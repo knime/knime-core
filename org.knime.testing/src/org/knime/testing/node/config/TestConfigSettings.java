@@ -93,7 +93,7 @@ public class TestConfigSettings {
 
     private boolean m_streamingTest = false;
 
-    private LoadVersion m_requiredLoadVersion = null;
+    private LoadVersion m_requiredLoadVersion = LoadVersion.FUTURE;
 
     private static final String[] EMPTY = new String[0];
 
@@ -313,19 +313,21 @@ public class TestConfigSettings {
     }
 
     /**
-     * @param version Vesion in which this test workflow is required to stay in to be functional or <code>null</code> to
-     *            not require a specific version.
+     * Sets the version in which this test workflow is required to stay in to be functional. If no specific version
+     * is required, pass {@link LoadVersion#FUTURE}.
+     *
+     * @param version the required version, must not be <code>null</code>
      */
     public void requiredLoadVersion(final LoadVersion version) {
         m_requiredLoadVersion = version;
     }
 
     /**
-     * Version in which this test workflow is required to stay in to be functional or <code>null</code> if no specific
-     * version is required. This is useful for testing backwards compatibility with older node settings for example.
+     * Returns the version in which this test workflow is required to stay in to be functional. If no specific version
+     * is required, {@link LoadVersion#FUTURE} will be returned. This is useful for testing backwards compatibility
+     * with older node settings, for example.
      *
-     * @return version in which this test workflow is required to stay in to be functional or <code>null</code> if no
-     *         specific version is required.
+     * @return version a version, never <code>null</code>
      */
     public LoadVersion requiredLoadVersion() {
         return m_requiredLoadVersion;
@@ -512,19 +514,20 @@ public class TestConfigSettings {
     }
 
     /**
-     * Parse a {@link LoadVersion} from given String.
+     * Parse a {@link LoadVersion} from given string. If the argument is <code>null</code> or no matching version is
+     * found, {@link LoadVersion#FUTURE} is returned.
      *
-     * @param s String to parse.
-     * @return a {@link LoadVersion} or <code>null</code> if s did not match any.
+     * @param s a version as string
+     * @return a {@link LoadVersion}, never <code>null</code>
      */
-    private LoadVersion parseLoadVersion(final String s) {
+    static LoadVersion parseLoadVersion(final String s) {
         for (final LoadVersion v : LoadVersion.values()) {
             if (v.getVersionString().equals(s)) {
                 return v;
             }
         }
 
-        return null;
+        return LoadVersion.FUTURE;
     }
 
     /**

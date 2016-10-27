@@ -132,8 +132,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     private final JCheckBox m_streamingTest = new JCheckBox();
 
     private final JComboBox<String> m_requiredLoadVersion = new JComboBox<>(Arrays
-        .<LoadVersion> asList(LoadVersion.values()).stream().filter((val) -> val != LoadVersion.FUTURE).map(val -> {
-            if (val == LoadVersion.UNKNOWN) {
+        .<LoadVersion> asList(LoadVersion.values()).stream().filter((val) -> val != LoadVersion.UNKNOWN).map(val -> {
+            if (val == LoadVersion.FUTURE) {
                 return "None";
             } else {
                 return val.getVersionString();
@@ -467,22 +467,6 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Parse a {@link LoadVersion} from given String.
-     *
-     * @param s String to parse.
-     * @return a {@link LoadVersion} or <code>null</code> if s did not match any.
-     */
-    private LoadVersion parseLoadVersion(final String s) {
-        for (final LoadVersion v : LoadVersion.values()) {
-            if (v.getVersionString().equals(s)) {
-                return v;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -494,7 +478,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_settings.streamingTest(m_streamingTest.isSelected());
 
         final String requiredLoadVersionName = (String)m_requiredLoadVersion.getSelectedItem();
-        m_settings.requiredLoadVersion(parseLoadVersion(requiredLoadVersionName));
+        m_settings.requiredLoadVersion(TestConfigSettings.parseLoadVersion(requiredLoadVersionName));
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
@@ -538,7 +522,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_streamingTest.setSelected(m_settings.streamingTest());
 
         LoadVersion loadVersion = m_settings.requiredLoadVersion();
-        m_requiredLoadVersion.setSelectedItem(loadVersion != null ? loadVersion.getVersionString() : null);
+        m_requiredLoadVersion
+            .setSelectedItem((loadVersion == LoadVersion.FUTURE) ? "None" : loadVersion.getVersionString());
 
         m_logErrorsModel.removeAllElements();
         for (String l : m_settings.requiredLogErrors()) {

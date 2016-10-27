@@ -538,8 +538,12 @@ class TestflowConfiguration {
         return m_streamingTest;
     }
 
-    /** As per {@link TestConfigSettings#requiredLoadVersion()}.
-     * @return version ...
+    /**
+     * Returns the version in which this test workflow is required to stay in to be functional. If no specific version
+     * is required, {@link LoadVersion#FUTURE} will be returned. This is useful for testing backwards compatibility
+     * with older node settings, for example.
+     *
+     * @return version a version, never <code>null</code>
      */
     public LoadVersion requiredLoadVersion() {
         return m_requiredLoadVersion;

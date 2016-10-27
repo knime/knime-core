@@ -49,13 +49,13 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 
-import junit.framework.TestResult;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.TestrunConfiguration;
+
+import junit.framework.TestResult;
 
 /**
  * Test that loads the workflow, saves it (potentially converting it into a new format), and finally loading it again.
@@ -102,6 +102,7 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
             WorkflowManager manager =
                     WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
             m_context.setWorkflowManager(manager);
+            WorkflowLoadTest.checkLoadVersion(this, result);
 
             LOGGER.info("Saving workflow '" + m_workflowName + "'");
             manager.save(m_workflowDir, new ExecutionMonitor(), true);

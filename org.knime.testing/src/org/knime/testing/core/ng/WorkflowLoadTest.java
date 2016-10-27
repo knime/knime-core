@@ -55,7 +55,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
-import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -73,7 +72,7 @@ import junit.framework.TestResult;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowLoadTest extends WorkflowTest {
+public class WorkflowLoadTest extends WorkflowTest {
     private final File m_workflowDir;
 
     private final File m_testcaseRoot;
@@ -90,7 +89,7 @@ class WorkflowLoadTest extends WorkflowTest {
      * @param runConfiguration the run configuration
      * @param context the test context, must not be <code>null</code>
      */
-    public WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
+    WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
         final IProgressMonitor monitor, final TestrunConfiguration runConfiguration, final WorkflowTestContext context) {
         super(workflowName, monitor, context);
         m_workflowDir = workflowDir;
@@ -106,6 +105,7 @@ class WorkflowLoadTest extends WorkflowTest {
         result.startTest(this);
         try {
             m_context.setWorkflowManager(loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration));
+            checkLoadVersion(this, result);
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -148,18 +148,28 @@ class WorkflowLoadTest extends WorkflowTest {
 
         WorkflowManager wfm = loadRes.getWorkflowManager();
 
-        LoadVersion requiredLoadVersion = test.m_context.getTestflowConfiguration().requiredLoadVersion();
-        if (requiredLoadVersion != null) {
-            LoadVersion loadVersion = NodeContext.getContext().getWorkflowManager().getLoadVersion();
-            if (requiredLoadVersion.isOlderThan(loadVersion)) {
-                result.addFailure(test,  new AssertionFailedError(String.format("Workflow was required to stay in an older version than it"
-                    + " is now (required: %s, actual: %s). It may have been accidentally saved with a newer version.",
-                    requiredLoadVersion, loadVersion)));
-            }
-        }
-
-
         wfm.addWorkflowVariables(true, runConfig.getFlowVariables());
         return wfm;
+    }
+
+    /**
+     * Checks if the current workflow version is the same or older then the required load version. In case this is not
+     * the case a test error is logged. Callers have to ensure that the workflow has already been loaded and the
+     * workflow manager has been set (via {@link WorkflowTestContext#setWorkflowManager(WorkflowManager)}, otherwise
+     * the settings are not available.
+     *
+     * @param test the current test
+     * @param result the test result to which the error will be added
+     */
+    public static void checkLoadVersion(final WorkflowTest test, final TestResult result) {
+        LoadVersion requiredLoadVersion = test.m_context.getTestflowConfiguration().requiredLoadVersion();
+        LoadVersion currentLoadVersion = test.m_context.getWorkflowManager().getLoadVersion();
+        if (requiredLoadVersion.isOlderThan(currentLoadVersion)) {
+            result.addFailure(test,
+                new AssertionFailedError(String.format(
+                    "Workflow was required to stay in an older version than it is now (required: %s, actual: %s). "
+                        + "It may have been accidentally saved with a newer version.",
+                    requiredLoadVersion, currentLoadVersion)));
+        }
     }
 }
