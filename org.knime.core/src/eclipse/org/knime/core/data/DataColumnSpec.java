@@ -47,14 +47,17 @@ package org.knime.core.data;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.knime.core.data.property.ColorHandler;
-import org.knime.core.data.property.PropertyHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * A <code>DataColumnSpec</code> describes one column in a
@@ -98,6 +101,9 @@ public final class DataColumnSpec {
     /** Holds the ColorHandler if one was set or null. */
     private final ColorHandler m_colorHandler;
 
+    /** Holds the FilterHandler if one was set or null. */
+    private final FilterHandler m_filterHandler;
+
     /** Config key for the column name. */
     private static final String CFG_COLUMN_NAME = "column_name";
 
@@ -122,6 +128,9 @@ public final class DataColumnSpec {
     /** Config key for the ShapeHandler. */
     private static final String CFG_SHAPES = "shape_handler";
 
+    /** Config key for the FilterHandler. */
+    private static final String CFG_FILTER = "filter_handler";
+
     /**
      * Constructor taking all properties of this column spec as arguments. It
      * creates a read-only <code>DataColumnSpec</code> and should only be
@@ -136,32 +145,26 @@ public final class DataColumnSpec {
      * @param sizeHdl the <code>SizeHandler</code> or <code>null</code>
      * @param colorHdl the <code>ColorHandler</code> or <code>null</code>
      * @param shapeHdl the <code>ShapeHandler</code> or <code>null</code>
-     * @throws NullPointerException if either column name, type, domain, or
-     *             properties are <code>null</code>
+     * @throws IllegalArgumentException if either column name, type, domain, or properties are <code>null</code>
      */
     DataColumnSpec(final String name, final String[] elNames,
             final DataType type, final DataColumnDomain domain,
             final DataColumnProperties props, final SizeHandler sizeHdl,
-            final ColorHandler colorHdl, final ShapeHandler shapeHdl) {
-        if (name == null || type == null || domain == null || props == null
-                || elNames == null) {
-            throw new NullPointerException("Do not init DataColumnSpec with"
-                    + " null arguments!");
-        }
-        List<String> elNamesAsList =
-            Collections.unmodifiableList(Arrays.asList(elNames));
-        if (elNamesAsList.contains(null)) {
-            throw new NullPointerException(
-                    "Element names must not contain null elements");
-        }
-        m_name = name;
+            final ColorHandler colorHdl, final ShapeHandler shapeHdl, final FilterHandler filterHdl) {
+        final String nullError = "Do not init DataColumnSpec with null arguments!";
+        List<String> elNamesAsList = Collections.unmodifiableList(
+            Arrays.asList(CheckUtils.checkArgumentNotNull(elNames, nullError)));
+        CheckUtils.checkArgument(!elNamesAsList.contains(null), "Element names must not contain null elements");
+
+        m_name = CheckUtils.checkArgumentNotNull(name, nullError);
+        m_type = CheckUtils.checkArgumentNotNull(type, nullError);
+        m_domain = CheckUtils.checkArgumentNotNull(domain, nullError);
+        m_properties = CheckUtils.checkArgumentNotNull(props, nullError);
         m_elementNames = elNamesAsList;
-        m_type = type;
-        m_domain = domain;
-        m_properties = props;
         m_sizeHandler = sizeHdl;
         m_colorHandler = colorHdl;
         m_shapeHandler = shapeHdl;
+        m_filterHandler = filterHdl;
     }
 
     /**
@@ -255,6 +258,16 @@ public final class DataColumnSpec {
     }
 
     /**
+     * Returns the <code>FilterHandler</code> defined on this column, if available. (Note, this method was added
+     * in KNIME 3.3 and therefore uses the java-8 Optional return type.)
+     * @return attached <code>FilterHandler</code> or <code>null</code>
+     * @since 3.3
+     */
+    public Optional<FilterHandler> getFilterHandler() {
+        return Optional.ofNullable(m_filterHandler);
+    }
+
+    /**
      * Two <code>DataColumnSpec</code>s are equal if they have the same
      * column name and type. Domain info, properties, and handlers are not
      * considered during the comparison.
@@ -300,18 +313,12 @@ public final class DataColumnSpec {
             && getDomain().equals(cspec.getDomain())
             && getProperties().equals(cspec.getProperties())
             && getElementNames().equals(cspec.getElementNames());
-        return areEqual && equalsHandlers(m_colorHandler, cspec.m_colorHandler)
-            && equalsHandlers(m_sizeHandler, cspec.m_sizeHandler)
-            && equalsHandlers(m_shapeHandler, cspec.m_shapeHandler);
-    }
+        return areEqual
+                && Objects.equals(m_colorHandler, cspec.m_colorHandler)
+                && Objects.equals(m_sizeHandler, cspec.m_sizeHandler)
+                && Objects.equals(m_shapeHandler, cspec.m_shapeHandler)
+                && Objects.equals(m_filterHandler, cspec.m_filterHandler);
 
-    /** @return helper method that compares two <code>PropertyHandler</code>s */
-    private boolean equalsHandlers(
-            final PropertyHandler h1, final PropertyHandler h2) {
-        if (h1 == null) {
-            return (h2 == null);
-        }
-        return h1.equals(h2);
     }
 
     /**
@@ -342,10 +349,8 @@ public final class DataColumnSpec {
      */
     public void save(final ConfigWO config) {
         config.addString(CFG_COLUMN_NAME, m_name);
-        if (m_elementNames.size() != 1
-                || !m_name.equals(m_elementNames.get(0))) {
-            config.addStringArray(CFG_ELEMENT_NAMES,
-                    m_elementNames.toArray(new String[m_elementNames.size()]));
+        if (m_elementNames.size() != 1 || !m_name.equals(m_elementNames.get(0))) {
+            config.addStringArray(CFG_ELEMENT_NAMES, m_elementNames.toArray(new String[m_elementNames.size()]));
         }
         m_type.save(config.addConfig(CFG_COLUMN_TYPE));
         m_domain.save(config.addConfig(CFG_COLUMN_DOMAIN));
@@ -358,6 +363,9 @@ public final class DataColumnSpec {
         }
         if (m_shapeHandler != null) {
             m_shapeHandler.save(config.addConfig(CFG_SHAPES));
+        }
+        if (m_filterHandler != null) {
+            m_filterHandler.save(config.addConfig(CFG_FILTER));
         }
     }
 
@@ -382,10 +390,8 @@ public final class DataColumnSpec {
             elNames = new String[]{name};
         }
         DataType type = DataType.load(config.getConfig(CFG_COLUMN_TYPE));
-        DataColumnDomain domain =
-                DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
-        DataColumnProperties properties =
-                DataColumnProperties.load(config.getConfig(CFG_COLUMN_PROPS));
+        DataColumnDomain domain = DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
+        DataColumnProperties properties = DataColumnProperties.load(config.getConfig(CFG_COLUMN_PROPS));
         ColorHandler color = null;
         if (config.containsKey(CFG_COLORS)) {
             color = ColorHandler.load(config.getConfig(CFG_COLORS));
@@ -398,8 +404,11 @@ public final class DataColumnSpec {
         if (config.containsKey(CFG_SHAPES)) {
             shape = ShapeHandler.load(config.getConfig(CFG_SHAPES));
         }
-        return new DataColumnSpec(name, elNames, type, domain, properties,
-                size, color, shape);
+        FilterHandler filter = null;
+        if (config.containsKey(CFG_FILTER)) {
+            filter = FilterHandler.load(config.getConfig(CFG_FILTER));
+        }
+        return new DataColumnSpec(name, elNames, type, domain, properties, size, color, shape, filter);
     }
 
 } // DataColumnSpec
