@@ -326,8 +326,8 @@ public class DateTimeToStringNodeModel extends NodeModel {
         private final int m_colIndex;
 
         /**
-         * @param inSpec
-         * @param colIndex
+         * @param inSpec spec of the column after computation
+         * @param colIndex index of the column to work on
          */
         public TimeToStringCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);

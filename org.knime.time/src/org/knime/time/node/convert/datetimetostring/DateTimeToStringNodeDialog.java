@@ -186,7 +186,6 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         gbcReplaceAppend.gridy = 0;
         gbcReplaceAppend.anchor = GridBagConstraints.WEST;
         panelReplace.add(m_dialogCompReplaceOrAppend.getComponentPanel(), gbcReplaceAppend);
-
         // add suffix text field
         gbcReplaceAppend.gridx++;
         gbcReplaceAppend.weightx = 1;
@@ -355,34 +354,34 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
+    static SettingsModelColumnFilter2 createColSelectModel() {
         return new SettingsModelColumnFilter2("col_select", StringValue.class);
     }
 
     /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
+    static SettingsModelString createReplaceAppendStringBool() {
         return new SettingsModelString("replace_or_append", DateTimeToStringNodeDialog.OPTION_REPLACE);
     }
 
-    /** @return the string select model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createSuffixModel() {
         final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(Date&Time)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
 
     /** @return the string select model, used in both dialog and model. */
-    public static SettingsModelString createFormatModel() {
+    static SettingsModelString createFormatModel() {
         return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
     }
 
     /** @return the boolean model, used in both dialog and model. */
-    public static SettingsModelBoolean createCancelOnFailModel() {
+    static SettingsModelBoolean createCancelOnFailModel() {
         return new SettingsModelBoolean("cancel_on_fail", true);
     }
 
     /** @return the string select model, used in both dialog and model. */
-    public static SettingsModelString createLocaleModel() {
+    static SettingsModelString createLocaleModel() {
         return new SettingsModelString("locale", Locale.getDefault().toString());
     }
 }

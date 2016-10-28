@@ -122,12 +122,12 @@ final class NewToOldTimeNodeModel extends NodeModel {
     }
 
     /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
+    static SettingsModelString createReplaceAppendStringBool() {
         return new SettingsModelString("replace_or_append", NewToOldTimeNodeDialog.OPTION_REPLACE);
     }
 
-    /** @return the string select model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createSuffixModel() {
         final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(old Date&Time)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
@@ -317,8 +317,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
         private final int m_colIndex;
 
         /**
-         * @param inSpec
-         * @param colIndex
+         * @param inSpec spec of the column after computation
+         * @param colIndex index of the column to work on
          */
         public ConvertTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
@@ -374,7 +374,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 LocalDate ld = ((LocalDateCell)cell).getLocalDate();
                 return new DateAndTimeCell(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
             }
-            return null;
+            throw new IllegalStateException("Data type of cell is not compatible.");
         }
     }
 }
