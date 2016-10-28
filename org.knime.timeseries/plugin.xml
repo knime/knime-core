@@ -39,8 +39,8 @@
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
