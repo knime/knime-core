@@ -116,7 +116,6 @@ public class TestDataNodeModel extends NodeModel {
         -Double.MAX_VALUE, -Double.MIN_VALUE, -Double.MIN_NORMAL};
     private static final Date[] dateVals = new Date[] {
         new Date(System.currentTimeMillis()),
-        new Date(System.nanoTime()),
         new Date(0),
         new GregorianCalendar(1600, 1, 1).getTime(),
         new GregorianCalendar(0, 1, 1).getTime(),
@@ -130,6 +129,9 @@ public class TestDataNodeModel extends NodeModel {
         new GregorianCalendar(1600, 1, 1, 24, 59, 59).getTime(),
         new GregorianCalendar(0, 1, 1, 24, 59, 59).getTime(),
         new GregorianCalendar(4000, 1, 1, 24, 59, 59).getTime()};
+
+    private static final long MIN_RND_DATE = new GregorianCalendar(0, 1, 1).getTime().getTime();
+    private static final long MAX_RND_DATE = new GregorianCalendar(3000, 1, 1).getTime().getTime();
 
     private final SettingsModelInteger m_noOfRows = createNoOfRowsModel();
     private final SettingsModelInteger m_noOfListItems =
@@ -364,11 +366,7 @@ public class TestDataNodeModel extends NodeModel {
     private DataCell getTimestampVal(final int rowIdx) {
         Date val;
         if (rowIdx >= dateVals.length) {
-            long nextLong = rnd.nextLong();
-            if (rowIdx % 2 == 0) {
-                nextLong *= -1;
-            }
-            val = new Date(nextLong);
+            val = new Date(MIN_RND_DATE + (long) ((MAX_RND_DATE - MIN_RND_DATE) * rnd.nextDouble()));
         } else {
             val = dateVals[rowIdx];
         }
