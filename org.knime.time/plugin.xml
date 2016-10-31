@@ -33,6 +33,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.adddate.AddDateNodeFactory">
       </node>
+      <node
+            category-path="/applications/timeseries"
+            deprecated="false"
+            factory-class="org.knime.time.node.manipulate.settimezone.SetTimeZoneNodeFactory">
+      </node>
    </extension>
 
    <extension
