@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,29 +41,34 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.convert.oldtonew;
+package org.knime.time.node.manipulate.adddate;
 
-import java.awt.FlowLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.ZoneId;
+import java.time.format.TextStyle;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -71,18 +77,21 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.convert.DateTimeTypes;
 
 /**
- * The node dialog of the node which converts old to new date&time types.
+ * The node dialog of the node which adds a date to a time cell.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-final class OldToNewTimeNodeDialog extends NodeDialogPane {
+public class AddDateNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
@@ -90,45 +99,55 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentString m_dialogCompSuffix;
 
-    private final DialogComponentBoolean m_dialogCompZoneBool;
+    private final DialogComponentNumberEdit m_dialogCompYear;
 
-    private final JComboBox<DateTimeTypes> m_typeCombobox;
+    private final DialogComponentStringSelection m_dialogCompMonth;
 
-    private final DialogComponentBoolean m_dialogCompTypeBool;
-
-    private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
+    private final DialogComponentNumberEdit m_dialogCompDay;
 
     static final String OPTION_APPEND = "Append selected columns";
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    /** Setting up all DialogComponents. */
-    OldToNewTimeNodeDialog() {
+    private final DialogComponentBoolean m_dialogCompZoneBool;
 
-        /*
-         * DialogComponents
-         */
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0);
+    private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
 
-        final SettingsModelString replaceOrAppendModel = OldToNewTimeNodeModel.createReplaceAppendStringBool();
+    /**
+     * Setting up all DialogComponents.
+     */
+    public AddDateNodeDialog() {
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
+
+        final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend =
             new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = OldToNewTimeNodeModel.createSuffixModel();
+        final SettingsModelString suffixModel = createSuffixModel();
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        final SettingsModelBoolean typeModelBool = OldToNewTimeNodeModel.createTypeModelBool();
-        m_dialogCompTypeBool =
-            new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)");
+        final SettingsModelIntegerBounded yearModel = createYearModel();
+        m_dialogCompYear = new DialogComponentNumberEdit(yearModel, "Year:", 4);
 
-        final SettingsModelBoolean zoneModelBool = OldToNewTimeNodeModel.createZoneModelBool();
+        final Month[] months = Month.values();
+        final String[] monthsStrings = new String[months.length];
+        for (int i = 0; i < months.length; i++) {
+            monthsStrings[i] = months[i].getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        }
+
+        final SettingsModelString monthModel = createMonthModel();
+        m_dialogCompMonth = new DialogComponentStringSelection(monthModel, "Month:", monthsStrings);
+
+        final SettingsModelInteger dayModel = createDayModel();
+        m_dialogCompDay = new DialogComponentNumberEdit(dayModel, "Day:");
+
+        final SettingsModelBoolean zoneModelBool = createZoneModelBool();
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
 
-        final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel();
+        final SettingsModelString zoneSelectModel = createTimeZoneSelectModel();
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
-        zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
         m_dialogCompTimeZoneSelec = new DialogComponentStringSelection(zoneSelectModel, "", availableZoneIdsArray);
 
         /*
@@ -141,7 +160,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 1;
+        gbc.weighty = 0;
 
         /*
          * add column filter
@@ -152,7 +171,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
          * add replace/append selection
          */
         gbc.gridy++;
-        gbc.weighty = 0;
         final JPanel panelReplace = new JPanel(new GridBagLayout());
         panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
         final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
@@ -172,40 +190,31 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         panel.add(panelReplace, gbc);
 
         /*
-         * add type selection
+         * add date settings
          */
         gbc.gridy++;
-        gbc.weighty = 0;
-        final JPanel panelTypeSelec = new JPanel(new GridBagLayout());
-        panelTypeSelec.setBorder(BorderFactory.createTitledBorder("New Type Selection"));
-        final GridBagConstraints gbcTS = new GridBagConstraints();
-        // add check box
-        gbcTS.fill = GridBagConstraints.VERTICAL;
-        gbcTS.gridx = 0;
-        gbcTS.gridy = 0;
-        gbcTS.weightx = 0;
-        gbcTS.anchor = GridBagConstraints.WEST;
-        panelTypeSelec.add(m_dialogCompTypeBool.getComponentPanel(), gbcTS);
-
-        // add label and combo box for type selection
-        gbcTS.gridx++;
-        gbcTS.weightx = 1;
-        final JPanel panelTypeList = new JPanel(new FlowLayout());
-        final JLabel label = new JLabel("New type: ");
-        panelTypeList.add(label);
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
-        m_typeCombobox.setEnabled(false);
-        panelTypeList.add(m_typeCombobox);
-        panelTypeSelec.add(panelTypeList, gbcTS);
-
-        gbc.gridy++;
-        panel.add(panelTypeSelec, gbc);
-
-        /*
-         * add time zone selection
-         */
+        final JPanel panelDate = new JPanel(new GridBagLayout());
+        panelDate.setBorder(BorderFactory.createTitledBorder("Add Date"));
+        final GridBagConstraints gbcDate = new GridBagConstraints();
+        //add year
+        gbcDate.fill = GridBagConstraints.VERTICAL;
+        gbcDate.insets = new Insets(3, 0, 0, 0);
+        gbcDate.gridx = 0;
+        gbcDate.gridy = 0;
+        gbcDate.weighty = 0;
+        gbcDate.anchor = GridBagConstraints.WEST;
+        panelDate.add(m_dialogCompYear.getComponentPanel(), gbcDate);
+        // add month
+        gbcDate.gridx++;
+        gbcDate.insets = new Insets(0, 0, 0, 0);
+        panelDate.add(m_dialogCompMonth.getComponentPanel(), gbcDate);
+        // add day
+        gbcDate.gridx++;
+        gbcDate.insets = new Insets(3, 0, 0, 0);
+        gbcDate.weightx = 1;
+        panelDate.add(m_dialogCompDay.getComponentPanel(), gbcDate);
+        // add time zone selection
         final JPanel panelZoneSelec = new JPanel(new GridBagLayout());
-        panelZoneSelec.setBorder(BorderFactory.createTitledBorder("Time Zone Selection"));
         final GridBagConstraints gbcZS = new GridBagConstraints();
         gbcZS.fill = GridBagConstraints.VERTICAL;
         gbcZS.gridx = 0;
@@ -215,9 +224,11 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         gbcZS.weightx = 1;
         gbcZS.gridx++;
         panelZoneSelec.add(m_dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
-
-        gbc.gridy++;
-        panel.add(panelZoneSelec, gbc);
+        gbcDate.gridx = 0;
+        gbcDate.gridwidth = 4;
+        gbcDate.gridy++;
+        panelDate.add(panelZoneSelec, gbcDate);
+        panel.add(panelDate, gbc);
 
         /*
          * add tab
@@ -225,7 +236,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         addTab("Options", panel);
 
         /*
-         * Change and action listeners
+         * Change listeners
          */
         replaceOrAppendModel.addChangeListener(new ChangeListener() {
 
@@ -239,28 +250,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
             }
         });
 
-        typeModelBool.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                m_typeCombobox.setEnabled(!typeModelBool.getBooleanValue());
-                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
-                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
-            }
-        });
-
-        m_typeCombobox.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeTypes.ZONED_DATE_TIME)) {
-                    zoneSelectModel.setEnabled(true);
-                } else {
-                    zoneSelectModel.setEnabled(false);
-                }
-            }
-        });
-
         zoneModelBool.addChangeListener(new ChangeListener() {
 
             @Override
@@ -268,6 +257,30 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
                 zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
             }
         });
+
+        final ChangeListener dateListener = new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                try {
+                    LocalDate.of(yearModel.getIntValue(), Month.valueOf(monthModel.getStringValue().toUpperCase()),
+                        dayModel.getIntValue());
+                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).setBorder(null);
+                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).updateUI();
+                    m_dialogCompDay.setToolTipText(null);
+                } catch (DateTimeException exc) {
+                    System.out.println(exc);
+                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1))
+                        .setBorder(BorderFactory.createLineBorder(Color.RED));
+                    m_dialogCompDay.setToolTipText(exc.getMessage());
+                }
+            }
+        };
+
+        yearModel.addChangeListener(dateListener);
+        monthModel.addChangeListener(dateListener);
+        dayModel.addChangeListener(dateListener);
+
     }
 
     /**
@@ -278,10 +291,11 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompColFilter.saveSettingsTo(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
-        m_dialogCompTypeBool.saveSettingsTo(settings);
+        m_dialogCompYear.saveSettingsTo(settings);
+        m_dialogCompMonth.saveSettingsTo(settings);
+        m_dialogCompDay.saveSettingsTo(settings);
         m_dialogCompZoneBool.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
-        settings.addString("newTypeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
     }
 
     /**
@@ -293,12 +307,57 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
-        m_dialogCompTypeBool.loadSettingsFrom(settings, specs);
-        m_typeCombobox.setEnabled(!m_dialogCompTypeBool.isSelected());
-        m_typeCombobox
-            .setSelectedItem(DateTimeTypes.valueOf(settings.getString("newTypeEnum", DateTimeTypes.LOCAL_DATE.name())));
+        m_dialogCompYear.loadSettingsFrom(settings, specs);
+        m_dialogCompMonth.loadSettingsFrom(settings, specs);
+        m_dialogCompDay.loadSettingsFrom(settings, specs);
         m_dialogCompZoneBool.loadSettingsFrom(settings, specs);
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
+    }
+
+    /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
+    public static SettingsModelColumnFilter2 createColSelectModel() {
+        return new SettingsModelColumnFilter2("col_select", LocalTimeValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", AddDateNodeDialog.OPTION_REPLACE);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createSuffixModel() {
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(with date)");
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createYearModel() {
+        return new SettingsModelIntegerBounded("year", LocalDate.now().getYear(), 0, Integer.MAX_VALUE);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createMonthModel() {
+        return new SettingsModelString("month", LocalDate.now().getMonth().toString());
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createDayModel() {
+        return new SettingsModelIntegerBounded("day", LocalDate.now().getDayOfMonth(), 0, 31);
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    static SettingsModelBoolean createZoneModelBool() {
+        return new SettingsModelBoolean("zone_bool", false);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createTimeZoneSelectModel() {
+        final SettingsModelString settingsModelString =
+            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
     }
 
 }

@@ -52,7 +52,7 @@
 			<option name="Add time zone">
 				If automatic type detection is enabled, you can
 				choose whether a time zone should be added or not. If checked, a
-				time zone can be chosen below.
+				time zone can be chosen.
 			</option>
 			<option name="Time Zone">
 				If

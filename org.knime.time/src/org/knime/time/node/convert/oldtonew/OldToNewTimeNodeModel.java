@@ -133,13 +133,13 @@ final class OldToNewTimeNodeModel extends NodeModel {
     }
 
     /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
+    static SettingsModelString createReplaceAppendStringBool() {
         return new SettingsModelString("replace_or_append", OldToNewTimeNodeDialog.OPTION_REPLACE);
     }
 
-    /** @return the string select model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(new Date&Time)");
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createSuffixModel() {
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(new Date/Time)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
@@ -574,9 +574,9 @@ final class OldToNewTimeNodeModel extends NodeModel {
         private final int m_colIndex;
 
         /**
-         * @param inSpec
-         * @param typeIndex
-         * @param colIndex
+         * @param inSpec spec of the column after computation
+         * @param typeIndex index of the column in the m_newTypes array
+         * @param colIndex index of the column to work on
          */
         public ConvertTimeCellFactory(final DataColumnSpec inSpec, final int typeIndex, final int colIndex) {
             super(inSpec);
@@ -641,7 +641,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     }
                 }
             }
-            return null;
+            throw new IllegalStateException("Data type is not compatible.");
         }
     }
 

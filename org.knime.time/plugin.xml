@@ -23,6 +23,16 @@
             deprecated="false"
             factory-class="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory">
       </node>
+      <node
+            category-path="/applications/timeseries"
+            deprecated="false"
+            factory-class="org.knime.time.node.manipulate.addtime.AddTimeNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            deprecated="false"
+            factory-class="org.knime.time.node.manipulate.adddate.AddDateNodeFactory">
+      </node>
    </extension>
 
    <extension
