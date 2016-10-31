@@ -151,7 +151,7 @@ public class AddTimeNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 0;
+        gbc.weighty = 1;
 
         /*
          * add column filter
@@ -162,6 +162,7 @@ public class AddTimeNodeDialog extends NodeDialogPane {
          * add replace/append selection
          */
         gbc.gridy++;
+        gbc.weighty = 0;
         final JPanel panelReplace = new JPanel(new GridBagLayout());
         panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
         final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
