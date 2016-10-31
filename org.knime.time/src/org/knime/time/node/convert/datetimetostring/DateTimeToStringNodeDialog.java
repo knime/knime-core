@@ -52,12 +52,12 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -284,7 +284,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                     typeFormatLabel.setText("Date format is not valid: " + ex.getMessage());
                     ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
                         .setBorder(BorderFactory.createLineBorder(Color.RED));
-                } catch (DateTimeException ex) {
+                } catch (UnsupportedTemporalTypeException ex) {
                     m_dialogCompFormatSelect.setToolTipText(ex.getMessage());
                     typeFormatLabel.setText("Data type of column '" + includes[i]
                         + "' is not compatible with date format: " + ex.getMessage());

@@ -330,12 +330,12 @@ final class NewToOldTimeNodeModel extends NodeModel {
          */
         @Override
         public DataCell getCell(final DataRow row) {
-            DataCell cell = row.getCell(m_colIndex);
+            final DataCell cell = row.getCell(m_colIndex);
             if (cell.isMissing()) {
                 return cell;
             }
             if (cell instanceof LocalDateTimeValue) {
-                LocalDateTime ldt = ((LocalDateTimeCell)cell).getLocalDateTime();
+                final LocalDateTime ldt = ((LocalDateTimeCell)cell).getLocalDateTime();
                 if (ldt.getNano() == 0) {
                     return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
                         ldt.getHour(), ldt.getMinute(), ldt.getSecond());
@@ -347,8 +347,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
             } else if (cell instanceof ZonedDateTimeValue) {
                 LocalDateTime ldt = null;
                 if (m_timeZoneSelect.getStringValue().equals(TIME_ZONE_OPT1)) {
-                    ZonedDateTime zdt = ((ZonedDateTimeCell)cell).getZonedDateTime();
-                    LocalDateTime ldtUTC = LocalDateTime.of(zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(),
+                    final ZonedDateTime zdt = ((ZonedDateTimeCell)cell).getZonedDateTime();
+                    final LocalDateTime ldtUTC = LocalDateTime.of(zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(),
                         zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano());
                     ldt = LocalDateTime.ofInstant(ldtUTC.toInstant(ZoneOffset.UTC), zdt.getZone());
                 } else {
@@ -363,7 +363,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                         (int)TimeUnit.NANOSECONDS.toMillis(ldt.getNano()));
                 }
             } else if (cell instanceof LocalTimeValue) {
-                LocalTime lt = ((LocalTimeCell)cell).getLocalTime();
+                final LocalTime lt = ((LocalTimeCell)cell).getLocalTime();
                 if (lt.getNano() == 0) {
                     return new DateAndTimeCell(lt.getHour(), lt.getMinute(), lt.getSecond(), -1);
                 } else {
@@ -371,7 +371,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                         (int)TimeUnit.NANOSECONDS.toMillis(lt.getNano()));
                 }
             } else if (cell instanceof LocalDateValue) {
-                LocalDate ld = ((LocalDateCell)cell).getLocalDate();
+                final LocalDate ld = ((LocalDateCell)cell).getLocalDate();
                 return new DateAndTimeCell(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
             }
             throw new IllegalStateException("Data type of cell is not compatible.");

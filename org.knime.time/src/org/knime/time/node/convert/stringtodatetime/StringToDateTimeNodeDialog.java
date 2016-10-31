@@ -301,7 +301,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
                 case LOCAL_DATE_TIME: {
                     final LocalDateTime now3 = LocalDateTime.now();
                     final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
-                    String format2 = now3.format(formatter3);
+                    final String format2 = now3.format(formatter3);
                     LocalDateTime.parse(format2, formatter3);
                     break;
                 }
