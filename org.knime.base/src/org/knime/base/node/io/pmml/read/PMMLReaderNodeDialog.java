@@ -60,9 +60,10 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
      */
     public PMMLReaderNodeDialog() {
         m_fileNameModel = createFileChooserModel();
-        addDialogComponent(
-            new DialogComponentFileChooser(m_fileNameModel, "pmml.reader", DialogComponentFileChooser.READER_DIALOG,
-                false, createFlowVariableModel(m_fileNameModel), ".pmml", ".xml"));
+        DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(m_fileNameModel, "pmml.reader",
+            DialogComponentFileChooser.READER_DIALOG, false, createFlowVariableModel(m_fileNameModel), ".pmml", ".xml");
+        fileChooser.setBorderTitle("Input location");
+        addDialogComponent(fileChooser);
     }
 
     /**

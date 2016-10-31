@@ -106,6 +106,7 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
                 }
             }
         });
+        m_dirChooser.setBorderTitle("Output directory");
 
         addDialogComponent(m_dirChooser);
         addDialogComponent(m_overwrite);

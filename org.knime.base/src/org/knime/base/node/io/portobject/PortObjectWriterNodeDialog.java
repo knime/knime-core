@@ -101,6 +101,7 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
 
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         addDialogComponent(overwriteOK);

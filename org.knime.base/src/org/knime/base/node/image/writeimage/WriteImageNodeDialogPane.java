@@ -102,6 +102,7 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
                 }
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         setHorizontalPlacement(false);

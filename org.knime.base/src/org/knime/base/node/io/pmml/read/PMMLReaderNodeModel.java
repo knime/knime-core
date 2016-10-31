@@ -120,7 +120,10 @@ public class PMMLReaderNodeModel extends NodeModel {
         // read the data dictionary and the mining schema and create a
         // PMMLPortObjectSpec
         String fileS = m_file.getStringValue();
-        CheckUtils.checkSourceFile(fileS);
+        String warning = CheckUtils.checkSourceFile(fileS);
+        if(warning != null){
+            setWarningMessage(warning);
+        }
 
         URL url = getURLFromSettings(fileS);
         try {

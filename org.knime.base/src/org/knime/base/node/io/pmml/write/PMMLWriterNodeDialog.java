@@ -98,6 +98,7 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
 
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         addDialogComponent(validateComponent);

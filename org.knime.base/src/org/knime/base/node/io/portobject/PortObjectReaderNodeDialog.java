@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
@@ -54,7 +54,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  * Dialog for the ModelContent Reader Node - allows user to choose file name and
  * directory.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
@@ -64,9 +64,10 @@ public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
      */
     public PortObjectReaderNodeDialog() {
         SettingsModelString settingsModelString = new SettingsModelString(PortObjectReaderNodeModel.FILENAME, "");
-        addDialogComponent(
-            new DialogComponentFileChooser(settingsModelString, PortObjectReaderNodeDialog.class.getName(),
-                DialogComponentFileChooser.READER_DIALOG, false, createFlowVariableModel(settingsModelString), ".zip"));
+        DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(settingsModelString, PortObjectReaderNodeDialog.class.getName(),
+            DialogComponentFileChooser.READER_DIALOG, false, createFlowVariableModel(settingsModelString), ".zip");
+        fileChooser.setBorderTitle("Input location");
+        addDialogComponent(fileChooser);
     }
 
 }

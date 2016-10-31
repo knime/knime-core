@@ -155,7 +155,10 @@ class PortObjectReaderNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         final String fileName = m_fileName.getStringValue();
-        CheckUtils.checkSourceFile(fileName);
+        String warning = CheckUtils.checkSourceFile(fileName);
+        if(warning != null){
+            setWarningMessage(warning);
+        }
 
         InputStream inStream = null;
         try {

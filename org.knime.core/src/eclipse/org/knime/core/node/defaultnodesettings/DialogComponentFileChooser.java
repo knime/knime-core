@@ -77,10 +77,12 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     /**
      * Type value indicating that the FileChooser is for a Reader-Node.
+     * @see JFileChooser
      */
     public static final int READER_DIALOG = JFileChooser.OPEN_DIALOG;
     /**
      * Type value indicating that the FileChooser is for a Writer-Node.
+     * @see JFileChooser
      */
     public static final int WRITER_DIALOG = JFileChooser.SAVE_DIALOG;
 
@@ -232,8 +234,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
 
         final String title = directoryOnly ? "Selected Directory:" : "Selected File:";
-        m_border = BorderFactory.createTitledBorder(BorderFactory
-            .createEtchedBorder(), title);
+        m_border = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), title);
         getComponentPanel().setBorder(m_border);
         getComponentPanel().setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
         getComponentPanel().add(m_filesPanel);
