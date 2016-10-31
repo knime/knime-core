@@ -107,20 +107,10 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
 
     /** Create new dialog, init layout.*/
     public CSVReaderNodeDialog() {
-        super();
-
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
-                "org.knime.base.node.io.csvreader", LocationValidation.FileInput, ".csv", ".txt");
+                "csv_read", LocationValidation.FileInput, ".csv", ".txt");
         m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
-
-        final JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
-        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Input location:"));
-        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        filePanel.add(m_filePanel);
-        filePanel.add(Box.createHorizontalGlue());
 
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
@@ -149,68 +139,76 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         });
         m_limitRowsChecker.doClick();
 
-        final JPanel optionsPanel = createPanel();
+        addTab("Settings", initLayout());
+
+        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
+        addTab("Encoding", m_encodingPanel);
+    }
+
+    private JPanel initLayout() {
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
+        JPanel optionsPanel = new JPanel(new GridBagLayout());
         optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
             .createEtchedBorder(), "Reader options:"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        optionsPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+        gbc.gridx +=1;
+        gbc.weightx = 1;
+        optionsPanel.add(new JPanel(), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        gbc.weightx = 0;
+        optionsPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionsPanel.add(getInFlowLayout(m_hasColHeaderChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_hasRowHeaderChecker), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        optionsPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
+
+        gbc.gridy += 1;
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        optionsPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
+
+        //empty panel to eat up extra space
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-        addTab("Settings", panel);
 
-        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
-        addTab("Encoding", m_encodingPanel);
-    }
-
-    private JPanel createPanel() {
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
-        centerPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
-        gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
-        gbc.gridx +=1;
-        gbc.weightx = 1;
-        centerPanel.add(new JPanel(), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        gbc.weightx = 0;
-        centerPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
-        gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_hasColHeaderChecker), gbc);
-        gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_hasRowHeaderChecker), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
-
-        gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
-        gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        centerPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
-        gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
-
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        gbc.weighty = 1;
-        centerPanel.add(new JPanel(), gbc);
-
-        return centerPanel;
+        return panel;
     }
 
     private static JPanel getInFlowLayout(final JComponent... comps) {

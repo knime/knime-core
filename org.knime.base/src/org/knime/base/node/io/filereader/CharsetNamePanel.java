@@ -114,7 +114,6 @@ public class CharsetNamePanel extends JPanel {
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(getSelectionPanel());
         loadSettings(settings);
-
     }
 
     private Container getSelectionPanel() {

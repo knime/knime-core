@@ -212,11 +212,6 @@ public class CSVWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_settings = new FileWriterNodeSettings(settings);
-
-        if (notEmpty(m_settings.getFileName())) {
-            StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID);
-            history.add(m_settings.getFileName());
-        }
     }
 
     /**

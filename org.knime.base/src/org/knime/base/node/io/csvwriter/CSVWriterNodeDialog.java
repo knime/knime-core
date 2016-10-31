@@ -123,27 +123,19 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     boolean m_isLocalDestination;
 
 
-
     /**
      * Creates a new CSV writer dialog.
      */
     public CSVWriterNodeDialog() {
-        super();
-
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(FileWriterNodeSettings.CFGKEY_FILE, FlowVariable.Type.STRING),
-                "org.knime.base.node.io.csvwriter", LocationValidation.FileOutput, ".csv", ".txt");
+                CSVWriterNodeModel.FILE_HISTORY_ID, LocationValidation.FileOutput, ".csv", ".txt");
         m_filePanel.setDialogTypeSaveWithExtension(".csv");
-
-        final JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
-        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Output location:"));
         m_filePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 String selFile = m_filePanel.getSelectedFile();
-                if ((selFile != null) && !selFile.isEmpty()) {
+                if (!selFile.isEmpty()) {
                     try {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
@@ -158,14 +150,6 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        filePanel.add(m_filePanel);
-        filePanel.add(Box.createHorizontalGlue());
-
-        final JPanel optionsPanel = new JPanel();
-        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Writer options:"));
 
         ItemListener l = new ItemListener() {
             @Override
@@ -222,6 +206,33 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
             }
         });
 
+        addTab("Settings", initLayout());
+
+        m_advancedPanel = new AdvancedPanel();
+        addTab("Advanced", m_advancedPanel);
+
+        m_quotePanel = new QuotePanel();
+        addTab("Quotes", m_quotePanel);
+
+        m_commentPanel = new CommentPanel();
+        addTab("Comment Header", m_commentPanel);
+
+        m_decSeparatorPanel = new DecimalSeparatorPanel();
+        addTab("Decimal Separator", m_decSeparatorPanel);
+
+        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
+        addTab("Encoding", m_encodingPanel);
+
+    }
+
+    private JPanel initLayout(){
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
 
         final JPanel colHeaderPane = new JPanel();
         colHeaderPane.setLayout(new BoxLayout(colHeaderPane, BoxLayout.X_AXIS));
@@ -258,6 +269,10 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         overwriteFilePane.add(m_overwritePolicyAbortButton);
         overwriteFilePane.add(Box.createHorizontalGlue());
 
+        final JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Writer options:"));
         optionsPanel.add(colHeaderPane);
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(colHeaderPane2);
@@ -276,24 +291,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-
-        addTab("Settings", panel);
-
-        m_advancedPanel = new AdvancedPanel();
-        addTab("Advanced", m_advancedPanel);
-
-        m_quotePanel = new QuotePanel();
-        addTab("Quotes", m_quotePanel);
-
-        m_commentPanel = new CommentPanel();
-        addTab("Comment Header", m_commentPanel);
-
-        m_decSeparatorPanel = new DecimalSeparatorPanel();
-        addTab("Decimal Separator", m_decSeparatorPanel);
-
-        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
-        addTab("Encoding", m_encodingPanel);
-
+        return panel;
     }
 
     /** Checks whether or not the "on file exists" check should be enabled. */
