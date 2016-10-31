@@ -47,8 +47,10 @@
  */
 package org.knime.base.node.io.arffwriter;
 
-import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -83,90 +85,86 @@ import org.knime.core.util.FileUtil;
  */
 public class ARFFWriterNodeDialog extends NodeDialogPane {
 
-    /** textfield to enter file name. */
     private final FilesHistoryPanel m_filePanel;
 
     private final JRadioButton m_overwritePolicyAbortButton;
 
     private final JRadioButton m_overwritePolicyOverwriteButton;
 
-    boolean m_isLocalDestination;
-
     /**
      * Creates a new ARFF file reader dialog.
      */
     public ARFFWriterNodeDialog() {
-        super();
-
         m_filePanel =
                 new FilesHistoryPanel(createFlowVariableModel(ARFFWriterNodeModel.CFGKEY_FILENAME, FlowVariable.Type.STRING),
                     "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
         m_filePanel.setDialogTypeSaveWithExtension(".arff");
-
-        final JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
-        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Output location:"));
         m_filePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                String selFile = m_filePanel.getSelectedFile();
-                if ((selFile != null) && !selFile.isEmpty()) {
+                String selFile = m_filePanel.getSelectedFile().trim();
+                if (!selFile.isEmpty()) {
                     try {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
-                        m_isLocalDestination = (path != null);
-                        m_overwritePolicyAbortButton.setEnabled(m_isLocalDestination);
-                        m_overwritePolicyOverwriteButton.setEnabled(m_isLocalDestination);
+                        boolean isLocalDestination = path != null;
+                        m_overwritePolicyAbortButton.setEnabled(isLocalDestination);
+                        m_overwritePolicyOverwriteButton.setEnabled(isLocalDestination);
                     } catch (IOException | URISyntaxException | InvalidPathException ex) {
                         // ignore
                     }
                 }
             }
         });
-        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        filePanel.add(m_filePanel);
-        filePanel.add(Box.createHorizontalGlue());
 
-        final JPanel optionsPanel = new JPanel();
-        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Writer options:"));
-
-        ButtonGroup bg = new ButtonGroup();
         m_overwritePolicyOverwriteButton = new JRadioButton("Overwrite");
-        bg.add(m_overwritePolicyOverwriteButton);
         m_overwritePolicyAbortButton = new JRadioButton("Abort");
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_overwritePolicyOverwriteButton);
         bg.add(m_overwritePolicyAbortButton);
         m_overwritePolicyAbortButton.doClick();
 
-        final JPanel overwriteFileLabelPane = new JPanel();
-        overwriteFileLabelPane.setLayout(
-                new BoxLayout(overwriteFileLabelPane, BoxLayout.X_AXIS));
-        overwriteFileLabelPane.add(new JLabel(" If file exists... "));
-        overwriteFileLabelPane.add(Box.createHorizontalGlue());
-        final JPanel overwriteFilePane = new JPanel();
-        overwriteFilePane.setLayout(
-                new BoxLayout(overwriteFilePane, BoxLayout.X_AXIS));
-        m_overwritePolicyOverwriteButton.setAlignmentY(Component.TOP_ALIGNMENT);
-        overwriteFilePane.add(m_overwritePolicyOverwriteButton);
-        overwriteFilePane.add(Box.createHorizontalStrut(20));
-        m_overwritePolicyAbortButton.setAlignmentY(Component.TOP_ALIGNMENT);
-        overwriteFilePane.add(m_overwritePolicyAbortButton);
-        overwriteFilePane.add(Box.createHorizontalGlue());
+        addTab("Settings", initLayout());
+    }
 
-        optionsPanel.add(overwriteFileLabelPane);
-        optionsPanel.add(Box.createVerticalStrut(3));
-        optionsPanel.add(overwriteFilePane);
-        optionsPanel.add(Box.createVerticalGlue());
+    private JPanel initLayout() {
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+
+        final JPanel optionsPanel = new JPanel(new GridBagLayout());
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Writer options:"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        optionsPanel.add(new JLabel(" If file exists... "), gbc);
+
+        gbc.gridx += 1;
+        gbc.insets = new Insets(5, 10, 5, 10);
+        optionsPanel.add(m_overwritePolicyOverwriteButton, gbc);
+
+        gbc.gridx += 1;
+        optionsPanel.add(m_overwritePolicyAbortButton, gbc);
+
+        //empty panel to eat up extra space
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
 
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-
-        addTab("Settings", panel);
+        return panel;
     }
 
     /**
@@ -193,10 +191,9 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
         m_filePanel.updateHistory();
         m_filePanel.setSelectedFile(settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
 
-        if(settings.getBoolean(
-                ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false)){
+        if (settings.getBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false)) {
             m_overwritePolicyOverwriteButton.doClick();
-        }else{
+        } else {
             m_overwritePolicyAbortButton.doClick();
         }
     }

@@ -86,21 +86,23 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
      * Creates a new ARFF file reader dialog.
      */
     public ARFFReaderNodeDialog() {
-        super();
-
         m_filePanel =
-                new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
-                    ARFFReaderNodeModel.ARFF_HISTORY_ID, LocationValidation.FileInput, ".arff");
+            new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
+                "ARFFFiles", LocationValidation.FileInput, ".arff");
         m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
 
+        m_rowPrefix = new JTextField("Row", 10);
+
+        addTab("Settings", initLayout());
+    }
+
+    private JPanel initLayout(){
         final JPanel filePanel = new JPanel();
         filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
         filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Input location:"));
-        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
         filePanel.add(m_filePanel);
-        filePanel.add(Box.createHorizontalGlue());
-
 
         final JPanel optionsPanel = new JPanel(new GridBagLayout());
         optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
@@ -113,25 +115,22 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         optionsPanel.add(new JLabel("RowID prefix: "), gbc);
 
         gbc.gridx += 1;
-        m_rowPrefix = new JTextField("Row", 10);
         optionsPanel.add(m_rowPrefix, gbc);
 
+        //empty panel to eat up extra space
         gbc.gridx++;
         gbc.gridy++;
         gbc.weightx = 1;
         gbc.weighty = 1;
         optionsPanel.add(new JPanel(), gbc);
 
-        JPanel panel = new JPanel();
+        final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-
-        addTab("Settings", panel);
+        return panel;
     }
-
-
 
     /**
      * {@inheritDoc}
@@ -154,5 +153,6 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_filePanel.getSelectedFile().trim());
         settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix.getText());
+        m_filePanel.addToHistory();
     }
 }
