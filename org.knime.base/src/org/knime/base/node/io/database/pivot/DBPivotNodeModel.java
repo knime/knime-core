@@ -288,7 +288,7 @@ final class DBPivotNodeModel extends DBNodeModel {
 
         exec.setMessage("Getting pivot values.");
         ExecutionMonitor subExec = exec.createSubProgress(0.7);
-        final Map<DataColumnSpec, Set<Object>> pivotElements = new LinkedHashMap<DataColumnSpec, Set<Object>>();
+        final Map<DataColumnSpec, Set<Object>> pivotElements = new LinkedHashMap<>();
         final List<String> pivotColumns = m_pivotCols.getIncludeList();
         int counter = 1;
         for (String pivotColumn : pivotColumns) {
@@ -298,7 +298,7 @@ final class DBPivotNodeModel extends DBNodeModel {
                 "SELECT DISTINCT " + manipulator.quoteIdentifier(pivotColumn) + " FROM (" + query + ") T";
             try (ResultSet valueSet = connection.createStatement().executeQuery(valueQuery);) {
                 exec.checkCanceled();
-                final Set<Object> vals = new HashSet<Object>();
+                final Set<Object> vals = new HashSet<>();
                 while (valueSet.next()) {
                     final Object dbVal = valueSet.getObject(1);
                     if (!valueSet.wasNull()) {
@@ -319,7 +319,7 @@ final class DBPivotNodeModel extends DBNodeModel {
             final DBColumnAggregationFunctionRow aggregationFunction = m_aggregationFunction2Use.get(i);
             String colName = aggregationFunction.getColumnSpec().getName();
             DBAggregationFunction function = aggregationFunction.getFunction();
-            aggValues.add(new Pair<String, DBAggregationFunction>(colName, function));
+            aggValues.add(new Pair<>(colName, function));
         }
 
         final ColumnNamePolicy pivotColPoliciy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
