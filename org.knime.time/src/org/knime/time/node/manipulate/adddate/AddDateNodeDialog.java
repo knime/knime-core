@@ -198,6 +198,7 @@ public class AddDateNodeDialog extends NodeDialogPane {
         final GridBagConstraints gbcDate = new GridBagConstraints();
         //add year
         gbcDate.fill = GridBagConstraints.VERTICAL;
+        gbcDate.insets = new Insets(3, 0, 0, 0);
         gbcDate.gridx = 0;
         gbcDate.gridy = 0;
         gbcDate.weighty = 0;
@@ -205,9 +206,11 @@ public class AddDateNodeDialog extends NodeDialogPane {
         panelDate.add(m_dialogCompYear.getComponentPanel(), gbcDate);
         // add month
         gbcDate.gridx++;
+        gbcDate.insets = new Insets(0, 0, 0, 0);
         panelDate.add(m_dialogCompMonth.getComponentPanel(), gbcDate);
         // add day
         gbcDate.gridx++;
+        gbcDate.insets = new Insets(3, 0, 0, 0);
         gbcDate.weightx = 1;
         panelDate.add(m_dialogCompDay.getComponentPanel(), gbcDate);
         // add time zone selection
