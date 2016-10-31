@@ -61,7 +61,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -153,41 +154,18 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
         panel.add(panelReplace, gbc);
 
         /*
-         * add date settings
+         * add time zone selection
          */
         gbc.gridy++;
-        //        final JPanel panelDate = new JPanel(new GridBagLayout());
-        //        panelDate.setBorder(BorderFactory.createTitledBorder("Add Date"));
-        //        final GridBagConstraints gbcDate = new GridBagConstraints();
-        //        //add year
-        //        gbcDate.fill = GridBagConstraints.VERTICAL;
-        //        gbcDate.gridx = 0;
-        //        gbcDate.gridy = 0;
-        //        gbcDate.weighty = 0;
-        //        gbcDate.anchor = GridBagConstraints.WEST;
-        //        panelDate.add(m_dialogCompYear.getComponentPanel(), gbcDate);
-        //        // add month
-        //        gbcDate.gridx++;
-        //        panelDate.add(m_dialogCompMonth.getComponentPanel(), gbcDate);
-        //        // add day
-        //        gbcDate.gridx++;
-        //        gbcDate.weightx = 1;
-        //        panelDate.add(m_dialogCompDay.getComponentPanel(), gbcDate);
-        // add time zone selection
         final JPanel panelZoneSelec = new JPanel(new GridBagLayout());
+        panelZoneSelec.setBorder(BorderFactory.createTitledBorder("Time Zone Selection"));
         final GridBagConstraints gbcZS = new GridBagConstraints();
         gbcZS.fill = GridBagConstraints.VERTICAL;
         gbcZS.gridx = 0;
         gbcZS.gridy = 0;
         gbcZS.anchor = GridBagConstraints.WEST;
-        //        panelZoneSelec.add(m_dialogCompZoneBool.getComponentPanel(), gbcZS);
         gbcZS.weightx = 1;
-        //        gbcZS.gridx++;
         panelZoneSelec.add(m_dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
-        //        gbcDate.gridx = 0;
-        //        gbcDate.gridwidth = 4;
-        //        gbcDate.gridy++;
-        //        panelDate.add(panelZoneSelec, gbcDate);
         panel.add(panelZoneSelec, gbc);
 
         /*
@@ -238,7 +216,7 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalTimeValue.class);
+        return new SettingsModelColumnFilter2("col_select", LocalDateTimeValue.class, ZonedDateTimeValue.class);
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -248,7 +226,7 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
 
     /** @return the string model, used in both dialog and model. */
     public static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(with date)");
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(with time zone)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
