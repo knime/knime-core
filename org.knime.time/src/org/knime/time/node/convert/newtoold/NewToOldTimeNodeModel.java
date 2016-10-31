@@ -128,7 +128,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(old Date&Time)");
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(old Date/Time)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
