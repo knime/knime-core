@@ -139,8 +139,7 @@ public class AddTimeNodeDialog extends NodeDialogPane {
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
-        m_dialogCompTimeZoneSelec =
-            new DialogComponentStringSelection(zoneSelectModel, "Time zone: ", availableZoneIdsArray);
+        m_dialogCompTimeZoneSelec = new DialogComponentStringSelection(zoneSelectModel, "", availableZoneIdsArray);
 
         /*
          * create panel with gbc
