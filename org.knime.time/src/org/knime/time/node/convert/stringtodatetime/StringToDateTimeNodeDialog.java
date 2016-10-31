@@ -113,7 +113,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentBoolean m_dialogCompCancelOnFail;
 
-    private final SettingsModelString formatModel;
+    private final SettingsModelString m_formatModel;
 
     /**
      * Predefined date formats.
@@ -123,7 +123,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     /**
      * Key for the string history to re-use user entered date formats.
      */
-    public static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
+    static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
     static final String OPTION_APPEND = "Append selected columns";
 
@@ -143,9 +143,9 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         final SettingsModelString suffixModel = createSuffixModel();
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        formatModel = createFormatModel();
+        m_formatModel = createFormatModel();
         m_dialogCompFormatSelect =
-            new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
+            new DialogComponentStringSelection(m_formatModel, "Date format: ", PREDEFINED_FORMATS, true);
 
         final Locale[] availableLocales = Locale.getAvailableLocales();
         final String[] availableLocalesString = new String[availableLocales.length];
@@ -280,10 +280,10 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * method for change/action listener of type and date combo boxes
+     * method for change/action listener of type and date combo boxes.
      */
     private void formatListener() {
-        final String format = formatModel.getStringValue();
+        final String format = m_formatModel.getStringValue();
         try {
             switch ((DateTimeTypes)m_typeCombobox.getSelectedItem()) {
                 case LOCAL_DATE: {

@@ -109,9 +109,9 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_dialogCompLocale;
 
-    private final SettingsModelString formatModel;
+    private final SettingsModelString m_formatModel;
 
-    private DataTableSpec spec;
+    private DataTableSpec m_spec;
 
     /**
      * Predefined date formats.
@@ -121,7 +121,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
     /**
      * Key for the string history to re-use user entered date formats.
      */
-    public static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
+    static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
     static final String OPTION_APPEND = "Append selected columns";
 
@@ -141,9 +141,9 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         final SettingsModelString suffixModel = createSuffixModel();
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        formatModel = createFormatModel();
+        m_formatModel = createFormatModel();
         m_dialogCompFormatSelect =
-            new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
+            new DialogComponentStringSelection(m_formatModel, "Date format: ", PREDEFINED_FORMATS, true);
 
         final Locale[] availableLocales = Locale.getAvailableLocales();
         final String[] availableLocalesString = new String[availableLocales.length];
@@ -247,13 +247,13 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                final String[] includes = colSelectModel.applyTo(spec).getIncludes();
+                final String[] includes = colSelectModel.applyTo(m_spec).getIncludes();
 
-                final String format = formatModel.getStringValue();
+                final String format = m_formatModel.getStringValue();
                 int i = 0;
                 try {
                     for (String include : includes) {
-                        final DataType type = spec.getColumnSpec(include).getType();
+                        final DataType type = m_spec.getColumnSpec(include).getType();
                         if (type.equals(LocalDateCellFactory.TYPE)) {
                             final LocalDate now1 = LocalDate.now();
                             final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
@@ -294,7 +294,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
             }
         };
         colSelectModel.addChangeListener(listener);
-        formatModel.addChangeListener(listener);
+        m_formatModel.addChangeListener(listener);
 
     }
 
@@ -316,7 +316,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        spec = specs[0];
+        m_spec = specs[0];
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
