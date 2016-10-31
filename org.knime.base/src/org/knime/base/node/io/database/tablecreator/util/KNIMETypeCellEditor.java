@@ -61,7 +61,6 @@ import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.SetCell;
 
 /**
  * Cell Editor to edit the Knime data type in the table
@@ -185,20 +184,7 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
                 setBackground(list.getBackground());
                 setForeground(list.getForeground());
             }
-            //TK_TODO: WORKAROUND UNTIL THE COLLECTION CELLS HAVE A NICE NAME
-            // Set the icon and text
-            String name = value.getName();
-            if (value.isCollectionType()) {
-                if (value.getCellClass() == SetCell.class) {
-                    name = "SetCell(";
-                } else {
-                    name = "ListCell(";
-                }
-                name += value.getCollectionElementType().getName() + ")";
-
-            }
-            setText(name);
-//            setText(value.getName());
+            setText(value.getName());
             setIcon(value.getIcon());
 
             return this;
