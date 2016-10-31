@@ -96,8 +96,7 @@ import org.knime.core.util.UniqueNameGenerator;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
-
+class AddTimeNodeModel extends org.knime.core.node.NodeModel {
     private final SettingsModelColumnFilter2 m_colSelect = AddTimeNodeDialog.createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = AddTimeNodeDialog.createReplaceAppendStringBool();
@@ -138,8 +137,8 @@ public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
-        final ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
-        final BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
+        ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
+        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
         return new BufferedDataTable[]{out};
     }
 
@@ -148,27 +147,30 @@ public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
      * @return the CR describing the output
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
-        final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        final int[] includeIndeces =
+        ColumnRearranger rearranger = new ColumnRearranger(inSpec);
+        String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+        int[] includeIndices =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
-        final DataType dataType;
+        DataType dataType;
         if (m_addZone.getBooleanValue()) {
             dataType = ZonedDateTimeCellFactory.TYPE;
         } else {
             dataType = LocalDateTimeCellFactory.TYPE;
         }
+
+        ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(AddTimeNodeDialog.OPTION_REPLACE)) {
-                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
-                final AddTimeCellFactory cellFac =
-                    new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
+                DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
+                AddTimeCellFactory cellFac =
+                    new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                final DataColumnSpec dataColSpec =
+                DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final AddTimeCellFactory cellFac = new AddTimeCellFactory(dataColSpec, includeIndeces[i++]);
+                AddTimeCellFactory cellFac = new AddTimeCellFactory(dataColSpec, includeIndices[i++], zone);
                 rearranger.append(cellFac);
             }
         }
@@ -200,29 +202,32 @@ public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
                 final RowInput in = (RowInput)inputs[0];
                 final RowOutput out = (RowOutput)outputs[0];
                 final DataTableSpec inSpec = in.getDataTableSpec();
-                final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+                int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddTimeNodeDialog.OPTION_REPLACE);
-                final DataType dataType;
+                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddTimeNodeDialog.OPTION_REPLACE);
+                DataType dataType;
                 if (m_addZone.getBooleanValue()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;
                 } else {
                     dataType = LocalDateTimeCellFactory.TYPE;
                 }
 
-                final AddTimeCellFactory[] cellFacs = new AddTimeCellFactory[includeIndeces.length];
+                ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+
+                AddTimeCellFactory[] cellFacs = new AddTimeCellFactory[includeIndeces.length];
                 if (isReplace) {
                     for (int i = 0; i < includeIndeces.length; i++) {
-                        final DataColumnSpecCreator dataColumnSpecCreator =
+                        DataColumnSpecCreator dataColumnSpecCreator =
                             new DataColumnSpecCreator(includeList[i], dataType);
-                        cellFacs[i] = new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                        cellFacs[i] =
+                            new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i], zone);
                     }
                 } else {
                     for (int i = 0; i < includeIndeces.length; i++) {
-                        final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                        DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
                             .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                        cellFacs[i] = new AddTimeCellFactory(dataColSpec, includeIndeces[i]);
+                        cellFacs[i] = new AddTimeCellFactory(dataColSpec, includeIndeces[i], zone);
                     }
                 }
 
@@ -324,16 +329,14 @@ public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
     }
 
     private final class AddTimeCellFactory extends SingleCellFactory {
-
         private final int m_colIndex;
 
-        /**
-         * @param inSpec spec of the column after computation
-         * @param colIndex index of the column to work on
-         */
-        public AddTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        private final ZoneId m_zone;
+
+        AddTimeCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
+            m_zone = zone;
         }
 
         /**
@@ -349,12 +352,11 @@ public class AddTimeNodeModel extends org.knime.core.node.NodeModel {
             final LocalTime localTime = LocalTime.of(m_hour.getIntValue(), m_minute.getIntValue(),
                 m_second.getIntValue(), m_nano.getIntValue());
             if (m_addZone.getBooleanValue()) {
-                return ZonedDateTimeCellFactory.create(ZonedDateTime.of(
-                    LocalDateTime.of(localDateCell.getLocalDate(), localTime), ZoneId.of(m_timeZone.getStringValue())));
+                return ZonedDateTimeCellFactory
+                    .create(ZonedDateTime.of(LocalDateTime.of(localDateCell.getLocalDate(), localTime), m_zone));
             } else {
                 return LocalDateTimeCellFactory.create(LocalDateTime.of(localDateCell.getLocalDate(), localTime));
             }
         }
     }
-
 }

@@ -75,6 +75,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -97,8 +98,7 @@ import org.knime.core.util.UniqueNameGenerator;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddDateNodeModel extends org.knime.core.node.NodeModel {
-
+class AddDateNodeModel extends NodeModel {
     private final SettingsModelColumnFilter2 m_colSelect = AddDateNodeDialog.createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = AddDateNodeDialog.createReplaceAppendStringBool();
@@ -149,7 +149,7 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        final int[] includeIndeces =
+        final int[] includeIndices =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
         final DataType dataType;
@@ -158,16 +158,20 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
         } else {
             dataType = LocalDateTimeCellFactory.TYPE;
         }
+
+        Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
+        ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(AddDateNodeDialog.OPTION_REPLACE)) {
-                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
-                final AddDateCellFactory cellFac =
-                    new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
+                DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
+                AddDateCellFactory cellFac =
+                    new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], month, zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                final DataColumnSpec dataColSpec =
+                DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndeces[i++]);
+                AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndices[i++], month, zone);
                 rearranger.append(cellFac);
             }
         }
@@ -199,29 +203,33 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
                 final RowInput in = (RowInput)inputs[0];
                 final RowOutput out = (RowOutput)outputs[0];
                 final DataTableSpec inSpec = in.getDataTableSpec();
-                final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+                int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddDateNodeDialog.OPTION_REPLACE);
-                final DataType dataType;
+                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddDateNodeDialog.OPTION_REPLACE);
+                DataType dataType;
                 if (m_addZone.getBooleanValue()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;
                 } else {
                     dataType = LocalDateTimeCellFactory.TYPE;
                 }
 
-                final AddDateCellFactory[] cellFacs = new AddDateCellFactory[includeIndeces.length];
+                Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
+                ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+
+                AddDateCellFactory[] cellFacs = new AddDateCellFactory[includeIndeces.length];
                 if (isReplace) {
                     for (int i = 0; i < includeIndeces.length; i++) {
-                        final DataColumnSpecCreator dataColumnSpecCreator =
+                        DataColumnSpecCreator dataColumnSpecCreator =
                             new DataColumnSpecCreator(includeList[i], dataType);
-                        cellFacs[i] = new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                        cellFacs[i] =
+                            new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i], month, zone);
                     }
                 } else {
                     for (int i = 0; i < includeIndeces.length; i++) {
-                        final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                        DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
                             .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                        cellFacs[i] = new AddDateCellFactory(dataColSpec, includeIndeces[i]);
+                        cellFacs[i] = new AddDateCellFactory(dataColSpec, includeIndeces[i], month, zone);
                     }
                 }
 
@@ -320,16 +328,17 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
     }
 
     private final class AddDateCellFactory extends SingleCellFactory {
-
         private final int m_colIndex;
 
-        /**
-         * @param inSpec spec of the column after computation
-         * @param colIndex index of the column to work on
-         */
-        public AddDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        private final ZoneId m_zone;
+
+        private final Month m_month;
+
+        AddDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
+            m_month = month;
+            m_zone = zone;
         }
 
         /**
@@ -342,15 +351,13 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
                 return cell;
             }
             final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
-            final LocalDate localDate = LocalDate.of(m_year.getIntValue(),
-                Month.valueOf(m_month.getStringValue().toUpperCase()), m_day.getIntValue());
+            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_month, m_day.getIntValue());
             if (m_addZone.getBooleanValue()) {
-                return ZonedDateTimeCellFactory.create(ZonedDateTime.of(
-                    LocalDateTime.of(localDate, localTimeCell.getLocalTime()), ZoneId.of(m_timeZone.getStringValue())));
+                return ZonedDateTimeCellFactory
+                    .create(ZonedDateTime.of(LocalDateTime.of(localDate, localTimeCell.getLocalTime()), m_zone));
             } else {
                 return LocalDateTimeCellFactory.create(LocalDateTime.of(localDate, localTimeCell.getLocalTime()));
             }
         }
     }
-
 }

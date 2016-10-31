@@ -85,8 +85,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddTimeNodeDialog extends NodeDialogPane {
-
+class AddTimeNodeDialog extends NodeDialogPane {
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
@@ -231,7 +230,6 @@ public class AddTimeNodeDialog extends NodeDialogPane {
          * Change listeners
          */
         replaceOrAppendModel.addChangeListener(new ChangeListener() {
-
             @Override
             public void stateChanged(final ChangeEvent e) {
                 if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
@@ -243,13 +241,11 @@ public class AddTimeNodeDialog extends NodeDialogPane {
         });
 
         zoneModelBool.addChangeListener(new ChangeListener() {
-
             @Override
             public void stateChanged(final ChangeEvent e) {
                 zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
             }
         });
-
     }
 
     /**
@@ -335,5 +331,4 @@ public class AddTimeNodeDialog extends NodeDialogPane {
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
-
 }

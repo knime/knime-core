@@ -91,8 +91,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddDateNodeDialog extends NodeDialogPane {
-
+class AddDateNodeDialog extends NodeDialogPane {
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
@@ -239,28 +238,17 @@ public class AddDateNodeDialog extends NodeDialogPane {
         /*
          * Change listeners
          */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
+        replaceOrAppendModel.addChangeListener(e -> {
+            if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
+                suffixModel.setEnabled(true);
+            } else {
+                suffixModel.setEnabled(false);
             }
         });
 
-        zoneModelBool.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
-            }
-        });
+        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
 
         final ChangeListener dateListener = new ChangeListener() {
-
             @Override
             public void stateChanged(final ChangeEvent e) {
                 try {
@@ -281,7 +269,6 @@ public class AddDateNodeDialog extends NodeDialogPane {
         yearModel.addChangeListener(dateListener);
         monthModel.addChangeListener(dateListener);
         dayModel.addChangeListener(dateListener);
-
     }
 
     /**
@@ -360,5 +347,4 @@ public class AddDateNodeDialog extends NodeDialogPane {
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
-
 }
