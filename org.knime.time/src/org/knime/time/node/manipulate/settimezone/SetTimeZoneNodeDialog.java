@@ -76,7 +76,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * The node dialog of the node which adds a date to a time cell.
+ * The node dialog of the node which adds or changes a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
@@ -124,7 +124,7 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 0;
+        gbc.weighty = 1;
 
         /*
          * add column filter
@@ -135,6 +135,7 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
          * add replace/append selection
          */
         gbc.gridy++;
+        gbc.weighty = 0;
         final JPanel panelReplace = new JPanel(new GridBagLayout());
         panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
         final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
@@ -235,7 +236,6 @@ public class SetTimeZoneNodeDialog extends NodeDialogPane {
     static SettingsModelString createTimeZoneSelectModel() {
         final SettingsModelString settingsModelString =
             new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-        settingsModelString.setEnabled(false);
         return settingsModelString;
     }
 

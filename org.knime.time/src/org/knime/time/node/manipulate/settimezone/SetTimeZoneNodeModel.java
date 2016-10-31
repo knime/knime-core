@@ -50,6 +50,8 @@ package org.knime.time.node.manipulate.settimezone;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
@@ -58,10 +60,11 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -84,7 +87,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * The node model of the node which adds a date to a time cell.
+ * The node model of the node which adds or changes a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
@@ -135,22 +138,17 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
         final int[] includeIndeces =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
-        final DataType dataType;
-        //        if (m_addZone.getBooleanValue()) {
-        dataType = ZonedDateTimeCellFactory.TYPE;
-        //        } else {
-        //            dataType = LocalDateTimeCellFactory.TYPE;
-        //        }
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(SetTimeZoneNodeDialog.OPTION_REPLACE)) {
-                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
-                final AddDateCellFactory cellFac =
-                    new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
+                final DataColumnSpecCreator dataColumnSpecCreator =
+                    new DataColumnSpecCreator(includedCol, ZonedDateTimeCellFactory.TYPE);
+                final SetTimeZoneCellFactory cellFac =
+                    new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                final DataColumnSpec dataColSpec =
-                    new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndeces[i++]);
+                final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                    .newColumn(includedCol + m_suffix.getStringValue(), ZonedDateTimeCellFactory.TYPE);
+                final SetTimeZoneCellFactory cellFac = new SetTimeZoneCellFactory(dataColSpec, includeIndeces[i++]);
                 rearranger.append(cellFac);
             }
         }
@@ -187,12 +185,21 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
                 final boolean isReplace =
                     m_isReplaceOrAppend.getStringValue().equals(SetTimeZoneNodeDialog.OPTION_REPLACE);
-                final DataType dataType;
-                //                if (m_addZone.getBooleanValue()) {
-                dataType = ZonedDateTimeCellFactory.TYPE;
-                //                } else {
-                //                    dataType = LocalDateTimeCellFactory.TYPE;
-                //                }
+                final SetTimeZoneCellFactory[] cellFacs = new SetTimeZoneCellFactory[includeIndeces.length];
+
+                if (isReplace) {
+                    for (int i = 0; i < includeIndeces.length; i++) {
+                        final DataColumnSpecCreator dataColumnSpecCreator =
+                            new DataColumnSpecCreator(includeList[i], ZonedDateTimeCellFactory.TYPE);
+                        cellFacs[i] = new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                    }
+                } else {
+                    for (int i = 0; i < includeIndeces.length; i++) {
+                        final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                            .newColumn(includeList[i] + m_suffix.getStringValue(), ZonedDateTimeCellFactory.TYPE);
+                        cellFacs[i] = new SetTimeZoneCellFactory(dataColSpec, includeIndeces[i]);
+                    }
+                }
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
@@ -200,16 +207,9 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
                     DataCell[] datacells = new DataCell[includeIndeces.length];
                     for (int i = 0; i < includeIndeces.length; i++) {
                         if (isReplace) {
-                            final DataColumnSpecCreator dataColumnSpecCreator =
-                                new DataColumnSpecCreator(includeList[i], dataType);
-                            final AddDateCellFactory cellFac =
-                                new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
+                            datacells[i] = cellFacs[i].getCell(row);
                         } else {
-                            final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                                .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                            final AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
+                            datacells[i] = cellFacs[i].getCell(row);
                         }
                     }
                     if (isReplace) {
@@ -222,6 +222,7 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
                 out.close();
             }
         };
+
     }
 
     /**
@@ -283,7 +284,7 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
         // no internals
     }
 
-    private final class AddDateCellFactory extends SingleCellFactory {
+    private final class SetTimeZoneCellFactory extends SingleCellFactory {
 
         private final int m_colIndex;
 
@@ -291,7 +292,7 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
          * @param inSpec spec of the column after computation
          * @param colIndex index of the column to work on
          */
-        public AddDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        public SetTimeZoneCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
             m_colIndex = colIndex;
         }
@@ -305,16 +306,17 @@ public class SetTimeZoneNodeModel extends org.knime.core.node.NodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            //            final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
-            //            final LocalDate localDate = LocalDate.of(m_year.getIntValue(),
-            //                Month.valueOf(m_month.getStringValue().toUpperCase()), m_day.getIntValue());
-            //            if (m_addZone.getBooleanValue()) {
-            //                return ZonedDateTimeCellFactory.create(ZonedDateTime.of(
-            //                    LocalDateTime.of(localDate, localTimeCell.getLocalTime()), ZoneId.of(m_timeZone.getStringValue())));
-            //            } else {
-            //                return LocalDateTimeCellFactory.create(LocalDateTime.of(localDate, localTimeCell.getLocalTime()));
-            //            }
-            return null;
+
+            if (cell instanceof LocalDateTimeCell) {
+                return ZonedDateTimeCellFactory.create(ZonedDateTime.of(((LocalDateTimeCell)cell).getLocalDateTime(),
+                    ZoneId.of(m_timeZone.getStringValue())));
+            }
+            if (cell instanceof ZonedDateTimeCell) {
+                return ZonedDateTimeCellFactory
+                    .create(ZonedDateTime.of(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime(),
+                        ZoneId.of(m_timeZone.getStringValue())));
+            }
+            throw new IllegalStateException("Data type of cell is not compatible.");
         }
     }
 

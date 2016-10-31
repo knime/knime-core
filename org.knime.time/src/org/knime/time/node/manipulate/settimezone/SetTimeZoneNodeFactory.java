@@ -53,7 +53,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which adds a date to a time cell.
+ * The node factory of the node which adds or changes a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */

@@ -5,8 +5,7 @@
 	<shortDescription>Sets a time zone.</shortDescription>
 	<fullDescription>
 		<intro>
-			Adds a default date to those cells which do have only a time yet.
-			Optionally a default time zone can be added too.
+			Adds a default time zone to those cells which do have only date and time yet or changes an already existing time zone.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -25,23 +24,9 @@
 				ones.
 			</option>
 		</tab>
-		<tab name="Add Date">
-			<option name="Year">
-				A year can be chosen.
-			</option>
-			<option name="Month">
-				A month can be chosen.
-			</option>
-			<option name="Day">
-				A day between 0 and 31 can be chosen.
-			</option>
-			<option name="Add time zone">
-				If checked, a time zone can be chosen.
-			</option>
-			<option name="Time Zone">
-				If
-				<i>Add time zone</i> is checked
-				, the user can choose the time zone here.
+		<tab name="Time Zone Selection">
+			<option name="Time zone">
+				A time zone can be chosen.
 			</option>
 		</tab>
 	</fullDescription>
@@ -50,7 +35,7 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table with added date.
+			Output table with added or changed time zone.
 		</outPort>
 	</ports>
 </knimeNode>
