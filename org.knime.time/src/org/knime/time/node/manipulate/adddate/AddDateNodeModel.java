@@ -210,22 +210,30 @@ public class AddDateNodeModel extends org.knime.core.node.NodeModel {
                     dataType = LocalDateTimeCellFactory.TYPE;
                 }
 
+                final AddDateCellFactory[] cellFacs = new AddDateCellFactory[includeIndeces.length];
+                if (isReplace) {
+                    for (int i = 0; i < includeIndeces.length; i++) {
+                        final DataColumnSpecCreator dataColumnSpecCreator =
+                            new DataColumnSpecCreator(includeList[i], dataType);
+                        cellFacs[i] = new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                    }
+                } else {
+                    for (int i = 0; i < includeIndeces.length; i++) {
+                        final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                            .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
+                        cellFacs[i] = new AddDateCellFactory(dataColSpec, includeIndeces[i]);
+                    }
+                }
+
                 DataRow row;
                 while ((row = in.poll()) != null) {
                     exec.checkCanceled();
                     DataCell[] datacells = new DataCell[includeIndeces.length];
                     for (int i = 0; i < includeIndeces.length; i++) {
                         if (isReplace) {
-                            final DataColumnSpecCreator dataColumnSpecCreator =
-                                new DataColumnSpecCreator(includeList[i], dataType);
-                            final AddDateCellFactory cellFac =
-                                new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
+                            datacells[i] = cellFacs[i].getCell(row);
                         } else {
-                            final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                                .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                            final AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
+                            datacells[i] = cellFacs[i].getCell(row);
                         }
                     }
                     if (isReplace) {

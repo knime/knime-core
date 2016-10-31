@@ -264,6 +264,7 @@ public class AddDateNodeDialog extends NodeDialogPane {
                     LocalDate.of(yearModel.getIntValue(), Month.valueOf(monthModel.getStringValue().toUpperCase()),
                         dayModel.getIntValue());
                     ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).setBorder(null);
+                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).updateUI();
                     m_dialogCompDay.setToolTipText(null);
                 } catch (DateTimeException exc) {
                     System.out.println(exc);
