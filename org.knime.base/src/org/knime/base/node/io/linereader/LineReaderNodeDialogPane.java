@@ -58,6 +58,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -92,17 +93,9 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
-    	
         m_filePanel = new FilesHistoryPanel(createFlowVariableModel(LineReaderConfig.CFG_URL, FlowVariable.Type.STRING),
             "line_read", LocationValidation.FileInput, "");
-
-        final JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
-        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Input location:"));
-        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        filePanel.add(m_filePanel);
-        filePanel.add(Box.createHorizontalGlue());
+        m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
 
         int col = 10;
         m_columnHeaderField = new JTextField("Column", col);
@@ -134,18 +127,21 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         });
         m_limitRowCountSpinner.setEnabled(false);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(filePanel);
-        JPanel optionsPanel = initLayout();
-        panel.add(optionsPanel);
-
-        addTab("Line Reader", panel);
+        addTab("Settings", initLayout());
     }
 
     private JPanel initLayout() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
+
+        JPanel optionsPanel = new JPanel(new GridBagLayout());
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
             .createEtchedBorder(), "Reader options:"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -155,39 +151,45 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
         gbc.gridy += 1;
         gbc.gridwidth = 1;
-        panel.add(new JLabel("Row Header Prefix "), gbc);
+        optionsPanel.add(new JLabel("Row Header Prefix "), gbc);
         gbc.gridx += 1;
-        panel.add(m_rowHeadPrefixField, gbc);
+        optionsPanel.add(m_rowHeadPrefixField, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
-        panel.add(new JLabel("Column Header "), gbc);
+        optionsPanel.add(new JLabel("Column Header "), gbc);
         gbc.gridx += 1;
-        panel.add(m_columnHeaderField, gbc);
+        optionsPanel.add(m_columnHeaderField, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        panel.add(m_skipEmptyLinesChecker, gbc);
+        optionsPanel.add(m_skipEmptyLinesChecker, gbc);
 
         gbc.gridy += 1;
         gbc.gridwidth = 1;
-        panel.add(m_limitRowCountChecker, gbc);
+        optionsPanel.add(m_limitRowCountChecker, gbc);
         gbc.gridx += 1;
-        panel.add(m_limitRowCountSpinner, gbc);
+        optionsPanel.add(m_limitRowCountSpinner, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.gridwidth = 1;
-        panel.add(m_regexChecker, gbc);
+        optionsPanel.add(m_regexChecker, gbc);
         gbc.gridx += 1;
-        panel.add(m_regexField, gbc);
+        optionsPanel.add(m_regexField, gbc);
 
+        //empty panel to eat up extra space
         gbc.gridx++;
         gbc.gridy++;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        panel.add(new JPanel(), gbc);
+        optionsPanel.add(new JPanel(), gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(optionsPanel);
 
         return panel;
     }
@@ -235,7 +237,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         LineReaderConfig config = new LineReaderConfig();
-        String fileS = m_filePanel.getSelectedFile();
+        String fileS = m_filePanel.getSelectedFile().trim();
         config.setUrlString(fileS);
         config.setColumnHeader(m_columnHeaderField.getText());
         config.setRowPrefix(m_rowHeadPrefixField.getText());

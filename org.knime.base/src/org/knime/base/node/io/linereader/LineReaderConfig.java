@@ -85,7 +85,7 @@ final class LineReaderConfig {
       * @return The URL
       * @throws InvalidSettingsException if invalid. */
     URL getURL() throws InvalidSettingsException {
-        CheckUtils.checkSourceFile(m_url == null ? null : m_url.toString());
+        CheckUtils.checkSourceFile(m_url);
         if (m_url.toLowerCase().matches("^[a-z]+:/.*")) {
             URL url;
             try {
