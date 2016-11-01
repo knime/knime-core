@@ -48,9 +48,11 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.FlowLayout;
+import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.border.TitledBorder;
@@ -184,7 +186,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             final String... validExtensions) {
         super(stringModel);
 
-        getComponentPanel().setLayout(new FlowLayout());
+        getComponentPanel().setLayout(new BoxLayout(getComponentPanel(), BoxLayout.X_AXIS));
         int selectionMode;
         LocationValidation locationValidation;
         if (directoryOnly) {
@@ -220,9 +222,11 @@ public class DialogComponentFileChooser extends DialogComponent {
 
 
         final String title = directoryOnly ? "Selected Directory:" : "Selected File:";
-        m_border = BorderFactory.createTitledBorder(title);
-        m_filesPanel.setBorder(m_border);
+        m_border = BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), title);
+        getComponentPanel().setBorder(m_border);
+        getComponentPanel().setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
         getComponentPanel().add(m_filesPanel);
+        getComponentPanel().add(Box.createHorizontalGlue());
 
         getModel().prependChangeListener(new ChangeListener() {
             @Override
@@ -338,5 +342,19 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     public void setAllowRemoteURLs(final boolean b) {
         m_filesPanel.setAllowRemoteURLs(b);
+    }
+
+    /**
+     * Sets the dialog type to SAVE {@link JFileChooser#SAVE_DIALOG}, whereby it also forces the given file extension
+     * when the user enters a path in the text field that does not end with either the argument extension or any
+     * extension specified in the constructor (ignoring case).
+     * Calling this method will overwrite the dialog type set in the constructor.
+     *
+     * @param forcedExtension optional parameter to force a file extension to be appended to the selected
+     *        file name, e.g. ".txt" (<code>null</code> and an empty string do not force any extension)
+     * @since 3.3
+     */
+    public void setDialogTypeSaveWithExtension(final String forcedExtension) {
+        m_filesPanel.setDialogTypeSaveWithExtension(forcedExtension);
     }
 }

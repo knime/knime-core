@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,11 +41,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
 package org.knime.base.node.io.portobject;
+
+import javax.swing.JFileChooser;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
@@ -54,7 +56,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  * Dialog for the ModelContent Reader Node - allows user to choose file name and
  * directory.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
@@ -63,10 +65,12 @@ public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
      * chooser entry.
      */
     public PortObjectReaderNodeDialog() {
-        addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(PortObjectReaderNodeModel.FILENAME, ""),
-                        PortObjectReaderNodeDialog.class.getName(),
-                        ".zip"));
+        SettingsModelString settingsModelString = new SettingsModelString(PortObjectReaderNodeModel.FILENAME, "");
+        DialogComponentFileChooser fileChooser =
+            new DialogComponentFileChooser(settingsModelString, PortObjectReaderNodeDialog.class.getName(),
+                JFileChooser.OPEN_DIALOG, false, createFlowVariableModel(settingsModelString), ".zip");
+        fileChooser.setBorderTitle("Input location");
+        addDialogComponent(fileChooser);
     }
 
 }

@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -119,9 +120,11 @@ public class PMMLReaderNodeModel extends NodeModel {
         // read the data dictionary and the mining schema and create a
         // PMMLPortObjectSpec
         String fileS = m_file.getStringValue();
-        if (fileS == null || fileS.isEmpty()) {
-            throw new InvalidSettingsException("Please select a PMML file!");
+        String warning = CheckUtils.checkSourceFile(fileS);
+        if (warning != null) {
+            setWarningMessage(warning);
         }
+
         URL url = getURLFromSettings(fileS);
         try {
             PMMLImport pmmlImport = new PMMLImport(url, false);

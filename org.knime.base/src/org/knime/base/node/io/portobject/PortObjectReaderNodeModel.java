@@ -64,6 +64,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -154,9 +155,11 @@ class PortObjectReaderNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         final String fileName = m_fileName.getStringValue();
-        if (fileName == null) {
-            throw new InvalidSettingsException("No file set.");
+        String warning = CheckUtils.checkSourceFile(fileName);
+        if (warning != null) {
+            setWarningMessage(warning);
         }
+
         InputStream inStream = null;
         try {
             inStream = FileUtil.openInputStream(fileName);

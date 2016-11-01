@@ -71,9 +71,10 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public PMMLWriterNodeDialog() {
-        final DialogComponentFileChooser fileChooser =
-            new DialogComponentFileChooser(createFileModel(), "pmml.writer.history", JFileChooser.SAVE_DIALOG, false,
-                createFlowVariableModel(createFileModel()), ".pmml", ".xml");
+        SettingsModelString fileModel = createFileModel();
+        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(fileModel, "pmml.writer.history",
+            JFileChooser.SAVE_DIALOG, false, createFlowVariableModel(fileModel), ".pmml", ".xml");
+        fileChooser.setDialogTypeSaveWithExtension(".pmml");
 
         DialogComponentBoolean validateComponent = new DialogComponentBoolean(
             createValidateModel(), "Validate PMML before export.");
@@ -98,6 +99,7 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
 
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         addDialogComponent(validateComponent);

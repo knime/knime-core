@@ -98,6 +98,7 @@ class AdvancedPanel extends JPanel {
         m_missValuePattern.setPreferredSize(TEXTFIELDDIM);
         m_missValuePattern.setMaximumSize(TEXTFIELDDIM);
         missPanel.add(Box.createHorizontalGlue());
+        missPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel colSepPanel = new JPanel();
         colSepPanel.setLayout(new BoxLayout(colSepPanel, BoxLayout.X_AXIS));
@@ -111,6 +112,7 @@ class AdvancedPanel extends JPanel {
         m_colSeparator.setToolTipText("Use \\t or \\n "
                 + "for a tab or newline character.");
         colSepPanel.add(Box.createHorizontalGlue());
+        colSepPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel lineSep = new JPanel();
         lineSep.setLayout(new BoxLayout(lineSep, BoxLayout.Y_AXIS));
@@ -120,21 +122,25 @@ class AdvancedPanel extends JPanel {
         JRadioButton def = new JRadioButton("System default (operating system dependant)");
         defBox.add(def);
         defBox.add(Box.createHorizontalGlue());
+        defBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, def.getMaximumSize().height));
         Box lfBox = Box.createHorizontalBox();
         lfBox.add(Box.createHorizontalStrut(10));
         JRadioButton lf = new JRadioButton("LF line endings (Linux/Unix style)");
         lfBox.add(lf);
         lfBox.add(Box.createHorizontalGlue());
+        lfBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, lf.getMaximumSize().height));
         Box crlfBox = Box.createHorizontalBox();
         crlfBox.add(Box.createHorizontalStrut(10));
         JRadioButton crlf = new JRadioButton("CR+LF line endings (Windows/DOS style)");
         crlfBox.add(crlf);
         crlfBox.add(Box.createHorizontalGlue());
+        crlfBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, crlf.getMaximumSize().height));
         Box crBox = Box.createHorizontalBox();
         crBox.add(Box.createHorizontalStrut(10));
         JRadioButton cr = new JRadioButton("CR only");
         crBox.add(cr);
         crBox.add(Box.createHorizontalGlue());
+        crBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, cr.getMaximumSize().height));
 
         m_defEnding = def.getModel();
         m_lfEnding = lf.getModel();
@@ -149,19 +155,20 @@ class AdvancedPanel extends JPanel {
         m_bGroup.setSelected(m_defEnding, true);
 
         lineSep.add(defBox);
+        lineSep.add(Box.createVerticalStrut(10));
         lineSep.add(lfBox);
+        lineSep.add(Box.createVerticalStrut(10));
         lineSep.add(crlfBox);
+        lineSep.add(Box.createVerticalStrut(10));
         lineSep.add(crBox);
+        lineSep.add(Box.createVerticalGlue());
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        add(Box.createVerticalGlue());
         add(colSepPanel);
         add(Box.createVerticalStrut(10));
         add(missPanel);
         add(Box.createVerticalStrut(10));
         add(lineSep);
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalGlue());
     }
 
     /**

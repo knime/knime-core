@@ -55,6 +55,7 @@ import java.util.regex.PatternSyntaxException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Configuration for line reader node.
@@ -84,9 +85,7 @@ final class LineReaderConfig {
       * @return The URL
       * @throws InvalidSettingsException if invalid. */
     URL getURL() throws InvalidSettingsException {
-        if (m_url == null || m_url.length() == 0) {
-            throw new InvalidSettingsException("Invalid (empty) URL");
-        }
+        CheckUtils.checkSourceFile(m_url);
         if (m_url.toLowerCase().matches("^[a-z]+:/.*")) {
             URL url;
             try {
@@ -188,9 +187,6 @@ final class LineReaderConfig {
     final void loadConfigurationInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         m_url = settings.getString(CFG_URL);
-        if (m_url == null || m_url.length() == 0) {
-            throw new InvalidSettingsException("Invalid (empty) URL");
-        }
         m_rowPrefix = settings.getString("rowPrefix");
         if (m_rowPrefix == null) {
             throw new InvalidSettingsException("Invalid (null) row prefix");

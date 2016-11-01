@@ -45,6 +45,8 @@
  */
 package org.knime.base.node.io.csvwriter;
 
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -76,6 +78,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 
@@ -87,7 +91,7 @@ import org.knime.core.util.FileUtil;
 public class CSVWriterNodeDialog extends NodeDialogPane {
 
     /** textfield to enter file name. */
-    private final CSVFilesHistoryPanel m_textBox;
+    private final FilesHistoryPanel m_filePanel;
 
     /** Checkbox for writing column header. */
     private final JCheckBox m_colHeaderChecker;
@@ -123,20 +127,15 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
      * Creates a new CSV writer dialog.
      */
     public CSVWriterNodeDialog() {
-        super();
-
-        final JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
-        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Output location:"));
-        m_textBox = new CSVFilesHistoryPanel(createFlowVariableModel(
-              FileWriterNodeSettings.CFGKEY_FILE,
-              FlowVariable.Type.STRING));
-        m_textBox.addChangeListener(new ChangeListener() {
+        m_filePanel =
+            new FilesHistoryPanel(createFlowVariableModel(FileWriterNodeSettings.CFGKEY_FILE, FlowVariable.Type.STRING),
+                CSVWriterNodeModel.FILE_HISTORY_ID, LocationValidation.FileOutput, ".csv", ".txt");
+        m_filePanel.setDialogTypeSaveWithExtension(".csv");
+        m_filePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                String selFile = m_textBox.getSelectedFile();
-                if ((selFile != null) && !selFile.isEmpty()) {
+                String selFile = m_filePanel.getSelectedFile();
+                if (!selFile.isEmpty()) {
                     try {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
@@ -151,13 +150,6 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        filePanel.add(m_textBox);
-        filePanel.add(Box.createHorizontalGlue());
-
-        final JPanel optionsPanel = new JPanel();
-        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Writer options:"));
 
         ItemListener l = new ItemListener() {
             @Override
@@ -194,7 +186,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_useGzipChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                String file = m_textBox.getSelectedFile();
+                String file = m_filePanel.getSelectedFile();
                 if (m_useGzipChecker.isSelected()) {
                     if (m_overwritePolicyAppendButton.isSelected()) {
                         m_overwritePolicyAbortButton.doClick();
@@ -202,11 +194,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                     m_overwritePolicyAppendButton.setEnabled(false);
                     if (file != null && file.length() > 0
                     		&& !file.toLowerCase().endsWith(".gz")) {
-                        m_textBox.setSelectedFile(file + ".gz");
+                        m_filePanel.setSelectedFile(file + ".gz");
                     }
                 } else {
                     if (file != null && file.toLowerCase().endsWith(".gz")) {
-                        m_textBox.setSelectedFile(file.substring(
+                        m_filePanel.setSelectedFile(file.substring(
                                 0, file.length() - ".gz".length()));
                     }
                     m_overwritePolicyAppendButton.setEnabled(true);
@@ -214,6 +206,33 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
             }
         });
 
+        addTab("Settings", initLayout());
+
+        m_advancedPanel = new AdvancedPanel();
+        addTab("Advanced", m_advancedPanel);
+
+        m_quotePanel = new QuotePanel();
+        addTab("Quotes", m_quotePanel);
+
+        m_commentPanel = new CommentPanel();
+        addTab("Comment Header", m_commentPanel);
+
+        m_decSeparatorPanel = new DecimalSeparatorPanel();
+        addTab("Decimal Separator", m_decSeparatorPanel);
+
+        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
+        addTab("Encoding", m_encodingPanel);
+
+    }
+
+    private JPanel initLayout(){
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
 
         final JPanel colHeaderPane = new JPanel();
         colHeaderPane.setLayout(new BoxLayout(colHeaderPane, BoxLayout.X_AXIS));
@@ -240,13 +259,20 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         final JPanel overwriteFilePane = new JPanel();
         overwriteFilePane.setLayout(
                 new BoxLayout(overwriteFilePane, BoxLayout.X_AXIS));
+        m_overwritePolicyOverwriteButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyOverwriteButton);
-        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(Box.createHorizontalStrut(20));
+        m_overwritePolicyAppendButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyAppendButton);
-        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(Box.createHorizontalStrut(20));
+        m_overwritePolicyAbortButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyAbortButton);
         overwriteFilePane.add(Box.createHorizontalGlue());
 
+        final JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Writer options:"));
         optionsPanel.add(colHeaderPane);
         optionsPanel.add(Box.createVerticalStrut(5));
         optionsPanel.add(colHeaderPane2);
@@ -265,25 +291,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-        panel.add(Box.createVerticalGlue());
-
-        addTab("Settings", panel);
-
-        m_advancedPanel = new AdvancedPanel();
-        addTab("Advanced", m_advancedPanel);
-
-        m_quotePanel = new QuotePanel();
-        addTab("Quotes", m_quotePanel);
-
-        m_commentPanel = new CommentPanel();
-        addTab("Comment Header", m_commentPanel);
-
-        m_decSeparatorPanel = new DecimalSeparatorPanel();
-        addTab("Decimal Separator", m_decSeparatorPanel);
-
-        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
-        addTab("Encoding", m_encodingPanel);
-
+        return panel;
     }
 
     /** Checks whether or not the "on file exists" check should be enabled. */
@@ -307,8 +315,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
             newValues = new FileWriterNodeSettings();
         }
 
-        m_textBox.updateHistory();
-        m_textBox.setSelectedFile(newValues.getFileName());
+        m_filePanel.updateHistory();
+        m_filePanel.setSelectedFile(newValues.getFileName());
         m_colHeaderChecker.setSelected(newValues.writeColumnHeader());
         m_colHeaderWriteSkipOnAppend.setSelected(newValues
                 .skipColHeaderIfFileExists());
@@ -349,7 +357,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
         FileWriterNodeSettings values = new FileWriterNodeSettings();
 
-        values.setFileName(m_textBox.getSelectedFile());
+        values.setFileName(m_filePanel.getSelectedFile().trim());
 
         values.setWriteColumnHeader(m_colHeaderChecker.isSelected());
         values.setSkipColHeaderIfFileExists(m_colHeaderWriteSkipOnAppend
@@ -379,5 +387,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         values.setCharacterEncoding(s.getCharsetName());
 
         values.saveSettingsTo(settings);
+
+        m_filePanel.addToHistory();
     }
 }

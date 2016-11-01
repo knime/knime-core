@@ -47,31 +47,32 @@
  */
 package org.knime.base.node.io.linereader;
 
-import java.awt.FlowLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.util.StringHistoryPanel;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -82,7 +83,6 @@ import org.knime.core.node.workflow.FlowVariable;
 final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     private final FilesHistoryPanel m_filePanel;
-    private final FlowVariableModelButton m_filePanelVarButton;
     private final JTextField m_columnHeaderField;
     private final JTextField m_rowHeadPrefixField;
     private final JCheckBox m_limitRowCountChecker;
@@ -93,17 +93,10 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
-        m_filePanel = new FilesHistoryPanel("line_read");
-        FlowVariableModel varModel = createFlowVariableModel(
-                LineReaderConfig.CFG_URL, FlowVariable.Type.STRING);
-        m_filePanelVarButton = new FlowVariableModelButton(varModel);
-        varModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                FlowVariableModel wvm = (FlowVariableModel)(e.getSource());
-                m_filePanel.setEnabled(!wvm.isVariableReplacementEnabled());
-            }
-        });
+        m_filePanel = new FilesHistoryPanel(createFlowVariableModel(LineReaderConfig.CFG_URL, FlowVariable.Type.STRING),
+            "line_read", LocationValidation.FileInput, "");
+        m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
+
         int col = 10;
         m_columnHeaderField = new JTextField("Column", col);
         m_rowHeadPrefixField = new JTextField("Row", col);
@@ -133,53 +126,71 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
         });
         m_limitRowCountSpinner.setEnabled(false);
-        JPanel panel = initLayout();
-        addTab("Line Reader", panel);
+
+        addTab("Settings", initLayout());
     }
 
     private JPanel initLayout() {
-        JPanel panel = new JPanel(new GridBagLayout());
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
+
+        JPanel optionsPanel = new JPanel(new GridBagLayout());
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Reader options:"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridwidth = 2;
-        JPanel filePanel = new JPanel(new FlowLayout());
-        filePanel.add(m_filePanel);
-        filePanel.add(m_filePanelVarButton);
-        panel.add(filePanel, gbc);
-
         gbc.gridy += 1;
         gbc.gridwidth = 1;
-        panel.add(new JLabel("Row Header Prefix "), gbc);
+        optionsPanel.add(new JLabel("Row Header Prefix "), gbc);
         gbc.gridx += 1;
-        panel.add(m_rowHeadPrefixField, gbc);
+        optionsPanel.add(m_rowHeadPrefixField, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
-        panel.add(new JLabel("Column Header "), gbc);
+        optionsPanel.add(new JLabel("Column Header "), gbc);
         gbc.gridx += 1;
-        panel.add(m_columnHeaderField, gbc);
+        optionsPanel.add(m_columnHeaderField, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        panel.add(m_skipEmptyLinesChecker, gbc);
+        optionsPanel.add(m_skipEmptyLinesChecker, gbc);
 
         gbc.gridy += 1;
         gbc.gridwidth = 1;
-        panel.add(m_limitRowCountChecker, gbc);
+        optionsPanel.add(m_limitRowCountChecker, gbc);
         gbc.gridx += 1;
-        panel.add(m_limitRowCountSpinner, gbc);
+        optionsPanel.add(m_limitRowCountSpinner, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.gridwidth = 1;
-        panel.add(m_regexChecker, gbc);
+        optionsPanel.add(m_regexChecker, gbc);
         gbc.gridx += 1;
-        panel.add(m_regexField, gbc);
+        optionsPanel.add(m_regexField, gbc);
+
+        //empty panel to eat up extra space
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(optionsPanel);
+
         return panel;
     }
 
@@ -226,10 +237,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         LineReaderConfig config = new LineReaderConfig();
-        String fileS = m_filePanel.getSelectedFile();
-        if (fileS == null) {
-            throw new InvalidSettingsException("No input selected");
-        }
+        String fileS = m_filePanel.getSelectedFile().trim();
         config.setUrlString(fileS);
         config.setColumnHeader(m_columnHeaderField.getText());
         config.setRowPrefix(m_rowHeadPrefixField.getText());

@@ -51,6 +51,40 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/io/arffreader/ARFFReaderNodeDialog.java" type="org.knime.base.node.io.arffreader.ARFFReaderNodeDialog">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffreader.ARFFReaderNodeDialog"/>
+                <message_argument value="itemStateChanged(ItemEvent)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffreader.ARFFReaderNodeDialog"/>
+                <message_argument value="popupFileChooser()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffreader.ARFFReaderNodeDialog"/>
+                <message_argument value="updateFileError()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/io/arffreader/ARFFReaderNodeModel.java" type="org.knime.base.node.io.arffreader.ARFFReaderNodeModel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffreader.ARFFReaderNodeModel"/>
+                <message_argument value="addToFileHistory(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffreader.ARFFReaderNodeModel"/>
+                <message_argument value="getFileHistory(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/io/filereader/CharsetNamePanel.java" type="org.knime.base.node.io.filereader.CharsetNamePanel">
         <filter id="338792546">
             <message_arguments>

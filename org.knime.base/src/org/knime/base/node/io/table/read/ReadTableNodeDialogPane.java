@@ -67,9 +67,11 @@ public class ReadTableNodeDialogPane extends DefaultNodeSettingsPane {
      */
     public ReadTableNodeDialogPane() {
         final SettingsModelString stringModel = new SettingsModelString(ReadTableNodeModel.CFG_FILENAME, "");
-        addDialogComponent(new DialogComponentFileChooser(stringModel, ReadTableNodeDialogPane.class.getName(),
-                JFileChooser.OPEN_DIALOG, false, createFlowVariableModel(stringModel),
-                ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
+        DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(stringModel,
+            ReadTableNodeDialogPane.class.getName(), JFileChooser.OPEN_DIALOG, false,
+            createFlowVariableModel(stringModel), ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
+        fileChooser.setBorderTitle("Input location");
+        addDialogComponent(fileChooser);
         setHorizontalPlacement(true);
         final SettingsModelBoolean limitCheckerModel = ReadTableNodeModel.createLimitCheckerModel();
         addDialogComponent(new DialogComponentBoolean(limitCheckerModel, "Limit number of rows"));

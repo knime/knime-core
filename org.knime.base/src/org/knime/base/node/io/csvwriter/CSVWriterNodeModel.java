@@ -147,11 +147,6 @@ public class CSVWriterNodeModel extends NodeModel {
 
         // check consistency of settings
 
-        String fileName = fws.getFileName();
-        if (fileName == null || fileName.length() == 0) {
-            throw new InvalidSettingsException("Missing output file name.");
-        }
-
         // the separator must not be contained in the missing value pattern
         // nor in the quote begin pattern.
         if (notEmpty(fws.getColSeparator())) {
@@ -217,11 +212,6 @@ public class CSVWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_settings = new FileWriterNodeSettings(settings);
-
-        if (notEmpty(m_settings.getFileName())) {
-            StringHistory history = StringHistory.getInstance(FILE_HISTORY_ID);
-            history.add(m_settings.getFileName());
-        }
     }
 
     /**

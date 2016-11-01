@@ -50,12 +50,14 @@ package org.knime.base.node.io.filereader;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
@@ -110,16 +112,8 @@ public class CharsetNamePanel extends JPanel {
     public CharsetNamePanel(final FileReaderSettings settings) {
         this.setSize(520, 375);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        add(Box.createVerticalStrut(20));
-        add(Box.createVerticalGlue());
-        add(getTextBox());
-        add(Box.createVerticalStrut(10));
         add(getSelectionPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalStrut(20));
-
         loadSettings(settings);
-
     }
 
     private Container getSelectionPanel() {
@@ -138,10 +132,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_default);
-        Box defaultBox = Box.createHorizontalBox();
-        defaultBox.add(Box.createHorizontalStrut(20));
-        defaultBox.add(m_default);
-        defaultBox.add(Box.createHorizontalGlue());
 
         m_iso8859 = new JRadioButton("ISO-8859-1");
         m_iso8859.setToolTipText("ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1");
@@ -152,10 +142,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_iso8859);
-        Box iso8859Box = Box.createHorizontalBox();
-        iso8859Box.add(Box.createHorizontalStrut(20));
-        iso8859Box.add(m_iso8859);
-        iso8859Box.add(Box.createHorizontalGlue());
 
         m_utf8 = new JRadioButton("UTF-8");
         m_utf8.setToolTipText("Eight-bit UCS Transformation Format");
@@ -166,10 +152,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf8);
-        Box utf8Box = Box.createHorizontalBox();
-        utf8Box.add(Box.createHorizontalStrut(20));
-        utf8Box.add(m_utf8);
-        utf8Box.add(Box.createHorizontalGlue());
 
         m_utf16le = new JRadioButton("UTF-16LE");
         m_utf16le.setToolTipText("Sixteen-bit UCS Transformation Format, little-endian byte order");
@@ -180,10 +162,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16le);
-        Box utf16leBox = Box.createHorizontalBox();
-        utf16leBox.add(Box.createHorizontalStrut(20));
-        utf16leBox.add(m_utf16le);
-        utf16leBox.add(Box.createHorizontalGlue());
 
         m_utf16be = new JRadioButton("UTF-16BE");
         m_utf16be.setToolTipText("Sixteen-bit UCS Transformation Format, big-endian byte order");
@@ -194,10 +172,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16be);
-        Box utf16beBox = Box.createHorizontalBox();
-        utf16beBox.add(Box.createHorizontalStrut(20));
-        utf16beBox.add(m_utf16be);
-        utf16beBox.add(Box.createHorizontalGlue());
 
         m_utf16 = new JRadioButton("UTF-16");
         m_utf16.setToolTipText("Sixteen-bit UCS Transformation Format, byte order identified by an optional "
@@ -209,10 +183,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16);
-        Box utf16Box = Box.createHorizontalBox();
-        utf16Box.add(Box.createHorizontalStrut(20));
-        utf16Box.add(m_utf16);
-        utf16Box.add(Box.createHorizontalGlue());
 
         m_custom = new JRadioButton(CUSTOM_LABEL);
         m_custom.setToolTipText("Enter a valid charset name supported by the Java Virtual Machine");
@@ -243,25 +213,36 @@ public class CharsetNamePanel extends JPanel {
                 checkCustomCharsetName();
             }
         });
-        Box customBox = Box.createHorizontalBox();
-        customBox.add(Box.createHorizontalStrut(20));
-        customBox.add(m_custom);
-        customBox.add(Box.createHorizontalStrut(5));
-        customBox.add(m_customName);
-        customBox.add(Box.createHorizontalGlue());
 
-        JPanel result = new JPanel();
-        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
+        JPanel result = new JPanel(new GridBagLayout());
         result.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
             "Select a character set for decoding:"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        result.add(m_default, gbc);
+        gbc.gridy++;
+        result.add(m_iso8859, gbc);
+        gbc.gridy++;
+        result.add(m_utf8, gbc);
+        gbc.gridy++;
+        result.add(m_utf16le, gbc);
+        gbc.gridy++;
+        result.add(m_utf16be, gbc);
+        gbc.gridy++;
+        result.add(m_utf16, gbc);
+        gbc.gridy++;
+        result.add(m_custom, gbc);
+        gbc.gridx++;
+        result.add(m_customName, gbc);
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx=1;
+        gbc.weighty=1;
+        result.add(new JPanel(), gbc);
 
-        result.add(defaultBox);
-        result.add(iso8859Box);
-        result.add(utf8Box);
-        result.add(utf16leBox);
-        result.add(utf16beBox);
-        result.add(utf16Box);
-        result.add(customBox);
         return result;
     }
 
@@ -296,11 +277,6 @@ public class CharsetNamePanel extends JPanel {
             m_customName.setForeground(Color.RED);
             return false;
         }
-    }
-
-    private Container getTextBox() {
-        Box result = Box.createHorizontalBox();
-        return result;
     }
 
     /**

@@ -44,6 +44,8 @@
  */
 package org.knime.base.node.io.pmml.read;
 
+import javax.swing.JFileChooser;
+
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -60,8 +62,10 @@ public class PMMLReaderNodeDialog extends DefaultNodeSettingsPane {
      */
     public PMMLReaderNodeDialog() {
         m_fileNameModel = createFileChooserModel();
-        addDialogComponent(new DialogComponentFileChooser(
-                m_fileNameModel, "pmml.reader", ".pmml", ".xml"));
+        DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(m_fileNameModel, "pmml.reader",
+            JFileChooser.OPEN_DIALOG, false, createFlowVariableModel(m_fileNameModel), ".pmml", ".xml");
+        fileChooser.setBorderTitle("Input location");
+        addDialogComponent(fileChooser);
     }
 
     /**
