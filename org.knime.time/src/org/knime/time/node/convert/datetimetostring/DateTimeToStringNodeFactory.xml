@@ -5,9 +5,8 @@
 	<shortDescription>Converts date&amp;time cells into cells holding strings.</shortDescription>
 	<fullDescription>
 		<intro>
-			Converts the time values in the date&amp;time columns into string
-			using the
-			selected or entered conversion pattern as defined by
+			Converts the time values in date&amp;time columns into strings
+			using a user-provided format pattern as defined by
 			<a
 				href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>
 			.
@@ -23,14 +22,13 @@
 				provided in the text field to the right.
 			</option>
 			<option name="Replace selected columns">
-				The selected columns will be replaced by the new ones.
+				The selected columns will be replaced by the converted columns.
 			</option>
 		</tab>
 		<tab name="Format Selection">
 			<option name="Date format">
-				A format string as required by the
-				<tt>java.time.format.DateTimeFormatter </tt>
-				.
+                A format string (defined by <a
+                    href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>).
 				<br />
 				<b>Examples:</b>
 				<ul>
@@ -41,7 +39,7 @@
 					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSVV'['VV']'" produces dates such as "2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>
-				<b>Valid pattern elements are:</b>
+				<b>Supported placeholders in the pattern are:</b>
 				<ul>
 					<li>G: era</li>
 					<li>u: year</li>

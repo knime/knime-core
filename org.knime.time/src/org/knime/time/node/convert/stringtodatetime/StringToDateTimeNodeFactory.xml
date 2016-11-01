@@ -3,21 +3,13 @@
 <knimeNode icon="string2date.png" type="Manipulator">
 	<name>String to Date&amp;time</name>
 	<shortDescription>
-		Parses date and/or time strings into date&amp;time
-		cells.
+		Parses date and/or time strings into date&amp;time cells.
 	</shortDescription>
 	<fullDescription>
 		<intro>
-			Parses the strings in the selected String column and converts them
-			into date&amp;time cells by using the entered format pattern.
-			<br />
-			Note, the date parser uses localization settings so in order to
-			parse
-			foreign language date formats you will need to either convert
-			these
-			formats to the localized representation manually, or change
-			the
-			localization of your system to match that of your data source.
+			Parses the strings in the selected columns and converts them into date&amp;time cells using the provided
+			format pattern.	<br />
+			Since dates may contain localized terms such as month or weekday names, you can select a locale.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -26,13 +18,11 @@
 		</tab>
 		<tab name="Replace/Append Selection">
 			<option name="Append selected columns">
-				The selected columns will be appended to the
-				input table. The suffix of
-				the appended columns can be chosen behind.
+				The selected columns will be appended to the input table. The suffix of	the appended columns can be
+				provided in the text field to the right.
 			</option>
 			<option name="Replace selected columns">
-				The selected columns will be replaced by the new
-				ones.
+				The selected columns will be replaced by the converted columns.
 			</option>
 		</tab>
 		<tab name="Type and Format Selection">
@@ -40,10 +30,8 @@
 				The type of the new data cells can be selected.
 			</option>
 			<option name="Date format">
-				A format string as required by the
-				<a
-					href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>
-				.
+				A format string (defined by <a
+                    href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>).
 				<br />
 				<b>Examples:</b>
 				<ul>
@@ -57,7 +45,7 @@
 						"2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>
-				<b>Valid pattern elements are:</b>
+				<b>Supported placeholders in the pattern are:</b>
 				<ul>
 					<li>G: era</li>
 					<li>u: year</li>
@@ -100,13 +88,14 @@
 				</ul>
 			</option>
 			<option name="Locale">
-			A <i>locale</i> can be chosen, which determines the language and geographic region.
+			A <i>locale</i> can be chosen, which determines the language and geographic region for terms such as months
+			or weekdays.
 			</option>
 		</tab>
 		<tab name="Abort Execution">
 			<option name="Fail on error">
-				If checked, the node will abort the execution and fail on
-				errors. If unchecked, missing values will be generated instead.
+				If checked, the node will abort the execution and fail on errors. If unchecked, missing values will be
+				generated instead.
 			</option>
 		</tab>
 	</fullDescription>
@@ -115,8 +104,7 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table containing the parsed
-			columns.
+			Output table containing the parsed columns.
 		</outPort>
 	</ports>
 </knimeNode>
