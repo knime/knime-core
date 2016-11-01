@@ -58,6 +58,7 @@ import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
@@ -109,6 +110,8 @@ public class KNIMEApplication implements IApplication {
                 appContext.applicationRunning();
                 return EXIT_OK;
             }
+
+            ViewUtils.setLookAndFeel();
 
             // initialize KNIMEConstants as early as possible in order to avoid deadlocks during startup
             KNIMEConstants.BUILD.toString();

@@ -17,6 +17,17 @@
 				Only the included columns will be converted.
 			</option>
 		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of
+				the appended columns can be chosen behind.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				ones.
+			</option>
+		</tab>
 		<tab name="New Type Selection">
 			<option name="Automatic type detection">
 				If checked, the type of the new column will be
@@ -41,7 +52,7 @@
 			<option name="Add time zone">
 				If automatic type detection is enabled, you can
 				choose whether a time zone should be added or not. If checked, a
-				time zone can be chosen below.
+				time zone can be chosen.
 			</option>
 			<option name="Time Zone">
 				If

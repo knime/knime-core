@@ -76,15 +76,16 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Local Date (yyyy-MM-dd HH:mm:ss)")
+    @DataCellFactoryMethod(name = "Local Date (yyyy-MM-dd'T'HH:mm:ss)")
     @Override
     public DataCell createCell(final String s) {
         return create(s);
     }
 
     /**
-     * Creates a new LocalDateTimeCell from a string such as "2007-12-03T10:15:30".
-     * For details see {@link LocalDateTime#parse(CharSequence)}.
+     * Creates a new LocalDateTimeCell from a string such as "2007-12-03T10:15:30". For details see
+     * {@link LocalDateTime#parse(CharSequence)}.
+     * 
      * @param s the string to parse into {@link LocalDateTimeCell}, not null.
      * @return the cell containing the parsed LocalDateTime.
      * @throws IllegalArgumentException when the string is null.
@@ -95,7 +96,9 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
     }
 
     /**
-     * Creates a new LocalDateTimeCell from the arguments, see {@link LocalDateTime#parse(CharSequence, DateTimeFormatter)}.
+     * Creates a new LocalDateTimeCell from the arguments, see
+     * {@link LocalDateTime#parse(CharSequence, DateTimeFormatter)}.
+     * 
      * @param s Non-null string to parse.
      * @param formatter Non-null formatter to use.
      * @return the cell containing the parsed LocalDateTime.
@@ -104,14 +107,15 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
      * @see LocalDateTime#parse(CharSequence, DateTimeFormatter)
      */
     public static DataCell create(final String s, final DateTimeFormatter formatter) {
-        LocalDateTime localDateTime = LocalDateTime.parse(
-            CheckUtils.checkArgumentNotNull(s, "String argument must not be null"),
-            CheckUtils.checkArgumentNotNull(formatter, "Formatter argument must not be null"));
+        LocalDateTime localDateTime =
+            LocalDateTime.parse(CheckUtils.checkArgumentNotNull(s, "String argument must not be null"),
+                CheckUtils.checkArgumentNotNull(formatter, "Formatter argument must not be null"));
         return create(localDateTime);
     }
 
     /**
      * Creates a new LocalDateTimeCell from the argument.
+     * 
      * @param localDateTime Non-null argument to wrap.
      * @return the cell containing the parsed LocalDateTime.
      * @throws IllegalArgumentException when the argument is null.

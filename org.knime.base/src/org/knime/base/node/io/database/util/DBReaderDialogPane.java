@@ -293,10 +293,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
                 }
             }
         }
-        if ((m_upstreamConnectionSettings == null) && !m_showConnectionPanel) {
-            throw new NotConfigurableException("Cannot open table selection without a valid database connection");
-        }
-        if (m_upstreamConnectionSettings != null) {
+        if (m_upstreamConnectionSettings != null || !m_showConnectionPanel) {
             m_connectionPane.setVisible(false);
         } else {
             m_connectionPane.setVisible(true);

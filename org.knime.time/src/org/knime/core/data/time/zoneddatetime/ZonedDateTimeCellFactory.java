@@ -76,15 +76,16 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Zoned Date (yyyy-MM-dd HH:mm:ss x z)")
+    @DataCellFactoryMethod(name = "Zoned Date (yyyy-MM-dd'T'HH:mm:ssXXX'['zzzz']')")
     @Override
     public DataCell createCell(final String s) {
         return create(s);
     }
 
     /**
-     * Creates a new ZonedDateTimeCell from a string such as "2007-12-03T10:15:30+01:00[Europe/Paris]".
-     * For details see {@link ZonedDateTime#parse(CharSequence)}.
+     * Creates a new ZonedDateTimeCell from a string such as "2007-12-03T10:15:30+01:00[Europe/Paris]". For details see
+     * {@link ZonedDateTime#parse(CharSequence)}.
+     * 
      * @param s the string to parse into {@link ZonedDateTimeCell}, not null.
      * @return the cell containing the parsed ZonedDateTime.
      * @throws IllegalArgumentException when the string is null.
@@ -95,7 +96,9 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
     }
 
     /**
-     * Creates a new ZonedDateTimeCell from the arguments, see {@link ZonedDateTime#parse(CharSequence, DateTimeFormatter)}.
+     * Creates a new ZonedDateTimeCell from the arguments, see
+     * {@link ZonedDateTime#parse(CharSequence, DateTimeFormatter)}.
+     * 
      * @param s Non-null string to parse.
      * @param formatter Non-null formatter to use.
      * @return the cell containing the parsed ZonedDateTime.
@@ -104,14 +107,15 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
      * @see ZonedDateTime#parse(CharSequence, DateTimeFormatter)
      */
     public static DataCell create(final String s, final DateTimeFormatter formatter) {
-        ZonedDateTime zonedDateTime = ZonedDateTime.parse(
-            CheckUtils.checkArgumentNotNull(s, "String argument must not be null"),
-            CheckUtils.checkArgumentNotNull(formatter, "Formatter argument must not be null"));
+        ZonedDateTime zonedDateTime =
+            ZonedDateTime.parse(CheckUtils.checkArgumentNotNull(s, "String argument must not be null"),
+                CheckUtils.checkArgumentNotNull(formatter, "Formatter argument must not be null"));
         return create(zonedDateTime);
     }
 
     /**
      * Creates a new ZonedDateTimeCell from the argument.
+     * 
      * @param zonedDateTime Non-null argument to wrap.
      * @return the cell containing the parsed ZonedDateTime.
      * @throws IllegalArgumentException when the argument is null.

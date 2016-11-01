@@ -128,19 +128,6 @@ public interface VariableProvider extends FlowVariableProvider {
 
         /**
          * {@inheritDoc}
-         *
-         * @deprecated Use {@link #setProgress(long, long, RowKey, ExecutionMonitor)}
-         */
-        @Override
-        @Deprecated
-        public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
-            final ExecutionMonitor exec) {
-            m_index = curRowNr;
-            super.setProgress(curRowNr, rowCount, lastKey, exec);
-        }
-
-        /**
-         * {@inheritDoc}
          */
         @Override
         public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey,

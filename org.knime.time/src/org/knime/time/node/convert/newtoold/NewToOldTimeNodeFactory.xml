@@ -18,6 +18,17 @@
 				Only the included columns will be converted.
 			</option>
 		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of
+				the appended columns can be chosen behind.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				ones.
+			</option>
+		</tab>
 		<tab name="Time Zone Handling">
 			<option name="Add the offset of the time zone to the time">
 				<p>If the first option is selected, the offset of the time zone will be

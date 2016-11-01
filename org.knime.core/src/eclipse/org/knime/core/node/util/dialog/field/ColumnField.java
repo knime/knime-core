@@ -44,44 +44,80 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2016 (simon): created
+ *   21 Oct 2016 (albrecht): created
  */
-package org.knime.time.node.convert.oldtonew;
+package org.knime.core.node.util.dialog.field;
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 /**
- * An enumeration that contains all different Date&Time Types.
+ * Settings for dialog column list field.
  *
- * @author Simon Schmid, KNIME.com, Konstanz, Germany
+ * <p>This class might change and is not meant as public API.
+ *
+ * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
+ * @since 3.3
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-enum DateTimeTypes {
-        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
-        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
-        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
+public abstract class ColumnField extends AbstractField {
 
-    private final String m_name;
+    private static final String KNIME_TYPE = "Type";
 
-    private final DataType m_dataType;
+    private DataType m_knimeType;
 
-    private DateTimeTypes(final String name, final DataType dataType) {
-        m_name = name;
-        m_dataType = dataType;
+    /**
+     * @return the knimeType
+     */
+    public DataType getKnimeType() {
+        return m_knimeType;
     }
 
     /**
-     * {@inheritDoc}
+     * @param knimeType the knimeType to set
      */
-    @Override
-    public String toString() {
-        return m_name;
+    public void setKnimeType(final DataType knimeType) {
+        m_knimeType = knimeType;
     }
 
-    public DataType getDataType() {
-        return m_dataType;
+    /** Saves current parameters to settings object.
+     * @param config To save to.
+     */
+    @Override
+    public void saveSettings(final Config config) {
+        super.saveSettings(config);
+        config.addDataType(KNIME_TYPE, m_knimeType);
     }
+
+    /** Loads parameters in NodeModel.
+     * @param config To load from.
+     * @throws InvalidSettingsException If incomplete or wrong.
+     */
+    @Override
+    public void loadSettings(final Config config)
+            throws InvalidSettingsException {
+        super.loadSettings(config);
+        m_knimeType = config.getDataType(KNIME_TYPE);
+    }
+
+
+    /** Loads parameters in Dialog.
+     * @param config To load from.
+     */
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        m_knimeType = config.getDataType(KNIME_TYPE, null);
+    }
+
+    /**
+     * A marker class for a field in the java snippet that represents an input column.
+     */
+    public static class InColumnField extends ColumnField {
+        // no additional fields
+    }
+
 }
