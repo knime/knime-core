@@ -13,7 +13,7 @@
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
-				Only the included columns will be parsed.
+				Only the included columns will be formatted.
 			</option>
 		</tab>
 		<tab name="Replace/Append Selection">

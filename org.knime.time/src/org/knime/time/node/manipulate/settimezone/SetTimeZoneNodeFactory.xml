@@ -5,12 +5,12 @@
 	<shortDescription>Sets a time zone.</shortDescription>
 	<fullDescription>
 		<intro>
-			Adds a default time zone to  cells which do not contain a time zone yet or changes an already existing time
+			Adds a default time zone to cells which do not contain a time zone yet or changes an already existing time
 			zone.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
-				Only to the included columns a date will be added.
+				Only to the included columns the time zone will be added/changed.
 			</option>
 		</tab>
 		<tab name="Replace/Append Selection">
