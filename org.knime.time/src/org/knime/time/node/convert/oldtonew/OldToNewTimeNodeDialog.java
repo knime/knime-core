@@ -122,7 +122,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
             new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)");
 
         final SettingsModelBoolean zoneModelBool = OldToNewTimeNodeModel.createZoneModelBool();
-        m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
+        m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone, if possible");
 
         final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel();
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();

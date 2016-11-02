@@ -216,23 +216,27 @@ final class OldToNewTimeNodeModel extends NodeModel {
             if (row != null) {
                 DataColumnSpecCreator dataColumnSpecCreator = null;
                 for (int i = 0; i < includes.length; i++) {
-                    if (!m_addZone.getBooleanValue()) {
-                        final DataCell cell = row.getCell(inSpec.findColumnIndex(includes[i]));
-                        if (cell.isMissing()) {
-                            m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
+                    final DataCell cell = row.getCell(inSpec.findColumnIndex(includes[i]));
+                    if (cell.isMissing()) {
+                        m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
+                        dataColumnSpecCreator =
+                            new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
+                    } else {
+                        final DateAndTimeCell timeCell = (DateAndTimeCell)cell;
+                        if (!timeCell.hasDate()) {
+                            m_newTypes[i] = DateTimeTypes.LOCAL_TIME;
                             dataColumnSpecCreator =
-                                new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
+                                new DataColumnSpecCreator(includes[i], DataType.getType(LocalTimeCell.class));
                         } else {
-                            final DateAndTimeCell timeCell = (DateAndTimeCell)cell;
-                            if (!timeCell.hasDate()) {
-                                m_newTypes[i] = DateTimeTypes.LOCAL_TIME;
+                            if (!timeCell.hasTime()) {
+                                m_newTypes[i] = DateTimeTypes.LOCAL_DATE;
                                 dataColumnSpecCreator =
-                                    new DataColumnSpecCreator(includes[i], DataType.getType(LocalTimeCell.class));
+                                    new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateCell.class));
                             } else {
-                                if (!timeCell.hasTime()) {
-                                    m_newTypes[i] = DateTimeTypes.LOCAL_DATE;
-                                    dataColumnSpecCreator =
-                                        new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateCell.class));
+                                if (m_addZone.getBooleanValue()) {
+                                    m_newTypes[i] = DateTimeTypes.ZONED_DATE_TIME;
+                                    dataColumnSpecCreator = new DataColumnSpecCreator(includes[i],
+                                        DataType.getType(ZonedDateTimeCell.class));
                                 } else {
                                     m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
                                     dataColumnSpecCreator = new DataColumnSpecCreator(includes[i],
@@ -240,26 +244,14 @@ final class OldToNewTimeNodeModel extends NodeModel {
                                 }
                             }
                         }
-                    } else {
-                        m_newTypes[i] = DateTimeTypes.ZONED_DATE_TIME;
-                        dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includes[i], DataType.getType(ZonedDateTimeCell.class));
                     }
+
                     newSpec[i] = dataColumnSpecCreator.createSpec();
                 }
                 return newSpec;
                 // row is not null, if the method is called by the execute method
             } else {
-                if (m_addZone.getBooleanValue()) {
-                    for (int i = 0; i < includes.length; i++) {
-                        DataColumnSpecCreator dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includes[i], DataType.getType(ZonedDateTimeCell.class));
-                        newSpec[i] = dataColumnSpecCreator.createSpec();
-                    }
-                    return newSpec;
-                } else {
-                    return null;
-                }
+                return null;
             }
             /*
              * if the type of the new cells is determined by the user itself
