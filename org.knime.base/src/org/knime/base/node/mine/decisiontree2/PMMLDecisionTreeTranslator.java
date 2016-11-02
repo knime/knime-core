@@ -240,7 +240,12 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             final DerivedFieldMapper mapper) {
         pmmlNode.setId(String.valueOf(node.getOwnIndex()));
         pmmlNode.setScore(node.getMajorityClass().toString());
-        pmmlNode.setRecordCount(node.getEntireClassCount());
+        // don't add recordCount if it is zero
+        // this is e.g. the case if a simple regression tree is
+        // read in and then exported again
+        if (node.getEntireClassCount() > 0) {
+            pmmlNode.setRecordCount(node.getEntireClassCount());
+        }
 
         if (node instanceof DecisionTreeNodeSplitPMML) {
             int defaultChild =
