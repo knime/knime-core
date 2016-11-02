@@ -316,10 +316,15 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
             }
             m_typeCombobox.setBorder(null);
             m_dialogCompFormatSelect.setToolTipText(null);
+            m_typeCombobox.setToolTipText(null);
+            m_typeFormatLabel.setToolTipText(null);
             m_typeFormatLabel.setText("");
         } catch (IllegalArgumentException | DateTimeException exception) {
             m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
-            m_typeFormatLabel.setText("Selected data type is not compatible with date format!");
+            m_typeCombobox.setToolTipText(exception.getMessage());
+            m_typeFormatLabel.setToolTipText(exception.getMessage());
+            m_typeFormatLabel
+                .setText("Selected data type is not compatible with date format! Hover over for more informations.");
             m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
         }
     }

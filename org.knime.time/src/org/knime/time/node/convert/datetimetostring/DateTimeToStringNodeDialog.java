@@ -52,12 +52,12 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -257,37 +257,33 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                         if (type.equals(LocalDateCellFactory.TYPE)) {
                             final LocalDate now1 = LocalDate.now();
                             final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
-                            LocalDate.parse(now1.format(formatter1), formatter1);
+                            now1.format(formatter1);
                         } else if (type.equals(LocalTimeCellFactory.TYPE)) {
                             final LocalTime now2 = LocalTime.now();
                             final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
-                            LocalTime.parse(now2.format(formatter2), formatter2);
+                            now2.format(formatter2);
                         } else if (type.equals(LocalDateTimeCellFactory.TYPE)) {
                             final LocalDateTime now3 = LocalDateTime.now();
                             final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
-                            String format2 = now3.format(formatter3);
-                            LocalDateTime.parse(format2, formatter3);
+                            now3.format(formatter3);
                         } else if (type.equals(ZonedDateTimeCellFactory.TYPE)) {
                             final ZonedDateTime now4 = ZonedDateTime.now();
                             final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);
-                            ZonedDateTime.parse(now4.format(formatter4), formatter4);
+                            now4.format(formatter4);
                         } else {
                             throw new IllegalStateException("Unhandled date&time type: " + type.getName());
                         }
                         i++;
                     }
                     m_dialogCompFormatSelect.setToolTipText(null);
+                    typeFormatLabel.setToolTipText(null);
                     ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1)).setBorder(null);
                     typeFormatLabel.setText("");
-                } catch (IllegalArgumentException ex) {
+                } catch (DateTimeException | IllegalArgumentException ex) {
                     m_dialogCompFormatSelect.setToolTipText(ex.getMessage());
-                    typeFormatLabel.setText("Date format is not valid: " + ex.getMessage());
-                    ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
-                        .setBorder(BorderFactory.createLineBorder(Color.RED));
-                } catch (UnsupportedTemporalTypeException ex) {
-                    m_dialogCompFormatSelect.setToolTipText(ex.getMessage());
+                    typeFormatLabel.setToolTipText(ex.getMessage());
                     typeFormatLabel.setText("Data type of column '" + includes[i]
-                        + "' is not compatible with date format: " + ex.getMessage());
+                        + "' is not compatible with date format! Hover over for more informations.");
                     ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
                         .setBorder(BorderFactory.createLineBorder(Color.RED));
                 }
