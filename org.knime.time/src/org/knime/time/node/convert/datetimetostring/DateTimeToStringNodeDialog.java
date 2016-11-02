@@ -361,7 +361,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(Date&Time)");
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(String)");
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }

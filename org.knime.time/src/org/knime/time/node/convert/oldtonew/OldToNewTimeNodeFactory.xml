@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="date_time.png" type="Manipulator">
-	<name>Legacy date&amp;time to date&amp;time</name>
+	<name>Legacy Date&amp;Time to Date&amp;Time</name>
 	<shortDescription>
-		Converts old date&amp;time to new.
+		Converts old Date&amp;Time to new.
 	</shortDescription>
 	<fullDescription>
 		<intro>
 			<p>
-				This node converts columns from the old date&amp;time data type to
+				This node converts columns from the old Date&amp;Time data type to
 				the new types. It is only useful if
 				you have to use nodes that have
-				not been adapted to the new date&amp;time type yet.
+				not been adapted to the new Date&amp;Time type yet.
 			</p>
 		</intro>
 		<tab name="Column Selection">

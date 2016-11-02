@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="string2date.png" type="Manipulator">
-	<name>String to Date&amp;time</name>
+	<name>String to Date&amp;Time</name>
 	<shortDescription>
-		Parses date and/or time strings into date&amp;time cells.
+		Parses date and/or time strings into Date&amp;Time cells.
 	</shortDescription>
 	<fullDescription>
 		<intro>
-			Parses the strings in the selected columns and converts them into date&amp;time cells using the provided
+			Parses the strings in the selected columns and converts them into Date&amp;Time cells using the provided
 			format pattern.	<br />
 			Since dates may contain localized terms such as month or weekday names, you can select a locale.
 		</intro>

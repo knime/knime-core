@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="time2string.png">
-	<name>Date&amp;time to String</name>
-	<shortDescription>Converts date&amp;time cells into cells holding strings.</shortDescription>
+	<name>Date&amp;Time to String</name>
+	<shortDescription>Converts Date&amp;Time cells into cells holding strings.</shortDescription>
 	<fullDescription>
 		<intro>
-			Converts the time values in date&amp;time columns into strings
+			Converts the time values in Date&amp;Time columns into strings
 			using a user-provided format pattern as defined by
 			<a
 				href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>

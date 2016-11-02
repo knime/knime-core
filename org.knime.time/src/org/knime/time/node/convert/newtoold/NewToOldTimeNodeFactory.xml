@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="date_time.png" type="Manipulator">
-	<name>Date&amp;time to legacy date&amp;time</name>
+	<name>Date&amp;Time to legacy Date&amp;Time</name>
 	<shortDescription>
-		Converts new date&amp;time to old.
+		Converts new Date&amp;Time to old.
 	</shortDescription>
 	<fullDescription>
 		<intro>
 			<p>
-				This node converts columns from the new date&amp;time data types to the legacy type. It is only useful
-				if you have to use nodes that have not been adapted to the new date&amp;time type yet.
+				This node converts columns from the new Date&amp;Time data types to the legacy type. It is only useful
+				if you have to use nodes that have not been adapted to the new Date&amp;Time type yet.
 			</p>
 		</intro>
 		<tab name="Column Selection">
@@ -29,7 +29,7 @@
 		<tab name="Time Zone Handling">
 			<option name="Add the offset of the time zone to the time">
 				<p>If the first option is selected, the offset of the time zone will be added to the time. Otherwise the
-				time zone information will be dropped, because the legacy date&amp;time type does not support time zones.
+				time zone information will be dropped, because the legacy Date&amp;Time type does not support time zones.
 				</p>
 				<p>
 				<u> Example:</u><br/>
