@@ -633,7 +633,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     }
                 }
             }
-            throw new IllegalStateException("Data type is not compatible.");
+            throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }
     }
 

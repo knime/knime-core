@@ -363,7 +363,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
             } catch (UnsupportedTemporalTypeException e) {
                 return new MissingCell(e.getMessage());
             }
-            throw new IllegalStateException("Data type of cell is not compatible.");
+            throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }
     }
 }

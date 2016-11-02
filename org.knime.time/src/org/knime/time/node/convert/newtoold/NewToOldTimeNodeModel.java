@@ -374,7 +374,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 final LocalDate ld = ((LocalDateCell)cell).getLocalDate();
                 return new DateAndTimeCell(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
             }
-            throw new IllegalStateException("Data type of cell is not compatible.");
+            throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }
     }
 }
