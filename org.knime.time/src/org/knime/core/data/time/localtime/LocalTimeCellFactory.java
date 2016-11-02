@@ -76,7 +76,7 @@ public final class LocalTimeCellFactory implements FromSimpleString, FromComplex
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Local Time (HH:mm:ss)")
+    @DataCellFactoryMethod(name = "String (HH:mm:ss)")
     @Override
     public DataCell createCell(final String s) {
         return create(s);

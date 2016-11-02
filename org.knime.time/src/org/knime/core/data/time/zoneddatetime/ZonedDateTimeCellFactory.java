@@ -76,7 +76,7 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Zoned Date (yyyy-MM-dd'T'HH:mm:ssXXX'['zzzz']')")
+    @DataCellFactoryMethod(name = "String (yyyy-MM-dd'T'HH:mm:ssXXX'['zzzz']')")
     @Override
     public DataCell createCell(final String s) {
         return create(s);

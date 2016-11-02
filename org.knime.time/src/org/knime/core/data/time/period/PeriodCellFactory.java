@@ -75,7 +75,7 @@ public final class PeriodCellFactory implements FromSimpleString, FromComplexStr
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Period (PnYnMnD)")
+    @DataCellFactoryMethod(name = "String (PnYnMnD)")
     @Override
     public DataCell createCell(final String s) {
         return create(s);

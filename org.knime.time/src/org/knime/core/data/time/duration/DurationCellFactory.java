@@ -75,7 +75,7 @@ public final class DurationCellFactory implements FromSimpleString, FromComplexS
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Duration (PThHmMsS)")
+    @DataCellFactoryMethod(name = "String (PThHmMsS)")
     @Override
     public DataCell createCell(final String s) {
         return create(s);

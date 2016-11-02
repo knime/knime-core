@@ -67,7 +67,7 @@ public interface ZonedDateTimeValue extends DataValue {
      * 
      * @return The {@link ZonedDateTime} instance.
      */
-    @DataValueAccessMethod(name = "Zoned date&time")
+    @DataValueAccessMethod(name = "ZonedDateTime")
     ZonedDateTime getZonedDateTime();
 
 }

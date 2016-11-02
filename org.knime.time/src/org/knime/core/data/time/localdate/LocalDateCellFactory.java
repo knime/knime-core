@@ -76,7 +76,7 @@ public final class LocalDateCellFactory implements FromSimpleString, FromComplex
         return TYPE;
     }
 
-    @DataCellFactoryMethod(name = "Local Date (yyyy-MM-dd)")
+    @DataCellFactoryMethod(name = "String (yyyy-MM-dd)")
     @Override
     public DataCell createCell(final String s) {
         return create(s);

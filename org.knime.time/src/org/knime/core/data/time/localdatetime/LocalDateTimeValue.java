@@ -67,7 +67,7 @@ public interface LocalDateTimeValue extends DataValue {
      * 
      * @return The {@link LocalDateTime} instance.
      */
-    @DataValueAccessMethod(name = "Local date&time")
+    @DataValueAccessMethod(name = "LocalDateTime")
     LocalDateTime getLocalDateTime();
 
 }

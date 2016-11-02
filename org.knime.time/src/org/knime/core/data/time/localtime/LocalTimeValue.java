@@ -67,7 +67,7 @@ public interface LocalTimeValue extends DataValue {
      * 
      * @return The {@link LocalTime} instance.
      */
-    @DataValueAccessMethod(name = "Local time")
+    @DataValueAccessMethod(name = "LocalTime")
     LocalTime getLocalTime();
 
 }
