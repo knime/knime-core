@@ -123,7 +123,11 @@ class FromDecisionTreeNodeModel extends NodeModel {
                     scoreDistrib.setValue(entry.getKey().toString());
                     scoreDistrib.setRecordCount(entry.getValue());
                     if (computeProbability) {
-                        scoreDistrib.setProbability(new BigDecimal(entry.getValue().doubleValue(), mc).divide(sum, mc));
+                        if (Double.compare(entry.getValue().doubleValue(), 0.0) == 0) {
+                            scoreDistrib.setProbability(new BigDecimal(0.0));
+                        } else {
+                            scoreDistrib.setProbability(new BigDecimal(entry.getValue().doubleValue(), mc).divide(sum, mc));
+                        }
                     }
                 }
             }
