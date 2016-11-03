@@ -31,9 +31,13 @@
         <tab name="Settings">
         	<option name="Schema">The optional schema of the table.</option>
         	<option name="Table name">The name of the table.</option>
-        	<option name="Temporary table">If checked, a temporary table is created.</option>
-        	<option name="If not exists">If checked, the table is only created when it doesn't exist in the database.
-        	If the table exists and the option isn't enabled the node will fail with a database specific error message.
+        	<option name="Create temporary table">If checked, a temporary table is created. 
+        	The scope of the created table and time it exists depends on the database specific handling of temporary 
+        	tables.</option>
+        	<option name="Create table if it does not exist">If checked, the table is only created when it doesn't 
+        	exist in the database. If the table exists and the option isn't enabled the node will fail with a database 
+        	specific error message. If supported by the database the node creates a <i>CREATE TABLE IF NOT EXISTS</i> 
+        	statement otherwise the node executes a query first to check if the table exists.
         	</option>
         	<option name="Use dynamic settings">If checked, the dynamic settings are enabled and the dynamic settings 
         	tabs are visible.

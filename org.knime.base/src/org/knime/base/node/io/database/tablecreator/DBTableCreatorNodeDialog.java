@@ -14,8 +14,8 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.io.database.tablecreator.util.AdditionalSQLStatementPanel;
 import org.knime.base.node.io.database.tablecreator.util.ColumnsPanel;
 import org.knime.base.node.io.database.tablecreator.util.DBTableCreatorConfiguration;
-import org.knime.base.node.io.database.tablecreator.util.KeysPanel;
 import org.knime.base.node.io.database.tablecreator.util.KNIMEBasedMappingPanel;
+import org.knime.base.node.io.database.tablecreator.util.KeysPanel;
 import org.knime.base.node.io.database.tablecreator.util.NameBasedKeysPanel;
 import org.knime.base.node.io.database.tablecreator.util.NameBasedMappingPanel;
 import org.knime.core.data.DataTableSpec;
@@ -153,12 +153,13 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
         box.add(Box.createVerticalGlue());
 
         final DialogComponentBoolean tempTableComp =
-                new DialogComponentBoolean(m_config.getTempTableSettingsModel(), "Temporary table");
+                new DialogComponentBoolean(m_config.getTempTableSettingsModel(), "Create temporary table");
         box.add(tempTableComp.getComponentPanel());
         box.add(Box.createVerticalGlue());
 
         final DialogComponentBoolean ifNotExistsComp =
-                new DialogComponentBoolean(m_config.getIfNotExistsSettingsModel(), "If not exists");
+                new DialogComponentBoolean(m_config.getIfNotExistsSettingsModel(),
+                    "Create table if it does not exist");
         box.add(ifNotExistsComp.getComponentPanel());
         box.add(Box.createVerticalGlue());
         tablePanel.add(box);
