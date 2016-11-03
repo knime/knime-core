@@ -49,7 +49,6 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.tablecreator.DBTableCreator;
 
 
 /**
@@ -57,7 +56,9 @@ import org.knime.core.node.port.database.tablecreator.DBTableCreator;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
+ * @deprecated moved to the org.knime.database.connectors plugin
  */
+@Deprecated
 public class SQLServerUtility extends DatabaseUtility {
     private static class SQLServerStatementManipulator extends StatementManipulator {
 
@@ -127,13 +128,5 @@ public class SQLServerUtility extends DatabaseUtility {
     @Override
     public boolean supportsCase() {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBTableCreator getTableCreator(final String schema, final String tableName, final boolean isTempTable) {
-        return new SQLServerTableCreator(getStatementManipulator(), schema, tableName, isTempTable);
     }
 }
