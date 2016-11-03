@@ -139,7 +139,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
-            hasView |= nc.hasInteractiveView() || nc.hasInteractiveWebView();
+            hasView |= nc.hasInteractiveView() || nc.getNrInteractiveWebViews() > 0;
             atLeastOneNodeIsExecuted |= nc.getNodeContainerState().isExecuted() && hasView;
         }
         return atLeastOneNodeIsExecuted;
@@ -158,14 +158,14 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
             boolean hasView = cont.getNrViews() > 0;
-            hasView |= cont.hasInteractiveView() || cont.hasInteractiveWebView();
+            hasView |= cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0;
             if (cont.getNodeContainerState().isExecuted() && hasView) {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             final IAction action;
-                            if (cont.hasInteractiveView() || cont.hasInteractiveWebView()) {
+                            if (cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0) {
                                 action = new OpenInteractiveViewAction(cont);
                             } else {
                                 action = new OpenViewAction(cont, 0);

@@ -8525,8 +8525,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public boolean hasInteractiveWebView() {
-        return false;
+    public int getNrInteractiveWebViews() {
+        return 0;
     }
 
     /** {@inheritDoc} */

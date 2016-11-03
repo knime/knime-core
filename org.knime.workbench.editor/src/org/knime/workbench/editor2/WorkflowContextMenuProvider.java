@@ -336,7 +336,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // add interactive view options
-                if (container.hasInteractiveView() || container.hasInteractiveWebView()) {
+                if (container.hasInteractiveView() || container.getNrInteractiveWebViews() > 0) {
                     action = new OpenInteractiveViewAction(container);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }

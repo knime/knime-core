@@ -296,8 +296,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public boolean hasInteractiveWebView() {
-        return m_node.hasWizardView();
+    public int getNrInteractiveWebViews() {
+        return m_node.hasWizardView() ? 1 : 0;
     }
 
     /** {@inheritDoc} */

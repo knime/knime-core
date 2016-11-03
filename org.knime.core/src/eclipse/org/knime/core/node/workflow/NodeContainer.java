@@ -1172,11 +1172,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public abstract boolean hasInteractiveView();
 
-    /**
-     * @return true if node provides {@link WebTemplate} for an interactive web view.
-     * @since 2.8
+    /** The number of 'interactive web views'. That is, views providing a {@link WebTemplate} for an interactive
+     * web view. {@link NativeNodeContainer} can have at most one view, {@link SubNodeContainer} may have many (one for
+     * each contained view node), {@link WorkflowManager} have none.
+     * @return  that number.
+     * @since 3.3
      */
-    public abstract boolean hasInteractiveWebView();
+    public abstract int getNrInteractiveWebViews();
 
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.

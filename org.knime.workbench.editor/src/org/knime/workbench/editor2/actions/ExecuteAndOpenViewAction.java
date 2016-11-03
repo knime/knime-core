@@ -122,7 +122,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         if (parts.length == 1) {
             tooltip += " node";
             NodeContainer nc = parts[0].getNodeContainer();
-            if (nc.hasInteractiveView() || nc.hasInteractiveWebView()) {
+            if (nc.hasInteractiveView() || nc.getNrInteractiveWebViews() > 0) {
                 return tooltip + " and open interactive view.";
             }
         } else {
@@ -146,7 +146,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
-            hasView |= nc.hasInteractiveView() || nc.hasInteractiveWebView();
+            hasView |= nc.hasInteractiveView() || nc.getNrInteractiveWebViews() > 0;
             if (wm.canExecuteNode(nc.getID()) && hasView) {
                 return true;
             }
@@ -156,7 +156,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
 
     private void executeAndOpen(final NodeContainer cont) {
         boolean hasView = cont.getNrViews() > 0;
-        hasView |= cont.hasInteractiveView() || cont.hasInteractiveWebView();
+        hasView |= cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0;
         if (hasView) {
             // another listener must be registered at the workflow manager to
             // receive also those events from nodes that have just been queued
@@ -174,7 +174,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                             public void run() {
                                 // run open view action
                                 IAction viewAction;
-                                if (cont.hasInteractiveView() || cont.hasInteractiveWebView()) {
+                                if (cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0) {
                                     viewAction = new OpenInteractiveViewAction(cont);
                                 } else {
                                     viewAction = new OpenViewAction(cont, 0);

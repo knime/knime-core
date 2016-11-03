@@ -130,7 +130,7 @@ public class OpenInteractiveViewAction extends Action {
             AbstractNodeView<?> view = null;
             if (m_nodeContainer.hasInteractiveView()) {
                 view = m_nodeContainer.getInteractiveView();
-            } else if (m_nodeContainer.hasInteractiveWebView()) {
+            } else if (m_nodeContainer.getNrInteractiveWebViews() > 0) {
                 NodeContext.pushContext(m_nodeContainer);
                 try {
                     // TODO: this needs to be changed to also work for SubNodeContainers

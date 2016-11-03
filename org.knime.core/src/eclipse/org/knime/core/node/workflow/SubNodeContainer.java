@@ -843,8 +843,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * {@inheritDoc}
      */
     @Override
-    public boolean hasInteractiveWebView() {
-        return false;
+    public int getNrInteractiveWebViews() {
+        return 0;
     }
 
     /**
