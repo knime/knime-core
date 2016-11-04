@@ -163,6 +163,8 @@ public final class DataColumnSpecCreator {
         m_shapeHandler = cspec.getShapeHandler();
         // property color
         m_colorHandler = cspec.getColorHandler();
+        // property filter
+        m_filterHandler = cspec.getFilterHandler().orElse(null);
     }
 
     /**
