@@ -729,10 +729,6 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <includes
-         id="org.eclipse.platform.jcraft_patch"
-         version="0.0.0"/>
-
    <requires>
       <import feature="org.eclipse.gef" version="3.9.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.platform" version="4.4.2" match="greaterOrEqual"/>
