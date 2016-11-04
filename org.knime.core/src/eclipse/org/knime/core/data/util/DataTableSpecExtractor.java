@@ -50,6 +50,7 @@ package org.knime.core.data.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -64,12 +65,14 @@ import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.filter.FilterHandler;
 
 /**
  * This utility class provides means to extract meta information from a specific data table spec and to return the
@@ -164,11 +167,13 @@ public class DataTableSpecExtractor {
                 colSpecs.add(new DataColumnSpecCreator("Color Handler", BooleanCell.TYPE).createSpec());
                 colSpecs.add(new DataColumnSpecCreator("Size Handler", BooleanCell.TYPE).createSpec());
                 colSpecs.add(new DataColumnSpecCreator("Shape Handler", BooleanCell.TYPE).createSpec());
+                colSpecs.add(new DataColumnSpecCreator("Filter Handler", BooleanCell.TYPE).createSpec());
                 break;
             default:
                 colSpecs.add(new DataColumnSpecCreator("Color Handler", StringCell.TYPE).createSpec());
                 colSpecs.add(new DataColumnSpecCreator("Size Handler", StringCell.TYPE).createSpec());
                 colSpecs.add(new DataColumnSpecCreator("Shape Handler", StringCell.TYPE).createSpec());
+                colSpecs.add(new DataColumnSpecCreator("Filter Handler", StringCell.TYPE).createSpec());
         }
         DataType lowerBoundColType = null; // likely number (important for sorting)
         DataType upperBoundColType = null;
@@ -231,18 +236,21 @@ public class DataTableSpecExtractor {
             ColorHandler colorHandler = colSpec.getColorHandler();
             SizeHandler sizeHandler = colSpec.getSizeHandler();
             ShapeHandler shapeHandler = colSpec.getShapeHandler();
+            Optional<FilterHandler> filterHandler = colSpec.getFilterHandler();
             switch (m_propertyHandlerOutputFormat) {
                 case Hide:
                     break;
                 case Boolean:
-                    cells.add(BooleanCell.get(colorHandler != null));
-                    cells.add(BooleanCell.get(sizeHandler != null));
-                    cells.add(BooleanCell.get(shapeHandler != null));
+                    cells.add(BooleanCellFactory.create(colorHandler != null));
+                    cells.add(BooleanCellFactory.create(sizeHandler != null));
+                    cells.add(BooleanCellFactory.create(shapeHandler != null));
+                    cells.add(BooleanCellFactory.create(filterHandler.isPresent()));
                     break;
                 default:
                     cells.add(new StringCell(colorHandler == null ? "" : colorHandler.toString()));
                     cells.add(new StringCell(sizeHandler == null ? "" : sizeHandler.toString()));
                     cells.add(new StringCell(shapeHandler == null ? "" : shapeHandler.toString()));
+                    cells.add(new StringCell(filterHandler.map(f -> f.toString()).orElse("")));
             }
 
             DataColumnDomain domain = colSpec.getDomain();
