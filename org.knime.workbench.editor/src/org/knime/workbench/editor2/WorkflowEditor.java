@@ -72,6 +72,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -247,7 +248,6 @@ import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.RemoteExplorerFileStore;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
-import org.knime.workbench.explorer.view.AbstractContentProvider.AfterRunCallback;
 import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.explorer.view.dialogs.OverwriteAndMergeInfo;
 import org.knime.workbench.explorer.view.dialogs.SnapshotPanel;
@@ -1650,12 +1650,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void doSave(final IProgressMonitor monitor) {
         if (isTempRemoteWorkflowEditor()) {
-            boolean doSaveAs = MessageDialog.openQuestion(getSite().getShell(), "Temporary Copy - Can't save in place",
-                "This is a temporary editor of a downloaded workflow\nIt cannot be saved in place, "
-            + "you must use \"Save As...\".\nDo you want to save it to a new location now?");
-            if (doSaveAs) {
-                doSaveAs();
-            }
+            saveBackToServer();
         } else {
             saveTo(m_fileResource, monitor, true);
         }
@@ -1731,13 +1726,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             try {
                 m_workflowCanBeDeleted.acquire();
                 newWorkflowDir.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
-                    (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false, new AfterRunCallback() {
-                        @Override
-                        public void afterCompletion(final Throwable throwable) {
-                            // TODO: find ExplorerView and select newWorkflowDir.
-                            m_workflowCanBeDeleted.release();
-                        }
-                    });
+                    (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false,
+                    t -> m_workflowCanBeDeleted.release());
             } catch (CoreException | InterruptedException e) {
                 String msg =
                     "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
@@ -2184,8 +2174,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void updateTempRemoteWorkflowMessage() {
         WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
         if (isTempRemoteWorkflowEditor()) {
-            workflowFigure.setMessage("\tThis is a temporary copy of a downloaded workflow. "
-                + "Use \"Save As...\" to permanently store it locally.");
+            workflowFigure.setMessage("  This is a temporary copy of \"" + URIUtil.toDecodedString(m_origRemoteLocation)
+                + "\".\n  Use \"Save\" to upload it back to its original location the server or \"Save As...\" to "
+                + "store it in a different location.");
         } else {
             workflowFigure.setMessage(null);
         }
@@ -3232,5 +3223,72 @@ public class WorkflowEditor extends GraphicalEditor implements
                 getEditorSite().getPage().closeEditor(WorkflowEditor.this, false);
             }
         });
+    }
+
+
+    private void saveBackToServer() {
+        assert m_origRemoteLocation != null : "No remote workflow";
+        AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
+
+        if (remoteStore.fetchInfo().exists()) {
+            boolean snapshotSupported = remoteStore.getContentProvider().supportsSnapshots();
+            final AtomicReference<SnapshotPanel> snapshotPanel = new AtomicReference<SnapshotPanel>(null);
+            MessageDialog dlg = new MessageDialog(getSite().getShell(), "Overwrite on server?", null,
+                "The workflow\n\n\t" + remoteStore.getMountIDWithFullPath()
+                    + "\n\nalready exists on the server. Do you want to overwrite it?\n",
+                MessageDialog.QUESTION, new String[]{IDialogConstants.NO_LABEL, IDialogConstants.YES_LABEL}, 1) {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                protected Control createCustomArea(final Composite parent) {
+                    if (snapshotSupported) {
+                        snapshotPanel.set(new SnapshotPanel(parent, SWT.NONE));
+                        snapshotPanel.get().setEnabled(true);
+                        return snapshotPanel.get();
+                    } else {
+                        return null;
+                    }
+                }
+            };
+            int dlgResult = dlg.open();
+            if (dlgResult != 1) {
+                return;
+            }
+
+            if ((snapshotPanel.get() != null) && (snapshotPanel.get().createSnapshot())) {
+                try {
+                    ((RemoteExplorerFileStore)remoteStore).createSnapshot(snapshotPanel.get().getComment());
+                } catch (CoreException e) {
+                    String msg =
+                            "Unable to create snapshot before overwriting the workflow:\n" + e.getMessage()
+                            + "\n\nUpload was canceled.";
+                    LOGGER.error(
+                        "Unable to create snapshot before overwriting the workflow: " + e.getMessage()
+                        + " Upload was canceled.", e);
+                    MessageDialog.openError(getSite().getShell(), "Server Error", msg);
+                    return;
+                }
+            }
+        }
+
+        // selected a remote location: save + upload
+        if (isDirty()) {
+            saveTo(m_fileResource, new NullProgressMonitor(), true);
+        }
+        AbstractExplorerFileStore localFS = getFileStore(m_fileResource);
+        if ((localFS == null) || !(localFS instanceof LocalExplorerFileStore)) {
+            LOGGER.error("Unable to resolve current workflow location. Workflow not uploaded!");
+            return;
+        }
+        try {
+            m_workflowCanBeDeleted.acquire();
+            remoteStore.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
+                (RemoteExplorerFileStore)remoteStore, /*deleteSource=*/false, t -> m_workflowCanBeDeleted.release());
+        } catch (CoreException | InterruptedException e) {
+            String msg = "Failed to upload the workflow to its remote location\n(" + e.getMessage() + ")";
+            LOGGER.error(msg, e);
+            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Upload failed.", msg);
+        }
     }
 }
