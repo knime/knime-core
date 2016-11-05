@@ -8529,6 +8529,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return 0;
     }
 
+    @Override
+    public String getInteractiveWebViewName(final int index) {
+        throw new IndexOutOfBoundsException(WorkflowManager.class.getSimpleName() + " has no views");
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getInteractiveViewName() {

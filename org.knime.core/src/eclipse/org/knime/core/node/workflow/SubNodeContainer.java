@@ -839,12 +839,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getNrInteractiveWebViews() {
-        return 0;
+        try (WorkflowLock lock = m_wfm.lock()) {
+            return (int)m_wfm.getWorkflow().getNodeValues().stream().filter(n -> n instanceof NativeNodeContainer)
+                    .filter(n -> n.getNrInteractiveWebViews() > 0).count();
+        }
+    }
+
+    @Override
+    public String getInteractiveWebViewName(final int index) {
+        return null;
     }
 
     /**
@@ -2174,5 +2179,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             return getWorkflowManager().canPerformReset();
         }
     }
+
 
 }

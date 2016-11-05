@@ -300,6 +300,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.hasWizardView() ? 1 : 0;
     }
 
+    /** {@inheritDoc}
+     * @since 3.3 */
+    @Override
+    public String getInteractiveWebViewName(final int index) {
+        if (index < 0 || index >= getNrInteractiveWebViews()) {
+            throw new IndexOutOfBoundsException("Invalid interactive view index" + index);
+        }
+        return m_node.getInteractiveViewName();
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getInteractiveViewName() {

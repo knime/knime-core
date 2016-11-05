@@ -1180,6 +1180,15 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public abstract int getNrInteractiveWebViews();
 
+    /** The name associated with the web view (e.g. JS scatter plot). A native node might just show the name
+     * as defined in the node description xml; a subnode will add a suffix to make them unique.
+     * @param index The index of interest, as per {@link #getNrInteractiveWebViews()}.
+     * @return The name, not null
+     * @throws IndexOutOfBoundsException if index is not valid
+     * @since 3.3
+     */
+    public abstract String getInteractiveWebViewName(final int index);
+
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
      *
