@@ -9,7 +9,7 @@ http://update.knime.org/store/3.2,remove
 http://update.knime.org/partner/3.2,remove
 http://update.knime.org/community-contributions/trusted/3.2,remove
 http://update.knime.org/community-contributions/3.2,remove
-http://tech.knime.org/update/community-contributions/trusted/3.2remove
+http://tech.knime.org/update/community-contributions/trusted/3.2,remove
 http://tech.knime.org/update/community-contributions/3.2,remove
 http://update.knime.org/analytics-platform/3.3,add,enabled,KNIME Analytics Platform Update Site
 http://update.knime.org/store/3.3,add,enabled,KNIME Store Update Site
