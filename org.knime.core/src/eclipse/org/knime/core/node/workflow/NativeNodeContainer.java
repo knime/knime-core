@@ -98,6 +98,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -288,26 +290,25 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.getNrViews();
     }
 
+    @Override
+    public InteractiveWebViewsResult getInteractiveWebViews() {
+        Builder builder = InteractiveWebViewsResult.newBuilder();
+        if (m_node.hasWizardView()) {
+            builder.add(this);
+        }
+        return builder.build();
+    }
+
+    void addInteractiveWebViewIfPresent(final InteractiveWebViewsResult.Builder builder) {
+        if (m_node.hasWizardView()) {
+            builder.add(this);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean hasInteractiveView() {
         return m_node.hasInteractiveView();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int getNrInteractiveWebViews() {
-        return m_node.hasWizardView() ? 1 : 0;
-    }
-
-    /** {@inheritDoc}
-     * @since 3.3 */
-    @Override
-    public String getInteractiveWebViewName(final int index) {
-        if (index < 0 || index >= getNrInteractiveWebViews()) {
-            throw new IndexOutOfBoundsException("Invalid interactive view index" + index);
-        }
-        return m_node.getInteractiveViewName();
     }
 
     /** {@inheritDoc} */

@@ -124,6 +124,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplat
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -839,19 +841,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return false;
     }
 
-    @Override
-    public int getNrInteractiveWebViews() {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            return (int)m_wfm.getWorkflow().getNodeValues().stream().filter(n -> n instanceof NativeNodeContainer)
-                    .filter(n -> n.getNrInteractiveWebViews() > 0).count();
-        }
-    }
-
-    @Override
-    public String getInteractiveWebViewName(final int index) {
-        return null;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -869,7 +858,21 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return null;
     }
 
-    /** This is ambigious. A sub node currently doesn't support ExecutionEnvironments (in fact NativeNodeContainer
+    /** A {@link InteractiveWebViewsResult} for a subnode is the set of all wizard views in it (no recursion).
+     * {@inheritDoc} */
+    @Override
+    public InteractiveWebViewsResult getInteractiveWebViews() {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            Builder builder = InteractiveWebViewsResult.newBuilder();
+            m_wfm.getWorkflow().getNodeValues().stream()
+                    .filter(n -> n instanceof NativeNodeContainer)
+                    .map(n -> (NativeNodeContainer)n)
+                    .forEachOrdered(n -> n.addInteractiveWebViewIfPresent(builder));
+            return builder.build();
+        }
+    }
+
+    /** This is ambiguous. A sub node currently doesn't support ExecutionEnvironments (in fact NativeNodeContainer
      * doesn't either). This method is overridden to avoid null checks in the super class.
      * {@inheritDoc} */
     @Override

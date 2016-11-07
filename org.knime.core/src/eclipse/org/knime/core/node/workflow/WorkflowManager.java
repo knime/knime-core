@@ -178,6 +178,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
@@ -8525,20 +8526,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public int getNrInteractiveWebViews() {
-        return 0;
-    }
-
-    @Override
-    public String getInteractiveWebViewName(final int index) {
-        throw new IndexOutOfBoundsException(WorkflowManager.class.getSimpleName() + " has no views");
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public String getInteractiveViewName() {
         return "no view available";
     }
+
+    /** Returns an empty result.
+     *  {@inheritDoc} */
+    @Override
+    public InteractiveWebViewsResult getInteractiveWebViews() {
+        return InteractiveWebViewsResult.newBuilder().build(); // empty list
+    }
+
 
     /** {@inheritDoc} */
     @Override

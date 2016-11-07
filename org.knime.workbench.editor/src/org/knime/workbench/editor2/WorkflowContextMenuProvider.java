@@ -69,6 +69,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -344,9 +345,9 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // in the 'else' block? Yes:
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
-                    int nrInteractiveWebViews = container.getNrInteractiveWebViews();
-                    for (int i = 0; i < nrInteractiveWebViews; i++) {
-                        action = new OpenInteractiveWebViewAction(container, i);
+                    InteractiveWebViewsResult interactiveWebViewsResult = container.getInteractiveWebViews();
+                    for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
+                        action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
                         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                     }
                 }
