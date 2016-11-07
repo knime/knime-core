@@ -122,14 +122,9 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#" + m_index + ")");
         try {
             final String title = m_nodeContainer.getViewName(m_index) + " - " + m_nodeContainer.getDisplayLabel();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title, bounds);
-                }
-            });
+            final java.awt.Rectangle knimeWindowBounds = OpenViewAction.getAppBoundsAsAWTRec();
+            SwingUtilities.invokeLater(
+                () -> Node.invokeOpenView(m_nodeContainer.getView(m_index), title, knimeWindowBounds));
         } catch (Throwable t) {
             MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("View cannot be opened");
@@ -147,5 +142,13 @@ public class OpenViewAction extends Action {
     @Override
     public String getId() {
         return "knime.open.view.action";
+    }
+
+    /** Get the workbench window as a Swing Rectangle -- used in various actions to center a new swing view on
+     * top of the application.
+     * @return non-null rectangle. */
+    static java.awt.Rectangle getAppBoundsAsAWTRec() {
+        final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+        return new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
     }
 }

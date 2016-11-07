@@ -92,6 +92,7 @@ import org.knime.workbench.editor2.actions.LockSubNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenInteractiveViewAction;
+import org.knime.workbench.editor2.actions.OpenInteractiveWebViewAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
 import org.knime.workbench.editor2.actions.OpenSubNodeEditorAction;
 import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
@@ -336,9 +337,18 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // add interactive view options
-                if (container.hasInteractiveView() || container.getNrInteractiveWebViews() > 0) {
+                if (container.hasInteractiveView()) {
                     action = new OpenInteractiveViewAction(container);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                } else {
+                    // in the 'else' block? Yes:
+                    // it's only one or the other -- do not support nodes that have
+                    // both (standard swing) interactive and web interactive views
+                    int nrInteractiveWebViews = container.getNrInteractiveWebViews();
+                    for (int i = 0; i < nrInteractiveWebViews; i++) {
+                        action = new OpenInteractiveWebViewAction(container, i);
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    }
                 }
 
                 if (container instanceof WorkflowManager) {

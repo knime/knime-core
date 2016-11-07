@@ -120,7 +120,6 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         String tooltip = "Execute the selected node";
         NodeContainerEditPart[] parts = getSelectedParts(NodeContainerEditPart.class);
         if (parts.length == 1) {
-            tooltip += " node";
             NodeContainer nc = parts[0].getNodeContainer();
             if (nc.hasInteractiveView() || nc.getNrInteractiveWebViews() > 0) {
                 return tooltip + " and open interactive view.";
@@ -174,8 +173,10 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                             public void run() {
                                 // run open view action
                                 IAction viewAction;
-                                if (cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0) {
+                                if (cont.hasInteractiveView()) {
                                     viewAction = new OpenInteractiveViewAction(cont);
+                                } else if (cont.getNrInteractiveWebViews() > 0) {
+                                    viewAction = new OpenInteractiveWebViewAction(cont, 0);
                                 } else {
                                     viewAction = new OpenViewAction(cont, 0);
                                 }

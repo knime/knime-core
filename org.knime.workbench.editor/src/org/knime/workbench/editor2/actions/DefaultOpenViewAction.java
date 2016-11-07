@@ -165,8 +165,10 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                     public void run() {
                         try {
                             final IAction action;
-                            if (cont.hasInteractiveView() || cont.getNrInteractiveWebViews() > 0) {
+                            if (cont.hasInteractiveView()) {
                                 action = new OpenInteractiveViewAction(cont);
+                            } else if (cont.getNrInteractiveWebViews() > 0) {
+                                action = new OpenInteractiveWebViewAction(cont, 0);
                             } else {
                                 action = new OpenViewAction(cont, 0);
                             }

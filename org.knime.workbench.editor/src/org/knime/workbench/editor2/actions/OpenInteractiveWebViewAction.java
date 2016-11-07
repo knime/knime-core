@@ -50,77 +50,81 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.wizard.AbstractWizardNodeView;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.editor2.WizardNodeView;
 
 /**
- * Action to open an interactive view of a node.
+ * Action to open an interactive web view of a node.
  *
- * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
- * @since 2.8
+ * @author Bernd Wiswedel, KNIME.com AG, Zurich, Switzerland
+ * @since 3.3
  */
-public class OpenInteractiveViewAction extends Action {
-    private final NodeContainer m_nodeContainer;
+public final class OpenInteractiveWebViewAction extends Action {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(OpenInteractiveViewAction.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(OpenInteractiveWebViewAction.class);
+
+    private final NodeContainer m_nodeContainer;
+    private final int m_index;
+
 
     /**
      * New action to open an interactive node view.
      *
      * @param nodeContainer The node
+     * @param index The index of the view (native nodes will have at most one, but subnodes may have multiple).
      */
-    public OpenInteractiveViewAction(final NodeContainer nodeContainer) {
+    public OpenInteractiveWebViewAction(final NodeContainer nodeContainer, final int index) {
         m_nodeContainer = CheckUtils.checkArgumentNotNull(nodeContainer);
-        CheckUtils.checkArgument(m_nodeContainer.hasInteractiveView(), "Node doesn't have an interactive (swing) view");
+        CheckUtils.checkArgument(index >= 0 && index < m_nodeContainer.getNrInteractiveWebViews(),
+                "invalid web view index %d, not in [0, %d)", index, m_nodeContainer.getNrInteractiveWebViews());
+        m_index = index;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isEnabled() {
         return m_nodeContainer.getNodeContainerState().isExecuted();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/openInteractiveView.png");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getToolTipText() {
-        return "Opens interactive node view: " + m_nodeContainer.getInteractiveViewName();
+        return "Opens interactive node view: " + m_nodeContainer.getInteractiveWebViewName(m_index);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getText() {
-        return "Interactive View: " + m_nodeContainer.getInteractiveViewName();
+        return "Interactive View: " + m_nodeContainer.getInteractiveWebViewName(m_index);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("rawtypes")
     @Override
     public void run() {
-        LOGGER.debug("Open Interactive Node View " + m_nodeContainer.getName());
+        LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
         try {
-            AbstractNodeView<?> view = m_nodeContainer.getInteractiveView();
-            final String title = m_nodeContainer.getInteractiveViewName();
+            AbstractWizardNodeView view = null;
+            NodeContext.pushContext(m_nodeContainer);
+            try {
+                // TODO: this needs to be changed to also work for SubNodeContainers
+                NodeModel nodeModel = ((NativeNodeContainer)m_nodeContainer).getNodeModel();
+                view = getConfiguredWizardNodeView(nodeModel);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+            view.setWorkflowManagerAndNodeID(m_nodeContainer.getParent(), m_nodeContainer.getID());
+            final String title = m_nodeContainer.getInteractiveWebViewName(m_index);
             Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
@@ -132,12 +136,35 @@ public class OpenInteractiveViewAction extends Action {
         }
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
+        //TODO uncomment for 3.1, make view interchangeable
+        //TODO get preference key
+        /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
+        try {
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IConfigurationElement[] configurationElements =
+                registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
+            for (IConfigurationElement element : configurationElements) {
+                if (viewID.equals(element.getAttribute("viewClass"))) {
+                    try {
+                        return (AbstractWizardNodeView)element.createExecutableExtension("viewClass");
+                    } catch (Throwable e) {
+                        LOGGER.error("Can't load view class for " + element.getAttribute("name")
+                            + ". Switching to default. - " + e.getMessage(), e);
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(
+                "JS view set in preferences (" + viewID + ") can't be loaded. Switching to default. - "
+                    + e.getMessage(), e);
+        }*/
+        return new WizardNodeView(nodeModel);
+    }
+
     @Override
     public String getId() {
-        return "knime.open.interactive.view.action";
+        return "knime.open.interactive.web.view.action";
     }
 }
