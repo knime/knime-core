@@ -53,7 +53,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which adds or changes a time zone.
+ * The node factory of the node which modifies a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
@@ -78,7 +78,8 @@ public class ModifyTimeZoneNodeFactory extends NodeFactory<ModifyTimeZoneNodeMod
      * {@inheritDoc}
      */
     @Override
-    public NodeView<ModifyTimeZoneNodeModel> createNodeView(final int viewIndex, final ModifyTimeZoneNodeModel nodeModel) {
+    public NodeView<ModifyTimeZoneNodeModel> createNodeView(final int viewIndex,
+        final ModifyTimeZoneNodeModel nodeModel) {
         return null;
     }
 

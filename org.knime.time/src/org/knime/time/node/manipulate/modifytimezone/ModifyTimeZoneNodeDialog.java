@@ -61,27 +61,28 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
- * The node dialog of the node which adds or changes a time zone.
+ * The node dialog of the node which modifies a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 class ModifyTimeZoneNodeDialog extends NodeDialogPane {
-    private final DialogComponentColumnFilter2 m_dialogCompColFilter;
+
+    private final DataColumnSpecFilterPanel m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
 
@@ -91,35 +92,27 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
 
     private final DialogComponentButtonGroup m_dialogCompModifySelect;
 
-    static final String OPTION_APPEND = "Append selected columns";
-
-    static final String OPTION_REPLACE = "Replace selected columns";
-
-    static final String MODIFY_OPTION_SET = "Set time zone";
-
-    static final String MODIFY_OPTION_SHIFT = "Shift time zone";
-
-    static final String MODIFY_OPTION_REMOVE = "Remove time zone";
+    private DataTableSpec m_spec;
 
     /**
      * Setting up all DialogComponents.
      */
     ModifyTimeZoneNodeDialog() {
-        final SettingsModelColumnFilter2 colSelectModel = createColSelectModel();
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(colSelectModel, 0);
+        m_dialogCompColFilter = new DataColumnSpecFilterPanel();
 
-        final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
-        m_dialogCompReplaceOrAppend =
-            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
+        final SettingsModelString replaceOrAppendModel = ModifyTimeZoneNodeModel.createReplaceAppendStringBool();
+        m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
+            ModifyTimeZoneNodeModel.OPTION_APPEND, ModifyTimeZoneNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = createSuffixModel();
+        final SettingsModelString suffixModel = ModifyTimeZoneNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        final SettingsModelString modifySelectModel = createModifySelectModel();
-        m_dialogCompModifySelect = new DialogComponentButtonGroup(modifySelectModel, true, null, MODIFY_OPTION_SET,
-            MODIFY_OPTION_SHIFT, MODIFY_OPTION_REMOVE);
+        final SettingsModelString modifySelectModel = ModifyTimeZoneNodeModel.createModifySelectModel();
+        m_dialogCompModifySelect =
+            new DialogComponentButtonGroup(modifySelectModel, true, null, ModifyTimeZoneNodeModel.MODIFY_OPTION_SET,
+                ModifyTimeZoneNodeModel.MODIFY_OPTION_SHIFT, ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
 
-        final SettingsModelString zoneSelectModel = createTimeZoneSelectModel();
+        final SettingsModelString zoneSelectModel = ModifyTimeZoneNodeModel.createTimeZoneSelectModel();
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
@@ -141,7 +134,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
         /*
          * add column filter
          */
-        panel.add(m_dialogCompColFilter.getComponentPanel(), gbc);
+        panel.add(m_dialogCompColFilter, gbc);
 
         /*
          * add replace/append selection
@@ -189,29 +182,25 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
          */
         addTab("Options", panel);
 
-        /*
-         * Change listeners
-         */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
-            }
-        });
-
         modifySelectModel.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                zoneSelectModel.setEnabled(!modifySelectModel.getStringValue().equals(MODIFY_OPTION_REMOVE));
-                /*
-                 * TODO: col filter updaten, streaming anpassen
-                 */
-                //                colSelectModel.
+                zoneSelectModel.setEnabled(
+                    !modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE));
+                boolean includeLocalDateTime =
+                    !modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
+                final DataTypeColumnFilter filter = includeLocalDateTime
+                    ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER;
+                final DataColumnSpecFilterConfiguration filterConfiguration =
+                    ModifyTimeZoneNodeModel.createDCFilterConfiguration(filter);
+                m_dialogCompColFilter.saveConfiguration(filterConfiguration);
+                final DataColumnSpecFilterConfiguration tempConfiguration =
+                    new DataColumnSpecFilterConfiguration(filterConfiguration.getConfigRootName());
+                final NodeSettings tempSettings = new NodeSettings("tempSettings");
+                tempConfiguration.saveConfiguration(tempSettings);
+                filterConfiguration.loadConfigurationInDialog(tempSettings, m_spec);
+                m_dialogCompColFilter.loadConfiguration(filterConfiguration, m_spec);
             }
         });
     }
@@ -221,7 +210,13 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_dialogCompColFilter.saveSettingsTo(settings);
+        boolean includeLocalDateTime = !((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
+        DataColumnSpecFilterConfiguration filterConfiguration =
+            ModifyTimeZoneNodeModel.createDCFilterConfiguration(includeLocalDateTime
+                ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER);
+        m_dialogCompColFilter.saveConfiguration(filterConfiguration);
+        filterConfiguration.saveConfiguration(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
@@ -234,38 +229,17 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        m_dialogCompColFilter.loadSettingsFrom(settings, specs);
+        m_spec = specs[0];
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
         m_dialogCompModifySelect.loadSettingsFrom(settings, specs);
-    }
-
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalDateTimeValue.class, ZonedDateTimeValue.class);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", ModifyTimeZoneNodeDialog.OPTION_REPLACE);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
-        SettingsModelString settingsModelString = new SettingsModelString("suffix", "(modified time zone)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTimeZoneSelectModel() {
-        return new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createModifySelectModel() {
-        return new SettingsModelString("modify_select", "Set");
+        boolean includeLocalDateTime = !((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
+        final DataColumnSpecFilterConfiguration filterConfiguration =
+            ModifyTimeZoneNodeModel.createDCFilterConfiguration(includeLocalDateTime
+                ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER);
+        filterConfiguration.loadConfigurationInDialog(settings, specs[0]);
+        m_dialogCompColFilter.loadConfiguration(filterConfiguration, specs[0]);
     }
 }

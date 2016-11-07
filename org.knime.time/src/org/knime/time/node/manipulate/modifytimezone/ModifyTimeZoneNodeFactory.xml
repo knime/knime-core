@@ -1,29 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="add_time.png">
+<knimeNode type="Manipulator" icon="default.png">
 	<name>Modify Time Zone</name>
 	<shortDescription>Modifies a time zone.</shortDescription>
 	<fullDescription>
 		<intro>
-			Adds a default time zone to cells which do not contain a time zone yet or changes an already existing time
-			zone.
+			Modifies a column by
+			<ul>
+				<li>adding a default time zone to cells which do not contain a time
+					zone yet or changes an already existing time
+					zone.
+				</li>
+				<li>shifting the time zone by changing or adding the time zone of
+					cells to a default time zone and shifting their times according
+					to it.</li>
+				<li>removing the time zone of cells which do contain one.</li>
+			</ul>
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
-				Only to the included columns the time zone will be added/changed.
+				Only the included columns will be modified.
 			</option>
 		</tab>
 		<tab name="Replace/Append Selection">
 			<option name="Append selected columns">
-				The selected columns will be appended to the input table. The suffix of the appended columns can be
-				provided in	the text field to the right.
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
 			</option>
 			<option name="Replace selected columns">
-				The selected columns will be replaced by the new columns.
+				The selected columns will be replaced by the new
+				columns.
 			</option>
 		</tab>
-		<tab name="Time Zone Selection">
-			<option name="Time zone">A fixed time zone.</option>
+		<tab name="Action Selection">
+			<option name="Set time zone">
+				Adds a default time zone to cells which do not contain a time zone yet
+				or changes an already existing time
+				zone.
+			</option>
+			<option name="Shift time zone">
+				Shifts the time zone by changing the time zone of cells which already have
+				a time zone to a default time zone or adding a time zone to cells
+				which do not have one yet and shifting their times according to it.
+			</option>
+			<option name="Remove time zone">
+				Removes the time zone of cells which do contain one.
+			</option>
+			<option name="Time zone">A fixed time zone to be set of shifted.</option>
 		</tab>
 	</fullDescription>
 	<ports>
@@ -31,7 +56,8 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table with added or changed time zone.
+			Output table with modified
+			time zone.
 		</outPort>
 	</ports>
 </knimeNode>
