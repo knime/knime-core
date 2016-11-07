@@ -102,6 +102,10 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 final class NewToOldTimeNodeModel extends NodeModel {
 
+    static final String OPTION_APPEND = "Append selected columns";
+
+    static final String OPTION_REPLACE = "Replace selected columns";
+
     static final String TIME_ZONE_OPT1 = "Add the offset of the time zone to the time";
 
     static final String TIME_ZONE_OPT2 = "Drop time zone information";
@@ -110,7 +114,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = createSuffixModel();
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
     private final SettingsModelString m_timeZoneSelect = createStringModel();
 
@@ -123,14 +127,19 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", NewToOldTimeNodeDialog.OPTION_REPLACE);
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
     }
 
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(old Date&Time)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(old Date&Time)");
+        replaceOrAppendModel.addChangeListener(
+            e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
+        suffixModel.setEnabled(false);
+        return suffixModel;
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -155,7 +164,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
         int i = 0;
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
                     new DataColumnSpecCreator(includedCol, DateAndTimeCell.TYPE);
                 final ConvertTimeCellFactory cellFac =
@@ -218,7 +227,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                     exec.checkCanceled();
                     DataCell[] datacells = new DataCell[includeIndeces.length];
                     for (int i = 0; i < includeIndeces.length; i++) {
-                        if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+                        if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                             final DataColumnSpecCreator dataColumnSpecCreator =
                                 new DataColumnSpecCreator(includeList[i], DateAndTimeCell.TYPE);
                             final ConvertTimeCellFactory cellFac =
@@ -232,7 +241,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                             datacells[i] = cellFac.getCells(row)[0];
                         }
                     }
-                    if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+                    if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                         out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
                     } else {
                         out.push(new AppendedColumnRow(row, datacells));

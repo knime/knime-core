@@ -69,6 +69,7 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -81,6 +82,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
@@ -99,21 +101,78 @@ import org.knime.core.util.UniqueNameGenerator;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 class AddDateNodeModel extends NodeModel {
-    private final SettingsModelColumnFilter2 m_colSelect = AddDateNodeDialog.createColSelectModel();
 
-    private final SettingsModelString m_isReplaceOrAppend = AddDateNodeDialog.createReplaceAppendStringBool();
+    static final String OPTION_APPEND = "Append selected columns";
 
-    private final SettingsModelString m_suffix = AddDateNodeDialog.createSuffixModel();
+    static final String OPTION_REPLACE = "Replace selected columns";
 
-    private final SettingsModelInteger m_year = AddDateNodeDialog.createYearModel();
+    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelString m_month = AddDateNodeDialog.createMonthModel();
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
-    private final SettingsModelInteger m_day = AddDateNodeDialog.createDayModel();
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
-    private final SettingsModelBoolean m_addZone = AddDateNodeDialog.createZoneModelBool();
+    private final SettingsModelInteger m_year = createYearModel();
 
-    private final SettingsModelString m_timeZone = AddDateNodeDialog.createTimeZoneSelectModel();
+    private final SettingsModelString m_month = createMonthModel();
+
+    private final SettingsModelInteger m_day = createDayModel();
+
+    private final SettingsModelBoolean m_addZone = createZoneModelBool();
+
+    private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
+
+    /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
+    public static SettingsModelColumnFilter2 createColSelectModel() {
+        return new SettingsModelColumnFilter2("col_select", LocalTimeValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
+    }
+
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(with date)");
+        replaceOrAppendModel.addChangeListener(
+            e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
+        suffixModel.setEnabled(false);
+        return suffixModel;
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createYearModel() {
+        return new SettingsModelIntegerBounded("year", LocalDate.now().getYear(), 0, Integer.MAX_VALUE);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createMonthModel() {
+        return new SettingsModelString("month", LocalDate.now().getMonth().toString());
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createDayModel() {
+        return new SettingsModelIntegerBounded("day", LocalDate.now().getDayOfMonth(), 0, 31);
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    static SettingsModelBoolean createZoneModelBool() {
+        return new SettingsModelBoolean("zone_bool", false);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createTimeZoneSelectModel(final SettingsModelBoolean zoneModelBool) {
+        final SettingsModelString zoneSelectModel =
+            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
+        zoneSelectModel.setEnabled(false);
+        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
+        return zoneSelectModel;
+    }
 
     /**
      * one in, one out
@@ -163,7 +222,7 @@ class AddDateNodeModel extends NodeModel {
         ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(AddDateNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 AddDateCellFactory cellFac =
                     new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], month, zone);
@@ -206,7 +265,7 @@ class AddDateNodeModel extends NodeModel {
                 String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
                 int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddDateNodeDialog.OPTION_REPLACE);
+                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
                 DataType dataType;
                 if (m_addZone.getBooleanValue()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;
@@ -332,12 +391,12 @@ class AddDateNodeModel extends NodeModel {
 
         private final ZoneId m_zone;
 
-        private final Month m_month;
+        private final Month m_monthValue;
 
         AddDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
-            m_month = month;
+            m_monthValue = month;
             m_zone = zone;
         }
 
@@ -351,7 +410,7 @@ class AddDateNodeModel extends NodeModel {
                 return cell;
             }
             final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
-            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_month, m_day.getIntValue());
+            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_monthValue, m_day.getIntValue());
             if (m_addZone.getBooleanValue()) {
                 return ZonedDateTimeCellFactory
                     .create(ZonedDateTime.of(LocalDateTime.of(localDate, localTimeCell.getLocalTime()), m_zone));

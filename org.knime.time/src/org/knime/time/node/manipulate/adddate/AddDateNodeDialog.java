@@ -68,7 +68,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -81,7 +80,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -104,10 +102,6 @@ class AddDateNodeDialog extends NodeDialogPane {
 
     private final DialogComponentNumberEdit m_dialogCompDay;
 
-    static final String OPTION_APPEND = "Append selected columns";
-
-    static final String OPTION_REPLACE = "Replace selected columns";
-
     private final DialogComponentBoolean m_dialogCompZoneBool;
 
     private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
@@ -116,16 +110,16 @@ class AddDateNodeDialog extends NodeDialogPane {
      * Setting up all DialogComponents.
      */
     public AddDateNodeDialog() {
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(AddDateNodeModel.createColSelectModel(), 0);
 
-        final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
-        m_dialogCompReplaceOrAppend =
-            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
+        final SettingsModelString replaceOrAppendModel = AddDateNodeModel.createReplaceAppendStringBool();
+        m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
+            AddDateNodeModel.OPTION_APPEND, AddDateNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = createSuffixModel();
+        final SettingsModelString suffixModel = AddDateNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        final SettingsModelIntegerBounded yearModel = createYearModel();
+        final SettingsModelIntegerBounded yearModel = AddDateNodeModel.createYearModel();
         m_dialogCompYear = new DialogComponentNumberEdit(yearModel, "Year:", 4);
 
         final Month[] months = Month.values();
@@ -134,16 +128,16 @@ class AddDateNodeDialog extends NodeDialogPane {
             monthsStrings[i] = months[i].getDisplayName(TextStyle.FULL, Locale.ENGLISH);
         }
 
-        final SettingsModelString monthModel = createMonthModel();
+        final SettingsModelString monthModel = AddDateNodeModel.createMonthModel();
         m_dialogCompMonth = new DialogComponentStringSelection(monthModel, "Month:", monthsStrings);
 
-        final SettingsModelInteger dayModel = createDayModel();
+        final SettingsModelInteger dayModel = AddDateNodeModel.createDayModel();
         m_dialogCompDay = new DialogComponentNumberEdit(dayModel, "Day:");
 
-        final SettingsModelBoolean zoneModelBool = createZoneModelBool();
+        final SettingsModelBoolean zoneModelBool = AddDateNodeModel.createZoneModelBool();
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
 
-        final SettingsModelString zoneSelectModel = createTimeZoneSelectModel();
+        final SettingsModelString zoneSelectModel = AddDateNodeModel.createTimeZoneSelectModel(zoneModelBool);
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
@@ -238,15 +232,6 @@ class AddDateNodeDialog extends NodeDialogPane {
         /*
          * Change listeners
          */
-        replaceOrAppendModel.addChangeListener(e -> {
-            if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                suffixModel.setEnabled(true);
-            } else {
-                suffixModel.setEnabled(false);
-            }
-        });
-
-        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
 
         final ChangeListener dateListener = new ChangeListener() {
             @Override
@@ -302,49 +287,4 @@ class AddDateNodeDialog extends NodeDialogPane {
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
     }
 
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalTimeValue.class);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", AddDateNodeDialog.OPTION_REPLACE);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(with date)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createYearModel() {
-        return new SettingsModelIntegerBounded("year", LocalDate.now().getYear(), 0, Integer.MAX_VALUE);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createMonthModel() {
-        return new SettingsModelString("month", LocalDate.now().getMonth().toString());
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createDayModel() {
-        return new SettingsModelIntegerBounded("day", LocalDate.now().getDayOfMonth(), 0, 31);
-    }
-
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createZoneModelBool() {
-        return new SettingsModelBoolean("zone_bool", false);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTimeZoneSelectModel() {
-        final SettingsModelString settingsModelString =
-            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
 }

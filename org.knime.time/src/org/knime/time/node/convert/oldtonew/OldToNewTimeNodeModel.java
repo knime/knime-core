@@ -55,6 +55,10 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JComboBox;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -110,17 +114,21 @@ import org.knime.time.node.convert.DateTimeTypes;
  */
 final class OldToNewTimeNodeModel extends NodeModel {
 
+    static final String OPTION_APPEND = "Append selected columns";
+
+    static final String OPTION_REPLACE = "Replace selected columns";
+
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = createSuffixModel();
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
     private final SettingsModelBoolean m_autoType = createTypeModelBool();
 
-    private final SettingsModelBoolean m_addZone = createZoneModelBool();
+    private final SettingsModelBoolean m_addZone = createZoneModelBool(m_autoType, null);
 
-    private final SettingsModelString m_timeZone = createTimeZoneSelectModel();
+    private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
 
     private String m_selectedNewType;
 
@@ -134,14 +142,19 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", OldToNewTimeNodeDialog.OPTION_REPLACE);
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
     }
 
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(new Date&Time)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(new Date&Time)");
+        replaceOrAppendModel.addChangeListener(
+            e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
+        suffixModel.setEnabled(false);
+        return suffixModel;
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -149,17 +162,44 @@ final class OldToNewTimeNodeModel extends NodeModel {
         return new SettingsModelBoolean("type_bool", true);
     }
 
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createZoneModelBool() {
-        return new SettingsModelBoolean("zone_bool", false);
+    /**
+     * @param typeModelBool
+     * @return the boolean model, used in both dialog and model.
+     */
+    static SettingsModelBoolean createZoneModelBool(final SettingsModelBoolean typeModelBool,
+        final JComboBox<DateTimeTypes> typeCombobox) {
+        final SettingsModelBoolean zoneModelBool = new SettingsModelBoolean("zone_bool", false);
+        typeModelBool.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (typeCombobox != null) {
+                    typeCombobox.setEnabled(!typeModelBool.getBooleanValue());
+                }
+                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
+                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
+            }
+        });
+        return zoneModelBool;
     }
 
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTimeZoneSelectModel() {
-        final SettingsModelString settingsModelString =
+    /**
+     * @param typeModelBool
+     * @return the string select model, used in both dialog and model.
+     */
+    static SettingsModelString createTimeZoneSelectModel(final SettingsModelBoolean zoneModelBool) {
+        final SettingsModelString zoneSelectModel =
             new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
+        zoneSelectModel.setEnabled(false);
+        zoneModelBool.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
+                zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
+            }
+        });
+        return zoneSelectModel;
     }
 
     /** One in, one out. */
@@ -184,7 +224,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
         }
         int i = 0;
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 ConvertTimeCellFactory cellFac = new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i++]);
                 rearranger.replace(cellFac, includedCol);
             } else {
@@ -420,7 +460,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     final RowInput rowInput = (RowInput)inputs[0];
                     final DataRow row = rowInput.poll();
                     if (row != null) {
-                        if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                        if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                             final DataColumnSpec[] colSpecs = new DataColumnSpec[row.getNumCells()];
                             final DataTableSpec inSpec = rowInput.getDataTableSpec();
                             final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
@@ -493,7 +533,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
                     DataCell[] datacells = new DataCell[includeIndexes.length];
                     for (int i = 0; i < includeIndexes.length; i++) {
-                        if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                        if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                             ConvertTimeCellFactory cellFac =
                                 new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i]);
                             datacells[i] = cellFac.getCells(row)[0];
@@ -505,7 +545,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                             datacells[i] = cellFac.getCells(row)[0];
                         }
                     }
-                    if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                    if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                         out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
                     } else {
                         out.push(new AppendedColumnRow(row, datacells));

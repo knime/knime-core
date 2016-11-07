@@ -58,6 +58,9 @@ import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.apache.commons.lang3.LocaleUtils;
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
@@ -111,24 +114,21 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 public class DateTimeToStringNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
-
-    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
-
-    private final SettingsModelString m_suffix = createSuffixModel();
-
-    private final SettingsModelString m_format = createFormatModel();
-
-    private final SettingsModelString m_locale = createLocaleModel();
-
-    /**
-     * Key for the string history to re-use user entered date formats.
-     */
     static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
     static final String OPTION_APPEND = "Append selected columns";
 
     static final String OPTION_REPLACE = "Replace selected columns";
+
+    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
+
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
+
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
+
+    private final SettingsModelString m_format = createFormatModel();
+
+    private final SettingsModelString m_locale = createLocaleModel();
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
@@ -141,11 +141,25 @@ public class DateTimeToStringNodeModel extends NodeModel {
         return new SettingsModelString("replace_or_append", OPTION_REPLACE);
     }
 
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(String)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(String)");
+        replaceOrAppendModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
+                    suffixModel.setEnabled(true);
+                } else {
+                    suffixModel.setEnabled(false);
+                }
+            }
+        });
+
+        suffixModel.setEnabled(false);
+        return suffixModel;
     }
 
     /** @return the string select model, used in both dialog and model. */

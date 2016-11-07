@@ -45,9 +45,6 @@
  */
 package org.knime.time.node.convert.newtoold;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
@@ -61,10 +58,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
 
-    static final String OPTION_APPEND = "Append selected columns";
-
-    static final String OPTION_REPLACE = "Replace selected columns";
-
     /** Setting up all DialogComponents. */
     NewToOldTimeNodeDialog() {
 
@@ -74,29 +67,14 @@ final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
         createNewGroup("Replace/Append Selection");
         setHorizontalPlacement(true);
         final SettingsModelString replaceOrAppendModel = NewToOldTimeNodeModel.createReplaceAppendStringBool();
-        addDialogComponent(
-            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE));
-        final SettingsModelString suffixModel = NewToOldTimeNodeModel.createSuffixModel();
+        addDialogComponent(new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
+            NewToOldTimeNodeModel.OPTION_APPEND, NewToOldTimeNodeModel.OPTION_REPLACE));
+        final SettingsModelString suffixModel = NewToOldTimeNodeModel.createSuffixModel(replaceOrAppendModel);
         addDialogComponent(new DialogComponentString(suffixModel, "Suffix of appended columns: "));
 
         createNewGroup("Time Zone Handling");
         addDialogComponent(new DialogComponentButtonGroup(NewToOldTimeNodeModel.createStringModel(), true, null,
             NewToOldTimeNodeModel.TIME_ZONE_OPT1, NewToOldTimeNodeModel.TIME_ZONE_OPT2));
-
-        /*
-         * Change and action listeners
-         */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
-            }
-        });
     }
 
 }

@@ -59,8 +59,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -98,10 +96,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
 
-    static final String OPTION_APPEND = "Append selected columns";
-
-    static final String OPTION_REPLACE = "Replace selected columns";
-
     /** Setting up all DialogComponents. */
     OldToNewTimeNodeDialog() {
 
@@ -111,20 +105,23 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompColFilter = new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0);
 
         final SettingsModelString replaceOrAppendModel = OldToNewTimeNodeModel.createReplaceAppendStringBool();
-        m_dialogCompReplaceOrAppend =
-            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
+        m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
+            OldToNewTimeNodeModel.OPTION_APPEND, OldToNewTimeNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = OldToNewTimeNodeModel.createSuffixModel();
+        final SettingsModelString suffixModel = OldToNewTimeNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
         final SettingsModelBoolean typeModelBool = OldToNewTimeNodeModel.createTypeModelBool();
         m_dialogCompTypeBool =
             new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)");
 
-        final SettingsModelBoolean zoneModelBool = OldToNewTimeNodeModel.createZoneModelBool();
+        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
+
+        final SettingsModelBoolean zoneModelBool =
+            OldToNewTimeNodeModel.createZoneModelBool(typeModelBool, m_typeCombobox);
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone, if possible");
 
-        final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel();
+        final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel(zoneModelBool);
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
@@ -193,7 +190,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         final JPanel panelTypeList = new JPanel(new FlowLayout());
         final JLabel label = new JLabel("New type: ");
         panelTypeList.add(label);
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
         m_typeCombobox.setEnabled(false);
         panelTypeList.add(m_typeCombobox);
         panelTypeSelec.add(panelTypeList, gbcTS);
@@ -227,27 +223,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         /*
          * Change and action listeners
          */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
-            }
-        });
-
-        typeModelBool.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                m_typeCombobox.setEnabled(!typeModelBool.getBooleanValue());
-                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
-                zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
-            }
-        });
 
         m_typeCombobox.addActionListener(new ActionListener() {
 
@@ -258,14 +233,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
                 } else {
                     zoneSelectModel.setEnabled(false);
                 }
-            }
-        });
-
-        zoneModelBool.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
             }
         });
     }

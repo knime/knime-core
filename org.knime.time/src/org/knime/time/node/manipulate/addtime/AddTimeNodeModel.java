@@ -67,6 +67,7 @@ import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdate.LocalDateValue;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.BufferedDataTable;
@@ -79,6 +80,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
@@ -97,23 +99,85 @@ import org.knime.core.util.UniqueNameGenerator;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 class AddTimeNodeModel extends org.knime.core.node.NodeModel {
-    private final SettingsModelColumnFilter2 m_colSelect = AddTimeNodeDialog.createColSelectModel();
 
-    private final SettingsModelString m_isReplaceOrAppend = AddTimeNodeDialog.createReplaceAppendStringBool();
+    static final String OPTION_APPEND = "Append selected columns";
 
-    private final SettingsModelString m_suffix = AddTimeNodeDialog.createSuffixModel();
+    static final String OPTION_REPLACE = "Replace selected columns";
 
-    private final SettingsModelInteger m_hour = AddTimeNodeDialog.createHourModel();
+    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelInteger m_minute = AddTimeNodeDialog.createMinuteModel();
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
-    private final SettingsModelInteger m_second = AddTimeNodeDialog.createSecondModel();
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
-    private final SettingsModelInteger m_nano = AddTimeNodeDialog.createNanoModel();
+    private final SettingsModelInteger m_hour = createHourModel();
 
-    private final SettingsModelBoolean m_addZone = AddTimeNodeDialog.createZoneModelBool();
+    private final SettingsModelInteger m_minute = createMinuteModel();
 
-    private final SettingsModelString m_timeZone = AddTimeNodeDialog.createTimeZoneSelectModel();
+    private final SettingsModelInteger m_second = createSecondModel();
+
+    private final SettingsModelInteger m_nano = createNanoModel();
+
+    private final SettingsModelBoolean m_addZone = createZoneModelBool();
+
+    private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
+
+    /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
+    public static SettingsModelColumnFilter2 createColSelectModel() {
+        return new SettingsModelColumnFilter2("col_select", LocalDateValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
+    }
+
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(with time)");
+        replaceOrAppendModel.addChangeListener(
+            e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
+        suffixModel.setEnabled(false);
+        return suffixModel;
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createHourModel() {
+        return new SettingsModelIntegerBounded("hour_int", LocalTime.now().getHour(), 0, 23);
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createMinuteModel() {
+        return new SettingsModelIntegerBounded("minute_int", LocalTime.now().getMinute(), 0, 59);
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createSecondModel() {
+        return new SettingsModelIntegerBounded("second_int", LocalTime.now().getSecond(), 0, 59);
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createNanoModel() {
+        return new SettingsModelIntegerBounded("nano_int", 0, 0, 999_999_999);
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    static SettingsModelBoolean createZoneModelBool() {
+        return new SettingsModelBoolean("zone_bool", false);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createTimeZoneSelectModel(final SettingsModelBoolean zoneModelBool) {
+        final SettingsModelString zoneSelectModel =
+            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
+        zoneSelectModel.setEnabled(false);
+        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
+        return zoneSelectModel;
+    }
 
     /**
      * one in, one out
@@ -162,7 +226,7 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
         ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(AddTimeNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 AddTimeCellFactory cellFac =
                     new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
@@ -205,7 +269,7 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
                 String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
                 int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(AddTimeNodeDialog.OPTION_REPLACE);
+                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
                 DataType dataType;
                 if (m_addZone.getBooleanValue()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;

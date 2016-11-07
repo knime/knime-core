@@ -51,18 +51,14 @@ package org.knime.time.node.manipulate.addtime;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.time.localdate.LocalDateValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -75,9 +71,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -100,10 +94,6 @@ class AddTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentNumberEdit m_dialogCompNano;
 
-    static final String OPTION_APPEND = "Append selected columns";
-
-    static final String OPTION_REPLACE = "Replace selected columns";
-
     private final DialogComponentBoolean m_dialogCompZoneBool;
 
     private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
@@ -112,29 +102,29 @@ class AddTimeNodeDialog extends NodeDialogPane {
      * Setting up all DialogComponents.
      */
     public AddTimeNodeDialog() {
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(AddTimeNodeModel.createColSelectModel(), 0);
 
-        final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
-        m_dialogCompReplaceOrAppend =
-            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
+        final SettingsModelString replaceOrAppendModel = AddTimeNodeModel.createReplaceAppendStringBool();
+        m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
+            AddTimeNodeModel.OPTION_APPEND, AddTimeNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = createSuffixModel();
+        final SettingsModelString suffixModel = AddTimeNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        m_dialogCompHour = new DialogComponentNumberEdit(createHourModel(), "Hour:");
+        m_dialogCompHour = new DialogComponentNumberEdit(AddTimeNodeModel.createHourModel(), "Hour:");
 
-        m_dialogCompMinute = new DialogComponentNumberEdit(createMinuteModel(), "Minute:");
+        m_dialogCompMinute = new DialogComponentNumberEdit(AddTimeNodeModel.createMinuteModel(), "Minute:");
 
-        final SettingsModelInteger secondModel = createSecondModel();
+        final SettingsModelInteger secondModel = AddTimeNodeModel.createSecondModel();
         m_dialogCompSecond = new DialogComponentNumberEdit(secondModel, "Second:");
 
-        final SettingsModelInteger nanoModel = createNanoModel();
+        final SettingsModelInteger nanoModel = AddTimeNodeModel.createNanoModel();
         m_dialogCompNano = new DialogComponentNumberEdit(nanoModel, "Nano:", 7);
 
-        final SettingsModelBoolean zoneModelBool = createZoneModelBool();
+        final SettingsModelBoolean zoneModelBool = AddTimeNodeModel.createZoneModelBool();
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
 
-        final SettingsModelString zoneSelectModel = createTimeZoneSelectModel();
+        final SettingsModelString zoneSelectModel = AddTimeNodeModel.createTimeZoneSelectModel(zoneModelBool);
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
@@ -225,27 +215,6 @@ class AddTimeNodeDialog extends NodeDialogPane {
          * add tab
          */
         addTab("Options", panel);
-
-        /*
-         * Change listeners
-         */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
-            }
-        });
-
-        zoneModelBool.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
-            }
-        });
     }
 
     /**
@@ -281,54 +250,4 @@ class AddTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
     }
 
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalDateValue.class);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", AddTimeNodeDialog.OPTION_REPLACE);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(with time)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createHourModel() {
-        return new SettingsModelIntegerBounded("hour_int", LocalTime.now().getHour(), 0, 23);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createMinuteModel() {
-        return new SettingsModelIntegerBounded("minute_int", LocalTime.now().getMinute(), 0, 59);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createSecondModel() {
-        return new SettingsModelIntegerBounded("second_int", LocalTime.now().getSecond(), 0, 59);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createNanoModel() {
-        return new SettingsModelIntegerBounded("nano_int", 0, 0, 999_999_999);
-    }
-
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createZoneModelBool() {
-        return new SettingsModelBoolean("zone_bool", false);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTimeZoneSelectModel() {
-        final SettingsModelString settingsModelString =
-            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
 }

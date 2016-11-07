@@ -118,7 +118,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
             DateTimeToStringNodeModel.OPTION_APPEND, DateTimeToStringNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = DateTimeToStringNodeModel.createSuffixModel();
+        final SettingsModelString suffixModel = DateTimeToStringNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
         m_formatModel = DateTimeToStringNodeModel.createFormatModel();
@@ -209,20 +209,8 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         addTab("Options", panel);
 
         /*
-         * Change and action listeners
+         * Change listeners
          */
-        replaceOrAppendModel.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (replaceOrAppendModel.getStringValue().equals(DateTimeToStringNodeModel.OPTION_APPEND)) {
-                    suffixModel.setEnabled(true);
-                } else {
-                    suffixModel.setEnabled(false);
-                }
-            }
-        });
-
         final ChangeListener listener = new ChangeListener() {
 
             @Override
