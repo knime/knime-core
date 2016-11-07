@@ -53,6 +53,10 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
 
 import org.apache.commons.lang3.LocaleUtils;
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
@@ -63,6 +67,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -84,6 +89,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -105,15 +111,83 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 public class DateTimeToStringNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = DateTimeToStringNodeDialog.createColSelectModel();
+    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelString m_isReplaceOrAppend = DateTimeToStringNodeDialog.createReplaceAppendStringBool();
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = DateTimeToStringNodeDialog.createSuffixModel();
+    private final SettingsModelString m_suffix = createSuffixModel();
 
-    private final SettingsModelString m_format = DateTimeToStringNodeDialog.createFormatModel();
+    private final SettingsModelString m_format = createFormatModel();
 
-    private final SettingsModelString m_locale = DateTimeToStringNodeDialog.createLocaleModel();
+    private final SettingsModelString m_locale = createLocaleModel();
+
+    /**
+     * Key for the string history to re-use user entered date formats.
+     */
+    static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
+
+    static final String OPTION_APPEND = "Append selected columns";
+
+    static final String OPTION_REPLACE = "Replace selected columns";
+
+    /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
+    static SettingsModelColumnFilter2 createColSelectModel() {
+        return new SettingsModelColumnFilter2("col_select", StringValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createSuffixModel() {
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(String)");
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createFormatModel() {
+        return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    static SettingsModelBoolean createCancelOnFailModel() {
+        return new SettingsModelBoolean("cancel_on_fail", true);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createLocaleModel() {
+        return new SettingsModelString("locale", Locale.getDefault().toString());
+    }
+
+    /**
+     * @return a set of all predefined formats plus the formats added by the user
+     */
+    static Collection<String> createPredefinedFormats() {
+        // unique values
+        Set<String> formats = new LinkedHashSet<String>();
+        formats.add("yyyy-MM-dd;HH:mm:ss.S");
+        formats.add("dd.MM.yyyy;HH:mm:ss.S");
+        formats.add("yyyy-MM-dd HH:mm:ss.S");
+        formats.add("dd.MM.yyyy HH:mm:ss.S");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formats.add("yyyy-MM-dd;HH:mm:ssVV");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'");
+        formats.add("yyyy/dd/MM");
+        formats.add("dd.MM.yyyy");
+        formats.add("yyyy-MM-dd");
+        formats.add("HH:mm:ss");
+        // check also the StringHistory....
+        final String[] userFormats = StringHistory.getInstance(FORMAT_HISTORY_KEY).getHistory();
+        for (String userFormat : userFormats) {
+            formats.add(userFormat);
+        }
+        return formats;
+    }
 
     /**
      */
@@ -152,7 +226,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(DateTimeToStringNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
                     new DataColumnSpecCreator(includedCol, StringCell.TYPE);
                 final TimeToStringCellFactory cellFac =
@@ -197,8 +271,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
                 final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
                 final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace =
-                    m_isReplaceOrAppend.getStringValue().equals(DateTimeToStringNodeDialog.OPTION_REPLACE);
+                final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
@@ -308,8 +381,8 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_locale.loadSettingsFrom(settings);
         final String dateformat = m_format.getStringValue();
         // if it is not a predefined one -> store it
-        if (!DateTimeToStringNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
-            StringHistory.getInstance(DateTimeToStringNodeDialog.FORMAT_HISTORY_KEY).add(dateformat);
+        if (!createPredefinedFormats().contains(dateformat)) {
+            StringHistory.getInstance(FORMAT_HISTORY_KEY).add(dateformat);
         }
     }
 
