@@ -243,6 +243,7 @@ import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.RemoteWorkflowInput;
 import org.knime.workbench.explorer.dialogs.SaveAsValidator;
 import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileInfo;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
@@ -3230,7 +3231,15 @@ public class WorkflowEditor extends GraphicalEditor implements
         assert m_origRemoteLocation != null : "No remote workflow";
         AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
 
-        if (remoteStore.fetchInfo().exists()) {
+        AbstractExplorerFileInfo fetchInfo = remoteStore.fetchInfo();
+        if (fetchInfo.exists()) {
+            if (!fetchInfo.isModifiable()) {
+                MessageDialog.openError(getSite().getShell(), "Workflow not writable",
+                    "You don't have permissions to overwrite the workflow. Use \"Save As...\" in order to save it to "
+                    + "a different location.");
+                return;
+            }
+
             boolean snapshotSupported = remoteStore.getContentProvider().supportsSnapshots();
             final AtomicReference<SnapshotPanel> snapshotPanel = new AtomicReference<SnapshotPanel>(null);
             MessageDialog dlg = new MessageDialog(getSite().getShell(), "Overwrite on server?", null,
@@ -3270,6 +3279,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                     return;
                 }
             }
+        } else if (!remoteStore.getParent().fetchInfo().isModifiable()) {
+            MessageDialog.openError(getSite().getShell(), "Workflow not writable",
+                "You don't have permissions to write into the workflow's parent folder. Use \"Save As...\" in order to"
+                    + " save it to a different location.");
+            return;
         }
 
         // selected a remote location: save + upload
