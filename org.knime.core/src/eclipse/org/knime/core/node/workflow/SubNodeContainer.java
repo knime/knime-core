@@ -55,6 +55,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,6 +67,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -863,11 +866,26 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     public InteractiveWebViewsResult getInteractiveWebViews() {
         try (WorkflowLock lock = m_wfm.lock()) {
-            Builder builder = InteractiveWebViewsResult.newBuilder();
-            m_wfm.getWorkflow().getNodeValues().stream()
+            // collect all the nodes first, then do make names unique (in case there are 2+ scatterplot)
+            NativeNodeContainer[] nodesWithViews = m_wfm.getWorkflow().getNodeValues().stream()
                     .filter(n -> n instanceof NativeNodeContainer)
+                    .filter(n -> n.getInteractiveWebViews().size() > 0)
                     .map(n -> (NativeNodeContainer)n)
-                    .forEachOrdered(n -> n.addInteractiveWebViewIfPresent(builder));
+                    .toArray(NativeNodeContainer[]::new);
+
+            // count how often certain names are in use
+            Map<String, Long> uniqueNameBag = Arrays.stream(nodesWithViews)
+                .map(n -> n.getInteractiveViewName())
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+            Builder builder = InteractiveWebViewsResult.newBuilder();
+            for (NativeNodeContainer n : nodesWithViews) {
+                String name = n.getInteractiveViewName();
+                if (uniqueNameBag.get(name) >= 2L) {
+                    name = name.concat(" (ID " + n.getID().getIndex() + ")");
+                }
+                builder.add(n, name);
+            }
             return builder.build();
         }
     }

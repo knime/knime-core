@@ -127,7 +127,15 @@ public final class InteractiveWebViewsResult {
          * @param nc The NC providing a interactive view.
          * @return this */
         public Builder add(final NativeNodeContainer nc) {
-            m_viewResults.add(new SingleInteractiveWebViewResult(nc, nc.getInteractiveViewName()));
+            return add(nc, nc.getInteractiveViewName());
+        }
+
+        /** Add the interactive view that is provided by a given node. Assumes the node does provide a view.
+         * @param nc The NC providing a interactive view.
+         * @param name the name as shown in the context menu.
+         * @return this */
+        public Builder add(final NativeNodeContainer nc, final String name) {
+            m_viewResults.add(new SingleInteractiveWebViewResult(nc, name));
             return this;
         }
 

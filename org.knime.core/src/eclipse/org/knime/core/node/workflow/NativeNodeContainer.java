@@ -299,12 +299,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return builder.build();
     }
 
-    void addInteractiveWebViewIfPresent(final InteractiveWebViewsResult.Builder builder) {
-        if (m_node.hasWizardView()) {
-            builder.add(this);
-        }
-    }
-
     /** {@inheritDoc} */
     @Override
     public boolean hasInteractiveView() {
