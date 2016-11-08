@@ -112,7 +112,7 @@
     <ports>
         <inPort index="0" name="Database Connection">A database connection to connect to the database.</inPort>
         <inPort index="1" name="Datatable">An optional data table whose data table spec should be used to create the new database table.</inPort>
-        <outPort index="0" name="Schema and Table Name">The schema and table name of the new created database table</outPort>
+        <outPort index="0" name="Database Connection">The input database connection including flow variables with the schema and table name of the new created database table</outPort>
         <!-- possibly more output ports here-->
     </ports>        
 </knimeNode>

@@ -20,8 +20,6 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.tablecreator.DBColumn;
 import org.knime.core.node.port.database.tablecreator.DBKey;
 import org.knime.core.node.port.database.tablecreator.DBTableCreator;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 
 /**
  * This is the model implementation of DBTableCreator.
@@ -41,7 +39,7 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
      */
     protected DBTableCreatorNodeModel() {
         super(new PortType[]{DatabaseConnectionPortObject.TYPE, BufferedDataTable.TYPE_OPTIONAL},
-            new PortType[]{FlowVariablePortObject.TYPE});
+            new PortType[]{DatabaseConnectionPortObject.TYPE});
     }
 
     /**
@@ -84,7 +82,7 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
             throw new InvalidSettingsException(e.getMessage());
         }
         pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
-        return new FlowVariablePortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
+        return new PortObjectSpec[]{dbSpec};
     }
 
     /**
@@ -94,8 +92,9 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
 
         exec.setMessage("Creating table");
+        final DatabaseConnectionPortObject dbConn = (DatabaseConnectionPortObject)inData[0];
         final DatabaseConnectionSettings conn =
-                ((DatabaseConnectionPortObject)inData[0]).getConnectionSettings(getCredentialsProvider());
+                dbConn.getConnectionSettings(getCredentialsProvider());
         final DBTableCreator tableCreator =
                 conn.getUtility().getTableCreator(m_config.getSchema(), getTableName(), m_config.isTempTable());
         final List<DBColumn> columns = m_config.getColumns();
@@ -108,7 +107,7 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
         if (!StringUtils.isBlank(warning)) {
             setWarningMessage(warning);
         }
-        return new PortObject[]{FlowVariablePortObject.INSTANCE};
+        return new PortObject[]{dbConn};
     }
 
     /**
