@@ -210,6 +210,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         m_previewLabel = new JLabel();
         gbcTypeFormat.insets = new Insets(0, 5, 0, 0);
         gbcTypeFormat.gridx = 0;
+        gbcTypeFormat.weightx = 0;
         gbcTypeFormat.gridy++;
         panelTypeFormat.add(m_previewLabel, gbcTypeFormat);
         // add label for warning
@@ -247,8 +248,9 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                             now1.format(formatter1);
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
-                            setTypeFormatWarningMessage(exception, "'" + includes[i] + "' is of type "
-                                + DateTimeTypes.LOCAL_DATE.toString() + " and does only have a date!");
+                            setTypeFormatWarningMessage(exception,
+                                "'" + includes[i] + "' is of type " + DateTimeTypes.LOCAL_DATE.toString()
+                                    + " and does only contain a date, but the format contains time fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
@@ -259,8 +261,9 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                             now2.format(formatter2);
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
-                            setTypeFormatWarningMessage(exception, "'" + includes[i] + "' is of type "
-                                + DateTimeTypes.LOCAL_TIME.toString() + " and does only have a time!");
+                            setTypeFormatWarningMessage(exception,
+                                "'" + includes[i] + "' is of type " + DateTimeTypes.LOCAL_TIME.toString()
+                                    + " and does only contain a time, but the format contains date fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
@@ -271,8 +274,10 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                             now3.format(formatter3);
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
-                            setTypeFormatWarningMessage(exception, "'" + includes[i] + "' is of type "
-                                + DateTimeTypes.LOCAL_DATE_TIME.toString() + " and does only have a date and a time!");
+                            setTypeFormatWarningMessage(exception,
+                                "'" + includes[i] + "' is of type " + DateTimeTypes.LOCAL_DATE_TIME
+                                    .toString()
+                                + " and does only contain a date and a time, but the format contains time zone fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
@@ -285,7 +290,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                         } catch (DateTimeException exception) {
                             setTypeFormatWarningMessage(exception,
                                 "'" + includes[i] + "' is of type " + DateTimeTypes.ZONED_DATE_TIME.toString()
-                                    + " and does only have a date, time and time zone or offset!");
+                                    + " and does only contain a date, time and time zone or offset!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
