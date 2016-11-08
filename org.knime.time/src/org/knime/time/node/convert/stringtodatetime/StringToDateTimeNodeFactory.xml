@@ -3,13 +3,17 @@
 <knimeNode icon="string2date.png" type="Manipulator">
 	<name>String to Date&amp;Time</name>
 	<shortDescription>
-		Parses date and/or time strings into Date&amp;Time cells.
+		Parses date and/or time strings into Date&amp;Time
+		cells.
 	</shortDescription>
 	<fullDescription>
 		<intro>
-			Parses the strings in the selected columns and converts them into Date&amp;Time cells using the provided
-			format pattern.	<br />
-			Since dates may contain localized terms such as month or weekday names, you can select a locale.
+			Parses the strings in the selected columns and converts them into
+			Date&amp;Time cells using the provided
+			format pattern.
+			<br />
+			Since dates may contain localized terms such as month or weekday
+			names, you can select a locale.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -18,11 +22,14 @@
 		</tab>
 		<tab name="Replace/Append Selection">
 			<option name="Append selected columns">
-				The selected columns will be appended to the input table. The suffix of	the appended columns can be
-				provided in the text field to the right.
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
 			</option>
 			<option name="Replace selected columns">
-				The selected columns will be replaced by the converted columns.
+				The selected columns will be replaced by the
+				converted columns.
 			</option>
 		</tab>
 		<tab name="Type and Format Selection">
@@ -30,8 +37,10 @@
 				The type of the new data cells can be selected.
 			</option>
 			<option name="Date format">
-				A format string (defined by <a
-                    href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>).
+				A format string (defined by
+				<a
+					href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>
+				).
 				<br />
 				<b>Examples:</b>
 				<ul>
@@ -88,14 +97,23 @@
 				</ul>
 			</option>
 			<option name="Locale">
-			A <i>locale</i> can be chosen, which determines the language and geographic region for terms such as months
-			or weekdays.
+				A
+				<i>locale</i>
+				can be chosen, which determines the language and geographic region
+				for terms such as months
+				or weekdays.
+			</option>
+			<option name="Content of the first cell">
+				Shows the content of the first non-missing cell of the first included
+				column to simplify format selection.
 			</option>
 		</tab>
 		<tab name="Abort Execution">
 			<option name="Fail on error">
-				If checked, the node will abort the execution and fail on errors. If unchecked, missing values will be
-				generated instead.
+				If checked, the node will abort the execution and
+				fail on errors. If unchecked, missing values will be
+				generated
+				instead.
 			</option>
 		</tab>
 	</fullDescription>
@@ -104,7 +122,8 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table containing the parsed columns.
+			Output table containing the parsed
+			columns.
 		</outPort>
 	</ports>
 </knimeNode>
