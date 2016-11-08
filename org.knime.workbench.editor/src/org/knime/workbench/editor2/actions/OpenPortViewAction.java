@@ -47,8 +47,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
@@ -143,8 +141,6 @@ public class OpenPortViewAction extends Action {
         LOGGER.debug("Open Port View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
         NodePort port = m_nodeContainer.getOutPort(m_index);
-        final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-        m_nodeContainer.getOutPort(m_index).openPortView(port.getPortName(), bounds);
+        m_nodeContainer.getOutPort(m_index).openPortView(port.getPortName(), OpenViewAction.getAppBoundsAsAWTRec());
     }
 }

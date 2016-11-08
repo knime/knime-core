@@ -83,6 +83,7 @@ import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
@@ -1172,11 +1173,18 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public abstract boolean hasInteractiveView();
 
-    /**
-     * @return true if node provides {@link WebTemplate} for an interactive web view.
-     * @since 2.8
+    /** Get the 'interactive web views' provided by this node. That is, views providing a {@link WebTemplate} for an interactive
+     * web view. {@link NativeNodeContainer} can have at most one view, {@link SubNodeContainer} may have many (one for
+     * each contained view node), {@link WorkflowManager} have none.
+     *
+     * <p>The model for the view is (currently) a {@link NodeModel} underlying the native node as the view itself
+     * lives in the UI code and has a strong dependency to the SWT browser / eclipse code.
+     *
+     * <p>The name associated with the web view (e.g. JS scatter plot) comes from a node's description (xml).
+     * @return An new {@link InteractiveWebViewsResult} with possibly 0 or more views.
+     * @since 3.3
      */
-    public abstract boolean hasInteractiveWebView();
+    public abstract InteractiveWebViewsResult getInteractiveWebViews();
 
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.

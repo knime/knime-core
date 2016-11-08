@@ -50,8 +50,6 @@ import java.util.OptionalInt;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -158,7 +156,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+            final java.awt.Rectangle knimeWindowBounds = OpenViewAction.getAppBoundsAsAWTRec();
             // first port is flow var port
             final OptionalInt portIndex = getPortIndex(cont);
             if (portIndex.isPresent()) {
@@ -167,10 +165,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                     @Override
                     public void run() {
                         NodeOutPort port = cont.getOutPort(portIndex.getAsInt());
-                        LOGGER.debug("Open First Out-Port View "
-                           + cont.getName() + " on port " + port.getPortName());
-                        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                        port.openPortView(port.getPortName(), bounds);
+                        LOGGER.debug("Open First Out-Port View " + cont.getName() + " on port " + port.getPortName());
+                        port.openPortView(port.getPortName(), knimeWindowBounds);
                     }
                 });
             }

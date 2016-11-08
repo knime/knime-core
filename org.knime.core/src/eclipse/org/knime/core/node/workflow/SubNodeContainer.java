@@ -55,6 +55,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -66,6 +67,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -124,6 +127,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplat
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -843,14 +848,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * {@inheritDoc}
      */
     @Override
-    public boolean hasInteractiveWebView() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getInteractiveViewName() {
         return null;
     }
@@ -864,7 +861,36 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return null;
     }
 
-    /** This is ambigious. A sub node currently doesn't support ExecutionEnvironments (in fact NativeNodeContainer
+    /** A {@link InteractiveWebViewsResult} for a subnode is the set of all wizard views in it (no recursion).
+     * {@inheritDoc} */
+    @Override
+    public InteractiveWebViewsResult getInteractiveWebViews() {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            // collect all the nodes first, then do make names unique (in case there are 2+ scatterplot)
+            NativeNodeContainer[] nodesWithViews = m_wfm.getWorkflow().getNodeValues().stream()
+                    .filter(n -> n instanceof NativeNodeContainer)
+                    .filter(n -> n.getInteractiveWebViews().size() > 0)
+                    .map(n -> (NativeNodeContainer)n)
+                    .toArray(NativeNodeContainer[]::new);
+
+            // count how often certain names are in use
+            Map<String, Long> uniqueNameBag = Arrays.stream(nodesWithViews)
+                .map(n -> n.getInteractiveViewName())
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+            Builder builder = InteractiveWebViewsResult.newBuilder();
+            for (NativeNodeContainer n : nodesWithViews) {
+                String name = n.getInteractiveViewName();
+                if (uniqueNameBag.get(name) >= 2L) {
+                    name = name.concat(" (ID " + n.getID().getIndex() + ")");
+                }
+                builder.add(n, name);
+            }
+            return builder.build();
+        }
+    }
+
+    /** This is ambiguous. A sub node currently doesn't support ExecutionEnvironments (in fact NativeNodeContainer
      * doesn't either). This method is overridden to avoid null checks in the super class.
      * {@inheritDoc} */
     @Override
@@ -2174,5 +2200,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             return getWorkflowManager().canPerformReset();
         }
     }
+
 
 }
