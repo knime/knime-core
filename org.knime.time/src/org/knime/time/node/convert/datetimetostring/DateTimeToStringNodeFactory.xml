@@ -81,6 +81,9 @@
 					<li>]: optional section end</li>
 				</ul>
 			</option>
+            <option name="Preview">
+                Shows a preview of the current settings applied to the current date and time.
+            </option>			
 		</tab>
 	</fullDescription>
 	<ports>
