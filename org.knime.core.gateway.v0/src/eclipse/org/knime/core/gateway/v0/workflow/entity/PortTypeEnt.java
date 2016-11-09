@@ -44,33 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
 package org.knime.core.gateway.v0.workflow.entity;
-
-import java.util.List;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ConnectionEnt extends Identifiable {
+public interface PortTypeEnt {
 
-    @Override
-    ConnectionEntID getID();
+    String getName();
 
-    NodeEntID getDest();
+    String getPortObjectClassName();
 
-    int getDestPort();
+    boolean isOptional();
 
-    NodeEntID getSource();
+    int getColor();
 
-    int getSourcePort();
-
-    boolean isDeleteable();
-
-    List<XYEnt> getBendPoints();
-
-    String getType();
+    boolean isHidden();
 
 }

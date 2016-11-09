@@ -74,9 +74,9 @@ public interface NodeEnt extends Identifiable {
 
     String getNodeState();
 
-    List<NodePortEnt> getInPorts();
+    List<NodeInPortEnt> getInPorts();
 
-    List<NodePortEnt> getOutPorts();
+    List<NodeOutPortEnt> getOutPorts();
 
     String getName();
 
@@ -85,6 +85,8 @@ public interface NodeEnt extends Identifiable {
     String getNodeType();
 
     BoundsEnt getBounds();
+
+    boolean isDeletable();
 
 
 }

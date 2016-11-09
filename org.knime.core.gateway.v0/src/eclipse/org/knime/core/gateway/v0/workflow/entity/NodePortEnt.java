@@ -54,4 +54,10 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface NodePortEnt extends ID {
 
+    int getPortIndex();
+
+    PortTypeEnt getPortType();
+
+    String getPortName();
+
 }
