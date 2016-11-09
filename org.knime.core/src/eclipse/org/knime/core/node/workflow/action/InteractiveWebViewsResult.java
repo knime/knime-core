@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
  * might be expensive.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzland
+ * @since 3.3
  */
 public final class InteractiveWebViewsResult {
 
