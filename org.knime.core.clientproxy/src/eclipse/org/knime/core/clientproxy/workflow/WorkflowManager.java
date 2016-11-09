@@ -82,7 +82,7 @@ import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -100,7 +100,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     /**
      * @param node
      */
-    public WorkflowManager(final WorkflowEnt node) {
+    public WorkflowManager(final WorkflowEntID node) {
         //TODO
         super(null);
     }

@@ -69,10 +69,11 @@ import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -105,8 +106,9 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public IWorkflowManager getParent() {
-        service(WorkflowService.class).getWorkflow(null);
-        return null;
+        WorkflowEntID parent = m_node.getParent();
+        //TODO return same instance if the instance for this ID has already been created
+        return new WorkflowManager(parent);
     }
 
     /**
@@ -114,8 +116,12 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public Optional<JobManagerUID> getJobManagerUID() {
-        // TODO Auto-generated method stub
-        return null;
+        JobManagerEnt jobManager = m_node.getJobManager();
+        JobManagerUID jobManagerUID = null;
+        if(jobManager != null) {
+            jobManagerUID = JobManagerUID.builder(jobManager.getID()).setName(jobManager.getName()).build();
+        }
+        return Optional.ofNullable(jobManagerUID);
     }
 
     /**
@@ -268,48 +274,42 @@ public class NodeContainer implements INodeContainer {
     @Override
     public NodeContainerState getNodeContainerState() {
         String state = m_node.getNodeState();
+        //TODO more rigid mapping here
         return new NodeContainerState() {
 
             @Override
             public boolean isWaitingToBeExecuted() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("queued");
             }
 
             @Override
             public boolean isIdle() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("idle");
             }
 
             @Override
             public boolean isHalted() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("halted");
             }
 
             @Override
             public boolean isExecutionInProgress() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("executing");
             }
 
             @Override
             public boolean isExecutingRemotely() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("executing_remotely");
             }
 
             @Override
             public boolean isExecuted() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("executed");
             }
 
             @Override
             public boolean isConfigured() {
-                // TODO Auto-generated method stub
-                return false;
+                return state.equals("configured");
             }
         };
     }
@@ -354,7 +354,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean areDialogSettingsValid() {
-        // TODO Auto-generated method stub
+        // TODO
         return false;
     }
 
@@ -381,8 +381,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public int getNrInPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_node.getInPorts().size();
     }
 
     /**
@@ -390,8 +389,8 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public INodeInPort getInPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO possibly return the same node in port instance for the same index
+        return new NodeInPort(m_node.getInPorts().get(index));
     }
 
     /**
@@ -399,8 +398,8 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public INodeOutPort getOutPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+      //TODO possibly return the same node in port instance for the same index
+        return new NodeOutPort(m_node.getOutPorts().get(index));
     }
 
     /**
@@ -408,8 +407,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public int getNrOutPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_node.getOutPorts().size();
     }
 
     /**
@@ -480,7 +478,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public URL getIcon() {
-        // TODO Auto-generated method stub
+        // TODO mapping from the node factory to the respective icon
         return null;
     }
 
@@ -576,8 +574,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean isDeletable() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_node.isDeletable();
     }
 
     /**
