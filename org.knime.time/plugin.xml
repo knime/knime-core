@@ -36,7 +36,7 @@
       <node
             category-path="/preview/datetime"
             deprecated="false"
-            factory-class="org.knime.time.node.manipulate.settimezone.SetTimeZoneNodeFactory">
+            factory-class="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory">
       </node>
    </extension>
 

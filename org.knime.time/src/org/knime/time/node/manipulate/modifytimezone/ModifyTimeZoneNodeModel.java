@@ -46,7 +46,7 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.settimezone;
+package org.knime.time.node.manipulate.modifytimezone;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,18 +54,25 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -74,7 +81,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
@@ -85,27 +91,93 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * The node model of the node which adds or changes a time zone.
+ * The node model of the node which modifies a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class SetTimeZoneNodeModel extends NodeModel {
+class ModifyTimeZoneNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = SetTimeZoneNodeDialog.createColSelectModel();
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter ZONED_AND_LOCAL_FILTER =
+        new DataTypeColumnFilter(ZonedDateTimeValue.class, LocalDateTimeValue.class);
 
-    private final SettingsModelString m_isReplaceOrAppend = SetTimeZoneNodeDialog.createReplaceAppendStringBool();
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter ZONED_FILTER = new DataTypeColumnFilter(ZonedDateTimeValue.class);
 
-    private final SettingsModelString m_suffix = SetTimeZoneNodeDialog.createSuffixModel();
+    static final String OPTION_APPEND = "Append selected columns";
 
-    private final SettingsModelString m_timeZone = SetTimeZoneNodeDialog.createTimeZoneSelectModel();
+    static final String OPTION_REPLACE = "Replace selected columns";
+
+    static final String MODIFY_OPTION_SET = "Set time zone";
+
+    static final String MODIFY_OPTION_SHIFT = "Shift time zone";
+
+    static final String MODIFY_OPTION_REMOVE = "Remove time zone";
+
+    private DataColumnSpecFilterConfiguration m_colSelect = createDCFilterConfiguration(ZONED_AND_LOCAL_FILTER);
+
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
+
+    private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
+
+    private final SettingsModelString m_timeZone = createTimeZoneSelectModel();
+
+    private final SettingsModelString m_modifyAction = createModifySelectModel();
+
+    /**
+     * @param typeColumnFilter column filter
+     * @return the column select model, used in both dialog and model.
+     */
+    public static DataColumnSpecFilterConfiguration
+        createDCFilterConfiguration(final DataTypeColumnFilter typeColumnFilter) {
+        return new DataColumnSpecFilterConfiguration("col_select", typeColumnFilter);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", OPTION_REPLACE);
+    }
+
+    /**
+     * @param replaceOrAppendModel model for the replace/append button group
+     * @return the string model, used in both dialog and model.
+     */
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(modified time zone)");
+        replaceOrAppendModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
+                    suffixModel.setEnabled(true);
+                } else {
+                    suffixModel.setEnabled(false);
+                }
+            }
+        });
+
+        suffixModel.setEnabled(false);
+        return suffixModel;
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createTimeZoneSelectModel() {
+        return new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createModifySelectModel() {
+        return new SettingsModelString("modify_select", MODIFY_OPTION_SET);
+    }
 
     /**
      * one in, one out
      */
-    protected SetTimeZoneNodeModel() {
+    protected ModifyTimeZoneNodeModel() {
         super(1, 1);
     }
 
@@ -140,19 +212,39 @@ class SetTimeZoneNodeModel extends NodeModel {
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
 
-        ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+        final ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+
+        DataType dataType;
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
+            dataType = LocalDateTimeCellFactory.TYPE;
+        } else {
+            dataType = ZonedDateTimeCellFactory.TYPE;
+        }
 
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(SetTimeZoneNodeDialog.OPTION_REPLACE)) {
-                DataColumnSpecCreator dataColumnSpecCreator =
-                    new DataColumnSpecCreator(includedCol, ZonedDateTimeCellFactory.TYPE);
-                SetTimeZoneCellFactory cellFac =
-                    new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++], zone);
+            if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
+                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
+                final SingleCellFactory cellFac;
+                if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                    cellFac = new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++], zone);
+                } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SHIFT)) {
+                    cellFac =
+                        new ShiftTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++], zone);
+                } else {
+                    cellFac = new RemoveTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
+                }
                 rearranger.replace(cellFac, includedCol);
             } else {
-                DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                    .newColumn(includedCol + m_suffix.getStringValue(), ZonedDateTimeCellFactory.TYPE);
-                SetTimeZoneCellFactory cellFac = new SetTimeZoneCellFactory(dataColSpec, includeIndeces[i++], zone);
+                DataColumnSpec dataColSpec =
+                    new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
+                final SingleCellFactory cellFac;
+                if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                    cellFac = new SetTimeZoneCellFactory(dataColSpec, includeIndeces[i++], zone);
+                } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SHIFT)) {
+                    cellFac = new ShiftTimeZoneCellFactory(dataColSpec, includeIndeces[i++], zone);
+                } else {
+                    cellFac = new RemoveTimeZoneCellFactory(dataColSpec, includeIndeces[i++]);
+                }
                 rearranger.append(cellFac);
             }
         }
@@ -185,33 +277,54 @@ class SetTimeZoneNodeModel extends NodeModel {
                 RowOutput out = (RowOutput)outputs[0];
                 DataTableSpec inSpec = in.getDataTableSpec();
                 String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                int[] includeIndices = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(SetTimeZoneNodeDialog.OPTION_REPLACE);
-                SetTimeZoneCellFactory[] cellFacs = new SetTimeZoneCellFactory[includeIndices.length];
+                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
+                SingleCellFactory[] cellFacs = new SingleCellFactory[includeIndeces.length];
 
                 ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
+                DataType dataType;
+                if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
+                    dataType = LocalDateTimeCellFactory.TYPE;
+                } else {
+                    dataType = ZonedDateTimeCellFactory.TYPE;
+                }
+
                 if (isReplace) {
-                    for (int i = 0; i < includeIndices.length; i++) {
+                    for (int i = 0; i < includeIndeces.length; i++) {
                         final DataColumnSpecCreator dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includeList[i], ZonedDateTimeCellFactory.TYPE);
-                        cellFacs[i] =
-                            new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i], zone);
+                            new DataColumnSpecCreator(includeList[i], dataType);
+                        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                            cellFacs[i] =
+                                new SetTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i], zone);
+                        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SHIFT)) {
+                            cellFacs[i] = new ShiftTimeZoneCellFactory(dataColumnSpecCreator.createSpec(),
+                                includeIndeces[i], zone);
+                        } else {
+                            cellFacs[i] =
+                                new RemoveTimeZoneCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                        }
                     }
                 } else {
-                    for (int i = 0; i < includeIndices.length; i++) {
+                    for (int i = 0; i < includeIndeces.length; i++) {
                         final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                            .newColumn(includeList[i] + m_suffix.getStringValue(), ZonedDateTimeCellFactory.TYPE);
-                        cellFacs[i] = new SetTimeZoneCellFactory(dataColSpec, includeIndices[i], zone);
+                            .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
+                        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                            cellFacs[i] = new SetTimeZoneCellFactory(dataColSpec, includeIndeces[i], zone);
+                        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SHIFT)) {
+                            cellFacs[i] = new ShiftTimeZoneCellFactory(dataColSpec, includeIndeces[i], zone);
+                        } else {
+                            cellFacs[i] = new RemoveTimeZoneCellFactory(dataColSpec, includeIndeces[i]);
+                        }
                     }
                 }
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
                     exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndices.length];
-                    for (int i = 0; i < includeIndices.length; i++) {
+                    final DataCell[] datacells = new DataCell[includeIndeces.length];
+                    for (int i = 0; i < includeIndeces.length; i++) {
                         if (isReplace) {
                             datacells[i] = cellFacs[i].getCell(row);
                         } else {
@@ -219,7 +332,7 @@ class SetTimeZoneNodeModel extends NodeModel {
                         }
                     }
                     if (isReplace) {
-                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndices));
+                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
                     } else {
                         out.push(new AppendedColumnRow(row, datacells));
                     }
@@ -254,10 +367,11 @@ class SetTimeZoneNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_colSelect.saveSettingsTo(settings);
+        m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
+        m_modifyAction.saveSettingsTo(settings);
     }
 
     /**
@@ -265,10 +379,11 @@ class SetTimeZoneNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.validateSettings(settings);
+        createDCFilterConfiguration(ZONED_AND_LOCAL_FILTER).loadConfigurationInModelChild(settings);
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_timeZone.validateSettings(settings);
+        m_modifyAction.validateSettings(settings);
     }
 
     /**
@@ -276,10 +391,13 @@ class SetTimeZoneNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.loadSettingsFrom(settings);
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
+        m_modifyAction.loadSettingsFrom(settings);
+        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET);
+        m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? ZONED_AND_LOCAL_FILTER : ZONED_FILTER);
+        m_colSelect.loadConfigurationInModel(settings);
     }
 
     /**
@@ -315,6 +433,56 @@ class SetTimeZoneNodeModel extends NodeModel {
             } else if (cell instanceof ZonedDateTimeCell) {
                 return ZonedDateTimeCellFactory
                     .create(ZonedDateTime.of(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime(), m_zone));
+            }
+            throw new IllegalStateException("Unexpected data type: " + cell.getClass());
+        }
+    }
+
+    private final class ShiftTimeZoneCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        private final ZoneId m_zone;
+
+        ShiftTimeZoneCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
+            super(inSpec);
+            m_colIndex = colIndex;
+            m_zone = zone;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            } else if (cell instanceof ZonedDateTimeCell) {
+                return ZonedDateTimeCellFactory
+                    .create(((ZonedDateTimeCell)cell).getZonedDateTime().toInstant().atZone(m_zone));
+            }
+            throw new IllegalStateException("Unexpected data type: " + cell.getClass());
+        }
+    }
+
+    private final class RemoveTimeZoneCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        RemoveTimeZoneCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+            super(inSpec);
+            m_colIndex = colIndex;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            } else if (cell instanceof ZonedDateTimeCell) {
+                return LocalDateTimeCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime());
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }

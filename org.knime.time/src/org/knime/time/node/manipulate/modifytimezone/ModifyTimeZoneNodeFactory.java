@@ -46,24 +46,24 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.settimezone;
+package org.knime.time.node.manipulate.modifytimezone;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which adds or changes a time zone.
+ * The node factory of the node which modifies a time zone.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class SetTimeZoneNodeFactory extends NodeFactory<SetTimeZoneNodeModel> {
+public class ModifyTimeZoneNodeFactory extends NodeFactory<ModifyTimeZoneNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public SetTimeZoneNodeModel createNodeModel() {
-        return new SetTimeZoneNodeModel();
+    public ModifyTimeZoneNodeModel createNodeModel() {
+        return new ModifyTimeZoneNodeModel();
     }
 
     /**
@@ -78,7 +78,8 @@ public class SetTimeZoneNodeFactory extends NodeFactory<SetTimeZoneNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView<SetTimeZoneNodeModel> createNodeView(final int viewIndex, final SetTimeZoneNodeModel nodeModel) {
+    public NodeView<ModifyTimeZoneNodeModel> createNodeView(final int viewIndex,
+        final ModifyTimeZoneNodeModel nodeModel) {
         return null;
     }
 
@@ -95,6 +96,6 @@ public class SetTimeZoneNodeFactory extends NodeFactory<SetTimeZoneNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new SetTimeZoneNodeDialog();
+        return new ModifyTimeZoneNodeDialog();
     }
 }
