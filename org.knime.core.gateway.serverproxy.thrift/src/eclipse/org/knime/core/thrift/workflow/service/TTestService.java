@@ -44,62 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 10, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.thrift.workflow.service;
 
-import java.util.List;
+import org.knime.core.thrift.workflow.entity.TTestEnt;
 
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
-
-import com.facebook.swift.codec.ThriftField;
-import com.facebook.swift.codec.ThriftStruct;
+import com.facebook.swift.service.ThriftMethod;
+import com.facebook.swift.service.ThriftService;
 
 /**
+ * TODO auto-generate
  *
- * @author Martin Horn, University of Konstanz
+ * @author hornm
  */
-@ThriftStruct
-public class TWorkflow implements WorkflowEnt {
+@ThriftService
+public interface TTestService {
 
-    public TWorkflow() {
-
-    }
-
-    @Override
-    @ThriftField(1)
-    public int test() {
-        return 10;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEntID getID() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NodeEnt> getNodes() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ConnectionEnt> getConnections() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+        @ThriftMethod
+        TTestEnt Tmethod(final TTestEnt param);
 
 }

@@ -44,41 +44,37 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 8, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.services;
 
-import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
-import org.knime.core.gateway.v0.workflow.service.ExecutionService;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.facebook.swift.service.ThriftMethod;
-import com.facebook.swift.service.ThriftService;
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@ThriftService
-public class TExecutionService implements ExecutionService {
+public class ServiceManager {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @ThriftMethod
-    public boolean canExecuteUpToHere(final NodeEntID n) {
-        return false;
+    private static ServiceFactory SERVICE_FACTORY;
 
+    /* SERVICES SINGLEON INSTANCES */
+    private static Map<Class<? extends GatewayService>, GatewayService> SERVICES =
+        new HashMap<Class<? extends GatewayService>, GatewayService>();
+
+    private ServiceManager() {
+        //private 'utility' class
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canExecuteNode(final NodeEntID n) {
-        // TODO Auto-generated method stub
-        return false;
+    public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
+        S service = (S)SERVICES.get(serviceInterface);
+        if (service == null) {
+            service = SERVICE_FACTORY.createService(serviceInterface);
+            SERVICES.put(serviceInterface, service);
+        }
+        return service;
     }
-
 }

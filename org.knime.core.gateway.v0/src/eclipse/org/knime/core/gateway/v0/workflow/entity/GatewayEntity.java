@@ -44,45 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift;
-
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
-
-import org.knime.core.gateway.v0.workflow.service.TestService;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
-import org.knime.core.thrift.workflow.service.TTestService;
-import org.knime.core.thrift.workflow.service.TTestServiceDelegate;
-import org.knime.core.thrift.workflow.service.TTestServiceImpl;
-
-import com.facebook.nifty.client.FramedClientConnector;
-import com.facebook.swift.codec.ThriftCodecManager;
-import com.facebook.swift.service.ThriftClientManager;
-import com.facebook.swift.service.ThriftServer;
-import com.facebook.swift.service.ThriftServiceProcessor;
-import com.google.common.net.HostAndPort;
+package org.knime.core.gateway.v0.workflow.entity;
 
 /**
+ * TODO
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class TestClientServer {
-
-    public static void main(final String[] args) throws InterruptedException, ExecutionException {
-        ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceImpl());
-        ThriftServer server = new ThriftServer(thriftServiceProcessor).start();
-        ThriftClientManager clientManager = new ThriftClientManager();
-        FramedClientConnector connector =
-            new FramedClientConnector(HostAndPort.fromParts("localhost", server.getPort()));
-        TestService service = new TTestServiceDelegate(clientManager.createClient(connector, TTestService.class).get());
-//        service.Tmethod(new TTestEnt.TTestEntBuilder().setAttr1("test").build());
-        service.method(new TTestEnt.TTestEntBuilder().setAttr1("test2").build());
-
-        clientManager.close();
-        server.close();
-    }
+public interface GatewayEntity {
 
 }

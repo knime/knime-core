@@ -14,5 +14,8 @@ Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.knime.core.gateway.v0.workflow.entity,
+Export-Package: org.knime.core.gateway.entities,
+ org.knime.core.gateway.services,
+ org.knime.core.gateway.v0.workflow.entity,
+ org.knime.core.gateway.v0.workflow.entity.builder,
  org.knime.core.gateway.v0.workflow.service

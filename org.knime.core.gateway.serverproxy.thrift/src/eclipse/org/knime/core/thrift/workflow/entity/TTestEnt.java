@@ -44,19 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 8, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.clientproxy.services;
+package org.knime.core.thrift.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.gateway.serverproxy.entity.AbstractTestEnt;
+import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
+
+import com.facebook.swift.codec.ThriftConstructor;
+import com.facebook.swift.codec.ThriftField;
+import com.facebook.swift.codec.ThriftStruct;
 
 /**
- * TODO: e.g. exposed as an extension point
+ * TODO auto-generate!
  *
- * @author Martin Horn, University of Konstanz
+ * @author hornm
  */
-public interface ServiceFactory {
+@ThriftStruct(builder = TTestEntBuilder.class)
+public class TTestEnt extends AbstractTestEnt {
 
-    <S extends GatewayService> S createService(Class<S> serviceInterface);
+    /**
+     * @param builder
+     */
+    protected TTestEnt(final TestEntBuilderImpl builder) {
+        super(builder);
+    }
+
+    @Override
+    @ThriftField(1)
+    public String getAttr1() {
+        return super.getAttr1();
+    }
+
+    @Override
+    @ThriftField(2)
+    public int getAttr2() {
+        return super.getAttr2();
+    }
+
+    public static class TTestEntBuilder extends TestEntBuilderImpl {
+
+        @Override
+        @ThriftConstructor
+        public TTestEnt build() {
+            return new TTestEnt(this);
+        }
+
+        @Override
+        @ThriftField
+        public TTestEntBuilder setAttr1(final String s) {
+            super.setAttr1(s);
+            return this;
+        }
+
+        @Override
+        @ThriftField
+        public TTestEntBuilder setAttr2(final int i) {
+            super.setAttr2(i);
+            return this;
+        }
+
+    }
 
 }

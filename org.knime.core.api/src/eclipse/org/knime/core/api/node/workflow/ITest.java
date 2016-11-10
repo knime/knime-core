@@ -44,39 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 8, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.gateway.serverproxy.service;
-
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+package org.knime.core.api.node.workflow;
 
 /**
- * TODO: delegate the method calls to {@link IWorkflowManager} and etc.
  *
- *
- * @author Martin Horn, University of Kontanz
+ * @author hornm
  */
-public class WorkflowServiceProxy implements WorkflowService {
+public interface ITest {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateWorkflow(final WorkflowEnt wf) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEnt getWorkflow(final WorkflowEntID id) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    String method(final String param);
 
 }

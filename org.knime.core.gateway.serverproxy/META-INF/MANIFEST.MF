@@ -16,3 +16,5 @@ Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: org.knime.core.gateway.serverproxy.entity,
+ org.knime.core.gateway.serverproxy.service

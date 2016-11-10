@@ -48,7 +48,7 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import static org.knime.core.clientproxy.services.ServiceManager.service;
+import static org.knime.core.gateway.services.ServiceManager.service;
 
 import java.util.List;
 

@@ -44,45 +44,68 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift;
+package org.knime.core.gateway.serverproxy.entity;
 
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
-
-import org.knime.core.gateway.v0.workflow.service.TestService;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
-import org.knime.core.thrift.workflow.service.TTestService;
-import org.knime.core.thrift.workflow.service.TTestServiceDelegate;
-import org.knime.core.thrift.workflow.service.TTestServiceImpl;
-
-import com.facebook.nifty.client.FramedClientConnector;
-import com.facebook.swift.codec.ThriftCodecManager;
-import com.facebook.swift.service.ThriftClientManager;
-import com.facebook.swift.service.ThriftServer;
-import com.facebook.swift.service.ThriftServiceProcessor;
-import com.google.common.net.HostAndPort;
+import org.knime.core.gateway.v0.workflow.entity.TestEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 
 /**
  *
  * @author hornm
  */
-public class TestClientServer {
+public abstract class AbstractTestEnt implements TestEnt {
 
-    public static void main(final String[] args) throws InterruptedException, ExecutionException {
-        ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceImpl());
-        ThriftServer server = new ThriftServer(thriftServiceProcessor).start();
-        ThriftClientManager clientManager = new ThriftClientManager();
-        FramedClientConnector connector =
-            new FramedClientConnector(HostAndPort.fromParts("localhost", server.getPort()));
-        TestService service = new TTestServiceDelegate(clientManager.createClient(connector, TTestService.class).get());
-//        service.Tmethod(new TTestEnt.TTestEntBuilder().setAttr1("test").build());
-        service.method(new TTestEnt.TTestEntBuilder().setAttr1("test2").build());
+    private final int m_i;
+    private final String m_s;
 
-        clientManager.close();
-        server.close();
+
+    protected AbstractTestEnt(final TestEntBuilderImpl builder) {
+        m_i = builder.m_i;
+        m_s = builder.m_s;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAttr1() {
+        return m_s;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getAttr2() {
+        return m_i;
+    }
+
+    public static abstract class TestEntBuilderImpl implements TestEntBuilder {
+
+        private int m_i;
+        private String m_s;
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TestEntBuilder setAttr1(final String s) {
+            m_s = s;
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TestEntBuilder setAttr2(final int i) {
+            m_i = i;
+            return this;
+        }
+
     }
 
 }

@@ -44,35 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.entities;
 
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
-import org.knime.core.thrift.workflow.entity.TWorkflow;
-
-import com.facebook.swift.service.ThriftMethod;
-import com.facebook.swift.service.ThriftService;
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@ThriftService
-public interface TWorkflowService extends WorkflowService {
+public class EntityBuilderManager {
 
-    /**
-     * {@inheritDoc}
-     */
-    @ThriftMethod
-    public void updateWorkflow(final TWorkflow wf);
+    private static EntityBuilderFactory BUILDER_FACTORY;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void updateWorkflow(final WorkflowEnt wf) {
-        updateWorkflow((TWorkflow) wf);
+    private EntityBuilderManager() {
+        //utility class
     }
+
+    public static <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
+        builder(final Class<B> builderInterface) {
+        //TODO caching
+        return BUILDER_FACTORY.createEntityBuilder(builderInterface);
+    }
+
 }

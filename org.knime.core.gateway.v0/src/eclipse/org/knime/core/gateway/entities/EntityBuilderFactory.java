@@ -44,45 +44,20 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.entities;
 
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
-import org.knime.core.thrift.workflow.entity.TWorkflow;
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 /**
+ * TODO: e.g. to be exposed as an extension point or maybe using guice??
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class TWorkflowServiceImpl implements TWorkflowService {
+public interface EntityBuilderFactory {
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateWorkflow(final TWorkflow wf) {
-        System.out.println("TEST " + wf.test());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateWorkflow(final WorkflowEnt wf) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEnt getWorkflow(final WorkflowEntID id) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B createEntityBuilder(Class<B> builderInterface);
 
 }

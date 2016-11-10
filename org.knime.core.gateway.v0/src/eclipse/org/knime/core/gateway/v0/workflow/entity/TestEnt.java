@@ -44,37 +44,19 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 8, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.clientproxy.services;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.knime.core.gateway.v0.workflow.service.GatewayService;
+package org.knime.core.gateway.v0.workflow.entity;
 
 /**
+ * Test entity.
  *
- * @author Martin Horn, University of Konstanz
+ * @author hornm
  */
-public class ServiceManager {
+public interface TestEnt extends GatewayEntity {
 
-    private static ServiceFactory SERVICE_FACTORY;
+    String getAttr1();
 
-    /* SERVICES SINGLEON INSTANCES */
-    private static Map<Class<? extends GatewayService>, GatewayService> SERVICES =
-        new HashMap<Class<? extends GatewayService>, GatewayService>();
+    int getAttr2();
 
-    private ServiceManager() {
-        //private 'utility' class
-    }
-
-    public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
-        S service = (S)SERVICES.get(serviceInterface);
-        if (service == null) {
-            service = SERVICE_FACTORY.createService(serviceInterface);
-            SERVICES.put(serviceInterface, service);
-        }
-        return service;
-    }
 }

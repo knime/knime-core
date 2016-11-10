@@ -44,45 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift;
+package org.knime.core.gateway.serverproxy.service;
 
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 
+import org.knime.core.api.node.workflow.ITest;
+import org.knime.core.gateway.v0.workflow.entity.TestEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.TestService;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
-import org.knime.core.thrift.workflow.service.TTestService;
-import org.knime.core.thrift.workflow.service.TTestServiceDelegate;
-import org.knime.core.thrift.workflow.service.TTestServiceImpl;
-
-import com.facebook.nifty.client.FramedClientConnector;
-import com.facebook.swift.codec.ThriftCodecManager;
-import com.facebook.swift.service.ThriftClientManager;
-import com.facebook.swift.service.ThriftServer;
-import com.facebook.swift.service.ThriftServiceProcessor;
-import com.google.common.net.HostAndPort;
 
 /**
  *
  * @author hornm
  */
-public class TestClientServer {
+public abstract class AbstractTestService implements TestService {
 
-    public static void main(final String[] args) throws InterruptedException, ExecutionException {
-        ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceImpl());
-        ThriftServer server = new ThriftServer(thriftServiceProcessor).start();
-        ThriftClientManager clientManager = new ThriftClientManager();
-        FramedClientConnector connector =
-            new FramedClientConnector(HostAndPort.fromParts("localhost", server.getPort()));
-        TestService service = new TTestServiceDelegate(clientManager.createClient(connector, TTestService.class).get());
-//        service.Tmethod(new TTestEnt.TTestEntBuilder().setAttr1("test").build());
-        service.method(new TTestEnt.TTestEntBuilder().setAttr1("test2").build());
+    //interface instances need to be injected somehow -> factory class to be exposed via an extension point?
+    //or using guice for dependency injection??
+    private ITest m_test;
 
-        clientManager.close();
-        server.close();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TestEnt method(final TestEnt param) {
+        //delegates the method call to a core.api method
+//        String s = m_test.method(param.getAttr1());
+        System.out.println("test");
+        return builder(TestEntBuilder.class).setAttr1("test3").setAttr2(3).build();
     }
 
 }

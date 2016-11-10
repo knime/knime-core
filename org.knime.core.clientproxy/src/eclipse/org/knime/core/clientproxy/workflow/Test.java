@@ -44,45 +44,30 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift;
+package org.knime.core.clientproxy.workflow;
 
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
+import static org.knime.core.gateway.services.ServiceManager.service;
 
+import org.knime.core.api.node.workflow.ITest;
+import org.knime.core.gateway.v0.workflow.entity.TestEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.TestService;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
-import org.knime.core.thrift.workflow.service.TTestService;
-import org.knime.core.thrift.workflow.service.TTestServiceDelegate;
-import org.knime.core.thrift.workflow.service.TTestServiceImpl;
-
-import com.facebook.nifty.client.FramedClientConnector;
-import com.facebook.swift.codec.ThriftCodecManager;
-import com.facebook.swift.service.ThriftClientManager;
-import com.facebook.swift.service.ThriftServer;
-import com.facebook.swift.service.ThriftServiceProcessor;
-import com.google.common.net.HostAndPort;
 
 /**
+ * Test class that calls a method from the {@link TestService}.
  *
  * @author hornm
  */
-public class TestClientServer {
+public class Test implements ITest {
 
-    public static void main(final String[] args) throws InterruptedException, ExecutionException {
-        ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceImpl());
-        ThriftServer server = new ThriftServer(thriftServiceProcessor).start();
-        ThriftClientManager clientManager = new ThriftClientManager();
-        FramedClientConnector connector =
-            new FramedClientConnector(HostAndPort.fromParts("localhost", server.getPort()));
-        TestService service = new TTestServiceDelegate(clientManager.createClient(connector, TTestService.class).get());
-//        service.Tmethod(new TTestEnt.TTestEntBuilder().setAttr1("test").build());
-        service.method(new TTestEnt.TTestEntBuilder().setAttr1("test2").build());
-
-        clientManager.close();
-        server.close();
+    @Override
+    public String method(final String param) {
+        TestService service = service(TestService.class);
+        TestEnt testEnt = builder(TestEntBuilder.class).setAttr1(param).setAttr2(3).build();
+        return service.method(testEnt).getAttr1();
     }
 
 }
