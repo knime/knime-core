@@ -94,10 +94,13 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
 
     private DataTableSpec m_spec;
 
+    private boolean m_includeLocalDateTime;
+
     /**
      * Setting up all DialogComponents.
      */
     ModifyTimeZoneNodeDialog() {
+        m_includeLocalDateTime = true;
         m_dialogCompColFilter = new DataColumnSpecFilterPanel();
 
         final SettingsModelString replaceOrAppendModel = ModifyTimeZoneNodeModel.createReplaceAppendStringBool();
@@ -186,21 +189,26 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                zoneSelectModel.setEnabled(
-                    !modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE));
-                boolean includeLocalDateTime =
-                    !modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
-                final DataTypeColumnFilter filter = includeLocalDateTime
-                    ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER;
-                final DataColumnSpecFilterConfiguration filterConfiguration =
-                    ModifyTimeZoneNodeModel.createDCFilterConfiguration(filter);
-                m_dialogCompColFilter.saveConfiguration(filterConfiguration);
-                final DataColumnSpecFilterConfiguration tempConfiguration =
-                    new DataColumnSpecFilterConfiguration(filterConfiguration.getConfigRootName());
-                final NodeSettings tempSettings = new NodeSettings("tempSettings");
-                tempConfiguration.saveConfiguration(tempSettings);
-                filterConfiguration.loadConfigurationInDialog(tempSettings, m_spec);
-                m_dialogCompColFilter.loadConfiguration(filterConfiguration, m_spec);
+                if ((m_includeLocalDateTime
+                    && !modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET))
+                    || (!m_includeLocalDateTime
+                        && modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET))) {
+                    zoneSelectModel.setEnabled(
+                        modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET));
+                    m_includeLocalDateTime =
+                        modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET);
+                    final DataTypeColumnFilter filter = m_includeLocalDateTime
+                        ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER;
+                    final DataColumnSpecFilterConfiguration filterConfiguration =
+                        ModifyTimeZoneNodeModel.createDCFilterConfiguration(filter);
+                    m_dialogCompColFilter.saveConfiguration(filterConfiguration);
+                    final DataColumnSpecFilterConfiguration tempConfiguration =
+                        new DataColumnSpecFilterConfiguration(filterConfiguration.getConfigRootName());
+                    final NodeSettings tempSettings = new NodeSettings("tempSettings");
+                    tempConfiguration.saveConfiguration(tempSettings);
+                    filterConfiguration.loadConfigurationInDialog(tempSettings, m_spec);
+                    m_dialogCompColFilter.loadConfiguration(filterConfiguration, m_spec);
+                }
             }
         });
     }
@@ -210,8 +218,8 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        boolean includeLocalDateTime = !((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
-            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
+        boolean includeLocalDateTime = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET);
         DataColumnSpecFilterConfiguration filterConfiguration =
             ModifyTimeZoneNodeModel.createDCFilterConfiguration(includeLocalDateTime
                 ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER);
@@ -234,10 +242,10 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
         m_dialogCompModifySelect.loadSettingsFrom(settings, specs);
-        boolean includeLocalDateTime = !((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
-            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
+        m_includeLocalDateTime = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET);
         final DataColumnSpecFilterConfiguration filterConfiguration =
-            ModifyTimeZoneNodeModel.createDCFilterConfiguration(includeLocalDateTime
+            ModifyTimeZoneNodeModel.createDCFilterConfiguration(m_includeLocalDateTime
                 ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER : ModifyTimeZoneNodeModel.ZONED_FILTER);
         filterConfiguration.loadConfigurationInDialog(settings, specs[0]);
         m_dialogCompColFilter.loadConfiguration(filterConfiguration, specs[0]);

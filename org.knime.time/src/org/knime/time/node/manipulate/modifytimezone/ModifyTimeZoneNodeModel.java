@@ -51,7 +51,6 @@ package org.knime.time.node.manipulate.modifytimezone;
 import java.io.File;
 import java.io.IOException;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
@@ -396,7 +395,7 @@ class ModifyTimeZoneNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_modifyAction.loadSettingsFrom(settings);
-        boolean includeLocalDateTime = !m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE);
+        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET);
         m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? ZONED_AND_LOCAL_FILTER : ZONED_FILTER);
         m_colSelect.loadConfigurationInModel(settings);
     }
@@ -458,10 +457,6 @@ class ModifyTimeZoneNodeModel extends NodeModel {
             final DataCell cell = row.getCell(m_colIndex);
             if (cell.isMissing()) {
                 return cell;
-            }
-            if (cell instanceof LocalDateTimeCell) {
-                return ZonedDateTimeCellFactory
-                    .create(((LocalDateTimeCell)cell).getLocalDateTime().toInstant(ZoneOffset.UTC).atZone(m_zone));
             }
             if (cell instanceof ZonedDateTimeCell) {
                 return ZonedDateTimeCellFactory
