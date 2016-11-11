@@ -61,8 +61,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -382,8 +380,7 @@ public final class FilesHistoryPanel extends JPanel {
         }
     }
 
-    private final List<ChangeListener> m_changeListener =
-            new ArrayList<ChangeListener>();
+    private final List<ChangeListener> m_changeListener = new ArrayList<ChangeListener>();
 
     private final JComboBox<String> m_textBox;
 
@@ -471,38 +468,9 @@ public final class FilesHistoryPanel extends JPanel {
         m_textBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                if ((e.getStateChange() == ItemEvent.SELECTED)
-                        && (e.getItem() != null)) {
-                    ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
-                    for (ChangeListener cl : m_changeListener) {
-                        cl.stateChanged(ev);
-                    }
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    fileLocationChanged();
                 }
-            }
-        });
-        ((JTextField) m_textBox.getEditor().getEditorComponent()).addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(final KeyEvent e) {
-            }
-
-            @Override
-            public void keyReleased(final KeyEvent e) {
-                ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
-                for (ChangeListener cl : m_changeListener) {
-                    cl.stateChanged(ev);
-                }
-            }
-
-            @Override
-            public void keyPressed(final KeyEvent e) {
-            }
-        });
-
-        // install listeners to update warn message whenever file name changes
-        m_textBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                fileLocationChanged();
             }
         });
 
@@ -542,10 +510,7 @@ public final class FilesHistoryPanel extends JPanel {
                 if (newFile != null) {
                     m_textBox.setSelectedItem(newFile);
                     StringHistory.getInstance(m_historyID).add(newFile);
-                    ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
-                    for (ChangeListener cl : m_changeListener) {
-                        cl.stateChanged(ev);
-                    }
+                    fileLocationChanged();
                 }
             }
         });
@@ -862,7 +827,7 @@ public final class FilesHistoryPanel extends JPanel {
     private void fileLocationChanged() {
         String selFile = getSelectedFile();
         m_warnMsg.setText("");
-        if (selFile != null && selFile.length() > 0) {
+        if (StringUtils.isNotEmpty(selFile)) {
             try {
                 URL url = FileUtil.toURL(selFile);
                 m_warnMsg.checkLocation(url);
@@ -873,6 +838,8 @@ public final class FilesHistoryPanel extends JPanel {
                 // ignore
             }
         }
+        final ChangeEvent changeEvent = new ChangeEvent(this);
+        m_changeListener.stream().forEach(c -> c.stateChanged(changeEvent));
     }
 
     /**
