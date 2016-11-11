@@ -63,6 +63,8 @@ public abstract class AbstractTestService implements TestService {
 
     //interface instances need to be injected somehow -> factory class to be exposed via an extension point?
     //or using guice for dependency injection??
+    //reason: we only want to develop against core.api and not against the core
+    //TestImpl needs to be injected here
     private ITest m_test;
 
     /**

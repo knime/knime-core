@@ -44,26 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 11, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift;
 
-import java.util.List;
-
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.entities.EntityBuilderFactory;
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowService extends GatewayService {
+public class TEntityBuilderFactory implements EntityBuilderFactory {
 
-    void updateWorkflow(WorkflowEnt wf);
-
-    WorkflowEnt getWorkflow(WorkflowEntID id);
-
-    //TODO workflow groups, workflow metadata (e.g. permissions), etc.?
-    List<WorkflowEntID> getAllWorkflows();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
+        createEntityBuilder(final Class<B> builderInterface) {
+        //TODO don't use if here but a map or annotations
+        if (builderInterface.isAssignableFrom(TestEntBuilder.class)) {
+            //TODO return the client stub here
+            return null;
+        }
+        return null;
+    }
 
 }

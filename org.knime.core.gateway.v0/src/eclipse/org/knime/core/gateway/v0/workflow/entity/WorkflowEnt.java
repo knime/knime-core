@@ -54,7 +54,7 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends Identifiable {
+public interface WorkflowEnt extends Identifiable, GatewayEntity {
 
     @Override
     WorkflowEntID getID();

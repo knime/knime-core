@@ -48,6 +48,8 @@
  */
 package org.knime.core.clientproxy.workflow;
 
+import static org.knime.core.gateway.services.ServiceManager.service;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -82,7 +84,11 @@ import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -97,12 +103,15 @@ import org.knime.core.util.Pair;
  */
 public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
+    private WorkflowEnt m_workflow;
+
     /**
      * @param node
      */
-    public WorkflowManager(final WorkflowEntID node) {
+    public WorkflowManager(final WorkflowEntID id) {
         //TODO
         super(null);
+        m_workflow = service(WorkflowService.class).getWorkflow(id);
     }
 
     /**
@@ -669,7 +678,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Collection<INodeContainer> getAllNodeContainers() {
-        // TODO Auto-generated method stub
+        List<NodeEnt> nodes = m_workflow.getNodes();
         return null;
     }
 
@@ -678,7 +687,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Collection<IConnectionContainer> getConnectionContainers() {
-        // TODO Auto-generated method stub
+        List<ConnectionEnt> connections = m_workflow.getConnections();
         return null;
     }
 

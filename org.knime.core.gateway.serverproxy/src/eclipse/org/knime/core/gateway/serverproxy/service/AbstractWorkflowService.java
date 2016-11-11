@@ -44,26 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 11, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.gateway.serverproxy.service;
 
-import java.util.List;
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowService extends GatewayService {
+public abstract class AbstractWorkflowService implements WorkflowService {
 
-    void updateWorkflow(WorkflowEnt wf);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateWorkflow(final WorkflowEnt wf) {
+        // TODO Auto-generated method stub
 
-    WorkflowEnt getWorkflow(WorkflowEntID id);
+    }
 
-    //TODO workflow groups, workflow metadata (e.g. permissions), etc.?
-    List<WorkflowEntID> getAllWorkflows();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowEnt getWorkflow(final WorkflowEntID id) {
+        //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
+        IWorkflowManager wfm = null;
+        wfm.getAllNodeContainers();
+        return builder(WorkflowEntBuilder.class).setNodes(null).setConnections(null).build();
+    }
 
 }

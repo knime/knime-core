@@ -44,26 +44,47 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 11, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift;
 
-import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.services.ServiceFactory;
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.gateway.v0.workflow.service.TestService;
+import org.knime.core.thrift.workflow.service.TTestService;
+import org.knime.core.thrift.workflow.service.TTestServiceDelegate;
+
+import com.facebook.nifty.client.FramedClientConnector;
+import com.facebook.swift.service.ThriftClientManager;
+import com.google.common.net.HostAndPort;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowService extends GatewayService {
+public class TServiceFactory implements ServiceFactory {
 
-    void updateWorkflow(WorkflowEnt wf);
+    private ThriftClientManager clientManager = new ThriftClientManager();
 
-    WorkflowEnt getWorkflow(WorkflowEntID id);
+    private FramedClientConnector connector = new FramedClientConnector(HostAndPort.fromParts("localhost", 2000));
 
-    //TODO workflow groups, workflow metadata (e.g. permissions), etc.?
-    List<WorkflowEntID> getAllWorkflows();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
+        //TODO don't use if here but a automatically filled map or annotations
+        if (serviceInterface.isAssignableFrom(TestService.class)) {
+            try {
+                return (S)new TTestServiceDelegate(clientManager.createClient(connector, TTestService.class).get());
+            } catch (InterruptedException | ExecutionException ex) {
+                //TODO
+                throw new RuntimeException(ex);
+            }
+        }
+        return null;
+    }
 
 }
