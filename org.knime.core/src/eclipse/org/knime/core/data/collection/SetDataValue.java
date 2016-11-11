@@ -48,6 +48,7 @@
 package org.knime.core.data.collection;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 
 /**
  * Additionally provides 'contains' functionality.
@@ -63,5 +64,33 @@ public interface SetDataValue extends CollectionDataValue {
      * @return true if the argument is contained in the collection.
      * @see DataCell#equals(Object o)
      */
-    public boolean contains(final DataCell cell);
+    boolean contains(final DataCell cell);
+
+
+    /**
+     * Meta information to collection values.
+     *
+     * @see DataValue#UTILITY
+     * @since 3.3
+     */
+    UtilityFactory UTILITY = new SetUtilityFactory();
+
+    /**
+     * Implementations of the meta information of this value class.
+     *
+     * @since 3.3
+     */
+    class SetUtilityFactory extends CollectionUtilityFactory {
+        protected SetUtilityFactory() {
+            super(SetDataValue.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Set";
+        }
+    }
 }

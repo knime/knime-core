@@ -22,6 +22,30 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/CollectionDataValue.java" type="org.knime.core.data.collection.CollectionDataValue$CollectionUtilityFactory">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.CollectionDataValue.CollectionUtilityFactory"/>
+                <message_argument value="CollectionUtilityFactory()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/ListDataValue.java" type="org.knime.core.data.collection.ListDataValue">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.ListDataValue"/>
+                <message_argument value="UTILITY"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/SetDataValue.java" type="org.knime.core.data.collection.SetDataValue">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.SetDataValue"/>
+                <message_argument value="UTILITY"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>
