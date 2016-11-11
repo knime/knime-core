@@ -80,9 +80,9 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
-import org.knime.core.util.layout.LayoutUtil;
 
 /**
  * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.

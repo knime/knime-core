@@ -46,7 +46,7 @@
  * History
  *   11 Nov 2016 (albrecht): created
  */
-package org.knime.core.util.layout;
+package org.knime.core.node.wizard.util;
 
 import java.io.IOException;
 import java.util.Map;
@@ -60,6 +60,7 @@ import org.osgi.util.tracker.ServiceTracker;
 /**
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
+ * @since 3.3
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class LayoutUtil {

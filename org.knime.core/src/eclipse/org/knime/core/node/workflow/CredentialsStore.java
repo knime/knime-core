@@ -288,6 +288,7 @@ public final class CredentialsStore implements Observer {
      * to inherit credentials from the calling node/workflow.
      * @param v Credentials flow variable.
      * @throws IllegalArgumentException If flow variable doesn't represent credentials.
+     * @since 3.3
      */
     public void addFromFlowVariable(final FlowVariable v) {
         CheckUtils.checkArgument(v.getType().equals(FlowVariable.Type.CREDENTIALS),
