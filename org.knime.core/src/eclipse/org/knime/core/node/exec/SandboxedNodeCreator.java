@@ -78,6 +78,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -259,6 +260,14 @@ public final class SandboxedNodeCreator {
                 tempWFM.saveNodeSettings(inID, s);
                 PortObjectInNodeModel.setInputNodeSettings(s,
                     portObjectRepositoryID, flowVars, m_copyDataIntoNewContext);
+
+                //update credentials store of the workflow
+                CredentialsStore cs  = tempWFM.getCredentialsStore();
+                flowVars.stream()
+                    .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
+                    .filter(f -> !cs.contains(f.getName()))
+                    .forEach(cs::addFromFlowVariable);
+
                 tempWFM.loadNodeSettings(inID, s);
                 ins[i] = inID;
             }

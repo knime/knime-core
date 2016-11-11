@@ -56,6 +56,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -116,6 +117,9 @@ public final class PortObjectInNodeModel extends NodeModel {
             case STRING:
                 pushFlowVariableString(fv.getName(), fv.getStringValue());
                 break;
+            case CREDENTIALS:
+                Node.invokePushFlowVariable(this, fv);
+                break;
             default:
                 throw new RuntimeException("Unknown variable type: "
                         + fv.getType() + " (" + fv + ")");
@@ -147,7 +151,9 @@ public final class PortObjectInNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new PortObjectIDSettings().loadSettings(settings);
+        PortObjectIDSettings s = new PortObjectIDSettings();
+        s.setCredentialsProvider(getCredentialsProvider());
+        s.loadSettings(settings);
     }
 
     /** {@inheritDoc} */
@@ -155,6 +161,7 @@ public final class PortObjectInNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         PortObjectIDSettings s = new PortObjectIDSettings();
+        s.setCredentialsProvider(getCredentialsProvider());
         s.loadSettings(settings);
         m_portObjectIDSettings = s;
     }

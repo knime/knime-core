@@ -284,6 +284,18 @@ public final class CredentialsStore implements Observer {
         m_manager.setDirty();
     }
 
+    /** Adds the credentials defined in the argument to this store. Used when running 'external' workflows that need
+     * to inherit credentials from the calling node/workflow.
+     * @param v Credentials flow variable.
+     * @throws IllegalArgumentException If flow variable doesn't represent credentials.
+     */
+    public void addFromFlowVariable(final FlowVariable v) {
+        CheckUtils.checkArgument(v.getType().equals(FlowVariable.Type.CREDENTIALS),
+            "Not a crendentials flow variable: %s", v);
+        CredentialsFlowVariableValue credentialsValue = v.getCredentialsValue();
+        add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword()));
+    }
+
     /** Framework private method to update or add a credentials object. Used by the Credentials quickform node
      * to hijack the store and add/fix. Subject to change in the next feature release.
      *
