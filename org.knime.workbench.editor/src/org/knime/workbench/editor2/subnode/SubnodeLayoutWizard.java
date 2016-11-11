@@ -52,12 +52,14 @@ package org.knime.workbench.editor2.subnode;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -92,6 +94,11 @@ public class SubnodeLayoutWizard extends Wizard {
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
         //Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
+        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
+        for (Map.Entry<NodeID, WizardNode> entry : viewNodes.entrySet()) {
+            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(wfManager.getID(), entry.getKey());
+            resultMap.put(idSuffix, entry.getValue());
+        }
         List<NodeID> nodeIDs = new ArrayList<NodeID>();
         nodeIDs.addAll(viewNodes.keySet());
         /*for (NodeID subnodeID : nestedSubnodes.keySet()) {
@@ -102,7 +109,7 @@ public class SubnodeLayoutWizard extends Wizard {
         }*/
         Collections.sort(nodeIDs);
         m_page = new SubnodeLayoutJSONEditorPage("Change the layout configuration");
-        m_page.setNodes(m_subNodeContainer, viewNodes);
+        m_page.setNodes(m_subNodeContainer, resultMap);
         addPage(m_page);
     }
 
