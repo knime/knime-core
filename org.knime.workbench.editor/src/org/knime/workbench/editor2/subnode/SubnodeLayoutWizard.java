@@ -90,19 +90,19 @@ public class SubnodeLayoutWizard extends Wizard {
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
-        Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
+        //Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
         List<NodeID> nodeIDs = new ArrayList<NodeID>();
         nodeIDs.addAll(viewNodes.keySet());
-        for (NodeID subnodeID : nestedSubnodes.keySet()) {
+        /*for (NodeID subnodeID : nestedSubnodes.keySet()) {
             WorkflowManager nestedWFManager = nestedSubnodes.get(subnodeID).getWorkflowManager();
             if (!nestedWFManager.findNodes(WizardNode.class, true).isEmpty()) {
                 nodeIDs.add(subnodeID);
             }
-        }
+        }*/
         Collections.sort(nodeIDs);
         m_page = new SubnodeLayoutJSONEditorPage("Change the layout configuration");
-        m_page.setNodes(wfManager, m_subNodeContainer, nodeIDs);
+        m_page.setNodes(m_subNodeContainer, viewNodes);
         addPage(m_page);
     }
 

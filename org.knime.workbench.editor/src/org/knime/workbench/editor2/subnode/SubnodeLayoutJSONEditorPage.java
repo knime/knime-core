@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BoxLayout;
@@ -89,9 +90,10 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.js.core.layout.LayoutTemplateProvider;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
@@ -112,9 +114,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private static NodeLogger LOGGER = NodeLogger.getLogger(SubnodeLayoutJSONEditorPage.class);
 
-    private WorkflowManager m_wfManager;
     private SubNodeContainer m_subNodeContainer;
-    private List<NodeID> m_viewNodes;
+    private Map<NodeID, WizardNode> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
     private RSyntaxTextArea m_textArea;
@@ -272,9 +273,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param subnodeContainer
      * @param viewNodes
      */
-    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer,
-        final List<NodeID> viewNodes) {
-        m_wfManager = manager;
+    public void setNodes(final SubNodeContainer subnodeContainer, final Map<NodeID, WizardNode> viewNodes) {
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
         JSONLayoutPage page = null;
@@ -307,10 +306,16 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         JSONLayoutPage page = new JSONLayoutPage();
         List<JSONLayoutRow> rows = new ArrayList<JSONLayoutRow>();
         page.setRows(rows);
-        for (NodeID nodeID : m_viewNodes) {
+        for (NodeID nodeID : m_viewNodes.keySet()) {
             JSONLayoutRow row = new JSONLayoutRow();
             JSONLayoutColumn col = new JSONLayoutColumn();
             JSONLayoutViewContent view = new JSONLayoutViewContent();
+            if (m_viewNodes.get(nodeID) instanceof LayoutTemplateProvider) {
+                JSONLayoutViewContent layoutViewTemplate = ((LayoutTemplateProvider)m_viewNodes.get(nodeID)).getLayoutTemplate();
+                if (layoutViewTemplate != null) {
+                    view = layoutViewTemplate;
+                }
+            }
             view.setNodeID(Integer.toString(nodeID.getIndex()));
             col.setContent(Arrays.asList(new JSONLayoutViewContent[]{view}));
             try {
@@ -355,7 +360,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         Set<Integer> notExistingIDs = new HashSet<Integer>(m_documentNodeIDs);
         Set<Integer> duplicateIDCheck = new HashSet<Integer>(m_documentNodeIDs);
         Set<Integer> duplicateIDs = new HashSet<Integer>();
-        for (NodeID id : m_viewNodes) {
+        for (NodeID id : m_viewNodes.keySet()) {
             Integer i = new Integer(id.getIndex());
             if (m_documentNodeIDs.contains(i)) {
                 notExistingIDs.remove(i);
