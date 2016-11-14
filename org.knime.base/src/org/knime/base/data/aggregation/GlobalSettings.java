@@ -65,6 +65,28 @@ import org.knime.core.data.filestore.FileStoreFactory;
  */
 public class GlobalSettings {
 
+    /**
+     * A context the aggregation is performed in (e.g. in the GroupBy-node -> row aggregation; in the Column
+     * Aggregator-node -> column aggregation).
+     * @since 3.3
+     */
+    public static enum AggregationContext {
+            /**
+             * Aggregation of rows.
+             */
+            ROW_AGGREGATION,
+
+            /**
+             * Aggregation of columns.
+             */
+            COLUMN_AGGREGATION,
+
+            /**
+             * Unknown.
+             */
+            UNKNOWN;
+    }
+
     /**Default global settings object that should be only used in
      * operator templates!!!*/
     public static final GlobalSettings DEFAULT = new GlobalSettings();
@@ -92,6 +114,8 @@ public class GlobalSettings {
     private final List<String> m_groupColNames;
 
     private final FileStoreFactory m_fileStoreFactory;
+
+    private AggregationContext m_aggregationContext = AggregationContext.UNKNOWN;
 
     /**Constructor for class GlobalSettings.
      * This constructor is used to create a dummy object that contains
@@ -148,8 +172,10 @@ public class GlobalSettings {
      * @param valueDelimiter the delimiter to use for value separation
      * @param spec the {@link DataTableSpec} of the table to process
      * @param noOfRows the number of rows of the input table
+     * @deprecated use the {@link GlobalSettingsBuilder} instead (via {@link #builder()})
      * @since 3.0
      */
+    @Deprecated
     public GlobalSettings(final FileStoreFactory fileStoreFactory,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
@@ -185,9 +211,11 @@ public class GlobalSettings {
         if (spec == null) {
             throw new NullPointerException("spec must not be null");
         }
-        if (noOfRows < 0) {
-            throw new IllegalArgumentException("No of rows must be positive");
-        }
+
+        //negative row count is allowed, meaning it is not available
+        //        if (noOfRows < 0) {
+        //            throw new IllegalArgumentException("No of rows must be positive");
+        //        }
         if (keyValueMap == null) {
             throw new NullPointerException("keyValueMap must not be null");
         }
@@ -198,6 +226,15 @@ public class GlobalSettings {
         m_spec = spec;
         m_noOfRows = noOfRows;
         m_keyValueMap = keyValueMap;
+    }
+
+    /**
+     * @param builder builder to create a new {@link GlobalSettings} instance from
+     */
+    private GlobalSettings(final GlobalSettingsBuilder builder) {
+        this(builder.m_fileStoreFactory, builder.m_groupColNames, builder.m_maxUniqueValues, builder.m_valueDelimiter,
+            builder.m_spec, builder.m_noOfRows, builder.m_keyValueMap);
+        m_aggregationContext = builder.m_context;
     }
 
     /**
@@ -216,7 +253,7 @@ public class GlobalSettings {
 
 
     /**
-     * @return the total number of rows of the input table
+     * @return the total number of rows of the input table, -1 if not available (e.g. if used in a streaming environment)
      * @since 3.0
      */
     public long getNoOfRows() {
@@ -230,6 +267,26 @@ public class GlobalSettings {
      */
     public int getNoOfColumns() {
         return m_spec.getNumColumns();
+    }
+
+    /**
+     * Returns the number of items to be aggregated. Its either the number of rows or the number of columns, depending
+     * on the context the aggregation is performed in, i.e. an aggregation of columns (Column Aggregator) or of rows
+     * (GroupBy).
+     *
+     * @return number of items to be aggregated, might be -1 if not available (e.g. the number of rows in a streaming
+     *         environment) or the aggregation context is not known
+     * @since 3.3
+     */
+    public long getNoOfItems() {
+        switch (m_aggregationContext) {
+            case ROW_AGGREGATION:
+                return getNoOfRows();
+            case COLUMN_AGGREGATION:
+                return getNoOfColumns();
+            default:
+                return -1;
+        }
     }
 
     /**
@@ -424,5 +481,106 @@ public class GlobalSettings {
             return false;
         }
         return true;
+    }
+
+    /**
+     * @return the builder to create {@link GlobalSettings} instances
+     * @since 3.3
+     */
+    public static GlobalSettingsBuilder builder() {
+        return new GlobalSettingsBuilder();
+    }
+
+    /**
+     * Builder to create {@link GlobalSettings}-objects.
+     * @since 3.3
+     */
+    public static class GlobalSettingsBuilder {
+
+        private int m_maxUniqueValues;
+        private String m_valueDelimiter;
+        private DataTableSpec m_spec;
+        private long m_noOfRows = -1;
+        private Map<String, Object> m_keyValueMap = new HashMap<String, Object>();
+        private List<String> m_groupColNames;
+        private FileStoreFactory m_fileStoreFactory;
+        private AggregationContext m_context = AggregationContext.UNKNOWN;
+
+        private GlobalSettingsBuilder() {
+            //
+        }
+
+        /**
+         * @param fileStoreFactory the file store factory to create file store cells (optional)
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setFileStoreFactory(final FileStoreFactory fileStoreFactory) {
+            m_fileStoreFactory = fileStoreFactory;
+            return this;
+        }
+
+        /**
+         * @param maxUniqueValues the maximum number of unique values to consider
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setMaxUniqueValues(final int maxUniqueValues) {
+            m_maxUniqueValues = maxUniqueValues;
+            return this;
+        }
+
+        /**
+         * @param spec the {@link DataTableSpec} of the table to process
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setDataTableSpec(final DataTableSpec spec) {
+            m_spec = spec;
+            return this;
+        }
+
+        /**
+         * @param noOfRows the total number of rows of the input table, -1 if not available (e.g. if used in a streaming environment)
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setNoOfRows(final long noOfRows) {
+            m_noOfRows = noOfRows;
+            return this;
+        }
+
+        /**
+         * @param groupColNames {@link List} that contains the names of the columns
+         * to group by
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setGroupColNames(final List<String> groupColNames) {
+            m_groupColNames = groupColNames;
+            return this;
+        }
+
+        /**
+         * @param valueDelimiter the standard delimiter to use for value separation
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setValueDelimiter(final String valueDelimiter) {
+            m_valueDelimiter = valueDelimiter;
+            return this;
+        }
+
+        /**
+         * @param context the aggregation context
+         * @return this builder
+         */
+        public GlobalSettingsBuilder setAggregationContext(final AggregationContext context) {
+            this.m_context = context;
+            return this;
+        }
+
+        /**
+         * @return a newly created {@link GlobalSettings} instance with the values taken from this builder
+         */
+        public GlobalSettings build() {
+            return new GlobalSettings(this);
+        }
+
+
     }
 }

@@ -112,13 +112,13 @@ public class PercentOperator extends CountOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        final long rowCount = getGlobalSettings().getNoOfRows();
-        if (rowCount == 0) {
+        final long itemCount = getGlobalSettings().getNoOfItems();
+        if (itemCount == 0) {
             return ZERO_PERCENTAGE;
         }
         final IntCell resultInternal = (IntCell)super.getResultInternal();
         final double percentage =
-            resultInternal.getDoubleValue() / rowCount * 100;
+            resultInternal.getDoubleValue() / itemCount * 100;
         return new DoubleCell(percentage);
     }
 

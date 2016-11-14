@@ -62,6 +62,7 @@ import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
 import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregator;
 import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregator;
 import org.knime.core.data.DataColumnSpec;
@@ -707,8 +708,14 @@ public class GroupByNodeModel extends NodeModel {
      */
     protected GlobalSettings createGlobalSettings(final ExecutionContext exec, final BufferedDataTable table,
         final List<String> groupByCols, final int maxUniqueVals) {
-        return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                maxUniqueVals, getDefaultValueDelimiter(), table.getDataTableSpec(), table.size());
+        return GlobalSettings.builder()
+                .setFileStoreFactory(FileStoreFactory.createWorkflowFileStoreFactory(exec))
+                .setGroupColNames(groupByCols)
+                .setMaxUniqueValues(maxUniqueVals)
+                .setValueDelimiter(getDefaultValueDelimiter())
+                .setDataTableSpec(table.getDataTableSpec())
+                .setNoOfRows(table.size())
+                .setAggregationContext(AggregationContext.ROW_AGGREGATION).build();
     }
 
     /**
