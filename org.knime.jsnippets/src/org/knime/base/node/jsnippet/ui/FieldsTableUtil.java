@@ -49,18 +49,20 @@ package org.knime.base.node.jsnippet.ui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
-import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
+import org.knime.base.node.jsnippet.type.ConverterUtil;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -185,10 +187,25 @@ final class FieldsTableUtil {
             setForeground(table.getForeground());
             setBackground(table.getBackground());
 
-            // let super class do the first step
-            super.getTableCellRendererComponent(table, value,
-                    isSelected, hasFocus,
-                    row, column);
+            if (value instanceof JavaToDataCellConverterFactory<?>) {
+                final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                if (factory.getName().isEmpty()) {
+                    setText(factory.getSourceType().getSimpleName());
+                } else {
+                    setText(factory.getSourceType().getSimpleName() + " (" + factory.getName() + ")");
+                }
+                setIcon(factory.getDestinationType().getIcon());
+            } else if (value instanceof DataCellToJavaConverterFactory) {
+                final DataCellToJavaConverterFactory<?, ?> factory = (DataCellToJavaConverterFactory<?, ?>)value;
+                if (factory.getName().isEmpty()) {
+                    setText(factory.getDestinationType().getSimpleName());
+                } else {
+                    setText(factory.getDestinationType().getSimpleName() + " (" + factory.getName() + ")");
+                }
+            } else {
+                // let super class do the first step
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            }
 
             FieldsTableModel model = (FieldsTableModel)table.getModel();
             if (model.isValidValue(row, column)) {
@@ -222,30 +239,57 @@ final class FieldsTableUtil {
         @SuppressWarnings("rawtypes")
         @Override
         public Component getTableCellRendererComponent(final JTable table,
-                final Object value, final boolean isSelected,
+                final Object v, final boolean isSelected,
                 final boolean hasFocus, final int row,
                 final int column) {
             // reset values which maybe changed by previous calls of this method
             setForeground(table.getForeground());
             setBackground(table.getBackground());
 
-            if (null == value || !(value instanceof Class)) {
-                return super.getTableCellRendererComponent(table,
-                        value,
-                        isSelected, hasFocus,
-                        row, column);
+            Object value = v;
+            if (value instanceof String) {
+                // try to find a converter factory with id matching the given String
+                Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+                    ConverterUtil.getDataCellToJavaConverterFactory((String)value);
+
+                if (factory.isPresent()) {
+                    value = factory.get();
+                }
             }
-            Class javaType = (Class)value;
+
+            /* if this is still a string, no DataCellToJavaConverterFactory was found. Might still be JavaToDataCellConverterFactory */
+            if (value instanceof String) {
+                // try to find a converter factory with id matching the given String
+                Optional<JavaToDataCellConverterFactory<?>> factory = ConverterUtil.getJavaToDataCellConverterFactory((String)value);
+
+                if (factory.isPresent()) {
+                    value = factory.get();
+                }
+            }
+
+            String text = "";
+            if (value instanceof DataCellToJavaConverterFactory) {
+                final DataCellToJavaConverterFactory<?, ?> factory = (DataCellToJavaConverterFactory<?, ?>)value;
+                text = factory.getName();
+            } else if (value instanceof JavaToDataCellConverterFactory) {
+                final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                text = factory.getName();
+            } else if (null == value || !(value instanceof Class)) {
+                return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            } else {
+                Class javaType = (Class)value;
+                text = javaType.getSimpleName();
+            }
 
             // let super class do the first step
             super.getTableCellRendererComponent(table,
-                    javaType.getSimpleName(),
+                    text,
                     isSelected, hasFocus,
                     row, column);
 
             FieldsTableModel model = (FieldsTableModel)table.getModel();
             if (model.isValidValue(row, column)) {
-                setToolTipText(null);
+                setToolTipText(text);
             } else {
                 setBackground(reddishBackground());
                 setToolTipText(model.getErrorMessage(row, column));
@@ -269,7 +313,7 @@ final class FieldsTableUtil {
         public JavaTypeTableCellEditor() {
             super(new JComboBox());
             JComboBox comboBox = (JComboBox)editorComponent;
-            comboBox.setRenderer(new JavaTypeListCellRenderer());
+            comboBox.setRenderer(new ConverterFactoryJavaTypeListCellRenderer());
         }
 
         /**
@@ -281,33 +325,13 @@ final class FieldsTableUtil {
                 final int row, final int column) {
             JComboBox comboBox = (JComboBox)editorComponent;
             FieldsTableModel model = (FieldsTableModel)table.getModel();
-            comboBox.setModel(new DefaultComboBoxModel(
-                    model.getAllowedJavaTypes(row)));
+            comboBox.setModel(new DefaultComboBoxModel(model.getAllowedJavaTypes(row)));
 
             return super.getTableCellEditorComponent(table, value,
                     isSelected, row, column);
         }
 
 
-    }
-
-    /** The cell render used in the JavaTypeTableCellEditor. */
-    @SuppressWarnings("serial")
-    private static class JavaTypeListCellRenderer
-        extends DefaultListCellRenderer {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            @SuppressWarnings("rawtypes")
-            Class javaType = (Class)value;
-            Object o = null == javaType ? "none" : javaType.getSimpleName();
-            return super.getListCellRendererComponent(list,
-                    o, index, isSelected, cellHasFocus);
-        }
     }
 
     /**

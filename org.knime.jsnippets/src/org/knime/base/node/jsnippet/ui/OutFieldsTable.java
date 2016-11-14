@@ -59,6 +59,7 @@ import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.DefaultCellEditor;
@@ -78,18 +79,21 @@ import javax.swing.plaf.UIResource;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
+import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
-import org.knime.base.node.jsnippet.util.JavaField;
-import org.knime.base.node.jsnippet.util.JavaField.OutCol;
-import org.knime.base.node.jsnippet.util.JavaField.OutVar;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
 import org.knime.base.node.jsnippet.util.JavaSnippetFields;
+import org.knime.base.node.jsnippet.util.field.JavaField;
+import org.knime.base.node.jsnippet.util.field.JavaField.FieldType;
+import org.knime.base.node.jsnippet.util.field.OutCol;
+import org.knime.base.node.jsnippet.util.field.OutVar;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.node.util.ConfigTablePanel;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.FlowVariableTableCellRenderer;
@@ -113,17 +117,6 @@ public class OutFieldsTable extends ConfigTablePanel {
      * Property fired when a row is manually added by the user.
      */
     public static final String PROP_FIELD_ADDED = "prop_field_added";
-
-    /**
-     * The KNIME type of an output field.
-     * @author Heiko Hofer
-     */
-    enum FieldType {
-        /** The field defines a column in a DataTable. */
-        Column,
-        /** The field defines a Flow Variable. */
-        FlowVariable
-    }
 
     private OutFieldsTableModel m_model;
     private DataTableSpec m_spec;
@@ -246,24 +239,19 @@ public class OutFieldsTable extends ConfigTablePanel {
                     return;
                 }
                 for (int r = e.getFirstRow(); r <= e.getLastRow(); r++) {
-                    boolean isCollection = (Boolean)m_model.getValueAt(r,
-                            Column.IS_COLLECTION);
+                    boolean isCollection = (Boolean)m_model.getValueAt(r, Column.IS_COLLECTION);
                     // update the java type
-                    Object javaTypeObject = m_model.getValueAt(r,
-                            Column.JAVA_TYPE);
+                    Object javaTypeObject = m_model.getValueAt(r, Column.JAVA_TYPE);
                     if (!(javaTypeObject instanceof Class)) {
                         return;
                     }
                     Class javaType = (Class)javaTypeObject;
                     if (javaType.isArray() && !isCollection) {
-                        m_model.setValueAt(javaType.getComponentType(), r,
-                            Column.JAVA_TYPE);
+                        m_model.setValueAt(javaType.getComponentType(), r, Column.JAVA_TYPE);
                     }
                     if (!javaType.isArray() && isCollection) {
-                        Class arrayType = Array.newInstance(
-                                javaType, 0).getClass();
-                        m_model.setValueAt(arrayType, r,
-                                Column.JAVA_TYPE);
+                        Class arrayType = Array.newInstance(javaType, 0).getClass();
+                        m_model.setValueAt(arrayType, r, Column.JAVA_TYPE);
                     }
                 }
             }
@@ -292,7 +280,6 @@ public class OutFieldsTable extends ConfigTablePanel {
                             cols.add(((DataColumnSpec)value).getName());
                         }
                     }
-                    defaultColTarget = null;
                     for (DataColumnSpec colSpec : m_spec) {
                         if (null == defaultColTarget) {
                             defaultColTarget = colSpec;
@@ -318,7 +305,6 @@ public class OutFieldsTable extends ConfigTablePanel {
                             flowVars.add(((FlowVariable)value).getName());
                         }
                     }
-                    defaultVarTarget = null;
                     for (FlowVariable flowVar : m_flowVars.values()) {
                         // test if a flow variable of this name might be
                         // created.
@@ -566,14 +552,25 @@ public class OutFieldsTable extends ConfigTablePanel {
         DataColumnSpec colSpec = m_spec.getColumnSpec(colName);
         Object value = null != colSpec ? colSpec : colName;
         m_model.setValueAt(value, r, Column.COLUMN);
-        DataType type = outCol.getKnimeType();
+        DataType type = outCol.getDataType();
         boolean isCollection = type.isCollectionType();
-        m_model.setValueAt(
-                isCollection ? type.getCollectionElementType() : type,
-                r, Column.DATA_TYPE);
+        m_model.setValueAt(isCollection ? type.getCollectionElementType() : type, r, Column.DATA_TYPE);
         m_model.setValueAt(isCollection, r, Column.IS_COLLECTION);
         m_model.setValueAt(outCol.getJavaName(), r, Column.JAVA_FIELD);
-        m_model.setValueAt(outCol.getJavaType(), r, Column.JAVA_TYPE);
+
+        Optional<?> factory = ConverterUtil.getJavaToDataCellConverterFactory(outCol.getConverterFactoryId());
+        if (!factory.isPresent()) {
+            // try to find another converter for the source and dest types. The one with for the stored id
+            // seems to be missing.
+            factory = ConverterUtil.getConverterFactory(outCol.getJavaType(), outCol.getDataType());
+        }
+
+        if (factory.isPresent()) {
+            m_model.setValueAt(factory.get(), r, Column.JAVA_TYPE);
+        } else {
+            m_model.setValueAt(outCol.getJavaType(), r, Column.JAVA_TYPE);
+        }
+
         return true;
     }
 
@@ -596,7 +593,7 @@ public class OutFieldsTable extends ConfigTablePanel {
         FlowVariable flowVar = m_flowVars.get(name);
         Object value = null != flowVar ? flowVar : name;
         m_model.setValueAt(value, r, Column.COLUMN);
-        m_model.setValueAt(outVar.getKnimeType(), r, Column.DATA_TYPE);
+        m_model.setValueAt(outVar.getFlowVarType(), r, Column.DATA_TYPE);
         if (!m_flowVarsOnly) {
             m_model.setValueAt(false, r, Column.IS_COLLECTION);
         }
@@ -647,25 +644,16 @@ public class OutFieldsTable extends ConfigTablePanel {
                 } else {
                     continue;
                 }
-                Object dataTypeValue = m_model.getValueAt(r,
-                        Column.DATA_TYPE);
-                boolean isArray = (Boolean)m_model.getValueAt(r,
-                        Column.IS_COLLECTION);
-                if (dataTypeValue instanceof DataType) {
-                    DataType type = (DataType)dataTypeValue;
-                    if (isArray) {
-                        type = ListCell.getCollectionType(type);
-                    }
-                    outCol.setKnimeType(type);
-                } else {
+                final Object dataTypeValue = m_model.getValueAt(r, Column.DATA_TYPE);
+                if (!(dataTypeValue instanceof DataType)) {
                     continue;
                 }
                 outCol.setJavaName(
                         (String)m_model.getValueAt(r, Column.JAVA_FIELD));
                 Object javaTypeObject = m_model.getValueAt(r,
                         Column.JAVA_TYPE);
-                if (javaTypeObject instanceof Class) {
-                    outCol.setJavaType((Class)javaTypeObject);
+                if (javaTypeObject instanceof JavaToDataCellConverterFactory) {
+                    outCol.setConverterFactory((JavaToDataCellConverterFactory)javaTypeObject);
                 } else {
                     continue;
                 }
@@ -708,7 +696,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 Object dataTypeValue = m_model.getValueAt(r, Column.DATA_TYPE);
                 if (dataTypeValue instanceof Type) {
                     Type type = (Type)dataTypeValue;
-                    outVar.setKnimeType(type);
+                    outVar.setFlowVarType(type);
                 } else {
                     continue;
                 }
@@ -733,8 +721,7 @@ public class OutFieldsTable extends ConfigTablePanel {
      *
      * @author Heiko Hofer
      */
-    static class BooleanRenderer extends JCheckBox
-        implements TableCellRenderer, UIResource {
+    static class BooleanRenderer extends JCheckBox implements TableCellRenderer, UIResource {
         private static final Border NO_FOCUS_BORDER =
             new EmptyBorder(1, 1, 1, 1);
 
@@ -802,16 +789,21 @@ public class OutFieldsTable extends ConfigTablePanel {
             // let super class do the first step
             super.getListCellRendererComponent(list, v, index, isSelected,
                     cellHasFocus);
-            if (v instanceof DataColumnSpec) {
+            if (value instanceof JavaToDataCellConverterFactory) {
+                final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                setText(factory.getName());
+                setToolTipText(getText());
+                setIcon(factory.getDestinationType().getIcon());
+            } else if (v instanceof DataColumnSpec) {
                 DataColumnSpec col = (DataColumnSpec)v;
                 setIcon(col.getType().getIcon());
                 setText(col.getName());
-                setToolTipText(null);
+                setToolTipText(getText());
             } else if (v instanceof DataType) {
                 DataType type = (DataType)v;
                 setIcon(type.getIcon());
                 setText(type.toString());
-                setToolTipText(null);
+                setToolTipText(getText());
             } else if (null == v || v instanceof String) {
                 setIcon(null);
                 setBackground(reddishBackground());
@@ -849,13 +841,21 @@ public class OutFieldsTable extends ConfigTablePanel {
                     row, column);
             FieldsTableModel model = (FieldsTableModel)table.getModel();
             if (model.isValidValue(row, column)) {
-                if (value instanceof DataColumnSpec) {
+                if (value instanceof JavaToDataCellConverterFactory) {
+                    final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                    setText(factory.getName());
+                    setIcon(factory.getDestinationType().getIcon());
+                } else if (value instanceof DataColumnSpec) {
                     DataColumnSpec col = (DataColumnSpec)value;
                     setIcon(col.getType().getIcon());
                     setText(col.getName());
                 }
             } else {
-                if (value instanceof DataColumnSpec) {
+                if (value instanceof JavaToDataCellConverterFactory) {
+                    final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                    setText(factory.getName());
+                    setIcon(factory.getDestinationType().getIcon());
+                } else if (value instanceof DataColumnSpec) {
                     DataColumnSpec col = (DataColumnSpec)value;
                     setIcon(col.getType().getIcon());
                     setText(col.getName());
@@ -907,12 +907,16 @@ public class OutFieldsTable extends ConfigTablePanel {
                     row, column);
             FieldsTableModel model = (FieldsTableModel)table.getModel();
             if (model.isValidValue(row, column)) {
-                if (value instanceof DataType) {
+                if (value instanceof JavaToDataCellConverterFactory) {
+                    final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+                    setText(factory.getDestinationType().toString() + " (" + factory.getName() + ")");
+                    setIcon(factory.getDestinationType().getIcon());
+                } else if (value instanceof DataType) {
                     DataType type = (DataType)value;
                     setIcon(type.getIcon());
                     setText(type.toString());
-                    setToolTipText(null);
                 }
+                setToolTipText(getText());
             } else {
                 if (value instanceof DataType) {
                     DataType type = (DataType)value;
@@ -1092,9 +1096,12 @@ public class OutFieldsTable extends ConfigTablePanel {
         private JComboBox createDataTypeComboBox() {
             JComboBox comboBox = new JComboBox();
             if (null != m_spec) {
-                TypeProvider typeProvider = TypeProvider.getDefault();
-                for (DataType type : typeProvider.getOutputDataTypes()) {
-                    comboBox.addItem(type);
+                for (DataType type : ConverterUtil.getAllDestinationDataTypes()) {
+                    if (ConverterUtil.getFactoriesForDestinationType(type).stream()
+                        .filter(factory -> JavaSnippet.getBuildPathFromCache(factory.getIdentifier()) != null).findAny()
+                        .isPresent()) {
+                        comboBox.addItem(type);
+                    }
                     // skip collection types, there is now a separate column
                     // for this.
                     // comboBox.addItem(ListCell.getCollectionType(type));

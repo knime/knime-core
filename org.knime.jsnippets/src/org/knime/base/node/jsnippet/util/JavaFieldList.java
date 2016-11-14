@@ -49,10 +49,11 @@ package org.knime.base.node.jsnippet.util;
 
 import java.util.ArrayList;
 
-import org.knime.base.node.jsnippet.util.JavaField.InCol;
-import org.knime.base.node.jsnippet.util.JavaField.InVar;
-import org.knime.base.node.jsnippet.util.JavaField.OutCol;
-import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.field.InCol;
+import org.knime.base.node.jsnippet.util.field.InVar;
+import org.knime.base.node.jsnippet.util.field.JavaField;
+import org.knime.base.node.jsnippet.util.field.OutCol;
+import org.knime.base.node.jsnippet.util.field.OutVar;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 

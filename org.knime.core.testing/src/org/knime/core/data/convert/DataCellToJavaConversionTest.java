@@ -47,16 +47,19 @@
 
 package org.knime.core.data.convert;
 
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.Is.is; // only the overload is(Class<T>) is actually deprecated
 import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -66,6 +69,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
 import org.knime.core.data.blob.BinaryObjectDataCell;
@@ -141,9 +145,6 @@ public class DataCellToJavaConversionTest {
     @Test
     public void testString() throws Exception {
         testSimpleConverter(StringCell.TYPE, String.class, new StringCell("KNIME"), "KNIME");
-
-        /* general toString() converter: */
-        testSimpleConverter(IntCell.TYPE, String.class, new IntCell(42), "42");
     }
 
     /**
@@ -230,10 +231,12 @@ public class DataCellToJavaConversionTest {
      */
     @Test
     public void testCollectionTypes() throws Exception {
-        ArrayList<IntCell> coll = new ArrayList<>();
+        ArrayList<DataCell> coll = new ArrayList<>();
         for (int i = 0; i < 5; ++i) {
             coll.add(new IntCell(i * i));
         }
+        // collection cells can allways contain missing cells.
+        coll.add(new MissingCell("42"));
 
         final ListCell listCell = CollectionCellFactory.createListCell(coll);
 
@@ -250,6 +253,8 @@ public class DataCellToJavaConversionTest {
         for (int i = 0; i < 5; ++i) {
             assertEquals(new Integer(i * i), array[i]);
         }
+
+        assertNull(array[5]);
     }
 
     /**
@@ -263,7 +268,7 @@ public class DataCellToJavaConversionTest {
             DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertThat("Not enough supported destination types for IntCell", destTypes.size(), is(greaterThan(3)));
+        assertThat("Not enough supported destination types for IntCell", destTypes.size(), is(greaterThan(2)));
         assertTrue(destTypes.contains(Integer.class));
         assertTrue(destTypes.contains(Long.class));
         assertTrue(destTypes.contains(Double.class));
@@ -281,7 +286,7 @@ public class DataCellToJavaConversionTest {
             .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
         assertThat("Not enough supported destination types for ListCell of IntCell", destTypes.size(),
-            is(greaterThan(3)));
+            is(greaterThan(2)));
         assertTrue(destTypes.contains(Integer[].class));
         assertTrue(destTypes.contains(Long[].class));
         assertTrue(destTypes.contains(Double[].class));
@@ -319,4 +324,22 @@ public class DataCellToJavaConversionTest {
         assertTrue(sourceTypes.contains(CollectionDataValue.class));
         assertTrue(sourceTypes.contains(MissingValue.class));
     }
+
+    /**
+     * Test that the converter framework always returns preferred converters first.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testPreferredConverters() throws Exception {
+        Collection<DataCellToJavaConverterFactory<?, ?>> factories = DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE);
+        assertFalse(factories.isEmpty());
+        assertEquals(Integer.class, factories.stream().findFirst().get().getDestinationType());
+
+        factories = DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(Integer.class);
+        assertFalse(factories.isEmpty());
+        assertEquals("Integer is preferred value of IntValue and should be first.",
+            IntValue.class, factories.stream().findFirst().get().getSourceType());
+    }
+
 }

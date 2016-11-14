@@ -32,7 +32,7 @@
 
    <element name="DataCellToJavaConverter">
       <complexType>
-         <attribute name="factoryClass" type="string">
+         <attribute name="factoryClass" type="string" use="required">
             <annotation>
                <documentation>
                   

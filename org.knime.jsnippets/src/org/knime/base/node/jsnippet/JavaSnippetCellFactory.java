@@ -47,27 +47,27 @@
  */
 package org.knime.base.node.jsnippet;
 
+import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.base.node.jsnippet.expression.Abort;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.expression.Cell;
 import org.knime.base.node.jsnippet.expression.TypeException;
-import org.knime.base.node.jsnippet.type.TypeProvider;
-import org.knime.base.node.jsnippet.type.data.DataValueToJava;
-import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
-import org.knime.base.node.jsnippet.util.JavaField.InCol;
-import org.knime.base.node.jsnippet.util.JavaField.InVar;
-import org.knime.base.node.jsnippet.util.JavaField.OutCol;
-import org.knime.base.node.jsnippet.util.JavaField.OutVar;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
+import org.knime.base.node.jsnippet.util.field.InCol;
+import org.knime.base.node.jsnippet.util.field.InVar;
+import org.knime.base.node.jsnippet.util.field.OutCol;
+import org.knime.base.node.jsnippet.util.field.OutVar;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,6 +76,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
@@ -87,36 +90,42 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  * @author Heiko Hofer
  */
 public class JavaSnippetCellFactory implements CellFactory {
-    private static final NodeLogger LOGGER = NodeLogger
-        .getLogger(JavaSnippetCellFactory.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetCellFactory.class);
 
     private JavaSnippet m_snippet;
+
     private DataTableSpec m_spec;
+
     private AbstractJSnippet m_jsnippet;
+
     private FlowVariableRepository m_flowVars;
+
     private int m_rowIndex;
+
     private int m_rowCount;
+
     private List<String> m_columns;
 
+    private ExecutionContext m_context;
 
     /**
      * Create a new cell factory.
+     *
      * @param snippet the snippet
      * @param spec the spec of the data table at the input
      * @param flowVariableRepository the flow variables at the input
      * @param rowCount the number of rows of the table at the input
+     * @param context the execution context
      */
-    public JavaSnippetCellFactory(final JavaSnippet snippet,
-            final DataTableSpec spec,
-            final FlowVariableRepository flowVariableRepository,
-            final int rowCount) {
+    public JavaSnippetCellFactory(final JavaSnippet snippet, final DataTableSpec spec,
+        final FlowVariableRepository flowVariableRepository, final int rowCount, final ExecutionContext context) {
         m_snippet = snippet;
         m_spec = spec;
         m_flowVars = flowVariableRepository;
         m_rowIndex = 0;
         m_rowCount = rowCount;
+        m_context = context;
     }
-
 
     /**
      * {@inheritDoc}
@@ -124,13 +133,12 @@ public class JavaSnippetCellFactory implements CellFactory {
     @SuppressWarnings("unchecked")
     @Override
     public DataCell[] getCells(final DataRow row) {
-         try {
+        try {
             if (null == m_jsnippet) {
                 m_jsnippet = m_snippet.createSnippetInstance();
                 // populate the fields in the m_jsnippet that are constant
                 // across the rows.
-                Field[] fs =
-                    m_jsnippet.getClass().getSuperclass().getDeclaredFields();
+                Field[] fs = m_jsnippet.getClass().getSuperclass().getDeclaredFields();
                 for (Field field : fs) {
                     if (field.getName().equals("m_flowVars")) {
                         field.setAccessible(true);
@@ -148,8 +156,7 @@ public class JavaSnippetCellFactory implements CellFactory {
                 m_columns = new ArrayList<>();
                 m_columns.addAll(cellsMap.keySet());
             }
-            Field[] fs =
-                m_jsnippet.getClass().getSuperclass().getDeclaredFields();
+            Field[] fs = m_jsnippet.getClass().getSuperclass().getDeclaredFields();
             for (Field field : fs) {
                 if (field.getName().equals("m_cellsMap")) {
                     field.setAccessible(true);
@@ -181,50 +188,42 @@ public class JavaSnippetCellFactory implements CellFactory {
 
             // populate the system input column fields with data
             for (InCol inCol : m_snippet.getSystemFields().getInColFields()) {
-                Field field = m_jsnippet.getClass().getField(
-                        inCol.getJavaName());
+                Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
                 Cell cell = cellsMap.get(inCol.getKnimeName());
                 Object v = cell.getValueOfType(inCol.getJavaType());
-                if (inCol.getKnimeType().isCollectionType() && v != null) {
-                    field.set(m_jsnippet,
-                            Arrays.copyOf((Object[]) v, ((Object[]) v).length,
-                                    inCol.getJavaType()));
+                if (inCol.getDataType().isCollectionType() && v != null) {
+                    field.set(m_jsnippet, Arrays.copyOf((Object[])v, ((Object[])v).length, (Class<? extends Object[]>)inCol.getJavaType()));
                 } else {
                     field.set(m_jsnippet, v);
                 }
             }
             // reset the system output fields to null (see also bug 3781)
             for (OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
-                Field field = m_jsnippet.getClass().getField(
-                        outCol.getJavaName());
+                Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
                 field.set(m_jsnippet, null);
             }
             // populate the system input flow variable fields with data
             for (InVar inCol : m_snippet.getSystemFields().getInVarFields()) {
-                Field field = m_jsnippet.getClass().getField(
-                        inCol.getJavaName());
-                Object v = m_flowVars.getValueOfType(inCol.getKnimeName(),
-                        inCol.getJavaType());
+                Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
+                Object v = m_flowVars.getValueOfType(inCol.getKnimeName(), inCol.getJavaType());
                 field.set(m_jsnippet, v);
             }
-         } catch (Exception e) {
-             // all reflection exceptions which will never happen, but in case
-             // re-throw exception
-             throw new RuntimeException(e);
-         }
+        } catch (Exception e) {
+            // all reflection exceptions which will never happen, but in case
+            // re-throw exception
+            throw new RuntimeException(e);
+        }
 
         try {
             // evaluate user script
             m_jsnippet.snippet();
         } catch (Throwable thr) {
             if (thr instanceof Abort) {
-                StringBuilder builder = new StringBuilder(
-                        "Calculation aborted: ");
+                StringBuilder builder = new StringBuilder("Calculation aborted: ");
                 String message = thr.getMessage();
                 builder.append(message == null ? "<no details>" : message);
                 throw new RuntimeException(builder.toString(), thr);
             } else {
-
 
                 Integer lineNumber = null;
                 for (StackTraceElement ste : thr.getStackTrace()) {
@@ -249,11 +248,10 @@ public class JavaSnippetCellFactory implements CellFactory {
                 OutVarList outVars = m_snippet.getSystemFields().getOutVarFields();
                 if (outVars.size() > 0) {
                     // Abort if flow variables are defined
-                    throw new RuntimeException("An error occured in an "
-                            + "expression with output flow variables.", thr);
+                    throw new RuntimeException("An error occured in an " + "expression with output flow variables.",
+                        thr);
                 }
-                OutColList outFields =
-                    m_snippet.getSystemFields().getOutColFields();
+                OutColList outFields = m_snippet.getSystemFields().getOutColFields();
                 DataCell[] out = new DataCell[outFields.size()];
                 for (int i = 0; i < out.length; i++) {
                     // Return missing values for output fields
@@ -270,49 +268,54 @@ public class JavaSnippetCellFactory implements CellFactory {
                 Field field = m_jsnippet.getClass().getField(var.getJavaName());
                 Object value = field.get(m_jsnippet);
                 if (null != value) {
-                    Type type = var.getKnimeType();
+                    Type type = var.getFlowVarType();
                     FlowVariable flowVar = null;
                     if (type.equals(Type.INTEGER)) {
-                        flowVar = new FlowVariable(
-                                var.getKnimeName(), (Integer)value);
+                        flowVar = new FlowVariable(var.getKnimeName(), (Integer)value);
                     } else if (type.equals(Type.DOUBLE)) {
-                        flowVar = new FlowVariable(
-                                var.getKnimeName(), (Double)value);
+                        flowVar = new FlowVariable(var.getKnimeName(), (Double)value);
                     } else { // case type.equals(Type.String)
-                        flowVar = new FlowVariable(
-                                var.getKnimeName(), (String)value);
+                        flowVar = new FlowVariable(var.getKnimeName(), (String)value);
                     }
                     m_flowVars.put(flowVar);
                 } else {
-                    throw new RuntimeException("Flow varibale \""
-                            + var.getKnimeName() + "\" has no value.");
+                    throw new RuntimeException("Flow variable \"" + var.getKnimeName() + "\" has no value.");
                 }
 
             }
             // get output column fields
-            OutColList outFields =
-                m_snippet.getSystemFields().getOutColFields();
+            OutColList outFields = m_snippet.getSystemFields().getOutColFields();
             DataCell[] out = new DataCell[outFields.size()];
             for (int i = 0; i < out.length; i++) {
                 OutCol outField = outFields.get(i);
 
-                Field field = m_jsnippet.getClass().getField(
-                        outField.getJavaName());
+                Field field = m_jsnippet.getClass().getField(outField.getJavaName());
                 Object value = field.get(m_jsnippet);
                 if (null == value) {
                     out[i] = DataType.getMissingCell();
                 } else {
-                    DataType elemType =
-                        outField.getKnimeType().isCollectionType()
-                        ? outField.getKnimeType().getCollectionElementType()
-                        : outField.getKnimeType();
-                    JavaToDataCell conv =
-                        TypeProvider.getDefault().getJavaToDataCell(
-                                elemType,
-                                outField.getKnimeType().isCollectionType());
-                    out[i] = conv.createDataCell(value);
+                    final String id = outField.getConverterFactoryId();
+                    Optional<JavaToDataCellConverterFactory<?>> factory = ConverterUtil.getJavaToDataCellConverterFactory(id);
+                    if (!factory.isPresent()) {
+                        throw new RuntimeException("Missing converter factory with ID: " + id);
+                    }
+                    out[i] = ((JavaToDataCellConverterFactory<Object>)factory.get()).create(m_context).convert(value);
                 }
             }
+            // Cleanup Closeable inputs
+            for (final OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
+                final Field field = m_jsnippet.getClass().getField(outCol.getJavaName());
+                final Object value = field.get(m_jsnippet);
+
+                if (value instanceof Closeable) {
+                    ((Closeable)value).close();
+                }
+                if (value instanceof AutoCloseable) {
+                    // From the doc: Calling close more than once *can* have visible side effects!
+                    ((AutoCloseable)value).close();
+                }
+            }
+
             m_rowIndex++;
             return out;
         } catch (Exception e) {
@@ -321,18 +324,14 @@ public class JavaSnippetCellFactory implements CellFactory {
             throw new RuntimeException(e);
         }
 
-
-
     }
-
 
     /**
      * @param row
      * @return
      */
     private Map<String, Cell> createCellsMap(final DataRow row) {
-        Map<String, Cell> cells = new LinkedHashMap<>(
-                row.getNumCells());
+        Map<String, Cell> cells = new LinkedHashMap<>(row.getNumCells());
         for (int i = 0; i < row.getNumCells(); i++) {
             String name = m_spec.getColumnSpec(i).getName();
             cells.put(name, new DataCellProxy(row, i));
@@ -340,26 +339,19 @@ public class JavaSnippetCellFactory implements CellFactory {
         return cells;
     }
 
-
-
-
-
     /**
      * {@inheritDoc}
      */
     @Override
     public DataColumnSpec[] getColumnSpecs() {
-        OutColList outFields =
-            m_snippet.getSystemFields().getOutColFields();
+        OutColList outFields = m_snippet.getSystemFields().getOutColFields();
         DataColumnSpec[] cols = new DataColumnSpec[outFields.size()];
         for (int i = 0; i < cols.length; i++) {
             OutCol field = outFields.get(i);
-            cols[i] = new DataColumnSpecCreator(field.getKnimeName(),
-                    field.getKnimeType()).createSpec();
+            cols[i] = new DataColumnSpecCreator(field.getKnimeName(), field.getDataType()).createSpec();
         }
         return cols;
     }
-
 
     /**
      * {@inheritDoc}
@@ -371,14 +363,15 @@ public class JavaSnippetCellFactory implements CellFactory {
 
     /** {@inheritDoc} */
     @Override
-    public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
+    public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey,
+        final ExecutionMonitor exec) {
         exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
     }
 
     private static class DataCellProxy implements Cell {
         private DataRow m_row;
-        private int m_index;
 
+        private int m_index;
 
         /**
          * Represents a cell in the given row as a java snippet cell.
@@ -411,13 +404,17 @@ public class JavaSnippetCellFactory implements CellFactory {
             if (cell.isMissing()) {
                 return null;
             }
-            TypeProvider p = TypeProvider.getDefault();
             DataType type = cell.getType();
-            DataType elemType = type.isCollectionType()
-                ? type.getCollectionElementType() : type;
-            DataValueToJava conv = p.getDataValueToJava(elemType,
-                    type.isCollectionType());
-            return conv.getValue(cell, c);
+
+            final Optional<?> factory = ConverterUtil.getConverterFactory(type, c);
+            if (!factory.isPresent()) {
+                throw new RuntimeException("Could not find a converter factory for: " + type.getName() + " -> " + c.getName());
+            }
+            try {
+                return ((DataCellToJavaConverterFactory<DataCell, Object>)factory.get()).create().convert(cell);
+            } catch (Exception e) {
+                throw new TypeException(e);
+            }
         }
 
         /**
@@ -428,7 +425,6 @@ public class JavaSnippetCellFactory implements CellFactory {
             DataCell cell = m_row.getCell(m_index);
             return cell.isMissing();
         }
-
 
     }
 }

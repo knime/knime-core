@@ -40,49 +40,52 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   03.02.2012 (hofer): created
  */
-package org.knime.base.node.jsnippet.type.data;
+package org.knime.base.node.jsnippet.ui;
 
-import org.knime.base.node.jsnippet.expression.TypeException;
-import org.knime.core.data.BooleanValue;
-import org.knime.core.data.DataCell;
+import java.awt.Component;
+
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JList;
+
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 
 /**
- * Provides the value of a BooleanValue object for the java snippet node.
+ * Renderer that checks if the value being renderer is a {@link JavaToDataCellConverterFactory} to render the name of
+ * the destination type and its icon aswell as the name of the factory. If not, the passed value's toString() method is
+ * used for rendering.
  *
- * @author Heiko Hofer
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
+ * @since 3.2
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class BooleanValueToJava extends DataValueToJava {
+public class ConverterFactoryDataTypeListCellRenderer extends DefaultListCellRenderer {
 
-    /**
-     * Create a new instance.
-     */
-    public BooleanValueToJava() {
-        super(Boolean.class);
-    }
+    private static final long serialVersionUID = -3238164216976500254L;
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("rawtypes")
     @Override
-    public boolean isCompatibleTo(final DataCell cell, final Class c)
-            throws TypeException {
-        return c.equals(Boolean.class)
-            && cell.getType().isCompatible(BooleanValue.class);
-    }
+    public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
+        // The super method will reset the icon if we call this method
+        // last. So we let super do its job first and then we take care
+        // that everything is properly set.
+        final Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        assert c == this;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Object getValueUnchecked(final DataCell cell, final Class c) {
-        return ((BooleanValue)cell).getBooleanValue();
+        if (value instanceof JavaToDataCellConverterFactory<?>) {
+            final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
+            setText(factory.getName());
+            setIcon(factory.getDestinationType().getIcon());
+        } else if (value instanceof DataCellToJavaConverterFactory) {
+            final DataCellToJavaConverterFactory<?, ?> factory = (DataCellToJavaConverterFactory<?, ?>)value;
+            setText(factory.getName());
+        }
+        setToolTipText(getText());
+        return this;
     }
-
 }

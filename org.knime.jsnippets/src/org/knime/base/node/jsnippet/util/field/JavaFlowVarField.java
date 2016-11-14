@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,55 +41,77 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   03.02.2012 (hofer): created
+ *   17.10.2016 (Jonathan Hale): created
  */
-package org.knime.base.node.jsnippet.type.data;
+package org.knime.base.node.jsnippet.util.field;
 
-import java.util.Calendar;
-import java.util.Date;
-
-import org.knime.base.node.jsnippet.expression.TypeException;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
- * Provides the value of a DoubleValue object for the java snippet node.
+ * A field in the java snippet representing flow variable.
  *
  * @author Heiko Hofer
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class DateAndTimeValueToJava extends DataValueToJava {
+public abstract class JavaFlowVarField extends JavaField {
+    private Type m_knimeType;
 
     /**
-     * Create a new instance.
+     * Get the type of the flow variable referenced by this field.
+     *
+     * @return the flow variable type
      */
-    public DateAndTimeValueToJava() {
-        super(Date.class, Calendar.class);
+    public Type getFlowVarType() {
+        return m_knimeType;
     }
 
     /**
-     * {@inheritDoc}
+     * Set the type of the flow variable referenced by this field.
+     *
+     * @param knimeType the knimeType to set
      */
-    @SuppressWarnings("rawtypes")
-    @Override
-    public boolean isCompatibleTo(final DataCell cell, final Class c)
-            throws TypeException {
-        return (c.equals(Date.class) || c.equals(Calendar.class))
-            && cell.getType().isCompatible(DateAndTimeValue.class);
+    public void setFlowVarType(final Type knimeType) {
+        m_knimeType = knimeType;
     }
 
     /**
-     * {@inheritDoc}
+     * Set the type of the java field
+     *
+     * @param javaType the javaType to set
      */
+    public void setJavaType(final Class<?> javaType) {
+        m_javaType = javaType;
+    }
+
     @Override
-    @SuppressWarnings("rawtypes")
-    public Object getValueUnchecked(final DataCell cell, final Class c) {
-        if (c.equals(Date.class)) {
-            return new Date(((DateAndTimeValue)cell).getUTCTimeInMillis());
-        } else { // case: c.equals(Calendar.class)
-            return ((DateAndTimeValue)cell).getUTCCalendarClone();
-        }
+    public void saveSettings(final Config config) {
+        super.saveSettings(config);
+        config.addString(KNIME_TYPE, m_knimeType.toString());
+    }
+
+    @Override
+    public void loadSettings(final Config config) throws InvalidSettingsException {
+        super.loadSettings(config);
+        String typeName = config.getString(KNIME_TYPE);
+        m_knimeType = Type.valueOf(typeName);
+    }
+
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        String typeName = config.getString(KNIME_TYPE, null);
+        m_knimeType = null != typeName ? Type.valueOf(typeName) : null;
+    }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.FlowVariable;
     }
 }

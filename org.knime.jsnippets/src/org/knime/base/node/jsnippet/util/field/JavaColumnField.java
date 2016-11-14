@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,95 +41,97 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   23.01.2012 (hofer): created
+ *   17.10.2016 (Jonathan Hale): created
  */
-package org.knime.base.node.jsnippet.util;
+package org.knime.base.node.jsnippet.util.field;
 
-import org.knime.base.node.jsnippet.util.JavaFieldList.InColList;
-import org.knime.base.node.jsnippet.util.JavaFieldList.InVarList;
-import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
-import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.data.DataType;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 /**
- * Holds definition of system fields in the java snippet. A field can be an
- * input or output column are flow variables.
- * <p>This class might change and is not meant as public API.
+ * Fields representing knime data columns.
  *
  * @author Heiko Hofer
- * @since 2.12
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public class JavaSnippetFields {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetFields.class);
-
-    private InColList m_inCols;
-    private InVarList m_inVars;
-    private OutColList m_outCols;
-    private OutVarList m_outVars;
+public abstract class JavaColumnField extends JavaField {
+    /**
+     * DataType used for display and finding replacements in case the loaded converter factory id was invalid.
+     */
+    protected DataType m_knimeType;
 
     /**
-     * @param inCols the fields representing input columns
-     * @param inVars the fields representing input variables
-     * @param outCols the fields representing output columns
-     * @param outVars the fields representing output variables
+     * Id of the converter factory to use for this field.
      */
-    public JavaSnippetFields(final InColList inCols,
-            final InVarList inVars,
-            final OutColList outCols,
-            final OutVarList outVars) {
-        m_inCols = CheckUtils.checkArgumentNotNull(inCols);
-        m_inVars = CheckUtils.checkArgumentNotNull(inVars);
-        m_outCols = CheckUtils.checkArgumentNotNull(outCols);
-        m_outVars = CheckUtils.checkArgumentNotNull(outVars);
+    protected String m_converterFactoryId = null;
+
+    /**
+     * @return the knimeType
+     */
+    public DataType getDataType() {
+        return m_knimeType;
+    }
+
+    @Override
+    public void saveSettings(final Config config) {
+        super.saveSettings(config);
+        config.addDataType(KNIME_TYPE, m_knimeType);
+
+        if (m_converterFactoryId != null) {
+            config.addString(CONV_FACTORY, m_converterFactoryId);
+        }
+    }
+
+    @Override
+    public void loadSettings(final Config config) throws InvalidSettingsException {
+        super.loadSettings(config);
+        m_knimeType = config.getDataType(KNIME_TYPE);
+        m_converterFactoryId = config.getString(CONV_FACTORY, null);
+    }
+
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        m_knimeType = config.getDataType(KNIME_TYPE, null);
+        m_converterFactoryId = config.getString(CONV_FACTORY, null);
+    }
+
+    @Override
+    public FieldType getFieldType() {
+        return FieldType.Column;
     }
 
     /**
+     * Id of the converter factory used to convert from column to java field type or vice versa. Depending on whether
+     * this is an in or out field this refers to:
+     * <ul>
+     * <li>InCol: {@link org.knime.core.data.convert.java.DataCellToJavaConverterFactory}</li>
+     * <li>OutCol: {@link org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory}</li>
+     * </ul>
      *
+     * @return the converter factory id
      */
-    public JavaSnippetFields() {
-        m_inCols = new InColList();
-        m_inVars = new InVarList();
-        m_outCols = new OutColList();
-        m_outVars = new OutVarList();
+    public String getConverterFactoryId() {
+        return m_converterFactoryId;
     }
 
-    /**
-     * Get the fields representing input columns.
-     * @return the fields representing input columns
-     */
-    public InColList getInColFields() {
-        return m_inCols;
-    }
+    @Override
+    public boolean equals(final Object other) {
+        if (!(other instanceof JavaColumnField)) {
+            return false;
+        }
 
-    /**
-     * Get the fields representing input variables.
-     * @return the fields representing input variables
-     */
-    public InVarList getInVarFields() {
-        return m_inVars;
-    }
+        if (((JavaColumnField)other).getConverterFactoryId() != getConverterFactoryId()) {
+            return false;
+        }
 
-    /**
-     * Get the fields representing output columns.
-     * @return the fields representing output columns
-     */
-    public OutColList getOutColFields() {
-        return m_outCols;
-    }
-
-    /**
-     * Get the fields representing output variables.
-     * @return the fields representing output variables
-     */
-    public OutVarList getOutVarFields() {
-        return m_outVars;
+        return super.equals(other);
     }
 }

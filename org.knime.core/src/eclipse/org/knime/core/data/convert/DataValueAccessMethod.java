@@ -69,7 +69,7 @@ public @interface DataValueAccessMethod {
      * Name of the DataValueAccessMethod shown to the user (in the JavaSnippet node dialog for example). Should contain
      * at least the simple name of the java type which is retrieved from the data value using this method.
      * <p>
-     * <b> Examples: </b> "Double", "String", "JsonValue", "SDF String"
+     * <b> Examples: </b> "Double", "String", "JsonValue", "String (SDF)"
      * </p>
      *
      * @return Descriptive name of the method

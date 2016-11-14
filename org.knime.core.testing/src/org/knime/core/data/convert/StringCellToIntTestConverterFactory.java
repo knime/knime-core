@@ -61,7 +61,7 @@ public class StringCellToIntTestConverterFactory extends SimpleDataCellToJavaCon
      *
      */
     public StringCellToIntTestConverterFactory() {
-        super(StringCell.class, Integer.class, (s) -> new Integer(42), "test");
+        super(StringCell.class, Integer.class, (s) -> new Integer(42), "Integer (Test)");
     }
 
 }

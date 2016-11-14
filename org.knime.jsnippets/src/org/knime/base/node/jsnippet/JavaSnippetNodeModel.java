@@ -160,7 +160,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
         m_snippet.setSettings(m_settings);
         final FlowVariableRepository flowVarRepo =
                 new FlowVariableRepository(getAvailableInputFlowVariables());
-        return m_snippet.createRearranger(spec, flowVarRepo, (int) rowCount);
+        return m_snippet.createRearranger(spec, flowVarRepo, (int) rowCount, null);
     }
 
 

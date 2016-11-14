@@ -128,7 +128,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
-    @DataCellFactoryMethod(name = "XML")
+    @DataCellFactoryMethod(name = "String (XML)")
     public static DataCell create(final String xml) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
         if (xml == null) {
@@ -153,7 +153,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @return DataCell representing the XML document
      * @throws NullPointerException if argument is null
      */
-    @DataCellFactoryMethod(name = "XML")
+    @DataCellFactoryMethod(name = "Document (XML)")
     public static DataCell create(final Document dom) {
         if (dom == null) {
             throw new NullPointerException("dom must not be null");
@@ -182,7 +182,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
-    @DataCellFactoryMethod(name = "XML")
+    @DataCellFactoryMethod(name = "InputStream (XML)")
     public static DataCell create(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
         if (is == null) {

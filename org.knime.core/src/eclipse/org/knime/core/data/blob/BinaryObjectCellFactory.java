@@ -139,7 +139,7 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      * @throws IOException In case of IO problems when large byte arrays are written to a file store.
      * @throws NullPointerException If argument is null
      */
-    @DataCellFactoryMethod(name = "Byte Array")
+    @DataCellFactoryMethod(name = "byte[]")
     public DataCell create(final byte[] bytes) throws IOException {
         if (bytes.length < MEMORY_LIMIT) {
             byte[] md5sum = newMD5Digest().digest(bytes);

@@ -209,7 +209,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
-        @DataCellFactoryMethod(name = "String")
+        @DataCellFactoryMethod(name = "InputStream (String)")
         @Override
         public DataCell createCell(final InputStream input) throws IOException {
             return createCell(new InputStreamReader(input, "UTF-8"));
@@ -218,7 +218,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
-        @DataCellFactoryMethod(name = "String")
+        @DataCellFactoryMethod(name = "Reader (String)")
         @Override
         public DataCell createCell(final Reader input) throws IOException {
             StringBuilder buf = new StringBuilder(1024);

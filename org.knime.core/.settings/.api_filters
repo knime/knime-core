@@ -22,6 +22,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/datacell/JavaToDataCellConverterRegistry.java" type="org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry"/>
+                <message_argument value="getPreferredConverterFactory(Class&lt;S&gt;, DataType)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/collection/CollectionDataValue.java" type="org.knime.core.data.collection.CollectionDataValue$CollectionUtilityFactory">
         <filter id="338722907">
             <message_arguments>

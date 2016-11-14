@@ -51,8 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.base.node.jsnippet.type.TypeProvider;
-import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -305,13 +304,8 @@ public abstract class AbstractJSnippet {
     /** Returns true when the cells of the column can provide the given type. */
     private boolean canProvideJavaType(final DataColumnSpec colSpec,
             @SuppressWarnings("rawtypes") final Class c) {
-        TypeProvider p = TypeProvider.getDefault();
         DataType type = colSpec.getType();
-        DataType elemType = type.isCollectionType()
-            ? type.getCollectionElementType() : type;
-        DataValueToJava conv = p.getDataValueToJava(elemType,
-                type.isCollectionType());
-        return conv.canProvideJavaType(c);
+        return ConverterUtil.getConverterFactory(type, c).isPresent();
     }
 
     /**

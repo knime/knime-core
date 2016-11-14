@@ -58,9 +58,9 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
@@ -179,6 +179,16 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
+     * Get all registered converter factories.
+     *
+     * @return Collection of registered converter factories.
+     * @since 3.3
+     */
+    public Collection<DataCellToJavaConverterFactory<?, ?>> getAllConverterFactories() {
+        return m_converterFactories.values().stream().flatMap(c -> c.stream()).collect(Collectors.toSet());
+    }
+
+    /**
      * Get all {@link DataCellToJavaConverterFactory converter factories} which create Converters which convert into a
      * specific {@link Class destType}.
      *
@@ -276,8 +286,8 @@ public final class DataCellToJavaConverterRegistry {
         }
         if (id.startsWith(CollectionConverterFactory.class.getName())) {
             // get the element converter factory id:
-            final String elemConvFactoryId = id.substring(CollectionConverterFactory.class.getName().length() + 1,
-                id.length() - 1);
+            final String elemConvFactoryId =
+                id.substring(CollectionConverterFactory.class.getName().length() + 1, id.length() - 1);
             Optional<DataCellToJavaConverterFactory<?, ?>> factory = getConverterFactory(elemConvFactoryId);
             if (factory.isPresent()) {
                 return Optional.of(new CollectionConverterFactory<>(factory.get()));
@@ -354,7 +364,7 @@ public final class DataCellToJavaConverterRegistry {
      * @return the preferred {@link DataCellToJavaConverterFactory} for given <code>sourceType</code> and
      *         <code>destType</code>.
      */
-    public <D> Optional<DataCellToJavaConverterFactory<DataValue, D>>
+    public <D> Optional<DataCellToJavaConverterFactory<? extends DataValue, D>>
         getPreferredConverterFactory(final DataType sourceType, final Class<D> destType) {
 
         // get the optional, we need to cast its contents rather than the Optional directly.
@@ -384,7 +394,8 @@ public final class DataCellToJavaConverterRegistry {
         // try creating a dynamic CollectionConverterFactory
         for (final DataCellToJavaConverterFactory<? extends DataValue, ?> factory : getConverterFactories(
             sourceType.getCollectionElementType(), destType.getComponentType())) {
-            allFactories.add(new CollectionConverterFactory<D, SE, DE>((DataCellToJavaConverterFactory<SE, DE>)factory));
+            allFactories
+                .add(new CollectionConverterFactory<D, SE, DE>((DataCellToJavaConverterFactory<SE, DE>)factory));
         }
 
         return allFactories;
@@ -411,7 +422,7 @@ public final class DataCellToJavaConverterRegistry {
         final Class<?> destType = factory.getDestinationType();
         Set<DataCellToJavaConverterFactory<?, ?>> byDestType = m_byDestinationType.get(destType);
         if (byDestType == null) {
-            byDestType = new HashSet<>();
+            byDestType = new LinkedHashSet<>();
             m_byDestinationType.put(destType, byDestType);
         }
         byDestType.add(factory);
@@ -419,7 +430,7 @@ public final class DataCellToJavaConverterRegistry {
         final Class<?> sourceType = factory.getSourceType();
         Set<DataCellToJavaConverterFactory<?, ?>> bySourceType = m_bySourceType.get(sourceType);
         if (bySourceType == null) {
-            bySourceType = new HashSet<>();
+            bySourceType = new LinkedHashSet<>();
             m_bySourceType.put(sourceType, bySourceType);
         }
         bySourceType.add(factory);
@@ -432,7 +443,7 @@ public final class DataCellToJavaConverterRegistry {
 
     /* -- Singleton methods -- */
 
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(JavaToDataCellConverterRegistry.class);
+    private final static NodeLogger LOGGER = NodeLogger.getLogger(DataCellToJavaConverterRegistry.class);
 
     private static final DataCellToJavaConverterRegistry INSTANCE = new DataCellToJavaConverterRegistry();
 
@@ -454,16 +465,25 @@ public final class DataCellToJavaConverterRegistry {
                 // check this first
                 final Object extension = configurationElement.createExecutableExtension("factoryClass");
                 if (extension instanceof DataCellToJavaConverterFactory) {
-                    final DataCellToJavaConverterFactory<?, ?> converterFactory =
+                    final DataCellToJavaConverterFactory<?, ?> factory =
                         (DataCellToJavaConverterFactory<?, ?>)extension;
-                    register(converterFactory);
+
+                    // Check name of factory
+                    if (!validateFactoryName(factory)) {
+                        LOGGER.warn("Factory name \"" + factory.getName() + "\" of factory with id \"" + factory.getIdentifier()
+                            + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
+                        LOGGER.warn("Factory will not be registered.");
+                        return;
+                    }
+
+                    register(factory);
                 } else {
                     // object was not an instance of ConverterProvider
                     LOGGER.error("Extension \"" + configurationElement.getDeclaringExtension()
                         + "\" is invalid: factory-class does not implement "
                         + DataCellToJavaConverterFactory.class.getName());
                 }
-            } catch (final CoreException e) {
+            } catch (final Throwable e) {
                 LOGGER.error("Error while loading extension \"" + configurationElement.getDeclaringExtension() + "\": "
                     + e.getMessage(), e);
             }
@@ -471,8 +491,8 @@ public final class DataCellToJavaConverterRegistry {
 
         // register "Object -> String" and "MissingValue -> null" converters
         // with lowest priority
-        register(new SimpleDataCellToJavaConverterFactory<>(DataValue.class, String.class, (val) -> val.toString()));
-        register(new SimpleDataCellToJavaConverterFactory<>(MissingValue.class, Object.class, (val) -> null));
+        register(new SimpleDataCellToJavaConverterFactory<>(MissingValue.class, Object.class, (val) -> null,
+            "Object (Null)"));
     }
 
     /*
@@ -481,9 +501,10 @@ public final class DataCellToJavaConverterRegistry {
     private void parseAnnotations() {
         final Collection<DataType> availableDataTypes = DataTypeRegistry.getInstance().availableDataTypes();
 
+        final Set<Class<? extends DataValue>> processedValueClasses = new HashSet<>();
         for (final DataType dataType : availableDataTypes) {
             for (final Class<? extends DataValue> valueClass : dataType.getValueClasses()) {
-                if (m_bySourceType.containsKey(valueClass)) {
+                if (processedValueClasses.contains(valueClass)) {
                     // already parsed this value class
                     continue;
                 }
@@ -496,6 +517,8 @@ public final class DataCellToJavaConverterRegistry {
                 for (final Pair<Method, DataValueAccessMethod> pair : methodsWithAnnotation) {
                     parseAnnotation(valueClass, pair.getFirst(), pair.getSecond());
                 }
+
+                processedValueClasses.add(valueClass);
             }
         }
     }
@@ -506,16 +529,37 @@ public final class DataCellToJavaConverterRegistry {
         try {
             final Class<T> javaType = (Class<T>)ClassUtil.ensureObjectType(method.getReturnType());
             final String name = annotation.name();
+            final DataCellToJavaConverterFactory<?, ?> factory = new SimpleDataCellToJavaConverterFactory<>(valueClass,
+                javaType, (value) -> (T)method.invoke(value), name);
 
-            register(new SimpleDataCellToJavaConverterFactory<>(valueClass, javaType,
-                (value) -> (T)method.invoke(value), name));
+            // Check name of factory
+            if (!validateFactoryName(factory)) {
+                LOGGER.warn("DataCellToJavaFactory name \"" + name + "\" of factory with id \"" + factory.getIdentifier()
+                    + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
+                LOGGER.warn("Factory will not be registered.");
+                return;
+            }
+            register(factory);
             LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for "
-                + javaType.getName() + " to " + valueClass.getName());
+                + valueClass.getName() + " to " + javaType.getName());
         } catch (IncompleteAnnotationException e) {
             LOGGER.coding(
                 "Incomplete Annotation for " + valueClass.getName() + "." + method.getName() + ". Will not register.",
                 e);
         }
+    }
+
+    /**
+     * Check whether the given factory name matches the naming convention described in
+     * {@link DataValueAccessMethod#name()}
+     *
+     * @param name the name of the
+     * @return
+     */
+    private boolean validateFactoryName(final DataCellToJavaConverterFactory<?, ?> factory) {
+        final String name = factory.getName();
+        final String className = factory.getDestinationType().getSimpleName();
+        return name.matches(Pattern.quote(className) + "(| \\(.+\\))");
     }
 
     /**

@@ -69,7 +69,7 @@ public class StringToIntCellTestConverterFactory extends SimpleJavaToDataCellCon
      * Constructor
      */
     public StringToIntCellTestConverterFactory() {
-        super(String.class, IntCell.TYPE, (string) -> new IntCell(42), "test");
+        super(String.class, IntCell.TYPE, (string) -> new IntCell(42), "String (Test)");
     }
 
 }

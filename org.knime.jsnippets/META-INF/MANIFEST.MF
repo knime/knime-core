@@ -10,6 +10,7 @@ Export-Package: org.knime.base.node.jsnippet.guarded,
  org.knime.base.node.jsnippet.template,
  org.knime.base.node.jsnippet.ui,
  org.knime.base.node.jsnippet.util,
+ org.knime.base.node.jsnippet.util.field,
  org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator,
  org.knime.base.node.rules.engine.pmml,
@@ -27,5 +28,6 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
  com.fifesoft.rstaui;bundle-version="[2.5.7,3.0.0)",
  com.fifesoft.rsyntaxtextarea;bundle-version="[2.5.7,3.0.0)",
  com.fifesoft.spellchecker;bundle-version="[2.5.7,3.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.knime.base.node.jsnippet.JavaSnippetActivator

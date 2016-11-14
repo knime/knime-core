@@ -76,6 +76,8 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.text.BadLocationException;
 
 import org.fife.rsta.ac.LanguageSupport;
@@ -249,6 +251,19 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
         m_inFieldsTable = createInFieldsTable();
         m_outFieldsTable = createOutFieldsTable();
+        final TableModelListener tableModelListener = new TableModelListener() {
+
+            @Override
+            public void tableChanged(final TableModelEvent e) {
+                if(e.getType() != TableModelEvent.DELETE) {
+                    // Updating completion can result in a small delay,
+                    // so we don't update when fields are removed.
+                    updateAutocompletion();
+                }
+            }
+        };
+        m_inFieldsTable.getTable().getModel().addTableModelListener(tableModelListener);
+        m_outFieldsTable.getTable().getModel().addTableModelListener(tableModelListener);
 
         // use split pane for fields
         m_inFieldsTable.setBorder(BorderFactory.createTitledBorder("Input"));
@@ -463,53 +478,30 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
     }
 
     private void updateAutocompletion() {
-        LanguageSupportFactory lsf = LanguageSupportFactory.get();
-        LanguageSupport support = lsf.getSupportFor(
+        final LanguageSupportFactory lsf = LanguageSupportFactory.get();
+        final LanguageSupport support = lsf.getSupportFor(
                 org.fife.ui.rsyntaxtextarea.SyntaxConstants.SYNTAX_STYLE_JAVA);
-        JavaLanguageSupport jls = (JavaLanguageSupport)support;
-        JarManager jarManager = jls.getJarManager();
+        final JavaLanguageSupport jls = (JavaLanguageSupport)support;
+        final JarManager jarManager = jls.getJarManager();
 
         try {
-            boolean doUpdate = false;
-            if (filesExist(m_autoCompletionJars)) {
-                m_autoCompletionJars = m_snippet.getClassPath();
-                doUpdate = true;
-            } else {
-                if (!Arrays.equals(m_autoCompletionJars, m_snippet.getClassPath())) {
-                    m_autoCompletionJars = m_snippet.getClassPath();
-                    doUpdate = true;
-                }
-            }
+            if (m_autoCompletionJars == null || !Arrays.stream(m_autoCompletionJars).allMatch(file -> file.exists())
+                || !Arrays.equals(m_autoCompletionJars, m_snippet.getClassPath())) {
 
-            if (doUpdate) {
+                m_autoCompletionJars = m_snippet.getClassPath();
                 jarManager.clearClassFileSources();
                 jarManager.addCurrentJreClassFileSource();
-                for (File jarFile : m_autoCompletionJars) {
+                for (final File jarFile : m_autoCompletionJars) {
+                    if (!jarFile.getName().endsWith(".jar")) {
+                        continue;
+                    }
                     jarManager.addClassFileSource(jarFile);
                 }
             }
-
-
         } catch (IOException ioe) {
             LOGGER.error(ioe.getMessage(), ioe);
         }
 
-    }
-
-    /**
-     * Tests if files in the given array exist.
-     * @param files the files to test
-     * @return true if array is not null and all files exist.
-     */
-    private boolean filesExist(final File[] files) {
-        if (null == files) {
-            return false;
-        }
-        boolean exists = true;
-        for (File file : files) {
-            exists = exists && file.exists();
-        }
-        return exists;
     }
 
     /** Create an empty, titled border.

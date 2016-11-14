@@ -72,7 +72,7 @@ import org.knime.core.data.convert.util.ClassUtil;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-class CollectionConverterFactory<D, SE extends DataValue, DE>
+public class CollectionConverterFactory<D, SE extends DataValue, DE>
     implements DataCellToJavaConverterFactory<CollectionDataValue, D> {
 
     private final Class<D> m_destType;
@@ -102,7 +102,13 @@ class CollectionConverterFactory<D, SE extends DataValue, DE>
 
             int i = 0;
             while (itor.hasNext()) {
-                Array.set(outputArray, i, elementConverter.convert((SE)itor.next()));
+                final DataCell next = itor.next();
+                // need to handle missing values
+                if (next.isMissing()) {
+                    Array.set(outputArray, i, null);
+                } else {
+                    Array.set(outputArray, i, elementConverter.convert((SE)next));
+                }
                 i++;
             }
 
@@ -123,5 +129,13 @@ class CollectionConverterFactory<D, SE extends DataValue, DE>
     @Override
     public String getIdentifier() {
         return getClass().getName() + "(" + m_elementConverterFactory.getIdentifier() + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return "Array of " + m_elementConverterFactory.getName();
     }
 }

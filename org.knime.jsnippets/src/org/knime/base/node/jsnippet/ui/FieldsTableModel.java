@@ -150,6 +150,15 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
     }
 
     /**
+     * Get the {@link Column} enum value corresponding to a column index.
+     * @param index The index of the column
+     * @return the {@link Column} enum value
+     */
+    public Column getColumnForIndex(final Integer index) {
+        return m_columnsReverse.get(index);
+    }
+
+    /**
      * Test whether the value of the cell defined by row and column is valid.
      * @param row the row index of the cell
      * @param column the column of the cell
@@ -186,14 +195,14 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
     }
 
     /**
-     * The possible java types for the given row. For the input table it depends
-     * to what java type the given column / flow variable can be converted.
-     * For the output table it gives all supported output types.
+     * The possible java types for the given row. For the input table it depends to what java type the given column /
+     * flow variable can be converted. For the output table it gives all supported output types.
+     *
      * @param row the row
-     * @return the allowed java types
+     * @return the allowed java types, either a Class[], if the row is for a flow variable or DataCellToJavaConverterFactory[]
+     *         if it is a column and input field or JavaToDataCellConverterFactory[] if it is an output field
      */
-    @SuppressWarnings("rawtypes")
-    abstract Class[] getAllowedJavaTypes(int row);
+    abstract Object[] getAllowedJavaTypes(int row);
 
     /**
      * Checks whether the cell values in the given row are valid.

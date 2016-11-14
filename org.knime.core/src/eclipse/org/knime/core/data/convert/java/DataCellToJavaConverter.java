@@ -71,4 +71,18 @@ public interface DataCellToJavaConverter<S extends DataValue, D> {
      * @throws Exception When something went wrong during conversion
      */
     public D convert(S source) throws Exception;
+
+    /**
+     * Casts the argument to <code>S</code> and calls {@link #convert(DataValue)}. It's responsibility of the caller to
+     * not pass objects not implementing that interface (e.g. missing values not allowed).
+     *
+     * @param cell Cell to convert
+     * @return the converted object.
+     * @throws Exception As per {@link #convert(DataValue)} or the type cast can't be performed.
+     * @since 3.3
+     */
+    @SuppressWarnings("unchecked")
+    default public D convertUnsafe(final DataCell cell) throws Exception {
+        return convert((S)cell);
+    }
 }

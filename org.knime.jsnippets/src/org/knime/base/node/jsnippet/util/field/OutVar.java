@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,83 +41,70 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   16.01.2012 (hofer): created
+ *   17.10.2016 (Jonathan Hale): created
  */
-package org.knime.base.node.jsnippet.type;
+package org.knime.base.node.jsnippet.util.field;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.knime.base.node.jsnippet.expression.TypeException;
-import org.knime.base.node.jsnippet.type.data.DataValueToJava;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.collection.CollectionDataValue;
-
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 /**
- * A type converter to create a java array from a list cell.
+ * A marker class for a field in the java snippet that represents an output variable.
  *
  * @author Heiko Hofer
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class ListCellToJava extends DataValueToJava {
-    private DataValueToJava m_elementToJava;
+public class OutVar extends JavaFlowVarField {
+    private static final String REPLACE_EXISTING = "replaceExisting";
+
+    private boolean m_replaceExisting;
 
     /**
-     * A type conversion for collection cells of the given type conversion.
-     *
-     * @param typeConverter the type conversion
+     * Create an instance.
      */
-    public ListCellToJava(final DataValueToJava typeConverter) {
-        super(createArrayTypes(typeConverter));
-        m_elementToJava = typeConverter;
-    }
-
-    /** Create array classes from the given classes. */
-    @SuppressWarnings("rawtypes")
-    private static Class[] createArrayTypes(
-            final DataValueToJava typeConversion) {
-        Class[] javaTypes = typeConversion.canProvideJavaTypes();
-        Class preferred = typeConversion.getPreferredJavaType();
-
-        Class[] result = new Class[javaTypes.length];
-        result[0] = Array.newInstance(preferred, 0).getClass();
-        int c = 1;
-        for (int i = 0; i < result.length; i++) {
-            if (!preferred.equals(javaTypes[i])) {
-                result[c] = Array.newInstance(javaTypes[i], 0).getClass();
-                c++;
-            }
-        }
-        return result;
+    public OutVar() {
+        m_replaceExisting = false;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the replaceExisting
      */
-    @SuppressWarnings("rawtypes")
+    public boolean getReplaceExisting() {
+        return m_replaceExisting;
+    }
+
+    /**
+     * @param replaceExisting the replaceExisting to set
+     */
+    public void setReplaceExisting(final boolean replaceExisting) {
+        m_replaceExisting = replaceExisting;
+    }
+
     @Override
-    public boolean isCompatibleTo(final DataCell cell, final Class c)
-            throws TypeException {
-        return canProvideJavaType(c)
-            && cell.getType().isCollectionType();
+    public void saveSettings(final Config config) {
+        super.saveSettings(config);
+        config.addBoolean(REPLACE_EXISTING, m_replaceExisting);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings({"rawtypes", "unchecked" })
     @Override
-    public Object getValueUnchecked(final DataCell cell, final Class c) {
-        List values = new ArrayList();
-        for (DataCell element : ((CollectionDataValue)cell)) {
-            values.add(m_elementToJava.getValue(element,
-                    c.getComponentType()));
-        }
-        return values.toArray();
+    public void loadSettings(final Config config) throws InvalidSettingsException {
+        super.loadSettings(config);
+        m_replaceExisting = config.getBoolean(REPLACE_EXISTING);
     }
 
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        m_replaceExisting = config.getBoolean(REPLACE_EXISTING, false);
+    }
+
+    @Override
+    public boolean isInput() {
+        return false;
+    }
 }

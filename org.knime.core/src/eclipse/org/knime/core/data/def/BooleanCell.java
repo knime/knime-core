@@ -301,7 +301,7 @@ public final class BooleanCell extends DataCell implements BooleanValue,
          * @param b a boolean
          * @return a new data cell
          */
-        @DataCellFactoryMethod(name = "Boolean value")
+        @DataCellFactoryMethod(name = "Boolean")
         public static DataCell create(final boolean b) {
             return b ? TRUE : FALSE;
         }

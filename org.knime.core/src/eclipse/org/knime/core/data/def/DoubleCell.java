@@ -294,7 +294,7 @@ public final class DoubleCell extends DataCell
          * @param d any double value
          * @return a new data cell
          */
-        @DataCellFactoryMethod(name = "Number (double)")
+        @DataCellFactoryMethod(name = "Double")
         public static DataCell create(final double d) {
             return new DoubleCell(d);
         }

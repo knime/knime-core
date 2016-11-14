@@ -1,5 +1,6 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,10 +41,25 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-	<p>
-	  Type conversion for DataValue to Java and Java to DataCell.
-	</p>
-</body>
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   17.10.2016 (Jonathan Hale): created
+ */
+package org.knime.base.node.jsnippet.util.field;
+
+/**
+ * A marker class for a field in the java snippet that represents an input variable.
+ *
+ * @author Heiko Hofer
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
+ */
+public class InVar extends JavaFlowVarField {
+
+    @Override
+    public boolean isInput() {
+        return true;
+    }
+}

@@ -65,8 +65,11 @@ import org.knime.core.node.ExecutionContext;
  * @param <T> {@link JavaToDataCellConverter} subclass which can be created by this factory.
  * @param <F> Element factory type
  * @since 3.2
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverterFactory<T> {
+public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverterFactory<T> {
 
     private final JavaToDataCellConverterFactory<F> m_elementFactory;
 
@@ -116,5 +119,10 @@ class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverter
     @Override
     public String getIdentifier() {
         return getClass().getName() + "(" + m_elementFactory.getIdentifier() + ")";
+    }
+
+    @Override
+    public String getName() {
+        return "Array of " + m_elementFactory.getName();
     }
 }

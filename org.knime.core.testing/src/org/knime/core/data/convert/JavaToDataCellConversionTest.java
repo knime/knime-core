@@ -100,14 +100,6 @@ public class JavaToDataCellConversionTest {
 
     private static final double FUZZY_DOUBLE_TOLERANCE = 0.000001;
 
-    /* Class for testing toString() converter */
-    private class MyClass {
-        @Override
-        public String toString() {
-            return "toString()";
-        }
-    }
-
     /**
      * Test {@link ConversionKey#equals(Object)}.
      */
@@ -205,10 +197,6 @@ public class JavaToDataCellConversionTest {
         final StringCell cell =
             testSimpleConversion(String.class, StringCell.TYPE, StringCell.class, new String("KNIME"));
         assertEquals("KNIME", cell.getStringValue());
-
-        /* .toString() converter */
-        final StringCell cell1 = testSimpleConversion(MyClass.class, StringCell.TYPE, StringCell.class, new MyClass());
-        assertEquals(new MyClass().toString(), cell1.getStringValue());
     }
 
     /**
@@ -274,7 +262,7 @@ public class JavaToDataCellConversionTest {
      */
     @Test
     public void testCollectionTypes() throws Exception {
-        final Integer[] coll = {0, 1, 4, 9, 16, 25};
+        final Integer[] coll = {0, 1, 4, 9, 16, 25, null};
 
         final Optional<JavaToDataCellConverterFactory<Integer[]>> factory = JavaToDataCellConverterRegistry
             .getInstance().getConverterFactories(Integer[].class, ListCell.getCollectionType(IntCell.TYPE)).stream().findFirst();
@@ -290,6 +278,7 @@ public class JavaToDataCellConversionTest {
         for (int i = 0; i < 6; ++i) {
             assertEquals(i * i, ((IntCell)listCell.get(i)).getIntValue());
         }
+        assertTrue(listCell.get(6).isMissing());
     }
 
     /**
@@ -301,10 +290,9 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer.class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(3, destTypes.size());
+        assertEquals(2, destTypes.size());
         assertTrue(destTypes.contains(IntCell.TYPE));
         assertTrue(destTypes.contains(LongCell.TYPE));
-        assertTrue(destTypes.contains(StringCell.TYPE));
 
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream.class).stream()
@@ -324,20 +312,17 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(4, destTypes.size());
+        assertEquals(2, destTypes.size());
         assertTrue(destTypes.contains(ListCell.getCollectionType(IntCell.TYPE)));
         assertTrue(destTypes.contains(ListCell.getCollectionType(LongCell.TYPE)));
-        assertTrue(destTypes.contains(ListCell.getCollectionType(StringCell.TYPE)));
-        assertTrue(destTypes.contains(StringCell.TYPE));
 
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
-        assertEquals(4, supertypeDestTypes.size());
+        assertEquals(3, supertypeDestTypes.size());
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(BinaryObjectDataCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(XMLCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(StringCell.TYPE)));
-        assertTrue(supertypeDestTypes.contains(StringCell.TYPE));
     }
 
     /**

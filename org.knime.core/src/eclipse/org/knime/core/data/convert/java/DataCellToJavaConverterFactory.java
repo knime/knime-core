@@ -95,13 +95,13 @@ public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
      * A human readable name for this converter factory to be displayed in user interfaces for example. Should contain
      * at least the simple name of the java type which is retrieved from the data value using this method.
      * <p>
-     * <b> Examples: </b> "Double", "String", "JsonValue", "SDF String"
+     * <b> Examples: </b> "Double", "String", "JsonValue", "String (SDF)"
      * </p>
      *
      * @return the name of this converter factory
      */
     default String getName() {
-        return getSourceType().getSimpleName();
+        return getDestinationType().getSimpleName();
     }
 
     /**

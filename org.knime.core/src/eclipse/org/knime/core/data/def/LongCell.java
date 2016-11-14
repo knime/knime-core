@@ -268,7 +268,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
          * @param l any integer value
          * @return a new data cell
          */
-        @DataCellFactoryMethod(name = "Number (long)")
+        @DataCellFactoryMethod(name = "Integer")
         public static DataCell create(final int l) {
             return new LongCell(l);
         }
@@ -280,7 +280,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
          * @return a new data cell
          * @since 3.2
          */
-        @DataCellFactoryMethod(name = "Number (long)")
+        @DataCellFactoryMethod(name = "Long")
         public static DataCell create(final long l) {
             return new LongCell(l);
         }

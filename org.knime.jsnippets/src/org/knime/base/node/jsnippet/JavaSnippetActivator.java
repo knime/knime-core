@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,37 +41,38 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   07.02.2012 (hofer): created
+ *   Nov 8, 2016 (squareys): created
  */
-package org.knime.base.node.jsnippet.type.data;
+package org.knime.base.node.jsnippet;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.BooleanCell;
+import org.knime.core.node.NodeLogger;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 /**
- * Converter to create a BooleanCell from a java object.
+ * Activator for org.knime.jsnippets.
  *
- * @author Heiko Hofer
+ * Caches all the classpaths required for every type converter.
+ *
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
  */
-public class JavaToBooleanCell extends JavaToDataCell {
-    /**
-     * Create a new instance.
-     */
-    public JavaToBooleanCell() {
-        super(Boolean.class);
-    }
+public class JavaSnippetActivator implements BundleActivator {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetActivator.class);
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public DataCell createDataCellUnchecked(final Object value)
-        throws Exception {
-        return (Boolean)value ? BooleanCell.TRUE : BooleanCell.FALSE;
+    public void start(final BundleContext context) throws Exception {
+        final long startTime = System.currentTimeMillis();
+        JavaSnippet.cacheCustomTypeClasspaths();
+        final long duration = System.currentTimeMillis() - startTime;
+
+        LOGGER.debug("Cached custom type classpaths [" + duration + " ms]");
     }
 
+    @Override
+    public void stop(final BundleContext context) throws Exception {
+    }
 
 }
