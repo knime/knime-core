@@ -80,7 +80,7 @@ public class TestrunConfiguration {
 
     private boolean m_checkLogMessages = true;
 
-    private boolean m_loadSaveLoad;
+    private boolean m_loadSaveLoad = true;
 
     private File m_saveLocation;
 
@@ -96,7 +96,7 @@ public class TestrunConfiguration {
 
     private boolean m_checkNodeMessages = true;
 
-    private boolean m_enableStreamingMode = false;
+    private boolean m_enableStreamingMode = true;
 
     private final Collection<FlowVariable> m_flowVariables = new ArrayList<>();
 
