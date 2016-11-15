@@ -104,8 +104,13 @@
 				or weekdays.
 			</option>
 			<option name="Content of the first cell">
-				Shows the content of the first non-missing cell of the first included
+				Shows the content of the first non-missing cell
+				of the first included
 				column to simplify format selection.
+			</option>
+			<option name="Guess data type and format">
+				If pressed the data type and the format are guessed based on the
+				content of the first cell.
 			</option>
 		</tab>
 		<tab name="Abort Execution">

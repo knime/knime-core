@@ -66,6 +66,7 @@ import java.util.Collection;
 import java.util.Locale;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -122,6 +123,8 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
     private DataTableSpec m_spec;
 
     private BufferedDataTable m_dataTable;
+
+    private String m_preview;
 
     /**
      * Setting up all DialogComponents.
@@ -202,6 +205,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Type and Format Selection"));
         final GridBagConstraints gbcTypeFormat = new GridBagConstraints();
         // add label and combo box for type selection
+        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
         gbcTypeFormat.fill = GridBagConstraints.VERTICAL;
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy = 0;
@@ -228,9 +232,15 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         gbcTypeFormat.gridx++;
         gbcTypeFormat.weightx = 1;
         panelTypeFormat.add(m_previewLabel, gbcTypeFormat);
+        // add button to guess type and format
+        final JButton guessButton = new JButton("Guess data type and format");
+        gbcTypeFormat.insets = new Insets(5, 20, 5, 0);
+        gbcTypeFormat.gridx = 1;
+        gbcTypeFormat.gridy++;
+        gbcTypeFormat.weightx = 0;
+        panelTypeFormat.add(guessButton, gbcTypeFormat);
         // add label for warning
         m_typeFormatWarningLabel = new JLabel();
-        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy++;
         gbcTypeFormat.weightx = 0;
@@ -239,6 +249,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_typeFormatWarningLabel.setForeground(Color.RED);
         panelTypeFormat.add(m_typeFormatWarningLabel, gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
+
         /*
          * add cancel on fail selection
          */
@@ -283,6 +294,42 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                 }
             }
         });
+        guessButton.addActionListener(e -> guessFormat(m_preview));
+    }
+
+    private void guessFormat(final String preview) {
+        final Collection<String> formats = StringToDateTimeNodeModel.createPredefinedFormats();
+        for (final String format : formats) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            try {
+                ZonedDateTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.ZONED_DATE_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalDateTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalDate.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+        }
     }
 
     /**
@@ -291,7 +338,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
     private void updatePreview(final SettingsModelColumnFilter2 colSelectModel) {
         final String[] includes = colSelectModel.applyTo(m_spec).getIncludes();
         Arrays.stream(colSelectModel.applyTo(m_spec).getIncludes()).mapToInt(s -> m_spec.findColumnIndex(s)).toArray();
-        String preview = "";
+        m_preview = "";
         if (m_dataTable != null) {
             if (!(includes.length == 0 || m_dataTable.size() == 0)) {
                 for (final DataRow row : m_dataTable) {
@@ -299,13 +346,13 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                     if (cell.isMissing()) {
                         continue;
                     } else {
-                        preview = ((StringValue)cell).getStringValue();
+                        m_preview = ((StringValue)cell).getStringValue();
                         break;
                     }
                 }
             }
         }
-        m_previewLabel.setText("Content of the first cell: " + preview);
+        m_previewLabel.setText("Content of the first cell: " + m_preview);
     }
 
     /**
