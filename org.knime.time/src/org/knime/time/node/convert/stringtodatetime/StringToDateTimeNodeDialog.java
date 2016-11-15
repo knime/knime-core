@@ -88,6 +88,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.time.node.convert.DateTimeTypes;
 
 /**
@@ -290,14 +292,16 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         final String[] includes = colSelectModel.applyTo(m_spec).getIncludes();
         Arrays.stream(colSelectModel.applyTo(m_spec).getIncludes()).mapToInt(s -> m_spec.findColumnIndex(s)).toArray();
         String preview = "";
-        if (!(includes.length == 0 || m_dataTable.size() == 0)) {
-            for (final DataRow row : m_dataTable) {
-                final DataCell cell = row.getCell(m_spec.findColumnIndex(includes[0]));
-                if (cell.isMissing()) {
-                    continue;
-                } else {
-                    preview = ((StringValue)cell).getStringValue();
-                    break;
+        if (m_dataTable != null) {
+            if (!(includes.length == 0 || m_dataTable.size() == 0)) {
+                for (final DataRow row : m_dataTable) {
+                    final DataCell cell = row.getCell(m_spec.findColumnIndex(includes[0]));
+                    if (cell.isMissing()) {
+                        continue;
+                    } else {
+                        preview = ((StringValue)cell).getStringValue();
+                        break;
+                    }
                 }
             }
         }
@@ -403,8 +407,10 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
+        m_dataTable = null;
+        m_spec = (DataTableSpec)specs[0];
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
@@ -424,10 +430,10 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final BufferedDataTable[] input)
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObject[] input)
         throws NotConfigurableException {
-        m_dataTable = input[0];
-        m_spec = input[0].getDataTableSpec();
+        m_dataTable = (BufferedDataTable)input[0];
+        m_spec = m_dataTable.getDataTableSpec();
         final DataTableSpec[] specs = new DataTableSpec[]{m_spec};
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
