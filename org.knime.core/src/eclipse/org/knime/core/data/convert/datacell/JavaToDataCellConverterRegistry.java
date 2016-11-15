@@ -404,10 +404,10 @@ public final class JavaToDataCellConverterRegistry {
                     final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)extension;
                     // Check name of factory
                     if (!validateFactoryName(factory)) {
-                        LOGGER.warn("JavaToDataCellFactory name \"" + factory.getName() + "\" of factory with id \""
+                        LOGGER.coding("JavaToDataCellFactory name \"" + factory.getName() + "\" of factory with id \""
                             + factory.getIdentifier()
                             + "\" does not follow naming convention (see DataCellFactoryMethod#name()).");
-                        LOGGER.warn("Factory will not be registered.");
+                        LOGGER.coding("Factory will not be registered.");
                         continue;
                     }
 

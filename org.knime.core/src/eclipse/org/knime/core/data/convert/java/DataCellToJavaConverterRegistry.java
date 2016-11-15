@@ -470,10 +470,10 @@ public final class DataCellToJavaConverterRegistry {
 
                     // Check name of factory
                     if (!validateFactoryName(factory)) {
-                        LOGGER.warn("Factory name \"" + factory.getName() + "\" of factory with id \"" + factory.getIdentifier()
+                        LOGGER.coding("Factory name \"" + factory.getName() + "\" of factory with id \"" + factory.getIdentifier()
                             + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
-                        LOGGER.warn("Factory will not be registered.");
-                        return;
+                        LOGGER.coding("Factory will not be registered.");
+                        continue;
                     }
 
                     register(factory);
