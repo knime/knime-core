@@ -403,6 +403,27 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * {@inheritDoc}
      */
     @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        m_dialogCompColFilter.loadSettingsFrom(settings, specs);
+        m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
+        m_dialogCompSuffix.loadSettingsFrom(settings, specs);
+        m_typeCombobox.setSelectedItem(
+            DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
+        m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
+        m_dialogCompLocale.loadSettingsFrom(settings, specs);
+        m_dialogCompCancelOnFail.loadSettingsFrom(settings, specs);
+        // retrieve potential new values from the StringHistory and add them
+        // (if not already present) to the combo box...
+        m_dialogCompFormatSelect.replaceListItems(StringToDateTimeNodeModel.createPredefinedFormats(), null);
+        // set preview
+        updatePreview((SettingsModelColumnFilter2)m_dialogCompColFilter.getModel());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final BufferedDataTable[] input)
         throws NotConfigurableException {
         m_dataTable = input[0];
