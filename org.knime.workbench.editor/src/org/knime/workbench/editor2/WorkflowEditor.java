@@ -3234,6 +3234,11 @@ public class WorkflowEditor extends GraphicalEditor implements
 
 
     private void saveBackToServer() {
+        if (m_parentEditor != null) { // parent does it if this is a metanode editor
+            m_parentEditor.saveBackToServer();
+            return;
+        }
+
         assert m_origRemoteLocation != null : "No remote workflow";
         AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
 

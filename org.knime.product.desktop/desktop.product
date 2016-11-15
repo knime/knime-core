@@ -42,7 +42,7 @@ openFile
 -Dknime.enable.fastload=true
 -XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
          <argsX86>-Xmx512m</argsX86>
-         <argsX86_64>-Xmx1024m</argsX86_64>
+         <argsX86_64>-Xmx2048m</argsX86_64>
       </vmArgs>
       <vmArgsLin>-Dorg.eclipse.swt.internal.gtk.disablePrinting
       </vmArgsLin>
