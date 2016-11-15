@@ -53,6 +53,8 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,9 +62,11 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -85,6 +89,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.time.node.convert.DateTimeTypes;
 
 /**
@@ -112,11 +118,13 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
 
     private final SettingsModelString m_formatModel;
 
+    private final JLabel m_previewLabel;
+
     private DataTableSpec m_spec;
 
     private BufferedDataTable m_dataTable;
 
-    private final JLabel m_previewLabel;
+    private String m_preview;
 
     /**
      * Setting up all DialogComponents.
@@ -197,6 +205,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Type and Format Selection"));
         final GridBagConstraints gbcTypeFormat = new GridBagConstraints();
         // add label and combo box for type selection
+        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
         gbcTypeFormat.fill = GridBagConstraints.VERTICAL;
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy = 0;
@@ -223,9 +232,15 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         gbcTypeFormat.gridx++;
         gbcTypeFormat.weightx = 1;
         panelTypeFormat.add(m_previewLabel, gbcTypeFormat);
+        // add button to guess type and format
+        final JButton guessButton = new JButton("Guess data type and format");
+        gbcTypeFormat.insets = new Insets(5, 20, 5, 0);
+        gbcTypeFormat.gridx = 1;
+        gbcTypeFormat.gridy++;
+        gbcTypeFormat.weightx = 0;
+        panelTypeFormat.add(guessButton, gbcTypeFormat);
         // add label for warning
         m_typeFormatWarningLabel = new JLabel();
-        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy++;
         gbcTypeFormat.weightx = 0;
@@ -234,6 +249,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_typeFormatWarningLabel.setForeground(Color.RED);
         panelTypeFormat.add(m_typeFormatWarningLabel, gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
+
         /*
          * add cancel on fail selection
          */
@@ -251,6 +267,7 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         panelCancelOnFail.add(m_dialogCompCancelOnFail.getComponentPanel(), gbcCancelOnFail);
 
         panel.add(panelCancelOnFail, gbc);
+
         /*
          * add tab
          */
@@ -259,10 +276,60 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         /*
          * Change and action listeners
          */
-
-        m_typeCombobox.addActionListener(e -> formatListener());
-        m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener());
+        m_typeCombobox.addActionListener(e -> formatListener(m_formatModel.getStringValue()));
+        m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener(m_formatModel.getStringValue()));
         colSelectModel.addChangeListener(e -> updatePreview(colSelectModel));
+        m_typeCombobox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                final Collection<String> formats = StringToDateTimeNodeModel.createPredefinedFormats();
+                if (!formatListener(m_formatModel.getStringValue())) {
+                    for (final String format : formats) {
+                        if (formatListener(format)) {
+                            m_formatModel.setStringValue(format);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        guessButton.addActionListener(e -> guessFormat(m_preview));
+    }
+
+    private void guessFormat(final String preview) {
+        final Collection<String> formats = StringToDateTimeNodeModel.createPredefinedFormats();
+        for (final String format : formats) {
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            try {
+                ZonedDateTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.ZONED_DATE_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalDateTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalDate.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+            try {
+                LocalTime.parse(preview, formatter);
+                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_TIME);
+                m_formatModel.setStringValue(format);
+                break;
+            } catch (DateTimeException e) {
+            }
+        }
     }
 
     /**
@@ -271,69 +338,102 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
     private void updatePreview(final SettingsModelColumnFilter2 colSelectModel) {
         final String[] includes = colSelectModel.applyTo(m_spec).getIncludes();
         Arrays.stream(colSelectModel.applyTo(m_spec).getIncludes()).mapToInt(s -> m_spec.findColumnIndex(s)).toArray();
-        final String preview;
-        if (includes.length == 0 || m_dataTable.size() == 0) {
-            preview = "";
-        } else {
-            final DataRow row = m_dataTable.iterator().next();
-            final DataCell cell = row.getCell(m_spec.findColumnIndex(includes[0]));
-            if (cell.isMissing()) {
-                preview = "";
-            } else {
-                preview = ((StringValue)cell).getStringValue();
+        m_preview = "";
+        if (m_dataTable != null) {
+            if (!(includes.length == 0 || m_dataTable.size() == 0)) {
+                for (final DataRow row : m_dataTable) {
+                    final DataCell cell = row.getCell(m_spec.findColumnIndex(includes[0]));
+                    if (cell.isMissing()) {
+                        continue;
+                    } else {
+                        m_preview = ((StringValue)cell).getStringValue();
+                        break;
+                    }
+                }
             }
         }
-        m_previewLabel.setText("Preview of the first cell: " + preview);
+        m_previewLabel.setText("Content of the first cell: " + m_preview);
     }
 
     /**
      * method for change/action listener of type and date combo boxes.
      */
-    private void formatListener() {
-        final String format = m_formatModel.getStringValue();
-        try {
-            switch ((DateTimeTypes)m_typeCombobox.getSelectedItem()) {
-                case LOCAL_DATE: {
+    private boolean formatListener(final String format) {
+        switch ((DateTimeTypes)m_typeCombobox.getSelectedItem()) {
+            case LOCAL_DATE: {
+                try {
                     final LocalDate now1 = LocalDate.now();
                     final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
                     LocalDate.parse(now1.format(formatter1), formatter1);
-                    break;
+                    return setTypeFormatWarningNull();
+                } catch (DateTimeException exception) {
+                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_DATE.toString()
+                        + " needs a date, but does not support a time, time zone or offset!");
+                } catch (IllegalArgumentException exception) {
+                    return setTypeFormatWarningMessage(exception, exception.getMessage());
                 }
-                case LOCAL_TIME: {
+            }
+            case LOCAL_TIME: {
+                try {
                     final LocalTime now2 = LocalTime.now();
                     final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
                     LocalTime.parse(now2.format(formatter2), formatter2);
-                    break;
+                    return setTypeFormatWarningNull();
+                } catch (DateTimeException exception) {
+                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_TIME.toString()
+                        + " needs a time, but does not support a date, time zone or offset!");
+                } catch (IllegalArgumentException exception) {
+                    return setTypeFormatWarningMessage(exception, exception.getMessage());
                 }
-                case LOCAL_DATE_TIME: {
+            }
+            case LOCAL_DATE_TIME: {
+                try {
                     final LocalDateTime now3 = LocalDateTime.now();
                     final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
                     final String format2 = now3.format(formatter3);
                     LocalDateTime.parse(format2, formatter3);
-                    break;
+                    return setTypeFormatWarningNull();
+                } catch (DateTimeException exception) {
+                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_DATE_TIME.toString()
+                        + " needs date and time, but does not support a time zone or offset!");
+                } catch (IllegalArgumentException exception) {
+                    return setTypeFormatWarningMessage(exception, exception.getMessage());
                 }
-                case ZONED_DATE_TIME: {
+            }
+            case ZONED_DATE_TIME: {
+                try {
                     final ZonedDateTime now4 = ZonedDateTime.now();
                     final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);
                     ZonedDateTime.parse(now4.format(formatter4), formatter4);
-                    break;
+                    return setTypeFormatWarningNull();
+                } catch (DateTimeException exception) {
+                    return setTypeFormatWarningMessage(exception,
+                        DateTimeTypes.ZONED_DATE_TIME.toString() + " needs date, time and a time zone or offset!");
+                } catch (IllegalArgumentException exception) {
+                    return setTypeFormatWarningMessage(exception, exception.getMessage());
                 }
-                default:
-                    throw new IllegalStateException("Unhandled date&time type: " + m_typeCombobox.getSelectedItem());
             }
-            m_typeCombobox.setBorder(null);
-            m_dialogCompFormatSelect.setToolTipText(null);
-            m_typeCombobox.setToolTipText(null);
-            m_typeFormatWarningLabel.setToolTipText(null);
-            m_typeFormatWarningLabel.setText("");
-        } catch (IllegalArgumentException | DateTimeException exception) {
-            m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
-            m_typeCombobox.setToolTipText(exception.getMessage());
-            m_typeFormatWarningLabel.setToolTipText(exception.getMessage());
-            m_typeFormatWarningLabel
-                .setText("Selected data type is not compatible with date format! Hover over for more informations.");
-            m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
+            default:
+                throw new IllegalStateException("Unhandled date&time type: " + m_typeCombobox.getSelectedItem());
         }
+    }
+
+    private boolean setTypeFormatWarningNull() {
+        m_typeCombobox.setBorder(null);
+        m_dialogCompFormatSelect.setToolTipText(null);
+        m_typeCombobox.setToolTipText(null);
+        m_typeFormatWarningLabel.setToolTipText(null);
+        m_typeFormatWarningLabel.setText("");
+        return true;
+    }
+
+    private boolean setTypeFormatWarningMessage(final Exception exception, final String message) {
+        m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
+        m_typeCombobox.setToolTipText(exception.getMessage());
+        m_typeFormatWarningLabel.setToolTipText(exception.getMessage());
+        m_typeFormatWarningLabel.setText(message);
+        m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
+        return false;
     }
 
     /**
@@ -354,8 +454,10 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
+        m_dataTable = null;
+        m_spec = (DataTableSpec)specs[0];
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
@@ -367,16 +469,18 @@ public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         // retrieve potential new values from the StringHistory and add them
         // (if not already present) to the combo box...
         m_dialogCompFormatSelect.replaceListItems(StringToDateTimeNodeModel.createPredefinedFormats(), null);
+        // set preview
+        updatePreview((SettingsModelColumnFilter2)m_dialogCompColFilter.getModel());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final BufferedDataTable[] input)
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObject[] input)
         throws NotConfigurableException {
-        m_dataTable = input[0];
-        m_spec = input[0].getDataTableSpec();
+        m_dataTable = (BufferedDataTable)input[0];
+        m_spec = m_dataTable.getDataTableSpec();
         final DataTableSpec[] specs = new DataTableSpec[]{m_spec};
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
