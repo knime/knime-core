@@ -64,10 +64,10 @@ public interface LocalDateValue extends DataValue {
 
     /**
      * Get the {@link LocalDate} instance wrapped by this cell.
-     * 
+     *
      * @return The {@link LocalDate} instance.
      */
-    @DataValueAccessMethod(name = "Local date")
+    @DataValueAccessMethod(name = "LocalDate")
     LocalDate getLocalDate();
 
 }
