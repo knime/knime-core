@@ -82,10 +82,10 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         if (workflowDirectory == null) {
             return null;
         } else {
-            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDirectory);
-            fac.setMountpointRoot(mountpointRoot);
-            fac.setMountpointURI(uri);
-            return fac.createContext();
+            return new WorkflowContext.Factory(workflowDirectory)
+                .setMountpointRoot(mountpointRoot)
+                .setMountpointURI(uri)
+                .createContext();
         }
     }
 

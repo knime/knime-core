@@ -219,8 +219,8 @@ public final class SandboxedNodeCreator {
         if (!m_copyDataIntoNewContext) {
             ctxFactory = new WorkflowContext.Factory(origContext);
             if (m_localWorkflowDir != null) {
-                ctxFactory.setOriginalLocation(origContext.getCurrentLocation());
-                ctxFactory.setCurrentLocation(m_localWorkflowDir);
+                ctxFactory.setOriginalLocation(origContext.getCurrentLocation())
+                    .setCurrentLocation(m_localWorkflowDir);
             }
         } else if (m_localWorkflowDir != null) {
             ctxFactory = new WorkflowContext.Factory(m_localWorkflowDir);
