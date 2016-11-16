@@ -1967,7 +1967,7 @@
            </FileExtension>
         </FileExtensionMapping>
         <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
+              NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2">
            <FileExtension
                  extension=".pmml">
            </FileExtension>
