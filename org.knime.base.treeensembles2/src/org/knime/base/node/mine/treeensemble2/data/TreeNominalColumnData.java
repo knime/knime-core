@@ -486,6 +486,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         if (missingWeight > EPSILON) {
             branchContainsMissingValues = true;
+        } else {
+            branchContainsMissingValues = false;
         }
 
         ArrayList<CombinedAttributeValues> attValList = Lists.newArrayList(combinedAttValsMap.values());
