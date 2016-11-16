@@ -391,7 +391,8 @@ public final class MemoryAlertSystem {
                         return false;
                     }
                     long diff = System.currentTimeMillis();
-                    m_gcEventLock.wait(remainingTime);
+                    long wait = Math.min(2000, remainingTime);
+                    m_gcEventLock.wait(wait);
                     remainingTime -= System.currentTimeMillis() - diff;
                     usage = getUsage();
                     LOGGER.debug("Wakeup in sleepWhileLow, current usage: " + usage);
