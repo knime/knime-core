@@ -184,7 +184,7 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
                 setBackground(list.getBackground());
                 setForeground(list.getForeground());
             }
-            setText(value.getName());
+            setText(value.toString());
             setIcon(value.getIcon());
 
             return this;

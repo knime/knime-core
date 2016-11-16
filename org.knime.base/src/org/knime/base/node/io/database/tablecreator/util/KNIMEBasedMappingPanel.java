@@ -183,7 +183,7 @@ public class KNIMEBasedMappingPanel extends AbstractTablePanel {
                 if (dt == null) {
                     setText("");
                 } else {
-                    setText(dt.getName());
+                    setText(dt.toString());
                     setIcon(dt.getIcon());
                 }
             }

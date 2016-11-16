@@ -53,6 +53,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -78,7 +79,7 @@ class SQLTypeCellEditor extends DefaultCellEditor {
 
     private static final long serialVersionUID = 1L;
 
-    private static final int STRING_HISTORY_MAX_ENTRY = 20;
+    private static final int STRING_HISTORY_MAX_ENTRY = 50;
 
     private static final String STRING_HISTORY_DELIMITER = "|";
 
@@ -173,35 +174,36 @@ class SQLTypeCellEditor extends DefaultCellEditor {
     @Override
     public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
         final int row, final int column) {
-        ComboBoxModel<String> model = getModelForRow(table, row);
-
-        //  When a model can't be found a null editor will be returned,
-        //  meaning the cell can't be edited.
-        if (model == null) {
-            return null;
-        } else {
-            @SuppressWarnings("unchecked")
-            JComboBox<String> comboBox = (JComboBox<String>)getComponent();
-            comboBox.setModel(model);
-            comboBox.setSelectedItem(value);
-            m_table = table;
-            m_row = row;
-            m_col = column;
-            return comboBox;
-        }
+        final ComboBoxModel<String> model = getModelForRow(table, row, value);
+        @SuppressWarnings("unchecked")
+        JComboBox<String> comboBox = (JComboBox<String>)getComponent();
+        comboBox.setModel(model);
+        comboBox.setSelectedItem(value);
+        m_table = table;
+        m_row = row;
+        m_col = column;
+        return comboBox;
     }
 
     /**
      * Get the model for the specified row
+     * @param value
      */
-    private ComboBoxModel<String> getModelForRow(final JTable table, final int row) {
+    private ComboBoxModel<String> getModelForRow(final JTable table, final int row, final Object value) {
         if (m_relatedColumn == NO_RELATED_COLUMN) {
             return m_models.get(DEFAULT_MODEL_KEY);
         }
 
         //  Use the value from the related column to do the lookup for the model
         m_relatedKey = table.getModel().getValueAt(row, m_relatedColumn).toString();
-        return m_models.get(m_relatedKey);
+        SQLTypeComboBoxModel model = m_models.get(m_relatedKey);
+        if (model == null) {
+            final Collection<String> options = new LinkedList<>();
+            options.add(value.toString());
+            model = new SQLTypeComboBoxModel(options);
+            m_models.put(m_relatedKey, model);
+        }
+        return model;
     }
 
     /**
