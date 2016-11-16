@@ -391,6 +391,9 @@ public final class MemoryAlertSystem {
                         return false;
                     }
                     long diff = System.currentTimeMillis();
+
+                    // sometimes the notifyAll from the GC thread doesn't get propagated, therefore we wake up
+                    // every two seconds and re-check
                     long wait = Math.min(2000, remainingTime);
                     m_gcEventLock.wait(wait);
                     remainingTime -= System.currentTimeMillis() - diff;
