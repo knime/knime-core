@@ -410,8 +410,7 @@ public abstract class AggregationOperator implements AggregationMethod {
         } catch (Throwable t) {
             final String msg = "Computing '" + getOperatorData().getLabel() + "' on column '" + getOperatorColumnSettings().getOriginalColSpec().getName()
                     + "' failed. Error: " + t.getMessage();
-            LOGGER.error(msg, t);
-            throw new IllegalStateException(msg);
+            throw new IllegalStateException(msg, t);
         }
     }
 
