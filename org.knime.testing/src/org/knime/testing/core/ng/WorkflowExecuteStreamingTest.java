@@ -128,7 +128,7 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
      */
     @Override
     protected void configureWorkflowManager(final WorkflowManager wfm) throws InvalidSettingsException {
-        try (WorkflowLock lock = null) {
+        try (WorkflowLock lock = wfm.lock()) {
             for (NodeContainer node : wfm.getNodeContainers()) {
                 NodeContainerState status = node.getNodeContainerState();
 
