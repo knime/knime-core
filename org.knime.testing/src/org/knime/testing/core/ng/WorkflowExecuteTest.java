@@ -110,8 +110,11 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
-            configureWorkflowManager(m_context.getWorkflowManager());
+
             resetTestflowConfigNode();
+            //this method should be called _after_ resetting the testflow config node
+            //this prevents that temporary changes to the node's settings (e.g. JobManager) are reverted
+            configureWorkflowManager(m_context.getWorkflowManager());
 
             final TestflowConfiguration flowConfiguration = m_context.getTestflowConfiguration();
 
