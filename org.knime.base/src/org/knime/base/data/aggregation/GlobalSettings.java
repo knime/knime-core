@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.knime.core.data.DataColumnSpec;
@@ -417,6 +418,7 @@ public class GlobalSettings {
         result = prime * result + (int) m_noOfRows;
         result = prime * result + ((m_spec == null) ? 0 : m_spec.hashCode());
         result = prime * result + ((m_valueDelimiter == null) ? 0 : m_valueDelimiter.hashCode());
+        result = prime * result + (Objects.hashCode(m_aggregationContext));
         return result;
     }
 
@@ -474,6 +476,9 @@ public class GlobalSettings {
                 return false;
             }
         } else if (!m_valueDelimiter.equals(other.m_valueDelimiter)) {
+            return false;
+        }
+        if (!Objects.equals(m_aggregationContext, other.m_aggregationContext)) {
             return false;
         }
         return true;
