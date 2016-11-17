@@ -3850,6 +3850,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // move SubNode to position of old Metanode (and remove it)
             subNC.setUIInformation(uii);
+            subNC.setCustomDescription(subWFM.getCustomDescription());
 
             configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
             return new MetaNodeToSubNodeResult(this, subNC.getID(), undoPersistor);
@@ -3890,6 +3891,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 inPorts, outPorts, name, false, null, null, null, subnodeID, subnode.getNodeAnnotation());
             metaNode.setUIInformation(uiInformation);
             metaNode.paste(fromSubnodePersistor);
+            metaNode.setCustomDescription(subnode.getCustomDescription());
 
             for (ConnectionContainer c : incomingConnections) {
                 if (c.getDestPort() != 0) {
