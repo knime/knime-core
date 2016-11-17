@@ -40,6 +40,7 @@ openFile
 -XX:+UnlockDiagnosticVMOptions
 -XX:+UnsyncloadClass 
 -Dknime.enable.fastload=true
+-Dsun.net.client.defaultReadTimeout=0
 -XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
          <argsX86>-Xmx512m</argsX86>
          <argsX86_64>-Xmx2048m</argsX86_64>
