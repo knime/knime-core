@@ -59,7 +59,6 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
-import org.eclipse.gef.editparts.ZoomListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
@@ -71,6 +70,7 @@ import org.knime.core.node.workflow.ConnectionProgressListener;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -93,8 +93,7 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements ZoomListener, ConnectionUIInformationListener,
-        ConnectionProgressListener {
+    implements ConnectionUIInformationListener, ConnectionProgressListener {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ConnectionContainerEditPart.class);
@@ -216,14 +215,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
                 new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
-        // register as zoom listener to adapt the line width
-        ZoomManager zoomManager =
-                (ZoomManager)getRoot().getViewer().getProperty(
-                        ZoomManager.class.toString());
-        zoomManager.addZoomListener(this);
-        conn
-                .setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
-                        .getZoom()));
+        conn.setLineWidth(getCurrentEditorSettings().getConnectionLineWidth());
 
         // make flow variable port connections look red.
         if (isFlowVariablePortConnection()) {
@@ -296,11 +288,9 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         }
 
         //update 'curved' settings and line width
-        //use the workflow editor (instead of the WorkflowManager) to get the settings from, otherwise
-        //the settings won't get inherited from the parent workflow (if the displayed workflow is a metanode)
-        WorkflowEditor we = (WorkflowEditor)((DefaultEditDomain)getViewer().getEditDomain()).getEditorPart();
-        fig.setCurved(we.getCurrentEditorSettings().getHasCurvedConnections());
-        fig.setLineWidth(we.getCurrentEditorSettings().getConnectionLineWidth());
+        EditorUIInformation uiInfo = getCurrentEditorSettings();
+        fig.setCurved(uiInfo.getHasCurvedConnections());
+        fig.setLineWidth(uiInfo.getConnectionLineWidth());
 
         // recreate list of bendpoints
         ArrayList<AbsoluteBendpoint> constraint =
@@ -316,25 +306,11 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         fig.setRoutingConstraint(constraint);
     }
 
-    private int calculateLineWidthFromZoomLevel(final double zoom) {
-        double newZoomValue = zoom;
-        // if the zoom level is larger than 100% the width
-        // is adapted accordingly
-        if (zoom < 1.0) {
-            newZoomValue = 1.0;
-        }
-        return (int) Math.round(newZoomValue);
-    }
-
-    /**
-     * Adapts the line width according to the zoom level.
-     *
-     * @param zoom the zoom level from the zoom manager
-     */
-    @Override
-    public void zoomChanged(final double zoom) {
-        ((PolylineConnection)getFigure())
-                .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
+    private EditorUIInformation getCurrentEditorSettings() {
+        //use the workflow editor (instead of the WorkflowManager) to get the settings from, otherwise
+        //the settings won't get inherited from the parent workflow (if the displayed workflow is a metanode)
+        return ((WorkflowEditor)((DefaultEditDomain)getViewer().getEditDomain()).getEditorPart())
+            .getCurrentEditorSettings();
     }
 
     /** {@inheritDoc} */
