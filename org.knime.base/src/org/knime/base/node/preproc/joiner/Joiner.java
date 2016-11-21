@@ -286,7 +286,9 @@ public final class Joiner {
                             + " Use \"Number to String node\" to "
                             + "convert the type of \""
                             + right + "\" to string.");
-                } else {
+                } else if (leftType.getPreferredValueClass() != rightType.getPreferredValueClass()) {
+                    // if both don't have the same preferred class they can't be equals, see DataCell#equals
+
                     throw new InvalidSettingsException("Type mismatch found of "
                             + "Joining Column Pair \""
                             + left + "\" and \"" + right + "\"."
