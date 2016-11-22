@@ -177,6 +177,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -1492,13 +1493,18 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    /** Save workflow to resource.
-     * @param fileResource .. the resource, usually m_fileResource or m_autoSaveFileResource
-     *        or soon-to-be m_fileResource (for save-as)
+    /**
+     * Save workflow to resource.
+     *
+     * @param fileResource .. the resource, usually m_fileResource or m_autoSaveFileResource or soon-to-be
+     *            m_fileResource (for save-as)
      * @param monitor ...
      * @param saveWithData ... save data also
+     * @param newContext a new workflow context for the saved workflow; if this is non-<code>null</code>, a "save as" is
+     *            performed
      */
-    private void saveTo(final URI fileResource, final IProgressMonitor monitor, final boolean saveWithData) {
+    private void saveTo(final URI fileResource, final IProgressMonitor monitor, final boolean saveWithData,
+        final WorkflowContext newContext) {
         LOGGER.debug("Saving workflow " + getWorkflowManager().getNameWithID());
 
         // Exception messages from the inner thread
@@ -1533,11 +1539,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         boolean wasInProgress = false;
         try {
             final File workflowDir = new File(fileResource);
-            final File file = new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
-
-            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(saveWithData, false);
-            final SaveWorkflowRunnable saveWorkflowRunnable =
-                    new SaveWorkflowRunnable(this, file, exceptionMessage, saveHelper, monitor);
+            AbstractSaveRunnable saveRunnable;
+            if (newContext != null) {
+                saveRunnable = new SaveAsRunnable(this, exceptionMessage, monitor, newContext);
+            } else {
+                WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(saveWithData, false);
+                saveRunnable = new InplaceSaveRunnable(this, exceptionMessage, saveHelper, monitor, workflowDir);
+            }
 
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
@@ -1545,7 +1553,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             NodeContainerState state = m_manager.getNodeContainerState();
             wasInProgress = state.isExecutionInProgress() && !state.isExecutingRemotely();
 
-            ps.run(true, false, saveWorkflowRunnable);
+            ps.run(true, false, saveRunnable);
             // this code is usually (always?) run in the UI thread but in case it's not we schedule in UI thread
             // (SVG export always in UI thread)
             Display.getDefault().syncExec(new Runnable() {
@@ -1653,7 +1661,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (isTempRemoteWorkflowEditor()) {
             saveBackToServer();
         } else {
-            saveTo(m_fileResource, monitor, true);
+            saveTo(m_fileResource, monitor, true, null);
         }
     }
 
@@ -1717,7 +1725,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (newWorkflowDir instanceof RemoteExplorerFileStore) {
             // selected a remote location: save + upload
             if (isDirty()) {
-                saveTo(m_fileResource, new NullProgressMonitor(), true);
+                saveTo(m_fileResource, new NullProgressMonitor(), true, null);
             }
             AbstractExplorerFileStore localFS = getFileStore(fileResource);
             if (localFS == null || !(localFS instanceof LocalExplorerFileStore)) {
@@ -1749,7 +1757,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return;
             }
 
-            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), true);
+            File mountPointRoot = null;
+            try {
+                mountPointRoot = newWorkflowDir.getContentProvider().getFileStore("/").toLocalFile();
+            } catch (CoreException ex) {
+                LOGGER.warn("Could not determine mount point root for " + newWorkflowDir + ": " + ex.getMessage(), ex);
+            }
+
+            WorkflowContext context = new WorkflowContext.Factory(m_manager.getContext())
+                        .setCurrentLocation(localNewWorkflowDir)
+                        .setMountpointRoot(mountPointRoot)
+                        .setMountpointURI(newWorkflowDir.toURI())
+                        .createContext();
+
+            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), true, context);
             setInput(new FileStoreEditorInput(newWorkflowFile));
             if (newWorkflowDir.getParent() != null) {
                 newWorkflowDir.getParent().refresh();
@@ -1816,14 +1837,14 @@ public class WorkflowEditor extends GraphicalEditor implements
 
                 saveEditorSettingsToWorkflowManager();
                 final File workflowDir = new File(autoSaveURI);
-                final File file = new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
 
                 // Exception messages from the inner thread
                 final StringBuilder exceptionMessage = new StringBuilder();
                 WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(m_isSavingWithData, true);
                 final NullProgressMonitor monitor = new NullProgressMonitor();
-                SaveWorkflowRunnable saveRunnable =
-                        new SaveWorkflowRunnable(WorkflowEditor.this, file, exceptionMessage, saveHelper, monitor);
+
+                AutosaveRunnable saveRunnable =
+                    new AutosaveRunnable(WorkflowEditor.this, exceptionMessage, saveHelper, monitor, workflowDir);
                 saveRunnable.run(jobMonitor);
                 jobMonitor.done();
                 return Status.OK_STATUS;
@@ -3299,7 +3320,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // selected a remote location: save + upload
         if (isDirty()) {
-            saveTo(m_fileResource, new NullProgressMonitor(), true);
+            saveTo(m_fileResource, new NullProgressMonitor(), true, null);
         }
         AbstractExplorerFileStore localFS = getFileStore(m_fileResource);
         if ((localFS == null) || !(localFS instanceof LocalExplorerFileStore)) {

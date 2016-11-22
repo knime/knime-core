@@ -321,7 +321,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.5 */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
-    private final WorkflowContext m_workflowContext;
+    private WorkflowContext m_workflowContext;
 
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
     private ExecutionController m_executionController;
@@ -416,9 +416,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // be any dependencies to parent
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowLock = new WorkflowLock(this);
-            m_workflowContext = context;
             if (context != null) {
-                createAndSetWorkflowTempDirectory(context);
+                m_workflowContext = createAndSetWorkflowTempDirectory(context);
+            } else {
+                m_workflowContext = null;
             }
         } else {
             // ...synchronize across border
@@ -495,7 +496,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
             }
             if (workflowContext != null) {
-                createAndSetWorkflowTempDirectory(workflowContext);
+                workflowContext = createAndSetWorkflowTempDirectory(workflowContext);
             }
         } else {
             workflowContext = null;
@@ -7364,14 +7365,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Creates a flow private sub dir in the temp folder. Sets it in the context. FileUtil#createTempDir picks it up
-     * from there. If the temp file location in the context is already set, this method does nothing.
-     * @param context to set the new temp dir location in
+     * Creates a flow private sub dir in the temp folder and returns a new workflow context with the temp directory set.
+     * FileUtil#createTempDir picks it up from there. If the temp file location in the context is already set, this
+     * method does nothing.
+     *
+     * @param context the current workflow context
+     * @return a new workflow context with the temp directory set
      * @throws IllegalStateException if temp folder can't be created.
      */
-    private void createAndSetWorkflowTempDirectory(final WorkflowContext context) {
+    private WorkflowContext createAndSetWorkflowTempDirectory(final WorkflowContext context) {
         if (context.getTempLocation() != null) {
-            return;
+            return context;
         }
         File rootDir = new File(KNIMEConstants.getKNIMETempDir());
         File tempDir;
@@ -7380,9 +7384,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         } catch (IOException e) {
             throw new IllegalStateException("Can't create temp folder in " + rootDir.getAbsolutePath(), e);
         }
-        context.setTempLocation(tempDir);
         // if we created the temp dir we must clean it up when disposing of the workflow
         m_tmpDir = tempDir;
+        return new WorkflowContext.Factory(context).setTempLocation(tempDir).createContext();
     }
 
     /** {@inheritDoc} */
@@ -8013,14 +8017,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Saves the workflow to a new location, setting the argument directory as the new NC dir. It will first copy the
      * "old" directory, point the NC dir to the new location and then do an incremental save.
      *
-     * @param directory new directory, not null
+     * @param newContext the new workflow context, including the changed path
      * @param exec The execution monitor
      * @throws IOException If an IO error occured
      * @throws CanceledExecutionException If the execution was canceled
      * @throws LockFailedException If locking failed
-     * @since 2.9
+     * @since 3.3
      */
-    public void saveAs(final File directory, final ExecutionMonitor exec) throws IOException,
+    public void saveAs(final WorkflowContext newContext, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
@@ -8030,6 +8034,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!isProject()) {
                 throw new IOException("Cannot call save-as on a non-project workflow");
             }
+            File directory = newContext.getCurrentLocation();
             directory.mkdirs();
             if (!directory.isDirectory() || !directory.canWrite()) {
                 throw new IOException("Cannot write to " + directory);
@@ -8038,6 +8043,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!isNCDirNullOrRootReferenceFolder) {
                 throw new IOException("Referenced directory pointer is not hierarchical: " + ncDirRef);
             }
+            m_workflowContext = newContext;
             ReferencedFile autoSaveDirRef = getAutoSaveDirectory();
             ExecutionMonitor saveExec;
             File ncDir = ncDirRef != null ? ncDirRef.getFile() : null;
@@ -8054,7 +8060,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         .notFileFilter(FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
                     exec.setMessage("Incremental save");
                     ncDirRef.changeRoot(directory);
-                    m_workflowContext.setCurrentLocation(directory);
                     if (autoSaveDirRef != null) {
                         File newLoc = WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef);
                         final File autoSaveDir = autoSaveDirRef.getFile();

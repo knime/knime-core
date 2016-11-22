@@ -271,6 +271,12 @@
                 <message_argument value="hasInteractiveWebView()"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="saveAs(File, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="collapseIntoMetaNode(NodeID[], WorkflowAnnotation[], String)"/>
