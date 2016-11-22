@@ -61,7 +61,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 public final class PeriodUtility extends ExtensibleUtilityFactory {
 
     /** Singleton icon to be used to display this cell type. */
-    private static final Icon ICON = loadIcon(PeriodUtility.class, "date_time.png");
+    private static final Icon ICON = loadIcon(PeriodUtility.class, "period.png");
 
     /** Default constructor. */
     public PeriodUtility() {

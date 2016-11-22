@@ -65,7 +65,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 public final class LocalDateUtility extends ExtensibleUtilityFactory {
 
     /** Singleton icon to be used to display this cell type. */
-    private static final Icon ICON = loadIcon(LocalDateUtility.class, "date_time.png");
+    private static final Icon ICON = loadIcon(LocalDateUtility.class, "local_date.png");
 
     private static final DataValueComparator COMPARATOR = new LocalDateComparator();
 
