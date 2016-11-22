@@ -341,7 +341,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
         try {
             fileChanged = takeOverNewFileLocation();
 
-            if (fileChanged && !m_preserveSettings.isSelected()) {
+            if (fileChanged && !m_preserveSettings.isSelected() && !m_filePanel.isVariableReplacementEnabled()) {
                 resetSettings();
             }
 

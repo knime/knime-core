@@ -68,6 +68,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -103,9 +104,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.tableview.TableRowHeaderView;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
-import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.FileUtil;
@@ -205,30 +206,29 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
         FlowVariableModel flowVarBrowseModel = createFlowVariableModel(FixedWidthFRSettings.CFGKEY_URL, Type.STRING);
 
-        m_url =
-            new FilesHistoryPanel(flowVarBrowseModel, FILEREADER_HISTORY_ID, LocationValidation.FileInput,
-                new String[]{".txt", ".csv"});
+        m_url = new FilesHistoryPanel(flowVarBrowseModel, FILEREADER_HISTORY_ID, LocationValidation.FileInput,
+            new String[]{".txt", ".csv"});
 
         m_url.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                if(!m_loadSettings){
-                try {
-                    URL newUrl = FileUtil.toURL(m_url.getSelectedFile());
-                    m_nodeSettings.setFileLocation(newUrl);
-                } catch (IOException ioe) {
-                    // ignore
-                }
+                if(!m_loadSettings ){
+                    try {
+                        URL newUrl = FileUtil.toURL(m_url.getSelectedFile());
+                        m_nodeSettings.setFileLocation(newUrl);
+                    } catch (IOException | InvalidPathException ioe) {
+                        m_nodeSettings.setFileLocation(null);
+                    }
 
-                if (!m_preserveSettings.isSelected()) {
-                    m_nodeSettings.reset();
-                }
-                m_hasColHeaders.setSelected(m_nodeSettings.getHasColHeaders());
-                m_hasRowHeaders.setSelected(m_nodeSettings.getHasRowHeader());
-                updateColPropTable();
-                updatePreview();
-                updateEnables();
+                    if (!m_preserveSettings.isSelected() && !m_url.isVariableReplacementEnabled()) {
+                        m_nodeSettings.reset();
+                    }
+                    m_hasColHeaders.setSelected(m_nodeSettings.getHasColHeaders());
+                    m_hasRowHeaders.setSelected(m_nodeSettings.getHasRowHeader());
+                    updateColPropTable();
+                    updatePreview();
+                    updateEnables();
                 }
             }
         });
@@ -771,7 +771,16 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
      */
     private boolean validateSettings() {
         try {
+            URL fileLocation = m_nodeSettings.getFileLocation();
+            String warning = CheckUtils.checkSourceFile(fileLocation != null ? fileLocation.toString() : null);
+            if (warning != null) {
+                setErrorLabelText(warning);
+                return false;
+            }
             m_nodeSettings.createNewInputReader();
+        } catch (InvalidSettingsException e) {
+            setErrorLabelText(e.getMessage());
+            return false;
         } catch (IOException ioe) {
             setErrorLabelText("Can't create input reader for preview table.", ioe.getMessage());
             return false;
@@ -840,10 +849,6 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        if (m_nodeSettings.getFileLocation() != null) {
-            StringHistory h = StringHistory.getInstance(FILEREADER_HISTORY_ID);
-            h.add(m_nodeSettings.getFileLocation().toString());
-        }
         m_nodeSettings.saveToConfiguration(settings);
     }
 
