@@ -120,6 +120,8 @@ public class JavaSnippetCompiler {
             m_compileArgs.add("1.8");
             m_compileArgs.add("-target");
             m_compileArgs.add("1.8");
+            m_compileArgs.add("-encoding");
+            m_compileArgs.add("UTF-8");
 
             m_compiler  = new EclipseCompiler();
         }
