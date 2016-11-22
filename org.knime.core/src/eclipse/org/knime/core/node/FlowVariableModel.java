@@ -132,7 +132,7 @@ public class FlowVariableModel {
      * @since 3.3
      */
     public Optional<FlowVariable> getVariableValue() {
-        return Optional.of(getParent().getAvailableFlowVariables().get(m_inputVariableName));
+        return Optional.ofNullable(getParent().getAvailableFlowVariables().get(m_inputVariableName));
     }
 
     /**
