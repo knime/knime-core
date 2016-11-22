@@ -52,6 +52,7 @@ import java.lang.reflect.Field;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -184,15 +185,22 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             Iterator<Connection> it = connectionMap.values().iterator();
             while (it.hasNext()) {
                 Connection conn = it.next();
-                if (conn.getMetaData().getURL().contains(m_dbName)) {
-                    if (!conn.isClosed()) {
-                        NodeLogger.getLogger(getClass()).debug("Closing connection " + conn.getMetaData().getURL()
-                            + " for user " + conn.getMetaData().getUserName());
-                        conn.setAutoCommit(false);
-                        conn.rollback();
-                        conn.close();
+
+                try {
+                    if (conn.getMetaData().getURL().contains(m_dbName)) {
+                        if (!conn.isClosed()) {
+                            NodeLogger.getLogger(getClass()).debug("Closing connection " + conn.getMetaData().getURL()
+                                + " for user " + conn.getMetaData().getUserName());
+                            conn.setAutoCommit(false);
+                            conn.rollback();
+                            conn.close();
+                        }
+                        it.remove();
                     }
-                    it.remove();
+
+                } catch (SQLException e) { // Some drivers don't support getMetaData on closed connections
+                    NodeLogger.getLogger(getClass()).infoWithFormat("Unable to getMetaData for connection: %s",
+                        e.getMessage());
                 }
             }
 
