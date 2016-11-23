@@ -54,6 +54,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
@@ -72,6 +73,8 @@ import org.knime.core.data.def.StringCell;
  *
  * @author Jonathan Hale
  */
+@Ignore("Requires StringCellToIntTestConverterFactory and StringToIntCellTestConverterFactory to be registered in the MANIFEST.MF!"
+    + "This would currently expose them in the JavaSnippet.")
 public class ExtensionPointTest {
 
     /**

@@ -27,16 +27,4 @@
             class="org.knime.core.util.EarlyStartupTest">
       </provider>
    </extension>
-   <extension
-         point="org.knime.core.JavaToDataCellConverter">
-      <JavaToDataCellConverter
-            factoryClass="org.knime.core.data.convert.StringToIntCellTestConverterFactory">
-      </JavaToDataCellConverter>
-   </extension>
-   <extension
-         point="org.knime.core.DataCellToJavaConverter">
-      <DataCellToJavaConverter
-            factoryClass="org.knime.core.data.convert.StringCellToIntTestConverterFactory">
-      </DataCellToJavaConverter>
-   </extension>
 </fragment>

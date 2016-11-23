@@ -240,14 +240,12 @@ public class InFieldsTableModel extends FieldsTableModel {
             final Collection<DataCellToJavaConverterFactory<?, ?>> factories =
                 ConverterUtil.getFactoriesForSourceType(colSpec.getType()).stream()
                     .filter(factory -> JavaSnippet.getBuildPathFromCache(factory.getIdentifier()) != null)
-                    .collect(Collectors.toList());
+                    .sorted((a, b) -> a.getName().compareToIgnoreCase(b.getName())).collect(Collectors.toList());
             final Object[] array = factories.toArray(new Object[factories.size()]);
             return array;
         } else if (input instanceof FlowVariable) {
             FlowVariable flowVar = (FlowVariable)input;
-            TypeConverter typeConversion =
-                TypeProvider.getDefault().getTypeConverter(
-                    flowVar.getType());
+            TypeConverter typeConversion = TypeProvider.getDefault().getTypeConverter(flowVar.getType());
             return typeConversion.canProvideJavaTypes();
         } else {
             return new Class[0];
