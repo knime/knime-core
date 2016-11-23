@@ -262,8 +262,9 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             DatabaseConnectionSettings.setDatabaseTimeout(pStore
                 .getInt(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT));
         } catch (Throwable e) {
-            LOGGER.error("FATAL: error initializing KNIME"
-                    + " repository - check plugin.xml" + " and classpath", e);
+            LOGGER.error(
+                "Error while starting workbench, some setting may not have been applied properly: " + e.getMessage(),
+                e);
         }
     }
 
