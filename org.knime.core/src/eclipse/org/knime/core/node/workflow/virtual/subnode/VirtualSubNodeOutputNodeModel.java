@@ -296,6 +296,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
      * Sets the sub node container this virtual output node is part of.
      *
      * @param subNodeContainer the sub node container
+     * @since 3.3
      */
     public void setSubNodeContainer(final SubNodeContainer subNodeContainer) {
         m_subNodeContainer = subNodeContainer;
