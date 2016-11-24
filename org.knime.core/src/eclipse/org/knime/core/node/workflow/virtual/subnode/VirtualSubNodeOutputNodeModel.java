@@ -90,6 +90,8 @@ import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 
 
@@ -106,6 +108,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     private int m_numberOfPorts;
     private VirtualSubNodeOutputConfiguration m_configuration;
     private VirtualSubNodeExchange m_outputExchange;
+    private SubNodeContainer m_subNodeContainer;
 
     /** @param outTypes Output types of subnode (which are input to this node) */
     public VirtualSubNodeOutputNodeModel(final PortType[] outTypes) {
@@ -243,6 +246,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             throws InvalidSettingsException {
         VirtualSubNodeOutputConfiguration config = new VirtualSubNodeOutputConfiguration(m_numberOfPorts);
         config.loadConfigurationInModel(settings);
+        String[] portNames = config.getPortNames();
+
+        //propagate the port names to the containing subnode container
+        //(if sub node container has been set)
+        if (m_subNodeContainer != null) {
+            for (int i = 0; i < portNames.length; i++) {
+                m_subNodeContainer.getOutPort(i + 1).setPortName(portNames[i]);
+                m_subNodeContainer.getOutPort(i + 1).stateChanged(new NodeStateEvent(m_subNodeContainer));
+            }
+        }
         m_configuration = config;
     }
 
@@ -277,6 +290,15 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             return true;
         }
         return false;
+    }
+
+    /**
+     * Sets the sub node container this virtual output node is part of.
+     *
+     * @param subNodeContainer the sub node container
+     */
+    public void setSubNodeContainer(final SubNodeContainer subNodeContainer) {
+        m_subNodeContainer = subNodeContainer;
     }
 
     /** Called by testing framework to force all available flow variables into output.

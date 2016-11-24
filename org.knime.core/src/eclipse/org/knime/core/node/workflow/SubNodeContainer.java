@@ -369,6 +369,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_wfmStateChangeListener = createAndAddStateListener();
         setInternalState(m_wfm.getInternalState());
         m_templateInformation = MetaNodeTemplateInformation.NONE;
+
+        postLoadWFM();
     }
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
@@ -1562,6 +1564,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** Callback from persistor. */
      void postLoadWFM() {
          getVirtualInNodeModel().setSubNodeContainer(this);
+         getVirtualOutNodeModel().setSubNodeContainer(this);
     }
 
     /** {@inheritDoc} */
