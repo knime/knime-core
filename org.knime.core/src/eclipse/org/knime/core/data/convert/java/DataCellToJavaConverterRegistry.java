@@ -52,6 +52,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -232,7 +233,7 @@ public final class DataCellToJavaConverterRegistry {
                         + " has no preffered type.");
                 }
 
-                set.addAll(getCollectionConverterFactory(ListCell.getCollectionType(elementType),
+                set.addAll(getCollectionConverterFactories(ListCell.getCollectionType(elementType),
                     ClassUtil.getArrayType(cls.getDestinationType())));
             }
         }
@@ -266,8 +267,9 @@ public final class DataCellToJavaConverterRegistry {
                     sourceType.getCollectionElementType());
 
             for (final DataCellToJavaConverterFactory<?, ?> factory : factories) {
-                set.addAll(
-                    getCollectionConverterFactory(sourceType, ClassUtil.getArrayType(factory.getDestinationType())));
+                // We do not use getCollectionConverterFactories here, because that will recursively check
+                // the class hierarchy. This was already done in getFactoriesForSourceType, though.
+                set.add(new CollectionConverterFactory<>(factory));
             }
         }
 
@@ -346,7 +348,7 @@ public final class DataCellToJavaConverterRegistry {
         }
 
         if (sourceType.isCollectionType() && destType.isArray()) {
-            allFactories.addAll(getCollectionConverterFactory(sourceType, destType));
+            allFactories.addAll(getCollectionConverterFactories(sourceType, destType));
         }
 
         return allFactories;
@@ -379,15 +381,19 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Get a {@link DataCellToJavaConverterFactory} for converters from collection <code>sourceType</code> into array
-     * <code>destType</code>.
+     * Get {@link CollectionConverterFactory CollectionConverterFactories} for converters from collection <code>sourceType</code>
+     * into array <code>destType</code>.
      *
      * @param destType Type the created converters convert from
      * @param sourceType Type the created converters convert to
      * @return the {@link DataCellToJavaConverterFactory} or <code>null</code> if none matched the given types
      */
     private <D, SE extends DataValue, DE> Collection<DataCellToJavaConverterFactory<CollectionDataValue, D>>
-        getCollectionConverterFactory(final DataType sourceType, final Class<D> destType) {
+        getCollectionConverterFactories(final DataType sourceType, final Class<D> destType) {
+
+        if (!sourceType.isCollectionType() || !destType.isArray()) {
+            return Collections.emptySet();
+        }
 
         final ArrayList<DataCellToJavaConverterFactory<CollectionDataValue, D>> allFactories = new ArrayList<>();
 
@@ -395,7 +401,7 @@ public final class DataCellToJavaConverterRegistry {
         for (final DataCellToJavaConverterFactory<? extends DataValue, ?> factory : getConverterFactories(
             sourceType.getCollectionElementType(), destType.getComponentType())) {
             allFactories
-                .add(new CollectionConverterFactory<D, SE, DE>((DataCellToJavaConverterFactory<SE, DE>)factory));
+                .add(new CollectionConverterFactory<>(factory));
         }
 
         return allFactories;
@@ -534,9 +540,9 @@ public final class DataCellToJavaConverterRegistry {
 
             // Check name of factory
             if (!validateFactoryName(factory)) {
-                LOGGER.warn("DataCellToJavaFactory name \"" + name + "\" of factory with id \"" + factory.getIdentifier()
+                LOGGER.coding("DataCellToJavaFactory name \"" + name + "\" of factory with id \"" + factory.getIdentifier()
                     + "\" does not follow naming convention (see DataValueAccessMethod#name()).");
-                LOGGER.warn("Factory will not be registered.");
+                LOGGER.coding("Factory will not be registered.");
                 return;
             }
             register(factory);
