@@ -58,11 +58,11 @@ import org.knime.core.node.workflow.ModelContentOutPortView;
  * which are part of a <code>DataTableSpec</code>.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
+ * @since 3.3
  */
 public class FilterDefinitionHandlerPortObject extends ViewPropertyPortObject {
     /**
      * @noreference This class is not intended to be referenced by clients.
-     * @since 3.3
      */
     public static final class Serializer extends AbstractSimplePortObjectSerializer<FilterDefinitionHandlerPortObject> {}
 
