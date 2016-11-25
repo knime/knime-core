@@ -545,6 +545,14 @@
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
+            color="#1eb9dc"
+            hidden="false"
+            name="FilterDefinition"
+            objectClass="org.knime.core.node.port.viewproperty.FilterDefinitionHandlerPortObject"
+            objectSerializer="org.knime.core.node.port.viewproperty.FilterDefinitionHandlerPortObject$Serializer"
+            specClass="org.knime.core.data.DataTableSpec">
+      </portType>
+      <portType
             color="#ff4b4b"
             name="Database Connection"
             objectClass="org.knime.core.node.port.database.DatabaseConnectionPortObject"

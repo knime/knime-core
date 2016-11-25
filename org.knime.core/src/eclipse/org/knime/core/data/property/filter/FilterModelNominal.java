@@ -101,7 +101,7 @@ public final class FilterModelNominal extends FilterModel {
 
     @Override
     public String toString() {
-        return super.toString() + "[" + ConvenienceMethods.getShortStringFrom(m_values, 10) + "]";
+        return "[" + ConvenienceMethods.getShortStringFrom(m_values, 10) + "] (" + super.toString() + ")";
     }
 
     @Override

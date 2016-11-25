@@ -153,11 +153,14 @@ public final class FilterModelRange extends FilterModel {
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder(super.toString()).append("; ");
+        StringBuilder b = new StringBuilder();
         b.append(m_minimumInclusive ? "[" : "(");
         b.append(m_minimum.orElse(Double.NEGATIVE_INFINITY)).append(", ");
         b.append(m_maximum.orElse(Double.POSITIVE_INFINITY));
         b.append(m_maximumInclusive ? "]" : ")");
+        b.append(" (");
+        b.append(super.toString());
+        b.append(")");
         return b.toString();
     }
 
