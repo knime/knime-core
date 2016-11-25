@@ -51,16 +51,21 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Random;
 
-import junit.framework.Assert;
-
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.knime.core.node.NodeLogger;
+
+import junit.framework.Assert;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
 public class DuplicateCheckerTest {
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Test
     public void testNoDuplicateManyRows() throws IOException {
         long t = System.currentTimeMillis();
@@ -116,7 +121,18 @@ public class DuplicateCheckerTest {
         internalTestArbitraryStrings(true, seed);
     }
 
-
+    /**
+     * Simple test for duplicates in the first chunk.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testEarlyDuplicate() throws Exception {
+        DuplicateChecker checker = new DuplicateChecker();
+        checker.addKey("A");
+        expectedException.expect(DuplicateKeyException.class);
+        checker.addKey("A");
+    }
 
     private void internalTestArbitraryStrings(final boolean isAddDuplicates, final long seed) throws IOException {
         LinkedHashSet<String> hash = new LinkedHashSet<String>();
@@ -194,5 +210,4 @@ public class DuplicateCheckerTest {
     private static char getRandomASCIIChar(final Random rand) {
         return (char)(' ' + rand.nextInt(Byte.MAX_VALUE - ' '));
     }
-
 }
