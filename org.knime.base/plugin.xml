@@ -1883,6 +1883,16 @@
             deprecated="false"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2">
       </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.filter.definition.merger.FilterDefinitionMergerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.filter.definition.apply.FilterApplyNodeFactory">
+      </node>
    </extension>
    
       
