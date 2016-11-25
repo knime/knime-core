@@ -311,6 +311,9 @@ class GroupLoopStartNodeModel extends NodeModel implements
             } catch (DuplicateKeyException e) {
                 throw new DuplicateKeyException(
                     "Input table was not sorted, found duplicate group identifier " + e.getKey());
+            } finally {
+                m_duplicateChecker.clear();
+                m_duplicateChecker = null;
             }
         }
 
