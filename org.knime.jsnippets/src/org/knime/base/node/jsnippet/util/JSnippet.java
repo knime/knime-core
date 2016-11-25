@@ -54,6 +54,7 @@ import java.io.IOException;
 import javax.swing.text.Document;
 import javax.tools.JavaFileObject;
 
+import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 
 
@@ -96,7 +97,7 @@ public interface JSnippet<T extends JSnippetTemplate> {
 
     /**
      * Get the jar files to be added to the class path.
-     * @return the jar files for the class path
+     * @return the jar files for the class path, never <code>null</code>
      * @throws IOException when a file could not be loaded
      */
     public File[] getClassPath() throws IOException;
@@ -120,5 +121,14 @@ public interface JSnippet<T extends JSnippetTemplate> {
      * @return if this snippet is the given source
      */
     public boolean isSnippetSource(JavaFileObject source);
+
+    /** Additional build path entries. Non-empty for standard java snipppet that also supports new in-output types
+     * driven by {@link org.knime.core.data.convert.java.DataCellToJavaConverterRegistry}.
+     * @return A non-null array (default implementation returns empty array)
+     * @since 3.3
+     */
+    default public File[] getAdditionalBuildPaths() {
+        return FileUtils.EMPTY_FILE_ARRAY;
+    }
 
 }

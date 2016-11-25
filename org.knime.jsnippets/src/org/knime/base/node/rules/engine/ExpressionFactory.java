@@ -72,8 +72,10 @@ import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -260,7 +262,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     mergedObjects.get(m_key).put(Integer.toString(i), matcher.group(i));
                 }
             }
-            return new ExpressionValue(BooleanCell.get(res), mergedObjects);
+            return new ExpressionValue(BooleanCellFactory.create(res), mergedObjects);
         }
 
         /**
@@ -413,7 +415,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                 DataCell cell = v.getValue();
                 if (cell instanceof BooleanValue) {
                     BooleanValue bool = (BooleanValue)cell;
-                    return new ExpressionValue(BooleanCell.get(!bool.getBooleanValue()), v.getMatchedObjects());
+                    return new ExpressionValue(BooleanCellFactory.create(!bool.getBooleanValue()), v.getMatchedObjects());
                 }
                 throw new IllegalStateException("Not boolean: " + v.getValue());
             }
@@ -656,7 +658,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                         + valCell.getType());
                 }
 
-                BooleanCell ret = BooleanCell.get(((BooleanValue) valCell).getBooleanValue());
+                BooleanCell ret = (BooleanCell)BooleanCellFactory.create(((BooleanValue) valCell).getBooleanValue());
                 Map<String, Map<String, String>> matchedObjects = val.getMatchedObjects();
                 for (int i = 1; i < boolExpressions.size(); ++i) {
                     Expression boolExpression = boolExpressions.get(i);
@@ -667,7 +669,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     } else if (cell instanceof BooleanValue) {
                         BooleanValue bool = (BooleanValue)cell;
                         matchedObjects = Util.mergeObjects(matchedObjects, v.getMatchedObjects());
-                        ret = BooleanCell.get(ret.getBooleanValue() ^ bool.getBooleanValue());
+                        ret = (BooleanCell)BooleanCellFactory.create(ret.getBooleanValue() ^ bool.getBooleanValue());
                     } else {
                         throw new IllegalStateException("Not a boolean value: " + v.getValue());
                     }
@@ -731,7 +733,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
                 ExpressionValue val = reference.evaluate(row, provider);
                 DataCell valCell = val.getValue();
-                return new ExpressionValue(BooleanCell.get(valCell.isMissing()), EMPTY_MAP);
+                return new ExpressionValue(BooleanCellFactory.create(valCell.isMissing()), EMPTY_MAP);
             }
 
             /**
@@ -790,7 +792,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
                 ExpressionValue val = reference.evaluate(row, provider);
                 DataCell valCell = val.getValue();
-                return new ExpressionValue(BooleanCell.get(valCell.isMissing()), EMPTY_MAP);
+                return new ExpressionValue(BooleanCellFactory.create(valCell.isMissing()), EMPTY_MAP);
             }
 
             /**
@@ -1298,21 +1300,21 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                             }
                         }
                     }
-                    return new ExpressionValue(BooleanCell.get(bothMissingAndAllowEquals), mergedObjects);
+                    return new ExpressionValue(BooleanCellFactory.create(bothMissingAndAllowEquals), mergedObjects);
                 }
                 //No missing values
                 final boolean leftNaN = isNaN(leftCell), rightNaN = isNaN(rightCell);
                 if (!m_nanMatch && (leftNaN || rightNaN)) {
                     //NaNs are considered equals to each other even if it is not by the IEEE spec.
                     boolean bothNaNAndAllowEquals = leftNaN && rightNaN && Arrays.binarySearch(possibleValues, 0) >= 0;
-                    return new ExpressionValue(BooleanCell.get(bothNaNAndAllowEquals), mergedObjects);
+                    return new ExpressionValue(BooleanCellFactory.create(bothNaNAndAllowEquals), mergedObjects);
                 }
                 boolean found = false;
                 int compareResult = Util.signum(cmp.compare(leftCell, rightCell));
                 for (int possibleValue : possibleValues) {
                     found |= possibleValue == compareResult;
                 }
-                return new ExpressionValue(BooleanCell.get(found), mergedObjects);
+                return new ExpressionValue(BooleanCellFactory.create(found), mergedObjects);
             }
 
             /**
@@ -1493,9 +1495,9 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
                 switch (reference) {
                     case RowCount:
-                        return new ExpressionValue(new IntCell(provider.getRowCount()), EMPTY_MAP);
+                        return new ExpressionValue(new LongCell(provider.getRowCountLong()), EMPTY_MAP);
                     case RowIndex:
-                        return new ExpressionValue(new IntCell(provider.getRowIndex()), EMPTY_MAP);
+                        return new ExpressionValue(new LongCell(provider.getRowIndexLong()), EMPTY_MAP);
                     case RowId:
                         return new ExpressionValue(new StringCell(row.getKey().getString()), EMPTY_MAP);
                     default:
@@ -1544,7 +1546,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
      * @return
      */
     private Expression booleanValue(final boolean b) {
-        return new ConstantExpression(new ExpressionValue(BooleanCell.get(b),
+        return new ConstantExpression(new ExpressionValue(BooleanCellFactory.create(b),
             Collections.<String, Map<String, String>> emptyMap()));
     }
 

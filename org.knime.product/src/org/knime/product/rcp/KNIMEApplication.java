@@ -48,6 +48,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
@@ -57,6 +58,7 @@ import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
@@ -99,10 +101,17 @@ public class KNIMEApplication implements IApplication {
         Display display = createDisplay();
 
         try {
+            // open document listener needs to be registered as first
+            // thing to account for open document events during startup
+            KNIMEOpenDocumentEventProcessor openDocProcessor = new KNIMEOpenDocumentEventProcessor();
+            display.addListener(SWT.OpenDocument, openDocProcessor);
+
             if (!checkInstanceLocation()) {
                 appContext.applicationRunning();
                 return EXIT_OK;
             }
+
+            ViewUtils.setLookAndFeel();
 
             // initialize KNIMEConstants as early as possible in order to avoid deadlocks during startup
             KNIMEConstants.BUILD.toString();
@@ -128,9 +137,7 @@ public class KNIMEApplication implements IApplication {
                 // the workbench globally so that all UI plug-ins can find it
                 // using
                 // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
-                returnCode =
-                        PlatformUI.createAndRunWorkbench(display,
-                                getWorkbenchAdvisor());
+                returnCode = PlatformUI.createAndRunWorkbench(display, getWorkbenchAdvisor(openDocProcessor));
             }
 
             // the workbench doesn't support relaunch yet (bug 61809) so
@@ -170,8 +177,8 @@ public class KNIMEApplication implements IApplication {
         }
     }
 
-    private WorkbenchAdvisor getWorkbenchAdvisor() {
-        return new KNIMEApplicationWorkbenchAdvisor();
+    private WorkbenchAdvisor getWorkbenchAdvisor(final KNIMEOpenDocumentEventProcessor openDocProcessor) {
+        return new KNIMEApplicationWorkbenchAdvisor(openDocProcessor);
     }
 
     /**

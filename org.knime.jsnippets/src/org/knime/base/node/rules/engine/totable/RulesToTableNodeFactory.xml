@@ -18,6 +18,8 @@
         <option name="Add confidence and weight columns">From PMML the <a href="http://www.dmg.org/v4-2-1/RuleSet.html#xsdGroup_Rule">confidence and weight</a> attributes are extracted to columns.</option>
         <option name="Add Record count and Number of correct statistics columns">In PMML, the <tt>recordCount</tt> and the <tt>nbCorrect</tt> attributes provide statistics about the input (training/test/validation) data, with this option, this information can be extracted to the columns: <b>Record count</b> and <b>Number of correct</b></option>
         <option name="Use additional parentheses to document precedence rules">If checked the output will contain additional parenthesis around rule parts to clearly document precedence. For instance, NOT is a stronger operator than AND than OR - using parenthesis improves readability. Checking this option does not change any of the rule logic.</option>
+        <option name="Provide score distibution record count in table with column name prefix">Information about the record count of score distribution is saved to the table with the specified prefix.</option>
+        <option name="Provide score distibution probability in table with column name prefix">Information about the probabilities of score distribution is saved to the table with the specified prefix</option>
     </fullDescription>
     
     <ports>

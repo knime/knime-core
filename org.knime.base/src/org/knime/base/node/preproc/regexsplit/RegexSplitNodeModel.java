@@ -71,7 +71,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
@@ -127,14 +126,6 @@ final class RegexSplitNodeModel extends SimpleStreamableFunctionWithInternalsNod
                     + "pattern or contained more groups than expected");
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        return new SimpleStreamableOperatorInternals();
     }
 
     @Override

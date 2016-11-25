@@ -44,10 +44,6 @@
  */
 package org.knime.core.node.port.database.writer;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.ConnectionPendingException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -56,33 +52,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Spliterator;
 import java.util.TimeZone;
-import java.util.function.Consumer;
 
-import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.blob.BinaryObjectDataValue;
-import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseHelper;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.workflow.CredentialsProvider;
 
@@ -94,19 +84,15 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Thomas Gabriel, University of Konstanz
  * @since 3.1
  */
-public class DBWriterImpl implements DBWriter {
+public class DBWriterImpl extends DatabaseHelper implements DBWriter {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DBWriterImpl.class);
-    private DatabaseConnectionSettings m_conn;
 
     /**
      * @param conn {@link DatabaseConnectionSettings}
      */
     public DBWriterImpl(final DatabaseConnectionSettings conn) {
-        if (conn == null) {
-            throw new NullPointerException("conn must not be null");
-        }
-        m_conn = conn;
+        super(conn);
     }
 
     /**
@@ -118,19 +104,20 @@ public class DBWriterImpl implements DBWriter {
     public String writeData(final String table, final RowInput input, final long rowCount, final boolean appendData,
         final ExecutionMonitor exec, final Map<String, String> sqlTypes, final CredentialsProvider cp,
         final int batchSize, final boolean insertNullForMissingCols) throws Exception {
-        final Connection conn = m_conn.createConnection(cp);
+        final DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
+        final Connection conn = conSettings.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
         final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
-        synchronized (m_conn.syncConnection(conn)) {
+        synchronized (conSettings.syncConnection(conn)) {
             exec.setMessage("Start writing rows in database...");
             DataTableSpec spec = input.getDataTableSpec();
             // mapping from spec columns to database columns
             final int[] mapping;
             // append data to existing table
             if (appendData) {
-                if (m_conn.getUtility().tableExists(conn, table)) {
+                if (conSettings.getUtility().tableExists(conn, table)) {
                     String query =
-                        m_conn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
+                        conSettings.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
                     try (ResultSet rs = conn.createStatement().executeQuery(query)) {
                         ResultSetMetaData rsmd = rs.getMetaData();
                         final Map<String, Integer> columnNames =
@@ -264,8 +251,12 @@ public class DBWriterImpl implements DBWriter {
                             "CREATE TABLE " + table + " "
                                     + createTableStmt(spec, sqlTypes, columnNamesForInsertStatement);
                     LOGGER.debug("Executing SQL statement as execute: " + query);
-                    Statement statement = conn.createStatement();
-                    statement.execute(query);
+                    try (Statement statement = conn.createStatement()) {
+                        statement.execute(query);
+                    }
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
                     mapping = new int[spec.getNumColumns()];
                     for (int k = 0; k < mapping.length; k++) {
                         mapping[k] = k;
@@ -302,6 +293,9 @@ public class DBWriterImpl implements DBWriter {
                 LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
                 statement.close();
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
             }
 
             // this is a (temporary) workaround for bug #5802: if there is a DataValue column in the input table
@@ -333,7 +327,7 @@ public class DBWriterImpl implements DBWriter {
             final boolean autoCommit = conn.getAutoCommit();
             DatabaseConnectionSettings.setAutoCommit(conn, false);
             try {
-                final TimeZone timezone = m_conn.getTimeZone();
+                final TimeZone timezone = conSettings.getTimeZone();
                 DataRow row; //get the first row
                 DataRow nextRow = input.poll();
                 //iterate over all incoming data rows
@@ -429,73 +423,6 @@ public class DBWriterImpl implements DBWriter {
         }
     }
 
-    /**
-     * @param table
-     * @param columnNames
-     * @param mapping
-     * @param insertNullForMissingCols
-     * @return the insert statement
-     */
-    protected String createInsertStatment(final String table, final String columnNames, final int[] mapping,
-        final boolean insertNullForMissingCols) {
-        // // creates the wild card string based on the number of columns
-        // this string it used every time an new row is inserted into the db
-        final StringBuilder wildcard = new StringBuilder("(");
-        boolean first = true;
-        for (int i = 0; i < mapping.length; i++) {
-            if (mapping[i] >= 0 || insertNullForMissingCols) {
-                    //insert only a ? if the column is available in the input table or the insert null for missing
-                    //columns option is enabled
-                if (first) {
-                    first = false;
-                } else {
-                    wildcard.append(", ");
-                }
-                wildcard.append("?");
-            }
-        }
-        wildcard.append(")");
-        // create table meta data with empty column information
-        final String query = "INSERT INTO " + table + " " + columnNames + " VALUES " + wildcard;
-        return query;
-    }
-
-    /**
-     * @param conn {@link ConnectionPendingException}
-     * @param table table name
-     * @return the column type mapping
-     * @throws SQLException
-     */
-    protected Map<Integer, Integer> getColumnTypes(final Connection conn, final String table) throws SQLException {
-        // TODO move this block to DatabaseUtility
-        Map<Integer, Integer> columnTypes = new HashMap<>();
-        try (ResultSet metaDataRs = conn.getMetaData().getColumns(conn.getCatalog(), null, table, null)) {
-            while (metaDataRs.next()) {
-                columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
-            }
-        }
-
-        if (columnTypes.isEmpty()) {
-            // e.g. PostgreSQL converts all table names to lower case by default
-            try (ResultSet metaDataRs =
-                conn.getMetaData().getColumns(conn.getCatalog(), null, table.toLowerCase(), null)) {
-                while (metaDataRs.next()) {
-                    columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
-                }
-            }
-        }
-        if (columnTypes.isEmpty()) {
-            // e.g. Oracle converts all table names to upper case by default
-            try (ResultSet metaDataRs =
-                conn.getMetaData().getColumns(conn.getCatalog(), null, table.toUpperCase(), null)) {
-                while (metaDataRs.next()) {
-                    columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
-                }
-            }
-        }
-        return columnTypes;
-    }
-
     /** Create connection to update table in database.
      * @param data The data to write.
      * @param setColumns columns part of the SET clause
@@ -517,9 +444,10 @@ public class DBWriterImpl implements DBWriter {
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = m_conn.createConnection(cp);
+        final DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
+        final Connection conn = conSettings.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
-        synchronized (m_conn.syncConnection(conn)) {
+        synchronized (conSettings.syncConnection(conn)) {
             exec.setMessage("Start updating rows in database...");
             final DataTableSpec spec = data.getDataTableSpec();
             final String updateStmt = createUpdateStatement(table, setColumns, whereColumns);
@@ -535,7 +463,7 @@ public class DBWriterImpl implements DBWriter {
             int curBatchSize = 0;
 
             // selected timezone
-            final TimeZone timezone = m_conn.getTimeZone();
+            final TimeZone timezone = conSettings.getTimeZone();
 
             LOGGER.debug("Executing SQL statement as prepareStatement: " + updateStmt);
             final PreparedStatement stmt = conn.prepareStatement(updateStmt);
@@ -633,33 +561,6 @@ public class DBWriterImpl implements DBWriter {
         }
     }
 
-    /**
-     * @param whereColumns
-     * @param setColumns
-     * @param table
-     * @return update statment
-     */
-    protected String createUpdateStatement(final String table, final String[] setColumns, final String[] whereColumns) {
-     // create query connection object
-        final StringBuilder query = new StringBuilder("UPDATE " + table + " SET");
-        for (int i = 0; i < setColumns.length; i++) {
-            if (i > 0) {
-                query.append(",");
-            }
-            final String newColumnName = replaceColumnName(setColumns[i]);
-            query.append(" " + newColumnName + " = ?");
-        }
-        query.append(" WHERE");
-        for (int i = 0; i < whereColumns.length; i++) {
-            if (i > 0) {
-                query.append(" AND");
-            }
-            final String newColumnName = replaceColumnName(whereColumns[i]);
-            query.append(" " + newColumnName + " = ?");
-        }
-        return query.toString();
-    }
-
     /** Create connection to update table in database.
      * @param schema table schema name. Could be <code>null</code>.
      * @param data The data to write.
@@ -681,9 +582,10 @@ public class DBWriterImpl implements DBWriter {
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = m_conn.createConnection(cp);
+        DatabaseConnectionSettings conSettings = getDatabaseConnectionSettings();
+        final Connection conn = conSettings.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
-        synchronized (m_conn.syncConnection(conn)) {
+        synchronized (conSettings.syncConnection(conn)) {
             exec.setMessage("Start deleting rows from database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
@@ -710,7 +612,7 @@ public class DBWriterImpl implements DBWriter {
             int curBatchSize = 0;
 
             // selected timezone
-            final TimeZone timezone = m_conn.getTimeZone();
+            final TimeZone timezone = conSettings.getTimeZone();
 
             LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
@@ -797,232 +699,5 @@ public class DBWriterImpl implements DBWriter {
                 stmt.close();
             }
         }
-    }
-
-    /**
-     * Set given column value into SQL statement.
-     * @param stmt statement used
-     * @param dbIdx database index to update/write
-     * @param cspec column spec to check type
-     * @param cell the data cell to write into the statement
-     * @param tz the {@link TimeZone} to use
-     * @param columnTypes
-     * @throws SQLException if the value can't be set
-     */
-    protected void fillStatement(final PreparedStatement stmt, final int dbIdx, final DataColumnSpec cspec,
-        final DataCell cell, final TimeZone tz, final Map<Integer, Integer> columnTypes)
-            throws SQLException {
-        if (cspec.getType().isCompatible(BooleanValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.BOOLEAN);
-            } else {
-                boolean bool = ((BooleanValue) cell).getBooleanValue();
-                stmt.setBoolean(dbIdx, bool);
-            }
-        } else if (cspec.getType().isCompatible(IntValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.INTEGER);
-            } else {
-                int integer = ((IntValue) cell).getIntValue();
-                stmt.setInt(dbIdx, integer);
-            }
-        } else if (cspec.getType().isCompatible(LongValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.BIGINT);
-            } else {
-                long dbl = ((LongValue) cell).getLongValue();
-                stmt.setLong(dbIdx, dbl);
-            }
-        } else if (cspec.getType().isCompatible(DoubleValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.DOUBLE);
-            } else {
-                double dbl = ((DoubleValue) cell).getDoubleValue();
-                if (Double.isNaN(dbl)) {
-                    stmt.setNull(dbIdx, Types.DOUBLE);
-                } else {
-                    stmt.setDouble(dbIdx, dbl);
-                }
-            }
-        } else if (cspec.getType().isCompatible(DateAndTimeValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.DATE);
-            } else {
-                final DateAndTimeValue dateCell = (DateAndTimeValue) cell;
-                final long corrDate = dateCell.getUTCTimeInMillis() - tz.getOffset(dateCell.getUTCTimeInMillis());
-                if (!dateCell.hasTime() && !dateCell.hasMillis()) {
-                    java.sql.Date date = new java.sql.Date(corrDate);
-                    stmt.setDate(dbIdx, date);
-                } else if (!dateCell.hasMillis()) {
-                    java.sql.Time time = new java.sql.Time(corrDate);
-                    stmt.setTime(dbIdx, time);
-                } else {
-                    java.sql.Timestamp timestamp = new java.sql.Timestamp(corrDate);
-                    stmt.setTimestamp(dbIdx, timestamp);
-                }
-            }
-        } else if (cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.BLOB);
-            } else {
-                try {
-                    BinaryObjectDataValue value = (BinaryObjectDataValue) cell;
-                    InputStream is = value.openInputStream();
-                    if (is == null) {
-                        stmt.setNull(dbIdx, Types.BLOB);
-                    } else {
-                        try {
-                            // to be compatible with JDBC 3.0, the length of the stream is restricted to max integer,
-                            // which are ~2GB; with JDBC 4.0 longs are supported and the respective method can be called
-                            stmt.setBinaryStream(dbIdx, is, (int) value.length());
-                        } catch (SQLException ex) {
-                            // if no supported (i.e. SQLite) set byte array
-                            byte[] bytes = IOUtils.toByteArray(is);
-                            stmt.setBytes(dbIdx, bytes);
-                        }
-                    }
-                } catch (IOException ioe) {
-                    stmt.setNull(dbIdx, Types.BLOB);
-                }
-            }
-        } else if (cspec.getType().isCompatible(CollectionDataValue.class)) {
-            fillArray(stmt, dbIdx, cell, tz);
-        } else if ((columnTypes == null) || cspec.getType().isCompatible(StringValue.class)) {
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, Types.VARCHAR);
-            } else {
-                stmt.setString(dbIdx, cell.toString());
-            }
-        } else {
-            Integer sqlType = columnTypes.get(dbIdx);
-            if (sqlType == null) {
-                sqlType = Types.VARCHAR;
-            }
-            if (cell.isMissing()) {
-                stmt.setNull(dbIdx, sqlType);
-            } else {
-                stmt.setObject(dbIdx, cell.toString(), sqlType);
-            }
-        }
-    }
-
-    /**
-     * @param stmt
-     * @param dbIdx
-     * @param cell
-     * @param tz
-     * @throws SQLException
-     */
-    protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell, final TimeZone tz)
-        throws SQLException {
-        if (cell.isMissing()) {
-            stmt.setNull(dbIdx, Types.ARRAY);
-        } else {
-            final CollectionDataValue collection = (CollectionDataValue)cell;
-            final Spliterator<DataCell> spliterator = collection.spliterator();
-            final DataType baseType = cell.getType().getCollectionElementType();
-            final Object[] vals = new Object[collection.size()];
-            final String type;
-            if (baseType.isCompatible(BooleanValue.class)) {
-                type = "boolean";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((BooleanValue)t).getBooleanValue();
-                    }
-                });
-            } else if (baseType.isCompatible(IntValue.class)) {
-                type = "integer";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((IntValue)t).getIntValue();
-                    }
-                });
-            } else if (baseType.isCompatible(LongValue.class)) {
-                type = "bigint";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((LongValue)t).getLongValue();
-                    }
-                });
-            } else if (baseType.isCompatible(DoubleValue.class)) {
-                type = "double";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        if (t.isMissing()) {
-                            vals[idx++] = null;
-                        } else {
-                            final double value = ((DoubleValue)t).getDoubleValue();
-                            vals[idx++] = Double.isNaN(value) ? null : value;
-                        }
-                    }
-                });
-            } else if (baseType.isCompatible(DateAndTimeValue.class)) {
-                type = "timestamp";
-            } else {
-                type = "varchar";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : t.toString();
-                    }
-                });
-            }
-            @SuppressWarnings("resource") //will be closed by the framework
-            final Connection conn = stmt.getConnection();
-            final Array array = conn.createArrayOf(type, vals);
-            stmt.setArray(dbIdx, array);
-        }
-    }
-
-    /**
-     * @param spec
-     * @param sqlTypes
-     * @param columnNamesForInsertStatement
-     * @return the create table statement
-     */
-    protected String createTableStmt(final DataTableSpec spec,
-            final Map<String, String> sqlTypes, final StringBuilder columnNamesForInsertStatement) {
-        StringBuilder buf = new StringBuilder("(");
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (i > 0) {
-                buf.append(", ");
-                columnNamesForInsertStatement.append(", ");
-            }
-            DataColumnSpec cspec = spec.getColumnSpec(i);
-            String colName = cspec.getName();
-            String column = replaceColumnName(colName);
-            buf.append(column + " " + sqlTypes.get(colName));
-
-            columnNamesForInsertStatement.append(column);
-        }
-        buf.append(")");
-        columnNamesForInsertStatement.append(')');
-
-        return buf.toString();
-    }
-
-    /**
-     * @param oldName old column name
-     * @return new column name
-     */
-    protected String replaceColumnName(final String oldName) {
-        final String colName;
-        if (!m_conn.getAllowSpacesInColumnNames()) {
-            //TK_TODO: this might replace not only spaces!!!
-            colName = oldName.replaceAll("[^a-zA-Z0-9]", "_");
-        } else {
-            colName = oldName;
-        }
-        //always call the quote method to also quote key words etc.
-        return m_conn.getUtility().getStatementManipulator().quoteIdentifier(colName);
     }
 }

@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Date and Time Handling
+Bundle-SymbolicName: org.knime.time;singleton:=true
+Bundle-Version: 3.3.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.knime.base;bundle-version="[3.3.0,4.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: org.knime.core.data.time.duration,
+ org.knime.core.data.time.localdate,
+ org.knime.core.data.time.localdatetime,
+ org.knime.core.data.time.localtime,
+ org.knime.core.data.time.period,
+ org.knime.core.data.time.zoneddatetime

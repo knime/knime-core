@@ -54,7 +54,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
@@ -70,7 +70,7 @@ import org.knime.core.util.tokenizer.TokenizerException;
  *
  * @see org.knime.core.data.RowIterator
  */
-class FileRowIterator extends RowIterator {
+class FileRowIterator extends CloseableRowIterator {
 
     /* The tokenizer reads the next token from the input stream. */
     private final Tokenizer m_tokenizer;
@@ -237,6 +237,12 @@ class FileRowIterator extends RowIterator {
         } catch (IOException ioe) {
             // then don't close it
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void close() {
+        dispose();
     }
 
     /**

@@ -49,6 +49,8 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.convert.DataValueAccessMethod;
+
 
 /**
  * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
@@ -66,6 +68,7 @@ public interface StringValue extends DataValue {
     /**
      * @return A String value.
      */
+    @DataValueAccessMethod(name = "String")
     String getStringValue();
 
     /** Implementations of the meta information of this value class. */

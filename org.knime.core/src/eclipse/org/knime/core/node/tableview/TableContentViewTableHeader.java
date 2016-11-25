@@ -65,15 +65,16 @@ import org.knime.core.node.util.CheckUtils;
  * Custom table header that mostly handles column width events and proper initialization.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.3
  */
 @SuppressWarnings("serial")
-final class TableContentViewTableHeader extends JTableHeader {
+public class TableContentViewTableHeader extends JTableHeader {
 
     private final TableContentView m_contentView;
 
     /** @param contentView The associated table view
      * @param cm forwarded to super constructor. */
-    TableContentViewTableHeader(final TableContentView contentView, final TableColumnModel cm) {
+    protected TableContentViewTableHeader(final TableContentView contentView, final TableColumnModel cm) {
         super(cm);
         m_contentView = CheckUtils.checkNotNull(contentView);
     }

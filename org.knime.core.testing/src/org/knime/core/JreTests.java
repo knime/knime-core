@@ -125,7 +125,7 @@ public class JreTests {
      */
     @Test
     public void checkJCEExtension() throws Exception {
-        assertThat("JCE does not seem to be installed, allows cipher length for AES is too small",
+        assertThat("JCE does not seem to be installed, allowed cipher length for AES is too small",
             Cipher.getMaxAllowedKeyLength("AES"), is(greaterThan(128)));
     }
 }

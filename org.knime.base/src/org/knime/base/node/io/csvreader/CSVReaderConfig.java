@@ -53,9 +53,12 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Config for CSV reader.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class CSVReaderConfig {
+// public scope as it's used in the widedata bundle. Scope to be reduced once both bundles are merged.
+public final class CSVReaderConfig {
 
     /** Config key for the URL property. */
     static final String CFG_URL = "url";
@@ -78,7 +81,6 @@ final class CSVReaderConfig {
      * except the url.
      */
     public CSVReaderConfig() {
-        super();
         m_colDelimiter = ",";
         m_rowDelimiter = "\n";
         m_quoteString = "\"";
@@ -150,17 +152,17 @@ final class CSVReaderConfig {
     }
 
     /** @return the location */
-    String getLocation() {
+    public String getLocation() {
         return m_location;
     }
 
     /** @param location the location to set */
-    void setLocation(final String location) {
+    public void setLocation(final String location) {
         m_location = location;
     }
 
     /** @return the colDelimiter */
-    String getColDelimiter() {
+    public String getColDelimiter() {
         return m_colDelimiter;
     }
 
@@ -170,7 +172,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the rowDelimiter */
-    String getRowDelimiter() {
+    public String getRowDelimiter() {
         return m_rowDelimiter;
     }
 
@@ -180,7 +182,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the quoteString */
-    String getQuoteString() {
+    public String getQuoteString() {
         return m_quoteString;
     }
 
@@ -190,7 +192,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the hasRowHeader */
-    boolean hasRowHeader() {
+    public boolean hasRowHeader() {
         return m_hasRowHeader;
     }
 
@@ -200,7 +202,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the hasColHeader */
-    boolean hasColHeader() {
+    public boolean hasColHeader() {
         return m_hasColHeader;
     }
 
@@ -210,7 +212,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the commentStart */
-    String getCommentStart() {
+    public String getCommentStart() {
         return m_commentStart;
     }
 
@@ -227,12 +229,12 @@ final class CSVReaderConfig {
     }
 
     /** @return the supportShortLines */
-    boolean isSupportShortLines() {
+    public boolean isSupportShortLines() {
         return m_supportShortLines;
     }
 
     /** @return the limitRowsCount (smaller 0 if unlimited). */
-    long getLimitRowsCount() {
+    public long getLimitRowsCount() {
         return m_limitRowsCount;
     }
 
@@ -242,7 +244,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the skipFirstLinesCount (smaller 0 if none to skip). */
-    int getSkipFirstLinesCount() {
+    public int getSkipFirstLinesCount() {
         return m_skipFirstLinesCount;
     }
 
@@ -252,7 +254,7 @@ final class CSVReaderConfig {
     }
 
     /** @return the set encoding, or null if the default character set should be used. */
-    String getCharSetName() {
+    public String getCharSetName() {
         return m_charSet;
     }
 

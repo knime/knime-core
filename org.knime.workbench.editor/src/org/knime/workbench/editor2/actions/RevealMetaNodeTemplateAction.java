@@ -56,6 +56,7 @@ import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -95,7 +96,7 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reveal Template";
+        return "Select Template in Explorer";
     }
 
     /**
@@ -104,7 +105,7 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Reveals the metanode template this metanode is linked to.";
+        return "Selects the metanode template this metanode is linked to in the KNIME explorer";
     }
 
 
@@ -145,19 +146,22 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
         List<NodeID> candidateList = new ArrayList<NodeID>();
         List<AbstractExplorerFileStore> templates
                 = new ArrayList<AbstractExplorerFileStore>();
-        ExplorerFileSystem efs = new ExplorerFileSystem();
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
             if (model instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)model;
-                MetaNodeTemplateInformation i = wm.getTemplateInformation();
-                if (Role.Link.equals(i.getRole())) {
-                    candidateList.add(wm.getID());
-                    AbstractExplorerFileStore template
-                            = efs.getStore(i.getSourceURI());
-                    if (template != null) {
-                        templates.add(template);
+                NodeContext.pushContext(p.getNodeContainer());
+                try {
+                    WorkflowManager wm = (WorkflowManager)model;
+                    MetaNodeTemplateInformation i = wm.getTemplateInformation();
+                    if (Role.Link.equals(i.getRole())) {
+                        candidateList.add(wm.getID());
+                        AbstractExplorerFileStore template = ExplorerFileSystem.INSTANCE.getStore(i.getSourceURI());
+                        if (template != null) {
+                            templates.add(template);
+                        }
                     }
+                } finally {
+                    NodeContext.removeLastContext();
                 }
             }
         }

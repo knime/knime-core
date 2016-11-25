@@ -64,7 +64,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import org.knime.base.node.preproc.normalize3.Normalizer3Config.NormalizerMode;
+import org.knime.base.node.preproc.normalize3.NormalizerConfig.NormalizerMode;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -80,6 +80,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  * The NormalizeNodeDialog lets the user choose the three different methods of normalization.
  *
  * @author Nicolas Cebron, University of Konstanz
+ * @since 3.2 getTableSpec() added to allow for altering exaction of {@link DataTableSpec}s from the {@link PortObjectSpec}.
  */
 public class Normalizer3NodeDialog extends NodeDialogPane {
 
@@ -94,7 +95,7 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
 
     private DataColumnSpecFilterPanel m_filterPanel;
 
-    private Map<NormalizerMode, JRadioButton> m_buttonMap = new HashMap<NormalizerMode, JRadioButton>();
+    private Map<NormalizerMode, JRadioButton> m_buttonMap = new HashMap<>();
 
     /**
      * Creates a new dialog for the Normalize Node.
@@ -214,8 +215,8 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        Normalizer3Config config = new Normalizer3Config();
-        DataTableSpec spec = (DataTableSpec)specs[0];
+        NormalizerConfig config = new NormalizerConfig();
+        DataTableSpec spec = getTableSpec(specs);
         config.loadConfigurationInDialog(settings, spec);
         m_maxTextField.setText(Double.toString(config.getMax()));
         m_minTextField.setText(Double.toString(config.getMin()));
@@ -228,7 +229,7 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        Normalizer3Config config = new Normalizer3Config();
+        NormalizerConfig config = new NormalizerConfig();
         for (Map.Entry<NormalizerMode, JRadioButton> entry : m_buttonMap.entrySet()) {
             if (entry.getValue().isSelected()) {
                 config.setMode(entry.getKey());
@@ -254,6 +255,17 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
                 "%s must be a valid double value (not a number: \"%s\")", name, inputField.getText());
             return 0;
         }
+    }
+
+    /**
+     * Get the {@link DataTableSpec} from the {@link PortObjectSpec}s.
+     * 
+     * @param specs the node's {@link PortObjectSpec}
+     * @return the corresponding {@link DataTableSpec} for the {@link PortObjectSpec}
+     * @throws NotConfigurableException if the specs are not valid
+     */
+    protected DataTableSpec getTableSpec(final PortObjectSpec[] specs) throws NotConfigurableException {
+        return (DataTableSpec)specs[0];
     }
 
 }

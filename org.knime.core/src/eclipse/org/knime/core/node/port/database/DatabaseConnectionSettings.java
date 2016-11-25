@@ -47,24 +47,13 @@ package org.knime.core.node.port.database;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -77,12 +66,11 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.core.util.ThreadUtils;
 
 /**
  *
@@ -103,9 +91,9 @@ public class DatabaseConnectionSettings {
     /** Keeps the history of all database URLs. */
     public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
-
-    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
-            ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
+//
+//    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
+//            ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
 
     private static int databaseTimeout = Math.max(15, getSystemPropertyDatabaseTimeout());
 
@@ -123,6 +111,7 @@ public class DatabaseConnectionSettings {
      */
     public static int getSystemPropertyDatabaseTimeout() {
         int timeout = -1;
+        @SuppressWarnings("deprecation")
         String sysPropTimeout = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
 
         if (sysPropTimeout != null) {
@@ -230,6 +219,8 @@ public class DatabaseConnectionSettings {
     private String m_jdbcUrl;
     private String m_user = null;
     private String m_pass = null;
+
+    private boolean m_kerberos = false;
 
     private String m_timezone = "current"; // use current as of KNIME 2.8, none before 2.8
 
@@ -346,50 +337,51 @@ public class DatabaseConnectionSettings {
         m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
         m_retrieveMetadataInConfigure = conn.m_retrieveMetadataInConfigure;
         m_dbIdentifier = conn.getDatabaseIdentifier();
+        m_kerberos = conn.useKerberos();
     }
 
-    /** Map the keeps database connection based on the user and URL. */
-    private static final Map<ConnectionKey, Connection> CONNECTION_MAP =
-        Collections.synchronizedMap(new HashMap<ConnectionKey, Connection>());
-    /** Holding the database connection keys used to sync the open connection
-     * process. */
-    private static final Map<ConnectionKey, ConnectionKey>
-        CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
-
-    private static final class ConnectionKey {
-        private final String m_un;
-        private final String m_pw;
-        private final String m_dn;
-        private ConnectionKey(final String userName, final String password,
-                final String databaseName) {
-            m_un = userName;
-            m_pw = password;
-            m_dn = databaseName;
-        }
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj == null || !(obj instanceof ConnectionKey)) {
-                return false;
-            }
-            ConnectionKey ck = (ConnectionKey) obj;
-            if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
-                  || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
-                  || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
-                return false;
-            }
-            return true;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return m_un.hashCode() ^ m_dn.hashCode();
-        }
-    }
+//    /** Map the keeps database connection based on the user and URL. */
+//    private static final Map<ConnectionKey, Connection> CONNECTION_MAP =
+//        Collections.synchronizedMap(new HashMap<ConnectionKey, Connection>());
+//    /** Holding the database connection keys used to sync the open connection
+//     * process. */
+//    private static final Map<ConnectionKey, ConnectionKey>
+//        CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
+//
+//    private static final class ConnectionKey {
+//        private final String m_un;
+//        private final String m_pw;
+//        private final String m_dn;
+//        private ConnectionKey(final String userName, final String password,
+//                final String databaseName) {
+//            m_un = userName;
+//            m_pw = password;
+//            m_dn = databaseName;
+//        }
+//        /** {@inheritDoc} */
+//        @Override
+//        public boolean equals(final Object obj) {
+//            if (obj == this) {
+//                return true;
+//            }
+//            if (obj == null || !(obj instanceof ConnectionKey)) {
+//                return false;
+//            }
+//            ConnectionKey ck = (ConnectionKey) obj;
+//            if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
+//                  || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
+//                  || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
+//                return false;
+//            }
+//            return true;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public int hashCode() {
+//            return m_un.hashCode() ^ m_dn.hashCode();
+//        }
+//    }
 
     /** Create a database connection based on this settings. Note, don't close
      * the connection since it cached for subsequent calls or later reuse to
@@ -427,91 +419,9 @@ public class DatabaseConnectionSettings {
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
-        if (m_jdbcUrl == null || m_user == null || m_pass == null || m_driver == null || m_timezone == null) {
-            throw new InvalidSettingsException("No settings available to create database connection.");
-        }
-        final Driver d = DatabaseDriverLoader.registerDriver(m_driver);
-        if (!d.acceptsURL(m_jdbcUrl)) {
-            throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_jdbcUrl);
-        }
-
-        final String jdbcUrl = m_jdbcUrl;
-        final String user;
-        final String pass;
-        if (cp == null || m_credName == null) {
-            user = m_user;
-            pass = m_pass;
-        } else {
-            ICredentials cred = cp.get(m_credName);
-            user = cred.getLogin();
-            pass = cred.getPassword();
-        }
-
-        // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl);
-
-        // retrieve original key and/or modify connection key map
-        synchronized (CONNECTION_KEYS) {
-            if (CONNECTION_KEYS.containsKey(databaseConnKey)) {
-                databaseConnKey = CONNECTION_KEYS.get(databaseConnKey);
-            } else {
-                CONNECTION_KEYS.put(databaseConnKey, databaseConnKey);
-            }
-        }
-
-        // sync database connection key: unique with database url and user name
-        synchronized (databaseConnKey) {
-            Connection conn = CONNECTION_MAP.get(databaseConnKey);
-            // if connection already exists
-            if (conn != null) {
-                try {
-                    if (conn.isClosed() || !getUtility().isValid(conn)) {
-                        CONNECTION_MAP.remove(databaseConnKey);
-                    } else {
-                        conn.clearWarnings();
-                        return conn;
-                    }
-                } catch (Exception e) { // remove invalid connection
-                    CONNECTION_MAP.remove(databaseConnKey);
-                }
-            }
-            // if a connection is not available
-            Callable<Connection> callable = new Callable<Connection>() {
-                /** {@inheritDoc} */
-                @Override
-                public Connection call() throws Exception {
-                    LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
-                    Driver driver = DriverManager.getDriver(jdbcUrl);
-                    Properties props = new Properties();
-                    if (user != null) {
-                        props.put("user", user);
-                    }
-                    if (pass != null) {
-                        props.put("password", pass);
-                    }
-                    return driver.connect(jdbcUrl, props);
-                }
-            };
-            //TODO:this has to be more robust e.g. the thread should terminate when KNIME terminates and should be
-            //cancelable if the user presses cancel. If no credentials are present for Phoenix the thread keeps KNIME
-            //alive for ages
-            Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
-            try {
-                conn = task.get(databaseTimeout + 1, TimeUnit.SECONDS);
-                CONNECTION_MAP.put(databaseConnKey, conn);
-                return conn;
-            } catch (ExecutionException ee) {
-                if (ee.getCause() instanceof SQLException) {
-                    throw (SQLException) ee.getCause();
-                } else {
-                    throw new SQLException(ee.getCause());
-                }
-            } catch (InterruptedException ex) {
-                throw new SQLException("Thread was interrupted while waiting for database to respond");
-            } catch (TimeoutException ex) {
-                throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
-            }
-        }
+        CheckUtils.checkSettingNotNull(m_driver, "No settings available to create database connection.");
+        CheckUtils.checkSettingNotNull(m_jdbcUrl, "No JDBC URL set.");
+        return getUtility().getConnectionFactory().getConnection(cp, this);
     }
 
     /**
@@ -559,6 +469,7 @@ public class DatabaseConnectionSettings {
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
         settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
         settings.addString("databaseIdentifier", m_dbIdentifier);
+        settings.addBoolean("kerberos", m_kerberos);
     }
 
     /**
@@ -570,7 +481,10 @@ public class DatabaseConnectionSettings {
     public void validateConnection(final ConfigRO settings,
             final CredentialsProvider cp)
             throws InvalidSettingsException {
-        loadConnection(settings, false, cp);
+        // fix AP-5784 (Credentials validation in all database connect nodes happens too early during load phase)
+        // passing null to the validation is better as the credentials provider may not be fully initialized
+        // null provider = no password checking.
+        loadConnection(settings, false, null);
     }
 
     /**
@@ -603,7 +517,7 @@ public class DatabaseConnectionSettings {
         boolean retrieveMetadataInConfigure = settings.getBoolean("retrieveMetadataInConfigure", true);
         boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
         boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", false);
-
+        boolean kerberos = settings.getBoolean("kerberos", false);
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
@@ -659,6 +573,7 @@ public class DatabaseConnectionSettings {
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             m_rowIdsStartWithZero = rowIdsStartWithZero;
             m_dbIdentifier = dbIdentifier;
+            m_kerberos = kerberos;
             DATABASE_URLS.add(m_jdbcUrl);
             return changed;
         }
@@ -676,34 +591,30 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
+    @SuppressWarnings("resource")
     public void execute(final String statement, final CredentialsProvider cp)
                 throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
             SQLException, IOException {
-        Connection conn = null;
-        Statement stmt = null;
-        try {
-            conn = createConnection(cp);
-            stmt = conn.createStatement();
-            LOGGER.debug("Executing SQL statement \"" + statement + "\"");
-            stmt.execute(statement);
-            if (!conn.getAutoCommit()) {
-                conn.commit();
-            }
-        } catch (SQLException ex) {
-            try {
-                if ((conn != null) && !conn.getAutoCommit()) {
-                    conn.rollback();
+        Connection conn = createConnection(cp);
+        synchronized (syncConnection(conn)) {
+            try (final Statement stmt = conn.createStatement()) {
+                LOGGER.debug("Executing SQL statement \"" + statement + "\"");
+                stmt.execute(statement);
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
                 }
-            } catch (SQLException ex2) {
-                // ignore this one and throw the original exception
-                LOGGER.debug("Caught another SQL exception while rolling back transaction: " + ex2.getMessage(), ex2);
-            }
-            throw ex;
-        } finally {
-            if (stmt != null) {
-                stmt.close();
+            } catch (SQLException ex) {
+                try {
+                    if ((conn != null) && !conn.getAutoCommit()) {
+                        conn.rollback();
+                    }
+                } catch (SQLException ex2) {
+                    // ignore this one and throw the original exception
+                    LOGGER.debug("Caught another SQL exception while rolling back transaction: " + ex2.getMessage(), ex2);
+                }
+                throw ex;
             }
         }
     }
@@ -802,7 +713,7 @@ public class DatabaseConnectionSettings {
      * @param cp {@link CredentialsProvider}
      * @return user name used to login to the database
      */
-    public final String getUserName(final CredentialsProvider cp) {
+    public String getUserName(final CredentialsProvider cp) {
         if (cp == null || m_credName == null) {
             return m_user;
         } else {
@@ -815,7 +726,7 @@ public class DatabaseConnectionSettings {
      * @param cp {@link CredentialsProvider}
      * @return password (decrypted) used to login to the database
      */
-    public final String getPassword(final CredentialsProvider cp) {
+    public String getPassword(final CredentialsProvider cp) {
         if (cp == null || m_credName == null) {
             return m_pass;
         } else {
@@ -846,11 +757,27 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * @param useKerberos <code>true</code> if Kerberos should be used
+     * @since 3.2
+     */
+    public void setKerberos(final boolean useKerberos) {
+        m_kerberos = useKerberos;
+    }
+
+    /**
+     * @return <code>true</code> if Kerberos should be used
+     * @since 3.2
+     */
+    public boolean useKerberos() {
+        return m_kerberos;
+    }
+
+    /**
      * @return user name used to login to the database
      * @deprecated use {@link #getUserName(CredentialsProvider)}
      */
     @Deprecated
-    public final String getUserName() {
+    public String getUserName() {
         return getUserName(null);
     }
 
@@ -859,7 +786,7 @@ public class DatabaseConnectionSettings {
      * @deprecated use {@link #getPassword(CredentialsProvider)}
      */
     @Deprecated
-    public final String getPassword() {
+    public String getPassword() {
         return getPassword(null);
     }
 
@@ -916,7 +843,7 @@ public class DatabaseConnectionSettings {
      * @return a credential identifier or <code>null</code>
      * @since 2.10
      */
-    public final String getCredentialName() {
+    public String getCredentialName() {
         return m_credName;
     }
 

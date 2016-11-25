@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -139,7 +140,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
-            hasView |= nc.hasInteractiveView() || nc.hasInteractiveWebView();
+            hasView |= nc.hasInteractiveView() || nc.getInteractiveWebViews().size() > 0;
             atLeastOneNodeIsExecuted |= nc.getNodeContainerState().isExecuted() && hasView;
         }
         return atLeastOneNodeIsExecuted;
@@ -157,16 +158,19 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                 + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
+            final InteractiveWebViewsResult webViewsResult = cont.getInteractiveWebViews();
             boolean hasView = cont.getNrViews() > 0;
-            hasView |= cont.hasInteractiveView() || cont.hasInteractiveWebView();
+            hasView |= cont.hasInteractiveView() || webViewsResult.size() > 0;
             if (cont.getNodeContainerState().isExecuted() && hasView) {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             final IAction action;
-                            if (cont.hasInteractiveView() || cont.hasInteractiveWebView()) {
+                            if (cont.hasInteractiveView()) {
                                 action = new OpenInteractiveViewAction(cont);
+                            } else if (webViewsResult.size() > 0) {
+                                action = new OpenInteractiveWebViewAction(cont, webViewsResult.get(0));
                             } else {
                                 action = new OpenViewAction(cont, 0);
                             }

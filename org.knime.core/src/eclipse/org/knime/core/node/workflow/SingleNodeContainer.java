@@ -130,6 +130,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /**
      * @param parent ...
      * @param id ...
+     * @param anno ...
+     */
+    SingleNodeContainer(final WorkflowManager parent, final NodeID id, final NodeAnnotation anno) {
+        super(parent, id, anno);
+    }
+
+
+    /**
+     * @param parent ...
+     * @param id ...
      * @param persistor ...
      */
     SingleNodeContainer(final WorkflowManager parent, final NodeID id, final NodeContainerMetaPersistor persistor) {
@@ -364,30 +374,39 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * Check if node can be safely reset.
      *
      * @return if node can be reset.
+     * @since 3.2
      */
     @Override
-    boolean isResetable() {
-        switch (getInternalState()) {
-        case EXECUTED:
-        case EXECUTED_MARKEDFOREXEC:
-        case CONFIGURED_MARKEDFOREXEC:
-        case UNCONFIGURED_MARKEDFOREXEC:
-        case CONFIGURED:
-            return true;
-        default:
+    public boolean isResetable() {
+        if (getNodeLocks().hasResetLock()) {
             return false;
+        } else {
+            switch (getInternalState()) {
+                case EXECUTED:
+                case EXECUTED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                case CONFIGURED:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 
     /** {@inheritDoc} */
     @Override
     boolean canPerformReset() {
-        synchronized (m_nodeMutex) {
-            switch (getInternalState()) {
-            case EXECUTED:
-                return true;
-            default:
-                return false;
+        if (getNodeLocks().hasResetLock()) {
+            return false;
+        } else {
+            synchronized (m_nodeMutex) {
+                switch (getInternalState()) {
+                    case EXECUTED:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
     }

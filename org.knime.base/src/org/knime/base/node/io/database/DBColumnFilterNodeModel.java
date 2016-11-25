@@ -45,8 +45,8 @@
  */
 package org.knime.base.node.io.database;
 
-import java.util.List;
-
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -123,12 +123,13 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject)inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
-        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         ColumnRearranger colre = new ColumnRearranger(dbObj.getSpec().getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
+        final DataTableSpec resultSpec = colre.createSpec();
+        final String newQuery = createQuery(conn, resultSpec);
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObjectSpec outSpec = new DatabasePortObjectSpec(
-                colre.createSpec(), conn.createConnectionModel());
+                resultSpec, conn.createConnectionModel());
         DatabasePortObject outObj = new DatabasePortObject(outSpec);
         return new PortObject[]{outObj};
     }
@@ -151,15 +152,18 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                     + "input spec: " + buf.toString());
         }
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
-        conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
+        final DataTableSpec resultSpec = colre.createSpec();
+        final String newQuery = createQuery(conn, resultSpec);
+        conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
-                colre.createSpec(), conn.createConnectionModel())};
+                resultSpec, conn.createConnectionModel())};
     }
 
-    private String createQuery(final String query, final StatementManipulator manipulator) {
+    private String createQuery(final DatabaseQueryConnectionSettings conn, final DataTableSpec resultSpec) {
+        final String query = conn.getQuery();
+        final StatementManipulator manipulator = conn.getUtility().getStatementManipulator();
         final StringBuilder buf = new StringBuilder();
         final String[] queries = query.split(
                 DBReader.SQL_QUERY_SEPARATOR);
@@ -173,10 +177,10 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             super.setWarningMessage("All columns retained.");
             buf.append("*"); // selects all columns
         } else {
-            final List<String> columnNames = m_filter.getIncludeList();
-            for (int i = 0; i < columnNames.size(); i++) {
-                final String colName = columnNames.get(i);
-                if (i > 0) {
+            int i = 0;
+            for (final DataColumnSpec colSpec : resultSpec) {
+                final String colName = colSpec.getName();
+                if (i++ > 0) {
                     buf.append(",");
                 }
                 buf.append(manipulator.quoteColumn(colName));

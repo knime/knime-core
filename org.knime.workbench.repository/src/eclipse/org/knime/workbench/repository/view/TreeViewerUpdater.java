@@ -101,8 +101,9 @@ class TreeViewerUpdater {
     /** Updates and filters the tree
     *
     * @param shouldExpand whether the tree should be expanded
+    * @param scrollToRoot if the viewer should be scrolled to the root element on update
     */
-   static void update(final TreeViewer viewer, final boolean shouldExpand) {
+   static void update(final TreeViewer viewer, final boolean shouldExpand, final boolean scrollToRoot) {
 
        Point backup = null;
 
@@ -121,7 +122,7 @@ class TreeViewerUpdater {
                viewer.expandAll();
            }
            //scroll to root
-           if (viewer.getTree().getItemCount() > 0) {
+           if (viewer.getTree().getItemCount() > 0 && scrollToRoot) {
                TreeItem item = viewer.getTree().getItem(0);
                viewer.getTree().showItem(item);
            }

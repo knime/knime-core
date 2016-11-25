@@ -93,9 +93,9 @@ public class MemoryGroupByTable extends GroupByTable {
      * @param retainOrder <code>true</code> if the original row order should be
      * retained
      * @throws CanceledExecutionException if the user has canceled the execution
-     * @since 2.6
+     * @since 3.2
      */
-    protected MemoryGroupByTable(final ExecutionContext exec,
+    public MemoryGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable, final List<String> groupByCols,
             final ColumnAggregator[] colAggregators,
             final GlobalSettings globalSettings,

@@ -81,9 +81,8 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
         SettingsModelBoolean overwriteOKSettings =
             WriteImageNodeModel.createOverwriteOKSettings();
 
-        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(fileOutSettings,
-            "write_png", JFileChooser.SAVE_DIALOG, false,
-            fvmModel);
+        final DialogComponentFileChooser fileChooser =
+            new DialogComponentFileChooser(fileOutSettings, "write_png", JFileChooser.SAVE_DIALOG, false, fvmModel);
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(
             overwriteOKSettings, "Overwrite OK");
 
@@ -103,6 +102,7 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
                 }
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         setHorizontalPlacement(false);

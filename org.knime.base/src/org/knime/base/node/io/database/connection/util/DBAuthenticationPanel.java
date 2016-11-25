@@ -50,6 +50,8 @@ package org.knime.base.node.io.database.connection.util;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -59,8 +61,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
@@ -94,6 +94,8 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
      */
     protected final JRadioButton m_usePassword = new JRadioButton("Use username & password");
 
+    private final JRadioButton m_useKerberos = new JRadioButton("Use Kerberos");
+
     /**
      * List for the available workflow credentials.
      */
@@ -113,13 +115,22 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
      * Gridbag constraints object used for layouting the panel.
      */
     protected final GridBagConstraints m_c = new GridBagConstraints();
-
     /**
      * Creates a new authentication panel.
      *
      * @param settings the settings object the panel should use
      */
     public DBAuthenticationPanel(final T settings) {
+        this(settings, false);
+    }
+    /**
+     * Creates a new authentication panel.
+     *
+     * @param settings the settings object the panel should use
+     * @param enableKerberos <code>true</code> if the Kerberos option should be enabled
+     * @since 3.2
+     */
+    public DBAuthenticationPanel(final T settings, final boolean enableKerberos) {
         super(new GridBagLayout());
         m_settings = settings;
 
@@ -160,18 +171,36 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
         m_c.weightx = 1;
         add(m_password, m_c);
 
-        ButtonGroup bg = new ButtonGroup();
+        if (enableKerberos) {
+            m_c.gridx = 0;
+            m_c.gridy++;
+            m_c.gridwidth = 2;
+            m_c.insets = new Insets(2, 2, 2, 2);
+            m_c.anchor = GridBagConstraints.WEST;
+            add(m_useKerberos, m_c);
+        }
+
+        final ButtonGroup bg = new ButtonGroup();
         bg.add(m_useCredentials);
         bg.add(m_usePassword);
+        bg.add(m_useKerberos);
 
-        m_useCredentials.addChangeListener(new ChangeListener() {
+        m_useCredentials.addActionListener(new ActionListener() {
             @Override
-            public void stateChanged(final ChangeEvent e) {
-                m_credentials.setEnabled(m_useCredentials.isSelected());
-                usernameLabel.setEnabled(!m_useCredentials.isSelected());
-                m_username.setEnabled(!m_useCredentials.isSelected());
-                passwordLabel.setEnabled(!m_useCredentials.isSelected());
-                m_password.setEnabled(!m_useCredentials.isSelected());
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
+            }
+        });
+        m_usePassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
+            }
+        });
+        m_useKerberos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
             }
         });
 
@@ -202,6 +231,9 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
             m_useCredentials.doClick();
             m_credentials.setSelectedItem(m_settings.getCredentialName());
         }
+        if (m_settings.useKerberos()) {
+            m_useKerberos.doClick();
+        }
     }
 
     /**
@@ -218,5 +250,15 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
             m_settings.setUserName(m_username.getText());
             m_settings.setPassword(new String(m_password.getPassword()));
         }
+        m_settings.setKerberos(m_useKerberos.isSelected());
+    }
+
+    private void authMethodChanged(final JLabel usernameLabel, final JLabel passwordLabel) {
+        m_credentials.setEnabled(m_useCredentials.isSelected());
+        final boolean useUserNamePassword = m_usePassword.isSelected();
+        usernameLabel.setEnabled(useUserNamePassword);
+        m_username.setEnabled(useUserNamePassword);
+        passwordLabel.setEnabled(useUserNamePassword);
+        m_password.setEnabled(useUserNamePassword);
     }
 }

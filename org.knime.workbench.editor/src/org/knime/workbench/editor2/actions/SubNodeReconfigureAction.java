@@ -56,6 +56,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.meta.ReconfigureMetaNodeWizard;
 
@@ -131,10 +132,13 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodeParts.length < 1) {
             return;
         }
-
         NodeContainerEditPart ep = nodeParts[0];
-        ReconfigureMetaNodeWizard wizard =
-                new ReconfigureMetaNodeWizard(ep.getViewer(), (SubNodeContainer)ep.getModel());
+        SubNodeContainer subnodeNC = (SubNodeContainer)ep.getModel();
+        if (!subnodeNC.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
+            return;
+        }
+
+        ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), subnodeNC);
         WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();
         dlg.open();

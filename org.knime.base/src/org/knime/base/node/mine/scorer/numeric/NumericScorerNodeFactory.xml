@@ -23,6 +23,9 @@
 		<option name="Predicted column">Column with the modeled, predicted data values.</option>
 		<option name="Change column name">Change the default output column name.</option>
 		<option name="Output column name">The name of the column in the output.</option>
+		<option name="Output scores as flow variables">Activate to receive all scores as flow variables.</option>
+		<option name="Prefix of flow variables">The scores can be exported as flow variables with a hard coded name. 
+		This option allows you to define a prefix for these variable identifiers so that name conflicts are resolved. </option>
     </fullDescription>
 
 	<ports>

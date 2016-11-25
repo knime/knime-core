@@ -56,15 +56,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.BitVectorDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSample;
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSampler;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -99,9 +103,11 @@ public class TreeEnsembleLearner {
 
     private TreeEnsembleModel m_ensembleModel;
 
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     private final TreeNodeSignatureFactory m_signatureFactory;
+
+    private final RowSampler m_rowSampler;
 
     /**
      * @param config
@@ -110,7 +116,12 @@ public class TreeEnsembleLearner {
     public TreeEnsembleLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data) {
         m_config = config;
         m_data = data;
-        m_indexManager = new DataIndexManager(m_data);
+        if (data.getTreeType() == TreeType.BitVector) {
+            m_indexManager = new BitVectorDataIndexManager(m_data.getNrRows());
+        } else {
+            m_indexManager = new DefaultDataIndexManager(m_data);
+        }
+        m_rowSampler = config.createRowSampler(data);
         int maxLevel = config.getMaxLevels();
         if (maxLevel < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
             // provided we have a binary tree (which is the default)
@@ -281,13 +292,13 @@ public class TreeEnsembleLearner {
         public TreeLearnerResult call() throws Exception {
             try {
                 AbstractTreeLearner learner;
+                final RowSample rowSample = m_rowSampler.createRowSample(m_rd);
                 if (m_data.getMetaData().isRegression()) {
-                    learner = new TreeLearnerRegression(m_config, m_data, m_indexManager, m_signatureFactory, m_rd);
+                    learner = new TreeLearnerRegression(m_config, m_data, m_indexManager, m_signatureFactory, m_rd, rowSample);
                 } else {
-                    learner = new TreeLearnerClassification(m_config, m_data, m_indexManager, m_signatureFactory, m_rd);
+                    learner = new TreeLearnerClassification(m_config, m_data, m_indexManager, m_signatureFactory, m_rd, rowSample);
                 }
                 AbstractTreeModel model = learner.learnSingleTree(m_exec, m_rd);
-                final RowSample rowSample = learner.getRowSampling();
                 final ColumnSampleStrategy colSamplingStrategy = learner.getColSamplingStrategy();
                 TreeLearnerResult result = new TreeLearnerResult(model, rowSample, colSamplingStrategy);
                 m_exec.setProgress(1.0);

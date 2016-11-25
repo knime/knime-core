@@ -122,8 +122,8 @@ public class PMMLRuleParser extends BaseRuleParser<PMMLPredicate> {
             PMMLExpressionFactory factory = (PMMLExpressionFactory)factoryPred;
             return new ArrayList<String>(factory.getUsedColumns());
         }
-        assert false : "For some reason the factory is not of proper type: " + factoryPred == null ? "null"
-            : factoryPred.getClass().getName();
+        assert false : "For some reason the factory is not of proper type: " + (factoryPred == null ? "null"
+            : factoryPred.getClass().getName());
         return Collections.emptyList();
     }
 }

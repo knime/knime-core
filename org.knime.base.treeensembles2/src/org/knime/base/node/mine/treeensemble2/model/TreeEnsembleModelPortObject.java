@@ -208,7 +208,7 @@ public class TreeEnsembleModelPortObject extends FileStorePortObject {
         pmmlSpecCreator.setTargetCol(targetSpec);
         PMMLPortObjectSpec pmmlSpec = pmmlSpecCreator.createSpec();
         PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
-        TreeModelClassification model = ensembleModel.getTreeModelClassification(modelIndex);
+        final AbstractTreeModel<?> model = ensembleModel.getTreeModel(modelIndex);
         portObject.addModelTranslater(new TreeModelPMMLTranslator(model));
         return portObject;
     }

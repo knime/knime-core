@@ -133,6 +133,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         final TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, null, inSpec);

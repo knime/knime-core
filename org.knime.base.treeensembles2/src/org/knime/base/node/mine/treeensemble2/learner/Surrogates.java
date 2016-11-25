@@ -323,17 +323,23 @@ public class Surrogates {
         BitSet rightChildMarker = bestSplitChildMarkers[1];
 
         for (int i = bestSplitMissedRows.nextSetBit(0); i >= 0; i = bestSplitMissedRows.nextSetBit(i + 1)) {
+            boolean foundFill = false;
             // fill in missing child marker from surrogates
             for (SurrogateCandidate surrogate : surrogates) {
                 BitSet surrogateLeftChildMarker = surrogate.getLeftChildMarker();
                 BitSet surrogateRightChildMarker = surrogate.getRightChildMarker();
                 if (surrogateLeftChildMarker.get(i)) {
                     leftChildMarker.set(i);
+                    foundFill = true;
                     break;
                 } else if (surrogateRightChildMarker.get(i)) {
                     rightChildMarker.set(i);
+                    foundFill = true;
                     break;
                 }
+            }
+            if (foundFill){
+                continue;
             }
             // the child marker was also missing in all surrogates => use majority rule
             if (majorityGoesLeft) {

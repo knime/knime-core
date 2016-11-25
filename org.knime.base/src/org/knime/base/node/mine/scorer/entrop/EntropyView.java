@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 11, 2006 (wiswedel): created
  */
@@ -52,6 +52,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import org.knime.base.node.util.DoubleFormat;
+import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableView;
 
@@ -59,10 +60,13 @@ import org.knime.core.node.tableview.TableView;
  * This panel is the view to a EntropyCalculator. SplitPane that shows on top
  * some basic clustering statistics and at the bottom the clusters, connnected
  * to a hilite handler.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class EntropyView extends JSplitPane {
+
+    private static final long serialVersionUID = 1L;
+
     /** The table view containing cluster statistics. */
     private final TableView m_tableView;
 
@@ -70,7 +74,7 @@ public class EntropyView extends JSplitPane {
     private final JEditorPane m_editorPane;
     /** Scrollpane containing m_editorPane. */
     private final JScrollPane m_editorPaneScroller;
-    
+
     /** Constructs new panel. */
     public EntropyView() {
         super(VERTICAL_SPLIT);
@@ -84,17 +88,37 @@ public class EntropyView extends JSplitPane {
     }
 
     /**
-     * Sets a new model. The model may be <code>null</code>.
-     * 
+     * Sets a new model. The model may be {@code null}
+     *
      * @param calculator the new entropy statistics
      */
     public void update(final EntropyCalculator calculator) {
-        m_editorPane.setText("");
         if (calculator == null) {
             m_tableView.setDataTable(null);
             return;
         }
-        m_tableView.setDataTable(calculator.getScoreTable());
+        update(calculator.getScoreTable(), calculator.getNrClusters(),
+            calculator.getPatternsInClusters(), calculator.getNrReference(), calculator.getPatternsInReference(),
+            calculator.getEntropy(), calculator.getQuality());
+    }
+
+    /**
+     * Sets a new model from the calculated entropy scorer values. 
+     * This allows to create an {@link EntropyNodeView} without the need to use an {@link EntropyCalculator}.
+     * 
+     * @param scoreTable the score data table
+     * @param nrClusters the number of clusters
+     * @param patternsInClusters the patterns in the cluster
+     * @param nrReference the number of references
+     * @param patternsInReference the patterns in the reference
+     * @param entropy the cluster entropy
+     * @param quality the cluster quality
+     * @since 3.2
+     */
+    public void update(final DataTable scoreTable, final int nrClusters, final int patternsInClusters,
+        final int nrReference, final int patternsInReference, final double entropy, final double quality) {
+        m_editorPane.setText("");
+        m_tableView.setDataTable(scoreTable);
         StringBuffer buffer = new StringBuffer();
         buffer.append("<html>");
         buffer.append("<body>\n");
@@ -110,10 +134,7 @@ public class EntropyView extends JSplitPane {
         String[] stats = new String[]{"Number of clusters found: ",
                 "Number of objects in clusters: ",
                 "Number of reference clusters: ", "Total number of patterns: "};
-        int[] vals = new int[]{calculator.getNrClusters(),
-                calculator.getPatternsInClusters(),
-                calculator.getNrReference(),
-                calculator.getPatternsInReference()};
+        int[] vals = new int[]{nrClusters, patternsInClusters, nrReference, patternsInReference};
         for (int i = 0; i < stats.length; i++) {
             buffer.append("<tr>\n");
             buffer.append("<td>\n");
@@ -137,7 +158,7 @@ public class EntropyView extends JSplitPane {
         buffer.append("Entropy: ");
         buffer.append("\n</td>\n");
         buffer.append("<td>\n");
-        buffer.append(DoubleFormat.formatDouble(calculator.getEntropy()));
+        buffer.append(DoubleFormat.formatDouble(entropy));
         buffer.append("\n</td>\n");
         buffer.append("</tr>\n");
         buffer.append("<tr>\n");
@@ -145,7 +166,7 @@ public class EntropyView extends JSplitPane {
         buffer.append("Quality: ");
         buffer.append("\n</td>\n");
         buffer.append("<td>\n");
-        buffer.append(DoubleFormat.formatDouble(calculator.getQuality()));
+        buffer.append(DoubleFormat.formatDouble(quality));
         buffer.append("\n</td>\n");
         buffer.append("</tr>\n");
         buffer.append("</table>\n");
@@ -163,7 +184,7 @@ public class EntropyView extends JSplitPane {
 
     /**
      * Sets the hilite handler to be used.
-     * 
+     *
      * @param handler new handler or <code>null</code>
      */
     public void setHiliteHandler(final HiLiteHandler handler) {

@@ -222,7 +222,7 @@ public class FlowVariableRepository {
      * @param className the type
      * @return the identifiers of the flow variables with given type.
      */
-    public Collection<String> getFlowVariables(final Class className) {
+    public Collection<String> getFlowVariables(final Class<?> className) {
         Collection<String> flowVarNames = new LinkedHashSet<>();
         for (String name : m_flowVarNames) {
             if (isOfType(name, className)) {

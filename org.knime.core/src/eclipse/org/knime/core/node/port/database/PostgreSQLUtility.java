@@ -82,7 +82,9 @@ import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAg
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
+ * @deprecated moved to the org.knime.database.connectors plugin
  */
+@Deprecated
 public class PostgreSQLUtility extends DatabaseUtility {
     private static class PostgreSQLStatementManipulator extends StatementManipulator {
 

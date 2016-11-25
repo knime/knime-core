@@ -146,12 +146,24 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
             }
 
             @Override
+            @Deprecated
             public int getRowCount() {
                 throw new IllegalStateException("Row count is not available.");
             }
 
             @Override
+            @Deprecated
             public int getRowIndex() {
+                throw new IllegalStateException("Row index is not available.");
+            }
+
+            @Override
+            public long getRowCountLong() {
+                throw new IllegalStateException("Row count is not available.");
+            }
+
+            @Override
+            public long getRowIndexLong() {
                 throw new IllegalStateException("Row index is not available.");
             }
         };
@@ -243,10 +255,20 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
 
     /**
      * {@inheritDoc}
+     * @deprecated
      */
+    @Deprecated
     @Override
     public int getRowCount() {
         return -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getRowCountLong() {
+        return -1L;
     }
 
     /**

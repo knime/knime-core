@@ -45,6 +45,8 @@
  */
 package org.knime.base.node.io.database;
 
+import java.util.regex.Matcher;
+
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
@@ -188,7 +190,7 @@ final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvide
         }
         thisSelect = thisSelect.replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
-                "(" + inSelect + ")");
+                "(" + Matcher.quoteReplacement(inSelect) + ")");
         thisSelect = FlowVariableResolver.parse(thisSelect, this);
         resultQueries.append(thisSelect);
         return resultQueries.toString();

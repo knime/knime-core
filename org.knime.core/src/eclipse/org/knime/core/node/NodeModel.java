@@ -56,6 +56,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.filestore.FileStorePortObject;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -594,6 +597,16 @@ public abstract class NodeModel {
                     if (outData[i] == data[j]) {
                         outData[i] = exec.createWrappedTable((BufferedDataTable)data[j]);
                     }
+                }
+            } else if (outData[i] instanceof FileStorePortObject) {
+                // file stores can be 'external', e.g. when a model reader node reads an external model file
+                FileStorePortObject fsPO = (FileStorePortObject)outData[i];
+                FileStoreHandlerRepository expectedRep = exec.getFileStoreHandler().getFileStoreHandlerRepository();
+                FileStoreHandlerRepository actualRep = FileStoreUtil.getFileStores(fsPO).stream()
+                        .map(FileStoreUtil::getFileStoreHandler).map(h -> h.getFileStoreHandlerRepository())
+                        .findFirst().orElse(expectedRep);
+                if (actualRep != expectedRep) {
+                    outData[i] = Node.copyPortObject(fsPO, exec);
                 }
             }
         }
@@ -1751,7 +1764,7 @@ public abstract class NodeModel {
     }
 
     /**
-     * Streaming API (pending): Finally determines the specifiction of the output (tables). In most cases
+     * Streaming API (pending): Finally determines the specification of the output (tables). In most cases
      * implementations just return the result of {@link #configure(PortObjectSpec[])} here (which is also the default
      * implementation). In some cases the node needs access on the data to determine the output spec (e.g. for nodes
      * such as "Transpose" or "One-to-Many"), which is iterated as described in

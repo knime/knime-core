@@ -270,6 +270,17 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     }
 
     /**
+     * Returns the index of the attribute specified by the given name.
+     *
+     * @param name name of the attribute to get index for
+     * @return the attribute index of the attribute <b>name</b>
+     *            or -1 if the attribute is unknown
+     */
+    public int getAttributeIndex(final String name) {
+        return m_attributeNameMapper.getIndex(name);
+    }
+
+    /**
      * Whether the attribute at the given index position is nominal or not.
      *
      * @param index the attribute index position

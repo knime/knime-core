@@ -111,7 +111,7 @@ public class MultiLineStringValueRenderer extends DefaultDataValueRenderer {
      */
     public MultiLineStringValueRenderer(final String description, final boolean monoSpaceFont) {
         super(description == null ? "Multi Line String" : description);
-        setVerticalAlignment(SwingConstants.TOP);
+        setVerticalAlignment(SwingConstants.CENTER);
         m_currentFont =
             new Font("Monospaced", getFont().getStyle(), getFont().getSize());
         m_monoSpaceFont = monoSpaceFont;

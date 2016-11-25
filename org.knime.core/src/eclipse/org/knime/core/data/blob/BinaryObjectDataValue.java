@@ -56,6 +56,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.convert.DataValueAccessMethod;
 
 /** Implemented by cell elements that are binary objects (BLOB).
  *
@@ -76,6 +77,7 @@ public interface BinaryObjectDataValue extends DataValue {
      * @return A new input stream on the byte content, not null.
      * @throws IOException If that fails for whatever I/O problems.
      */
+    @DataValueAccessMethod(name = "InputStream")
     InputStream openInputStream() throws IOException;
 
     /** Implementations of the meta information of this value class. */

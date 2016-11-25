@@ -75,18 +75,16 @@ import org.knime.core.util.tokenizer.Quote;
 import org.knime.core.util.tokenizer.Tokenizer;
 
 /**
- * Provides functionality for analyzing an ASCII data file to create default
- * settings. It tries to figure out what kind of delimiters and comments the
- * file contains - honoring fixed pre-settings passed in.
+ * Provides functionality for analyzing an ASCII data file to create default settings. It tries to figure out what kind
+ * of delimiters and comments the file contains - honoring fixed pre-settings passed in.
  *
  * @author Peter Ohl, University of Konstanz
  */
 public final class FileAnalyzer {
 
     /**
-     * If the analysis is cut short, we look only at the first couple of lines.
-     * We look at as many lines as the preview table will read in as its first
-     * chunk.
+     * If the analysis is cut short, we look only at the first couple of lines. We look at as many lines as the preview
+     * table will read in as its first chunk.
      */
     static final int NUMOFLINES = TableContentModel.CHUNK_SIZE;
 
@@ -104,39 +102,31 @@ public final class FileAnalyzer {
     private static final double COLHDR_SUB = 0.05;
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileAnalyzer.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileAnalyzer.class);
 
     private FileAnalyzer() {
         // use static methods only
     }
 
     /**
-     * Tries to guess FileReader settings for the passed data file. It will use
-     * the settings in the settings object (if any - but the file location is
-     * required), and will read in the first lines from the file. It will first
-     * detect comment characters (if the first lines start with '#' or '%'), and
-     * then guess the delimiter (',', ';', or space) depending on which cuts a
-     * line into (more than one) tokens.
+     * Tries to guess FileReader settings for the passed data file. It will use the settings in the settings object (if
+     * any - but the file location is required), and will read in the first lines from the file. It will first detect
+     * comment characters (if the first lines start with '#' or '%'), and then guess the delimiter (',', ';', or space)
+     * depending on which cuts a line into (more than one) tokens.
      *
-     * @param userSettings containing the URL of the file to examine and
-     *            settings that should be used and considered fixed.
-     * @param exec used to check for cancellations and to report progress. Could
-     *            be null. If a {@link FileReaderExecutionMonitor} is provided
-     *            it is distinguished between user cancellations cutting the
-     *            analysis short, and interrupts that return immediately and
-     *            return null as result.
-     * @return settings that supposably provide more or less useful results. It
-     *         will always be a non-null object - but may not contain any
-     *         settings if guessing was just too hard.
+     * @param userSettings containing the URL of the file to examine and settings that should be used and considered
+     *            fixed.
+     * @param exec used to check for cancellations and to report progress. Could be null. If a
+     *            {@link FileReaderExecutionMonitor} is provided it is distinguished between user cancellations cutting
+     *            the analysis short, and interrupts that return immediately and return null as result.
+     * @return settings that supposably provide more or less useful results. It will always be a non-null object - but
+     *         may not contain any settings if guessing was just too hard.
      * @throws IOException if there was an error reading from the URL
      */
-    public static FileReaderNodeSettings analyze(
-            final FileReaderNodeSettings userSettings,
-            final ExecutionMonitor exec) throws IOException {
+    public static FileReaderNodeSettings analyze(final FileReaderNodeSettings userSettings, final ExecutionMonitor exec)
+        throws IOException {
         if (userSettings.getDataFileLocation() == null) {
-            throw new IllegalArgumentException("Must specify a valid file "
-                    + "location for the file analyzer");
+            throw new IllegalArgumentException("Must specify a valid file location for the file analyzer");
         }
 
         ExecutionMonitor execMon = exec;
@@ -151,21 +141,26 @@ public final class FileAnalyzer {
 
         execMon.setProgress(0.0);
         try {
-            result.setDataFileLocationAndUpdateTableName(userSettings
-                    .getDataFileLocation());
+            result.setDataFileLocationAndUpdateTableName(userSettings.getDataFileLocation());
             result.setDecimalSeparator(userSettings.getDecimalSeparator());
             result.setThousandsSeparator(userSettings.getThousandsSeparator());
-            result.setDecimalSeparatorUserSet(userSettings
-                    .decimalSeparatorUserSet());
+            result.setDecimalSeparatorUserSet(userSettings.decimalSeparatorUserSet());
             result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
-            result.setMaximumNumberOfRowsToRead(userSettings
-                    .getMaximumNumberOfRowsToRead());
+            result.setMaximumNumberOfRowsToRead(userSettings.getMaximumNumberOfRowsToRead());
             result.setSkipFirstLines(userSettings.getSkipFirstLines());
             result.allowLFinQuotes(userSettings.allowLFinQuotes());
             result.setCharsetName(userSettings.getCharsetName());
             result.setAnalyzeUsedAllRows(true);
-            result.setMissValuePatternStrCols(userSettings
-                    .getMissValuePatternStrCols());
+            result.setMissValuePatternStrCols(userSettings.getMissValuePatternStrCols());
+
+            //if the user didn't provide the charset, identify it by looking at the first bytes of the stream
+            if (!userSettings.isCharsetUserSet()) {
+                result.setCharsetName(guessCharSet(userSettings));
+                result.setCharsetUserSet(false);
+            } else {
+                result.setCharsetName(userSettings.getCharsetName());
+                result.setCharsetUserSet(true);
+            }
 
             ExecutionMonitor subExec = execMon.createSubProgress(COMMENT_SUB);
             if (!userSettings.isCommentUserSet()) {
@@ -175,9 +170,8 @@ public final class FileAnalyzer {
             } else {
                 // take over user settings.
                 for (Comment comment : userSettings.getAllComments()) {
-                    result.addBlockCommentPattern(comment.getBegin(), comment
-                            .getEnd(), comment.returnAsSeparateToken(), comment
-                            .includeInToken());
+                    result.addBlockCommentPattern(comment.getBegin(), comment.getEnd(), comment.returnAsSeparateToken(),
+                        comment.includeInToken());
                 }
                 result.setCommentUserSet(true);
             }
@@ -193,11 +187,9 @@ public final class FileAnalyzer {
                 // take over user settings.
                 for (Quote quote : userSettings.getAllQuotes()) {
                     if (quote.hasEscapeChar()) {
-                        result.addQuotePattern(quote.getLeft(), quote
-                                .getRight(), quote.getEscape());
+                        result.addQuotePattern(quote.getLeft(), quote.getRight(), quote.getEscape());
                     } else {
-                        result.addQuotePattern(quote.getLeft(), quote
-                                .getRight());
+                        result.addQuotePattern(quote.getLeft(), quote.getRight());
                     }
                 }
                 result.setQuoteUserSet(true);
@@ -216,6 +208,8 @@ public final class FileAnalyzer {
                 result.addWhiteSpaceCharacter("\t");
                 result.setWhiteSpaceUserSet(false);
             }
+            subExec.setProgress(1.0);
+            checkInterrupt(execMon);
 
             // for now we just take over this flag:
             result.setSupportShortLines(userSettings.getSupportShortLines());
@@ -235,9 +229,7 @@ public final class FileAnalyzer {
             // skipped columns.
             subExec = execMon.createSubProgress(ROWHDR_SUB);
             if (userSettings.isFileHasRowHeadersUserSet()) {
-                result
-                        .setFileHasRowHeaders(userSettings
-                                .getFileHasRowHeaders());
+                result.setFileHasRowHeaders(userSettings.getFileHasRowHeaders());
                 result.setFileHasRowHeadersUserSet(true);
             } else {
                 boolean hasRowHeaders;
@@ -260,8 +252,7 @@ public final class FileAnalyzer {
 
             // guesses (or copies) column types and names.
             subExec = execMon.createSubProgress(TYPES_SUB + COLHDR_SUB);
-            Vector<ColProperty> columnProps =
-                    createColumnProperties(userSettings, result, subExec);
+            Vector<ColProperty> columnProps = createColumnProperties(userSettings, result, subExec);
             result.setColumnProperties(columnProps);
             subExec.setProgress(1.0);
 
@@ -291,32 +282,27 @@ public final class FileAnalyzer {
     }
 
     /**
-     * If the specified {@link ExecutionMonitor} is a
-     * {@link FileReaderExecutionMonitor} this method throws an exception, if
-     * the execution is supposed to be interrupted. Otherwise it just returns.
+     * If the specified {@link ExecutionMonitor} is a {@link FileReaderExecutionMonitor} this method throws an
+     * exception, if the execution is supposed to be interrupted. Otherwise it just returns.
      *
      * @param exec the monitor to check for interrupts
      */
-    private static void checkInterrupt(final ExecutionMonitor exec)
-            throws InterruptedExecutionException {
+    private static void checkInterrupt(final ExecutionMonitor exec) throws InterruptedExecutionException {
         if (exec instanceof FileReaderExecutionMonitor) {
             ((FileReaderExecutionMonitor)exec).checkInterrupted();
         }
     }
 
     /**
-     * If the specified {@link ExecutionMonitor} is a
-     * {@link FileReaderExecutionMonitor}, it is asked if the user canceled the
-     * operation and wants to cut analysis short. Also, if the execution is
-     * supposed to be interrupted, it throws an exception.
+     * If the specified {@link ExecutionMonitor} is a {@link FileReaderExecutionMonitor}, it is asked if the user
+     * canceled the operation and wants to cut analysis short. Also, if the execution is supposed to be interrupted, it
+     * throws an exception.
      *
      * @param exec the monitor to check for interrupts
      * @return true, if analysis should be cut short, false otherwise.
-     * @throws InterruptedExecutionException if the execution should be
-     *             interrupted immediately
+     * @throws InterruptedExecutionException if the execution should be interrupted immediately
      */
-    private static boolean cutItShort(final ExecutionMonitor exec)
-            throws InterruptedExecutionException {
+    private static boolean cutItShort(final ExecutionMonitor exec) throws InterruptedExecutionException {
         if (exec instanceof FileReaderExecutionMonitor) {
             FileReaderExecutionMonitor m = (FileReaderExecutionMonitor)exec;
             m.checkInterrupted();
@@ -331,37 +317,45 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Determines the type and name of each column. It tries to figure out if
-     * there are column headers in the file or otherwise generates names for the
-     * columns. <br>
-     * We read from the first line one token per column (plus one for the row
-     * header if we have row headers in the file). Then we do three checks:
-     * first, if we have row headers and are missing one token we assume the
-     * column header for the "row-header-column" is missing, thus we must have
-     * column headers. Second, we check the types of the tokens read. If one of
-     * the tokens (except the first if we have row headers) cannot be converted
-     * into the column's type, we assume its a column header. Last, if all
-     * tokens (except the first if we have row headers) start with the same
-     * prefix followed by an increasing number, then that looks like column
-     * headers to us. Otherwise we say we have no column headers.
+     * If the specified {@link ExecutionMonitor} is a {@link FileReaderExecutionMonitor}, the number of lines that
+     * should be analyzed during a short-cut analysis is returned.
+     *
+     * @param exec the monitor to check for number of short cut lines
+     * @return number of lines to use during short cut - or the default value if not set in this exec monitor
+     */
+    private static int getShortCutLines(final ExecutionMonitor exec) {
+        if (exec instanceof FileReaderExecutionMonitor) {
+            FileReaderExecutionMonitor m = (FileReaderExecutionMonitor)exec;
+            return m.getShortCutLines();
+        }
+        return NUMOFLINES;
+    }
+
+    /**
+     * Determines the type and name of each column. It tries to figure out if there are column headers in the file or
+     * otherwise generates names for the columns. <br>
+     * We read from the first line one token per column (plus one for the row header if we have row headers in the
+     * file). Then we do three checks: first, if we have row headers and are missing one token we assume the column
+     * header for the "row-header-column" is missing, thus we must have column headers. Second, we check the types of
+     * the tokens read. If one of the tokens (except the first if we have row headers) cannot be converted into the
+     * column's type, we assume its a column header. Last, if all tokens (except the first if we have row headers) start
+     * with the same prefix followed by an increasing number, then that looks like column headers to us. Otherwise we
+     * say we have no column headers.
      *
      * @param userSettings settings user provided. Must be honored!
-     * @param result the settings so far, must contain data url, delimiters,
-     *            comments, quotes, colNumber, and rowHeader flag
+     * @param result the settings so far, must contain data url, delimiters, comments, quotes, colNumber, and rowHeader
+     *            flag
      * @param exec to check for cancellations and report progress to
-     * @return a vector of colProperty objects, having the columnSpec set and
-     *         the useFileHeader flag
+     * @return a vector of colProperty objects, having the columnSpec set and the useFileHeader flag
      * @throws IOException if an I/O error occurs
      */
-    private static Vector<ColProperty> createColumnProperties(
-            final FileReaderNodeSettings userSettings,
-            final FileReaderNodeSettings result, final ExecutionMonitor exec)
+    private static Vector<ColProperty> createColumnProperties(final FileReaderNodeSettings userSettings,
+        final FileReaderNodeSettings result, final ExecutionMonitor exec)
             throws IOException, InterruptedExecutionException {
 
         // first detect the type of each column
         ExecutionMonitor subExec = exec.createSubProgress(TYPES_SUB);
-        ColProperty[] colProps =
-                createColumnTypes(userSettings, result, subExec);
+        ColProperty[] colProps = createColumnTypes(userSettings, result, subExec);
         // extract the column types and column missing values from the result
         // of the above method call
         DataType[] columnTypes = new DataType[colProps.length];
@@ -428,24 +422,21 @@ public final class FileAnalyzer {
             // check first if we get off easy: If we didn't get enough column
             // headers, we assume the rowHeader is a data column header.
             if (result.getFileHasRowHeaders()
-                    // && (the last token is empty)
-                    && (columnHeaders.length > 0)
-                    && (columnHeaders[columnHeaders.length - 1] == null)) {
+                // && (the last token is empty)
+                && (columnHeaders.length > 0) && (columnHeaders[columnHeaders.length - 1] == null)) {
                 result.setFileHasColumnHeaders(true);
                 // discard the last (=null) token
                 String[] colNames = new String[result.getNumberOfColumns()];
                 colNames[0] = rowHeader;
-                System.arraycopy(columnHeaders, 0, colNames, 1,
-                        colNames.length - 1);
-                return createColProps(colNames, userColProps, columnTypes,
-                        missValues, formatParameters, exec);
+                System.arraycopy(columnHeaders, 0, colNames, 1, colNames.length - 1);
+                return createColProps(colNames, userColProps, columnTypes, missValues, formatParameters, exec);
             }
 
             // another indication for a column_headers_must_have is when the
             // first line contains tokens that are not type compliant with all
             // other lines (e.g. all items in the column are integers except in
             // the first line).
-            DataCellFactory cellFactory = new DataCellFactory(null);  // we create simple cells only
+            DataCellFactory cellFactory = new DataCellFactory(null); // we create simple cells only
             cellFactory.setDecimalSeparator(result.getDecimalSeparator());
             cellFactory.setThousandsSeparator(result.getThousandsSeparator());
 
@@ -459,9 +450,7 @@ public final class FileAnalyzer {
                 cellFactory.setMissingValuePattern(missValues[c]);
                 cellFactory.setFormatParameter(formatParameters[c]);
 
-                DataCell dc =
-                        cellFactory.createDataCellOfType(columnTypes[c],
-                                columnHeaders[c]);
+                DataCell dc = cellFactory.createDataCellOfType(columnTypes[c], columnHeaders[c]);
 
                 if (dc != null) {
                     // this column header could be data - try the others...
@@ -470,8 +459,7 @@ public final class FileAnalyzer {
 
                 // header is not data: must be column header
                 result.setFileHasColumnHeaders(true);
-                return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValues, formatParameters, exec);
+                return createColProps(columnHeaders, userColProps, columnTypes, missValues, formatParameters, exec);
             }
 
             // if all column headers fit the type of the column, the rowHeader
@@ -481,28 +469,24 @@ public final class FileAnalyzer {
                 // if the user said we have row headers they may not fit our
                 // prefix+index pattern, so we have nothing to test against.
                 if (rowHeader != null && scndLineRowHeader != null) {
-                    HeaderHelper hh =
-                            HeaderHelper
-                                    .extractPrefixAndIndexFromHeader(rowHeader);
+                    HeaderHelper hh = HeaderHelper.extractPrefixAndIndexFromHeader(rowHeader);
                     if (hh == null || !hh.testNextHeader(scndLineRowHeader)) {
                         // this first line row header isn't a good row header
                         // all the other lines have nice ones - create col hdrs
                         // also create colHdrs if they don't fit to each other
                         // header is not data: must be column header
                         result.setFileHasColumnHeaders(true);
-                        return createColProps(columnHeaders, userColProps,
-                                columnTypes, missValues, formatParameters, exec);
+                        return createColProps(columnHeaders, userColProps, columnTypes, missValues, formatParameters,
+                            exec);
                     }
                 }
             }
 
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
-            if ((columnHeaders.length > 0)
-                    && consecutiveHeaders(columnHeaders, exec)) {
+            if ((columnHeaders.length > 0) && consecutiveHeaders(columnHeaders, exec)) {
                 result.setFileHasColumnHeaders(true);
-                return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValues, formatParameters, exec);
+                return createColProps(columnHeaders, userColProps, columnTypes, missValues, formatParameters, exec);
             }
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
@@ -511,48 +495,39 @@ public final class FileAnalyzer {
             return createColProps(nulls, userColProps, columnTypes, missValues, formatParameters, exec);
         } else {
             // user set fileHasColHeaders - see if it's true or false
-            result.setFileHasColumnHeaders(userSettings
-                    .getFileHasColumnHeaders());
+            result.setFileHasColumnHeaders(userSettings.getFileHasColumnHeaders());
             result.setFileHasColumnHeadersUserSet(true);
             if (userSettings.getFileHasColumnHeaders()) {
                 // use the headers we read in
-                if ((columnHeaders.length > 0)
-                        && (columnHeaders[columnHeaders.length - 1] == null)
-                        && rowHeader != null) {
+                if ((columnHeaders.length > 0) && (columnHeaders[columnHeaders.length - 1] == null)
+                    && rowHeader != null) {
                     // okay, we got one too few, use row header
                     String[] colNames = new String[result.getNumberOfColumns()];
                     colNames[0] = rowHeader;
-                    System.arraycopy(columnHeaders, 0, colNames, 1,
-                            colNames.length - 1);
-                    return createColProps(colNames, userColProps, columnTypes,
-                            missValues, formatParameters, exec);
+                    System.arraycopy(columnHeaders, 0, colNames, 1, colNames.length - 1);
+                    return createColProps(colNames, userColProps, columnTypes, missValues, formatParameters, exec);
                 } else {
-                    return createColProps(columnHeaders, userColProps,
-                            columnTypes, missValues, formatParameters, exec);
+                    return createColProps(columnHeaders, userColProps, columnTypes, missValues, formatParameters, exec);
                 }
             } else {
                 // don't read col headers - create null array to generate names
                 String[] colNames = new String[columnHeaders.length];
-                return createColProps(colNames, userColProps, columnTypes,
-                        missValues, formatParameters, exec);
+                return createColProps(colNames, userColProps, columnTypes, missValues, formatParameters, exec);
             }
         }
     }
 
     /**
-     * Looks at the first token of each line (except the first line) and returns
-     * true if they are all prefixed by the same (possibly empty) string
-     * followed by a constantly incremented number.
+     * Looks at the first token of each line (except the first line) and returns true if they are all prefixed by the
+     * same (possibly empty) string followed by a constantly incremented number.
      *
      * @param settings the file to look at with corresponding settings
      * @return true if it's reasonable to assume the file has row headers
      * @throws IOException if an I/O error occurs
-     * @throws InterruptedExecutionException if analysis should be interrupted
-     *             immediately
+     * @throws InterruptedExecutionException if analysis should be interrupted immediately
      */
-    private static boolean checkRowHeader(
-            final FileReaderNodeSettings settings, final ExecutionMonitor exec)
-            throws IOException, InterruptedExecutionException {
+    private static boolean checkRowHeader(final FileReaderNodeSettings settings, final ExecutionMonitor exec)
+        throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
         final double fileSize = reader.getFileSize();
@@ -586,9 +561,7 @@ public final class FileAnalyzer {
                         // we ignore the first line (could be col header line)
                         if (helper == null) {
                             // the first row ID we see
-                            helper =
-                                    HeaderHelper
-                                            .extractPrefixAndIndexFromHeader(token);
+                            helper = HeaderHelper.extractPrefixAndIndexFromHeader(token);
                             if (helper == null) {
                                 // that's not row header material
                                 return false;
@@ -606,14 +579,13 @@ public final class FileAnalyzer {
                         firstTokenInRow = true; // the next token is the first
                         linesRead++;
                         if (cutItShort(exec)) {
-                            if (linesRead > NUMOFLINES) {
+                            if (linesRead > getShortCutLines(exec)) {
                                 break;
                             }
-                            exec.setProgress(linesRead / (double)NUMOFLINES);
+                            exec.setProgress(linesRead / (double)getShortCutLines(exec));
                         } else {
                             if (fileSize > 0) {
-                                exec.setProgress(reader.getNumberOfBytesRead()
-                                        / fileSize);
+                                exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
                             }
                         }
                     }
@@ -628,23 +600,18 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Returns <code>true</code> if all items in the array are prefixed by the
-     * same (possibly empty) string followed by a constantly increasing number.
+     * Returns <code>true</code> if all items in the array are prefixed by the same (possibly empty) string followed by
+     * a constantly increasing number.
      *
-     * @param headers the headers to look at, an empty item is considered end of
-     *            list
+     * @param headers the headers to look at, an empty item is considered end of list
      * @param exec to check for cancellations or interruptions.
-     * @return <code>true</code> if it's reasonable to assume that these are
-     *         headers
-     * @throws InterruptedExecutionException if the execution is interrupted
-     *             immediately
+     * @return <code>true</code> if it's reasonable to assume that these are headers
+     * @throws InterruptedExecutionException if the execution is interrupted immediately
      */
-    private static boolean consecutiveHeaders(final String[] headers,
-            final ExecutionMonitor exec) {
+    private static boolean consecutiveHeaders(final String[] headers, final ExecutionMonitor exec) {
 
         // examine the first header first - it is the template for the rest
-        HeaderHelper helper =
-                HeaderHelper.extractPrefixAndIndexFromHeader(headers[0]);
+        HeaderHelper helper = HeaderHelper.extractPrefixAndIndexFromHeader(headers[0]);
         if (helper == null) {
             return false;
         }
@@ -661,23 +628,18 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Creates colProperty objects from the names and types passed in. If the
-     * specified names are not unique it will uniquify them, setting the
-     * 'useFileHeader' flag to false - if the file has colHeaders. If the
-     * specified name is null it will create a name like 'col' + colNumber (also
-     * falseing the flag, if the file has col headers).
+     * Creates colProperty objects from the names and types passed in. If the specified names are not unique it will
+     * uniquify them, setting the 'useFileHeader' flag to false - if the file has colHeaders. If the specified name is
+     * null it will create a name like 'col' + colNumber (also falseing the flag, if the file has col headers).
      *
      * @param colNames the names of the columns. Items can be <code>null</code>.
-     * @param userProps ColProperty objects preset by the user. Used, if not
-     *            null, instead of a generated col property.
-     * @param colTypes the type of the columns. Items can NOT be
-     *            <code>null</code>.
+     * @param userProps ColProperty objects preset by the user. Used, if not null, instead of a generated col property.
+     * @param colTypes the type of the columns. Items can NOT be <code>null</code>.
      * @return a Vector of ColProperties. colTypes.length in number.
      */
-    private static Vector<ColProperty> createColProps(final String[] colNames,
-            final Vector<ColProperty> userProps, final DataType[] colTypes,
-            final String[] missValuePattern, final String[] formatParameters, final ExecutionMonitor exec)
-            throws InterruptedExecutionException {
+    private static Vector<ColProperty> createColProps(final String[] colNames, final Vector<ColProperty> userProps,
+        final DataType[] colTypes, final String[] missValuePattern, final String[] formatParameters,
+        final ExecutionMonitor exec) throws InterruptedExecutionException {
 
         assert colNames.length == colTypes.length;
         assert colNames.length == missValuePattern.length;
@@ -723,8 +685,7 @@ public final class FileAnalyzer {
                     name = "Col" + c;
                 }
                 // create and set the column spec
-                DataColumnSpecCreator dcsc =
-                        new DataColumnSpecCreator(name, colTypes[c]);
+                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name, colTypes[c]);
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
                 colProp.setMissingValuePattern(missValuePattern[c]);
@@ -770,9 +731,8 @@ public final class FileAnalyzer {
 
     }
 
-    private static ColProperty[] createColumnTypes(
-            final FileReaderNodeSettings userSettings,
-            final FileReaderNodeSettings result, final ExecutionMonitor exec)
+    private static ColProperty[] createColumnTypes(final FileReaderNodeSettings userSettings,
+        final FileReaderNodeSettings result, final ExecutionMonitor exec)
             throws IOException, InterruptedExecutionException {
         BufferedFileReader reader = result.createNewInputReader();
         long fileSize = reader.getFileSize();
@@ -837,7 +797,7 @@ public final class FileAnalyzer {
                 }
                 colIdx++;
                 if (result.getFileHasRowHeaders() && (colIdx == 0)
-                        && (!result.isRowDelimiter(token, tokenizer.lastTokenWasQuoted()))) {
+                    && (!result.isRowDelimiter(token, tokenizer.lastTokenWasQuoted()))) {
                     // ignore the row header - get the next token/column
                     token = tokenizer.nextToken();
                     if (token == null) { // EOF
@@ -856,22 +816,20 @@ public final class FileAnalyzer {
                     }
                     colIdx = -1;
                     if (cutItShort(exec)) {
-                        if (linesRead >= NUMOFLINES) {
+                        if (linesRead >= getShortCutLines(exec)) {
                             result.setAnalyzeUsedAllRows(false);
                             break;
                         }
-                        exec.setProgress(linesRead / (double)NUMOFLINES);
+                        exec.setProgress(linesRead / (double)getShortCutLines(exec));
                     } else {
                         if (fileSize > 0) {
-                            exec.setProgress(reader.getNumberOfBytesRead()
-                                    / (double)fileSize);
+                            exec.setProgress(reader.getNumberOfBytesRead() / (double)fileSize);
                         }
                     }
                     continue;
                 }
                 if ((linesRead < 1)
-                        && (!userSettings.isFileHasColumnHeadersUserSet()
-                                || userSettings.getFileHasColumnHeaders())) {
+                    && (!userSettings.isFileHasColumnHeadersUserSet() || userSettings.getFileHasColumnHeaders())) {
                     // skip the first line - could be column headers -
                     // unless we know it's not
                     continue;
@@ -893,9 +851,7 @@ public final class FileAnalyzer {
                 token = token.trim();
 
                 if (types[colIdx].isCompatible(IntValue.class)) {
-                    DataCell dc =
-                            cellFactory.createDataCellOfType(IntCell.TYPE,
-                                    token);
+                    DataCell dc = cellFactory.createDataCellOfType(IntCell.TYPE, token);
                     if (dc != null) {
                         gotValue[colIdx] = gotValue[colIdx] || !dc.isMissing();
                         continue;
@@ -905,8 +861,7 @@ public final class FileAnalyzer {
                         // we accept one token that can't be
                         // parsed per column - but we don't use doubles
                         // as missing value! Would be odd.
-                        dc = cellFactory.createDataCellOfType(
-                                DoubleCell.TYPE, token);
+                        dc = cellFactory.createDataCellOfType(DoubleCell.TYPE, token);
                         if (dc == null) {
                             missValPattern[colIdx] = token;
                             continue;
@@ -918,9 +873,7 @@ public final class FileAnalyzer {
                 } // no else, we immediately check if it's a double
 
                 if (types[colIdx].isCompatible(DoubleValue.class)) {
-                    DataCell dc =
-                            cellFactory.createDataCellOfType(DoubleCell.TYPE,
-                                    token);
+                    DataCell dc = cellFactory.createDataCellOfType(DoubleCell.TYPE, token);
                     if (dc != null) {
                         gotValue[colIdx] = gotValue[colIdx] || !dc.isMissing();
                         continue;
@@ -956,12 +909,8 @@ public final class FileAnalyzer {
                 types[t] = StringCell.TYPE;
                 boolean gotOneVal = missValPattern[t] != null;
                 missValPattern[t] = null;
-                if ((cnt < 21) && !gotOneVal
-                        && ((userColProps == null)
-                                || (userColProps.size() <= t)
-                                || (userColProps.get(t) == null)
-                                || (!userColProps
-                                        .get(t).getSkipThisColumn()))) {
+                if ((cnt < 21) && !gotOneVal && ((userColProps == null) || (userColProps.size() <= t)
+                    || (userColProps.get(t) == null) || (!userColProps.get(t).getSkipThisColumn()))) {
                     if (cnt < 20) {
                         cols += "#" + t + ", ";
                         cnt++;
@@ -974,24 +923,21 @@ public final class FileAnalyzer {
         }
         if (cols.length() > 0) {
             LOGGER.warn("Didn't get any value for column(s) with index "
-                    // cut off the comma
-                    + cols.substring(0, cols.length() - 2)
-                    + ". Please verify column type(s).");
+                // cut off the comma
+                + cols.substring(0, cols.length() - 2) + ". Please verify column type(s).");
         }
 
         // pack column types and column missing values in one object
         ColProperty[] colPropResult = new ColProperty[types.length];
         for (int c = 0; c < colPropResult.length; c++) {
             ColProperty cp = new ColProperty();
-            DataColumnSpecCreator dcsc =
-                    new DataColumnSpecCreator("Foo", types[c]);
+            DataColumnSpecCreator dcsc = new DataColumnSpecCreator("Foo", types[c]);
             cp.setColumnSpec(dcsc.createSpec());
             if (types[c].equals(StringCell.TYPE)) {
                 // for string columns we don't have a missing value.
                 // use the global one, if set, otherwise '?'
                 if (result.getMissValuePatternStrCols() != null) {
-                    cp.setMissingValuePattern(result
-                            .getMissValuePatternStrCols());
+                    cp.setMissingValuePattern(result.getMissValuePatternStrCols());
                 } else {
                     cp.setMissingValuePattern("?");
                 }
@@ -1005,20 +951,16 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Looks at the first character of the first lines of the file and
-     * determines what kind of single line comment we should support. Comments
-     * are usually at the beginning of the file - so this method looks only at
-     * the first couple of lines (even if we are not supposed to cut the
-     * analysis short).
+     * Looks at the first character of the first lines of the file and determines what kind of single line comment we
+     * should support. Comments are usually at the beginning of the file - so this method looks only at the first couple
+     * of lines (even if we are not supposed to cut the analysis short).
      *
-     * @param settings object containing the data file location. The method will
-     *            add comment patterns to this object.
+     * @param settings object containing the data file location. The method will add comment patterns to this object.
      * @param exec to check for cancellations and to report progress
      * @throws IOException if an I/O error occurs
      */
-    private static void addComments(final FileReaderNodeSettings settings,
-            final ExecutionMonitor exec) throws IOException,
-            InterruptedExecutionException {
+    private static void addComments(final FileReaderNodeSettings settings, final ExecutionMonitor exec)
+        throws IOException, InterruptedExecutionException {
 
         assert settings != null;
         assert settings.getDataFileLocation() != null;
@@ -1046,7 +988,6 @@ public final class FileAnalyzer {
                 }
                 linesRead++;
 
-                exec.setProgress(linesRead / (double)NUMOFLINES);
 
                 if (line.charAt(0) == '#') {
                     settings.addSingleLineCommentPattern("#", false, false);
@@ -1063,8 +1004,13 @@ public final class FileAnalyzer {
                     break;
                 }
                 if (cutItShort(exec)) {
-                    if (linesRead >= NUMOFLINES) {
+                    if (linesRead >= getShortCutLines(exec)) {
                         settings.setAnalyzeUsedAllRows(false);
+                        break;
+                    }
+                    exec.setProgress(linesRead / (double)getShortCutLines(exec));
+                } else {
+                    if (linesRead >= NUMOFLINES) {
                         break;
                     }
                     exec.setProgress(linesRead / (double)NUMOFLINES);
@@ -1076,20 +1022,18 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Adds quotes to the settings object. It counts the occurrence of double
-     * and single quotes in each line. If it's an odd number it will not
-     * consider this being a quote (unless it has an odd number of escaped
-     * character of this type).
+     * Adds quotes to the settings object. It counts the occurrence of double and single quotes in each line. If it's an
+     * odd number it will not consider this being a quote (unless it has an odd number of escaped character of this
+     * type).
      *
-     * @param settings the object to add quote settings to. Must contain file
-     *            location and possibly comments - but no delimiters yet!
+     * @param settings the object to add quote settings to. Must contain file location and possibly comments - but no
+     *            delimiters yet!
      * @param exec to check for cancellations and to report progress
      * @throws IOException if an I/O error occurs
      * @throws InterruptedExecutionException if analysis was interrupted
      */
-    private static void addQuotes(final FileReaderNodeSettings settings,
-            final ExecutionMonitor exec) throws IOException,
-            InterruptedExecutionException {
+    private static void addQuotes(final FileReaderNodeSettings settings, final ExecutionMonitor exec)
+        throws IOException, InterruptedExecutionException {
         assert settings != null;
         assert settings.getAllQuotes().size() == 0;
         assert settings.getDataFileLocation() != null;
@@ -1126,13 +1070,13 @@ public final class FileAnalyzer {
                 }
                 linesRead++;
                 // cutItShort also checks for interrupt
-                if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                if (cutItShort(exec) && (linesRead > getShortCutLines(exec))) {
                     settings.setAnalyzeUsedAllRows(false);
                     break;
                 }
 
                 if (cutItShort(exec)) {
-                    exec.setProgress(linesRead / (double)NUMOFLINES);
+                    exec.setProgress(linesRead / (double)getShortCutLines(exec));
                 } else if (fileSize > 0) {
                     exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
                 }
@@ -1222,16 +1166,13 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Splits the lines of the file (honoring the settings in the settings
-     * object), and tries to guess which delimiters create the best results.
-     * It'll try out semicolon, comma, tab, or space delimiters; in this order.
-     * Whatever produces more than one column (consistently) will be set. If no
-     * settings create more than one column no column delimiters will be set. A
-     * row delimiter ('\n' and '\r') is always set.
+     * Splits the lines of the file (honoring the settings in the settings object), and tries to guess which delimiters
+     * create the best results. It'll try out semicolon, comma, tab, or space delimiters; in this order. Whatever
+     * produces more than one column (consistently) will be set. If no settings create more than one column no column
+     * delimiters will be set. A row delimiter ('\n' and '\r') is always set.
      */
-    private static void setDelimitersAndColNum(
-            final FileReaderNodeSettings userSettings,
-            final FileReaderNodeSettings result, final ExecutionMonitor exec)
+    private static void setDelimitersAndColNum(final FileReaderNodeSettings userSettings,
+        final FileReaderNodeSettings result, final ExecutionMonitor exec)
             throws IOException, InterruptedExecutionException {
 
         assert result != null;
@@ -1246,8 +1187,7 @@ public final class FileAnalyzer {
             // version of CSV files (they use semicolons, because comma is the
             // decimal separator - which might not yet be specified by the user)
             //
-            if ((userSettings.getThousandsSeparator() != ';')
-                    && (userSettings.getDecimalSeparator() != ';')) {
+            if ((userSettings.getThousandsSeparator() != ';') && (userSettings.getDecimalSeparator() != ';')) {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
@@ -1267,8 +1207,7 @@ public final class FileAnalyzer {
             // Try out comma delimiter
             // - but only if its not the decimal or thousand separator
             //
-            if ((userSettings.getThousandsSeparator() != ',')
-                    && (userSettings.getDecimalSeparator() != ',')) {
+            if ((userSettings.getThousandsSeparator() != ',') && (userSettings.getDecimalSeparator() != ',')) {
                 // make sure '\n' and '\r' is a row delimiter. Always.
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
@@ -1288,8 +1227,7 @@ public final class FileAnalyzer {
             // try tab separated columns
             // - but only if its not the decimal or thousand separator
             //
-            if ((userSettings.getThousandsSeparator() != '\t')
-                    && (userSettings.getDecimalSeparator() != '\t')) {
+            if ((userSettings.getThousandsSeparator() != '\t') && (userSettings.getDecimalSeparator() != '\t')) {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
@@ -1311,8 +1249,7 @@ public final class FileAnalyzer {
             // Try space, ignoring additional tabs at the end of each line
             // - but only if its not the decimal or thousand separator
             //
-            if ((userSettings.getThousandsSeparator() != ' ')
-                    && (userSettings.getDecimalSeparator() != ' ')) {
+            if ((userSettings.getThousandsSeparator() != ' ') && (userSettings.getDecimalSeparator() != ' ')) {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
@@ -1364,21 +1301,17 @@ public final class FileAnalyzer {
             // user provided delimiters copy them
             for (Delimiter delim : userSettings.getAllDelimiters()) {
                 if (userSettings.isRowDelimiter(delim.getDelimiter(), false)) {
-                    result.addRowDelimiter(delim.getDelimiter(), delim
-                            .combineConsecutiveDelims());
+                    result.addRowDelimiter(delim.getDelimiter(), delim.combineConsecutiveDelims());
                 } else {
-                    result.addDelimiterPattern(delim.getDelimiter(), delim
-                            .combineConsecutiveDelims(), delim.returnAsToken(),
-                            delim.includeInToken());
+                    result.addDelimiterPattern(delim.getDelimiter(), delim.combineConsecutiveDelims(),
+                        delim.returnAsToken(), delim.includeInToken());
                 }
             }
 
             result.setDelimiterUserSet(true);
-            result.setIgnoreEmptyTokensAtEndOfRow(userSettings
-                    .ignoreEmptyTokensAtEndOfRow());
+            result.setIgnoreEmptyTokensAtEndOfRow(userSettings.ignoreEmptyTokensAtEndOfRow());
             if (userSettings.ignoreDelimsAtEORUserSet()) {
-                result.setIgnoreDelimsAtEndOfRowUserValue(userSettings
-                        .ignoreDelimsAtEORUserValue());
+                result.setIgnoreDelimsAtEndOfRowUserValue(userSettings.ignoreDelimsAtEORUserValue());
             }
             // set the number of cols that we read in with user presets.
             // take the maximum if rows have different num of cols.
@@ -1390,15 +1323,12 @@ public final class FileAnalyzer {
     }
 
     /**
-     * Creates a sub-exec with the progress part (100%) set to the unused
-     * remainder of the passed monitor.
+     * Creates a sub-exec with the progress part (100%) set to the unused remainder of the passed monitor.
      *
      * @param exec the monitor to use the unused progress from
-     * @return a sub-progress that uses up the entire remainder from the
-     *         argument
+     * @return a sub-progress that uses up the entire remainder from the argument
      */
-    private static ExecutionMonitor createSubExecWithRemainder(
-            final ExecutionMonitor exec) {
+    private static ExecutionMonitor createSubExecWithRemainder(final ExecutionMonitor exec) {
         Double progress = exec.getProgressMonitor().getProgress();
         if (progress == null) {
             progress = new Double(0.0);
@@ -1416,9 +1346,8 @@ public final class FileAnalyzer {
      * that is, we may need some of these empty tokens at the end of a row to
      * fill the row, in case a later row has more (non-empty) tokens.
      */
-    private static boolean testDelimiterSettingsSetColNum(
-            final FileReaderNodeSettings settings, final ExecutionMonitor exec)
-            throws IOException, InterruptedExecutionException {
+    private static boolean testDelimiterSettingsSetColNum(final FileReaderNodeSettings settings,
+        final ExecutionMonitor exec) throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
         Tokenizer tokenizer = new Tokenizer(reader);
@@ -1441,8 +1370,7 @@ public final class FileAnalyzer {
             }
             String token = tokenizer.nextToken();
             if (fileSize > 0) {
-                exec.setProgress(reader.getNumberOfBytesRead()
-                        / (double)fileSize);
+                exec.setProgress(reader.getNumberOfBytesRead() / (double)fileSize);
             }
             if (!settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
 
@@ -1462,7 +1390,7 @@ public final class FileAnalyzer {
 
                     linesRead++;
                     try {
-                        if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                        if (cutItShort(exec) && (linesRead > getShortCutLines(exec))) {
                             // cutItShort also checks for interrupts
                             settings.setAnalyzeUsedAllRows(false);
                             break;
@@ -1565,9 +1493,8 @@ public final class FileAnalyzer {
 
     }
 
-    private static int getMaximumNumberOfColumns(
-            final FileReaderNodeSettings settings, final ExecutionMonitor exec)
-            throws IOException, InterruptedExecutionException {
+    private static int getMaximumNumberOfColumns(final FileReaderNodeSettings settings, final ExecutionMonitor exec)
+        throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
         Tokenizer tokenizer = new Tokenizer(reader);
@@ -1614,8 +1541,7 @@ public final class FileAnalyzer {
                     if (colCount > numOfCols) {
                         // we are supposed to return the maximum
                         numOfCols = colCount;
-                        settings.setColumnNumDeterminingLineNumber(tokenizer
-                                .getLineNumber());
+                        settings.setColumnNumDeterminingLineNumber(tokenizer.getLineNumber());
                     }
 
                     colCount = 0;
@@ -1632,15 +1558,14 @@ public final class FileAnalyzer {
                     }
                     if (cutItShort(exec)) {
                         // cutItShort also checks for interrupts
-                        if (dataLinesRead >= NUMOFLINES) {
+                        if (dataLinesRead >= getShortCutLines(exec)) {
                             settings.setAnalyzeUsedAllRows(false);
                             break;
                         }
-                        exec.setProgress(dataLinesRead / (double)NUMOFLINES);
+                        exec.setProgress(dataLinesRead / (double)getShortCutLines(exec));
                     } else {
                         if (fileSize > 0) {
-                            exec.setProgress(reader.getNumberOfBytesRead()
-                                    / fileSize);
+                            exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
                         }
                     }
                 }
@@ -1652,9 +1577,45 @@ public final class FileAnalyzer {
         return numOfCols;
     }
 
+    private static String guessCharSet(final FileReaderNodeSettings settings) {
+        String charset = settings.getCharsetName();
+        try (BufferedFileReader reader = settings.createNewInputReader()) {
+            int c = reader.read();
+            if (c == 239) {
+                //EF
+                c = reader.read();
+                if (c == 187) {
+                    //BB
+                    c = reader.read();
+                    if (c == 191) {
+                        //BF
+                        charset = "UTF-8";
+                    }
+                }
+            } else if (c == 254) {
+                //FE
+                c = reader.read();
+                if (c == 255) {
+                    //FF
+                    charset = "UTF-16BE";
+                }
+            } else if (c == 255) {
+                //FF
+                c = reader.read();
+                if (c == 254) {
+                    //FE
+                    charset = "UTF-16LE";
+                }
+            }
+        } catch (IOException e) {
+            // use the default
+        }
+        return charset;
+    }
+
     /**
-     * Little helper class for the check header method. Holds the prefix and the
-     * running index of possible row or column headers.
+     * Little helper class for the check header method. Holds the prefix and the running index of possible row or column
+     * headers.
      *
      * @author ohl, University of Konstanz
      */
@@ -1669,25 +1630,19 @@ public final class FileAnalyzer {
         private long m_lastIndex;
 
         /**
-         * Stores the prefix all headers should start with (could be empty), the
-         * index in the string, where the running index of the headers start and
-         * the first running index seen (to ensure increasing indices).
+         * Stores the prefix all headers should start with (could be empty), the index in the string, where the running
+         * index of the headers start and the first running index seen (to ensure increasing indices).
          *
-         * @param prefix the prefix of all headers (could be empty but not
-         *            null).
-         * @param indexStartIdx the index in the header the running index starts
-         *            at. Must not be negative.
+         * @param prefix the prefix of all headers (could be empty but not null).
+         * @param indexStartIdx the index in the header the running index starts at. Must not be negative.
          * @param firstRunningIndex the first running index of the first header
          */
-        private HeaderHelper(final String prefix, final int indexStartIdx,
-                final long firstRunningIndex) {
+        private HeaderHelper(final String prefix, final int indexStartIdx, final long firstRunningIndex) {
             if (prefix == null) {
-                throw new NullPointerException(
-                        "The row ID prefix can't be null.");
+                throw new NullPointerException("The row ID prefix can't be null.");
             }
             if (indexStartIdx < 0) {
-                throw new IllegalArgumentException(
-                        "The start index can't be negative.");
+                throw new IllegalArgumentException("The start index can't be negative.");
             }
             m_prefix = prefix;
             m_indexStartIdx = indexStartIdx;
@@ -1695,20 +1650,16 @@ public final class FileAnalyzer {
         }
 
         /**
-         * Checks if the specified header fits in the sequence of consecutive
-         * headers. That is, it must consist of the stored prefix followed by a
-         * number (the running index) that must be larger than the last one
-         * seen. It is assumed that all headers are checked through this method
-         * in the order they are read (because this method stores the last
-         * running index seen).<br>
-         * If false is returned, this method doesn't change its last running
-         * index seen.
+         * Checks if the specified header fits in the sequence of consecutive headers. That is, it must consist of the
+         * stored prefix followed by a number (the running index) that must be larger than the last one seen. It is
+         * assumed that all headers are checked through this method in the order they are read (because this method
+         * stores the last running index seen).<br>
+         * If false is returned, this method doesn't change its last running index seen.
          *
          * @param headerToTest the next header in the file to test.
-         * @return true, if this header fits in the sequence of header - with
-         *         its prefix and its running index.
+         * @return true, if this header fits in the sequence of header - with its prefix and its running index.
          */
-        boolean testNextHeader(final String headerToTest) {
+            boolean testNextHeader(final String headerToTest) {
             if (headerToTest == null || headerToTest.isEmpty()) {
                 return false;
             }
@@ -1724,8 +1675,7 @@ public final class FileAnalyzer {
             // see if it has a running index after the prefix
             long newIdx;
             try {
-                newIdx =
-                        Long.parseLong(headerToTest.substring(m_indexStartIdx));
+                newIdx = Long.parseLong(headerToTest.substring(m_indexStartIdx));
             } catch (NumberFormatException nfe) {
                 // this header doesn't have an index. ByeBye.
                 return false;
@@ -1740,14 +1690,12 @@ public final class FileAnalyzer {
         }
 
         /**
-         * from the header passed it extracts the prefix and the running index
-         * and stores them in the returned helper class. If the specified header
-         * has no index at the end, it returns null.
+         * from the header passed it extracts the prefix and the running index and stores them in the returned helper
+         * class. If the specified header has no index at the end, it returns null.
          *
          * @param header the (possible) header to examine
-         * @return a class holding the (possibly empty) prefix and the running
-         *         index of the specified header, or null, if the header has no
-         *         prefix
+         * @return a class holding the (possibly empty) prefix and the running index of the specified header, or null,
+         *         if the header has no prefix
          */
         static HeaderHelper extractPrefixAndIndexFromHeader(final String header) {
             if (header == null || header.isEmpty()) {

@@ -162,7 +162,7 @@ public class PatternAggregationTableModel extends AbstractAggregationTableModel<
      */
     private void updateMethod(final int row, final AggregationMethod method) {
         final PatternAggregator old = getRow(row);
-        if (old.getMethodTemplate().equals(method)) {
+        if (old.getMethodTemplate().getId().equals(method.getId())) {
             //check if the method has changed
             return;
         }

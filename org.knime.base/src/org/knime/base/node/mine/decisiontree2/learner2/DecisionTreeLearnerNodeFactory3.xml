@@ -72,6 +72,15 @@
             skipped. This is generally the case for nominal columns that have
             too many different values.
         </option>
+        <option name="Force root split column">
+        	If checked, the first split is calculated on the chosen column without 
+            evaluating any other column for possible splits. This is sometimes
+            useful if the user has additional information as to which column is best 
+            to split on even if it does not have the numeric best split quality. In
+            case the selected column does not contain valid splits (e.g. because it
+            has a constant value in all rows) a warning message will be displayed.
+            If uncertain, leave unselected.
+        </option>
 		<option name="Binary nominal splits">
 			If checked, nominal attributes are split in a binary fashion. Binary
 			splits are more difficult to calculate but result also in more 

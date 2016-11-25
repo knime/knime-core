@@ -271,13 +271,15 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @see java.util.Stack#peek()
      */
     public <T extends FlowObject> T peek(final Class<T> type) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.get(i);
-            if (type.isInstance(e)) {
-                return type.cast(e);
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.get(i);
+                if (type.isInstance(e)) {
+                    return type.cast(e);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -291,13 +293,15 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @since 2.8
      */
     public <T extends FlowScopeContext> T peekScopeContext(final Class<T> type, final boolean isInactiveScope) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.get(i);
-            if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
-                return type.cast(e);
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.get(i);
+                if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
+                    return type.cast(e);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -312,13 +316,15 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @see java.util.Stack#pop()
      */
     public <T extends FlowObject> T pop(final Class<T> type) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.remove(i);
-            if (type.isInstance(e)) {
-                return type.cast(e);
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.remove(i);
+                if (type.isInstance(e)) {
+                    return type.cast(e);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -336,13 +342,15 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @since 2.8
      */
     public <T extends FlowScopeContext> T popScopeContext(final Class<T> type, final boolean isInactiveScope) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.remove(i);
-            if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
-                return type.cast(e);
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.remove(i);
+                if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
+                    return type.cast(e);
+                }
             }
+            return null;
         }
-        return null;
     }
 
     /** Get the variable with the given name. Throws and exception if
@@ -353,14 +361,16 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @throws NoSuchElementException if variable does not exist
      */
     public FlowVariable peekFlowVariable(final String name, final Type type) {
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.get(i);
-            if (!(e instanceof FlowVariable)) {
-                continue;
-            }
-            FlowVariable v = (FlowVariable)e;
-            if (v.getName().equals(name) && v.getType().equals(type)) {
-                return v;
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.get(i);
+                if (!(e instanceof FlowVariable)) {
+                    continue;
+                }
+                FlowVariable v = (FlowVariable)e;
+                if (v.getName().equals(name) && v.getType().equals(type)) {
+                    return v;
+                }
             }
         }
         throw new NoSuchElementException("No such variable \"" + name + "\" of"
@@ -384,17 +394,19 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     public Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type... types) {
         LinkedHashMap<String, FlowVariable> hash = new LinkedHashMap<String, FlowVariable>();
         List<Type> typesAsList = Arrays.asList(types);
-        for (int i = m_stack.size() - 1; i >= 0; i--) {
-            FlowObject e = m_stack.get(i);
-            if (!(e instanceof FlowVariable)) {
-                continue;
-            }
-            FlowVariable v = (FlowVariable)e;
-            if (!typesAsList.contains(v.getType())) {
-                continue;
-            }
-            if (!hash.containsKey(v.getName())) {
-                hash.put(v.getName(), v);
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; i--) {
+                FlowObject e = m_stack.get(i);
+                if (!(e instanceof FlowVariable)) {
+                    continue;
+                }
+                FlowVariable v = (FlowVariable)e;
+                if (!typesAsList.contains(v.getType())) {
+                    continue;
+                }
+                if (!hash.containsKey(v.getName())) {
+                    hash.put(v.getName(), v);
+                }
             }
         }
         return Collections.unmodifiableMap(hash);
@@ -411,12 +423,13 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     List<FlowObject> getFlowObjectsOwnedBy(final NodeID id,
             final Scope... ignoredScopes) {
         List<FlowObject> result = new ArrayList<FlowObject>();
-        FilteredScopeIterator it =
-            new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
-        while (it.hasNext()) {
-            FlowObject v = it.next();
-            if (v.getOwner().equals(id)) {
-                result.add(v);
+        synchronized (m_stack) {
+            FilteredScopeIterator it = new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
+            while (it.hasNext()) {
+                FlowObject v = it.next();
+                if (v.getOwner().equals(id)) {
+                    result.add(v);
+                }
             }
         }
         return result;
@@ -480,8 +493,10 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     public int hashCode() {
         // stacks are not really used in hashs ... but since we implement equals
         int hash = m_nodeID.hashCode();
-        for (FlowObject o : m_stack) {
-            hash += o.hashCode();
+        synchronized (m_stack) {
+            for (FlowObject o : m_stack) {
+                hash += o.hashCode();
+            }
         }
         return hash;
     }
@@ -496,8 +511,10 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
             return false;
         }
         FlowObjectStack o = (FlowObjectStack)obj;
-        return o.m_nodeID.equals(m_nodeID)
-            && o.m_stack.equals(m_stack); // deep equals!
+        synchronized (m_stack) {
+            return o.m_nodeID.equals(m_nodeID)
+                && o.m_stack.equals(m_stack); // deep equals!
+        }
     }
 
     /**
@@ -509,10 +526,12 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         b.append(m_nodeID);
         b.append("---");
         b.append('\n');
-        for (int i = m_stack.size() - 1; i >= 0; --i) {
-            FlowObject o = m_stack.get(i);
-            b.append(o);
-            b.append('\n');
+        synchronized (m_stack) {
+            for (int i = m_stack.size() - 1; i >= 0; --i) {
+                FlowObject o = m_stack.get(i);
+                b.append(o);
+                b.append('\n');
+            }
         }
         b.append("--------");
         return b.toString();

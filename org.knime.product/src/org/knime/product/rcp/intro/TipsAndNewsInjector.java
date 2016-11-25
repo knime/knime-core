@@ -50,9 +50,12 @@ package org.knime.product.rcp.intro;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -93,19 +96,32 @@ class TipsAndNewsInjector extends AbstractInjector {
 
     private Node m_tips;
 
+    private Node m_newsGraphic;
+
     TipsAndNewsInjector(final File templateFile, final ReentrantLock introFileLock,
         final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
-        final TransformerFactory transformerFactory) {
+        final TransformerFactory transformerFactory, final Map<String, String> brandingInfo) {
         super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
             transformerFactory);
         URL tipsTricksUrl = null;
         try {
-            tipsTricksUrl =
-                new URL("http://www.knime.org/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID()
-                + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&osname=" + detectOS() + "&arch="
-                + Platform.getOSArch());
-        } catch (MalformedURLException ex) {
+            //Retrieve branding information
+            if (brandingInfo.containsKey("CustomTips")) {
+                //If there is a URL for custom tips replace the standard URL.
+                tipsTricksUrl = new URL(brandingInfo.get("CustomTips"));
+            } else {
+                //If there is no custom URL use the standard one
+                String branding = "";
+                if (brandingInfo.containsKey("PartnerName")) {
+                    //Add the partner name to the URL
+                    branding = "&brand=" + URLEncoder.encode(brandingInfo.get("PartnerName"), "UTF-8");
+                }
+                tipsTricksUrl = new URL("http://www.knime.org/tips-and-tricks?knid="
+                    + KNIMEConstants.getKNIMEInstanceID() + "&version=" + KNIMEConstants.VERSION + "&os="
+                    + Platform.getOS() + "&osname=" + detectOS() + "&arch=" + Platform.getOSArch() + branding);
+            }
+        } catch (MalformedURLException | UnsupportedEncodingException ex) {
             // does not happen
         }
         m_tipsAndNewsUrl = tipsTricksUrl;
@@ -118,7 +134,8 @@ class TipsAndNewsInjector extends AbstractInjector {
         NodeList nl = newsNode.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node child = nl.item(i);
-            if (!(child instanceof Comment) && (child.getNodeValue() != null) && !child.getNodeValue().trim().isEmpty()) {
+            if (!(child instanceof Comment) && (child.getNodeValue() != null)
+                && !child.getNodeValue().trim().isEmpty()) {
                 return newsNode;
             }
         }
@@ -177,6 +194,13 @@ class TipsAndNewsInjector extends AbstractInjector {
             tipsNode.removeAttribute("style");
             tipsNode.appendChild(doc.adoptNode(m_tips));
         }
+
+        if (m_newsGraphic != null) {
+            Element newsGraphicNode =
+                (Element)xpath.evaluate("//div[@id='news-graphic']", doc.getDocumentElement(), XPathConstants.NODE);
+
+            newsGraphicNode.getParentNode().replaceChild(doc.adoptNode(m_newsGraphic), newsGraphicNode);
+        }
     }
 
     /**
@@ -212,9 +236,16 @@ class TipsAndNewsInjector extends AbstractInjector {
             fixRelativeURLs(m_news, xpath);
         }
 
-        m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
+        m_tips =
+            (Node)xpath.evaluate("//div[@id='col-right']//div[@class='contentWrapper']//div[@class='view-content']",
+                res.getNode(), XPathConstants.NODE);
         if (m_tips != null) {
             fixRelativeURLs(m_tips, xpath);
+        }
+
+        m_newsGraphic = (Node)xpath.evaluate("//div[@id='news-graphic']", res.getNode(), XPathConstants.NODE);
+        if (m_newsGraphic != null) {
+            fixRelativeURLs(m_newsGraphic, xpath);
         }
     }
 

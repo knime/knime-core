@@ -50,7 +50,7 @@ import org.knime.base.node.rules.engine.Rule.Outcome.NoOutcome;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 
 /**
@@ -168,6 +168,14 @@ public interface Rule {
             }
 
             /**
+             * @return the expression
+             * @since 3.2
+             */
+            Expression getExpression() {
+                return m_expression;
+            }
+
+            /**
              * {@inheritDoc}
              */
             @Override
@@ -199,12 +207,12 @@ public interface Rule {
      * @since 2.8
      */
     static enum TableReference implements Reference {
-        /** Refers to the row index (the first row is {@code 1}). */
-        RowIndex(org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX, IntCell.TYPE),
+        /** Refers to the row index (the first row is {@code 0L}). */
+        RowIndex(org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX, LongCell.TYPE),
         /** The row key's string representation. */
         RowId(org.knime.ext.sun.nodes.script.expression.Expression.ROWID, StringCell.TYPE),
         /** All rows in the table. */
-        RowCount(org.knime.ext.sun.nodes.script.expression.Expression.ROWCOUNT, IntCell.TYPE);
+        RowCount(org.knime.ext.sun.nodes.script.expression.Expression.ROWCOUNT, LongCell.TYPE);
         private final String m_name;
 
         private final DataType m_dataType;

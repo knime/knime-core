@@ -64,6 +64,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 
 
@@ -203,7 +204,16 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param bayesInput the PMML {@link BayesInput} object to export this model to
      */
     protected void exportToPMML(final BayesInput bayesInput) {
-        bayesInput.setFieldName(getAttributeName());
+        exportToPMML(bayesInput, null);
+    }
+    /**
+     * @param bayesInput the PMML {@link BayesInput} object to export this model to
+     * @param mapper {@link DerivedFieldMapper}. Might be <code>null</code>.
+     * @since 3.2
+     */
+    protected void exportToPMML(final BayesInput bayesInput, final DerivedFieldMapper mapper) {
+        final String fieldName = mapper != null ? mapper.getDerivedFieldName(getAttributeName()) : getAttributeName();
+        bayesInput.setFieldName(fieldName);
         if (!m_ignoreMissingVals) {
             PMMLNaiveBayesModelTranslator.setIntExtension(bayesInput.addNewExtension(), NO_OF_MISSING_VALUES,
                 m_noOfMissingVals);

@@ -310,7 +310,7 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
         final boolean checkRetrieveMetadata) throws InvalidSettingsException {
         DatabaseQueryConnectionSettings connection = inSpec.getConnectionSettings(getCredentialsProvider());
         final StatementManipulator statementManipulator = connection.getUtility().getStatementManipulator();
-        final String newQuery = createQuery(connection.getQuery(), statementManipulator);
+        final String newQuery = createQuery(connection, connection.getQuery(), statementManipulator);
         connection = createDBQueryConnection(inSpec, newQuery);
 
         if (checkRetrieveMetadata && !connection.getRetrieveMetadataInConfigure()) {
@@ -323,11 +323,12 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
     }
 
     /**
+     * @param connection
      * @param query Query for the input table
      * @param manipulator Statement manipulator for the current database
      * @return SQL query that applies a group by to the input query
      */
-    private String createQuery(final String query, final StatementManipulator manipulator) {
+    private String createQuery(final DatabaseQueryConnectionSettings connection, final String query, final StatementManipulator manipulator) {
         final StringBuilder buf = new StringBuilder();
         final String[] queries = query.split(DBReader.SQL_QUERY_SEPARATOR);
         for (int i = 0; i < queries.length - 1; i++) {
@@ -364,8 +365,13 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
                 columnBuf.append(", ");
             }
         }
-        buf.append("SELECT " + columnBuf.toString() + " FROM (" + selectQuery + ") "
-                + manipulator.quoteIdentifier(tableName));
+        //we add this hack since google big query requires the AS here but Oracle for example does not supports it
+        final boolean appendAs = connection.getDriver().toLowerCase().contains("googlebigquery");
+        buf.append("SELECT " + columnBuf.toString() + " FROM (" + selectQuery + ") ");
+        if (appendAs) {
+            buf.append("AS ");
+        }
+        buf.append(manipulator.quoteIdentifier(tableName));
         // build GROUP BY clause
         if (!groupByCols.isEmpty()) {
             buf.append(" GROUP BY ");

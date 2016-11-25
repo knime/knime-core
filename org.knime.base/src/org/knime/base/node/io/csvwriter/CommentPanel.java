@@ -89,8 +89,6 @@ class CommentPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(createWhatPanel());
         add(createCommentPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalGlue());
     }
 
     private JPanel createCommentPanel() {
@@ -115,14 +113,16 @@ class CommentPanel extends JPanel {
         m_commentEnd.setMaximumSize(TEXTFIELDDIM);
         patternBox.add(m_commentEnd);
         patternBox.add(Box.createHorizontalGlue());
-        patternBox.add(Box.createHorizontalGlue());
+        patternBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel commentPanel = new JPanel();
         commentPanel.setLayout(new BoxLayout(commentPanel, BoxLayout.Y_AXIS));
         commentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Comment Pattern"));
         commentPanel.add(textBox);
+        commentPanel.add(Box.createVerticalStrut(50));
         commentPanel.add(patternBox);
+        commentPanel.add(Box.createVerticalGlue());
 
         return commentPanel;
     }
@@ -169,16 +169,19 @@ class CommentPanel extends JPanel {
         userBox.add(Box.createHorizontalStrut(leftInset));
         userBox.add(m_addUser);
         userBox.add(Box.createHorizontalGlue());
+        userBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addUser.getMaximumSize().height));
 
         Box dateBox = Box.createHorizontalBox();
         dateBox.add(Box.createHorizontalStrut(leftInset));
         dateBox.add(m_addDate);
         dateBox.add(Box.createHorizontalGlue());
+        dateBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addDate.getMaximumSize().height));
 
         Box nameBox = Box.createHorizontalBox();
         nameBox.add(Box.createHorizontalStrut(leftInset));
         nameBox.add(m_addTableName);
         nameBox.add(Box.createHorizontalGlue());
+        nameBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addTableName.getMaximumSize().height));
 
         Box customBox = Box.createHorizontalBox();
         customBox.add(Box.createHorizontalStrut(leftInset));
@@ -186,16 +189,22 @@ class CommentPanel extends JPanel {
         customBox.add(Box.createHorizontalStrut(3));
         customBox.add(m_commentLine);
         customBox.add(Box.createHorizontalGlue());
+        customBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_commentLine.getMaximumSize().height));
 
         JPanel whatPanel = new JPanel();
         whatPanel.setLayout(new BoxLayout(whatPanel, BoxLayout.Y_AXIS));
         whatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Comment Header Content"));
         whatPanel.add(textBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(dateBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(userBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(nameBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(customBox);
+        whatPanel.add(Box.createVerticalStrut(10));
 
         return whatPanel;
     }

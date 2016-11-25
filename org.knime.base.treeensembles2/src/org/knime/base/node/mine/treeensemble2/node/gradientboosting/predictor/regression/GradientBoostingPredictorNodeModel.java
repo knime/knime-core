@@ -53,10 +53,8 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -140,12 +138,12 @@ public class GradientBoostingPredictorNodeModel extends NodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
-                TreeEnsembleModelPortObject model =
-                    (TreeEnsembleModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                GradientBoostingModelPortObject model =
+                    (GradientBoostingModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final TreeEnsemblePredictor pred =
-                    new TreeEnsemblePredictor(modelSpec, model, dataSpec, m_configuration);
+                final GradientBoostingPredictor pred =
+                    new GradientBoostingPredictor(model, modelSpec, dataSpec, m_configuration);
                 ColumnRearranger rearranger = pred.getPredictionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);

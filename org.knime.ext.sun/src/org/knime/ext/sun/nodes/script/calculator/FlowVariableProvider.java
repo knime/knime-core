@@ -61,6 +61,16 @@ public interface FlowVariableProvider {
      */
     public Object readVariable(final String name, final Class<?> type);
 
-    /** @return the row count of the BDT being processed, otherwise -1. */
+    /**
+     * @return the row count of the BDT being processed, otherwise -1.
+     * @deprecated Use {@link #getRowCountLong()}.
+     */
+    @Deprecated
     public int getRowCount();
+
+    /** @return the row count of the BDT being processed, otherwise -1.
+     * @since 3.2 */
+    public default long getRowCountLong() {
+        return getRowCount();
+    }
 }

@@ -53,7 +53,6 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLFalsePredicate;
-import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
@@ -126,7 +125,7 @@ public abstract class AbstractTreeNodeSurrogateCondition extends TreeNodeConditi
      * {@inheritDoc}
      */
     @Override
-    public PMMLPredicate toPMMLPredicate() {
+    public PMMLCompoundPredicate toPMMLPredicate() {
         PMMLCompoundPredicate compound = new PMMLCompoundPredicate("surrogate");
         for (int i = 0; i < getNumSurrogates() + 1; i++) {
             TreeNodeCondition condition = getColumnCondition(i);

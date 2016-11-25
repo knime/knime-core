@@ -48,6 +48,7 @@
 package org.knime.base.node.rules.engine;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
@@ -55,14 +56,29 @@ import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * This is the model for the business rule node. It takes the user-defined rules and assigns the row to the first or the
@@ -113,24 +129,33 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
-        final List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleFilter);
+        RowInput input = new DataTableRowInput(inData[0]);
         final BufferedDataContainer first = exec.createDataContainer(inData[0].getDataTableSpec(), true);
         final int nrOutPorts = getNrOutPorts();
-        final RowAppender second =
-                nrOutPorts > 1 ? exec.createDataContainer(inData[0].getDataTableSpec(), true) : new RowAppender() {
-                    @Override
-                    public void addRowToTable(final DataRow row) {
-                        //do nothing
-                    }
-                };
-        final RowAppender[] containers = new RowAppender[]{first, second};
+        final BufferedDataContainer second = exec.createDataContainer(inData[0].getDataTableSpec(), true);
+        BufferedDataTableRowOutput[] outputs = new BufferedDataTableRowOutput[] {new BufferedDataTableRowOutput(first), new BufferedDataTableRowOutput(second)};
+        execute(input , outputs, inData[0].size(), exec);
+        return nrOutPorts == 2 ? new BufferedDataTable[] {outputs[0].getDataTable(), outputs[1].getDataTable()} : new BufferedDataTable[] {outputs[0].getDataTable()};
+    }
+    /**
+     * The real worker.
+     * @param inData The input data as {@link RowInput}.
+     * @param outputs The output tables.
+     * @param rowCount The row count (if available, else {@code -1} is fine).
+     * @param exec The {@link ExecutionContext}.
+     * @throws ParseException Parsing of rules failed.
+     * @throws CanceledExecutionException Execution cancelled.
+     * @throws InterruptedException Streaming failed.
+     */
+    private void execute(final RowInput inData, final RowOutput[] outputs, final long rowCount,
+        final ExecutionContext exec) throws ParseException, CanceledExecutionException, InterruptedException {
+        final List<Rule> rules = parseRules(inData.getDataTableSpec(), RuleNodeSettings.RuleFilter);
         final int matchIndex = m_includeOnMatch.getBooleanValue() ? 0 : 1;
         final int otherIndex = 1 - matchIndex;
 
-        final BufferedDataTable[] ret = new BufferedDataTable[nrOutPorts];
         try {
-            final int[] rowIdx = new int[]{0};
-            final int rows = inData[0].getRowCount();
+            final long[] rowIdx = new long[]{0L};
+            final long rows = rowCount;
             final VariableProvider provider = new VariableProvider() {
                 @Override
                 public Object readVariable(final String name, final Class<?> type) {
@@ -138,48 +163,63 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
                 }
 
                 @Override
-                public int getRowCount() {
+                public long getRowCountLong() {
                     return rows;
                 }
 
+                @Deprecated
                 @Override
+                public int getRowCount() {
+                    return KnowsRowCountTable.checkRowCount(rows);
+                }
+
+                @Override
+                @Deprecated
                 public int getRowIndex() {
+                    return (int)rowIdx[0];
+                }
+
+                @Override
+                public long getRowIndexLong() {
                     return rowIdx[0];
                 }
             };
-            for (DataRow row : inData[0]) {
+            DataRow row;
+            while ((row = inData.poll()) != null) {
                 rowIdx[0]++;
-                exec.setProgress(rowIdx[0] / (double)rows, "Adding row " + rowIdx[0] + " of " + rows);
+                exec.setProgress(rowIdx[0] / (double)rows, () -> "Adding row " + rowIdx[0] + " of " + rows);
                 exec.checkCanceled();
                 boolean wasMatch = false;
                 for (Rule r : rules) {
                     if (r.getCondition().matches(row, provider).getOutcome() == MatchState.matchedAndStop) {
                         //                        r.getSideEffect().perform(row, provider);
                         DataValue value = r.getOutcome().getComputedResult(row, provider);
+                        final int index;
                         if (value instanceof BooleanValue) {
                             final BooleanValue bv = (BooleanValue)value;
-                            containers[bv.getBooleanValue() ? matchIndex : otherIndex].addRowToTable(row);
+                            index = bv.getBooleanValue() ? matchIndex : otherIndex;
                         } else {
-                            containers[matchIndex].addRowToTable(row);
+                            index = matchIndex;
+                        }
+                        if (index < outputs.length) {
+                            outputs[index].push(row);
                         }
                         wasMatch = true;
                         break;
                     }
                 }
                 if (!wasMatch) {
-                    containers[otherIndex].addRowToTable(row);
+                    if (otherIndex < outputs.length) {
+                        outputs[otherIndex].push(row);
+                    }
                 }
             }
         } finally {
-            first.close();
-            ret[0] = first.getTable();
-            if (second instanceof BufferedDataContainer) {
-                BufferedDataContainer container = (BufferedDataContainer)second;
-                container.close();
-                ret[1] = container.getTable();
+            outputs[0].close();
+            if (outputs.length > 1) {
+                outputs[1].close();
             }
         }
-        return ret;
     }
 
     /**
@@ -207,5 +247,96 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         super.validateSettings(settings);
         m_includeOnMatch.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        final InputPortRole[] inputPortRoles = super.getInputPortRoles();
+        final RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.RuleFilter);
+        final boolean isDistributable = !hasNonDistributableRule(ruleFactory);
+        //!hasNonStreamingRule(ruleFactory);
+        inputPortRoles[0] = isDistributable 
+                ? InputPortRole.DISTRIBUTED_STREAMABLE : InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        return inputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        final OutputPortRole[] outputPortRoles = super.getOutputPortRoles();
+        final RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.RuleFilter);
+        final boolean isDistributable = !hasNonDistributableRule(ruleFactory);
+        Arrays.fill(outputPortRoles, isDistributable ? OutputPortRole.DISTRIBUTED : OutputPortRole.NONDISTRIBUTED);
+        return outputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        final DataTableSpec spec = (DataTableSpec)inSpecs[0];
+        try {
+            parseRules(spec, RuleNodeSettings.RuleFilter);
+        } catch (final ParseException e) {
+            throw new InvalidSettingsException(e);
+        }
+        return new StreamableOperator() {
+
+            private SimpleStreamableOperatorInternals m_internals;
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void loadInternals(final StreamableOperatorInternals internals) {
+                m_internals = (SimpleStreamableOperatorInternals) internals;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
+                //count number of rows
+                long count = 0;
+                if (inputs[0] instanceof RowInput) {
+                    final RowInput rowInput = (RowInput)inputs[0];
+                    while(rowInput.poll()!=null) {
+                        count++;
+                    }
+                } else if (inputs[0] instanceof PortObjectInput) {
+                    final PortObjectInput portObjectInput = (PortObjectInput)inputs[0];
+                    count += ((BufferedDataTable)portObjectInput.getPortObject()).size();
+                }
+                m_internals.getConfig().addLong(CFG_ROW_COUNT, count);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return m_internals;
+            }
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                long rowCount = -1L;
+                if (m_internals.getConfig().containsKey(CFG_ROW_COUNT)) {
+                    rowCount = m_internals.getConfig().getLong(CFG_ROW_COUNT);
+                }
+                RowOutput[] rowOutputs = (outputs instanceof RowOutput[]) ? (RowOutput[])outputs
+                    : outputs.length > 1 ? new RowOutput[]{(RowOutput)outputs[0], (RowOutput)outputs[1]}
+                        : new RowOutput[]{(RowOutput)outputs[0]};
+                execute((RowInput)inputs[0], rowOutputs, rowCount, exec);
+            }
+        };
     }
 }

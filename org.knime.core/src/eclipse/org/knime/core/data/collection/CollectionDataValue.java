@@ -66,7 +66,7 @@ public interface CollectionDataValue extends DataValue, CellCollection {
     /** Meta information to collection values.
      * @see DataValue#UTILITY
      */
-    UtilityFactory UTILITY = new CollectionUtilityFactory();
+    UtilityFactory UTILITY = new CollectionUtilityFactory(CollectionDataValue.class);
 
     /** Get the common super type of all elements in this collection.
      * @return The common super type, never null. */
@@ -82,9 +82,14 @@ public interface CollectionDataValue extends DataValue, CellCollection {
         private static final Icon ICON =
             loadIcon(CollectionDataValue.class, "/collectionicon.png");
 
-        /** Only subclasses are allowed to instantiate this class. */
-        protected CollectionUtilityFactory() {
-            super(CollectionDataValue.class);
+        /**
+         * Only subclasses are allowed to instantiate this class.
+         *
+         * @param clazz the data value class for which this factory is responsible
+         * @since 3.3
+         */
+        protected CollectionUtilityFactory(final Class<? extends DataValue> clazz) {
+            super(clazz);
         }
 
         /** {@inheritDoc} */

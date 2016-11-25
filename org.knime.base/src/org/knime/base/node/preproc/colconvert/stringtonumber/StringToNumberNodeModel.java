@@ -59,7 +59,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -75,7 +74,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
@@ -225,14 +223,6 @@ public class StringToNumberNodeModel extends SimpleStreamableFunctionWithInterna
             LOGGER.warn(errorMessage);
             setWarningMessage(warnings.toString().replaceAll("[\r\n]+$", ""));
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        return new SimpleStreamableOperatorInternals();
     }
 
     /**
@@ -576,16 +566,6 @@ public class StringToNumberNodeModel extends SimpleStreamableFunctionWithInterna
             }
             return newcolspecs;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setProgress(final int curRowNr, final int rowCount,
-                final RowKey lastKey, final ExecutionMonitor exec) {
-            exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
-        }
-
 
         /**
          * {@inheritDoc}

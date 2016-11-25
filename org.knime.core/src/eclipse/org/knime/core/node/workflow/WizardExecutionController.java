@@ -47,6 +47,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,7 +62,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -69,6 +69,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
@@ -78,8 +80,9 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.util.LayoutUtil;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
-import org.knime.core.util.Pair;
 
 /**
  * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
@@ -96,38 +99,29 @@ public final class WizardExecutionController extends ExecutionController {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardExecutionController.class);
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
-
     private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
-
     private static final String ID_IMPL_BUNDLE = "implementationBundleID";
-
     private static final String ID_IMPORT_RES = "importResource";
-
     private static final String ID_DEPENDENCY = "webDependency";
 
     private static final String ATTR_JS_ID = "javascriptComponentID";
-
     private static final String ATTR_NAMESPACE = "namespace";
-
     private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
-
     private static final String ATTR_PATH = "relativePath";
-
     private static final String ATTR_TYPE = "type";
-
     private static final String ATTR_INIT_METHOD_NAME = "init-method-name";
-
     private static final String ATTR_VALIDATE_METHOD_NAME = "validate-method-name";
-
     private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
-
     private static final String ATTR_SETVALIDATIONERROR_METHOD_NAME = "setValidationError-method-name";
 
     private static final String ID_WEB_RESOURCE = "webResource";
 
     private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
-
     private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
+
+    private static final String DEFAULT_DEPENDENCY = "knimeService_1.0";
+    private static final Set<WebResourceLocator> DEFAULT_RES =
+        getResourcesFromExtension(getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, DEFAULT_DEPENDENCY));
 
     /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
     @SuppressWarnings("rawtypes")
@@ -173,6 +167,7 @@ public final class WizardExecutionController extends ExecutionController {
             return getEmptyWebTemplate();
         }
         Set<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
+        webResList.addAll(DEFAULT_RES);
         for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
             String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
             IConfigurationElement dependencyExtension =
@@ -322,15 +317,6 @@ public final class WizardExecutionController extends ExecutionController {
         }
     }
 
-    private static boolean containsDestination(final List<Pair<NodeID, NodeID>> waitingPairs, final NodeID dest) {
-        for (Pair<NodeID, NodeID> p : waitingPairs) {
-            if (p.getSecond().equals(dest)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /** Created from workflow.
      * @param manager ...
      */
@@ -397,31 +383,6 @@ public final class WizardExecutionController extends ExecutionController {
         return m_waitingSubnodes.contains(source);
     }
 
-    private NodeID findNextWaitingSubnode() {
-        final Workflow flow = m_manager.getWorkflow();
-        Map<NodeID, Set<Integer>> breadthFirstSortedList = flow.createBreadthFirstSortedList(flow.getNodeIDs(), true);
-        for (Map.Entry<NodeID, Set<Integer>> entry : breadthFirstSortedList.entrySet()) {
-            NodeContainer nc = flow.getNode(entry.getKey());
-            if (nc instanceof SubNodeContainer) {
-                SubNodeContainer subnodeNC = (SubNodeContainer)nc;
-                WorkflowManager subnodeMgr = subnodeNC.getWorkflowManager();
-                if (subnodeMgr.getNodeContainerState().isExecuted()) {
-                    continue; // do not prompt executed sub nodes
-                }
-                if (m_promptedSubnodeIDSuffixes.contains(entry.getKey().getIndex())) {
-                    continue;
-                }
-                @SuppressWarnings("rawtypes")
-                final Map<NodeID, WizardNode> wizardNodes =
-                subnodeMgr.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
-                if (!wizardNodes.isEmpty()) {
-                    return subnodeNC.getID();
-                }
-            }
-        }
-        return null;
-    }
-
     /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
      * @return The current wizard page. */
     public WizardPageContent getCurrentWizardPage() {
@@ -447,15 +408,23 @@ public final class WizardExecutionController extends ExecutionController {
         SubNodeContainer subNC = manager.getNodeContainer(currentSubnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> executedWizardNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
-        LinkedHashMap<String, WizardNode> resultMap = new LinkedHashMap<String, WizardNode>();
+        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : executedWizardNodeMap.entrySet()) {
             if (!subWFM.getNodeContainer(entry.getKey(), NativeNodeContainer.class, true).isInactive()) {
-                NodeIDSuffix idSuffix = NodeIDSuffix.create(manager.getID(), entry.getKey());
-                resultMap.put(idSuffix.toString(), entry.getValue());
+                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
+                resultMap.put(idSuffix, entry.getValue());
             }
         }
-        NodeIDSuffix pageID = NodeIDSuffix.create(manager.getID(), subWFM.getID());
-        return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutJSONString());
+        NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
+        String pageLayout = subNC.getLayoutJSONString();
+        if (pageLayout == null || "".equals(pageLayout)) {
+            try {
+                pageLayout = LayoutUtil.createDefaultLayout(resultMap);
+            } catch (IOException ex) {
+                LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
+            }
+        }
+        return new WizardPageContent(pageID, resultMap, pageLayout);
     }
 
     /** ...
@@ -494,6 +463,24 @@ public final class WizardExecutionController extends ExecutionController {
 //            return false;
 //        }
 //        return true;
+    }
+
+    /** Parameterizes {@link InputNode}s in the workflow (URL parameters).
+     * @param input non-null input
+     * @throws InvalidSettingsException if wfm chokes
+     * @see WorkflowManager#setInputNodes(Map)
+     * @since 3.2 */
+    public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
+        final WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            checkDiscard();
+            NodeContext.pushContext(manager);
+            try {
+                manager.setInputNodes(input);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
     }
 
     /** Continues the execution and executes up to, incl., the next subnode awaiting input. If no such subnode exists
@@ -544,7 +531,7 @@ public final class WizardExecutionController extends ExecutionController {
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
-            NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
+            NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             CheckUtils.checkState(id.hasPrefix(currentID), "The wizard page content for ID %s (suffix %s) "
                         + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), currentID);
@@ -575,7 +562,7 @@ public final class WizardExecutionController extends ExecutionController {
         manager.resetHaltedSubnode(currentID);
 //        manager.resetAndConfigureNode(currentID);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
-            NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
+            NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
@@ -708,8 +695,8 @@ public final class WizardExecutionController extends ExecutionController {
     /** Result value of {@link WizardExecutionController#getCurrentWizardPage()}. */
     public static final class WizardPageContent {
 
-        private final String m_pageNodeID;
-        private final Map<String, WizardNode> m_pageMap;
+        private final NodeIDSuffix m_pageNodeID;
+        private final Map<NodeIDSuffix, WizardNode> m_pageMap;
         private final String m_layoutInfo;
 
         /**
@@ -718,7 +705,7 @@ public final class WizardExecutionController extends ExecutionController {
          * @param layoutInfo
          */
         @SuppressWarnings("rawtypes")
-        WizardPageContent(final String pageNodeID, final Map<String, WizardNode> pageMap,
+        WizardPageContent(final NodeIDSuffix pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
             final String layoutInfo) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
@@ -727,8 +714,9 @@ public final class WizardExecutionController extends ExecutionController {
 
         /**
          * @return the pageNodeID
+         * @since 3.3
          */
-        public String getPageNodeID() {
+        public NodeIDSuffix getPageNodeID() {
             return m_pageNodeID;
         }
 
@@ -736,7 +724,7 @@ public final class WizardExecutionController extends ExecutionController {
          * @return the pageMap
          */
         @SuppressWarnings("rawtypes")
-        public Map<String, WizardNode> getPageMap() {
+        public Map<NodeIDSuffix, WizardNode> getPageMap() {
             return m_pageMap;
         }
 
@@ -748,124 +736,6 @@ public final class WizardExecutionController extends ExecutionController {
             return m_layoutInfo;
         }
 
-    }
-
-    /** Utility class that only stores the workflow relative NodeID path. If the NodeID of the workflow is
-     * 0:3 and the quickforms in there are 0:3:1:1 and 0:3:1:2 then it only saves {1,1} and {1,2}. We must not
-     * save the wfm ID with the NodeIDs as those may change when the workflow is swapped out/read back in.
-     * See also bug 4478.
-     */
-    static final class NodeIDSuffix {
-        /* This class makes com.knime.enterprise.server.WorkflowInstance.NodeIDSuffix obsolete. */
-
-        private final int[] m_suffixes;
-
-        /** @param suffixes ... */
-        NodeIDSuffix(final int[] suffixes) {
-            m_suffixes = suffixes;
-        }
-
-        /** Create the suffix object by cutting the parentID from the argument nodeID.
-         * @param parentID ...
-         * @param nodeID ..
-         * @return The extracted suffix object
-         * @throws IllegalArgumentException If the parentID is not a prefix of the nodeID.
-         *
-         */
-        static NodeIDSuffix create(final NodeID parentID, final NodeID nodeID) {
-            if (!nodeID.hasPrefix(parentID)) {
-                throw new IllegalArgumentException("The argument node ID \"" + nodeID
-                    + "\" does not have the expected parent prefix \"" + parentID + "\"");
-            }
-            List<Integer> suffixList = new ArrayList<Integer>();
-            NodeID traverse = nodeID;
-            do {
-                suffixList.add(traverse.getIndex());
-                traverse = traverse.getPrefix();
-            } while (!parentID.equals(traverse));
-            Collections.reverse(suffixList);
-            return new NodeIDSuffix(ArrayUtils.toPrimitive(suffixList.toArray(new Integer[suffixList.size()])));
-        }
-
-        /** Reverse operation to {@link #create(NodeID, NodeID)}. Prepends the parentID to this suffix and
-         * returns a valid (new) NodeID.
-         * @param parentID ...
-         * @return ...
-         */
-        NodeID prependParent(final NodeID parentID) {
-            NodeID result = parentID;
-            for (int i : m_suffixes) {
-                result = new NodeID(result, i);
-            }
-            return result;
-        }
-
-        /** Utility function to convert a set of suffixes into a set of IDs. */
-        static Set<NodeID> toNodeIDSet(final NodeID parentID, final Set<NodeIDSuffix> suffixSet) {
-            LinkedHashSet<NodeID> resultSet = new LinkedHashSet<NodeID>();
-            for (NodeIDSuffix sID: suffixSet) {
-                resultSet.add(sID.prependParent(parentID));
-            }
-            return resultSet;
-        }
-
-        /** Utility function to convert a set of IDs into a set of suffixes. */
-        static Set<NodeIDSuffix> fromNodeIDSet(final NodeID parentID, final Set<NodeID> idSet) {
-            LinkedHashSet<NodeIDSuffix> resultSet = new LinkedHashSet<NodeIDSuffix>();
-            for (NodeID id: idSet) {
-                resultSet.add(NodeIDSuffix.create(parentID, id));
-            }
-            return resultSet;
-        }
-
-        /** @return the stored indices - used by the persistor. */
-        int[] getSuffixes() {
-            return m_suffixes;
-        }
-
-        /** Outputs the underlying string array, e.g. "2:5:4:2"
-         * {@inheritDoc} */
-        @Override
-        public String toString() {
-            return StringUtils.join(ArrayUtils.toObject(m_suffixes), ':');
-        }
-
-        /** Reverse operation of {@link #toString()}.
-         * @param string The string as returned by {@link #toString()}.
-         * @return A new {@link NodeIDSuffix}.
-         * @throws IllegalArgumentException If parsing fails.
-         */
-        public static NodeIDSuffix fromString(final String string) {
-            String[] splitString = StringUtils.split(string, ':');
-            int[] suffixes = new int[splitString.length];
-            for (int i = 0; i < suffixes.length; i++) {
-                try {
-                    suffixes[i] = Integer.parseInt(splitString[i]);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Can't parse node id suffix string \""
-                            + string + "\": " + e.getMessage(), e);
-                }
-            }
-            return new NodeIDSuffix(suffixes);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(m_suffixes);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (!(obj instanceof NodeIDSuffix)) {
-                return false;
-            }
-            return Arrays.equals(m_suffixes, ((NodeIDSuffix)obj).m_suffixes);
-        }
     }
 
 }

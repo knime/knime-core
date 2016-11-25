@@ -54,7 +54,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
+import org.knime.base.node.rules.engine.RowAppenderRowOutput;
 import org.knime.base.node.rules.engine.Rule;
 import org.knime.base.node.rules.engine.RuleEngineNodeModel;
 import org.knime.base.node.rules.engine.RuleFactory;
@@ -74,12 +76,26 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * This is the model for the Rule-based Row Splitter (Dictionary) node. It takes the user-defined rules and assigns the row to the first or the
- * second outport (the second can be dummy).
+ * This is the model for the Rule-based Row Splitter (Dictionary) node. It takes the user-defined rules and assigns the
+ * row to the first or the second outport (the second can be dummy).
  *
  * @author Thorsten Meinl, University of Konstanz
  * @author Gabor Bakos
@@ -90,6 +106,12 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
 
     /** Default value for the include on match parameter. */
     static final boolean DEFAULT_INCLUDE_ON_MATCH = true;
+
+    /** Index of the data port. */
+    static final int DATA_PORT = 0;
+
+    /** Index of the rule port. */
+    static final int RULE_PORT = 1;
 
     private boolean m_includeOnMatch = DEFAULT_INCLUDE_ON_MATCH;
 
@@ -118,12 +140,13 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
         CheckUtils.checkSettingNotNull(
             inSpecs[RuleEngine2PortsNodeModel.RULE_PORT].getColumnSpec(m_settings.getRuleColumn()),
             "No rule column with name: " + m_settings.getRuleColumn() + " is present in the rules table");
-        CheckUtils.checkSetting(m_settings.getOutcomeColumn() == null ||
-            inSpecs[RuleEngine2PortsNodeModel.RULE_PORT].findColumnIndex(m_settings.getOutcomeColumn()) >=0,
+        CheckUtils.checkSetting(
+            m_settings.getOutcomeColumn() == null
+                || inSpecs[RuleEngine2PortsNodeModel.RULE_PORT].findColumnIndex(m_settings.getOutcomeColumn()) >= 0,
             "No outcome column with name: " + m_settings.getOutcomeColumn() + " is present in the rules table");
         final DataTableSpec[] ret = new DataTableSpec[getNrOutPorts()];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = inSpecs[0];
+            ret[i] = inSpecs[DATA_PORT];
         }
         return ret;
     }
@@ -136,80 +159,106 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
         throws Exception {
         BufferedDataTable ruleTable = inData[RuleEngine2PortsNodeModel.RULE_PORT];
         BufferedDataTable dataTable = inData[RuleEngine2PortsNodeModel.DATA_PORT];
-        m_rulesList.clear();
-        m_rulesList.addAll(RuleEngineVariable2PortsNodeModel.rules(ruleTable, m_settings, RuleNodeSettings.RuleFilter));
-        final List<Rule> rules =
-            parseRules(dataTable.getDataTableSpec(), RuleNodeSettings.RuleFilter);
+        //        m_rulesList.clear();
+        //        m_rulesList.addAll(RuleEngineVariable2PortsNodeModel.rules(ruleTable, m_settings, RuleNodeSettings.RuleFilter));
+        //        final List<Rule> rules = parseRules(dataTable.getDataTableSpec(), RuleNodeSettings.RuleFilter);
         final BufferedDataContainer first = exec.createDataContainer(dataTable.getDataTableSpec(), true);
         final int nrOutPorts = getNrOutPorts();
         final RowAppender second =
-            nrOutPorts > 1 ? exec.createDataContainer(inData[0].getDataTableSpec(), true) : new RowAppender() {
+            nrOutPorts > 1 ? exec.createDataContainer(dataTable.getDataTableSpec(), true) : new RowAppender() {
                 @Override
                 public void addRowToTable(final DataRow row) {
                     //do nothing
                 }
             };
-        final RowAppender[] containers = new RowAppender[]{first, second};
-        final int matchIndex = m_includeOnMatch ? 0 : 1;
-        final int otherIndex = 1 - matchIndex;
-
+        //        final RowAppender[] containers = new RowAppender[]{first, second};
+        //        final int matchIndex = m_includeOnMatch ? 0 : 1;
+        //        final int otherIndex = 1 - matchIndex;
+        //
         final BufferedDataTable[] ret = new BufferedDataTable[nrOutPorts];
-        try {
-            final int[] rowIdx = new int[]{0};
-            final int rows = inData[0].getRowCount();
-            final VariableProvider provider = new VariableProvider() {
-                @Override
-                public Object readVariable(final String name, final Class<?> type) {
-                    return RuleEngineFilter2PortsNodeModel.this.readVariable(name, type);
-                }
-
-                @Override
-                public int getRowCount() {
-                    return rows;
-                }
-
-                @Override
-                public int getRowIndex() {
-                    return rowIdx[0];
-                }
-            };
-            for (DataRow row : inData[0]) {
-                rowIdx[0]++;
-                exec.setProgress(rowIdx[0] / (double)rows, "Adding row " + rowIdx[0] + " of " + rows);
-                exec.checkCanceled();
-                boolean wasMatch = false;
-                for (Rule r : rules) {
-                    if (r.getCondition().matches(row, provider).getOutcome() == MatchState.matchedAndStop) {
-                        //                        r.getSideEffect().perform(row, provider);
-                        DataValue value = r.getOutcome().getComputedResult(row, provider);
-                        if (value instanceof BooleanValue) {
-                            final BooleanValue bv = (BooleanValue)value;
-                            containers[bv.getBooleanValue() ? matchIndex : otherIndex].addRowToTable(row);
-                        } else {
-                            containers[matchIndex].addRowToTable(row);
-                        }
-                        wasMatch = true;
-                        break;
-                    }
-                }
-                if (!wasMatch) {
-                    containers[otherIndex].addRowToTable(row);
-                }
-            }
-        } finally {
-            first.close();
-            ret[0] = first.getTable();
-            if (second instanceof BufferedDataContainer) {
-                BufferedDataContainer container = (BufferedDataContainer)second;
-                container.close();
-                ret[1] = container.getTable();
-            }
+        //        try {
+        //            final MutableLong rowIdx = new MutableLong();
+        //            final long rows = inData[DATA_PORT].size();
+        //            final VariableProvider provider = new VariableProvider() {
+        //                @Override
+        //                public Object readVariable(final String name, final Class<?> type) {
+        //                    return RuleEngineFilter2PortsNodeModel.this.readVariable(name, type);
+        //                }
+        //
+        //                @Override
+        //                @Deprecated
+        //                public int getRowCount() {
+        //                    throw new UnsupportedOperationException();
+        //                }
+        //
+        //                @Override
+        //                public long getRowCountLong() {
+        //                    return rows;
+        //                }
+        //
+        //                @Override
+        //                @Deprecated
+        //                public int getRowIndex() {
+        //                    throw new UnsupportedOperationException();
+        //                }
+        //
+        //                @Override
+        //                public long getRowIndexLong() {
+        //                    return rowIdx.longValue();
+        //                }
+        //            };
+        //            for (DataRow row : inData[DATA_PORT]) {
+        //                rowIdx.increment();
+        //                exec.setProgress(rowIdx.longValue() / (double)rows, "Adding row " + rowIdx.longValue() + " of " + rows);
+        //                exec.checkCanceled();
+        //                boolean wasMatch = false;
+        //                for (final Rule r : rules) {
+        //                    if (r.getCondition().matches(row, provider).getOutcome() == MatchState.matchedAndStop) {
+        //                        //                        r.getSideEffect().perform(row, provider);
+        //                        DataValue value = r.getOutcome().getComputedResult(row, provider);
+        //                        if (value instanceof BooleanValue) {
+        //                            final BooleanValue bv = (BooleanValue)value;
+        //                            containers[bv.getBooleanValue() ? matchIndex : otherIndex].addRowToTable(row);
+        //                        } else {
+        //                            containers[matchIndex].addRowToTable(row);
+        //                        }
+        //                        wasMatch = true;
+        //                        break;
+        //                    }
+        //                }
+        //                if (!wasMatch) {
+        //                    containers[otherIndex].addRowToTable(row);
+        //                }
+        //            }
+        //        } finally {
+        //            first.close();
+        //            ret[0] = first.getTable();
+        //            if (second instanceof BufferedDataContainer) {
+        //                BufferedDataContainer container = (BufferedDataContainer)second;
+        //                container.close();
+        //                ret[1] = container.getTable();
+        //            }
+        //        }
+        final PortOutput[] outputs =
+            new PortOutput[]{new BufferedDataTableRowOutput(first), new RowAppenderRowOutput(second)};
+        final StreamableOperator streamableOperator = createStreamableOperator(new PartitionInfo(0, 1),
+            new DataTableSpec[]{inData[0].getSpec(), inData[1].getSpec()});
+        final PortInput[] inputs = new PortInput[]{new DataTableRowInput(dataTable), new DataTableRowInput(ruleTable)};
+        final SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
+        internals.getConfig().addLong(CFG_ROW_COUNT, dataTable.size());
+        streamableOperator.loadInternals(internals);
+        streamableOperator.runFinal(inputs, outputs, exec);
+        ret[0] = first.getTable();
+        if (ret.length > 1) {
+            ret[1] = ((BufferedDataContainer)second).getTable();
         }
         return ret;
     }
 
     /**
-     * Parses all rules in the settings object.
+     * Parses all rules in the from the table (assuming {@link #rules()} is safe to call, like
+     * {@link #createStreamableOperator(PartitionInfo, PortObjectSpec[])} or
+     * {@link #execute(BufferedDataTable[], ExecutionContext)} was called before).
      *
      * @param spec the spec of the table on which the rules are applied.
      * @param nodeType The type of the node from this method is called.
@@ -249,7 +298,6 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
         return m_rulesList;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -281,8 +329,8 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         //No internal state
     }
 
@@ -290,8 +338,8 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         //No internal state
     }
 
@@ -301,5 +349,200 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
     @Override
     protected void reset() {
         //No internal state
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        final InputPortRole[] inputPortRoles = super.getInputPortRoles();
+        //We can always stream, maybe just need more than one iteration.
+        //we cannot be sure before parsing the rules that there are no row indices in the rules, so non-distributed.
+        inputPortRoles[0] = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        //The rules should be collected without distributed execution.
+        inputPortRoles[1] = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        return inputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        final OutputPortRole[] outputPortRoles = super.getOutputPortRoles();
+        outputPortRoles[0] = OutputPortRole.NONDISTRIBUTED;
+        if (outputPortRoles.length > 1) {
+            outputPortRoles[1] = outputPortRoles[0];
+        }
+        return outputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean iterate(final StreamableOperatorInternals internals) {
+        SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)internals;
+        if (simpleInternals.getConfig().containsKey(CFG_ROW_COUNT)) {
+            //already iterated
+            return false;
+        } else {
+            //needs one iteration to determine the row count
+            return true;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        final DataTableSpec spec = (DataTableSpec)inSpecs[DATA_PORT];
+        try {
+            parseRules(spec, RuleNodeSettings.RuleSplitter);
+        } catch (final ParseException e) {
+            throw new InvalidSettingsException(e);
+        }
+        return new StreamableOperator() {
+            private SimpleStreamableOperatorInternals m_internals;
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void loadInternals(final StreamableOperatorInternals internals) {
+                m_internals = (SimpleStreamableOperatorInternals)internals;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
+                //count number of rows
+                long count = 0;
+                RowInput rowInput = (RowInput)inputs[DATA_PORT];
+                while (rowInput.poll() != null) {
+                    count++;
+                }
+                m_internals.getConfig().addLong(CFG_ROW_COUNT, count);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return m_internals;
+            }
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                long rowCount = -1L;
+                if (m_internals.getConfig().containsKey(CFG_ROW_COUNT)) {
+                    rowCount = m_internals.getConfig().getLong(CFG_ROW_COUNT);
+                }
+                m_rulesList.clear();
+                final PortInput rulePort = inputs[RULE_PORT];
+                if (rulePort instanceof PortObjectInput) {
+                    PortObjectInput poRule = (PortObjectInput)rulePort;
+                    m_rulesList.addAll(RuleEngineVariable2PortsNodeModel
+                        .rules((BufferedDataTable)poRule.getPortObject(), m_settings, RuleNodeSettings.RuleFilter));
+                } else if (rulePort instanceof RowInput) {
+                    RowInput riRule = (RowInput)rulePort;
+                    m_rulesList.addAll(
+                        RuleEngineVariable2PortsNodeModel.rules(riRule, m_settings, RuleNodeSettings.RuleFilter));
+                }
+                final RowInput inputPartitions = (RowInput)inputs[DATA_PORT];
+                final List<Rule> rules = parseRules(inputPartitions.getDataTableSpec(), RuleNodeSettings.RuleFilter);
+                final RowOutput first = (RowOutput)outputs[0];
+                final int nrOutPorts = getNrOutPorts();
+                final RowOutput second = nrOutPorts > 1 ? (RowOutput)outputs[1] : new RowOutput() {
+                    @Override
+                    public void push(final DataRow row) throws InterruptedException {
+                        //do nothing
+                    }
+
+                    @Override
+                    public void close() throws InterruptedException {
+                        //do nothing
+                    }
+                };
+                final RowOutput[] containers = new RowOutput[]{first, second};
+                final int matchIndex = m_includeOnMatch ? 0 : 1;
+                final int otherIndex = 1 - matchIndex;
+
+                try {
+                    final MutableLong rowIdx = new MutableLong(0L);
+                    final long rows = rowCount;
+                    final VariableProvider provider = new VariableProvider() {
+                        @Override
+                        public Object readVariable(final String name, final Class<?> type) {
+                            return RuleEngineFilter2PortsNodeModel.this.readVariable(name, type);
+                        }
+
+                        @Override
+                        @Deprecated
+                        public int getRowCount() {
+                            throw new UnsupportedOperationException();
+                        }
+
+                        @Override
+                        public long getRowCountLong() {
+                            return rows;
+                        }
+
+                        @Override
+                        @Deprecated
+                        public int getRowIndex() {
+                            throw new UnsupportedOperationException();
+                        }
+
+                        @Override
+                        public long getRowIndexLong() {
+                            return rowIdx.longValue();
+                        }
+                    };
+                    DataRow row;
+                    while ((row = inputPartitions.poll()) != null) {
+                        rowIdx.increment();
+                        if (rows > 0) {
+                            exec.setProgress(rowIdx.longValue() / (double)rows,
+                                () -> "Adding row " + rowIdx.longValue() + " of " + rows);
+                        } else {
+                            exec.setMessage(() -> "Adding row " + rowIdx.longValue() + " of " + rows);
+                        }
+                        exec.checkCanceled();
+                        boolean wasMatch = false;
+                        for (Rule r : rules) {
+                            if (r.getCondition().matches(row, provider).getOutcome() == MatchState.matchedAndStop) {
+                                //                        r.getSideEffect().perform(row, provider);
+                                DataValue value = r.getOutcome().getComputedResult(row, provider);
+                                if (value instanceof BooleanValue) {
+                                    final BooleanValue bv = (BooleanValue)value;
+                                    containers[bv.getBooleanValue() ? matchIndex : otherIndex].push(row);
+                                } else {
+                                    containers[matchIndex].push(row);
+                                }
+                                wasMatch = true;
+                                break;
+                            }
+                        }
+                        if (!wasMatch) {
+                            containers[otherIndex].push(row);
+                        }
+                    }
+                } finally {
+                    try {
+                        second.close();
+                    } finally {
+                        first.close();
+                    }
+                }
+            }
+        };
     }
 }

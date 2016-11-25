@@ -71,6 +71,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -158,6 +159,7 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
 
     private void createContent(final PortObjectSpec[] specs, final int tableIndex) {
         this.setLayout(new BorderLayout());
+
         final DataTableSpec tableSpec = (DataTableSpec)specs[tableIndex];
         final JList<String> jList = new JList<String>(m_settings.getColumns().toArray(new String[0]));
         final Border border;
@@ -196,7 +198,6 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
         JScrollPane columns = new JScrollPane(jList);
         columns.setMaximumSize(new Dimension(120, 150));
         columns.setPreferredSize(new Dimension(120, 150));
-        this.add(columns, BorderLayout.WEST);
 
         // This button fires the remove event so that the panel is removed from its parent
         JButton requestRemoveButton = new JButton("Remove");
@@ -302,7 +303,10 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
             }
         });
         eastPanel.add(m_settingsPanel, BorderLayout.CENTER);
-        this.add(eastPanel, BorderLayout.EAST);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, columns, eastPanel);
+        this.add(splitPane, BorderLayout.CENTER);
+        splitPane.setResizeWeight(0.5);
     }
 
     private static Component createWarningLabel(final List<String> warningMessages) {

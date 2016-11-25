@@ -210,6 +210,14 @@ final class JavaIfSwitchNodeModel extends NodeModel
         return -1;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getRowCountLong() {
+        return -1L;
+    }
+
     /** {@inheritDoc} */
     @Override
     protected void loadInternals(final File nodeInternDir,

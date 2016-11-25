@@ -86,7 +86,9 @@ public class InvokeInstallSiteAction extends AbstractP2Action {
             @Override
             public void run() {
                 provUI.getPolicy().setRepositoriesVisible(false);
-                provUI.openInstallWizard(null, null, job);
+                if (provUI.openInstallWizard(null, null, job) == 0) {
+                    clearOsgiAreaBeforeRestart();
+                }
                 provUI.getPolicy().setRepositoriesVisible(true);
             }
         });

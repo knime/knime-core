@@ -185,6 +185,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     private static final Image META_NODE_UNLOCK_ICON = ImageRepository
         .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_unlock_decorator.png");
 
+    private static final Image NODE_LOCK_ICON =
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_lock_decorator.png");
+
     /**
      * true, if the figure was initialized from the node extra info object.
      */
@@ -266,6 +269,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         updateJobManagerIcon();
         checkMetaNodeTemplateIcon();
         checkMetaNodeLockIcon();
+        checkNodeLockIcon();
         // set the active (or disabled) state
         ((NodeContainerFigure)getFigure()).setStateFromNC(cont);
         // set the node message
@@ -877,6 +881,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
                             break;
                         case LockStatus:
                             checkMetaNodeLockIcon();
+                            checkNodeLockIcon();
                             break;
                         case MetaNodePorts:
                             refreshChildren(); // account for new/removed ports
@@ -993,6 +998,32 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             NodeContainerFigure fig = (NodeContainerFigure)getFigure();
             fig.setMetaNodeLockIcon(i);
         }
+    }
+
+    private void checkNodeLockIcon() {
+        NodeContainer nc = getNodeContainer();
+        Image i;
+        StringBuilder toolTip = new StringBuilder();
+        //node is considered being locked if it is either lock from being reseted, it's not deletable, or the dialog is locked
+        if (nc.getNodeLocks().hasResetLock() || nc.getNodeLocks().hasDeleteLock() || nc.getNodeLocks().hasConfigureLock()) {
+            toolTip.append("Node Locked (");
+            i = NODE_LOCK_ICON;
+            if (nc.getNodeLocks().hasResetLock()) {
+                toolTip.append("Reset, ");
+            }
+            if (nc.getNodeLocks().hasDeleteLock()) {
+                toolTip.append("Delete, ");
+            }
+            if (nc.getNodeLocks().hasConfigureLock()) {
+                toolTip.append("Configure, ");
+            }
+            toolTip.setLength(toolTip.length() - 2);
+            toolTip.append(")");
+        } else {
+            i = null;
+        }
+        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+        fig.setNodeLockIcon(i, toolTip.toString());
     }
 
     /** {@inheritDoc} */

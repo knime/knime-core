@@ -45,25 +45,18 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.AbstractWizardNodeView;
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContext;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
-import org.knime.workbench.editor2.WizardNodeView;
 
 /**
  * Action to open an interactive view of a node.
@@ -83,8 +76,8 @@ public class OpenInteractiveViewAction extends Action {
      * @param nodeContainer The node
      */
     public OpenInteractiveViewAction(final NodeContainer nodeContainer) {
-        m_nodeContainer = nodeContainer;
-        nodeContainer.getNodeContainerState().isExecuted();
+        m_nodeContainer = CheckUtils.checkArgumentNotNull(nodeContainer);
+        CheckUtils.checkArgument(m_nodeContainer.hasInteractiveView(), "Node doesn't have an interactive (swing) view");
     }
 
     /**
@@ -122,32 +115,13 @@ public class OpenInteractiveViewAction extends Action {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("rawtypes")
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Node View " + m_nodeContainer.getName());
         try {
-            AbstractNodeView<?> view = null;
-            if (m_nodeContainer.hasInteractiveView()) {
-                view = m_nodeContainer.getInteractiveView();
-            } else if (m_nodeContainer.hasInteractiveWebView()) {
-                NodeContext.pushContext(m_nodeContainer);
-                try {
-                    // TODO: this needs to be changed to also work for SubNodeContainers
-                    NodeModel nodeModel = ((NativeNodeContainer)m_nodeContainer).getNodeModel();
-                    view = getConfiguredWizardNodeView(nodeModel);
-                } finally {
-                    NodeContext.removeLastContext();
-                }
-                ((AbstractWizardNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
-                                                                           m_nodeContainer.getID());
-            } else {
-                Assert.isNotNull(view, "Interactive view could not be instantiated. Probably a coding error.");
-            }
+            AbstractNodeView<?> view = m_nodeContainer.getInteractiveView();
             final String title = m_nodeContainer.getInteractiveViewName();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-            Node.invokeOpenView(view, title, bounds);
+            Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");
@@ -156,33 +130,6 @@ public class OpenInteractiveViewAction extends Action {
             LOGGER.error("The interactive view for node '" + m_nodeContainer.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
         }
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
-        //TODO uncomment for 3.1, make view interchangeable
-        //TODO get preference key
-        /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
-        try {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IConfigurationElement[] configurationElements =
-                registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
-            for (IConfigurationElement element : configurationElements) {
-                if (viewID.equals(element.getAttribute("viewClass"))) {
-                    try {
-                        return (AbstractWizardNodeView)element.createExecutableExtension("viewClass");
-                    } catch (Throwable e) {
-                        LOGGER.error("Can't load view class for " + element.getAttribute("name")
-                            + ". Switching to default. - " + e.getMessage(), e);
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            LOGGER.error(
-                "JS view set in preferences (" + viewID + ") can't be loaded. Switching to default. - "
-                    + e.getMessage(), e);
-        }*/
-        return new WizardNodeView(nodeModel);
     }
 
     /**

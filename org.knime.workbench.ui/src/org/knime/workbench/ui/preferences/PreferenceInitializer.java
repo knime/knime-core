@@ -111,6 +111,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.P_GRID_SIZE_X, PreferenceConstants.P_GRID_DEFAULT_SIZE_X);
         store.setDefault(PreferenceConstants.P_GRID_SIZE_Y, PreferenceConstants.P_GRID_DEFAULT_SIZE_Y);
 
+        store.setDefault(PreferenceConstants.P_CURVED_CONNECTIONS, PreferenceConstants.P_DEFAULT_CURVED_CONNECTIONS);
+        store.setDefault(PreferenceConstants.P_CONNECTIONS_LINE_WIDTH, PreferenceConstants.P_DEFAULT_CONNECTION_LINE_WIDTH);
+
         store.setDefault(PreferenceConstants.P_AUTO_SAVE_ENABLE, PreferenceConstants.P_AUTO_SAVE_DEFAULT_ENABLE);
         store.setDefault(PreferenceConstants.P_AUTO_SAVE_INTERVAL,
             PreferenceConstants.P_AUTO_SAVE_DEFAULT_INTERVAL_SECS);

@@ -79,10 +79,10 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
      */
     public WriteTableNodeDialogPane() {
         final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
-            new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
-            ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG, false,
-            createFlowVariableModel(WriteTableNodeModel.CFG_FILENAME, Type.STRING),
+            new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""), ReadTableNodeDialogPane.class.getName(),
+            JFileChooser.SAVE_DIALOG, false, createFlowVariableModel(WriteTableNodeModel.CFG_FILENAME, Type.STRING),
             ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
+        fileChooser.setDialogTypeSaveWithExtension(ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
 
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
             WriteTableNodeModel.CFG_OVERWRITE_OK, false), "Overwrite OK");
@@ -103,6 +103,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
                 }
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         addDialogComponent(overwriteOK);

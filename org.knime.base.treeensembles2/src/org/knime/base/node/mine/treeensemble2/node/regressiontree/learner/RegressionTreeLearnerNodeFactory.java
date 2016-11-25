@@ -66,14 +66,17 @@ public final class RegressionTreeLearnerNodeFactory extends NodeFactory<Regressi
     /** {@inheritDoc} */
     @Override
     protected int getNrNodeViews() {
-        return 0;
+        return 1;
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeView<RegressionTreeLearnerNodeModel> createNodeView(final int viewIndex,
         final RegressionTreeLearnerNodeModel nodeModel) {
-        return null;
+        if (viewIndex != 0) {
+            throw new IllegalArgumentException("There exists only one view with index 0.");
+        }
+        return new RegressionTreeLearnerNodeView(nodeModel);
     }
 
     /** {@inheritDoc} */

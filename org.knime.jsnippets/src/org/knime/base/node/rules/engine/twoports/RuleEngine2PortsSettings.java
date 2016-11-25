@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   2015 máj. 22 (Gábor): created
+ *   2015 mï¿½j. 22 (Gï¿½bor): created
  */
 package org.knime.base.node.rules.engine.twoports;
 

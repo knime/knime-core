@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -74,21 +75,23 @@ public final class UniqueNameGenerator {
         Pattern.compile("(^.*) \\(#(\\d+)\\)");
 
     /** Create name generator, with names reserved from column names.
-     * @param spec The spec whose name are the initially set of names. */
+     * @param spec The spec whose name are the initially set of names (null allowed). */
     public UniqueNameGenerator(final DataTableSpec spec) {
-        m_nameHash = new HashSet<String>();
-        for (DataColumnSpec col : spec) {
-            m_nameHash.add(col.getName());
+        if (spec == null) {
+            m_nameHash = new HashSet<String>();
+        } else {
+            m_nameHash = spec.stream().map(c -> c.getName()).collect(Collectors.toCollection(HashSet<String>::new));
         }
     }
 
     /** Create new name generator with reserved names from argument set.
-     * @param names Reserved names, must not be null. */
+     * @param names Reserved names (null allowed). */
     public UniqueNameGenerator(final Set<String> names) {
         if (names == null) {
-            throw new NullPointerException("Argument must not be null.");
+            m_nameHash = new HashSet<>();
+        } else {
+            m_nameHash = new HashSet<String>(names);
         }
-        m_nameHash = new HashSet<String>(names);
     }
 
     /** Create new unique name. The returned name is guaranteed to be unique,

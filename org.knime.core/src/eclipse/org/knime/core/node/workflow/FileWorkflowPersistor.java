@@ -1130,6 +1130,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             exec.checkCanceled();
             int missingNodeSuffix = missingNode.getKey();
             NodeAndBundleInformation nodeInfo = missingNode.getValue().getNodeAndBundleInformation();
+            loadResult.addMissingNode(nodeInfo);
             NodeSettingsRO additionalFactorySettings = missingNode.getValue().getAdditionalFactorySettings();
             ArrayList<PersistorWithPortIndex> upstreamNodes = new ArrayList<PersistorWithPortIndex>();
             ArrayList<List<PersistorWithPortIndex>> downstreamNodes = new ArrayList<List<PersistorWithPortIndex>>();

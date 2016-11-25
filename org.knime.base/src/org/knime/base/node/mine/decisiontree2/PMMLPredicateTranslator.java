@@ -95,7 +95,10 @@ public final class PMMLPredicateTranslator {
             initSimpleSetPred(sp, setPred);
         } else if (predicate instanceof PMMLCompoundPredicate) {
             PMMLCompoundPredicate compPred = (PMMLCompoundPredicate)predicate;
-            CompoundPredicate cp = CompoundPredicate.Factory.newInstance();
+            // compound predicates were only instantiated but not added to the node
+            // this never caused any problems up until v3.3 because the KNIME decision tree
+            // for classification does not use compound predicates
+            CompoundPredicate cp = node.addNewCompoundPredicate();
             cp.setBooleanOperator(getOperator(compPred.getBooleanOperator()));
             for (PMMLPredicate pred : compPred.getPredicates()) {
                 exportTo(pred, cp);
@@ -139,7 +142,11 @@ public final class PMMLPredicateTranslator {
     private static void initSimplePredicate(final PMMLSimplePredicate sp, final SimplePredicate simplePred) {
         simplePred.setField(sp.getSplitAttribute());
         simplePred.setOperator(getOperator(sp.getOperator()));
-        simplePred.setValue(sp.getThreshold());
+        PMMLOperator op = sp.getOperator();
+        // for IS_MISSING and IS_NOT_MISSING the attribute value must not appear!
+        if (!(op == PMMLOperator.IS_MISSING || op == PMMLOperator.IS_NOT_MISSING)) {
+            simplePred.setValue(sp.getThreshold());
+        }
     }
 
     /**

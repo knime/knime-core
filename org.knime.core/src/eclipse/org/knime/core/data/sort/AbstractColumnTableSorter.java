@@ -67,6 +67,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -75,6 +76,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.CanceledExecutionException;
@@ -158,13 +160,13 @@ abstract class AbstractColumnTableSorter {
      */
     AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final SortingDescription... descriptions)
         throws InvalidSettingsException {
-        checkNotNullAndNotEmpty(descriptions);
+        checkArgument(!ArrayUtils.contains(descriptions, null), "Null values are not permitted.");
         m_dataTableSpec = checkNotNull(spec);
         m_sortDescriptions = descriptions;
         m_rowCount = rowsCount;
         m_buffer = new LinkedHashMap<>();
         for (SortingDescription desc : descriptions) {
-            m_buffer.put(desc, new ArrayList<DataRow>(20000));
+            m_buffer.put(desc, new ArrayList<DataRow>());
         }
         validateAndInit(spec, descriptions);
     }
@@ -186,8 +188,14 @@ abstract class AbstractColumnTableSorter {
     void sort(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
         throws CanceledExecutionException {
 
-        clearBuffer();
-        sortOnDisk(dataTable, exec, resultListener);
+        if (m_sortDescriptions.length <= 0) {
+            for (DataRow r : dataTable) {
+                resultListener.consume(new DefaultRow(r.getKey(), new DataCell[0]));
+            }
+        } else {
+            clearBuffer();
+            sortOnDisk(dataTable, exec, resultListener);
+        }
     }
 
     /**
@@ -222,12 +230,10 @@ abstract class AbstractColumnTableSorter {
      * @param exec an execution context for reporting progress and creating BufferedDataContainers
      * @throws CanceledExecutionException if the user has canceled execution
      */
-    private void
-        sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
-            throws CanceledExecutionException {
+    private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec,
+        final SortingConsumer resultListener) throws CanceledExecutionException {
 
-        final List<AbstractTableSorter> columnPartitions =
-            new ArrayList<AbstractTableSorter>(m_sortDescriptions.length);
+        final List<AbstractTableSorter> columnPartitions = new ArrayList<>(m_sortDescriptions.length);
 
         // Each sorting description is done as a single external merge sort of their parts of the data
         for (int i = 0; i < m_sortDescriptions.length; i++) {
@@ -237,7 +243,7 @@ abstract class AbstractColumnTableSorter {
             columnPartitions.add(tableSorter);
         }
 
-        exec.setMessage("Reading table.");
+        exec.setMessage("Reading table");
         RowIterator iterator = dataTable.iterator();
 
         ExecutionMonitor readProgress = exec.createSubProgress(0.7);
@@ -245,26 +251,27 @@ abstract class AbstractColumnTableSorter {
         // phase one: create as big chunks as possible from the given input table
         // for each sort description
         int chunkCount = 0;
-        int currentTotalRows = 0;
+        long currentTotalRows = 0L;
         while (iterator.hasNext()) {
-            LOGGER.debugWithFormat("Reading temporary tables -- ", chunkCount);
-            fillBuffer(iterator, exec);
-            int bufferedRows = m_buffer.entrySet().iterator().next().getValue().size();
-            LOGGER.debugWithFormat("Writing temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
+            assert m_buffer.values().stream().allMatch(l -> l.isEmpty());
+            long bufferedRows = fillBuffer(iterator, exec);
+            LOGGER.debugWithFormat("Writing temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             currentTotalRows += bufferedRows;
-            readProgress.setProgress(currentTotalRows / (double)m_rowCount, "Writing temporary tables -- "
-                + chunkCount++ + "/" + bufferedRows);
-            LOGGER.debugWithFormat("Sorting temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            readProgress.setProgress(currentTotalRows / (double)m_rowCount,
+                String.format("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows));
+            chunkCount += 1;
+            LOGGER.debugWithFormat("Sorting temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             sortBufferInParallel();
 
             for (AbstractTableSorter tableSorter : columnPartitions) {
                 tableSorter.openChunk();
             }
 
-            LOGGER.debugWithFormat("Writing temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            LOGGER.debugWithFormat("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows);
             for (int i = 0; i < m_sortDescriptions.length; i++) {
                 SortingDescription sortingDescription = m_sortDescriptions[i];
-                LOGGER.debugWithFormat("Writing temporary table -- %d/%d ", chunkCount, i);
+                LOGGER.debugWithFormat("Writing temporary table (chunk %d, column %d)", chunkCount, i);
                 AbstractTableSorter tableSorter = columnPartitions.get(i);
                 ListIterator<DataRow> rowIterator = m_buffer.get(sortingDescription).listIterator();
                 while (rowIterator.hasNext()) {
@@ -282,13 +289,6 @@ abstract class AbstractColumnTableSorter {
             clearBuffer();
         }
 
-        clearBuffer();
-
-        // if the table is empty or has only one row, we can stop here
-        if (currentTotalRows <= 1) {
-            return;
-        }
-
         readProgress.setProgress(1.0);
 
         // phase 2: merge the temporary tables
@@ -298,8 +298,10 @@ abstract class AbstractColumnTableSorter {
 
         // publish the results to the listener
         List<DataRow> currentRow = new ArrayList<>();
-        int rowNo = 0;
-        while (partitionRowIterators.get(0).hasNext()) {
+        long rowNo = 0;
+        Iterator<DataRow> firstPartitionIterator = partitionRowIterators.isEmpty()
+                ? Collections.<DataRow>emptyList().iterator() : partitionRowIterators.get(0);
+        while (firstPartitionIterator.hasNext()) {
             for (int i = 0; i < partitionRowIterators.size(); i++) {
                 currentRow.add(partitionRowIterators.get(i).next());
             }
@@ -362,7 +364,7 @@ abstract class AbstractColumnTableSorter {
 
     private static SortingDescription[] toSortDescriptions(final DataTableSpec dataTableSpec, final String[] toSort)
         throws InvalidSettingsException {
-        checkNotNullAndNotEmpty(toSort);
+        checkArgument(!ArrayUtils.contains(toSort, null), "Null values are not permitted.");
 
         SortingDescription[] toReturn = new SortingDescription[toSort.length];
         int index = 0;
@@ -381,11 +383,6 @@ abstract class AbstractColumnTableSorter {
         return toReturn;
     }
 
-    private static <T> void checkNotNullAndNotEmpty(final T[] toSort) {
-        checkArgument(ArrayUtils.isNotEmpty(toSort), "Array cannot be empty.");
-        checkArgument(!ArrayUtils.contains(toSort, null), "Null values are not permitted.");
-    }
-
     /**
      * @param m_buffer
      * @param iterator
@@ -393,21 +390,23 @@ abstract class AbstractColumnTableSorter {
      * @param exec
      * @throws CanceledExecutionException
      */
-    private void fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
+    private long fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
         throws CanceledExecutionException {
 
-        // read at least two rows, otherwise we won't make any progress
         long count = 0;
         while (iterator.hasNext()) {
+            count += 1;
             readExec.checkCanceled();
             DataRow r = iterator.next();
             for (Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
                 descr.getValue().add(descr.getKey().createSubRow(r));
             }
-            if ((++count >= 2) &&  m_memActionIndicator.lowMemoryActionRequired()) {
+            // read at least two rows, otherwise we won't make any progress
+            if ((count >= 2) &&  m_memActionIndicator.lowMemoryActionRequired()) {
                 break;
             }
         }
+        return count;
     }
 
     private void clearBuffer() {
@@ -417,22 +416,22 @@ abstract class AbstractColumnTableSorter {
     }
 
     private void sortBufferInParallel() {
+        List<Future<?>> futures = new ArrayList<>();
         try {
-            List<Future<?>> futures = new ArrayList<>();
             for (final Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
                 futures.add(m_executor.enqueue(new Runnable() {
-
                     @Override
                     public void run() {
                         Collections.sort(descr.getValue(), descr.getKey());
                     }
                 }));
             }
-            //wait until the inserting is finished
+            // wait until the inserting is finished
             for (Future<?> f : futures) {
                 f.get();
             }
         } catch (ExecutionException | InterruptedException e) {
+            futures.stream().forEach(f -> f.cancel(true));
             throw new RuntimeException("Execution has been interrupted!", e);
         }
     }

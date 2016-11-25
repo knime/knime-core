@@ -47,6 +47,8 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.convert.DataValueAccessMethod;
+
 
 /**
  * Interface supporting generic boolean values.
@@ -62,6 +64,7 @@ public interface BooleanValue extends DataValue {
     /**
      * @return A generic <code>boolean</code> value.
      */
+    @DataValueAccessMethod(name = "Boolean")
     boolean getBooleanValue();
 
     /** Implementations of the meta information of this value class. */

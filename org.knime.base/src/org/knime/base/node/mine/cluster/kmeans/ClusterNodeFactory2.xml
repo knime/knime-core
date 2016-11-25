@@ -25,6 +25,11 @@
 		    The number of iterations after which the algorithm terminates,
 			independent of the accuracy improvement of the cluster centers.
 		</option>
+		<option name="Enable Hilite Mapping">
+            If enabled, the hiliting of a cluster row (2nd output) will hilite all rows of this
+            cluster in the input table and the 1st output table. Depending on the number of rows, enabling this 
+            feature might consume a lot of memory.
+		</option>
 	</fullDescription>
 	
     <ports>

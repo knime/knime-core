@@ -53,7 +53,6 @@ package org.knime.base.node.preproc.pmml.missingval.compute;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -112,10 +111,9 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
      */
     public MissingValueHandlerFactorySelectionPanel(final DataType[] dt, final MVIndividualSettings s,
                                                  final PortObjectSpec[] specs) {
-
         // Each settings panel for the different factories is a card in a card layout.
         // The change of the cards is triggered by the combo box.
-        m_argumentsPanel = new JPanel(new CardLayout());
+        m_argumentsPanel = new JPanel(new DynamicCardLayout());
         m_comboBox = new JComboBox<MissingCellHandlerFactory>();
         for (MissingCellHandlerFactory fac : MissingCellHandlerFactoryManager.getInstance().getFactories(dt)) {
             m_comboBox.addItem(fac);
@@ -131,7 +129,6 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
                 m_argumentsPanel.add(new EmptyMissingValueHandlerPanel(), fac.getID());
             }
         }
-
         // Add listener to respond to a changing selection so the settings panel cards can be updated
         m_comboBox.addActionListener(this);
         // Now set the selected item. The change action event is triggered and the correct panel shown.
@@ -151,13 +148,13 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         add(m_comboBox, gbc);
         gbc.gridx = 0;
         gbc.gridy++;
+        gbc.fill = GridBagConstraints.BOTH;
         add(m_argumentsPanel, gbc);
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void actionPerformed(final ActionEvent e) {
         MissingCellHandlerFactory fac = getSelectedFactory();
@@ -166,18 +163,6 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
             m_argumentsPanel.setVisible(true);
             String key = fac.getID();
             ((CardLayout)m_argumentsPanel.getLayout()).show(m_argumentsPanel, key);
-
-            // Find visible component and adapt size of container to it.
-            // This avoids that m_argumentsPanel always takes as much space as its largest card.
-            Dimension dim = null;
-            for (Component p : m_argumentsPanel.getComponents()) {
-                if (p.isVisible()) {
-                    dim = p.getPreferredSize();
-                    // There can only be one visible card, so we can break here.
-                    break;
-                }
-            }
-            m_argumentsPanel.setPreferredSize(dim);
         } else {
             // If the factory has no settings panel, we can hide the card layout panel.
             m_argumentsPanel.setVisible(false);

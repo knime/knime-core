@@ -52,7 +52,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeColumnMetaData {
@@ -86,7 +86,7 @@ public abstract class TreeColumnMetaData {
         if (obj == this) {
             return true;
         }
-        if (obj instanceof TreeColumnMetaData) {
+        if (this.getClass() == obj.getClass()) {
             String oAttName = ((TreeColumnMetaData)obj).getAttributeName();
             if (m_attributeName.equals(oAttName)) {
                 return true;

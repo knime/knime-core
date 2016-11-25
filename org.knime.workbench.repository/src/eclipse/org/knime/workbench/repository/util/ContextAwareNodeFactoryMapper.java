@@ -66,10 +66,10 @@ public final class ContextAwareNodeFactoryMapper {
     }
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ContextAwareNodeFactoryMapper.class);
-    private static final Map<String, Pair<Class<? extends ContextAwareNodeFactory>, Image>> EXTENSION_REGISTRY;
+    private static final Map<String, Pair<Class<? extends ContextAwareNodeFactory<?>>, Image>> EXTENSION_REGISTRY;
 
     static {
-        EXTENSION_REGISTRY = new TreeMap<String, Pair<Class<? extends ContextAwareNodeFactory>,Image>>();
+        EXTENSION_REGISTRY = new TreeMap<String, Pair<Class<? extends ContextAwareNodeFactory<?>>,Image>>();
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         for (IConfigurationElement element : registry
                 .getConfigurationElementsFor(
@@ -83,7 +83,9 @@ public final class ContextAwareNodeFactoryMapper {
                 @SuppressWarnings("unchecked")
                 final ContextAwareNodeFactory<NodeModel> o =
                         (ContextAwareNodeFactory<NodeModel>)element.createExecutableExtension("NodeFactory");
-                Class<? extends ContextAwareNodeFactory> clazz = o.getClass();
+                @SuppressWarnings("unchecked")
+                Class<? extends ContextAwareNodeFactory<?>> clazz =
+                    (Class<? extends ContextAwareNodeFactory<?>>)o.getClass();
 
                 for (IConfigurationElement child : element.getChildren()) {
                     String extension = child.getAttribute("extension");
@@ -94,7 +96,7 @@ public final class ContextAwareNodeFactoryMapper {
                             icon = ImageRepository.getIconImage(o);
                         }
                         EXTENSION_REGISTRY.put(extension,
-                                               new Pair<Class<? extends ContextAwareNodeFactory>, Image>(clazz, icon));
+                            new Pair<Class<? extends ContextAwareNodeFactory<?>>, Image>(clazz, icon));
                     } // else already registered -> first come first serve
                 }
             } catch (InvalidRegistryObjectException | CoreException e) {
@@ -114,13 +116,14 @@ public final class ContextAwareNodeFactoryMapper {
       * @return the node factory registered for this extension, or null if
       *      the extension is not registered.
       */
-     public static Class<? extends ContextAwareNodeFactory> getNodeFactory(final String url) {
-        for (Map.Entry<String, Pair<Class<? extends ContextAwareNodeFactory>, Image>> e : EXTENSION_REGISTRY.entrySet()) {
+     public static Class<? extends ContextAwareNodeFactory<?>> getNodeFactory(final String url) {
+        for (Map.Entry<String, Pair<Class<? extends ContextAwareNodeFactory<?>>, Image>> e : EXTENSION_REGISTRY
+            .entrySet()) {
             if (url.endsWith(e.getKey())) {
                 return e.getValue().getFirst();
             }
         }
-         return null;
+        return null;
      }
 
      /**
@@ -131,11 +134,12 @@ public final class ContextAwareNodeFactoryMapper {
       * @since 2.7
       */
      public static Image getImage(final String url) {
-         for (Map.Entry<String, Pair<Class<? extends ContextAwareNodeFactory>, Image>> e : EXTENSION_REGISTRY.entrySet()) {
-             if (url.endsWith(e.getKey())) {
-                 return e.getValue().getSecond();
-             }
-         }
-          return null;
+        for (Map.Entry<String, Pair<Class<? extends ContextAwareNodeFactory<?>>, Image>> e : EXTENSION_REGISTRY
+            .entrySet()) {
+            if (url.endsWith(e.getKey())) {
+                return e.getValue().getSecond();
+            }
+        }
+        return null;
      }
 }

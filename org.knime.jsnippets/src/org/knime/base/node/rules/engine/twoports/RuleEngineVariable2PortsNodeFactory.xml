@@ -92,6 +92,7 @@ $${SFlowVar10}$$ MATCHES $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$
 
         <option name="Rules column">Name of the column in the second input table containing the rules or just the conditions if an outcome column is also selected. In case the rules are available during configuration, the type of the outcome column is shown at the right end of this configuration row.</option>
         <option name="=>">In case your rules are in two separate columns (condition and outcome), this should be the column containing the outcome values. (Ignored for the comment -starting with <tt>//</tt>- conditions. In case it contains missing value for non-comment conditions, the output type will be String!) For String columns the outcome should not be quoted (by <tt>"</tt> or by <tt>/</tt>)</option>
+        <option name="Treat values starting with $ as references">When checked, the values in string -outcome- column starting with <tt>$</tt> are not treated as string constants with that value, but are tried to be parsed as references to flow variables, columns or table properties.</option>
 		<option name="Result variable">Name of the new flow variable,
 			which contains the
 			outcome of the rules.

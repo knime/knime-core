@@ -96,6 +96,7 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
         while ((nextChild = matchingNode.findMatchingChild(record)) != null) {
             matchingNode = nextChild;
         }
+        assert matchingNode.getNrChildren() == 0 : "The found node is not a leaf node!";
         return matchingNode;
     }
 

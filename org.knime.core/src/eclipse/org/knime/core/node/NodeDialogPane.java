@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -107,6 +108,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.ICredentials;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeContext;
@@ -132,6 +134,7 @@ import org.knime.core.util.MutableInteger;
 public abstract class NodeDialogPane {
     static {
         MacFileChooserFixer.installFixer();
+        ViewUtils.setLookAndFeel();
     }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
@@ -280,10 +283,12 @@ public abstract class NodeDialogPane {
 
     /**
      * Creates and adds the job manager selection tab.
+     *
      * @param splitType indicates how table splitting is supported in this node
      */
     public void addJobMgrTab(final SplitType splitType) {
-        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType);
+        m_jobMgrTab =
+            new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(m_nodeContext.getNodeContainer()));
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 
@@ -297,11 +302,22 @@ public abstract class NodeDialogPane {
 
     /** Returns true if the underlying node is write protected. A node is write
      * protected if it is part of a linked metanode (i.e. referencing a
-     * template). Client code usually does not need to evaluate this flag, the
+     * template), it has a reset lock ({@link NodeContainer#getNodeLocks()}) and
+     * is executed at the same time, or it has a configure lock ({@link NodeContainer#getNodeLocks()}).
+     *
+     * Client code usually does not need to evaluate this flag, the
      * framework will disable the OK/Apply button for write protected nodes.
      * @return If this node is write protected. */
     public final boolean isWriteProtected() {
-        return m_isWriteProtected;
+        NodeContainer nc = getNodeContext().getNodeContainer();
+        if (nc.getNodeLocks().hasResetLock()
+            && (nc.getNodeContainerState().isExecuted() || nc.getNodeContainerState().isExecutionInProgress())) {
+            return true;
+        } else if (nc.getNodeLocks().hasConfigureLock()) {
+            return true;
+        } else {
+            return m_isWriteProtected;
+        }
     }
 
     /** @return available flow variables in a non-modifiable map

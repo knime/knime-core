@@ -83,6 +83,7 @@ import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
@@ -149,7 +150,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private NodeMessage m_nodeMessage = NodeMessage.NONE;
 
-    private boolean m_isDeletable;
+    /**
+     * Object that represents locks set on the node, i.e.
+     * whether the node is allowed to be deleted, reseted or configured.
+     */
+    private NodeLocks m_nodeLocks;
 
     /** this list will hold FlowObjects of loops in the pipeline which cannot
      * be executed before this one is not done - usually these are loops
@@ -209,9 +214,23 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
         m_id = id;
         m_state = InternalNodeContainerState.IDLE;
-        m_isDeletable = true;
+        m_nodeLocks = new NodeLocks(false, false, false);
         m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
         m_annotation.registerOnNodeContainer(this);
+    }
+
+    /**
+     * Create new NodeContainer with IDLE state. The provided node annotation will be taken over.
+     *
+     * @param parent the workflowmanager holding this node
+     * @param id the nodes identifier
+     * @param nodeAnno the node annotation to be copied from. If <code>null</code> then it's like calling {@link #NodeContainer(WorkflowManager, NodeID)}.
+     */
+    NodeContainer(final WorkflowManager parent, final NodeID id, final NodeAnnotation nodeAnno) {
+        this(parent, id);
+        if (nodeAnno != null) {
+            m_annotation.getData().copyFrom(nodeAnno.getData(), true);
+        }
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -232,7 +251,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
 
         m_uiInformation = persistor.getUIInfo();
-        m_isDeletable = persistor.isDeletable();
+        m_nodeLocks = persistor.getNodeLocks();
+
         setNodeMessage(persistor.getNodeMessage());
         if (!persistor.getLoadHelper().isTemplateFlow()) {
             m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
@@ -336,12 +356,15 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /////////////////////////////////////////////////
 
     /**
-     * @return true of this node (or all nodes in this container) are
-     *   resetable.
+     * @return true of this node (or all nodes in this container) are resetable. Please take the
+     *         {@link #getNodeLocks()}#hasResetLock() property into account when implementing this method.
      */
     abstract boolean isResetable();
 
-    /** @return true if this node is executed or contains executed nodes. */
+    /**
+     * @return true if this node is executed or contains executed nodes. Please take the
+     *         {@link #hasResetLock()} into account when implementing this method.
+     */
     abstract boolean canPerformReset();
 
     /** Enable (or disable) queuing of underlying node for execution. This
@@ -1150,11 +1173,18 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public abstract boolean hasInteractiveView();
 
-    /**
-     * @return true if node provides {@link WebTemplate} for an interactive web view.
-     * @since 2.8
+    /** Get the 'interactive web views' provided by this node. That is, views providing a {@link WebTemplate} for an interactive
+     * web view. {@link NativeNodeContainer} can have at most one view, {@link SubNodeContainer} may have many (one for
+     * each contained view node), {@link WorkflowManager} have none.
+     *
+     * <p>The model for the view is (currently) a {@link NodeModel} underlying the native node as the view itself
+     * lives in the UI code and has a strong dependency to the SWT browser / eclipse code.
+     *
+     * <p>The name associated with the web view (e.g. JS scatter plot) comes from a node's description (xml).
+     * @return An new {@link InteractiveWebViewsResult} with possibly 0 or more views.
+     * @since 3.3
      */
-    public abstract boolean hasInteractiveWebView();
+    public abstract InteractiveWebViewsResult getInteractiveWebViews();
 
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
@@ -1322,12 +1352,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** @param value the isDeletable to set */
     public void setDeletable(final boolean value) {
-        m_isDeletable = value;
+        if (m_nodeLocks.hasDeleteLock() == value) {
+            changeNodeLocks(!value, NodeLock.DELETE);
+        }
     }
 
     /** @return the isDeletable */
     public boolean isDeletable() {
-        return m_isDeletable;
+        return !m_nodeLocks.hasDeleteLock();
     }
 
     /** Method that's called when the node is discarded. The single node
@@ -1577,5 +1609,128 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             }
         }
 
+    }
+
+
+    /* ------------- Node Locking -------------- */
+
+    /**
+     * Changes the nodes lock status for various actions, i.e. from being deleted, reseted or configured.
+     *
+     * @param setLock whether the locks should be set (<code>true</code>) or released (<code>false</code>)
+     * @param locks the locks to be set or released, e.g. {@link NodeLock#DELETE}, {@link NodeLock#RESET},
+     *            {@link NodeLock#CONFIGURE}
+     * @since 3.2
+     */
+    public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
+        boolean deleteLock = m_nodeLocks.hasDeleteLock();
+        boolean resetLock = m_nodeLocks.hasResetLock();
+        boolean configureLock = m_nodeLocks.hasConfigureLock();
+        for (NodeLock nl : locks) {
+            switch (nl) {
+                case DELETE:
+                    deleteLock = setLock;
+                    break;
+                case RESET:
+                    resetLock = setLock;
+                    break;
+                case CONFIGURE:
+                    configureLock = setLock;
+                    break;
+                case ALL:
+                    deleteLock = setLock;
+                    resetLock = setLock;
+                    configureLock = setLock;
+                default:
+                    break;
+            }
+        }
+        if (deleteLock != m_nodeLocks.hasDeleteLock() || resetLock != m_nodeLocks.hasResetLock()
+            || configureLock != m_nodeLocks.hasConfigureLock()) {
+            notifyNodePropertyChangedListener(NodeProperty.LockStatus);
+            m_nodeLocks = new NodeLocks(deleteLock, resetLock, configureLock);
+        }
+    }
+
+
+    /**
+     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
+     *
+     * @return the currently set {@link NodeLocks}
+     * @since 3.2
+     */
+    public NodeLocks getNodeLocks() {
+        return m_nodeLocks;
+    }
+
+    /**
+     * Class that represents the lock status of a node, i.e. whether a node has a reset, delete or configure-lock.
+     * If a lock is set then the respective action is not allowed to be performed.
+     *
+     * @since 3.2
+     */
+    public final static class NodeLocks {
+
+        private boolean m_hasDeleteLock;
+        private boolean m_hasResetLock;
+        private boolean m_hasConfigureLock;
+
+        NodeLocks(final boolean hasDeleteLock, final boolean hasResetLock, final boolean hasConfigureLock) {
+            m_hasDeleteLock = hasDeleteLock;
+            m_hasResetLock = hasResetLock;
+            m_hasConfigureLock = hasConfigureLock;
+        }
+
+        /**
+         * @return <code>true</code> if the node can be deleted
+         */
+        public boolean hasDeleteLock() {
+           return m_hasDeleteLock;
+        }
+
+       /**
+        * @return <code>true</code> if the node is locked from being reseted, i.e. it is under NO circumstances resetable, if
+        *         <code>false</code> it still might be not resetable depending on the {@link NodeContainer#isResetable()}-implementation.
+        * @since 3.2
+        */
+       public boolean hasResetLock() {
+           return m_hasResetLock;
+       }
+
+       /**
+        * @return <code>true</code> if the node is locked from being configured
+        * @since 3.2
+        */
+       public boolean hasConfigureLock() {
+           return m_hasConfigureLock;
+       }
+
+    }
+
+    /**
+     * Available locks to be passed in the {@link NodeContainer#changeNodeLocks(boolean, NodeLock...)}-method.
+     *
+     * @since 3.2
+     */
+    public static enum NodeLock {
+        /**
+         * Represents all available locks.
+         */
+        ALL,
+
+        /**
+         * Represents a delete node lock.
+         */
+        DELETE,
+
+        /**
+         * Represents a reset node lock.
+         */
+        RESET,
+
+        /**
+         * Represents a configure node lock.
+         */
+        CONFIGURE;
     }
 }

@@ -55,7 +55,11 @@ import java.util.List;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ICredentials;
 
 /**
  * Settings helper that reads/writes the port object ID that is used by the {@link PortObjectRepository}.
@@ -69,6 +73,7 @@ public final class PortObjectIDSettings {
     private Integer m_id;
     private List<FlowVariable> m_flowVariables;
     private boolean m_copyData;
+    private CredentialsProvider m_credentialsProvider;
 
     /** Constructor, which sets a null ID (no id). */
     public PortObjectIDSettings() {
@@ -113,6 +118,12 @@ public final class PortObjectIDSettings {
                 case STRING:
                     v = new FlowVariable(name, child.getString("value"));
                     break;
+                case CREDENTIALS:
+                    CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
+                    ICredentials credentials = m_credentialsProvider.get(child.getString("value"));
+                    v = CredentialsStore.newCredentialsFlowVariable(
+                        credentials.getName(), credentials.getLogin(), credentials.getPassword(), false, false);
+                    break;
                 default:
                     throw new InvalidSettingsException(
                             "Unknown type " + varType);
@@ -145,6 +156,9 @@ public final class PortObjectIDSettings {
                 break;
             case STRING:
                 child.addString("value", fv.getStringValue());
+                break;
+            case CREDENTIALS:
+                child.addString("value", fv.getName());
                 break;
             default:
                 assert false : "Unknown variable type: " + fv.getType();
@@ -193,6 +207,16 @@ public final class PortObjectIDSettings {
     /** @return the copyData */
     public boolean isCopyData() {
         return m_copyData;
+    }
+
+    /**
+     * Sets the credentials provider to read the credentials from (in case there are credentials flow variables to be loaded).
+     * Only required for loading the settings.
+     *
+     * @param cp the credentials provider
+     */
+    public void setCredentialsProvider(final CredentialsProvider cp) {
+        m_credentialsProvider = cp;
     }
 
 }

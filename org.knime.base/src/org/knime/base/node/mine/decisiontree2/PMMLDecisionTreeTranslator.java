@@ -58,6 +58,7 @@ import org.apache.xmlbeans.XmlCursor;
 import org.dmg.pmml.ArrayType;
 import org.dmg.pmml.FIELDUSAGETYPE;
 import org.dmg.pmml.MININGFUNCTION;
+import org.dmg.pmml.MININGFUNCTION.Enum;
 import org.dmg.pmml.MISSINGVALUESTRATEGY;
 import org.dmg.pmml.MiningFieldDocument.MiningField;
 import org.dmg.pmml.NOTRUECHILDSTRATEGY;
@@ -87,6 +88,7 @@ import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * A DecisionTree translator class between KNIME and PMML.
@@ -147,6 +149,13 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
     private DecisionTree m_tree;
 
     /**
+     * Only used when a regression tree model is read in a pmml model appender node.
+     * This is because in pmml there is no real difference between regression and classification
+     * trees other than the kind of function they perform (regression or classification).
+     */
+    private boolean m_isClassification;
+
+    /**
      * Creates a new decision tree translator initialized with the decision
      * tree. For usage with the
      * {@link #exportTo(PMMLDocument, PMMLPortObjectSpec)} method.
@@ -156,6 +165,7 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
     public PMMLDecisionTreeTranslator(final DecisionTree tree) {
         this();
         m_tree = tree;
+        m_isClassification = true;
     }
 
     /**
@@ -177,7 +187,11 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
 
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, treeModel);
         treeModel.setModelName("DecisionTree");
-        treeModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
+        if (m_isClassification) {
+            treeModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
+        } else {
+            treeModel.setFunctionName(MININGFUNCTION.REGRESSION);
+        }
 
         // ----------------------------------------------
         // set up splitCharacteristic
@@ -228,7 +242,12 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             final DerivedFieldMapper mapper) {
         pmmlNode.setId(String.valueOf(node.getOwnIndex()));
         pmmlNode.setScore(node.getMajorityClass().toString());
-        pmmlNode.setRecordCount(node.getEntireClassCount());
+        // don't add recordCount if it is zero
+        // this is e.g. the case if a simple regression tree is
+        // read in and then exported again
+        if (node.getEntireClassCount() > 0) {
+            pmmlNode.setRecordCount(node.getEntireClassCount());
+        }
 
         if (node instanceof DecisionTreeNodeSplitPMML) {
             int defaultChild =
@@ -315,8 +334,7 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             // delegate the writing to the predicate translator
             PMMLPredicateTranslator.exportTo(predicate, pmmlNode);
         } else {
-            LOGGER.error("Node Type " + parent.getClass()
-                    + " is not supported!");
+            throw new IllegalArgumentException("Node Type " + parent.getClass() + " is not supported!");
         }
 
         // adding score distribution (class counts)
@@ -397,8 +415,14 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
     public DecisionTree parseDecTreeFromModel(final TreeModel treeModel) {
         // --------------------------------------------
         // check the mining function, only classification is allowed
-        if (MININGFUNCTION.CLASSIFICATION != treeModel.getFunctionName()) {
-            LOGGER.error("Only classification tree is supported!");
+
+        final Enum functionName = CheckUtils.checkArgumentNotNull(treeModel.getFunctionName(), "Function name must not be null");
+        if (MININGFUNCTION.CLASSIFICATION.equals(functionName)) {
+            m_isClassification = true;
+        } else if (MININGFUNCTION.REGRESSION.equals(functionName)) {
+            m_isClassification = false;
+        } else {
+            throw new IllegalArgumentException("Unsupported function name \"" + functionName + "\"");
         }
 
         // --------------------------------------------
@@ -438,6 +462,9 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
      * @return the decision tree stored by this translator
      */
     public DecisionTree getDecisionTree() {
+        if (!m_isClassification) {
+            throw new IllegalStateException("The provided PMML Tree Model is not a classification tree.");
+        }
         return m_tree;
     }
 

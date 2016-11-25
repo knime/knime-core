@@ -53,14 +53,20 @@ import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.AbstractPortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  *
@@ -90,6 +96,28 @@ public class RegressionTreeModelPortObject extends AbstractPortObject {
      */
     public RegressionTreeModelPortObject() {
         // not to be used by node
+    }
+
+    public PMMLPortObject createDecisionTreePMMLPortObject() {
+        final RegressionTreeModel model = getModel();
+        DataTableSpec attributeLearnSpec = model.getLearnAttributeSpec(m_spec.getLearnTableSpec());
+        DataColumnSpec targetSpec = m_spec.getTargetColumn();
+        PMMLPortObjectSpecCreator pmmlSpecCreator =
+            new PMMLPortObjectSpecCreator(new DataTableSpec(attributeLearnSpec, new DataTableSpec(targetSpec)));
+
+        try {
+            pmmlSpecCreator.setLearningCols(attributeLearnSpec);
+        } catch (InvalidSettingsException e) {
+            // this exception is not actually thrown in the code
+            // (as of KNIME v2.5.1)
+            throw new IllegalStateException(e);
+        }
+        pmmlSpecCreator.setTargetCol(targetSpec);
+        PMMLPortObjectSpec pmmlSpec = pmmlSpecCreator.createSpec();
+        PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
+        final TreeModelRegression tree = model.getTreeModel();
+        portObject.addModelTranslater(new TreeModelPMMLTranslator(tree));
+        return portObject;
     }
 
     /**

@@ -2,13 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Analytics Platform
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 3.1.1.qualifier
+Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: knime-product.jar,
  lib/tagsoup-1.2.1.jar
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
 Export-Package: org.knime.product,
+ org.knime.product.branding,
  org.knime.product.headless,
  org.knime.product.rcp
 Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
@@ -45,6 +46,8 @@ Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
  com.sun.jna;bundle-version="[3.5.2,4.0.0)",
  org.eclipse.equinox.p2.ui.sdk.scheduler;bundle-version="[1.0.100,2.0.0)",
  org.eclipse.e4.ui.css.swt.theme;bundle-version="0.10.0",
- org.eclipse.e4.ui.css.swt;bundle-version="0.12.0"
+ org.eclipse.e4.ui.css.swt;bundle-version="0.12.0",
+ org.apache.commons.compress;bundle-version="[1.5.0,2.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

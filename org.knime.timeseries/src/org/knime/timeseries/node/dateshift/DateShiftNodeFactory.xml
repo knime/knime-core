@@ -22,6 +22,7 @@
         <option name="Select shift column">Select the column containing the value to apply.</option>
         <option name="Select granularity of shift">The granularity of the numerical value 
         	(in years, months, weeks, days, hours, minutes, seconds, milliseconds)</option>
+        <option name="Replace column">If selected, the input column will be replaced by the computed result. </option>  
         <option name="Appended column name">Name of the newly appended column containing the calculate date/time. </option>  
         
         

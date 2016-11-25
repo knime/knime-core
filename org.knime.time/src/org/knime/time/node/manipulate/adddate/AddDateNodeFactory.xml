@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="add_date.png">
+	<name>Add Date</name>
+	<shortDescription>Adds date information to a time cell.</shortDescription>
+	<fullDescription>
+		<intro>
+			Adds a fixed date to cells which contain only a time. Optionally a default time zone can be added too.
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only to the included columns a date will be added.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the input table. The suffix of the appended columns can be
+				provided in	the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new columns.
+			</option>
+		</tab>
+		<tab name="Add Date">
+			<option name="Year">The fixed year.</option>
+			<option name="Month">The fixed month</option>
+			<option name="Day">The fixed day (a value between 1 and 31)</option>
+			<option name="Add time zone">If checked, a time zone will be added to the date.</option>
+			<option name="Time Zone">If <i>Add time zone</i> is checked, the user can choose the time zone here.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with added date.
+		</outPort>
+	</ports>
+</knimeNode>

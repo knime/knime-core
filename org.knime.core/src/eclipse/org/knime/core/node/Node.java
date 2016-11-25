@@ -64,8 +64,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.UIManager;
-
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
@@ -236,22 +234,6 @@ public final class Node implements NodeModelWarningListener {
     // and the WFM is asking if the node isExecutable(), which it is in most
     // cases then
     private final Object m_configureLock = new Object();
-
-    static {
-        try {
-            String sysLaF = UIManager.getSystemLookAndFeelClassName();
-            // The GTK L&F has apparently some serious problems. Weka dialogs
-            // cannot be opened (NPE) and in 1.6.0 there were problems with
-            // "Xlib: sequence lost" ... resulting in KNIME going down.
-            if (sysLaF.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
-                sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
-            }
-            UIManager.setLookAndFeel(sysLaF);
-        } catch (Exception e) {
-            NodeLogger.getLogger(Node.class).error("Unable to set LaF", e);
-            // use the default look and feel then.
-        }
-    }
 
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
@@ -912,7 +894,7 @@ public final class Node implements NodeModelWarningListener {
                     newInData[i] = rawInData[i];
                 } else {
                     exec.setMessage("Copying input object at port " +  i);
-                    ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                    ExecutionContext subExec = exec.createSubExecutionContext(0.0);
                     try {
                         newInData[i] = copyPortObject(rawInData[i], subExec);
                     } catch (CanceledExecutionException e) {
@@ -1198,9 +1180,7 @@ public final class Node implements NodeModelWarningListener {
      */
     private boolean setOutPortObjects(final PortObject[] newOutData,
             final boolean tolerateNullOutports, final boolean tolerateDifferentSpecs) {
-        if (newOutData == null) {
-            throw new NullPointerException("Port object array is null");
-        }
+        CheckUtils.checkArgumentNotNull(newOutData, "Port object array is null");
         if (newOutData.length != getNrOutPorts()) {
             throw new IndexOutOfBoundsException("Array is expected to be of "
                     + "length " + getNrOutPorts() + ": " + newOutData.length);
@@ -1309,9 +1289,9 @@ public final class Node implements NodeModelWarningListener {
      * @return The (deep) copy.
      * @throws IOException In case of exceptions while accessing the stream or
      * if the argument is an instance of {@link BufferedDataTable}.
-     * @throws CanceledExecutionException If canceled.*/
+     * @throws CanceledExecutionException If canceled. */
     public static PortObject copyPortObject(final PortObject portObject,
-            final ExecutionMonitor exec) throws IOException,
+            final ExecutionContext exec) throws IOException,
             CanceledExecutionException {
         if (portObject instanceof BufferedDataTable) {
             throw new IOException("Can't copy BufferedDataTable objects");
@@ -1356,7 +1336,7 @@ public final class Node implements NodeModelWarningListener {
         if (portObject instanceof FileStorePortObject) {
             FileStorePortObject sourceFSObj = (FileStorePortObject)portObject;
             FileStorePortObject resultFSObj = (FileStorePortObject)result;
-            FileStoreUtil.retrieveFileStoreHandlers(sourceFSObj, resultFSObj);
+            FileStoreUtil.retrieveFileStoreHandlers(sourceFSObj, resultFSObj, exec.getFileStoreHandler());
         }
         if (!deferredOutputStream.isInMemory()) {
             deferredOutputStream.getFile().delete();

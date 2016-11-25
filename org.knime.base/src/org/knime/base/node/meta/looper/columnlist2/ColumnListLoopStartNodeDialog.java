@@ -49,8 +49,12 @@ package org.knime.base.node.meta.looper.columnlist2;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,6 +62,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
@@ -72,19 +77,44 @@ public class ColumnListLoopStartNodeDialog extends NodeDialogPane {
     private final DataColumnSpecFilterPanel m_filterPanel =
             new DataColumnSpecFilterPanel();
 
+    private final JRadioButton m_noColumnsPolicyFailButton =
+            new JRadioButton("Fail");
+
+    private final JRadioButton m_noColumnsPolicyOneInterationButton =
+            new JRadioButton("Run one iteration");
+
     /**
      * Creates a new dialog.
      */
     public ColumnListLoopStartNodeDialog() {
         JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
 
+        GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 1;
         c.weighty = 1;
         p.add(m_filterPanel, c);
+
+        JPanel noColumnsPolicyPanel = new JPanel(new GridLayout(0, 1));
+        noColumnsPolicyPanel.setBorder(
+                BorderFactory.createTitledBorder("If include column list is empty:"));
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_noColumnsPolicyOneInterationButton);
+        //Default is to run one iteration.
+        m_noColumnsPolicyOneInterationButton.doClick();
+        bg.add(m_noColumnsPolicyFailButton);
+        noColumnsPolicyPanel.add(m_noColumnsPolicyOneInterationButton);
+        noColumnsPolicyPanel.add(m_noColumnsPolicyFailButton);
+
+        c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        p.add(noColumnsPolicyPanel, c);
 
         addTab("Standard settings", p);
     }
@@ -98,6 +128,10 @@ public class ColumnListLoopStartNodeDialog extends NodeDialogPane {
         DataColumnSpecFilterConfiguration conf = ColumnListLoopStartNodeModel.createDCSFilterConfiguration();
         m_filterPanel.saveConfiguration(conf);
         conf.saveConfiguration(settings);
+
+        SettingsModelBoolean noColumnsSettings = ColumnListLoopStartNodeModel.createNoColumnsPolicySetings();
+        noColumnsSettings.setBooleanValue(m_noColumnsPolicyOneInterationButton.isSelected());
+        noColumnsSettings.saveSettingsTo(settings);
     }
 
     /**
@@ -109,5 +143,13 @@ public class ColumnListLoopStartNodeDialog extends NodeDialogPane {
         DataColumnSpecFilterConfiguration conf = ColumnListLoopStartNodeModel.createDCSFilterConfiguration();
         conf.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(conf, specs[0]);
+
+        //true means to run one iteration and false that the node should fail
+        boolean runOneIter = settings.getBoolean(ColumnListLoopStartNodeModel.CFG_NO_COLUMNS_POLICY, true);
+        if(runOneIter){
+            m_noColumnsPolicyOneInterationButton.doClick();
+        } else {
+            m_noColumnsPolicyFailButton.doClick();
+        }
     }
 }

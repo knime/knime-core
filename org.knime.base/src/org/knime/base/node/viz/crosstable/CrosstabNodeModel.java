@@ -60,6 +60,7 @@ import java.util.Map;
 
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 import org.knime.base.data.aggregation.deprecated.SumOperator;
@@ -455,10 +456,14 @@ public class CrosstabNodeModel extends NodeModel
 
         final ColumnNamePolicy colNamePolicy =
             ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
-        final GlobalSettings globalSettings =
-            new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                    maxUniqueVals, GlobalSettings.STANDARD_DELIMITER,
-                    table.getDataTableSpec(), table.size());
+        final GlobalSettings globalSettings = GlobalSettings.builder()
+                .setFileStoreFactory(FileStoreFactory.createWorkflowFileStoreFactory(exec))
+                .setGroupColNames(groupByCols)
+                .setMaxUniqueValues(maxUniqueVals)
+                .setValueDelimiter(GlobalSettings.STANDARD_DELIMITER)
+                .setDataTableSpec(table.getDataTableSpec())
+                .setNoOfRows(table.size())
+                .setAggregationContext(AggregationContext.ROW_AGGREGATION).build();
 
         ColumnAggregator collAggregator = null;
         if (null != m_settings.getWeightColumn()) {

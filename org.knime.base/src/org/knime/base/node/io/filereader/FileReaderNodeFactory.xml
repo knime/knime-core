@@ -33,10 +33,15 @@
 			or select a file from the "Browse..." dialog.
 			</option>		
 		<option name="Preserve user settings"> If checked, the checkmarks and
-		    column names/types you explictly entered are preserved even if 
+		    column names/types you explicitly entered are preserved even if 
 		    you select a new file. By default, the analyzer starts with fresh
 		    default settings for each new file location.
 		    </option>
+		<option name="Rescan">If clicked, the file content is analyzed again. All 
+		    settings are reset (unless the "Preserve user settings" option
+		    is selected) and the file is read in again to pre-set new settings and the table
+		    structure.  
+            </option>
 		<option name="Read row IDs">If checked, the first column in the file
 			is used as row IDs. If not checked, default row headers are
 			created.</option>

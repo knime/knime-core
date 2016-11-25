@@ -54,9 +54,9 @@ import java.awt.Frame;
 import java.awt.Panel;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BoxLayout;
@@ -89,9 +89,11 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.js.core.layout.DefaultLayoutCreatorImpl;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
@@ -100,7 +102,6 @@ import org.knime.js.core.layout.bs.JSONLayoutViewContent;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
@@ -112,9 +113,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private static NodeLogger LOGGER = NodeLogger.getLogger(SubnodeLayoutJSONEditorPage.class);
 
-    private WorkflowManager m_wfManager;
     private SubNodeContainer m_subNodeContainer;
-    private List<NodeID> m_viewNodes;
+    private Map<NodeIDSuffix, WizardNode> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
     private RSyntaxTextArea m_textArea;
@@ -272,9 +272,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param subnodeContainer
      * @param viewNodes
      */
-    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer,
-        final List<NodeID> viewNodes) {
-        m_wfManager = manager;
+    public void setNodes(final SubNodeContainer subnodeContainer, final Map<NodeIDSuffix, WizardNode> viewNodes) {
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
         JSONLayoutPage page = null;
@@ -304,21 +302,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
 
     private JSONLayoutPage generateInitialJson() {
-        JSONLayoutPage page = new JSONLayoutPage();
-        List<JSONLayoutRow> rows = new ArrayList<JSONLayoutRow>();
-        page.setRows(rows);
-        for (NodeID nodeID : m_viewNodes) {
-            JSONLayoutRow row = new JSONLayoutRow();
-            JSONLayoutColumn col = new JSONLayoutColumn();
-            JSONLayoutViewContent view = new JSONLayoutViewContent();
-            view.setNodeID(Integer.toString(nodeID.getIndex()));
-            col.setContent(Arrays.asList(new JSONLayoutViewContent[]{view}));
-            try {
-                col.setWidthMD(12);
-            } catch (JsonMappingException e) { /* do nothing */ }
-            row.addColumn(col);
-            rows.add(row);
-        }
+        DefaultLayoutCreatorImpl creator = new DefaultLayoutCreatorImpl();
+        JSONLayoutPage page = creator.createDefaultLayoutStructure(m_viewNodes);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         try {
             String initialJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
@@ -355,15 +340,15 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         Set<Integer> notExistingIDs = new HashSet<Integer>(m_documentNodeIDs);
         Set<Integer> duplicateIDCheck = new HashSet<Integer>(m_documentNodeIDs);
         Set<Integer> duplicateIDs = new HashSet<Integer>();
-        for (NodeID id : m_viewNodes) {
-            Integer i = new Integer(id.getIndex());
+        for (NodeIDSuffix id : m_viewNodes.keySet()) {
+            int i = NodeID.fromString(id.toString()).getIndex();
             if (m_documentNodeIDs.contains(i)) {
                 notExistingIDs.remove(i);
             } else {
                 missingIDs.add(i);
             }
         }
-        for (Integer id : m_documentNodeIDs) {
+        for (int id : m_documentNodeIDs) {
             if (!duplicateIDCheck.remove(id)) {
                 duplicateIDs.add(id);
             }
@@ -371,7 +356,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         StringBuilder error = new StringBuilder();
         if (notExistingIDs.size() > 0) {
             error.append("Node IDs referenced in layout, but do not exist in node: ");
-            for (Integer id : notExistingIDs) {
+            for (int id : notExistingIDs) {
                 error.append(id);
                 error.append(", ");
             }
@@ -382,7 +367,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         if (missingIDs.size() > 0) {
             error.append("Node IDs missing in layout: ");
-            for (Integer id : missingIDs) {
+            for (int id : missingIDs) {
                 error.append(id);
                 error.append(", ");
             }
@@ -393,7 +378,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         if (duplicateIDs.size() > 0) {
             error.append("Multiple references to node IDs: ");
-            for (Integer id : duplicateIDs) {
+            for (int id : duplicateIDs) {
                 error.append(id);
                 error.append(", ");
             }

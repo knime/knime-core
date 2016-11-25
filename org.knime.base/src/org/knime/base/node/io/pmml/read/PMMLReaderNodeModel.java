@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -79,12 +80,24 @@ public class PMMLReaderNodeModel extends NodeModel {
 
 
     private PMMLPortObject m_pmmlPort;
+    private boolean m_hasPMMLIn;
+
+    /**
+     * Default constructor for a PMML Reader with optional input port.
+     */
+    public PMMLReaderNodeModel() {
+        this(true);
+    }
 
     /**
      * Create a new PMML reader node model with optional PMML in port.
+     * @param hasPMMLIn if true, the node has an optional PMML input
+     * @since 3.2
      */
-    public PMMLReaderNodeModel() {
-        super(new PortType[]{PMMLPortObject.TYPE_OPTIONAL}, new PortType[]{PMMLPortObject.TYPE});
+    public PMMLReaderNodeModel(final boolean hasPMMLIn) {
+        super(hasPMMLIn ? new PortType[]{PMMLPortObject.TYPE_OPTIONAL}
+            : new PortType[0], new PortType[]{PMMLPortObject.TYPE});
+        m_hasPMMLIn = hasPMMLIn;
     }
 
     /**
@@ -94,7 +107,7 @@ public class PMMLReaderNodeModel extends NodeModel {
      * @param context the node creation context
      */
     public PMMLReaderNodeModel(final NodeCreationContext context) {
-        this();
+        this(false);
         m_file.setStringValue(context.getUrl().toString());
     }
 
@@ -107,9 +120,11 @@ public class PMMLReaderNodeModel extends NodeModel {
         // read the data dictionary and the mining schema and create a
         // PMMLPortObjectSpec
         String fileS = m_file.getStringValue();
-        if (fileS == null || fileS.isEmpty()) {
-            throw new InvalidSettingsException("Please select a PMML file!");
+        String warning = CheckUtils.checkSourceFile(fileS);
+        if (warning != null) {
+            setWarningMessage(warning);
         }
+
         URL url = getURLFromSettings(fileS);
         try {
             PMMLImport pmmlImport = new PMMLImport(url, false);
@@ -125,7 +140,7 @@ public class PMMLReaderNodeModel extends NodeModel {
         }
         PMMLPortObjectSpec parsedSpec = m_pmmlPort.getSpec();
         PMMLPortObjectSpec outSpec = createPMMLOutSpec(
-                (PMMLPortObjectSpec)inSpecs[0], parsedSpec);
+                m_hasPMMLIn ? (PMMLPortObjectSpec)inSpecs[0] : null, parsedSpec);
         return new PortObjectSpec[]{outSpec};
     }
 
@@ -162,7 +177,7 @@ public class PMMLReaderNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        PMMLPortObject inPort = (PMMLPortObject)inData[0];
+        PMMLPortObject inPort = m_hasPMMLIn ? (PMMLPortObject)inData[0] : null;
         if (inPort != null) {
             TransformationDictionary dict
                     = TransformationDictionary.Factory.newInstance();

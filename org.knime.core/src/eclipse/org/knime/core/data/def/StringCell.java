@@ -65,6 +65,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * A data cell implementation holding a string value by storing this value in a
@@ -191,6 +192,7 @@ implements StringValue, NominalValue {
          *
          * Uses {@link Integer#parseInt(String)} to convert the string into an int.
          */
+        @DataCellFactoryMethod(name = "String")
         @Override
         public DataCell createCell(final String s) {
             return create(s);
@@ -207,6 +209,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
+        @DataCellFactoryMethod(name = "InputStream (String)")
         @Override
         public DataCell createCell(final InputStream input) throws IOException {
             return createCell(new InputStreamReader(input, "UTF-8"));
@@ -215,6 +218,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
+        @DataCellFactoryMethod(name = "Reader (String)")
         @Override
         public DataCell createCell(final Reader input) throws IOException {
             StringBuilder buf = new StringBuilder(1024);

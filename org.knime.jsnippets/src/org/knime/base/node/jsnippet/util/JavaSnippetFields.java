@@ -51,6 +51,8 @@ import org.knime.base.node.jsnippet.util.JavaFieldList.InColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.InVarList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Holds definition of system fields in the java snippet. A field can be an
@@ -64,6 +66,9 @@ import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
  * @noreference This class is not intended to be referenced by clients.
  */
 public class JavaSnippetFields {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetFields.class);
+
     private InColList m_inCols;
     private InVarList m_inVars;
     private OutColList m_outCols;
@@ -79,10 +84,10 @@ public class JavaSnippetFields {
             final InVarList inVars,
             final OutColList outCols,
             final OutVarList outVars) {
-        m_inCols = inCols;
-        m_inVars = inVars;
-        m_outCols = outCols;
-        m_outVars = outVars;
+        m_inCols = CheckUtils.checkArgumentNotNull(inCols);
+        m_inVars = CheckUtils.checkArgumentNotNull(inVars);
+        m_outCols = CheckUtils.checkArgumentNotNull(outCols);
+        m_outVars = CheckUtils.checkArgumentNotNull(outVars);
     }
 
     /**
@@ -126,5 +131,4 @@ public class JavaSnippetFields {
     public OutVarList getOutVarFields() {
         return m_outVars;
     }
-
 }

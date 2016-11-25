@@ -58,25 +58,44 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalBinaryConditi
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class NominalBinarySplitCandidate extends SplitCandidate {
 
+    /**
+     * Specifies that missing values shouldn't be sent in either direction.
+     */
+    public static final byte NO_MISSINGS = 0;
+
+    /**
+     * Specifies that missing values should be sent into the left child.
+     */
+    public static final byte MISSINGS_GO_LEFT = 1;
+
+    /**
+     * Specifies that missing values should be sent into the right child.
+     */
+    public static final byte MISSINGS_GO_RIGHT = 2;
+
     private final BigInteger m_rightChildMask;
+
+    private final byte m_missingsStrategy;
 
     /**
      * @param columnData
      * @param gainValue
      * @param rightChildMask
      */
-    public NominalBinarySplitCandidate(final TreeAttributeColumnData columnData, final double gainValue, final BigInteger rightChildMask, final BitSet missedRows) {
+    public NominalBinarySplitCandidate(final TreeAttributeColumnData columnData, final double gainValue,
+        final BigInteger rightChildMask, final BitSet missedRows, final byte missingsStrategy) {
         super(columnData, gainValue, missedRows);
         m_rightChildMask = rightChildMask;
+        m_missingsStrategy = missingsStrategy;
     }
 
     @Override
     public TreeNominalColumnData getColumnData() {
-        return (TreeNominalColumnData) super.getColumnData();
+        return (TreeNominalColumnData)super.getColumnData();
     }
 
     /**
@@ -92,10 +111,21 @@ public class NominalBinarySplitCandidate extends SplitCandidate {
     @Override
     public TreeNodeNominalBinaryCondition[] getChildConditions() {
         TreeNominalColumnMetaData columnMeta = getColumnData().getMetaData();
-        return new TreeNodeNominalBinaryCondition[] {
-            new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, false),
-            new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, true)
-        };
+        switch (m_missingsStrategy) {
+            case MISSINGS_GO_LEFT :
+                return new TreeNodeNominalBinaryCondition[]{
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, false, true),
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, true, false)};
+            case MISSINGS_GO_RIGHT :
+                return new TreeNodeNominalBinaryCondition[]{
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, false, false),
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, true, true)};
+            default :
+                // Same as using NO_MISSINGS
+                return new TreeNodeNominalBinaryCondition[]{
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, false, false),
+                    new TreeNodeNominalBinaryCondition(columnMeta, m_rightChildMask, true, false)};
+        }
     }
 
     /**

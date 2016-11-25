@@ -56,10 +56,9 @@ import org.knime.core.node.NodeView;
  * Computes the distance between the a numeric column's values and predicted values.
  *
  * @author Gabor Bakos
+ * @since 3.2
  */
-public class NumericScorerNodeFactory
-        extends NodeFactory<NumericScorerNodeModel> {
-
+public class NumericScorerNodeFactory extends NodeFactory<NumericScorerNodeModel> {
     /**
      * {@inheritDoc}
      */

@@ -48,6 +48,7 @@
 package org.knime.core.node;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.event.ChangeEvent;
@@ -63,7 +64,7 @@ import org.knime.core.node.workflow.FlowVariable;
  *
  * This allows NodeDialogPane implementations to encapsulate all of the
  * information related to variable/settings replacements.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public class FlowVariableModel {
@@ -83,7 +84,7 @@ public class FlowVariableModel {
     private final CopyOnWriteArrayList<ChangeListener> m_listeners;
 
     /** Create a new WVM object.
-     * 
+     *
      * @param parent NodeDialogPane (needed to retrieve visible variables)
      * @param keys of corresponding settings object
      * @param type of variable/settings object
@@ -125,17 +126,26 @@ public class FlowVariableModel {
     }
 
     /**
+     * Returns the value of the selected flow variable or an empty optional if no flow variable has been selected.
+     *
+     * @return the flow variable or an empty optional
+     * @since 3.3
+     */
+    public Optional<FlowVariable> getVariableValue() {
+        return Optional.ofNullable(getParent().getAvailableFlowVariables().get(m_inputVariableName));
+    }
+
+    /**
      * @param variableName the inputVariableName to set. Set to null
      * if no replacement is wanted.
      */
     public void setInputVariableName(final String variableName) {
-        
         if (!ConvenienceMethods.areEqual(variableName, m_inputVariableName)) {
             m_inputVariableName = variableName;
             notifyChangeListeners();
         }
     }
-    
+
     /**
      * @return true if variable replacement is activated.
      */
@@ -166,7 +176,7 @@ public class FlowVariableModel {
      */
     FlowVariable[] getMatchingVariables() {
         ArrayList<FlowVariable> list = new ArrayList<FlowVariable>();
-        for (FlowVariable sv 
+        for (FlowVariable sv
                 : getParent().getAvailableFlowVariables().values()) {
             if (ConfigEditTreeModel.doesTypeAccept(m_type, sv.getType())) {
                 list.add(sv);
@@ -174,11 +184,11 @@ public class FlowVariableModel {
         }
         return list.toArray(new FlowVariable[list.size()]);
     }
-    
+
     /**
      * Adds a listener which is notified whenever a new value is set in the
      * model. Does nothing if the listener is already registered.
-     * 
+     *
      * @param l listener to add.
      */
     public void addChangeListener(final ChangeListener l) {
@@ -189,7 +199,7 @@ public class FlowVariableModel {
 
     /**
      * Remove a specific listener.
-     * 
+     *
      * @param l listener to remove.
      */
     public void removeChangeListener(final ChangeListener l) {
@@ -204,5 +214,5 @@ public class FlowVariableModel {
             l.stateChanged(new ChangeEvent(this));
         }
     }
-    
+
 }

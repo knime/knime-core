@@ -423,6 +423,23 @@ public final class FileUtil {
         }
     }
 
+    /** Similar to {@link #zipDir(ZipOutputStream, Collection, String, ZipFileFilter, ExecutionMonitor)}, whereby
+     * all elements are directly put into the zip root.
+     * @param zout See delegating method
+     * @param includeList See delegating method
+     * @param filter See delegating method
+     * @param exec See delegating method
+     * @return See delegating method
+     * @throws IOException See delegating method
+     * @throws CanceledExecutionException See delegating method
+     *
+     */
+    public static boolean zipDir(final ZipOutputStream zout,
+        final Collection<File> includeList, final ZipFileFilter filter,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        return zipDir(zout, includeList, "", filter, exec);
+    }
+
     /**
      * Packs all files and directories passed in the includeList into a zip
      * stream. Recursively adds all files contained in directories. Files in the
@@ -438,6 +455,12 @@ public final class FileUtil {
      *            archive. Directories will be added with their content
      *            (recursively). Files are placed in the root of the archive
      *            (i.e. their path is not preserved).
+     * @param zipEntryPrefix an optional parameter to specify the parent entry of
+     *            the added directory content. In most cases this parameter is
+     *            "" or null but can also be, e.g. "subfolder1/subfolder2/" as
+     *            parent hierarchy. Callers should then create the respective
+     *            (empty) zip entries up-front and should include the '/'
+     *            at the end of this string
      * @param filter each file (and directory) contained is only included in the
      *            zip archive if it is accepted by the filter. If a directory is
      *            not accepted, it entire content is excluded from the zip. Must
@@ -454,9 +477,10 @@ public final class FileUtil {
      *             if two files or directories in the include list have the same
      *             (simple) name, or an element in the include list doesn't
      *             exist.
+     * @since 3.2
      */
     public static boolean zipDir(final ZipOutputStream zout,
-            final Collection<File> includeList, final ZipFileFilter filter,
+            final Collection<File> includeList, final String zipEntryPrefix, final ZipFileFilter filter,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
 
@@ -473,7 +497,7 @@ public final class FileUtil {
         } else {
             size = Long.MAX_VALUE;
         }
-        ZipWrapper zipper = new ZipWrapper(zout);
+        ZipWrapper zipper = new ZipWrapper(zout, zipEntryPrefix);
 
         // the read buffer, re-used for each file
         final byte[] buff = new byte[BUFF_SIZE];
@@ -1029,13 +1053,14 @@ public final class FileUtil {
     }
 
     /**
-     * Returns the file path from a 'file' or 'knime' URL. For the latter the file is tried to be resolved, whereby
-     * only local files (e.g. workflow relative URLs) are successfully resolved. If the 'knime' URL points to a file
-     * located on a KNIME server it throws an exception with a proper cause and message.
+     * Returns the file path from a 'file' or 'knime' URL. For the latter the file is tried to be resolved, whereby only
+     * local files (e.g. workflow relative URLs) are successfully resolved. If the 'knime' URL points to a non-local
+     * file, <code>null</code> is returned.
      *
      * @param fileUrl an URL with the 'file' or 'knime' protocol
-     * @return the path
-     * @throws IllegalArgumentException if the URL is not denote a local file.
+     * @return the path or <code>null</code>
+     * @throws IllegalArgumentException if the URL protocol is neither 'file' nor 'knime' or resolving a 'knime'-URL
+     *             fails
      */
     public static File getFileFromURL(final URL fileUrl) {
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
@@ -1194,18 +1219,13 @@ public final class FileUtil {
 
         if (urlConnection instanceof HttpURLConnection) {
             ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
+            ((HttpURLConnection)urlConnection).setChunkedStreamingMode(1 << 20);
+            urlConnection = new HttpURLConnectionDecorator((HttpURLConnection)urlConnection);
         }
 
         urlConnection.setDoOutput(true);
         urlConnection.connect();
 
-        if (urlConnection instanceof HttpURLConnection) {
-            HttpURLConnection c = (HttpURLConnection)urlConnection;
-            if (c.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Error while writing to '" + c.getURL() + "': " + c.getResponseCode() + " - "
-                    + c.getResponseMessage());
-            }
-        }
         return urlConnection;
     }
 
@@ -1251,13 +1271,25 @@ public final class FileUtil {
      * @since 2.6 */
     public static InputStream openInputStream(final String loc)
         throws IOException, InvalidSettingsException {
+        return openInputStream(loc, urlTimeout);
+    }
+
+    /** Opens a buffered input stream for the location (file path or URL).
+     * @param loc the location; can be both a file path or URL.
+     * @param timeoutInMilliseconds The timeout in milliseconds ({@code >0}).
+     * @return a buffered input stream.
+     * @throws IOException Forwarded from file input stream or url.openStream.
+     * @throws InvalidSettingsException If the argument is invalid or null.
+     * @since 3.3*/
+    public static InputStream openInputStream(final String loc, final int timeoutInMilliseconds)
+        throws IOException, InvalidSettingsException {
         if (loc == null || loc.length() == 0) {
             throw new InvalidSettingsException("No location provided");
         }
         InputStream stream;
         try {
             URL url = new URL(loc);
-            stream = FileUtil.openStreamWithTimeout(url);
+            stream = FileUtil.openStreamWithTimeout(url, timeoutInMilliseconds);
         } catch (MalformedURLException mue) {
             File file = new File(loc);
             if (!file.exists()) {
@@ -1272,14 +1304,17 @@ public final class FileUtil {
     private static final class ZipWrapper extends ZipOutputStream {
         private long m_written = 0;
         private ZipOutputStream m_zipper;
+        private String m_zipEntryPrefix;
 
         /**
          * Wraps a zip stream and counts the bytes written.
          * @param zipStream stream to wrap
+         * @param zipEntryPrefix a possibly null prefix to prepend to all zip entry names
          */
-        public ZipWrapper(final ZipOutputStream zipStream) {
+        ZipWrapper(final ZipOutputStream zipStream, final String zipEntryPrefix) {
             super(new NullOutputStream());
             m_zipper = zipStream;
+            m_zipEntryPrefix = StringUtils.defaultIfBlank(zipEntryPrefix, null);
         }
         /**
          * @return the number of original (uncompressed) bytes written to the stream.
@@ -1354,7 +1389,11 @@ public final class FileUtil {
          */
         @Override
         public void putNextEntry(final ZipEntry e) throws IOException {
-            m_zipper.putNextEntry(e);
+            ZipEntry entry = e;
+            if (m_zipEntryPrefix != null) {
+                entry = new ZipEntry(m_zipEntryPrefix + e.getName());
+            }
+            m_zipper.putNextEntry(entry);
         }
         /**
          * @param b

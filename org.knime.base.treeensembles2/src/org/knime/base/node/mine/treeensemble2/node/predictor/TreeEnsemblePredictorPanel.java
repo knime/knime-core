@@ -75,9 +75,9 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
 
     private final JCheckBox m_appendOverallConfidenceColChecker;
 
-    private final JCheckBox m_appendClassConfidencesColChecker;
+    private final JCheckBox m_appendClassProbabilitiesColChecker;
 
-    private final JTextField m_suffixForClassConfidencesTextField;
+    private final JTextField m_suffixForClassProbabilitiesTextField;
 
     private final JLabel m_suffixLabel;
 
@@ -85,14 +85,20 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
 
     private final JCheckBox m_changePredictionColNameChecker;
 
+    private final JCheckBox m_useSoftVotingChecker;
+
     private final boolean m_isRegression;
+
+    private final boolean m_isRandomForest;
 
     /**
      * @param isRegression panel for regression or classification.
+     * @param isRandomForest for random forest type algorithms show the soft voting option
      * */
-    public TreeEnsemblePredictorPanel(final boolean isRegression) {
+    public TreeEnsemblePredictorPanel(final boolean isRegression, final boolean isRandomForest) {
         super(new GridBagLayout());
         m_isRegression = isRegression;
+        m_isRandomForest = isRandomForest;
         m_predictionColNameField = new JTextField(20);
         final String defColName = TreeEnsemblePredictorConfiguration.getDefPredictColumnName();
         m_predictionColNameField.setText(defColName);
@@ -116,22 +122,23 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
             }
 
         });
-        m_appendClassConfidencesColChecker = new JCheckBox("Append individual class confidences");
-        m_suffixForClassConfidencesTextField = new JTextField(20);
+        m_appendClassProbabilitiesColChecker = new JCheckBox("Append individual class probabilities");
+        m_suffixForClassProbabilitiesTextField = new JTextField(20);
         m_suffixLabel = new JLabel("Suffix for probability columns");
         m_suffixLabel.setEnabled(false);
-        m_suffixForClassConfidencesTextField.setEnabled(false);
-        m_appendClassConfidencesColChecker.addChangeListener(new ChangeListener() {
+        m_suffixForClassProbabilitiesTextField.setEnabled(false);
+        m_appendClassProbabilitiesColChecker.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
                 JCheckBox source = (JCheckBox)e.getSource();
-                m_suffixForClassConfidencesTextField.setEnabled(source.isSelected());
+                m_suffixForClassProbabilitiesTextField.setEnabled(source.isSelected());
                 m_suffixLabel.setEnabled(source.isSelected());
             }
 
         });
         m_appendOverallConfidenceColChecker = new JCheckBox("Append overall prediction confidence");
+        m_useSoftVotingChecker = new JCheckBox("Use soft voting");
         initLayout();
     }
 
@@ -146,7 +153,7 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
         gbc.gridy = 0;
         add(m_changePredictionColNameChecker, gbc);
         gbc.gridy += 1;
-        add(new JLabel("Prediction Column Name"), gbc);
+        add(new JLabel("Prediction column name"), gbc);
         gbc.gridx += 1;
         add(m_predictionColNameField, gbc);
 
@@ -159,14 +166,21 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
             gbc.gridy += 1;
             gbc.gridx = 0;
             gbc.gridwidth = 2;
-            add(m_appendClassConfidencesColChecker, gbc);
+            add(m_appendClassProbabilitiesColChecker, gbc);
 
             gbc.gridy += 1;
             gbc.gridx = 0;
             gbc.gridwidth = 1;
             add(m_suffixLabel, gbc);
             gbc.gridx += 1;
-            add(m_suffixForClassConfidencesTextField, gbc);
+            add(m_suffixForClassProbabilitiesTextField, gbc);
+
+            if (m_isRandomForest) {
+                gbc.gridy += 1;
+                gbc.gridx = 0;
+                gbc.gridwidth = 2;
+                add(m_useSoftVotingChecker, gbc);
+            }
         }
     }
 
@@ -184,9 +198,9 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
         if (config.isAppendPredictionConfidence() != m_appendOverallConfidenceColChecker.isSelected()) {
             m_appendOverallConfidenceColChecker.doClick();
         }
-        m_suffixForClassConfidencesTextField.setText(config.getSuffixForClassProbabilities());
-        if (config.isAppendClassConfidences() != m_appendClassConfidencesColChecker.isSelected()) {
-            m_appendClassConfidencesColChecker.doClick();
+        m_suffixForClassProbabilitiesTextField.setText(config.getSuffixForClassProbabilities());
+        if (config.isAppendClassConfidences() != m_appendClassProbabilitiesColChecker.isSelected()) {
+            m_appendClassProbabilitiesColChecker.doClick();
         }
         String colName = config.getPredictionColumnName();
         if (colName == null || colName.isEmpty()) {
@@ -196,6 +210,7 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
         if (config.isChangePredictionColumnName() != m_changePredictionColNameChecker.isSelected()) {
             m_changePredictionColNameChecker.doClick();
         }
+        m_useSoftVotingChecker.setSelected(config.isUseSoftVoting());
     }
 
     /**
@@ -206,11 +221,12 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
      */
     public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(m_isRegression, "");
-        config.setAppendClassConfidences(m_appendClassConfidencesColChecker.isSelected());
+        config.setAppendClassConfidences(m_appendClassProbabilitiesColChecker.isSelected());
         config.setAppendPredictionConfidence(m_appendOverallConfidenceColChecker.isSelected());
         config.setPredictionColumnName(m_predictionColNameField.getText());
         config.setChangePredictionColumnName(m_changePredictionColNameChecker.isSelected());
-        config.setSuffixForClassConfidences(m_suffixForClassConfidencesTextField.getText());
+        config.setSuffixForClassConfidences(m_suffixForClassProbabilitiesTextField.getText());
+        config.setUseSoftVoting(m_useSoftVotingChecker.isSelected());
         config.save(settings);
     }
 

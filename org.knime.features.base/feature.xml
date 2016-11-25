@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="3.1.1.qualifier"
+      version="3.3.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -729,10 +729,6 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <includes
-         id="org.eclipse.platform.jcraft_patch"
-         version="0.0.0"/>
-
    <requires>
       <import feature="org.eclipse.gef" version="3.9.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.platform" version="4.4.2" match="greaterOrEqual"/>
@@ -892,6 +888,20 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="org.knime.base.treeensembles"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.knime.base.treeensembles2"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.knime.workbench.workflowcoach"
          download-size="0"
          install-size="0"
          version="0.0.0"

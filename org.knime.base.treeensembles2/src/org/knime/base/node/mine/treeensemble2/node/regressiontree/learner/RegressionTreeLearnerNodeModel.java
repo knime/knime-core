@@ -48,28 +48,36 @@
 package org.knime.base.node.mine.treeensemble2.node.regressiontree.learner;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeDataCreator;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.BitVectorDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -84,6 +92,11 @@ import com.google.common.math.IntMath;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObjectHolder {
+
+    /** The file name where to write the internals to. */
+    private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
+    /** The file name where to write the internals to. */
+    private static final String INTERNAL_INFO_FILE = "info.xml";
 
     private RegressionTreeModelPortObject m_treeModelPortObject;
 
@@ -113,6 +126,7 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         RegressionTreeModelPortObjectSpec treeSpec = new RegressionTreeModelPortObjectSpec(learnSpec);
 
@@ -149,7 +163,12 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         exec.setMessage("Learning tree");
 
         RandomData rd = m_configuration.createRandomData();
-        final DataIndexManager indexManager = new DataIndexManager(data);
+        final IDataIndexManager indexManager;
+        if (data.getTreeType() == TreeType.BitVector) {
+            indexManager = new BitVectorDataIndexManager(data.getNrRows());
+        } else {
+           indexManager = new DefaultDataIndexManager(data);
+        }
         TreeNodeSignatureFactory signatureFactory = null;
         int maxLevels = m_configuration.getMaxLevels();
         if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
@@ -158,8 +177,8 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         } else {
             signatureFactory = new TreeNodeSignatureFactory();
         }
-
-        TreeLearnerRegression treeLearner = new TreeLearnerRegression(m_configuration, data, indexManager, signatureFactory, rd);
+        final RowSample rowSample = m_configuration.createRowSampler(data).createRowSample(rd);
+        TreeLearnerRegression treeLearner = new TreeLearnerRegression(m_configuration, data, indexManager, signatureFactory, rd, rowSample);
         TreeModelRegression regTree = treeLearner.learnSingleTree(learnExec, rd);
 
         RegressionTreeModel model = new RegressionTreeModel(m_configuration, data.getMetaData(), regTree, data.getTreeType());
@@ -208,12 +227,34 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
+        File file = new File(nodeInternDir, INTERNAL_DATASAMPLE_FILE);
+        if (file.exists()) {
+            m_hiliteRowSample = DataContainer.readFromZip(file);
+        }
+        file = new File(nodeInternDir, INTERNAL_INFO_FILE);
+        if (file.exists()) {
+            NodeSettingsRO sets = NodeSettings.loadFromXML(new FileInputStream(file));
+            m_viewMessage = sets.getString("view_warning", null);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
+        File file;
+        ExecutionMonitor sub;
+        if (m_hiliteRowSample != null) {
+            file = new File(nodeInternDir, INTERNAL_DATASAMPLE_FILE);
+            sub = exec.createSubProgress(0.2);
+            DataContainer.writeToZip(m_hiliteRowSample, file, sub);
+        }
+        if (m_viewMessage != null) {
+            file = new File(nodeInternDir, INTERNAL_INFO_FILE);
+            NodeSettings sets = new NodeSettings("ensembleData");
+            sets.addString("view_warning", m_viewMessage);
+            sets.saveToXML(new FileOutputStream(file));
+        }
     }
 
     /** {@inheritDoc} */
@@ -228,6 +269,27 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
     @Override
     public void setInternalPortObjects(final PortObject[] portObjects) {
         m_treeModelPortObject = (RegressionTreeModelPortObject)portObjects[0];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RegressionTreeModel getRegressionTreeModel() {
+        return m_treeModelPortObject == null ? null : m_treeModelPortObject.getModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public DataTable getHiliteRowSample() {
+        return m_hiliteRowSample;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getViewMessage() {
+        return m_viewMessage;
     }
 
 }

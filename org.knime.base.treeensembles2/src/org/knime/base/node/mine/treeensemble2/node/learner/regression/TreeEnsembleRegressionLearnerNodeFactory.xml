@@ -36,7 +36,9 @@
         </p>
         <p>
           <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a
-          &lt;= fashion; nominal columns are currently split by creating child nodes for each of the values. 
+          &lt;= fashion; nominal columns can currently be split by creating child nodes for each of the values or by 
+          calculating binary splits that use sets of nominal values (the method is described in Section 8.8 
+          of "Classification and Regression Trees" by Breiman et al. (1984)). 
         </p>
       </option>
       <option name="Ignore columns without domain information">
@@ -51,6 +53,9 @@
       <option name="Use mid points splits (only for numeric attributes)">
         Uses for numerical splits the middle point between two class boundaries. If unselected the split attribute value
         is the smaller value with "&lt;=" relationship.
+      </option>
+      <option name="Use binary splits for nominal columns">
+      	If selected, nominal columns also produce binary splits instead of multiway splits in which each nominal value corresponds to one child node.
       </option>
       <option name="Limit number of levels (tree depth)">
         Number of tree levels to be learned. For instance, a value of 1 would only split the (single) root node

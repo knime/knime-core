@@ -51,11 +51,14 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -63,6 +66,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -91,19 +97,17 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.FindPosition.SearchOptions;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
-import org.knime.core.node.util.ConvenienceMethods;
-
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Panel containing a table view on a generic {@link DataTable}. The
- * table is located in a scroll pane and row and column headers are visible and
- * fixed.
- * <br>
- * For the caching strategy used in the table refer to
- * {@link TableContentModel}.
+ * Panel containing a table view on a generic {@link DataTable}. The table is located in a scroll pane and row and
+ * column headers are visible and fixed. <br>
+ * For the caching strategy used in the table refer to {@link TableContentModel}.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -116,8 +120,7 @@ public class TableView extends JScrollPane {
     private static final int ROWHEADER_WIDTH = 100;
 
     /** Cursor that is shown when the column header is resized (north-south). */
-    private static final Cursor RESIZE_CURSOR =
-        Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
+    private static final Cursor RESIZE_CURSOR = Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
 
     /** The popup menu which allows to trigger hilite events. */
     private JPopupMenu m_popup;
@@ -129,15 +132,17 @@ public class TableView extends JScrollPane {
     private boolean m_isColumnHeaderResizingAllowed;
 
     /**
-     * @since 2.8 */
+     * @since 2.8
+     */
     private boolean m_isPreferredSizeDataDependent = false;
 
-    /** Position (row, col) for "Find" menu entry. It either points to the
-     * location of the last match or (0,0). */
-    private FindPositionRowKey m_searchPosition;
+    /**
+     * Position (row, col) for "Find" menu entry. It either points to the location of the last match or (-1, -1).
+     */
+    private FindPosition m_searchPosition;
 
     /** Last search string, needed for continued search. */
-    private String m_searchString;
+    private Optional<SearchString> m_searchString = Optional.empty();
 
     private TableAction m_findAction;
 
@@ -146,22 +151,18 @@ public class TableView extends JScrollPane {
     private TableAction m_gotoRowAction;
 
     /**
-     * Creates new empty <code>TableView</code>. Content and handlers are set
-     * using the appropriate methods, that is,
-     * {@link #setDataTable(DataTable)} and
-     * {@link #setHiLiteHandler(HiLiteHandler)}. The model for this
-     * view, however, is not <code>null</code>. That is, it's completely legal
-     * to do {@link #getContentModel()} right after calling this
-     * constructor.
+     * Creates new empty <code>TableView</code>. Content and handlers are set using the appropriate methods, that is,
+     * {@link #setDataTable(DataTable)} and {@link #setHiLiteHandler(HiLiteHandler)}. The model for this view, however,
+     * is not <code>null</code>. That is, it's completely legal to do {@link #getContentModel()} right after calling
+     * this constructor.
      */
     public TableView() {
         this(new TableContentModel());
     }
 
     /**
-     * Creates new instance of a <code>TableView</code> given a content view.
-     * A row header is created and displayed. There is no property handler
-     * connected to this view at this time.
+     * Creates new instance of a <code>TableView</code> given a content view. A row header is created and displayed.
+     * There is no property handler connected to this view at this time.
      *
      * @param contentView view to display.
      * @throws NullPointerException if contentView is <code>null</code>
@@ -173,14 +174,11 @@ public class TableView extends JScrollPane {
         // if not "off", the horizontal scroll bar is never shown (reduces
         // size of columns to minimum)
         contentView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        TableRowHeaderView rowHeadView =
-            TableRowHeaderView.createHeaderView(contentView);
+        TableRowHeaderView rowHeadView = TableRowHeaderView.createHeaderView(contentView);
         setRowHeaderView(rowHeadView);
         // set width of the row header
-        rowHeadView.setPreferredScrollableViewportSize(
-            new Dimension(ROWHEADER_WIDTH, 0));
-        setCorner(ScrollPaneConstants.UPPER_LEFT_CORNER,
-            rowHeadView.getTableHeader());
+        rowHeadView.setPreferredScrollableViewportSize(new Dimension(ROWHEADER_WIDTH, 0));
+        setCorner(ScrollPaneConstants.UPPER_LEFT_CORNER, rowHeadView.getTableHeader());
 
         // workaround for bug 4202002: The scrolling is out of sync when
         // scrolled in RowHeader.
@@ -188,11 +186,10 @@ public class TableView extends JScrollPane {
         getRowHeader().addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                JViewport jvViewport = (JViewport) e.getSource();
+                JViewport jvViewport = (JViewport)e.getSource();
                 int iExtent = jvViewport.getExtentSize().height;
                 int iMax = jvViewport.getViewSize().height;
-                int iValue = Math.max(0, Math.min(
-                    jvViewport.getViewPosition().y, iMax - iExtent));
+                int iValue = Math.max(0, Math.min(jvViewport.getViewPosition().y, iMax - iExtent));
                 getVerticalScrollBar().setValues(iValue, iExtent, 0, iMax);
             } // stateChanged(ChangeEvent)
         });
@@ -202,8 +199,7 @@ public class TableView extends JScrollPane {
             public void mouseClicked(final MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     Point ePoint = e.getPoint();
-                    Point thisPoint = SwingUtilities.convertPoint(
-                            (Component)e.getSource(), ePoint, TableView.this);
+                    Point thisPoint = SwingUtilities.convertPoint((Component)e.getSource(), ePoint, TableView.this);
                     showPopup(thisPoint);
                 }
             }
@@ -235,8 +231,7 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Constructs new View by calling
-     * <code>this(new TableContentView(model))</code>.
+     * Constructs new View by calling <code>this(new TableContentView(model))</code>.
      *
      * @param model model to be displayed.
      * @see TableView#TableView(TableContentView)
@@ -247,8 +242,8 @@ public class TableView extends JScrollPane {
     } // TableView(TableContentModel)
 
     /**
-     * Creates new instance of a <code>TableView</code> based on a
-     * {@link DataTable}. A row header is created and displayed.
+     * Creates new instance of a <code>TableView</code> based on a {@link DataTable}. A row header is created and
+     * displayed.
      *
      * @param table table to be displayed
      * @throws NullPointerException if <code>table</code> is <code>null</code>.
@@ -258,8 +253,8 @@ public class TableView extends JScrollPane {
     } // TableView(DataTable)
 
     /**
-     * Creates new instance of a <code>TableView</code> based on a
-     * {@link DataTable}. A row header is created and displayed.
+     * Creates new instance of a <code>TableView</code> based on a {@link DataTable}. A row header is created and
+     * displayed.
      *
      * @param table table to be displayed
      * @param propHdl used to connect other views, may be <code>null</code>
@@ -270,9 +265,8 @@ public class TableView extends JScrollPane {
     } // TableView(DataTable, HiLiteHandler)
 
     /**
-     * Simply checks if argument is <code>null</code> and throws an exception if
-     * it is. Otherwise returns argument. This method is called in the
-     * constructor.
+     * Simply checks if argument is <code>null</code> and throws an exception if it is. Otherwise returns argument. This
+     * method is called in the constructor.
      *
      * @param content argument to check.
      * @return <code>content</code>
@@ -291,12 +285,11 @@ public class TableView extends JScrollPane {
      * @return reference to content table
      */
     public TableContentView getContentTable() {
-        return (TableContentView) getViewport().getView();
+        return (TableContentView)getViewport().getView();
     }
 
     /**
-     * Get reference to underlying <code>TableContentModel</code>. This call
-     * is identical to calling
+     * Get reference to underlying <code>TableContentModel</code>. This call is identical to calling
      * <code>(TableContentModel)(getContentTable().getModel())</code>.
      *
      * @return the model displayed.
@@ -306,8 +299,7 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Get reference to row header table, that is the column displaying the
-     * row keys from the underlying table.
+     * Get reference to row header table, that is the column displaying the row keys from the underlying table.
      *
      * @return reference to row header.
      */
@@ -315,10 +307,9 @@ public class TableView extends JScrollPane {
         return (TableRowHeaderView)getRowHeader().getView();
     }
 
-    /** Delegates to super implementation but sets an appropriate preferred
-     * size before returning. If the table has no columns (but more than 0
-     * rows), the corner was not shown (because of 0,0 preferred dimension).
-     * {@inheritDoc}
+    /**
+     * Delegates to super implementation but sets an appropriate preferred size before returning. If the table has no
+     * columns (but more than 0 rows), the corner was not shown (because of 0,0 preferred dimension). {@inheritDoc}
      */
     @Override
     public JViewport getColumnHeader() {
@@ -330,8 +321,7 @@ public class TableView extends JScrollPane {
             // bug fix #934: header of row header column was not shown when
             // table contains no columns
             if (hasData && viewHeight == 0) {
-                view.setPreferredSize(
-                        getCorner(UPPER_LEFT_CORNER).getPreferredSize());
+                view.setPreferredSize(getCorner(UPPER_LEFT_CORNER).getPreferredSize());
             } else if (!hasData && viewHeight > 0) {
                 // null is perfectly ok, it seems
                 view.setPreferredSize(null);
@@ -340,8 +330,9 @@ public class TableView extends JScrollPane {
         return viewPort;
     }
 
-    /** Overwritten to add (north-south) resize listener to upper left corner.
-     * {@inheritDoc} */
+    /**
+     * Overwritten to add (north-south) resize listener to upper left corner. {@inheritDoc}
+     */
     @Override
     public void setCorner(final String key, final Component corner) {
         if (UPPER_LEFT_CORNER.equals(key)) {
@@ -352,8 +343,7 @@ public class TableView extends JScrollPane {
             }
             if (corner != null && isColumnHeaderResizingAllowed()) {
                 if (m_columnHeaderResizeHandler == null) {
-                    m_columnHeaderResizeHandler =
-                        new ColumnHeaderResizeMouseHandler();
+                    m_columnHeaderResizeHandler = new ColumnHeaderResizeMouseHandler();
                 }
                 corner.addMouseListener(m_columnHeaderResizeHandler);
                 corner.addMouseMotionListener(m_columnHeaderResizeHandler);
@@ -365,8 +355,7 @@ public class TableView extends JScrollPane {
     /**
      * Checks if a property handler is registered.
      *
-     * @return <code>true</code> if global hiliting is possible (property
-     *         handler is available).
+     * @return <code>true</code> if global hiliting is possible (property handler is available).
      * @see TableContentModel#hasHiLiteHandler()
      */
     public final boolean hasHiLiteHandler() {
@@ -374,13 +363,10 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * This table "has data" when there is valid input, i.e. the
-     * {@link DataTable} to display is not <code>null</code>. The
-     * status may changed during runtime by calling the model's
-     * <code>setDataTable(DataTable)</code> method.
+     * This table "has data" when there is valid input, i.e. the {@link DataTable} to display is not <code>null</code>.
+     * The status may changed during runtime by calling the model's <code>setDataTable(DataTable)</code> method.
      *
-     * @return <code>true</code> when there is data to display,
-     *      <code>false</code> otherwise
+     * @return <code>true</code> when there is data to display, <code>false</code> otherwise
      * @see TableContentModel#hasData()
      */
     public boolean hasData() {
@@ -388,8 +374,7 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Sends a request to the content table to hilite all currently selected
-     * rows.
+     * Sends a request to the content table to hilite all currently selected rows.
      *
      * @see TableContentView#hiliteSelected()
      */
@@ -398,8 +383,7 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Sends a request to the content table to unhilite all currently selected
-     * rows.
+     * Sends a request to the content table to unhilite all currently selected rows.
      *
      * @see TableContentView#unHiliteSelected()
      */
@@ -419,8 +403,7 @@ public class TableView extends JScrollPane {
     /**
      * Sets a new <code>DataTable</code> as content.
      *
-     * @param data new data to be shown; may be <code>null</code> to have an
-     *        empty table.
+     * @param data new data to be shown; may be <code>null</code> to have an empty table.
      * @see TableContentModel#setDataTable(DataTable)
      */
     public void setDataTable(final DataTable data) {
@@ -428,9 +411,8 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Sets a new <code>HiLiteHandler</code> this view talks to.
-     * The argument may be <code>null</code> to disconnect from the
-     * current <code>HiLiteHandler</code>.
+     * Sets a new <code>HiLiteHandler</code> this view talks to. The argument may be <code>null</code> to disconnect
+     * from the current <code>HiLiteHandler</code>.
      *
      * @param hiLiteHdl the new <code>HiLiteHandler</code>.
      */
@@ -441,11 +423,9 @@ public class TableView extends JScrollPane {
     /**
      * Control behavior to show only hilited rows.
      *
-     * @param showOnlyHilite <code>true</code> Filter and display only
-     *        rows whose hilite status is set.
+     * @param showOnlyHilite <code>true</code> Filter and display only rows whose hilite status is set.
      * @see TableContentModel#getTableContentFilter()
-     * @deprecated Implementors should refer to
-     * <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
+     * @deprecated Implementors should refer to <code>getContentModel().setTableContentFilter(TableContentFilter)</code>
      */
     @Deprecated
     public final void showHiLitedOnly(final boolean showOnlyHilite) {
@@ -455,11 +435,9 @@ public class TableView extends JScrollPane {
     /**
      * Get status of filtering for hilited rows.
      *
-     * @return <code>true</code>: only hilited rows are shown,
-     *         <code>false</code>: all rows are shown.
+     * @return <code>true</code>: only hilited rows are shown, <code>false</code>: all rows are shown.
      * @see TableContentModel#getTableContentFilter()
-     * @deprecated Implementors should refer to
-     * <code>getContentModel().getTableContentFilter()</code>
+     * @deprecated Implementors should refer to <code>getContentModel().getTableContentFilter()</code>
      */
     @Deprecated
     public boolean showsHiLitedOnly() {
@@ -483,7 +461,6 @@ public class TableView extends JScrollPane {
     public void countRowsInBackground() {
         getContentModel().countRowsInBackground();
     }
-
 
     /**
      * Get row height from table.
@@ -526,8 +503,9 @@ public class TableView extends JScrollPane {
         }
     }
 
-    /** Get the height of the column header view or -1 if none has been set
-     * (no data available).
+    /**
+     * Get the height of the column header view or -1 if none has been set (no data available).
+     *
      * @return The height of the column header view.
      */
     public int getColumnHeaderViewHeight() {
@@ -548,8 +526,10 @@ public class TableView extends JScrollPane {
         return -1;
     }
 
-    /** Set the height of the column header view. If none has been set
-     * (i.e. no data is available), this method does nothing.
+    /**
+     * Set the height of the column header view. If none has been set (i.e. no data is available), this method does
+     * nothing.
+     *
      * @param newHeight The new height. -1 will unset any preferred size.
      */
     public void setColumnHeaderViewHeight(final int newHeight) {
@@ -596,8 +576,7 @@ public class TableView extends JScrollPane {
     /**
      * Shall row header encode the color information in an icon?
      *
-     * @param showIt <code>true</code> for show icon (and thus the color),
-     *        <code>false</code> ignore colors
+     * @param showIt <code>true</code> for show icon (and thus the color), <code>false</code> ignore colors
      * @see TableRowHeaderView#setShowColorInfo(boolean)
      */
     public void setShowColorInfo(final boolean showIt) {
@@ -614,8 +593,10 @@ public class TableView extends JScrollPane {
         return getHeaderTable().isShowColorInfo();
     }
 
-    /** Forwards to {@link TableContentView#setWrapColumnHeader(boolean)} and if argument is true also
-     * sets {@link #setColumnHeaderResizingAllowed(boolean)}.
+    /**
+     * Forwards to {@link TableContentView#setWrapColumnHeader(boolean)} and if argument is true also sets
+     * {@link #setColumnHeaderResizingAllowed(boolean)}.
+     *
      * @param value passed on
      * @since 2.8
      */
@@ -627,7 +608,9 @@ public class TableView extends JScrollPane {
         setColumnHeaderViewHeight(-1);
     }
 
-    /** Get the {@link #setWrapColumnHeader(boolean)} property.
+    /**
+     * Get the {@link #setWrapColumnHeader(boolean)} property.
+     *
      * @return ...
      * @since 2.8
      */
@@ -636,8 +619,9 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Set whether or not the icon in the column header is to be displayed.
-     * Delegate method to {@link TableView#setShowColorInfo(boolean)}.
+     * Set whether or not the icon in the column header is to be displayed. Delegate method to
+     * {@link TableView#setShowColorInfo(boolean)}.
+     *
      * @param show Whether or not this icon should be shown.
      */
     public void setShowIconInColumnHeader(final boolean show) {
@@ -645,8 +629,8 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Get the status if the icon in the column header is shown.
-     * Delegate method to {@link TableView#isShowColorInfo()}.
+     * Get the status if the icon in the column header is shown. Delegate method to {@link TableView#isShowColorInfo()}.
+     *
      * @return true when the icon is shown, false otherwise.
      */
     public boolean isShowIconInColumnHeader() {
@@ -654,8 +638,8 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Whether or not the resizing of the column header height is allowed.
-     * The default is <code>false</code>.
+     * Whether or not the resizing of the column header height is allowed. The default is <code>false</code>.
+     *
      * @return the isColumnHeaderResizingAllowed.
      * @see #setColumnHeaderResizingAllowed(boolean)
      */
@@ -663,8 +647,10 @@ public class TableView extends JScrollPane {
         return m_isColumnHeaderResizingAllowed;
     }
 
-    /** Should the preferred size of the view be derived from the content (at most 2/3 of the screen real estate)?
+    /**
+     * Should the preferred size of the view be derived from the content (at most 2/3 of the screen real estate)?
      * Default is false.
+     *
      * @param value the value to set
      * @since 2.8
      */
@@ -672,7 +658,9 @@ public class TableView extends JScrollPane {
         m_isPreferredSizeDataDependent = value;
     }
 
-    /** see {@link #setPreferredSizeDataDependent(boolean)}.
+    /**
+     * see {@link #setPreferredSizeDataDependent(boolean)}.
+     *
      * @return the isPreferredSizeDataDependent
      * @since 2.8
      */
@@ -682,11 +670,10 @@ public class TableView extends JScrollPane {
 
     /**
      * Enable or disable the resizing of the column header height.
-     * @param isColumnHeaderResizingAllowed If <code>true</code> resizing is
-     * allowed.
+     *
+     * @param isColumnHeaderResizingAllowed If <code>true</code> resizing is allowed.
      */
-    public void setColumnHeaderResizingAllowed(
-            final boolean isColumnHeaderResizingAllowed) {
+    public void setColumnHeaderResizingAllowed(final boolean isColumnHeaderResizingAllowed) {
         if (m_isColumnHeaderResizingAllowed == isColumnHeaderResizingAllowed) {
             return;
         }
@@ -695,8 +682,7 @@ public class TableView extends JScrollPane {
         if (m_isColumnHeaderResizingAllowed) {
             if (corner != null) {
                 if (m_columnHeaderResizeHandler == null) {
-                    m_columnHeaderResizeHandler =
-                        new ColumnHeaderResizeMouseHandler();
+                    m_columnHeaderResizeHandler = new ColumnHeaderResizeMouseHandler();
                 }
                 corner.addMouseListener(m_columnHeaderResizeHandler);
                 corner.addMouseMotionListener(m_columnHeaderResizeHandler);
@@ -710,38 +696,35 @@ public class TableView extends JScrollPane {
     }
 
     /**
-     * Find cells (or row IDs) that match the search string. If a matching
-     * element is found, the view is scrolled to that position. Successive calls
-     * of this method with the same arguments will continue the search.
+     * Find cells (or row IDs) that match the search string. If a matching element is found, the view is scrolled to
+     * that position. Successive calls of this method with the same arguments will continue the search.
      *
-     * @param search The search string.
-     * @param idOnly If only the ID column should be searched.
-     * @throws NullPointerException If <code>search</code> argument is null.
+     * @param searchString The search string.
+     * @param searchOptions non-null search options.
+     * @throws NullPointerException If any argument is null.
      */
-    protected void find(final String search, final boolean idOnly) {
-        if (search == null) {
-            throw new NullPointerException("Search expression is null");
-        }
+    void find(final SearchString searchString, final SearchOptions searchOptions) {
+        CheckUtils.checkArgumentNotNull(searchString, "Search expression is null");
         TableContentView cView = getContentTable();
         if (cView == null) {
             return;
         }
         // if new search options, reset search position and start on top
-        if (m_searchPosition == null || idOnly != m_searchPosition.isIDOnly()) {
-            initNewSearchPostion(idOnly);
-        } else if (!ConvenienceMethods.areEqual(m_searchString, search)) {
+        if (m_searchPosition == null || !searchOptions.equals(m_searchPosition.getSearchOptions())) {
+            initNewSearchPostion(searchOptions);
+        } else if (!Objects.equals(m_searchString.orElse(null), searchString)) {
             m_searchPosition.reset();
         }
-        setLastSearchString(search);
+        setLastSearchString(searchString);
 
         m_searchPosition.mark();
         do {
-            if (m_searchPosition.next()) {
-                JOptionPane.showMessageDialog(this,
-                    "Reached end of table, continue from top");
+            if (!m_searchPosition.next()) {
+                JOptionPane.showMessageDialog(this, "Reached end of table, continue from top");
             }
             int pos = m_searchPosition.getSearchRow();
-            if (pos < 0) {
+            int col = m_searchPosition.getSearchColumn();
+            if (pos == FindPosition.HEADER && col == FindPosition.HEADER) {
                 // the position object will traverse all rows, then
                 // reset the position (pos = -1) and then start from 0, ...
                 // this can't be changed because of the marking (we also have
@@ -749,19 +732,20 @@ public class TableView extends JScrollPane {
                 // into a m_searchPosition.reset() state.
                 continue;
             }
-            int col = m_searchPosition.getSearchColumn();
             String str = null;
-            if (col < 0) {
+            if (pos == FindPosition.HEADER) {
+                str = cView.getColumnName(col);
+            } else if (col == FindPosition.HEADER) {
                 str = cView.getContentModel().getRowKey(pos).getString();
             } else {
                 TableCellRenderer rend = cView.getCellRenderer(pos, col);
-                Component comp = rend.getTableCellRendererComponent(cView,
-                        cView.getValueAt(pos, col), false, false, pos, col);
+                Component comp =
+                    rend.getTableCellRendererComponent(cView, cView.getValueAt(pos, col), false, false, pos, col);
                 if (comp instanceof JLabel) {
                     str = ((JLabel)comp).getText();
                 }
             }
-            if (str != null && str.contains(m_searchString)) {
+            if (searchString.matches(str)) {
                 gotoCell(pos, col);
                 return;
             }
@@ -770,63 +754,64 @@ public class TableView extends JScrollPane {
         m_searchPosition.reset();
     }
 
-    private void initNewSearchPostion(final boolean idOnly) {
+    private void initNewSearchPostion(final SearchOptions searchOptions) {
         TableContentView cView = getContentTable();
         int rowCount = cView.getRowCount();
         int colCount = cView.getColumnCount();
-        m_searchPosition = idOnly ? new FindPositionRowKey(rowCount)
-                : new FindPositionAll(rowCount, colCount);
+        m_searchPosition = new FindPosition(rowCount, colCount, searchOptions);
 
     }
 
-    /** Sets a new search string and sends event if it differs from the
-     * previous search string. (Event is important for Find Next button's
-     * enable status.
+    /**
+     * Sets a new search string and sends event if it differs from the previous search string. (Event is important for
+     * Find Next button's enable status.
+     *
      * @param searchString The new search string.
      */
-    private void setLastSearchString(final String searchString) {
-        if (!ConvenienceMethods.areEqual(m_searchString, searchString)) {
-            String old = m_searchString;
-            m_searchString = searchString;
+    private void setLastSearchString(final SearchString searchString) {
+        SearchString old = m_searchString.orElse(null);
+        if (!Objects.equals(old, searchString)) {
+            m_searchString = Optional.ofNullable(searchString);
             firePropertyChange("search_string", old, searchString);
         }
     }
 
     /**
-     * Scrolls to the given coordinate cell. This method is invoked
-     * from the navigation menu. If there is no such coordinate it will
-     * display an error message.
+     * Scrolls to the given coordinate cell. This method is invoked from the navigation menu. If there is no such
+     * coordinate it will display an error message.
      *
      * @param row the row to scroll to
      * @param col the col to scroll to (negative for row key)
      */
     public void gotoCell(final int row, final int col) {
-        TableContentView cView = getContentTable();
-        try {
-            cView.getValueAt(row, Math.max(col, 0));
-        } catch (IndexOutOfBoundsException ioe) {
-            if (cView.getColumnCount() != 0) {
-                JOptionPane.showMessageDialog(this, "No such row/col: ("
-                        + (row + 1) + ", " + (col + 1) + ")",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+        final TableContentView cView = getContentTable();
+        final ListSelectionModel colSelModel = cView.getColumnModel().getSelectionModel();
+        final ListSelectionModel rowSelModel = cView.getSelectionModel();
+        if (row >= 0) {
+            try {
+                cView.getValueAt(row, Math.max(col, 0));
+            } catch (IndexOutOfBoundsException ioe) {
+                if (cView.getColumnCount() != 0) {
+                    JOptionPane.showMessageDialog(this, "No such row/col: (" + (row + 1) + ", " + (col + 1) + ")", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
+            rowSelModel.setSelectionInterval(row, row);
+        } else {
+            rowSelModel.clearSelection();
         }
-        Rectangle rec = cView.getCellRect(row, Math.max(col, 0), false);
-        cView.getSelectionModel().setSelectionInterval(row, row);
+        final Rectangle rec = cView.getCellRect(Math.max(row, 0), Math.max(col, 0), false);
         if (col >= 0) {
-            ListSelectionModel colSelModel =
-                cView.getColumnModel().getSelectionModel();
-            if (colSelModel != null) {
-                colSelModel.setSelectionInterval(col, col);
-            }
+            colSelModel.setSelectionInterval(col, col);
+        } else {
+            colSelModel.clearSelection();
         }
         cView.scrollRectToVisible(rec);
     }
 
     /**
-     * Opens the popup menu on the row header. It allows to trigger hilite
-     * events.
+     * Opens the popup menu on the row header. It allows to trigger hilite events.
      *
      * @param p location where to open the popup
      */
@@ -843,9 +828,10 @@ public class TableView extends JScrollPane {
         m_popup.show(this, p.x, p.y);
     }
 
-    /** Registers the argument action in the components action map.
-     * @param action The action to register (does nothing if
-     *        it hasn't a key stroke assigned)
+    /**
+     * Registers the argument action in the components action map.
+     *
+     * @param action The action to register (does nothing if it hasn't a key stroke assigned)
      */
     private void registerAction(final TableAction action) {
         KeyStroke stroke = action.getKeyStroke();
@@ -867,30 +853,26 @@ public class TableView extends JScrollPane {
         TableAction gotoRowAction = registerGotoRowAction();
         JMenuItem goToRowItem = new JMenuItem(gotoRowAction);
         goToRowItem.setAccelerator(gotoRowAction.getKeyStroke());
-        goToRowItem.addPropertyChangeListener(
-                new EnableListener(this, true, false));
+        goToRowItem.addPropertyChangeListener(new EnableListener(this, true, false));
         goToRowItem.setEnabled(hasData());
         result.add(goToRowItem);
         TableAction findAction = registerFindAction();
         JMenuItem findItem = new JMenuItem(findAction);
         findItem.setAccelerator(findAction.getKeyStroke());
-        findItem.addPropertyChangeListener(
-                new EnableListener(this, true, false));
+        findItem.addPropertyChangeListener(new EnableListener(this, true, false));
         findItem.setEnabled(hasData());
         result.add(findItem);
         TableAction findNextAction = registerFindNextAction();
         final JMenuItem findNextItem = new JMenuItem(findNextAction);
         findNextItem.setAccelerator(findNextAction.getKeyStroke());
-        findNextItem.addPropertyChangeListener(
-                new EnableListener(this, true, false) {
+        findNextItem.addPropertyChangeListener(new EnableListener(this, true, false) {
             /** {@inheritDoc} */
             @Override
             protected boolean checkEnabled(final JComponent source) {
                 return super.checkEnabled(source) && m_searchString != null;
             }
         });
-        addPropertyChangeListener("search_string",
-                new PropertyChangeListener() {
+        addPropertyChangeListener("search_string", new PropertyChangeListener() {
             /** {@inheritDoc} */
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
@@ -963,14 +945,11 @@ public class TableView extends JScrollPane {
 
         JMenu filterSubMenu = new JMenu("Filter");
 
-        JRadioButtonMenuItem showAllItem =
-            new JRadioButtonMenuItem("Show All");
-        showAllItem.addPropertyChangeListener(
-                "ancestor", new PropertyChangeListener() {
+        JRadioButtonMenuItem showAllItem = new JRadioButtonMenuItem("Show All");
+        showAllItem.addPropertyChangeListener("ancestor", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
-                boolean selected = getContentModel().
-                    getTableContentFilter().equals(TableContentFilter.All);
+                boolean selected = getContentModel().getTableContentFilter().equals(TableContentFilter.All);
                 ((AbstractButton)evt.getSource()).setSelected(selected);
             }
         });
@@ -980,55 +959,43 @@ public class TableView extends JScrollPane {
                 getContentModel().setTableContentFilter(TableContentFilter.All);
             }
         });
-        showAllItem.addPropertyChangeListener(
-                new EnableListener(this, true, false));
+        showAllItem.addPropertyChangeListener(new EnableListener(this, true, false));
         showAllItem.setEnabled(hasData());
         filterSubMenu.add(showAllItem);
 
-        JRadioButtonMenuItem showHiliteItem =
-            new JRadioButtonMenuItem("Show Hilited Only");
-        showHiliteItem.addPropertyChangeListener(
-                "ancestor", new PropertyChangeListener() {
+        JRadioButtonMenuItem showHiliteItem = new JRadioButtonMenuItem("Show Hilited Only");
+        showHiliteItem.addPropertyChangeListener("ancestor", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
-                boolean selected = getContentModel().
-                getTableContentFilter().equals(TableContentFilter.HiliteOnly);
+                boolean selected = getContentModel().getTableContentFilter().equals(TableContentFilter.HiliteOnly);
                 ((AbstractButton)evt.getSource()).setSelected(selected);
             }
         });
         showHiliteItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                getContentModel().setTableContentFilter(
-                        TableContentFilter.HiliteOnly);
+                getContentModel().setTableContentFilter(TableContentFilter.HiliteOnly);
             }
         });
-        showHiliteItem.addPropertyChangeListener(
-                new EnableListener(this, true, true));
+        showHiliteItem.addPropertyChangeListener(new EnableListener(this, true, true));
         showHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
         filterSubMenu.add(showHiliteItem);
 
-        JRadioButtonMenuItem showUnHiliteItem =
-            new JRadioButtonMenuItem("Show UnHilited Only");
-        showUnHiliteItem.addPropertyChangeListener(
-                "ancestor", new PropertyChangeListener() {
+        JRadioButtonMenuItem showUnHiliteItem = new JRadioButtonMenuItem("Show UnHilited Only");
+        showUnHiliteItem.addPropertyChangeListener("ancestor", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
-                boolean selected = getContentModel().
-                    getTableContentFilter().equals(
-                            TableContentFilter.UnHiliteOnly);
+                boolean selected = getContentModel().getTableContentFilter().equals(TableContentFilter.UnHiliteOnly);
                 ((AbstractButton)evt.getSource()).setSelected(selected);
             }
         });
         showUnHiliteItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                getContentModel().setTableContentFilter(
-                        TableContentFilter.UnHiliteOnly);
+                getContentModel().setTableContentFilter(TableContentFilter.UnHiliteOnly);
             }
         });
-        showUnHiliteItem.addPropertyChangeListener(
-                new EnableListener(this, true, true));
+        showUnHiliteItem.addPropertyChangeListener(new EnableListener(this, true, true));
         showUnHiliteItem.setEnabled(hasData() && hasHiLiteHandler());
         filterSubMenu.add(showUnHiliteItem);
 
@@ -1051,26 +1018,22 @@ public class TableView extends JScrollPane {
             public void actionPerformed(final ActionEvent e) {
                 while (true) {
                     int curRowHeight = getRowHeight();
-                    String in = JOptionPane.showInputDialog(
-                            TableView.this, "Enter new row height:",
-                            "" + curRowHeight);
+                    String in = JOptionPane.showInputDialog(TableView.this, "Enter new row height:", "" + curRowHeight);
                     if (in == null) { // canceled
-                         return;
+                        return;
                     }
                     try {
                         int newHeight = Integer.parseInt(in);
                         if (newHeight <= 0) { // disallow negative values.
-                            JOptionPane.showMessageDialog(
-                                    TableView.this, "No negative values allowed"
-                                    , "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(TableView.this, "No negative values allowed", "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         } else {
                             setRowHeight(newHeight);
                             return;
                         }
                     } catch (NumberFormatException nfe) {
-                        JOptionPane.showMessageDialog(
-                                TableView.this, "Can't parse "
-                                + in, "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(TableView.this, "Can't parse " + in, "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -1086,27 +1049,22 @@ public class TableView extends JScrollPane {
             public void actionPerformed(final ActionEvent e) {
                 while (true) {
                     int curWidth = getColumnWidth();
-                    String in = JOptionPane.showInputDialog(
-                            TableView.this, "Enter new column width:",
-                            "" + curWidth);
+                    String in = JOptionPane.showInputDialog(TableView.this, "Enter new column width:", "" + curWidth);
                     if (in == null) { // canceled
                         return;
                     }
                     try {
                         int newWidth = Integer.parseInt(in);
                         if (newWidth <= 0) { // disallow negative values.
-                            JOptionPane.showMessageDialog(
-                                    TableView.this,
-                                    "No negative values allowed",
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(TableView.this, "No negative values allowed", "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         } else {
                             setColumnWidth(newWidth);
                             return;
                         }
                     } catch (NumberFormatException nfe) {
-                        JOptionPane.showMessageDialog(
-                                TableView.this, "Can't parse "
-                                + in, "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(TableView.this, "Can't parse " + in, "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -1162,8 +1120,7 @@ public class TableView extends JScrollPane {
 
         item = new JCheckBoxMenuItem("Show Color Information");
         item.setMnemonic('C');
-        item.addPropertyChangeListener("ancestor",
-        new PropertyChangeListener() {
+        item.addPropertyChangeListener("ancestor", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 JCheckBoxMenuItem source = (JCheckBoxMenuItem)evt.getSource();
@@ -1183,23 +1140,26 @@ public class TableView extends JScrollPane {
         return result;
     } // createViewMenu()
 
-    /** Registers all actions for navigation on the table, namely "Find...",
-     * "Find Next" and "Go to Row...". */
+    /**
+     * Registers all actions for navigation on the table, namely "Find...", "Find Next" and "Go to Row...".
+     */
     public void registerNavigationActions() {
         registerFindAction();
         registerFindNextAction();
         registerGotoRowAction();
     }
 
-    /** Creates and registers the "Find ..." action on this component. Multiple
-     * invocation of this method have no effect (lazy initialization).
+    /**
+     * Creates and registers the "Find ..." action on this component. Multiple invocation of this method have no effect
+     * (lazy initialization).
+     *
      * @return The non-null action representing the find task.
-     * @see #registerNavigationActions() */
+     * @see #registerNavigationActions()
+     */
     public TableAction registerFindAction() {
         if (m_findAction == null) {
             String name = "Find...";
-            KeyStroke stroke = KeyStroke.getKeyStroke(
-                    KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK);
+            KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK);
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
@@ -1207,23 +1167,63 @@ public class TableView extends JScrollPane {
                         return;
                     }
                     if (m_searchPosition == null) {
-                        initNewSearchPostion(false);
+                        initNewSearchPostion(new SearchOptions(true, false, true));
                     }
                     m_searchPosition.reset();
-                    boolean isIDOnly = m_searchPosition.isIDOnly();
-                    JCheckBox rowKeyBox =
-                        new JCheckBox("Row ID only", isIDOnly);
+                    SearchOptions searchOptions = m_searchPosition.getSearchOptions();
+                    boolean isSearchRowID = searchOptions.isSearchRowID();
+                    boolean isSearchColumnName = searchOptions.isSearchColumnName();
+                    boolean isSearchData = searchOptions.isSearchData();
+
+                    JCheckBox rowKeyBox = new JCheckBox("Search RowID Column", isSearchRowID);
+                    JCheckBox colNameBox = new JCheckBox("Search Column Names", isSearchColumnName);
+                    JCheckBox dataBox = new JCheckBox("Search Data", isSearchData);
+                    JCheckBox[] asArray = new JCheckBox[] {rowKeyBox, colNameBox, dataBox};
+                    rowKeyBox.addItemListener(new AtLeastOnButtonSelectedItemListener(dataBox, asArray));
+                    colNameBox.addItemListener(new AtLeastOnButtonSelectedItemListener(rowKeyBox, asArray));
+                    dataBox.addItemListener(new AtLeastOnButtonSelectedItemListener(rowKeyBox, asArray));
+
+                    JCheckBox ignoreCaseBox = new JCheckBox("Case insensitive",
+                        m_searchString.map(i -> i.isIgnoreCase()).orElse(false));
+
+                    JCheckBox regexBox = new JCheckBox("Regular Expression",
+                        m_searchString.map(i -> i.isRegex()).orElse(false));
+
                     JPanel panel = new JPanel(new BorderLayout());
-                    panel.add(new JLabel("Find String: "), BorderLayout.WEST);
-                    panel.add(rowKeyBox, BorderLayout.EAST);
-                    String in = (String)JOptionPane.showInputDialog(
-                            TableView.this, panel, "Search",
-                            JOptionPane.QUESTION_MESSAGE, null,
-                            null, m_searchString);
-                    if (in == null || in.isEmpty()) { // canceled
-                        return;
+                    panel.add(new JLabel("Options: "), BorderLayout.NORTH);
+                    JPanel centerPanel = new JPanel(new GridLayout(0, 1));
+                    centerPanel.add(rowKeyBox);
+                    centerPanel.add(colNameBox);
+                    centerPanel.add(dataBox);
+                    centerPanel.add(new JLabel());
+                    centerPanel.add(ignoreCaseBox);
+                    centerPanel.add(regexBox);
+                    centerPanel.add(new JLabel());
+                    panel.add(centerPanel, BorderLayout.CENTER);
+                    panel.add(new JLabel("    "), BorderLayout.WEST);
+                    panel.add(new JLabel("Find String: "), BorderLayout.SOUTH);
+
+                    SearchString newSearchString;
+                    while (true) {
+                        String in = (String)JOptionPane.showInputDialog(TableView.this, panel, "Search",
+                            JOptionPane.QUESTION_MESSAGE, null, null,
+                            m_searchString.map(s -> s.getSearchString()).orElse(""));
+                        if (StringUtils.isEmpty(in)) { // canceled
+                            return;
+                        }
+                        try {
+                            newSearchString = new SearchString(in, ignoreCaseBox.isSelected(), regexBox.isSelected());
+                            break;
+                        } catch (PatternSyntaxException pse) {
+                            JOptionPane.showMessageDialog(TableView.this,
+                                pse.getMessage(), "Invalid regular expression", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
-                    find(in, rowKeyBox.isSelected());
+
+                    searchOptions = new SearchOptions(
+                        rowKeyBox.isSelected(), colNameBox.isSelected(), dataBox.isSelected());
+
+                    find(newSearchString, searchOptions);
                 }
             };
             registerAction(action);
@@ -1232,10 +1232,13 @@ public class TableView extends JScrollPane {
         return m_findAction;
     }
 
-    /** Creates and registers the "Find Next" action on this component. Multiple
-     * invocation of this method have no effect (lazy initialization).
+    /**
+     * Creates and registers the "Find Next" action on this component. Multiple invocation of this method have no effect
+     * (lazy initialization).
+     *
      * @return The non-null action representing the find next task.
-     * @see #registerNavigationActions() */
+     * @see #registerNavigationActions()
+     */
     public TableAction registerFindNextAction() {
         registerFindAction();
         if (m_findNextAction == null) {
@@ -1244,12 +1247,11 @@ public class TableView extends JScrollPane {
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
-                    if (m_searchString == null) {
+                    if (!m_searchString.isPresent()) {
                         return;
                     }
-                    assert m_searchPosition != null
-                    : "Search position is null but search string is non-null";
-                    find(m_searchString, m_searchPosition.isIDOnly());
+                    assert m_searchPosition != null : "Search position is null but search string is non-null";
+                    find(m_searchString.get(), m_searchPosition.getSearchOptions());
                 }
             };
             registerAction(action);
@@ -1258,34 +1260,34 @@ public class TableView extends JScrollPane {
         return m_findNextAction;
     }
 
-    /** Creates and registers the "Go to Row" action on this component. Multiple
-     * invocation of this method have no effect (lazy initialization).
+    /**
+     * Creates and registers the "Go to Row" action on this component. Multiple invocation of this method have no effect
+     * (lazy initialization).
+     *
      * @return The non-null action representing the go to row task.
-     * @see #registerNavigationActions() */
+     * @see #registerNavigationActions()
+     */
     public TableAction registerGotoRowAction() {
         if (m_gotoRowAction == null) {
             String name = "Go to Row...";
-            KeyStroke stroke = KeyStroke.getKeyStroke(
-                    KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK);
+            KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK);
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
                     if (!hasData()) {
                         return;
                     }
-                    String rowString = JOptionPane.showInputDialog(
-                            TableView.this, "Enter row number:", "Go to Row",
-                            JOptionPane.QUESTION_MESSAGE);
+                    String rowString = JOptionPane.showInputDialog(TableView.this, "Enter row number:", "Go to Row",
+                        JOptionPane.QUESTION_MESSAGE);
                     if (rowString == null) { // canceled
-                         return;
+                        return;
                     }
                     try {
                         int row = Integer.parseInt(rowString);
                         gotoCell(row - 1, 0);
                     } catch (NumberFormatException nfe) {
-                        JOptionPane.showMessageDialog(TableView.this,
-                                "Can't parse " + rowString, "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(TableView.this, "Can't parse " + rowString, "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }
             };
@@ -1298,19 +1300,20 @@ public class TableView extends JScrollPane {
     /** PropertyChangeListener that will disable/enable the menu items. */
     private static class EnableListener implements PropertyChangeListener {
         private final boolean m_watchData;
+
         private final boolean m_watchHilite;
+
         private final TableView m_view;
 
         /**
-         * Constructor. Will respect the hasData(), hasHiliteHandler() flag
-         * according to the arguments.
+         * Constructor. Will respect the hasData(), hasHiliteHandler() flag according to the arguments.
+         *
          * @param view The view to get status from
          * @param watchData Shall this listener respect data change events.
          * @param watchHilite Shall this listener respect hilite change events.
          *
          */
-        public EnableListener(final TableView view,
-                final boolean watchData, final boolean watchHilite) {
+        public EnableListener(final TableView view, final boolean watchData, final boolean watchHilite) {
             m_view = view;
             m_watchData = watchData;
             m_watchHilite = watchHilite;
@@ -1324,7 +1327,9 @@ public class TableView extends JScrollPane {
             source.setEnabled(isEnabled);
         }
 
-        /** Determines whether component is to be enabled.
+        /**
+         * Determines whether component is to be enabled.
+         *
          * @param source Event source (for reference)
          * @return if to enable (true) or disable (false);
          */
@@ -1398,17 +1403,16 @@ public class TableView extends JScrollPane {
         }
     }
 
-    /** Action associate with the table. There are instances for "Find...",
-     * "Find Next" and "Go to Row". This class has an additional field for the
-     * preferred accelerator key.
+    /**
+     * Action associate with the table. There are instances for "Find...", "Find Next" and "Go to Row". This class has
+     * an additional field for the preferred accelerator key.
      */
     public abstract static class TableAction extends AbstractAction {
 
         private final KeyStroke m_keyStroke;
 
         /**
-         * @param keyStroke Key stroke for this actions
-         *        (needs to be registered elsewhere)
+         * @param keyStroke Key stroke for this actions (needs to be registered elsewhere)
          * @param name Name, see {@link AbstractAction#AbstractAction(String)}
          */
         TableAction(final KeyStroke keyStroke, final String name) {
@@ -1422,4 +1426,35 @@ public class TableView extends JScrollPane {
         }
     }
 
-}   // TableView
+    /** Some sort of button group that would make sure that the default button get selected if none of the 'other'
+     * buttons is selected. */
+    private final static class AtLeastOnButtonSelectedItemListener implements ItemListener {
+        private JCheckBox m_fallBackButton;
+        private JCheckBox[] m_buttons;
+
+        /**
+         * @param fallBackButton
+         * @param buttons
+         */
+        AtLeastOnButtonSelectedItemListener(final JCheckBox fallBackButton, final JCheckBox... buttons) {
+            m_fallBackButton = fallBackButton;
+            m_buttons = buttons;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void itemStateChanged(final ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.DESELECTED) {
+                for (JCheckBox b : m_buttons) {
+                    if (b.isSelected()) {
+                        return;
+                    }
+                }
+                m_fallBackButton.doClick();
+            }
+        }
+
+    }
+} // TableView

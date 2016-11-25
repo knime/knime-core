@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 13, 2006 (wiswedel): created
  */
@@ -55,6 +55,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -65,11 +67,16 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 
 /**
- * 
+ * This class represents the dialog for the entropy scorer node.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class EntropyNodeDialogPane extends NodeDialogPane {
@@ -77,12 +84,28 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
 
     private final ColumnSelectionComboxBox m_comboCluster;
 
+    private final SettingsModelBoolean m_flowVarModel = new SettingsModelBoolean("generate flow variables", false);
+    private final SettingsModelString m_useNamePrefixModel = createFlowPrefixModel(m_flowVarModel);
+    private final DialogComponentBoolean m_flowVarComponent = new DialogComponentBoolean(m_flowVarModel, "Output scores as flow variables");
+    private final DialogComponentString m_useNamePrefixComponent = new DialogComponentString(m_useNamePrefixModel, "Prefix of flow variables");
+
+    private boolean m_flowVariableOption;
+    
     /**
-     * The dialog for the entropy scorer. 
-     *
+     * Creates a new dialog for the entropy scorer.
+     */
+    public EntropyNodeDialogPane() {
+        this(false);
+    }
+
+    /**
+     * The dialog for the entropy scorer.
+     * @param flowVar whether the flow variable dialog options should be displayed or not
+     * @since 3.2 Added support for flow variable output, by using new flag
      */
     @SuppressWarnings("unchecked")
-    public EntropyNodeDialogPane() {
+    public EntropyNodeDialogPane(final boolean flowVar) {
+        m_flowVariableOption = flowVar;
         m_comboReference = new ColumnSelectionComboxBox((Border)null,
                 DataValue.class);
         m_comboCluster = new ColumnSelectionComboxBox((Border)null,
@@ -105,7 +128,33 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
         layout.add(referenceFlower);
         layout.add(clusterFlowerLbl);
         layout.add(clusterFlower);
+
+        if(m_flowVariableOption) {
+            layout.add(m_flowVarComponent.getComponentPanel());
+            layout.add(m_useNamePrefixComponent.getComponentPanel());
+        }
         addTab("Default", layout);
+    }
+
+
+    /**
+     * @param useNamePrefixModel TODO
+     * @return A new {@link SettingsModelString} for the flow variable prefix
+     * @since 3.2 Creates the settings model for the flow variable prefix
+     */
+    public static SettingsModelString createFlowPrefixModel(final SettingsModelBoolean useNamePrefixModel) {
+        final SettingsModelString result = new SettingsModelString("name prefix for flowvars", "");
+        useNamePrefixModel.addChangeListener(new ChangeListener() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(useNamePrefixModel.getBooleanValue());
+            }
+        });
+        result.setEnabled(useNamePrefixModel.getBooleanValue());
+        return result;
     }
 
     /**
@@ -130,6 +179,10 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
                 EntropyNodeModel.CFG_REFERENCE_COLUMN, defaultReference);
         m_comboCluster.update(clustering, clusterSelected);
         m_comboReference.update(reference, referenceSelected);
+        if (m_flowVariableOption) {
+            m_flowVarComponent.loadSettingsFrom(settings, specs);
+            m_useNamePrefixComponent.loadSettingsFrom(settings, specs);
+        }
     }
 
     /**
@@ -142,6 +195,10 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
         String clustering = m_comboCluster.getSelectedColumn();
         settings.addString(EntropyNodeModel.CFG_CLUSTERING_COLUMN, clustering);
         settings.addString(EntropyNodeModel.CFG_REFERENCE_COLUMN, reference);
+        if (m_flowVariableOption) {
+            m_flowVarModel.saveSettingsTo(settings);
+            m_useNamePrefixModel.saveSettingsTo(settings);
+        }
     }
 
     private static String suggestColumn(final DataTableSpec spec,

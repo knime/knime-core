@@ -55,7 +55,9 @@ import org.knime.workbench.editor2.actions.ChangeGridAction;
  * Editor action for opening the Grid Settings dialog.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland.
+ * @deprecated replaced by {@link ChangeEditorUIEditorAction}
  */
+@Deprecated
 public class ChangeGridEditorAction extends AbstractEditorAction {
     /**
      * {@inheritDoc}

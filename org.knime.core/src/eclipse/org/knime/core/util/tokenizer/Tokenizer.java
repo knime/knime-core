@@ -801,9 +801,10 @@ public class Tokenizer {
          */
         if (m_newToken.length() == 0) {
             int c = getNextChar();
-            if (c != LF) {
-                putBackChar(c);
+            while(c == LF){
+                c = getNextChar();
             }
+            putBackChar(c);
         }
 
         return result.toString();

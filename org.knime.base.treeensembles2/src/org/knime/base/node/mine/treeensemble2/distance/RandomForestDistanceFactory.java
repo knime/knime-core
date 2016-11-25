@@ -54,7 +54,7 @@ import org.knime.distance.DistanceMeasureFactory;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class RandomForestDistanceFactory extends DistanceMeasureFactory<RandomForestDistanceConfig> {
 

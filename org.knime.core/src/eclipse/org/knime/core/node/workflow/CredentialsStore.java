@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -133,7 +134,17 @@ public final class CredentialsStore implements Observer {
      * parent store).
      * @throws IllegalArgumentException If the identifier is unknown
      */
-    public synchronized Credentials get(final String name) {
+    public Credentials get(final String name) {
+        return getAsOptional(name).orElseThrow(() -> new IllegalArgumentException(
+            "No credentials stored to name \"" + name + "\""));
+    }
+
+    /**
+     * Implementation of {@link #get(String)} returning an optional.
+     * @param name The name to lookup
+     * @return The credentials for this name as {@link Optional} (either in this store or the parent store).
+     */
+    synchronized Optional<Credentials> getAsOptional(final String name) {
         Credentials c = m_credentials.get(name);
         WorkflowManager parent = m_manager.getParent();
         while (c == null && parent != null) {
@@ -141,11 +152,7 @@ public final class CredentialsStore implements Observer {
             c = parentStore.m_credentials.get(name);
             parent = parent.getParent();
         }
-        if (c == null) {
-            throw new IllegalArgumentException("No credentials stored to "
-                    + "name \"" + name + "\"");
-        }
-        return c;
+        return Optional.ofNullable(c);
     }
 
     /**
@@ -275,6 +282,19 @@ public final class CredentialsStore implements Observer {
     @Override
     public void update(final Observable o, final Object arg) {
         m_manager.setDirty();
+    }
+
+    /** Adds the credentials defined in the argument to this store. Used when running 'external' workflows that need
+     * to inherit credentials from the calling node/workflow.
+     * @param v Credentials flow variable.
+     * @throws IllegalArgumentException If flow variable doesn't represent credentials.
+     * @since 3.3
+     */
+    public void addFromFlowVariable(final FlowVariable v) {
+        CheckUtils.checkArgument(v.getType().equals(FlowVariable.Type.CREDENTIALS),
+            "Not a crendentials flow variable: %s", v);
+        CredentialsFlowVariableValue credentialsValue = v.getCredentialsValue();
+        add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword()));
     }
 
     /** Framework private method to update or add a credentials object. Used by the Credentials quickform node
@@ -408,11 +428,24 @@ public final class CredentialsStore implements Observer {
         /** Called when node is loaded from disc. Implementations will prompt the password by means of the workflow
          * load helper and then {@link #pushCredentialsFlowVariable(String, String, String)} it.
          * @param loadHelper Non-null helper.
+         * @param credProvider The credentials provider set on the corresponding node, not null. Read-only!!
          * @param isExecuted Whether node is executed - executed nodes do not prompt for password via the callback
          * @param isInactive TODO
          */
-        public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper, boolean isExecuted, boolean isInactive);
+        public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
+            final CredentialsProvider credProvider, boolean isExecuted, boolean isInactive);
 
+        /**
+         * Called when the workflow credentials change on a workflow. Credential QF nodes in the workflow can then
+         * inherit the modified password from the workflow. Used to address AP-5974.
+         * <p>
+         * Method is only called on non-executed nodes; a configure call follows after all nodes in the workflow have
+         * been updated.
+         *
+         * @param workflowCredentials read-only list of workflow credentials.
+         * @since 3.3
+         */
+        public default void onWorkfowCredentialsChanged(final Collection<Credentials> workflowCredentials) {
+        }
     }
-
 }

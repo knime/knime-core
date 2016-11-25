@@ -47,18 +47,23 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.type.TypeProvider;
-import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
 import org.knime.base.node.jsnippet.type.flowvar.TypeConverter;
-import org.knime.base.node.jsnippet.ui.OutFieldsTable.FieldType;
+import org.knime.base.node.jsnippet.util.field.JavaField.FieldType;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.datacell.ArrayToCollectionConverterFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 
@@ -76,12 +81,12 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 public class OutFieldsTableModel extends FieldsTableModel {
     private static String[] getColumns(final boolean flowVarsOnly) {
         if (flowVarsOnly) {
-            return new String[]{"Replace", "Column / Flow Variable",
-                    "Output Type", "Java Type",  "Java Field"};
+            return new String[]{"Replace", "Flow Variable",
+                    "KNIME Type", "Java Type",  "Java Field"};
         } else {
             return new String[]{"Field Type", "Replace",
-                    "Column / Flow Variable",
-                    "Output Type", "Array", "Java Type",  "Java Field"};
+                    "Name",
+                    "KNIME Type", "Array", "Java Type",  "Java Field"};
         }
     }
 
@@ -298,45 +303,53 @@ public class OutFieldsTableModel extends FieldsTableModel {
         if (null == value) {
             return "Please select a value";
         }
-        if (!(value instanceof Class)) {
+
+        if (value instanceof JavaToDataCellConverterFactory) {
+            if (getValueAt(row, Column.FIELD_TYPE) == FieldType.FlowVariable) {
+                return "Cannot use DataCell converters for flow variables.";
+            }
+        } else if (value instanceof String) {
+            final String id = (String)value;
+            final Optional<JavaToDataCellConverterFactory<?>> factory =
+                ConverterUtil.getJavaToDataCellConverterFactory(id);
+            return factory.isPresent() ? null : "Converter factory " + id + " was not found.";
+        } else if (value instanceof Class) {
+            Class javaType = (Class)value;
+            Object outType = getValueAt(row, Column.DATA_TYPE);
+
+            if (outType instanceof DataType) {
+                DataType elemType = (DataType)outType;
+                boolean isCollection = (Boolean)getValueAt(row,
+                        Column.IS_COLLECTION);
+                DataType dataType = isCollection
+                    ? ListCell.getCollectionType(elemType) : elemType;
+                final Collection<JavaToDataCellConverterFactory<?>> factories =
+                        ConverterUtil.getFactoriesForDestinationType(dataType);
+                if (factories.isEmpty()) {
+                    return "The java type \"" + javaType.getSimpleName()
+                          + "\" is not supported for output columns.";
+                }
+                if (dataType.isCollectionType() && !javaType.isArray()) {
+                    return "Please choose an java array for collection types.";
+                }
+                if (!dataType.isCollectionType() && javaType.isArray()) {
+                    return "An array cannot be written to a non collection column";
+                }
+
+            } else if (outType instanceof Type) {
+                Type type = (Type)outType;
+                TypeConverter typeConversion =
+                    TypeProvider.getDefault().getTypeConverter(type);
+                if (!typeConversion.canProvideJavaType(javaType)) {
+                    return "The java type \"" + javaType.getSimpleName()
+                          + "\" is not supported.";
+                }
+            }
+        } else {
             return "Cannot find class " + value.toString();
         }
 
-        Class javaType = (Class)value;
-
-        Object outType = getValueAt(row, Column.DATA_TYPE);
-        if (outType instanceof DataType) {
-            DataType elemType = (DataType)outType;
-            boolean isCollection = (Boolean)getValueAt(row,
-                    Column.IS_COLLECTION);
-            DataType dataType = isCollection
-                ? ListCell.getCollectionType(elemType) : elemType;
-            JavaToDataCell javaToDataCell =
-                TypeProvider.getDefault().getJavaToDataCell(elemType,
-                        isCollection);
-            Collection<Class> canTypes =
-                Arrays.asList(javaToDataCell.canJavaTypes());
-            if (!canTypes.contains(javaType)) {
-                return "The java type \"" + javaType.getSimpleName()
-                      + "\" is not supported for output columns.";
-            }
-            if (dataType.isCollectionType() && !javaType.isArray()) {
-                return "Please choose an java array for collection types.";
-            }
-            if (!dataType.isCollectionType() && javaType.isArray()) {
-                return "An array cannot be written to a non collection column";
-            }
-
-        } else if (outType instanceof Type) {
-            Type type = (Type)outType;
-            TypeConverter typeConversion =
-                TypeProvider.getDefault().getTypeConverter(type);
-            if (!typeConversion.canProvideJavaType(javaType)) {
-                return "The java type \"" + javaType.getSimpleName()
-                      + "\" is not supported.";
-            }
-        }
-        // no errror found
+        // no error found
         return null;
     }
 
@@ -370,17 +383,18 @@ public class OutFieldsTableModel extends FieldsTableModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("rawtypes")
     @Override
-    public Class[] getAllowedJavaTypes(final int row) {
+    public Object[] getAllowedJavaTypes(final int row) {
         Object input = getValueAt(row, Column.DATA_TYPE);
         if (input instanceof DataType) {
             DataType elemType = (DataType)input;
-            boolean isCollection = (Boolean)getValueAt(row,
-                    Column.IS_COLLECTION);
-            JavaToDataCell javaToDataCell = TypeProvider.getDefault()
-                .getJavaToDataCell(elemType, isCollection);
-            return javaToDataCell.canJavaTypes();
+            boolean isCollection = (Boolean)getValueAt(row, Column.IS_COLLECTION);
+            final DataType dataType = isCollection ? ListCell.getCollectionType(elemType) : elemType;
+            final Collection<JavaToDataCellConverterFactory<?>> factories =
+                ConverterUtil.getFactoriesForDestinationType(dataType).stream()
+                    .filter(factory -> JavaSnippet.getBuildPathFromCache(factory.getIdentifier()) != null)
+                    .collect(Collectors.toList());
+            return factories.toArray(new Object[factories.size()]);
         } else if (input instanceof Type) {
             Type type = (Type)input;
             TypeConverter typeConversion =
@@ -388,6 +402,92 @@ public class OutFieldsTableModel extends FieldsTableModel {
             return typeConversion.canCreatedFromJavaTypes();
         } else {
             return new Class[]{String.class};
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setValueAt(final Object aValue, final int row, final Column column) {
+        super.setValueAt(aValue, row, column);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setValueAt(final Object aValue, final int row, final int column) {
+        // make sure setValue(Object, int, Column) is always called.
+        Column col = getColumnForIndex(column);
+        if (col == Column.COLUMN) {
+            if (aValue instanceof FlowVariable) {
+                // make sure we do not keep a ConverterFactory in the JavaType column
+                // when changing from DataColumnSpec.
+                Object type = getValueAt(row, Column.JAVA_TYPE);
+
+                if (type instanceof JavaToDataCellConverterFactory) {
+                    // set java type to dest type of converter factory
+                    setValueAt(((JavaToDataCellConverterFactory<?>)type).getSourceType(), row,
+                        Column.JAVA_TYPE);
+                }
+            } else if (aValue instanceof DataColumnSpec) {
+                // make sure we do not keep a Java class in the JavaType column for Columns
+                final Object type = getValueAt(row, Column.JAVA_TYPE);
+                final DataType dataType = (DataType)getValueAt(row, Column.DATA_TYPE);
+
+                if (type instanceof Class) {
+                    // find a DataCell converter which is able to convert from the new column type to the current java type
+                    final Optional<?> factory = ConverterUtil.getConverterFactory((Class<?>)type, dataType);
+
+                    if (factory.isPresent()) {
+                        setValueAt(factory.get(), row, Column.JAVA_TYPE);
+                    }
+                }
+            }
+        } else if (col == Column.DATA_TYPE) {
+            Object type = getValueAt(row, Column.JAVA_TYPE);
+            Boolean isCollection = (Boolean)getValueAt(row, Column.IS_COLLECTION);
+
+            if (isCollection != null && type instanceof JavaToDataCellConverterFactory && aValue instanceof DataType) {
+                final JavaToDataCellConverterFactory<?> converterFactory = (JavaToDataCellConverterFactory<?>) type;
+                DataType dataType = (DataType) aValue;
+                Class<?> javaType = converterFactory.getSourceType();
+                if (isCollection && !dataType.isCollectionType()) {
+                    dataType = ListCell.getCollectionType(dataType);
+                    if (!(converterFactory instanceof ArrayToCollectionConverterFactory)) {
+                        javaType = Array.newInstance(javaType, 0).getClass();
+                    }
+                } else if (!isCollection && javaType.isArray()) {
+                    if (converterFactory instanceof ArrayToCollectionConverterFactory) {
+                        javaType = javaType.getComponentType();
+                    }
+                }
+
+                // Try to find a converter factory which converts the newly selected DataType to the selected JavaType.
+                final Optional<?> factory = ConverterUtil.getConverterFactory(javaType, dataType);
+
+                if (factory.isPresent()) {
+                    setValueAt(factory.get(), row, Column.JAVA_TYPE);
+                } else {
+                    // If there is no way to convert to the existing Java type, use the preferred type instead.
+                    final Optional<JavaToDataCellConverterFactory<?>> preferred = ConverterUtil.getPreferredFactoryForDestinationType(dataType);
+                    if (preferred.isPresent()) {
+                        setValueAt(preferred.get(), row, Column.JAVA_TYPE);
+                    }
+                }
+            }
+        }
+        super.setValueAt(aValue, row, column);
+
+        /* If this was the collection check box, post process to set the appropriate converter factory. */
+        if (col == Column.IS_COLLECTION) {
+            Object type = getValueAt(row, Column.DATA_TYPE);
+
+            if (type != null) {
+                // make sure DataType is updated to a Collection type or back to a single element type
+                setValueAt(type, row, getIndex(Column.DATA_TYPE));
+            }
         }
     }
 }

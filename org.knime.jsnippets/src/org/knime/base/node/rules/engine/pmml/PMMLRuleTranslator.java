@@ -46,13 +46,17 @@
  */
 package org.knime.base.node.rules.engine.pmml;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlCursor;
@@ -69,6 +73,7 @@ import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod;
 import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod.Criterion;
 import org.dmg.pmml.RuleSetDocument.RuleSet;
 import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
+import org.dmg.pmml.ScoreDistributionDocument.ScoreDistribution;
 import org.dmg.pmml.SimplePredicateDocument.SimplePredicate;
 import org.dmg.pmml.SimplePredicateDocument.SimplePredicate.Operator.Enum;
 import org.dmg.pmml.SimpleRuleDocument;
@@ -90,6 +95,7 @@ import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.util.Pair;
 
 /**
  * This class converts PMML RuleSets to and from {@link Rule}s. <br>
@@ -102,6 +108,50 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * @since 2.9
  */
 public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLTranslator {
+    /**
+     * Stores the probability and the record count of a score distribution element. Both are optional.
+     *
+     * @since 3.2
+     */
+    public static final class ScoreProbabilityAndRecordCount {
+        private final BigDecimal m_probability;
+
+        private final double m_recordCount;
+
+        /**
+         * @param probability The probability of the score value, can be {@code null}.
+         * @param recordCount The number of records which were observed in the learning process for the score value, can
+         *            be non-integer too.
+         */
+        public ScoreProbabilityAndRecordCount(final BigDecimal probability, final double recordCount) {
+            super();
+            m_probability = probability;
+            m_recordCount = recordCount;
+        }
+
+        /**
+         * @return the probability
+         */
+        public BigDecimal getProbability() {
+            return m_probability;
+        }
+
+        /**
+         * @return the recordCount
+         */
+        public double getRecordCount() {
+            return m_recordCount;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("(probability=%s, recordCount=%s)", m_probability, m_recordCount);
+        }
+    }
+
     /**
      * A simple container class for the simple PMML rules created.
      */
@@ -118,22 +168,44 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
 
         private double m_nbCorrect;
 
+        private final Map<String, ScoreProbabilityAndRecordCount> m_scoreDistribution;
+
         /**
          * Constructs {@link Rule} with its content. The nbCorrect, recordCount and id properties are not available in
          * this simplified model.
          *
-         * @param condition The {@link PMMLPredicate} (preferably the rule speicific subtypes,
+         * @param condition The {@link PMMLPredicate} (preferably the rule specific subtypes,
          *            {@link PMMLRuleSimplePredicate} and {@link PMMLRuleCompoundPredicate}).
          * @param outcome The outcome when the condition matches.
          * @param weight The weight of rule.
          * @param confidence The confidence of the rule.
          */
-        protected Rule(final PMMLPredicate condition, final String outcome, final Double weight, final Double confidence) {
+        protected Rule(final PMMLPredicate condition, final String outcome, final Double weight,
+            final Double confidence) {
+            this(condition, outcome, weight, confidence, new HashMap<>());
+        }
+
+        /**
+         * Constructs {@link Rule} with its content. The nbCorrect, recordCount and id properties are not available in
+         * this simplified model.
+         *
+         * @param condition The {@link PMMLPredicate} (preferably the rule specific subtypes,
+         *            {@link PMMLRuleSimplePredicate} and {@link PMMLRuleCompoundPredicate}).
+         * @param outcome The outcome when the condition matches.
+         * @param weight The weight of rule.
+         * @param confidence The confidence of the rule.
+         * @param scoreDistribution The map of score distribution values (cannot be {@code null}, but parts of its
+         *            values can be {@code null}).
+         * @since 3.2
+         */
+        protected Rule(final PMMLPredicate condition, final String outcome, final Double weight,
+            final Double confidence, final Map<String, ScoreProbabilityAndRecordCount> scoreDistribution) {
             super();
             this.m_condition = condition;
             this.m_outcome = outcome;
             this.m_weight = weight;
             this.m_confidence = confidence;
+            this.m_scoreDistribution = new LinkedHashMap<>(scoreDistribution);
         }
 
         /**
@@ -192,6 +264,14 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
          */
         final void setNbCorrect(final double nbCorrect) {
             this.m_nbCorrect = nbCorrect;
+        }
+
+        /**
+         * @return the scoreDistribution
+         * @since 3.2
+         */
+        public Map<String, ScoreProbabilityAndRecordCount> getScoreDistribution() {
+            return Collections.unmodifiableMap(m_scoreDistribution);
         }
 
         /**
@@ -437,9 +517,12 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         } else {
             throw new UnsupportedOperationException(r.toString());
         }
-        Rule ret =
-            new Rule(pred, r.getScore(), r.isSetWeight() ? r.getWeight() : null, r.isSetConfidence()
-                ? r.getConfidence() : null);
+        final Map<String, ScoreProbabilityAndRecordCount> scores = r.getScoreDistributionList().stream()
+            .map(sd -> Pair.create(sd.getValue(), new ScoreProbabilityAndRecordCount(
+                sd.isSetProbability() ? sd.getProbability() : null, sd.getRecordCount())))
+            .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+        final Rule ret = new Rule(pred, r.getScore(), r.isSetWeight() ? r.getWeight() : null,
+            r.isSetConfidence() ? r.getConfidence() : null, scores);
         if (r.isSetNbCorrect()) {
             ret.setNbCorrect(r.getNbCorrect());
         }
@@ -465,8 +548,10 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         RuleSet ruleSet = ruleSetModel.addNewRuleSet();
         RuleSelectionMethod ruleSelectionMethod = ruleSet.addNewRuleSelectionMethod();
         RuleSet origRs = m_originalRuleModel == null ? null : m_originalRuleModel.getRuleSet();
-        List<RuleSelectionMethod> origMethods = origRs == null ? Collections.<RuleSelectionMethod>emptyList() : origRs.getRuleSelectionMethodList();
-        ruleSelectionMethod.setCriterion(origMethods.isEmpty() ? Criterion.FIRST_HIT : origMethods.get(0).getCriterion());
+        final List<RuleSelectionMethod> origMethods =
+            origRs == null ? Collections.<RuleSelectionMethod> emptyList() : origRs.getRuleSelectionMethodList();
+        ruleSelectionMethod
+            .setCriterion(origMethods.isEmpty() ? Criterion.FIRST_HIT : origMethods.get(0).getCriterion());
         if (!Double.isNaN(m_recordCount)) {
             ruleSet.setRecordCount(m_recordCount);
         }
@@ -506,6 +591,15 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
             }
             if (rule.getConfidence() != null) {
                 simpleRule.setConfidence(rule.getConfidence());
+            }
+            for (final Entry<String, ScoreProbabilityAndRecordCount> entry : rule.getScoreDistribution().entrySet()) {
+                final ScoreDistribution sd = simpleRule.addNewScoreDistribution();
+                sd.setValue(entry.getKey());
+                final ScoreProbabilityAndRecordCount value = entry.getValue();
+                if (value.getProbability() != null) {
+                    sd.setProbability(value.getProbability());
+                }
+                sd.setRecordCount(value.getRecordCount());
             }
         }
     }

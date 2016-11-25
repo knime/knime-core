@@ -639,6 +639,11 @@ public class ExecutionContext extends ExecutionMonitor {
                 m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
     }
 
+    /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */
+    IWriteFileStoreHandler getFileStoreHandler() {
+        return m_fileStoreHandler;
+    }
+
     /**
      * Get reference to the local table repository. It contains
      * <code>ContainerTable</code> objects that have been created during the

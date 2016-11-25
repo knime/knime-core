@@ -163,7 +163,7 @@ public class TreeDoubleVectorNumericColumnDataCreator implements TreeAttributeCo
             sortedData[i] = t.m_value;
             sortIndex[i] = t.m_indexInColumn;
         }
-        final String n = TreeNumericColumnMetaData.getAttributeName(attributeIndex);
+        final String n = TreeNumericColumnMetaData.getAttributeNameDouble(attributeIndex);
         TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(n);
         final int missingCount = m_missingCounts[attributeIndex];
         return new TreeDoubleVectorNumericColumnData(metaData, configuration, sortIndex, sortedData,

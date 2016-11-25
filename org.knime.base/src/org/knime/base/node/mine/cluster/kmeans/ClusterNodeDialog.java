@@ -46,8 +46,10 @@ package org.knime.base.node.mine.cluster.kmeans;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
@@ -83,9 +85,14 @@ public class ClusterNodeDialog extends DefaultNodeSettingsPane {
         DialogComponentColumnFilter columnFilter = new DialogComponentColumnFilter(
                 new SettingsModelFilterString(ClusterNodeModel.CFG_COLUMNS),
                 0, true, DoubleValue.class);
+        DialogComponentBoolean enableHilite = new DialogComponentBoolean(
+            new SettingsModelBoolean(ClusterNodeModel.CFG_ENABLE_HILITE, false),
+            "Enable Hilite Mapping");
+
         addDialogComponent(nrOfClusters);
         addDialogComponent(maxNrOfIterations);
         addDialogComponent(columnFilter);
+        addDialogComponent(enableHilite);
         setDefaultTabTitle("K-Means Properties");
     }
 }

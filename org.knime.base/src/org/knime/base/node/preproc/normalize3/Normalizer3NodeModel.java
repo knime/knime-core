@@ -92,7 +92,7 @@ public class Normalizer3NodeModel extends NodeModel {
     private static final int MAX_UNKNOWN_COLS = 3;
 
     /** Configuration. */
-    private Normalizer3Config m_config;
+    private NormalizerConfig m_config;
 
     /**
      * Creates an new normalizer. One input, two outputs (one of which is the model).
@@ -255,7 +255,7 @@ public class Normalizer3NodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_config = new Normalizer3Config();
+        m_config = new NormalizerConfig();
         m_config.loadConfigurationInModel(settings);
     }
 
@@ -282,7 +282,7 @@ public class Normalizer3NodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_config = new Normalizer3Config();
+        m_config = new NormalizerConfig();
         m_config.loadConfigurationInModel(settings);
     }
 
@@ -294,7 +294,7 @@ public class Normalizer3NodeModel extends NodeModel {
     private String[] getIncludedComlumns(final DataTableSpec spec) throws InvalidSettingsException {
         boolean hasGuessedDefaults = false;
         if (m_config == null) {
-            Normalizer3Config config = new Normalizer3Config();
+            NormalizerConfig config = new NormalizerConfig();
             config.guessDefaults(spec);
             hasGuessedDefaults = true;
             m_config = config;

@@ -77,6 +77,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
@@ -134,6 +135,19 @@ public class DBRowIteratorImpl extends RowIterator {
      */
     protected DBRowIteratorImpl(final DataTableSpec spec, final DatabaseConnectionSettings conn,
         final BinaryObjectCellFactory blobFactory, final ResultSet result, final boolean useDbRowId) {
+        this(spec, conn, blobFactory, result, useDbRowId, 0);
+    }
+
+    /**
+     * @param spec {@link DataTableSpec}
+     * @param conn {@link DatabaseConnectionSettings}
+     * @param blobFactory {@link BinaryObjectCellFactory}
+     * @param result {@link ResultSet}
+     * @param useDbRowId <code>true</code> if the db row id should be used
+     * @since 3.2
+     */
+    protected DBRowIteratorImpl(final DataTableSpec spec, final DatabaseConnectionSettings conn,
+        final BinaryObjectCellFactory blobFactory, final ResultSet result, final boolean useDbRowId, final long startRowId) {
         m_spec = spec;
         m_conn = conn;
         m_blobFactory = blobFactory;
@@ -141,6 +155,7 @@ public class DBRowIteratorImpl extends RowIterator {
         m_streamException = new boolean[m_spec.getNumColumns()];
         m_rowIdsStartWithZero = m_conn.getRowIdsStartWithZero();
         m_useDbRowId = useDbRowId;
+        m_rowCounter = startRowId;
     }
 
     /**
@@ -218,14 +233,6 @@ public class DBRowIteratorImpl extends RowIterator {
                         case Types.REAL:
                             cell = readFloat(i);
                             break;
-                        case Types.FLOAT:
-                        case Types.DOUBLE:
-                            cell = readDouble(i);
-                            break;
-                        case Types.DECIMAL:
-                        case Types.NUMERIC:
-                            cell = readBigDecimal(i);
-                            break;
                         default: cell = readDouble(i);
                     }
                 } else if (type.isCompatible(DateAndTimeValue.class)) {
@@ -253,8 +260,9 @@ public class DBRowIteratorImpl extends RowIterator {
                         case Types.LONGVARCHAR:
                         case Types.LONGNVARCHAR:
                             cell = readAsciiStream(i); break;
-                        case Types.LONGVARBINARY:
                         case Types.BINARY:
+                        case Types.LONGVARBINARY:
+                        case Types.VARBINARY:
                             cell = readBinaryStream(i); break;
                         default: cell = readString(i);
                     }
@@ -292,8 +300,10 @@ public class DBRowIteratorImpl extends RowIterator {
                 cells[i] = cell;
             } catch (SQLException sqle) {
                 handlerException("SQL Exception reading Object of type \"" + dbType + "\": ", sqle);
+                cells[i] = new MissingCell(sqle.getMessage());
             } catch (IOException ioe) {
                 handlerException("I/O Exception reading Object of type \"" + dbType + "\": ", ioe);
+                cells[i] = new MissingCell(ioe.getMessage());
             }
         }
         long rowId;

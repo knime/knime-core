@@ -64,13 +64,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /** Model implementation of the line reader node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class LineReaderNodeModel extends NodeModel {
-
-    private LineReaderConfig m_config;
+    private final LineReaderConfig m_config = new LineReaderConfig();
 
     /** No input, one output. */
     public LineReaderNodeModel() {
@@ -96,6 +96,7 @@ final class LineReaderNodeModel extends NodeModel {
         int currentRow = 0;
         final int limitRows = m_config.getLimitRowCount();
         final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+        final boolean matchRegex = !"".equals(m_config.getRegex());
         String line;
         String rowPrefix = m_config.getRowPrefix();
         try {
@@ -111,6 +112,10 @@ final class LineReaderNodeModel extends NodeModel {
                 exec.checkCanceled();
                 if (isSkipEmpty && line.trim().length() == 0) {
                     // do not increment currentRow
+                    continue;
+                }
+                if (matchRegex && !line.matches(m_config.getRegex())) {
+                    //do not increment currentRow
                     continue;
                 }
                 if (limitRows > 0 && currentRow >= limitRows) {
@@ -134,13 +139,16 @@ final class LineReaderNodeModel extends NodeModel {
     }
 
     private DataTableSpec createOutputSpec() throws InvalidSettingsException {
-        if (m_config == null) {
-            throw new InvalidSettingsException("No configuration available");
-        }
-        String colName = m_config.getColumnHeader();
-        DataColumnSpecCreator creator =
-            new DataColumnSpecCreator(colName, StringCell.TYPE);
         URL url = m_config.getURL();
+        String warning = CheckUtils.checkSourceFile(url == null ? null : url.toString());
+        if (warning != null) {
+            setWarningMessage(warning);
+        }
+
+        String colName = m_config.getColumnHeader();
+        CheckUtils.checkNotNull(colName, "No output column name provided");
+
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, StringCell.TYPE);
         String path = url.getPath();
         String name = "";
         if (path != null) {
@@ -161,9 +169,7 @@ final class LineReaderNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_config != null) {
-            m_config.saveConfiguration(settings);
-        }
+        m_config.saveConfiguration(settings);
     }
 
     /** {@inheritDoc} */
@@ -177,9 +183,7 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        LineReaderConfig c = new LineReaderConfig();
-        c.loadConfigurationInModel(settings);
-        m_config = c;
+        m_config.loadConfigurationInModel(settings);
     }
 
     /** {@inheritDoc} */
@@ -197,5 +201,4 @@ final class LineReaderNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
         // no internals
     }
-
 }

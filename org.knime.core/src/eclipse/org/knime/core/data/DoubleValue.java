@@ -49,6 +49,8 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.convert.DataValueAccessMethod;
+
 
 /**
  * Interface supporting generic double values.
@@ -65,6 +67,7 @@ public interface DoubleValue extends DataValue {
     /**
      * @return A generic <code>double</code> value.
      */
+    @DataValueAccessMethod(name = "Double")
     double getDoubleValue();
 
     /** Implementations of the meta information of this value class. */

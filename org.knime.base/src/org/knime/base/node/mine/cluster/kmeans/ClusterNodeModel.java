@@ -85,6 +85,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
@@ -119,6 +120,10 @@ public class ClusterNodeModel extends NodeModel {
 
     /** Config key for the maximal number of iterations. */
     public static final String CFG_MAX_ITERATIONS = "maxNrIterations";
+
+    /** Config key for the enable hiliting setting.
+     * @since 3.3 */
+    public static final String CFG_ENABLE_HILITE = "enableHilite";
 
     /** Config key for the used columns. */
     public static final String CFG_COLUMNS = "cfgColmns";
@@ -161,6 +166,8 @@ public class ClusterNodeModel extends NodeModel {
     private final SettingsModelFilterString m_usedColumns
         = new SettingsModelFilterString(CFG_COLUMNS);
 
+    private final SettingsModelBoolean m_enableHilite = new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
+
     private ClusterViewData m_viewData;
 
     private boolean m_pmmlInEnabled;
@@ -175,6 +182,8 @@ public class ClusterNodeModel extends NodeModel {
 
     /**
      * Constructor, remember parent and initialize status.
+     * @param pmmlInEnabled if true, the node has an input PMML port
+     * @param outputCenters if true, the node has another output port for the cluster centers
      */
     ClusterNodeModel(final boolean pmmlInEnabled, final boolean outputCenters) {
         super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
@@ -233,6 +242,7 @@ public class ClusterNodeModel extends NodeModel {
         m_nrOfClusters.saveSettingsTo(settings);
         m_nrMaxIterations.saveSettingsTo(settings);
         m_usedColumns.saveSettingsTo(settings);
+        m_enableHilite.saveSettingsTo(settings);
     }
 
     /**
@@ -252,6 +262,7 @@ public class ClusterNodeModel extends NodeModel {
         // if exception is thrown -> catch it, and remember it
         // in configure set all numeric columns into includeList
         try {
+            m_enableHilite.validateSettings(settings);
             m_usedColumns.validateSettings(settings);
         } catch (InvalidSettingsException ise) {
             // do nothing: problably an old workflow
@@ -273,6 +284,12 @@ public class ClusterNodeModel extends NodeModel {
         m_nrOfClusters.loadSettingsFrom(settings);
         m_nrMaxIterations.loadSettingsFrom(settings);
         m_dimension = m_usedColumns.getIncludeList().size() + m_usedColumns.getExcludeList().size();
+        // added in 3.3
+        if (settings.containsKey(CFG_ENABLE_HILITE)) {
+            m_enableHilite.loadSettingsFrom(settings);
+        } else {
+            m_enableHilite.setBooleanValue(false);
+        }
         try {
             m_usedColumns.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
@@ -298,10 +315,8 @@ public class ClusterNodeModel extends NodeModel {
         addExcludeColumnsToIgnoreList(spec);
         double[][] clusters = initializeClusters(inData);
 
-
         // also keep counts of how many patterns fall in a specific cluster
         int[] clusterCoverage = new int[m_nrOfClusters.getIntValue()];
-
 
         // --------- create clusters --------------
         // reserve space for cluster center updates (do batch update!)
@@ -358,26 +373,7 @@ public class ClusterNodeModel extends NodeModel {
                 }
             }
             // update cluster centers
-            for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
-                if (clusterCoverage[c] > 0) {
-                    // only update clusters who do cover some pattern:
-                    int pos = 0;
-                    for (int i = 0; i < m_dimension; i++) {
-                        if (m_ignoreColumn[i]) {
-                            continue;
-                        }
-                        // normalize delta by nr of covered patterns
-                        double newValue = delta[c][pos] / clusterCoverage[c];
-                        // compare before assigning the value to make sure we
-                        // don't stop if things have changed substantially
-                        if (Math.abs(clusters[c][pos] - newValue) > 1e-10) {
-                            finished = false;
-                        }
-                        clusters[c][pos] = newValue;
-                        pos++;
-                    }
-                }
-            }
+            finished = updateClusterCenters(clusterCoverage, clusters, delta);
             currentIteration++;
         } // while(!finished & nrIt<maxNrIt)
         // create list of feature names
@@ -397,17 +393,21 @@ public class ClusterNodeModel extends NodeModel {
             int winner = findClosestPrototypeFor(row, clusters);
             DataCell cell = new StringCell(CLUSTER + winner);
             labeledInput.addRowToTable(new AppendedColumnRow(row, cell));
-            RowKey key = new RowKey(CLUSTER + winner);
-            if (mapping.get(key) == null) {
-                Set<RowKey> set = new HashSet<RowKey>();
-                set.add(row.getKey());
-                mapping.put(key, set);
-            } else {
-                mapping.get(key).add(row.getKey());
+            if (m_enableHilite.getBooleanValue()) {
+                RowKey key = new RowKey(CLUSTER + winner);
+                if (mapping.get(key) == null) {
+                    Set<RowKey> set = new HashSet<RowKey>();
+                    set.add(row.getKey());
+                    mapping.put(key, set);
+                } else {
+                    mapping.get(key).add(row.getKey());
+                }
             }
         }
         labeledInput.close();
-        m_translator.setMapper(new DefaultHiLiteMapper(mapping));
+        if (m_enableHilite.getBooleanValue()) {
+            m_translator.setMapper(new DefaultHiLiteMapper(mapping));
+        }
         BufferedDataTable outData = labeledInput.getTable();
 
         // handle the optional PMML input
@@ -443,6 +443,33 @@ public class ClusterNodeModel extends NodeModel {
             return new PortObject[]{outData, outPMMLPort};
         }
      }
+
+    private boolean updateClusterCenters(final int[] clusterCoverage,
+                                        final double[][] clusters,
+                                        final double[][] delta) {
+        boolean finished = true;
+        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
+            if (clusterCoverage[c] > 0) {
+                // only update clusters who do cover some pattern:
+                int pos = 0;
+                for (int i = 0; i < m_dimension; i++) {
+                    if (m_ignoreColumn[i]) {
+                        continue;
+                    }
+                    // normalize delta by nr of covered patterns
+                    double newValue = delta[c][pos] / clusterCoverage[c];
+                    // compare before assigning the value to make sure we
+                    // don't stop if things have changed substantially
+                    if (Math.abs(clusters[c][pos] - newValue) > 1e-10) {
+                        finished = false;
+                    }
+                    clusters[c][pos] = newValue;
+                    pos++;
+                }
+            }
+        }
+        return finished;
+    }
 
     private double[][] initializeClusters(final DataTable input) {
         // initialize matrix of double (nr clusters * input dimension)
@@ -740,9 +767,11 @@ public class ClusterNodeModel extends NodeModel {
             // ignore and set mapper to null if info is not available.
             // (fixes bug #1016)
             String[] featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
-            NodeSettingsRO mapSet = settings.getNodeSettings(CFG_HILITEMAPPING);
             m_viewData = new ClusterViewData(clusters, clusterCoverage, m_dimension - m_nrIgnoredColumns, featureNames);
-            m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
+            if (m_enableHilite.getBooleanValue()) {
+                NodeSettingsRO mapSet = settings.getNodeSettings(CFG_HILITEMAPPING);
+                m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
+            }
         } catch (InvalidSettingsException e) {
             throw new IOException(e);
         }
@@ -763,8 +792,10 @@ public class ClusterNodeModel extends NodeModel {
             internalSettings.addDoubleArray(CFG_CLUSTER + i, m_viewData.clusters()[i]);
         }
         internalSettings.addStringArray(CFG_FEATURE_NAMES, m_viewData.featureNames());
-        NodeSettingsWO mapSet = internalSettings.addNodeSettings(CFG_HILITEMAPPING);
-        ((DefaultHiLiteMapper) m_translator.getMapper()).save(mapSet);
+        if (m_enableHilite.getBooleanValue()) {
+            NodeSettingsWO mapSet = internalSettings.addNodeSettings(CFG_HILITEMAPPING);
+            ((DefaultHiLiteMapper) m_translator.getMapper()).save(mapSet);
+        }
         File f = new File(internDir, SETTINGS_FILE_NAME);
         FileOutputStream out = new FileOutputStream(f);
         internalSettings.saveToXML(out);

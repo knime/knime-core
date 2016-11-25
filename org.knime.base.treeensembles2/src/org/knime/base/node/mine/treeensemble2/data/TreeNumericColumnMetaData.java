@@ -63,8 +63,12 @@ public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData
      * @param bytePosition
      * @return name for artificial byte column
      */
-    public static final String getAttributeName(final int bytePosition) {
+    public static final String getAttributeNameByte(final int bytePosition) {
         return "Byte " + bytePosition;
+    }
+
+    public static final String getAttributeNameDouble(final int doublePosition) {
+        return "Double " + doublePosition;
     }
 
     /**

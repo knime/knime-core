@@ -49,6 +49,8 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.convert.DataValueAccessMethod;
+
 
 /**
  * Interface supporting generic int values.
@@ -64,6 +66,7 @@ public interface IntValue extends DataValue {
     /**
      * @return A generic <code>int</code> value.
      */
+    @DataValueAccessMethod(name = "Integer")
     int getIntValue();
 
     /** Implementations of the meta information of this value class. */

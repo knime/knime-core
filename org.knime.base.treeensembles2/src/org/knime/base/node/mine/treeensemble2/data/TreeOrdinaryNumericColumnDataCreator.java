@@ -85,10 +85,10 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
         Tuple t = new Tuple();
         if (cell.isMissing()) {
             //            throw new UnsupportedOperationException("missing vals not supported");
-            t.m_value = Double.NaN;
+            t.m_value = (float)Double.NaN;
             m_numMissing++;
         } else {
-            t.m_value = ((DoubleValue)cell).getDoubleValue();
+            t.m_value = (float)((DoubleValue)cell).getDoubleValue();
         }
         t.m_indexInColumn = m_tuples.size();
         m_tuples.add(t);
@@ -108,7 +108,7 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
         Tuple[] tuples = m_tuples.toArray(new Tuple[m_tuples.size()]);
         Arrays.sort(tuples);
         final int length = tuples.length;
-        final double[] sortedData = new double[length];
+        final float[] sortedData = new float[length];
         final int[] sortIndex = new int[length];
         for (int i = 0; i < tuples.length; i++) {
             Tuple t = tuples[i];
@@ -124,9 +124,48 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
     }
 
     private static class Tuple implements Comparable<Tuple> {
-        private double m_value;
+        private float m_value;
 
         private int m_indexInColumn;
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + m_indexInColumn;
+            result = prime * result + Float.floatToIntBits(m_value);
+            return result;
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Tuple other = (Tuple)obj;
+            if (m_indexInColumn != other.m_indexInColumn) {
+                return false;
+            }
+            if (Float.floatToIntBits(m_value) != Float.floatToIntBits(other.m_value)) {
+                return false;
+            }
+            return true;
+        }
+
 
         /** {@inheritDoc} */
         @Override

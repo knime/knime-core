@@ -54,8 +54,6 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Set;
 
-import junit.framework.TestCase;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.ComplexNumberCell;
@@ -65,6 +63,8 @@ import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 
+import junit.framework.TestCase;
+
 /**
  * Test the <code>Config</code> class.
  *
@@ -72,15 +72,19 @@ import org.knime.core.data.def.StringCell;
  */
 public final class NodeSettingsTest extends TestCase {
 
-    private static final NodeSettings SETT = new NodeSettings("test-settings");
+    private NodeSettings m_settings;
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
+    protected void setUp() throws Exception {
+        m_settings = new NodeSettings("test-settings");
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void tearDown() throws Exception {
         StringBuffer buf = new StringBuffer();
-        SETT.toString(buf);
+        m_settings.toString(buf);
         NodeLogger.getLogger(getClass()).debug(buf.toString());
         testFile();
         testXML();
@@ -126,32 +130,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testInt() throws Exception {
         try {
-            SETT.addInt(null, 11);
+            m_settings.addInt(null, 11);
             fail();
         } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
         String key = "kint";
-        SETT.addInt(key, 5);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(5 == SETT.getInt(key));
-        assertTrue(5 == SETT.getInt(key, -1));
+        m_settings.addInt(key, 5);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(5 == m_settings.getInt(key));
+        assertTrue(5 == m_settings.getInt(key, -1));
         key += "array";
-        SETT.addIntArray(key, new int[]{42, 13});
-        assertTrue(SETT.containsKey(key));
-        int[] a = SETT.getIntArray(key);
+        m_settings.addIntArray(key, new int[]{42, 13});
+        assertTrue(m_settings.containsKey(key));
+        int[] a = m_settings.getIntArray(key);
         assertTrue(a[0] == 42 && a[1] == 13);
-        a = SETT.getIntArray(key, new int[0]);
+        a = m_settings.getIntArray(key, new int[0]);
         assertTrue(a[0] == 42 && a[1] == 13);
         key = "kint_array_0";
-        SETT.addIntArray(key, new int[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getIntArray(key).length == 0);
-        assertTrue(SETT.getIntArray(key, new int[1]).length == 0);
+        m_settings.addIntArray(key, new int[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getIntArray(key).length == 0);
+        assertTrue(m_settings.getIntArray(key, new int[1]).length == 0);
         key = "kint-";
-        SETT.addIntArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getIntArray(key) == null);
+        m_settings.addIntArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getIntArray(key) == null);
     }
 
     /**
@@ -162,32 +166,32 @@ public final class NodeSettingsTest extends TestCase {
 
     public void testDouble() throws Exception {
         try {
-            SETT.addDouble(null, 11.11);
+            m_settings.addDouble(null, 11.11);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kdouble";
-        SETT.addDouble(key, 5.5);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(5.5 == SETT.getDouble(key));
-        assertTrue(5.5 == SETT.getDouble(key, -1.0));
+        m_settings.addDouble(key, 5.5);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(5.5 == m_settings.getDouble(key));
+        assertTrue(5.5 == m_settings.getDouble(key, -1.0));
         key += "array";
-        SETT.addDoubleArray(key, new double[]{42.42, 13.13});
-        assertTrue(SETT.containsKey(key));
-        double[] a = SETT.getDoubleArray(key);
+        m_settings.addDoubleArray(key, new double[]{42.42, 13.13});
+        assertTrue(m_settings.containsKey(key));
+        double[] a = m_settings.getDoubleArray(key);
         assertTrue(a[0] == 42.42 && a[1] == 13.13);
-        a = SETT.getDoubleArray(key, new double[0]);
+        a = m_settings.getDoubleArray(key, new double[0]);
         assertTrue(a[0] == 42.42 && a[1] == 13.13);
         key = "kdouble_array_0";
-        SETT.addDoubleArray(key, new double[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDoubleArray(key).length == 0);
-        assertTrue(SETT.getDoubleArray(key, new double[1]).length == 0);
+        m_settings.addDoubleArray(key, new double[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDoubleArray(key).length == 0);
+        assertTrue(m_settings.getDoubleArray(key, new double[1]).length == 0);
         key = "kdouble-";
-        SETT.addDoubleArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDoubleArray(key) == null);
+        m_settings.addDoubleArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDoubleArray(key) == null);
     }
 
     /**
@@ -197,32 +201,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testFloat() throws Exception {
         try {
-            SETT.addFloat(null, 11.11f);
+            m_settings.addFloat(null, 11.11f);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kfloat";
-        SETT.addFloat(key, 5.5f);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(5.5 == SETT.getFloat(key));
-        assertTrue(5.5 == SETT.getFloat(key, -1.0f));
+        m_settings.addFloat(key, 5.5f);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(5.5 == m_settings.getFloat(key));
+        assertTrue(5.5 == m_settings.getFloat(key, -1.0f));
         key += "array";
-        SETT.addFloatArray(key, new float[]{42.42f, 13.13f});
-        assertTrue(SETT.containsKey(key));
-        float[] a = SETT.getFloatArray(key);
+        m_settings.addFloatArray(key, new float[]{42.42f, 13.13f});
+        assertTrue(m_settings.containsKey(key));
+        float[] a = m_settings.getFloatArray(key);
         assertTrue(a[0] == 42.42f && a[1] == 13.13f);
-        a = SETT.getFloatArray(key, new float[0]);
+        a = m_settings.getFloatArray(key, new float[0]);
         assertTrue(a[0] == 42.42f && a[1] == 13.13f);
         key = "kfloat_array_0";
-        SETT.addFloatArray(key, new float[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getFloatArray(key).length == 0);
-        assertTrue(SETT.getFloatArray(key, new float[1]).length == 0);
+        m_settings.addFloatArray(key, new float[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getFloatArray(key).length == 0);
+        assertTrue(m_settings.getFloatArray(key, new float[1]).length == 0);
         key = "kfloat-";
-        SETT.addFloatArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getFloatArray(key) == null);
+        m_settings.addFloatArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getFloatArray(key) == null);
     }
 
     /**
@@ -232,32 +236,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testBoolean() throws Exception {
         try {
-            SETT.addBoolean(null, true);
+            m_settings.addBoolean(null, true);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kboolean";
-        SETT.addBoolean(key, true);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getBoolean(key));
-        assertTrue(SETT.getBoolean(key, false));
+        m_settings.addBoolean(key, true);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getBoolean(key));
+        assertTrue(m_settings.getBoolean(key, false));
         key += "array";
-        SETT.addBooleanArray(key, new boolean[]{false, true});
-        assertTrue(SETT.containsKey(key));
-        boolean[] a = SETT.getBooleanArray(key);
+        m_settings.addBooleanArray(key, new boolean[]{false, true});
+        assertTrue(m_settings.containsKey(key));
+        boolean[] a = m_settings.getBooleanArray(key);
         assertTrue(!a[0] && a[1]);
-        a = SETT.getBooleanArray(key, new boolean[0]);
+        a = m_settings.getBooleanArray(key, new boolean[0]);
         assertTrue(!a[0] && a[1]);
         key = "kboolean_array_0";
-        SETT.addBooleanArray(key, new boolean[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getBooleanArray(key).length == 0);
-        assertTrue(SETT.getBooleanArray(key, new boolean[1]).length == 0);
+        m_settings.addBooleanArray(key, new boolean[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getBooleanArray(key).length == 0);
+        assertTrue(m_settings.getBooleanArray(key, new boolean[1]).length == 0);
         key = "kboolean-";
-        SETT.addBooleanArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getBooleanArray(key) == null);
+        m_settings.addBooleanArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getBooleanArray(key) == null);
     }
 
     /**
@@ -267,32 +271,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testChar() throws Exception {
         try {
-            SETT.addChar(null, '5');
+            m_settings.addChar(null, '5');
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kchar";
-        SETT.addChar(key, '5');
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getChar(key) == '5');
-        assertTrue(SETT.getChar(key, 'n') == '5');
+        m_settings.addChar(key, '5');
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getChar(key) == '5');
+        assertTrue(m_settings.getChar(key, 'n') == '5');
         key += "array";
-        SETT.addCharArray(key, new char[]{'4', '2'});
-        assertTrue(SETT.containsKey(key));
-        char[] a = SETT.getCharArray(key);
+        m_settings.addCharArray(key, new char[]{'4', '2'});
+        assertTrue(m_settings.containsKey(key));
+        char[] a = m_settings.getCharArray(key);
         assertTrue(a[0] == '4' && a[1] == '2');
-        a = SETT.getCharArray(key, new char[0]);
+        a = m_settings.getCharArray(key, new char[0]);
         assertTrue(a[0] == '4' && a[1] == '2');
         key = "kchar_array_0";
-        SETT.addCharArray(key, new char[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getCharArray(key).length == 0);
-        assertTrue(SETT.getCharArray(key, new char[1]).length == 0);
+        m_settings.addCharArray(key, new char[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getCharArray(key).length == 0);
+        assertTrue(m_settings.getCharArray(key, new char[1]).length == 0);
         key = "kchar-";
-        SETT.addCharArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getCharArray(key) == null);
+        m_settings.addCharArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getCharArray(key) == null);
     }
 
     /**
@@ -302,32 +306,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testShort() throws Exception {
         try {
-            SETT.addShort(null, (short)'5');
+            m_settings.addShort(null, (short)'5');
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kshort";
-        SETT.addShort(key, (short)'5');
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getShort(key) == '5');
-        assertTrue(SETT.getShort(key, (short)'n') == (short)'5');
+        m_settings.addShort(key, (short)'5');
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getShort(key) == '5');
+        assertTrue(m_settings.getShort(key, (short)'n') == (short)'5');
         key += "array";
-        SETT.addShortArray(key, new short[]{'4', '2'});
-        assertTrue(SETT.containsKey(key));
-        short[] a = SETT.getShortArray(key);
+        m_settings.addShortArray(key, new short[]{'4', '2'});
+        assertTrue(m_settings.containsKey(key));
+        short[] a = m_settings.getShortArray(key);
         assertTrue(a[0] == '4' && a[1] == '2');
-        a = SETT.getShortArray(key, new short[0]);
+        a = m_settings.getShortArray(key, new short[0]);
         assertTrue(a[0] == '4' && a[1] == '2');
         key = "kshort_array_0";
-        SETT.addShortArray(key, new short[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getShortArray(key).length == 0);
-        assertTrue(SETT.getShortArray(key, new short[1]).length == 0);
+        m_settings.addShortArray(key, new short[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getShortArray(key).length == 0);
+        assertTrue(m_settings.getShortArray(key, new short[1]).length == 0);
         key = "kshort-";
-        SETT.addShortArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getShortArray(key) == null);
+        m_settings.addShortArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getShortArray(key) == null);
     }
 
     /**
@@ -337,32 +341,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testLong() throws Exception {
         try {
-            SETT.addLong(null, 42L);
+            m_settings.addLong(null, 42L);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "klong";
-        SETT.addLong(key, 42L);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getLong(key) == 42L);
-        assertTrue(SETT.getLong(key, 5L) == 42L);
+        m_settings.addLong(key, 42L);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getLong(key) == 42L);
+        assertTrue(m_settings.getLong(key, 5L) == 42L);
         key += "array";
-        SETT.addLongArray(key, 11L, 66L);
-        assertTrue(SETT.containsKey(key));
-        long[] a = SETT.getLongArray(key);
+        m_settings.addLongArray(key, 11L, 66L);
+        assertTrue(m_settings.containsKey(key));
+        long[] a = m_settings.getLongArray(key);
         assertTrue(a[0] == 11L && a[1] == 66L);
-        a = SETT.getLongArray(key, new long[0]);
+        a = m_settings.getLongArray(key, new long[0]);
         assertTrue(a[0] == 11L && a[1] == 66L);
         key = "klong_array_0";
-        SETT.addLongArray(key, new long[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getLongArray(key).length == 0);
-        assertTrue(SETT.getLongArray(key, new long[1]).length == 0);
+        m_settings.addLongArray(key, new long[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getLongArray(key).length == 0);
+        assertTrue(m_settings.getLongArray(key, new long[1]).length == 0);
         key = "klong-";
-        SETT.addLongArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getLongArray(key) == null);
+        m_settings.addLongArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getLongArray(key) == null);
     }
 
     /**
@@ -372,32 +376,32 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testByte() throws Exception {
         try {
-            SETT.addByte(null, (byte)'n');
+            m_settings.addByte(null, (byte)'n');
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kbyte";
-        SETT.addByte(key, (byte)'b');
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getByte(key) == (byte)'b');
-        assertTrue(SETT.getByte(key, (byte)'n') == (byte)'b');
+        m_settings.addByte(key, (byte)'b');
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getByte(key) == (byte)'b');
+        assertTrue(m_settings.getByte(key, (byte)'n') == (byte)'b');
         key += "array";
-        SETT.addByteArray(key, new byte[]{'4', '2'});
-        assertTrue(SETT.containsKey(key));
-        byte[] a = SETT.getByteArray(key);
+        m_settings.addByteArray(key, new byte[]{'4', '2'});
+        assertTrue(m_settings.containsKey(key));
+        byte[] a = m_settings.getByteArray(key);
         assertTrue(a[0] == '4' && a[1] == '2');
-        a = SETT.getByteArray(key, new byte[0]);
+        a = m_settings.getByteArray(key, new byte[0]);
         assertTrue(a[0] == '4' && a[1] == '2');
         key = "kbyte_array_0";
-        SETT.addByteArray(key, new byte[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getByteArray(key).length == 0);
-        assertTrue(SETT.getByteArray(key, new byte[1]).length == 0);
+        m_settings.addByteArray(key, new byte[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getByteArray(key).length == 0);
+        assertTrue(m_settings.getByteArray(key, new byte[1]).length == 0);
         key = "kbyte-";
-        SETT.addByteArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getByteArray(key) == null);
+        m_settings.addByteArray(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getByteArray(key) == null);
     }
 
     /**
@@ -407,49 +411,49 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testStringDataCell() throws Exception {
         try {
-            SETT.addDataCell(null, new StringCell("null"));
+            m_settings.addDataCell(null, new StringCell("null"));
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "nullDataCell";
-        SETT.addDataCell(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataCell(key) == null);
+        m_settings.addDataCell(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataCell(key) == null);
         DataCell nullCell = new StringCell("null");
-        assertTrue(SETT.getDataCell(key, nullCell) == null);
+        assertTrue(m_settings.getDataCell(key, nullCell) == null);
         key = "kDataCell";
-        SETT.addDataCell(key, new StringCell("B"));
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataCell(key).equals(new StringCell("B")));
-        assertTrue(SETT.getDataCell(key, null).equals(
+        m_settings.addDataCell(key, new StringCell("B"));
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataCell(key).equals(new StringCell("B")));
+        assertTrue(m_settings.getDataCell(key, null).equals(
                 new StringCell("B")));
         key += "array";
-        SETT.addDataCellArray(key, new DataCell[]{new StringCell("T"),
+        m_settings.addDataCellArray(key, new DataCell[]{new StringCell("T"),
                 new StringCell("P"), new StringCell("M")});
-        assertTrue(SETT.containsKey(key));
-        DataCell[] a = SETT.getDataCellArray(key);
+        assertTrue(m_settings.containsKey(key));
+        DataCell[] a = m_settings.getDataCellArray(key);
         assertTrue(a[0].equals(new StringCell("T")));
         assertTrue(a[1].equals(new StringCell("P")));
         assertTrue(a[2].equals(new StringCell("M")));
-        a = SETT.getDataCellArray(key, new DataCell[0]);
+        a = m_settings.getDataCellArray(key, new DataCell[0]);
         assertTrue(a[0].equals(new StringCell("T")));
         assertTrue(a[1].equals(new StringCell("P")));
         assertTrue(a[2].equals(new StringCell("M")));
         key = "kDataCell_array_0";
-        SETT.addDataCellArray(key, new DataCell[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataCellArray(key).length == 0);
-        assertTrue(SETT.getDataCellArray(key, new DataCell[1]).length == 0);
+        m_settings.addDataCellArray(key, new DataCell[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataCellArray(key).length == 0);
+        assertTrue(m_settings.getDataCellArray(key, new DataCell[1]).length == 0);
         key = "kDataCell-";
-        SETT.addDataCellArray(key, (DataCell[]) null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataCellArray(key) == null);
+        m_settings.addDataCellArray(key, (DataCell[]) null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataCellArray(key) == null);
         key = "unknownDataCell";
         DataCell unknownCell = new FuzzyNumberCell(0.0, 1.0, 2.0);
-        SETT.addDataCell(key, unknownCell);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(unknownCell.equals(SETT.getDataCell(key)));
+        m_settings.addDataCell(key, unknownCell);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(unknownCell.equals(m_settings.getDataCell(key)));
     }
 
     /**
@@ -459,37 +463,37 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testDataCell() throws Exception {
         StringCell s = new StringCell("stringi");
-        SETT.addDataCell("string", s);
-        assertTrue(SETT.containsKey("string"));
-        assertTrue(SETT.getDataCell("string").equals(s));
+        m_settings.addDataCell("string", s);
+        assertTrue(m_settings.containsKey("string"));
+        assertTrue(m_settings.getDataCell("string").equals(s));
         DoubleCell d = new DoubleCell(45.42);
-        SETT.addDataCell("double", d);
-        assertTrue(SETT.containsKey("double"));
-        assertTrue(SETT.getDataCell("double").equals(d));
+        m_settings.addDataCell("double", d);
+        assertTrue(m_settings.containsKey("double"));
+        assertTrue(m_settings.getDataCell("double").equals(d));
         IntCell i = new IntCell(11);
-        SETT.addDataCell("int", i);
-        assertTrue(SETT.containsKey("int"));
-        assertTrue(SETT.getDataCell("int").equals(i));
+        m_settings.addDataCell("int", i);
+        assertTrue(m_settings.containsKey("int"));
+        assertTrue(m_settings.getDataCell("int").equals(i));
         DataCell m = DataType.getMissingCell();
-        SETT.addDataCell("missing", m);
-        assertTrue(SETT.containsKey("missing"));
-        assertTrue(SETT.getDataCell("missing").equals(m));
+        m_settings.addDataCell("missing", m);
+        assertTrue(m_settings.containsKey("missing"));
+        assertTrue(m_settings.getDataCell("missing").equals(m));
         ComplexNumberCell c = new ComplexNumberCell(5.4, 4.5);
-        SETT.addDataCell("complex", c);
-        assertTrue(SETT.containsKey("complex"));
-        assertTrue(SETT.getDataCell("complex").equals(c));
+        m_settings.addDataCell("complex", c);
+        assertTrue(m_settings.containsKey("complex"));
+        assertTrue(m_settings.getDataCell("complex").equals(c));
         FuzzyNumberCell n = new FuzzyNumberCell(1, 2, 4);
-        SETT.addDataCell("fnumber", n);
-        assertTrue(SETT.containsKey("fnumber"));
-        assertTrue(SETT.getDataCell("fnumber").equals(n));
+        m_settings.addDataCell("fnumber", n);
+        assertTrue(m_settings.containsKey("fnumber"));
+        assertTrue(m_settings.getDataCell("fnumber").equals(n));
         FuzzyIntervalCell f = new FuzzyIntervalCell(1, 2, 3, 4);
-        SETT.addDataCell("finterval", f);
-        assertTrue(SETT.containsKey("finterval"));
-        assertTrue(SETT.getDataCell("finterval").equals(f));
+        m_settings.addDataCell("finterval", f);
+        assertTrue(m_settings.containsKey("finterval"));
+        assertTrue(m_settings.getDataCell("finterval").equals(f));
         DataCell unknownCell = new UnknownCell();
-        SETT.addDataCell("unknownCell", unknownCell);
-        assertTrue(SETT.containsKey("unknownCell"));
-        assertTrue(SETT.getDataCell("unknownCell").equals(unknownCell));
+        m_settings.addDataCell("unknownCell", unknownCell);
+        assertTrue(m_settings.containsKey("unknownCell"));
+        assertTrue(m_settings.getDataCell("unknownCell").equals(unknownCell));
     }
 
     private static class UnknownCell extends DataCell {
@@ -515,46 +519,46 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testDataType() throws Exception {
         try {
-            SETT.addDataType(null, StringCell.TYPE);
+            m_settings.addDataType(null, StringCell.TYPE);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "nullDataType";
-        SETT.addDataType(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataType(key) == null);
-        assertTrue(SETT.getDataType(key, StringCell.TYPE) == null);
+        m_settings.addDataType(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataType(key) == null);
+        assertTrue(m_settings.getDataType(key, StringCell.TYPE) == null);
         key = "kDataType";
-        SETT.addDataType(key, DoubleCell.TYPE);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataType(key).equals(DoubleCell.TYPE));
-        assertTrue(SETT.getDataType(key, null).equals(DoubleCell.TYPE));
+        m_settings.addDataType(key, DoubleCell.TYPE);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataType(key).equals(DoubleCell.TYPE));
+        assertTrue(m_settings.getDataType(key, null).equals(DoubleCell.TYPE));
         key += "array";
-        SETT.addDataTypeArray(key, new DataType[]{DoubleCell.TYPE,
+        m_settings.addDataTypeArray(key, new DataType[]{DoubleCell.TYPE,
                 StringCell.TYPE, IntCell.TYPE});
-        assertTrue(SETT.containsKey(key));
-        DataType[] a = SETT.getDataTypeArray(key);
+        assertTrue(m_settings.containsKey(key));
+        DataType[] a = m_settings.getDataTypeArray(key);
         assertTrue(a[0].equals(DoubleCell.TYPE));
         assertTrue(a[1].equals(StringCell.TYPE));
         assertTrue(a[2].equals(IntCell.TYPE));
-        a = SETT.getDataTypeArray(key, new DataType[0]);
+        a = m_settings.getDataTypeArray(key, new DataType[0]);
         assertTrue(a[0].equals(DoubleCell.TYPE));
         assertTrue(a[1].equals(StringCell.TYPE));
         assertTrue(a[2].equals(IntCell.TYPE));
         key = "kDataType_array_0";
-        SETT.addDataTypeArray(key, new DataType[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataTypeArray(key).length == 0);
-        assertTrue(SETT.getDataTypeArray(key, new DataType[1]).length == 0);
+        m_settings.addDataTypeArray(key, new DataType[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataTypeArray(key).length == 0);
+        assertTrue(m_settings.getDataTypeArray(key, new DataType[1]).length == 0);
         key = "kDataType-";
-        SETT.addDataTypeArray(key, (DataType[]) null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getDataTypeArray(key) == null);
+        m_settings.addDataTypeArray(key, (DataType[]) null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getDataTypeArray(key) == null);
         key = "unknownDataType";
-        SETT.addDataType(key, FuzzyIntervalCell.TYPE);
-        assertTrue(SETT.containsKey(key));
-        DataType unknownType = SETT.getDataType(key);
+        m_settings.addDataType(key, FuzzyIntervalCell.TYPE);
+        assertTrue(m_settings.containsKey(key));
+        DataType unknownType = m_settings.getDataType(key);
         assertTrue(FuzzyIntervalCell.TYPE.equals(unknownType));
     }
 
@@ -565,41 +569,41 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testString() throws Exception {
         try {
-            SETT.addString(null, "null");
+            m_settings.addString(null, "null");
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "nullString";
-        SETT.addString(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getString(key) == null);
-        assertTrue(SETT.getString(key, "null") == null);
+        m_settings.addString(key, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getString(key) == null);
+        assertTrue(m_settings.getString(key, "null") == null);
         key = "kString";
-        SETT.addString(key, "B");
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getString(key).equals("B"));
-        assertTrue(SETT.getString(key, null).equals("B"));
+        m_settings.addString(key, "B");
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getString(key).equals("B"));
+        assertTrue(m_settings.getString(key, null).equals("B"));
         key += "array";
-        SETT.addStringArray(key, new String[]{"T", "P", "M"});
-        assertTrue(SETT.containsKey(key));
-        String[] a = SETT.getStringArray(key);
+        m_settings.addStringArray(key, new String[]{"T", "P", "M"});
+        assertTrue(m_settings.containsKey(key));
+        String[] a = m_settings.getStringArray(key);
         assertTrue(a[0].equals("T"));
         assertTrue(a[1].equals("P"));
         assertTrue(a[2].equals("M"));
-        a = SETT.getStringArray(key, new String[0]);
+        a = m_settings.getStringArray(key, new String[0]);
         assertTrue(a[0].equals("T"));
         assertTrue(a[1].equals("P"));
         assertTrue(a[2].equals("M"));
         key = "kString_array_0";
-        SETT.addStringArray(key, new String[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getStringArray(key).length == 0);
-        assertTrue(SETT.getStringArray(key, new String[1]).length == 0);
+        m_settings.addStringArray(key, new String[0]);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getStringArray(key).length == 0);
+        assertTrue(m_settings.getStringArray(key, new String[1]).length == 0);
         key = "kString-";
-        SETT.addStringArray(key, (String[]) null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getStringArray(key) == null);
+        m_settings.addStringArray(key, (String[]) null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getStringArray(key) == null);
     }
 
     /**
@@ -609,15 +613,15 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testConfig() throws Exception {
         try {
-            SETT.addNodeSettings((String)null);
+            m_settings.addNodeSettings((String)null);
             fail();
         } catch (IllegalArgumentException iae) {
             assertTrue(true);
         }
         String key = "kConfig";
-        NodeSettings c = (NodeSettings) SETT.addNodeSettings(key);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getNodeSettings(key) == c);
+        NodeSettings c = (NodeSettings) m_settings.addNodeSettings(key);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getNodeSettings(key) == c);
         c.addString("kString_plus", "6");
         c.containsKey("kString_plus");
         assertTrue(c.getString("kString_plus", "-1").equals("6"));
@@ -627,7 +631,7 @@ public final class NodeSettingsTest extends TestCase {
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.
      */
     public void testKeySets() {
-        NodeSettings key = (NodeSettings) SETT.addNodeSettings("test_key_set");
+        NodeSettings key = (NodeSettings) m_settings.addNodeSettings("test_key_set");
         key.addNodeSettings("ConfigA");
         key.addNodeSettings("ConfigB");
         key.addNodeSettings("ConfigC");
@@ -655,7 +659,7 @@ public final class NodeSettingsTest extends TestCase {
      * @throws Exception Should not happen.
      */
     public void testSpecialStrings() throws Exception {
-        NodeSettings key = (NodeSettings) SETT.addNodeSettings(
+        NodeSettings key = (NodeSettings) m_settings.addNodeSettings(
                 "special_strings");
         key.addString("N", "\n");
         key.addString("R", "\r");
@@ -688,7 +692,7 @@ public final class NodeSettingsTest extends TestCase {
      * @throws InvalidSettingsException If a value could not be read.
      */
     public void testInt3DMatrix() throws InvalidSettingsException {
-        NodeSettings config = (NodeSettings) SETT.addNodeSettings("matrix");
+        NodeSettings config = (NodeSettings) m_settings.addNodeSettings("matrix");
         // write int matrix
         int[][][] array = new int[][][]{{{1, 2, 4}, {5, 2, 6}, {7, 1, 9}},
                 {{7, 6, 4}, {8, 2, 9}, {0, 1, 2}}};
@@ -715,16 +719,16 @@ public final class NodeSettingsTest extends TestCase {
      */
     public void testKeys() {
         String key = "key-test";
-        SETT.addNodeSettings(key);
-        SETT.addString(key, "string");
-        SETT.addBoolean(key, true);
-        SETT.addInt(key, -42);
-        SETT.addDouble(key, 5.0);
-        SETT.addShort(key, (short)'s');
-        SETT.addChar(key, 'c');
-        SETT.addByte(key, (byte)'b');
-        SETT.addDataCell(key, null);
-        SETT.addDataType(key, null);
+        m_settings.addNodeSettings(key);
+        m_settings.addString(key, "string");
+        m_settings.addBoolean(key, true);
+        m_settings.addInt(key, -42);
+        m_settings.addDouble(key, 5.0);
+        m_settings.addShort(key, (short)'s');
+        m_settings.addChar(key, 'c');
+        m_settings.addByte(key, (byte)'b');
+        m_settings.addDataCell(key, null);
+        m_settings.addDataType(key, null);
     }
 
     /**
@@ -735,13 +739,13 @@ public final class NodeSettingsTest extends TestCase {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(os);
         // write this NodeSettings
-        SETT.writeToFile(oos);
+        m_settings.writeToFile(oos);
         // and read the NodeSettings again
         byte[] bytes = os.toByteArray();
         ByteArrayInputStream is = new ByteArrayInputStream(bytes);
         ObjectInputStream ois = new ObjectInputStream(is);
         NodeSettings settings = NodeSettings.readFromFile(ois);
-        assertTrue(settings.isIdentical(SETT));
+        assertTrue(settings.isIdentical(m_settings));
     }
 
     /**
@@ -751,11 +755,11 @@ public final class NodeSettingsTest extends TestCase {
     public void testXML() throws IOException {
         // store to XML
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        SETT.saveToXML(os);
+        m_settings.saveToXML(os);
         // read from XML
         InputStream is = new ByteArrayInputStream(os.toByteArray());
         NodeSettingsRO settings = NodeSettings.loadFromXML(is);
-        assertTrue(settings.equals(SETT));
+        assertTrue(settings.equals(m_settings));
     }
 
     /**
@@ -767,30 +771,35 @@ public final class NodeSettingsTest extends TestCase {
         final String encKey = "LaLeLu";
 
         try {
-            SETT.addPassword(null, encKey, "null");
+            m_settings.addPassword(null, encKey, "null");
             fail();
         } catch (IllegalArgumentException iae) {
             // expected
         }
         String key = "nullString";
-        SETT.addPassword(key, encKey, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getPassword(key, encKey) == null);
-        assertTrue(SETT.getPassword(key, encKey, "null") == null);
+        m_settings.addPassword(key, encKey, null);
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getPassword(key, encKey) == null);
+        assertTrue(m_settings.getPassword(key, encKey, "null") == null);
 
         key = "simplePassword";
-        SETT.addPassword(key, encKey, "B");
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getPassword(key, encKey).equals("B"));
-        assertTrue(SETT.getPassword(key, encKey, null).equals("B"));
+        m_settings.addPassword(key, encKey, "B");
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getPassword(key, encKey).equals("B"));
+        assertTrue(m_settings.getPassword(key, encKey, null).equals("B"));
 
         key = "emptyPassword";
-        SETT.addPassword(key, encKey, "");
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getPassword(key, encKey).equals(""));
-        assertTrue(SETT.getPassword(key, encKey, null).equals(""));
+        m_settings.addPassword(key, encKey, "");
+        assertTrue(m_settings.containsKey(key));
+        assertTrue(m_settings.getPassword(key, encKey).equals(""));
+        assertTrue(m_settings.getPassword(key, encKey, null).equals(""));
 
-        assertTrue(SETT.getPassword("nonExistingPassword", encKey, "none").equals("none"));
+        assertTrue(m_settings.getPassword("nonExistingPassword", encKey, "none").equals("none"));
+    }
+
+    public void testJapanese() throws Exception {
+        m_settings.addString("japanese", "あ");
+        assertEquals("あ",   m_settings.getString("japanese"));
     }
 
     /**

@@ -904,22 +904,22 @@ public class BatchExecutor {
         try {
             wfm = loadWorkflow(config);
         } catch (IOException ex) {
-            LOGGER.error("IO error while loading the workflow");
+            LOGGER.error("IO error while loading the workflow: " + ex.getMessage());
             return EXIT_ERR_LOAD;
         } catch (InvalidSettingsException ex) {
-            LOGGER.error("Encountered invalid settings while loading the workflow");
+            LOGGER.error("Encountered invalid settings while loading the workflow: " + ex.getMessage());
             return EXIT_ERR_LOAD;
         } catch (CanceledExecutionException ex) {
             LOGGER.error("Workflow loading was canceled by user");
             return EXIT_ERR_LOAD;
         } catch (UnsupportedWorkflowVersionException ex) {
-            LOGGER.error("Unsupported workflow version");
+            LOGGER.error("Unsupported workflow version: " + ex.getMessage());
             return EXIT_ERR_LOAD;
         } catch (LockFailedException ex) {
             LOGGER.error("Workflow is locked by another KNIME instance");
             return EXIT_ERR_LOAD;
         } catch (IllegalOptionException ex) {
-            LOGGER.error("Unknown or wrong option");
+            LOGGER.error("Unknown or wrong option: " + ex.getMessage());
             return EXIT_ERR_PRESTART;
         }
         boolean sucessful;

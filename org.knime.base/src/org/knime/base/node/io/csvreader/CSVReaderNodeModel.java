@@ -70,14 +70,18 @@ import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
  * Model for CSV Reader node.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class CSVReaderNodeModel extends NodeModel {
+// extended in wide data plug-in
+public class CSVReaderNodeModel extends NodeModel {
 
     private CSVReaderConfig m_config;
 
     /** No input, one output. */
-    CSVReaderNodeModel() {
+    protected CSVReaderNodeModel() {
         super(0, 1);
     }
 
@@ -91,6 +95,10 @@ final class CSVReaderNodeModel extends NodeModel {
         m_config.setLocation(context.getUrl().toString());
     }
 
+    /** @return the config */
+    protected CSVReaderConfig getConfig() {
+        return m_config;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -111,7 +119,19 @@ final class CSVReaderNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+        final ExecutionContext exec) throws Exception {
+
+        FileTable fTable = createFileTable(exec);
+        try {
+            BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
+            return new BufferedDataTable[] {table};
+        } finally {
+            // fix AP-6127
+            fTable.dispose();
+        }
+    }
+
+    protected FileTable createFileTable(final ExecutionContext exec) throws Exception {
         // prepare the settings for the file analyzer
         FileReaderNodeSettings settings = new FileReaderNodeSettings();
 
@@ -161,6 +181,7 @@ final class CSVReaderNodeModel extends NodeModel {
         settings.setMaximumNumberOfRowsToRead(limitRowsCount);
 
         settings.setCharsetName(m_config.getCharSetName());
+        settings.setCharsetUserSet(true);
 
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
@@ -172,10 +193,7 @@ final class CSVReaderNodeModel extends NodeModel {
         }
 
         exec.setMessage("Buffering file");
-        FileTable fTable = new FileTable(settings.createDataTableSpec(), settings, readExec);
-        BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
-
-        return new BufferedDataTable[] {table};
+        return  new FileTable(settings.createDataTableSpec(), settings, readExec);
     }
 
     /** {@inheritDoc} */

@@ -66,6 +66,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
@@ -136,6 +137,7 @@ final class RandomForestClassificationLearnerNodeModel extends NodeModel
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         // the following call may return null, which is OK during configure
@@ -207,6 +209,8 @@ final class RandomForestClassificationLearnerNodeModel extends NodeModel
         }
         readInExec.setProgress(1.0);
         exec.setMessage("Learning trees");
+        // Use xgboost missing value handling
+        m_configuration.setMissingValueHandling(MissingValueHandling.XGBoost);
         TreeEnsembleLearner learner = new TreeEnsembleLearner(m_configuration, data);
         TreeEnsembleModel model;
         try {
@@ -227,7 +231,6 @@ final class RandomForestClassificationLearnerNodeModel extends NodeModel
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
         BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
         m_ensembleModelPortObject = modelPortObject;
-        printEnsembleStatistics(model);
         if (warn != null) {
             setWarningMessage(warn);
         }

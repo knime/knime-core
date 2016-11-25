@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="default.png">
+	<name>Modify Time Zone</name>
+	<shortDescription>Modifies a time zone.</shortDescription>
+	<fullDescription>
+		<intro>
+			Modifies a column by
+			<ul>
+				<li>adding a time zone to local date&amp;time columns or changing the time zone in zoned date&amp;time
+				    columns (without adjusting the time!),
+				</li>
+				<li>shifting the time zone in zoned date&amp;time columns by adjusting the time (and potentially date)
+				    according to the new time zone offset, or</li>
+				<li>removing the time zone from zoned date&amp;time columns.</li>
+			</ul>
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be modified.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				columns.
+			</option>
+		</tab>
+		<tab name="Action Selection">
+			<option name="Set time zone">
+				Adds a time zone to local date&amp;time columns or changed the time zone in zoned date&amp;time
+                columns (without adjusting the time!).
+			</option>
+			<option name="Shift time zone">
+				Shifts the time zone in zoned date&amp;time columns by adjusting the time (and potentially date)
+                according to the new time zone offset.
+			</option>
+			<option name="Remove time zone">
+				Removes the time zone from zoned date&amp;time columns.
+			</option>
+			<option name="Time zone">A time zone to be set or shifted.</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with modified columns.
+		</outPort>
+	</ports>
+</knimeNode>

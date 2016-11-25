@@ -13,7 +13,7 @@
    <element name="extension">
       <annotation>
          <appInfo>
-            <meta.element />
+            <meta.element deprecated="true" />
          </appInfo>
       </annotation>
       <complexType>
@@ -48,6 +48,11 @@
    </element>
 
    <element name="jdbcDriver">
+      <annotation>
+         <appInfo>
+            <meta.element deprecated="true"/>
+         </appInfo>
+      </annotation>
       <complexType>
          <attribute name="jarFile" type="string" use="required">
             <annotation>
@@ -55,7 +60,7 @@
                   Path to the JDBC jar relative to the plug-in root
                </documentation>
                <appInfo>
-                  <meta.attribute kind="resource"/>
+                  <meta.attribute kind="resource" deprecated="true"/>
                </appInfo>
             </annotation>
          </attribute>

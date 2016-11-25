@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="add_time.png">
+	<name>Add Time</name>
+	<shortDescription>Adds time information to a date cell.</shortDescription>
+	<fullDescription>
+		<intro>
+			Adds a fixed time to cells which only contain a date. Optionally a fixed time zone can be added, too.
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only to the included columns a time will be added.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the input table. The suffix of the appended columns can be
+				provided in	the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new columns.
+			</option>
+		</tab>
+		<tab name="Add Time">
+			<option name="Hour">A fixed hour between 0 and 23.</option>
+			<option name="Minute">A fixed minute between 0 and 59</option>
+			<option name="Second">A fixed second between 0 and 59</option>
+			<option name="Nano">A fixed nanosecond between 0 and 999,999,999</option>
+			<option name="Add time zone">If checked, a fixed time zone will be added.</option>
+			<option name="Time Zone">If <i>Add time zone</i> is checked, the user can choose the time zone here.</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with added time.
+		</outPort>
+	</ports>
+</knimeNode>

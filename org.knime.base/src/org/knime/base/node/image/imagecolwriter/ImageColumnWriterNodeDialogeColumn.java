@@ -79,10 +79,9 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
             new DialogComponentColumnNameSelection(new SettingsModelString(
                     "imageColumn", null), "Image column", 0, ImageValue.class);
 
-    private final DialogComponentFileChooser m_dirChooser =
-            new DialogComponentFileChooser(new SettingsModelString("directory",
-                    null), ImageColumnWriterNodeDialogeColumn.class.getName(),
-                    JFileChooser.SAVE_DIALOG, true, createFlowVariableModel("directory", Type.STRING));
+    private final DialogComponentFileChooser m_dirChooser = new DialogComponentFileChooser(
+        new SettingsModelString("directory", null), ImageColumnWriterNodeDialogeColumn.class.getName(),
+        JFileChooser.SAVE_DIALOG, true, createFlowVariableModel("directory", Type.STRING));
 
     private final DialogComponentBoolean m_overwrite =
             new DialogComponentBoolean(new SettingsModelBoolean("overwrite",
@@ -107,9 +106,10 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
                 }
             }
         });
+        m_dirChooser.setBorderTitle("Output directory");
 
-        addDialogComponent(m_imageColumn);
         addDialogComponent(m_dirChooser);
         addDialogComponent(m_overwrite);
+        addDialogComponent(m_imageColumn);
     }
 }

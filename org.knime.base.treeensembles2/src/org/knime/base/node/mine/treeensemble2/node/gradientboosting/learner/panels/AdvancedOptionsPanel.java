@@ -61,6 +61,7 @@ import java.util.Random;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -72,12 +73,13 @@ import javax.swing.SpinnerNumberModel;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.ColumnSamplingMode;
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.ViewUtils;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class AdvancedOptionsPanel extends JPanel {
 
@@ -116,6 +118,8 @@ public class AdvancedOptionsPanel extends JPanel {
     private final JCheckBox m_useBinaryNominalSplitsChecker;
 
     private final JSpinner m_alphaFractionSpinner;
+
+    private final JComboBox<MissingValueHandling> m_missingValueHandlingComboBox;
 
     private final boolean m_isRegression;
 
@@ -214,7 +218,8 @@ public class AdvancedOptionsPanel extends JPanel {
         m_seedChecker.doClick();
 
         m_useAverageSplitPointsChecker = new JCheckBox("Use mid point splits (only for numeric attributes)");
-        m_useBinaryNominalSplitsChecker = new JCheckBox("Use binary splits for nominal columns.");
+        m_useBinaryNominalSplitsChecker = new JCheckBox("Use binary splits for nominal columns");
+        m_missingValueHandlingComboBox = new JComboBox<MissingValueHandling>(MissingValueHandling.values());
 
         initPanel();
     }
@@ -254,6 +259,13 @@ public class AdvancedOptionsPanel extends JPanel {
         add(m_useBinaryNominalSplitsChecker, gbc);
         gbc.gridwidth = 1;
 
+        gbc.gridy += 1;
+        gbc.gridwidth = 2;
+        add(new JLabel("Missing value handling"), gbc);
+        gbc.gridx = 1;
+        add(m_missingValueHandlingComboBox, gbc);
+
+
         gbc.insets = defaultInsets;
         gbc.gridy += 1;
         gbc.gridx = 0;
@@ -271,7 +283,7 @@ public class AdvancedOptionsPanel extends JPanel {
             gbc.gridwidth = 1;
 
             gbc.gridy += 1;
-            add(new JLabel("Alpha"), gbc);
+            add(new JLabel("Alpha (percentage of the data that are not treated as outlier)"), gbc);
             gbc.gridx = 1;
             gbc.weightx = 1.0;
             add(m_alphaFractionSpinner, gbc);
@@ -383,6 +395,7 @@ public class AdvancedOptionsPanel extends JPanel {
         m_alphaFractionSpinner.setValue(cfg.getAlpha());
         m_useAverageSplitPointsChecker.setSelected(cfg.isUseAverageSplitPoints());
         m_useBinaryNominalSplitsChecker.setSelected(cfg.isUseBinaryNominalSplits());
+        m_missingValueHandlingComboBox.setSelectedItem(cfg.getMissingValueHandling());
 
         double dataFrac = cfg.getDataFractionPerTree();
         boolean isDataWithReplacement = cfg.isDataSelectionWithReplacement();
@@ -438,6 +451,11 @@ public class AdvancedOptionsPanel extends JPanel {
         cfg.setAlpha((Double)m_alphaFractionSpinner.getValue());
         cfg.setUseAverageSplitPoints(m_useAverageSplitPointsChecker.isSelected());
         cfg.setUseBinaryNominalSplits(m_useBinaryNominalSplitsChecker.isSelected());
+        final MissingValueHandling missValHandling = (MissingValueHandling)m_missingValueHandlingComboBox.getSelectedItem();
+        if (missValHandling == MissingValueHandling.Surrogate && !m_useBinaryNominalSplitsChecker.isSelected()) {
+            throw new InvalidSettingsException("Surrogate missing value handling can only be used if binary nominal splits are enabled.");
+        }
+        cfg.setMissingValueHandling((MissingValueHandling)m_missingValueHandlingComboBox.getSelectedItem());
 
         double dataFrac;
         boolean isSamplingWithReplacement;

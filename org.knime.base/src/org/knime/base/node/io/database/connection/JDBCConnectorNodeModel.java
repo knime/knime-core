@@ -120,8 +120,9 @@ class JDBCConnectorNodeModel extends NodeModel {
             Throwable cause = ExceptionUtils.getRootCause(ex);
             if (cause == null) {
                 cause = ex;
+            } if (cause instanceof ClassNotFoundException) {
+                cause = new Exception("Could not find driver class: " + cause.getMessage());
             }
-
             throw new SQLException("Could not create connection to database: " + cause.getMessage(), ex);
         }
 

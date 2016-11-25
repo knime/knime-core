@@ -84,4 +84,9 @@ public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHand
         return getNextIndex() > 0;
     }
 
+    /** @return a new instance - do not reuse for different tables/port objects. */
+    public static final NotInWorkflowWriteFileStoreHandler create() {
+        return new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
+    }
+
 }

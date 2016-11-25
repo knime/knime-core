@@ -107,6 +107,7 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 
         <option name="Rules column">Name of the column in the second input table containing the rules or just the conditions if an outcome column is also selected. In case the rules are available during configuration, the type of the outcome column is shown at the right end of this configuration row.</option>
         <option name="=>">In case your rules are in two separate columns (condition and outcome), this should be the column containing the outcome values. (Ignored for the comment -starting with <tt>//</tt>- conditions. It should not contain missing values or other than the logical/boolean values or the <tt>TRUE</tt>/<tt>FALSE</tt> values in a String column.</option>
+        <option name="Treat values starting with $ as references">When checked, the values in the string -outcome- column starting with <tt>$</tt> are not treated as string constants with that value, but are tried to be parsed as references to flow variables, columns or table properties.</option>
 		<option name="TRUE matches go to">
 			A row will be included in the top/bottom output table if the first
 			rule that matches has TRUE outcome depending on the selection. If the first matching rule yields FALSE 

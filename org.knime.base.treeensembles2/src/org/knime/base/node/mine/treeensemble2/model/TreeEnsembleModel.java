@@ -153,12 +153,20 @@ public class TreeEnsembleModel {
     /**
      * @param models
      */
-    protected TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType treeType,
+    public TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType treeType,
         final boolean containsClassDistribution) {
         m_metaData = metaData;
         m_models = models;
         m_type = treeType;
         m_containsClassDistribution = containsClassDistribution;
+    }
+
+    /**
+     *
+     * @return true if the trees in the forest contain class distributions
+     */
+    public boolean containsClassDistribution() {
+        return m_containsClassDistribution;
     }
 
     /**
@@ -251,7 +259,7 @@ public class TreeEnsembleModel {
                 DataColumnSpec[] bvColSpecs = new DataColumnSpec[nrAttributes];
                 for (int i = 0; i < nrAttributes; i++) {
                     bvColSpecs[i] =
-                        new DataColumnSpecCreator(TreeNumericColumnMetaData.getAttributeName(i), IntCell.TYPE)
+                        new DataColumnSpecCreator(TreeNumericColumnMetaData.getAttributeNameByte(i), IntCell.TYPE)
                             .createSpec();
                 }
                 return new DataTableSpec(bvColSpecs);
@@ -353,7 +361,7 @@ public class TreeEnsembleModel {
         }
         final Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(length / 0.75 + 1.0));
         for (int i = 0; i < length; i++) {
-            valueMap.put(TreeNumericColumnMetaData.getAttributeName(i), Double.valueOf(dv.getValue(i)));
+            valueMap.put(TreeNumericColumnMetaData.getAttributeNameDouble(i), Double.valueOf(dv.getValue(i)));
         }
         return new PredictorRecord(valueMap);
     }
@@ -372,7 +380,7 @@ public class TreeEnsembleModel {
         }
         Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(length / 0.75 + 1.0));
         for (int i = 0; i < length; i++) {
-            valueMap.put(TreeNumericColumnMetaData.getAttributeName(i), Integer.valueOf(bv.get(i)));
+            valueMap.put(TreeNumericColumnMetaData.getAttributeNameByte(i), Integer.valueOf(bv.get(i)));
         }
         return new PredictorRecord(valueMap);
     }

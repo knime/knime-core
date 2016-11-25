@@ -52,11 +52,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
+ * Represents a nominal value.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NominalValueRepresentation {
 
+    /**
+     * Nominal representation of a missing value
+     */
     public static final String MISSING_VALUE = "?";
 
     private String m_nominalValue;
@@ -66,13 +70,14 @@ public final class NominalValueRepresentation {
     private double m_totalFrequency;
 
     /**
-     * @param nominalValue
-     * @param assignedInteger
+     * @param nominalValue String representation of nominal value
+     * @param assignedInteger Integer representation of nominal value
+     * @param initialFrequency initial frequency with which the object is created
      */
-    public NominalValueRepresentation(final String nominalValue, final int assignedInteger, final double initialFreqency) {
+    public NominalValueRepresentation(final String nominalValue, final int assignedInteger, final double initialFrequency) {
         m_nominalValue = nominalValue;
         m_assignedInteger = assignedInteger;
-        m_totalFrequency = initialFreqency;
+        m_totalFrequency = initialFrequency;
     }
 
     /** @return the assignedInteger */
@@ -100,6 +105,21 @@ public final class NominalValueRepresentation {
         return m_nominalValue + " (" + m_assignedInteger + ")";
     }
 
+    @Override
+    public boolean equals(final Object that) {
+        if (this == that) {
+            return true;
+        } else if (this.getClass() != that.getClass()) {
+            return false;
+        }
+        final NominalValueRepresentation thatNomVal = (NominalValueRepresentation)that;
+        if (m_nominalValue.length() != thatNomVal.m_nominalValue.length()) {
+            return false;
+        } else {
+            return m_nominalValue.equals(thatNomVal.m_nominalValue);
+        }
+    }
+
     /**
      * @param output
      * @throws IOException
@@ -108,6 +128,17 @@ public final class NominalValueRepresentation {
         output.writeUTF(m_nominalValue);
         output.writeInt(m_assignedInteger);
         output.writeDouble(m_totalFrequency);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 43;
+        int result = prime * m_assignedInteger;
+        result = 43 * result + m_nominalValue.hashCode();
+        return result;
     }
 
     /**

@@ -133,6 +133,21 @@ public interface NodeExecutionJobManager {
     public boolean canDisconnect(final NodeExecutionJob job);
 
     /**
+     * Allows one to check whether this job manager can execute a certain type of {@link NodeContainer}, e.g. meta node,
+     * sub node or native node. If a node container CANNOT be executed, the job manager will not be available for
+     * selection in the node's dialog. By default this method returns <code>true</code>.
+     *
+     *
+     * @param nc the node container to check if it can be executed with this job manager
+     * @return <code>true</code> if the job manager can execute the passed node container, otherwise <code>false</code>
+     *
+     * @since 3.2
+     */
+    default public boolean canExecute(final NodeContainer nc) {
+        return true;
+    }
+
+    /**
      * Saves all the information necessary to reconnect to the specified job
      * after it is disconnected.
      *

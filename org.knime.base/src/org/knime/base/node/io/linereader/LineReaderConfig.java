@@ -49,10 +49,13 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Configuration for line reader node.
@@ -68,6 +71,7 @@ final class LineReaderConfig {
     private String m_columnHeader;
     private boolean m_skipEmptyLines;
     private int m_limitRowCount;
+    private String m_regex;
 
     /** @return the url */
     String getUrlString() {
@@ -81,9 +85,7 @@ final class LineReaderConfig {
       * @return The URL
       * @throws InvalidSettingsException if invalid. */
     URL getURL() throws InvalidSettingsException {
-        if (m_url == null || m_url.length() == 0) {
-            throw new InvalidSettingsException("Invalid (empty) URL");
-        }
+        CheckUtils.checkSourceFile(m_url);
         if (m_url.toLowerCase().matches("^[a-z]+:/.*")) {
             URL url;
             try {
@@ -154,6 +156,19 @@ final class LineReaderConfig {
     void setSkipEmptyLines(final boolean skipEmptyLines) {
         m_skipEmptyLines = skipEmptyLines;
     }
+    /**
+     * @return the User defined regular expression a line has to match or the
+     * universal ".*" if none was specified
+     */
+    String getRegex() {
+        return m_regex;
+    }
+    /**
+     * @param regex
+     */
+    void setRegex(final String regex) {
+        m_regex = regex;
+    }
 
     /** Save current configuration.
      * @param settings to save to. */
@@ -163,6 +178,7 @@ final class LineReaderConfig {
         settings.addString("columnHeader", m_columnHeader);
         settings.addBoolean("skipEmptyLines", m_skipEmptyLines);
         settings.addInt("limitRowCount", m_limitRowCount);
+        settings.addString("regex", m_regex);
     }
 
     /** Load configuration in NodeModel.
@@ -171,9 +187,6 @@ final class LineReaderConfig {
     final void loadConfigurationInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         m_url = settings.getString(CFG_URL);
-        if (m_url == null || m_url.length() == 0) {
-            throw new InvalidSettingsException("Invalid (empty) URL");
-        }
         m_rowPrefix = settings.getString("rowPrefix");
         if (m_rowPrefix == null) {
             throw new InvalidSettingsException("Invalid (null) row prefix");
@@ -185,6 +198,14 @@ final class LineReaderConfig {
         }
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines");
         m_limitRowCount = settings.getInt("limitRowCount");
+        m_regex = settings.getString("regex", "");
+        if (!"".equals(m_regex)){
+            try {
+                Pattern.compile(m_regex);
+            } catch(PatternSyntaxException e){
+                throw new InvalidSettingsException("Invalid Regex: " + m_regex, e);
+            }
+        }
     }
 
     /** Load configuration in dialog, init defaults if invalid.
@@ -195,6 +216,7 @@ final class LineReaderConfig {
         m_columnHeader = settings.getString("columnHeader", "Column");
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines", false);
         m_limitRowCount = settings.getInt("limitRowCount", -1);
+        m_regex = settings.getString("regex", "");
     }
 
 }

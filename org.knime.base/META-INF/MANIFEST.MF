@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
-Bundle-Version: 3.2.0.qualifier
+Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: knime-base.jar,
  lib/Jama-1.0.2.jar,
  lib/schemas.jar
@@ -119,6 +119,7 @@ Export-Package: Jama,
  org.knime.base.node.mine.regression.predict2,
  org.knime.base.node.mine.scorer.accuracy,
  org.knime.base.node.mine.scorer.entrop,
+ org.knime.base.node.mine.scorer.numeric,
  org.knime.base.node.mine.smote,
  org.knime.base.node.mine.sota,
  org.knime.base.node.mine.sota.distances,
@@ -163,6 +164,7 @@ Export-Package: Jama,
  org.knime.base.node.preproc.columnrenameregex,
  org.knime.base.node.preproc.columntogrid,
  org.knime.base.node.preproc.correlation.compute,
+ org.knime.base.node.preproc.correlation.filter,
  org.knime.base.node.preproc.correlation.pmcc,
  org.knime.base.node.preproc.createtablestructure,
  org.knime.base.node.preproc.discretization.caim2,
@@ -184,6 +186,7 @@ Export-Package: Jama,
  org.knime.base.node.preproc.matcher,
  org.knime.base.node.preproc.missingval,
  org.knime.base.node.preproc.normalize,
+ org.knime.base.node.preproc.normalize3,
  org.knime.base.node.preproc.partition,
  org.knime.base.node.preproc.pivot,
  org.knime.base.node.preproc.pmml,
@@ -269,12 +272,14 @@ Export-Package: Jama,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
-Require-Bundle: org.knime.core;bundle-version="[3.1.0,4.0.0)";visibility:=reexport,
+Require-Bundle: org.knime.core;bundle-version="[3.2.1,4.0.0)";visibility:=reexport,
  org.apache.commons.math;bundle-version="[2.1.0,2.2.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
  org.apache.commons.lang;bundle-version="[2.6.0,2.7.0)",
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
  javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)",
- org.knime.workbench.repository
+ org.knime.workbench.repository,
+ com.fifesoft.rsyntaxtextarea;bundle-version="2.5.8",
+ org.knime.core.pmml;bundle-version="[3.2.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BuddyPolicy: dependent

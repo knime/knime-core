@@ -47,6 +47,10 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.predictor;
 
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -88,6 +92,8 @@ public final class TreeEnsemblePredictorConfiguration {
     private String m_predictionColumnName;
 
     private boolean m_changePredictionColumnName = false;
+
+    private boolean m_useSoftVoting = false;
 
     /**
      * @param isRegression
@@ -184,6 +190,33 @@ public final class TreeEnsemblePredictorConfiguration {
     }
 
     /**
+     * @return boolean to indicate if soft voting is enabled
+     */
+    public boolean isUseSoftVoting() {
+        return m_useSoftVoting;
+    }
+
+    /** In case the configuration is set to {@link #isUseSoftVoting() soft voting} and the model contains no
+     * class distribution, return a warning message. Otherwise return an empty optional.
+     * @param model The non-null model to check.
+     * @return An optional warning message.
+     */
+    public Optional<String> checkSoftVotingSettingForModel(final TreeEnsembleModelPortObject model) {
+        if (isUseSoftVoting() && !model.getEnsembleModel().containsClassDistribution()) {
+            return Optional.of("The tree ensemble does not contain the target distributions"
+                + "; soft voting will have the same results as hard voting.");
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * @param useSoftVoting boolean that indicates whether soft voting should be enabled
+     */
+    public void setUseSoftVoting(final boolean useSoftVoting) {
+        m_useSoftVoting = useSoftVoting;
+    }
+
+    /**
      * Saves the configuration settings
      * @param settings
      */
@@ -194,6 +227,7 @@ public final class TreeEnsemblePredictorConfiguration {
         settings.addString("predictionColumnName", m_predictionColumnName);
         settings.addBoolean("changePredictionColumnName", m_changePredictionColumnName);
         settings.addString("suffixForClassProbabilities", m_suffixForClassProbabilities);
+        settings.addBoolean("useSoftVoting", m_useSoftVoting);
     }
 
     /**
@@ -214,6 +248,7 @@ public final class TreeEnsemblePredictorConfiguration {
 
         m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
         m_suffixForClassProbabilities = settings.getString("suffixForClassProbabilities", "");
+        m_useSoftVoting = settings.getBoolean("useSoftVoting", false);
     }
 
     /**
@@ -227,12 +262,14 @@ public final class TreeEnsemblePredictorConfiguration {
         m_appendClassConfidences = settings.getBoolean("appendClassConfidences");
         m_predictionColumnName = settings.getString("predictionColumnName");
         m_appendModelCount = settings.getBoolean("appendModelCount");
-        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
+        if (StringUtils.isEmpty(m_predictionColumnName)) {
             throw new InvalidSettingsException("Prediction column name must not be empty");
         }
 
         m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
         m_suffixForClassProbabilities = settings.getString("suffixForClassProbabilities");
+        // added in 3.3
+        m_useSoftVoting = settings.getBoolean("useSoftVoting", false);
     }
 
     /**

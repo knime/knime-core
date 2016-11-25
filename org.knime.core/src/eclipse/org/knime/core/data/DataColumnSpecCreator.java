@@ -55,11 +55,13 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -102,6 +104,9 @@ public final class DataColumnSpecCreator {
 
     /** Holds the ShapeHandler if one was set or null. */
     private ShapeHandler m_shapeHandler = null;
+
+    /** Holds the FilterHandler if one was set or null. */
+    private FilterHandler m_filterHandler = null;
 
     /** Holds the ColorHandler if one was set or null. */
     private ColorHandler m_colorHandler = null;
@@ -158,6 +163,8 @@ public final class DataColumnSpecCreator {
         m_shapeHandler = cspec.getShapeHandler();
         // property color
         m_colorHandler = cspec.getColorHandler();
+        // property filter
+        m_filterHandler = cspec.getFilterHandler().orElse(null);
     }
 
     /**
@@ -236,26 +243,26 @@ public final class DataColumnSpecCreator {
 
         // check for redundant color handler
         ColorHandler colorHandler2 = cspec2.getColorHandler();
-        if ((m_colorHandler != null && !m_colorHandler.equals(colorHandler2))
-                || (m_colorHandler == null && colorHandler2 != null)) {
-            LOGGER.warn("Column has already a color handler attached, "
-                    + "ignoring new handler.");
+        if (!Objects.equals(m_colorHandler, colorHandler2)) {
+            LOGGER.warn("Column has already a color handler attached, ignoring new handler.");
         }
 
         // check for redundant shape handler
         ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
-        if ((m_shapeHandler != null && !m_shapeHandler.equals(shapeHandler2))
-                || (m_shapeHandler == null && shapeHandler2 != null)) {
-            LOGGER.warn("Column has already a color handler attached, "
-                    + "ignoring new handler.");
+        if (!Objects.equals(m_shapeHandler, shapeHandler2)) {
+            LOGGER.warn("Column has already a shape handler attached, ignoring new handler.");
         }
 
         // check for redundant size handler
         SizeHandler sizeHandler2 = cspec2.getSizeHandler();
-        if ((m_sizeHandler != null && !m_sizeHandler.equals(sizeHandler2))
-                || (m_sizeHandler == null && sizeHandler2 != null)) {
-            LOGGER.warn("Column has already a color handler attached, "
-                    + "ignoring new handler.");
+        if (!Objects.equals(m_sizeHandler, sizeHandler2)) {
+            LOGGER.warn("Column has already a size handler attached, ignoring new handler.");
+        }
+
+        // check for redundant filter handler
+        FilterHandler filterHandler = cspec2.getFilterHandler().orElse(null);
+        if (!Objects.equals(m_filterHandler, filterHandler)) {
+            LOGGER.warn("Column has already a filter handler attached, ignoring new handler.");
         }
 
         // merge properties, take intersection
@@ -389,6 +396,16 @@ public final class DataColumnSpecCreator {
     }
 
     /**
+     * Set (new) <code>FilterHandler</code> which can be <code>null</code>.
+     *
+     * @param filterHdl the (new) <code>FilterHandler</code> or <code>null</code>
+     * @since 3.3
+     */
+    public void setFilterHandler(final FilterHandler filterHdl) {
+        m_filterHandler = filterHdl;
+    }
+
+    /**
      * Set (new) <code>ColorHandler</code> which can be <code>null</code>.
      *
      * @param colorHdl the (new) <code>ColorHandler</code> or
@@ -406,6 +423,7 @@ public final class DataColumnSpecCreator {
         this.setSizeHandler(null);
         this.setColorHandler(null);
         this.setShapeHandler(null);
+        this.setFilterHandler(null);
     }
 
     /**
@@ -418,6 +436,6 @@ public final class DataColumnSpecCreator {
         String[] elNames =
             m_elementNames == null ? new String[0] : m_elementNames;
         return new DataColumnSpec(m_name, elNames, m_type, m_domain,
-                m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler);
+                m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler, m_filterHandler);
     }
 }

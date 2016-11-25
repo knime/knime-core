@@ -59,7 +59,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
  */
 final class RegressionTreeLearnerNodeDialogPane extends NodeDialogPane {
 
@@ -69,7 +69,7 @@ final class RegressionTreeLearnerNodeDialogPane extends NodeDialogPane {
      *  */
     public RegressionTreeLearnerNodeDialogPane() {
         m_optionsPanel = new OptionsPanel();
-        addTab("Attribute Selection", new JScrollPane(m_optionsPanel));
+        addTab("Options", new JScrollPane(m_optionsPanel));
 
     }
 

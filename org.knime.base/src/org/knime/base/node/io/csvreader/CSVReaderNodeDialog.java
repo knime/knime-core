@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.io.csvreader;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -55,8 +55,12 @@ import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -64,6 +68,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.io.filereader.CharsetNamePanel;
+import org.knime.base.node.io.filereader.FileReaderNodeSettings;
 import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -77,9 +82,13 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Dialog to CSV Reader node.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class CSVReaderNodeDialog extends NodeDialogPane {
+// this class is also used in the wide data extension. Once it's moved to the base bundle the scope if this class
+// should be limited again.
+public final class CSVReaderNodeDialog extends NodeDialogPane {
 
     private final FilesHistoryPanel m_filePanel;
     private final JTextField m_colDelimiterField;
@@ -96,12 +105,13 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     private final CharsetNamePanel m_encodingPanel;
 
 
-    /** Create new dialog, init layout. */
-    CSVReaderNodeDialog() {
-        JPanel panel = new JPanel(new BorderLayout());
+    /** Create new dialog, init layout.*/
+    public CSVReaderNodeDialog() {
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
                 "csv_read", LocationValidation.FileInput, ".csv", ".txt");
+        m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
+
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
         m_rowDelimiterField = new JTextField("###", col);
@@ -128,52 +138,77 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
-        panel.add(m_filePanel, BorderLayout.NORTH);
-        JPanel centerPanel = createPanel();
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(new JLabel(" "), BorderLayout.WEST);
-        addTab("CSV Reader", panel);
+
+        addTab("Settings", initLayout());
+
         m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
-        addTab("CSV Reader Encoding", m_encodingPanel);
+        addTab("Encoding", m_encodingPanel);
     }
 
-    private JPanel createPanel() {
-        JPanel centerPanel = new JPanel(new GridBagLayout());
+    private JPanel initLayout() {
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_filePanel.getPreferredSize().height));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
+        JPanel optionsPanel = new JPanel(new GridBagLayout());
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Reader options:"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
-        centerPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        optionsPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
         gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+        optionsPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+        gbc.gridx +=1;
+        gbc.weightx = 1;
+        optionsPanel.add(new JPanel(), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
+        gbc.weightx = 0;
+        optionsPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
         gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
+        optionsPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_hasColHeaderChecker), gbc);
+        optionsPanel.add(getInFlowLayout(m_hasColHeaderChecker), gbc);
         gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_hasRowHeaderChecker), gbc);
+        optionsPanel.add(getInFlowLayout(m_hasRowHeaderChecker), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
+        optionsPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
 
         gbc.gridy += 1;
-        centerPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
         gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
         gbc.gridy += 1;
         gbc.gridx = 0;
-        centerPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
+        optionsPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
         gbc.gridx += 1;
-        centerPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
-        return centerPanel;
+        optionsPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
+
+        //empty panel to eat up extra space
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
+
+        return panel;
     }
 
     private static JPanel getInFlowLayout(final JComponent... comps) {
@@ -242,7 +277,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setSkipFirstLinesCount(skiptFirstLines);
         int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
         config.setLimitRowsCount(limitRows);
-        FileReaderSettings s = new FileReaderSettings();
+        FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());
 

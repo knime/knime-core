@@ -74,7 +74,9 @@ import org.knime.workbench.KNIMEEditorPlugin;
  *
  * @author Peter Ohl, KNIME.com, Zurich, Switzerland
  * @since 2.6
+ * @deprecated replaced by {@link EditorUISettingsDialog}
  */
+@Deprecated
 public class EditorGridSettingsDialog extends Dialog {
 
     private static final ImageDescriptor IMG_PERMS = AbstractUIPlugin.imageDescriptorFromPlugin(

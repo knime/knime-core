@@ -61,8 +61,9 @@ import org.knime.core.data.RowKey;
  * Class that holds the view information for the scorer.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
-final class ScorerViewData {
+public final class ScorerViewData {
     /**
      * The confusion matrix as int 2-D array.
      */
@@ -100,6 +101,29 @@ final class ScorerViewData {
      */
     private final List<RowKey>[][] m_keyStore;
 
+    /**
+     * Constructs the scorer view data
+     * 
+     * @param scorerCount the scorer counts
+     * @param nrRows the number of rows
+     * @param falseCount the count of false predictions
+     * @param correctCount the count of correct predictions
+     * @param firstCompareColumn the first column to compare
+     * @param secondCompareColumn the second column to compare
+     * @param targetValues the target values
+     */
+    public ScorerViewData(final int[][] scorerCount, final int nrRows, final int falseCount, final int correctCount,
+        final String firstCompareColumn, final String secondCompareColumn, final String[] targetValues) {
+        m_scorerCount = scorerCount;
+        m_nrRows = nrRows;
+        m_falseCount = falseCount;
+        m_correctCount = correctCount;
+        m_firstCompareColumn = firstCompareColumn;
+        m_secondCompareColumn = secondCompareColumn;
+        m_targetValues = targetValues;
+        m_keyStore = null;
+    }
+
     ScorerViewData(final int[][] scorerCount, final int nrRows, final int falseCount, final int correctCount,
         final String firstCompareColumn, final String secondCompareColumn, final String[] targetValues,
         final List<RowKey>[][] keyStore) {
@@ -113,28 +137,58 @@ final class ScorerViewData {
         m_keyStore = keyStore;
     }
 
-    String getFirstCompareColumn() {
+    /**
+     * Returns the name of the first column to compare.
+     * 
+     * @return the the name of the first compare column
+     */
+    public String getFirstCompareColumn() {
         return m_firstCompareColumn;
     }
 
 
-    String getSecondCompareColumn() {
+    /**
+     * Returns the name of the second column to compare.
+     * 
+     * @return the name of the second compare column
+     */
+    public String getSecondCompareColumn() {
         return m_secondCompareColumn;
     }
 
-    int getCorrectCount() {
+    /**
+     * Returns the count of correct predictions.
+     * 
+     * @return the correct count
+     */
+    public int getCorrectCount() {
         return m_correctCount;
     }
 
-    int getFalseCount() {
+    /**
+     * Returns the count of false predictions.
+     * 
+     * @return the false count
+     */
+    public int getFalseCount() {
         return m_falseCount;
     }
 
-    String[] getTargetValues() {
+    /**
+     * Returns the target values.
+     * 
+     * @return the target values
+     */
+    public String[] getTargetValues() {
         return m_targetValues;
     }
 
-    int[][] getScorerCount() {
+    /**
+     * Returns the scorer count.
+     * 
+     * @return the scorer count
+     */
+    public int[][] getScorerCount() {
         return m_scorerCount;
     }
 
@@ -147,9 +201,11 @@ final class ScorerViewData {
     }
 
     /**
+     * Returns the accuracy of the prediction.
+     * 
      * @return ratio of correct classified and all patterns
      */
-    double getAccuracy() {
+    public double getAccuracy() {
         double totalNumberDataSets = m_falseCount + m_correctCount;
         if (totalNumberDataSets == 0) {
             return Double.NaN;
@@ -159,9 +215,11 @@ final class ScorerViewData {
     }
 
     /**
+     * Returns the error of the prediction.
+     * 
      * @return ratio of wrong classified and all patterns
      */
-    double getError() {
+    public double getError() {
         double totalNumberDataSets = m_falseCount + m_correctCount;
         if (totalNumberDataSets == 0) {
             return Double.NaN;
@@ -171,10 +229,12 @@ final class ScorerViewData {
     }
 
     /**
+     * Returns Cohen's Kappa Coefficient of the prediciton.
+     * 
      * @return Cohen's Kappa
      * @since 2.9
      */
-    double getCohenKappa() {
+    public double getCohenKappa() {
         long[] rowSum = new long[m_scorerCount[0].length];
         long[] colSum = new long[m_scorerCount.length];
         //Based on: https://en.wikipedia.org/wiki/Cohen%27s_kappa#
@@ -200,11 +260,23 @@ final class ScorerViewData {
         return (p0 - pe) / (1 - pe);
     }
 
-    int getTP(final int classIndex) {
+    /**
+     * Returns the true positives for the given class index.
+     * 
+     * @param classIndex the class index
+     * @return the true positives for the given class index
+     */
+    public int getTP(final int classIndex) {
         return m_scorerCount[classIndex][classIndex];
     }
 
-    int getFN(final int classIndex) {
+    /**
+     * Returns the false negatives for the given class index.
+     * 
+     * @param classIndex the class index
+     * @return the false negatives for the given class index
+     */
+    public int getFN(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount[classIndex].length; i++) {
             if (classIndex != i) {
@@ -214,7 +286,14 @@ final class ScorerViewData {
         return ret;
     }
 
-    int getTN(final int classIndex) {
+
+    /**
+     * Returns the true negatives for the given class index.
+     * 
+     * @param classIndex the class index
+     * @return the true negatives for the given class index
+     */
+    public int getTN(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
             if (i != classIndex) {
@@ -228,7 +307,13 @@ final class ScorerViewData {
         return ret;
     }
 
-    int getFP(final int classIndex) {
+    /**
+     * Returns the false positives for the given class index.
+     * 
+     * @param classIndex the class index
+     * @return the false positives for the given class index
+     */
+    public int getFP(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
             if (classIndex != i) {
@@ -271,7 +356,7 @@ final class ScorerViewData {
      */
     Point[] getCompleteHilitedCells(final Set<RowKey> keys) {
 
-        List<Point> result = new ArrayList<Point>();
+        List<Point> result = new ArrayList<>();
 
         // for all cells of the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
@@ -322,7 +407,7 @@ final class ScorerViewData {
      */
     Set<RowKey> getSelectedSet(final Point[] cells) {
 
-        Set<RowKey> keySet = new HashSet<RowKey>();
+        Set<RowKey> keySet = new HashSet<>();
 
         for (Point cell : cells) {
 

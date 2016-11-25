@@ -58,6 +58,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -66,6 +68,10 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @since 3.1
  */
 public interface DBReader {
+
+    /** Default error column name used in the error table
+     * @since 3.2*/
+    String DEF_ERROR_COL_NAME = "Error";
 
     /** Separator used to decided which SQL statements should be execute
      * line-by-line; the semicolon is not part of the executed query.
@@ -163,6 +169,34 @@ public interface DBReader {
     DataTable getTable(ExecutionMonitor exec, CredentialsProvider cp, boolean useDbRowId, final int cachedNoRows)
         throws CanceledExecutionException, SQLException;
 
+    /**
+     * Loop table in database.
+     * @param exec {@link ExecutionContext}
+     * @param cp {@link CredentialsProvider}
+     * @param data the data rows with the parameters to loop over
+     * @param rowCount the number of input rows or -1 if unknown
+     * @param failIfException flag that indicates if the method should thrown an exception on error
+     * @param appendInputColumns <code>true</code> if parameter input columns should be appended 
+     * @param includeEmptyResults <code>true</code> if a row should be added for parameters that do not return a result
+     * @param retainAllColumns <code>true</code> all input columns should be retained
+     * @param columns the parameter column names
+     * @return {@link BufferedDataTableRowOutput} containing the loop result
+     * @throws Exception
+     * @since 3.2
+     */
+    BufferedDataTableRowOutput loopTable(final ExecutionContext exec, final CredentialsProvider cp, final RowInput data,
+        final long rowCount, final boolean failIfException, final boolean appendInputColumns,
+        final boolean includeEmptyResults, final boolean retainAllColumns,
+        final String... columns) throws Exception;
+
+    /**
+     * @return {@link BufferedDataTable} containing error message. The column name with the error message
+     * should be {@value #DEF_ERROR_COL_NAME}.
+     * The method {@link #loopTable(ExecutionContext, CredentialsProvider, RowInput, long, boolean, boolean, boolean, boolean, String...) loopTable}
+     * must be called before using this method, otherwise it will throw {@link IllegalStateException}.
+     * @since 3.2
+     */
+    BufferedDataTable getErrorDataTable();
 
 //    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //    STREAMING IS DISABLED UNTIL WE HAVE A PROPPER CONNECTION HANDLING SINCE MYSQL FOR EXAMPLE DOES NOT ALLOW

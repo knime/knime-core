@@ -301,6 +301,13 @@
             path="/">
       </category>
       <category
+            description="PMML Processing Nodes (Labs)"
+            icon="icons/missing.gif"
+            level-id="labspmml"
+            name="PMML"
+            path="/labs">
+      </category>
+      <category
             after="toolintegration"
             description="Nodes provided by the KNIME community"
             icon="icons/16x16/category_community_nodes.png"
@@ -457,1514 +464,1424 @@
          point="org.knime.workbench.repository.nodes">
       <node
             factory-class="org.knime.base.node.mine.smote.SmoteNodeFactory"
-            category-path="/manipulation/column/column-transform"
-            id="org.knime.base.node.mine.smote.SmoteNodeFactory"/>
+            category-path="/manipulation/column/column-transform"/>
       <node
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.filereader.FileReaderNodeFactory"
-            id="org.knime.base.node.io.filereader.FileReaderNodeFactory">
+            factory-class="org.knime.base.node.io.filereader.FileReaderNodeFactory">
       </node>
       <node
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorManager2NodeFactory">
+            factory-class="org.knime.base.node.viz.property.color.ColorManager2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
-            id="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"/>
+            factory-class="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"/>
       <node
 	        after="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
-            id="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory">
+            factory-class="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+            factory-class="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory">
       </node>
       <node
-            after="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
+            after="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
-            id="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory">
+            factory-class="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory">
       </node>
       <node
             after="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory"
-            id="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory">
+            factory-class="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory">
       </node>
       <node
             category-path="/view"
-            factory-class="org.knime.base.node.viz.table.TableNodeFactory"
-            id="org.knime.base.node.viz.table.TableNodeFactory">
+            factory-class="org.knime.base.node.viz.table.TableNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/binning"
-            factory-class="org.knime.base.node.preproc.binner.BinnerNodeFactory"
-            id="org.knime.base.node.preproc.binner.BinnerNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.binner.BinnerNodeFactory"/>
       <node
             category-path="/manipulation/column/binning"
             factory-class="org.knime.base.node.preproc.binnerdictionary.BinByDictionaryNodeFactory"
-            id="org.knime.base.node.preproc.binnerdictionary.BinByDictionaryNodeFactory"
             after="org.knime.base.node.preproc.binner.BinnerNodeFactory">
       </node>
       <node
             category-path="/io"
-            factory-class="org.knime.base.node.util.cache.CacheNodeFactory"
-            id="org.knime.base.node.util.cache.CacheNodeFactory"/>
+            factory-class="org.knime.base.node.util.cache.CacheNodeFactory"/>
       <node
             category-path="/analytics/mining/clustering"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"
-            id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"/>
+            factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"/>
       <node
             category-path="/analytics/mining/rules/basisfunction"
-            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"
-            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"/>
+            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"/>
       <node
             category-path="/analytics/mining/rules/basisfunction"
-            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"
-            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"/>
-      <!--node deprecated
+            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"/>
+      <node deprecated="true"
             category-path="/analytics/mining/rules/basisfunction"
-            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"
-            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/-->
+            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/>
       <node
             category-path="/analytics/mining/nn/pnn"
-            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"
-            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"/>
+            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"/>
       <node
             category-path="/analytics/mining/nn/pnn"
-            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"
-            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"/>
-      <!--node
+            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"/>
+      <node deprecated="true"
             category-path="/analytics/mining/nn/pnn"
-            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"
-            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/-->
+            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/>
       <node
             category-path="/io/write"
-            factory-class="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
-            id="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"/>
+            factory-class="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.joiner.Joiner2NodeFactory"
-            id="org.knime.base.node.preproc.joiner.Joiner2NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.joiner.Joiner2NodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.crossjoin.CrossJoinerNodeFactory"
-            id="org.knime.base.node.preproc.crossjoin.CrossJoinerNodeFactory"
             after="org.knime.base.node.preproc.joiner.Joiner2NodeFactory" />
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.split2.SplitNodeFactory2"
-            id="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
+            factory-class="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columnappend.ColumnAppenderNodeFactory"
-            id="org.knime.base.node.preproc.columnappend.ColumnAppenderNodeFactory"
             after="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
       <node
             after="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
             factory-class="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"
-            category-path="/io/write"
-            id="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"/>
+            category-path="/io/write"/>
       <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.sorter.SorterNodeFactory"
-            id="org.knime.base.node.preproc.sorter.SorterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.sorter.SorterNodeFactory"/>
       <node
             after="org.knime.base.node.io.filereader.FileReaderNodeFactory"
             factory-class="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
-            category-path="/io/read"
-            id="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"/>
+            category-path="/io/read"/>
       <node
             after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
-            id="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"/>
+            factory-class="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"/>
       <node
             after="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.linereader.LineReaderNodeFactory"
-            id="org.knime.base.node.io.linereader.LineReaderNodeFactory">
+            factory-class="org.knime.base.node.io.linereader.LineReaderNodeFactory">
       </node>
       <node
             category-path="/analytics/statistics"
             factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
-            id="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             after="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"/>
       <node
             category-path="/analytics/statistics"
             factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
-            id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
             after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory"
-            id="org.knime.base.node.preproc.normalize3.Normalize3NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory"/>
      <node
            category-path="/manipulation/pmml"
            deprecated="true"
-           factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
-           id="org.knime.base.node.preproc.normalize.NormalizePMMLNodeFactory"/>
+           factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLApplyNodeFactory"
-            id="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"/>
-      <node
-            category-path="/manipulation/pmml"
-            deprecated="true"
-            factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"
-            id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLApplyNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
             deprecated="true"
-            factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"
-            id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
             deprecated="true"
-            factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"
-            id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
             deprecated="true"
-            factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory"
-            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2PMMLNodeFactory"/>
-            
-        <node
-              category-path="/manipulation/pmml"
-              deprecated="true"
-              factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"
-              id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"/>
-         
-         
-        <node
-              category-path="/manipulation/pmml"
-              deprecated="false"
-              factory-class="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"
-              id="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"/>
-         
-         
+            factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="true"
+            factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory"/>
+    <node
+            category-path="/manipulation/pmml"
+            deprecated="true"
+            factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"/>
+    <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"/>
      <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"
-            id="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"/>
      <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.append.row.AppendedRowsWithOptionalInNodeFactory"
-            id="org.knime.base.node.preproc.append.row.AppendedRowsWithOptionalInNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.append.row.AppendedRowsWithOptionalInNodeFactory"/>
       <node
             category-path="/manipulation/row/row-filter"
-            factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
-            id="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.filter.row.RowFilterNodeFactory"
             category-path="/manipulation/row/row-filter"
-            factory-class="org.knime.base.node.preproc.filter.row.RowFilter2PortNodeFactory"
-            id="org.knime.base.node.preproc.filter.row.RowFilter2PortNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.filter.row.RowFilter2PortNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"
-            category-path="/manipulation/row/row-transform"
-            id="org.knime.base.node.preproc.shuffle.ShuffleNodeFactory"/>
+            category-path="/manipulation/row/row-transform"/>
       <node
             factory-class="org.knime.base.node.preproc.sample.SamplingNodeFactory"
-            category-path="/manipulation/row/row-transform"
-            id="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
+            category-path="/manipulation/row/row-transform"/>
       <node
             after="org.knime.base.node.preproc.sample.SamplingNodeFactory"
             factory-class="org.knime.base.node.preproc.bootstrap.BootstrapNodeFactory"
-            category-path="/manipulation/row/row-transform"
-            id="org.knime.base.node.preproc.bootstrap.BootstrapNodeFactory"/>
+            category-path="/manipulation/row/row-transform"/>
       <node
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
-            id="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
             after="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
       <node
             factory-class="org.knime.base.node.preproc.partition.PartitionNodeFactory"
-            category-path="/manipulation/row/row-transform"
-            id="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
+            category-path="/manipulation/row/row-transform"/>
       <node
             category-path="/analytics/mining/clustering"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
-            id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
+            factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
       <node
             category-path="/analytics/mining/clustering"
-            factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory2"
-            id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory2"/>
-      <!--node deprecated
+            factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory2"/>
+      <node deprecated="true"
             factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"
-            category-path="/manipulation/column/column-transform"
-            id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/-->
+            category-path="/manipulation/column/column-transform"/>
       <node
             category-path="/analytics/mining/nn/mlp"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"
-            id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"/>
+            factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"/>
       <node
             category-path="/analytics/mining/nn/mlp"
-            factory-class="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"
-            id="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"/>
-      <!--node deprecated
+            factory-class="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"/>
+      <node deprecated="true"
             category-path="/analytics/mining/nn/mlp"
-            factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"
-            id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/-->
+            factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/>
       <node
-            after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
+            after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
-            id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
+            factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
             category-path="/manipulation/table"
-            factory-class="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"
-            id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
       <node
             category-path="/manipulation/table"
-            factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
-            id="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory" />
+            factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"/>
       <node
             category-path="/manipulation/table"
-            factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
-            id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"/>
+            factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"/>
       <node
             category-path="/analytics/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"
-            id="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"/>
-      <!--node deprecated
+            factory-class="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"/>
+      <node deprecated="true"
             category-path="/analytics/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
-            id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/-->
+            factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"/>
       <node
             category-path="/analytics/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"
-            id="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"/>
+            factory-class="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"/>
       <node
             category-path="/analytics/mining/clustering"
-            factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
-            id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
+            factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
-            id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
-            id="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
             after="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory"
-            id="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory" />
+            factory-class="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory"/>
       <node
             category-path="/analytics/mining/subgroup"
-            factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"
-            id="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
       <node
             category-path="/analytics/mining/subgroup"
-            factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"
-            id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
+            factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
        <node
              category-path="/analytics/statistics/regression"
              deprecated="true"
-             factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
-             id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
+             factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
              after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
              category-path="/analytics/statistics/regression"
              deprecated="true"
-             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
-             id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
+             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
        <node
              after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
              category-path="/analytics/statistics/regression"
              deprecated="true"
-             factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
-             id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
+             factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
        <node
              category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
-             id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
              after="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"/> 
 	    <node
 	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
-	          factory-class="org.knime.base.node.io.table.read.ReadTableNodeFactory"
-	          id="org.knime.base.node.io.table.read.ReadTableNodeFactory"/>
+	          factory-class="org.knime.base.node.io.table.read.ReadTableNodeFactory"/>
 	    <node
 	          after="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"
 	          category-path="/io/write"
-	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
-	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
+	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
      <node
            category-path="/manipulation/column/column-split+combine"
-           factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"
-           id="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
+           factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
      <node
            category-path="/manipulation/column/column-split+combine"
            factory-class="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
-           id="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
            after="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"
-           id="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"/>
+           factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"
-           id="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
+           factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
      <node
            category-path="/manipulation/column/column-transform"
-           factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"
-           id="org.knime.base.node.preproc.normalize.NormalizeApplyNodeFactory"/>
+           factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"
-           id="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"/>
+           factory-class="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"
-           id="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"/>
+           factory-class="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory"
-           id="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory"/>
+           factory-class="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory"
-           id="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory"/>
+           factory-class="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory"/>
      <node
            category-path="/view"
-           factory-class="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"
-           id="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
+           factory-class="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
      <node
            category-path="/manipulation/row/row-filter"
-           factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
-           id="org.knime.base.node.preproc.hilite"/>
+           factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"/>
     <node
          after="org.knime.base.node.preproc.binner.BinnerNodeFactory"
 		 category-path="/manipulation/column/binning"
-         factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
-         id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
+         factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"/>
     <node
-         after="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"
+         after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
    		 category-path="/manipulation/column/binning"
-         factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
-         id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
+         factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"/>
     <node
          factory-class="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"
-         category-path="/manipulation/row/row-other"
-         id="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"/>
+         category-path="/manipulation/row/row-other"/>
       <node
             category-path="/analytics/mining/miscClass"
-            factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"
-            id="org.knime.base.node.mine.knn.KnnNodeFactory"/>  
+            factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"/>  
    <node
          category-path="/analytics/mining/clustering"
-         factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"
-         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
+         factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
    <node
          category-path="/analytics/mining/clustering"
-         factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"
-         id="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>         
+         factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>
       <node
             category-path="/view"
-            factory-class="org.knime.base.node.viz.pie.node.fixed.FixedPieNodeFactory"
-            id="org.knime.base.node.viz.pie.node.fixed.FixedPieNodeFactory">
+            factory-class="org.knime.base.node.viz.pie.node.fixed.FixedPieNodeFactory">
       </node>
       <node
             category-path="/view"
-            factory-class="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory"
-            id="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory">
+            factory-class="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory">
       </node>
       <node
             category-path="/analytics/mining/dtree"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2"
-            id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
+            factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
       </node>
       <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
-            id="org.knime.base.node.preproc.groupby.GroupByNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.groupby.GroupByNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.groupby.GroupByNodeFactory"
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"
-            id="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.ungroup.UngroupNodeFactory"/>
       <node
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
-            id="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
             category-path="/analytics/mining/bayes"
-            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"
-            id="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"/>
-      <!--node deprecated
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"/>
+      <node deprecated="true"
             category-path="/analytics/mining/bayes"
-            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"
-            id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/-->
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/>
       <node
             category-path="/analytics/mining/bayes"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"
-            id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"/>
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"/>
       <node
             category-path="/analytics/statistics"
-            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
-            id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
-            id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"
-            id="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
-            id="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
             after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/analytics/mining/mds"
-            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
-            id="org.knime.base.node.mine.mds.MDSNodeFactory"/>
+            factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"/>
       <node
             category-path="/analytics/mining/mds"
             deprecated="false"
-            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
-            id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
+            factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
       <node
             category-path="/analytics/mining/svm"
             deprecated="true"
-            factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory"
-            id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
+            factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
       </node>
       <node
             category-path="/analytics/mining/svm"
-            factory-class="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory"
-            id="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory">
+            factory-class="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory">
       </node>
-      <!--node
+      <node deprecated="true"
             category-path="/analytics/mining/svm"
-            factory-class="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory"
-            id="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
-      </node-->
+            factory-class="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
+      </node>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"
-            id="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"/>
       <node
             category-path="/manipulation/row/row-filter"
-            factory-class="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"
-            id="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
-            id="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
-            factory-class="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"
-            id="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"
-            factory-class="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory"
-            id="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory">
+            factory-class="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory"
-            factory-class="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory"
-            id="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory">
+            factory-class="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory">
       </node>
        <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory"
-            factory-class="org.knime.base.node.preproc.domain.editnominal.EditNominalDomainNodeFactory"
-            id="org.knime.base.node.preproc.domain.editnominal.EditNominalDomainNodeFactory">
+            factory-class="org.knime.base.node.preproc.domain.editnominal.EditNominalDomainNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"
-            id="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"
-            id="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"
-            id="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>
       <node  
             after="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"/>
+            />
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory"
-            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory"
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeFactory"
-            id="org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory"
-            id="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
-            id="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
+            
             after="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory">
       </node>
       <node
             category-path="/analytics/mining/clustering"
             factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
-            id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
+            >
       </node>
       <node
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory">
+            >
       </node>
       <node
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
+            
             after="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"/>
       <node
             after="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
-            id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
-            id="org.knime.base.node.viz.roc.ROCNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.viz.roc.ROCNodeFactory"
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
-            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"
+            
             deprecated="true" />
       <node
             after="org.knime.base.node.viz.roc.ROCNodeFactory"
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrichment2.EnrichmentPlotterFactory"
-            id="org.knime.chem.node.viz.enrich2.EnrichmentPlotterFactory"/>
+            />
        <node
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
-            id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
+            />
        <node
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
-            id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
+            >
    	  </node>
    	  <node
             after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
-            id="org.knime.base.node.io.database.DatabaseLoopingNodeFactory">
+             >
+      </node>
+   	  <node
+            after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+            category-path="/database/database-io"
+            factory-class="org.knime.base.node.io.database.parameterizedquery.ParameterizedDBQueryNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
-            id="org.knime.base.node.io.database.DBConnectionNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
-            id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBRowFilterNodeFactory"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBQueryNodeFactory2"
-            id="org.knime.base.node.io.database.DBQueryNodeFactory2"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBQueryNodeFactory2"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
-            id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBSorterNodeFactory"
-            id="org.knime.base.node.io.database.DBSorterNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBSorterNodeFactory"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
-            id="org.knime.base.node.io.database.DBGroupByNodeFactory"/>
+            />
       <node
-            after="org.knime.base.node.io.database.DBGroupByNodeFactory"
+            after="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
-            id="org.knime.base.node.io.database.DBJoinerNodeFactory"/>
+            /> 
+      <node
+            after="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            category-path="/database/database-manipulation"
+            factory-class="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
-            id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
+            />
       <node
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
-            id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBWriterNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBUpdateNodeFactory"
-            id="org.knime.base.node.io.database.DBUpdateNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.database.DBUpdateNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
-            id="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"/>
+            />
       <node
             category-path="/database/database-utility"
             factory-class="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"
-            id="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"/>
+            />
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
-            id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">
+            >
       </node>
       <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
-            id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory"
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
+            >
       </node>
       <node
             factory-class="org.knime.base.node.preproc.filter.missingvaluecolfilter.MissingValueColumnFilterNodeFactory"
             category-path="/manipulation/column/column-filter"
-            id="org.knime.base.node.preproc.filter.MissingValueColumnFilterNodeFactory"/>
+            />
       <node
             category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory">
+            >
       </node>
        <node
              category-path="/manipulation/column/column-split+combine"
              factory-class="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory"
-             id="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory">
+             >
        </node>
        <node
              after="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory"
              category-path="/manipulation/column/column-split+combine"
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
-             id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">
+             >
        </node>
       <node
             after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
-            id="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
+            deprecated="true"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory"
-            id="org.knime.base.node.preproc.regexsplit.RegexSplitNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.io.table.write.WriteTableNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
-            id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
-            id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
-            id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
+            >
       </node>
       <node
-            after="org.knime.base.node.image.writemage.WriteImageNodeFactory"
+            after="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory"
-            id="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory">
+            >
       </node>
       <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
-            id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory"
-            id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
+            >
       </node>
       <node
             category-path="/analytics/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
             category-path="/analytics/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
-            id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopStartCountNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.looper.LoopStartCountNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
-            id="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory"
-            id="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory">
+            >
       </node>  
       <node
             after="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
-            id="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowvariable.variableloophead.LoopStartVariableNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopEndNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopEndNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.looper.LoopEndNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
-            id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
-            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
-            id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
+            >
+      </node>
+      <node
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.base.node.flowvariable.createfilename.CreateFilenameNodeFactory"
+            >
       </node>
       <node
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
+            
             after="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
+            >
       </node>
        <node
              after="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory"
-             id="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory">
+             >
        </node>
        <node
              after="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.variabletotablerow2.VariableToTable2NodeFactory"
-             id="org.knime.base.node.flowvariable.variabletotablerow2.VariableToTable2NodeFactory">
+             >
        </node>
        <node
              after="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
-             id="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory">
+             >
        </node>
       <node
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory"
-            id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
-            id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory">
+            >
       </node>
       <node
             category-path="manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory"
-            id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory"
-            id="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory"
-            id="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory">
+            >
       </node>
 
       <node
             category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCANodeFactory"
-            id="org.knime.base.node.mine.pca.PCANodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCANodeFactory"
             category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
-            id="org.knime.base.node.mine.pca.PCAComputeNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
             category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
-            id="org.knime.base.node.mine.pca.PCAApplyNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
             category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAReverseNodeFactory"
-            id="org.knime.base.node.mine.pca.PCAReverseNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory"
-            id="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory">
+            deprecated="true"
+            factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeFactory"
-            id="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopEnd2NodeFactory"
-            id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
+            >
       </node>
       <node
             category-path="/analytics/mining/subgroup"
             factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
-            id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
-            id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
+            >
       </node>
       <node
             category-path="/view/view-util"
             factory-class="org.knime.base.node.image.ImageToTableNodeFactory"
-            id="org.knime.base.node.image.ImageToTableNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.image.ImageToTableNodeFactory"
             category-path="/view/view-util"
             factory-class="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory"
-            id="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.manualif.ManualIfNodeFactory"
-            id="org.knime.base.node.switches.manualif.ManualIfNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.manualif.ManualIfNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.endif.EndifNodeFactory"
-            id="org.knime.base.node.switches.endif.EndifNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.endif.EndifNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.startcase.StartcaseNodeFactory"
-            id="org.knime.base.node.switches.startcase.StartcaseNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.startcase.StartcaseNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
-            id="org.knime.base.node.switches.endcase.EndcaseNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory"
-            id="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
-            id="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory"
-            id="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory"
-            id="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory"
-            id="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory">
+            >
       </node>
             <node
             after="org.knime.base.node.preproc.split2.SplitNodeFactory2"
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columntogrid2.ColumnToGrid2NodeFactory"
-            id="org.knime.base.node.preproc.columntogrid2.ColumnToGrid2NodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory"
-            id="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
-            id="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
+            
             after="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
       </node>
       <node
             category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.preproc.addemptyrows.AddEmptyRowsNodeFactory"
-            id="org.knime.base.node.preproc.addemptyrows.AddEmptyRowsNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.cellreplace.CellReplacerNodeFactory"
-            id="org.knime.base.node.preproc.cellreplace.CellReplacerNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/binning"
             factory-class="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory"
-            id="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/binning"
             factory-class="org.knime.base.node.preproc.autobinner.apply.AutoBinnerApplyNodeFactory"
-            id="org.knime.base.node.preproc.autobinner.apply.AutoBinnerApplyNodeFactory">
+            >
       </node>        
       <node
             category-path="/flowcontrol/loopsupport"
             deprecated="false"
             factory-class="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory"
-            id="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory">
+            >
       </node>
       <node
             category-path="/io/read"
             factory-class="org.knime.base.node.io.listfiles2.ListFilesNodeFactory"
-            id="org.knime.base.node.io.listfiles2.ListFilesNodeFactory">
+            >
       </node>
       <node
             category-path="/io/io-other"
             factory-class="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
-            id="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
             factory-class="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
             category-path="/io/io-other"
-            id="org.knime.base.node.util.sampledata.SampleDataNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
             category-path="/io/io-other"
             factory-class="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
-            id="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
             category-path="/io/io-other"
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
-            id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"/>
+            />
       <node
             after="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
             category-path="/io/io-other"
             factory-class="org.knime.base.node.util.sendmail.SendMailNodeFactory"
-            id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.util.sendmail.SendMailNodeFactory"
             category-path="/io/io-other"
             factory-class="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
-            id="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
             category-path="/io/io-other"
             factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
-            id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLDeNodeFactory"
-            id="org.knime.base.node.preproc.normalize.PMMLNormalizerDeNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerDeNodeFactory"
-            id="org.knime.base.node.preproc.normalize.NormalizerDeNodeFactory">
+            >
       </node>
       <node
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory"
-            id="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             deprecated="true"
             factory-class="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory2"
-            id="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory"
-            id="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory">
+            >
       </node> 
       <node
             category-path="//manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory"
-            id="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory">
+            >
       </node>      
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory"
-            id="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
+            >
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            deprecated="false"
+            after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory"
+            factory-class="org.knime.base.node.preproc.refcolumnresorter.ReferenceColumnResorterNodeFactory"
+            >
       </node>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
-            id="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
+            
             after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/"
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory"
-            id="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/"
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory"
-            id="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory"
-            id="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory"
-            id="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory"
-            id="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory"
-            id="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"
-            id="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"
+            
             after="org.knime.base.collection.list.split.CollectionSplitNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"
-            id="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"
+            
             after="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"/>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
             category-path="/flowcontrol/trycatch"
             factory-class="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory"
-            id="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
-            id="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory">
+            >
       </node>      
       <node
             category-path="/flowcontrol/automation"
             factory-class="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
-            id="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
             category-path="/flowcontrol/automation"
             factory-class="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
-            id="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
             category-path="/flowcontrol/automation"
             factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
-            id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
+            >
       </node>
       <node
             after="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
             category-path="/flowcontrol/automation"
             factory-class="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory"
-            id="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory"
-            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory"
-            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory"
-            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory">
+            >
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
-            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory"
-            id="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-connector"
             factory-class="org.knime.base.node.io.database.connection.JDBCConnectorNodeFactory"
-            id="org.knime.base.node.io.database.JDBCConnectorNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory"
-            id="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-utility"
             factory-class="org.knime.base.node.io.database.SQLInjectNodeFactory"
-            id="org.knime.base.node.io.database.SQLInjectNodeFactory">
+            >
       </node>
       <node
             category-path="database/database-utility"
             factory-class="org.knime.base.node.io.database.SQLExtractNodeFactory"
-            id="org.knime.base.node.io.database.SQLExtractNodeFactory">
+            >
       </node>
       <node
             category-path="database/database-utility"
             factory-class="org.knime.base.node.io.database.drop.DBDropTableNodeFactory"
-            id="org.knime.base.node.io.database.drop.DBDropTableNodeFactory">
+            >
       </node>
       <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.hilite.AutoHiLiteNodeFactory"
-            id="org.knime.base.node.viz.hilite.AutoHiLiteNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colautotypecast.ColumnAutoTypeCasterNodeFactory"
-            id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
+            >
       </node>
            <node
             category-path="/io/read"
             factory-class="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory"
-            id="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"
-            id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
-      <!-- <node
+            />
+      <node deprecated="true"
             category-path="/analytics/mining/miscClass"
-            factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory"
-            id="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
-      </node> -->
-      <node
-            category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory"
-            id="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory">
+            factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory"
-            id="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
+            factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            factory-class="org.knime.base.node.preproc.extractmissingvaluecause.ExtractMissingValueCauseNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory">
+            >
       </node>
       <node 
       		category-path="/database/database-manipulation" 
       		factory-class="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory" 
-      		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
+      		/>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory2">
+            >
       </node>
       <node
             category-path="/manipulation/pmml"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory2"
-            id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory2">
+            >
       </node>
       <node
             category-path="/analytics/mining/dtree"
             deprecated="false"
             factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory3"
-            id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory3">
+            >
       </node>
       <node
             category-path="/analytics/statistics/regression"
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
-            id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2">
+            >
       </node>
       <node
             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
             category-path="/analytics/statistics/regression"
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"
-            id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2">
+            >
       </node>
       <node
             category-path="/analytics/statistics/regression"
             deprecated="true"
             factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2"
-            id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2">
+            >
       </node>
       <node
             category-path="/analytics/statistics/regression"
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"
-            id="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3">
+            >
       </node>
       <node
             category-path="/analytics/mining/nn/mlp"
             deprecated="false"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory2"
-            id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory2">
+            >
       </node>
       <node
             category-path="/analytics/mining/svm"
             deprecated="false"
             factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory2"
-            id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory2">
+            >
       </node>
       <node
             category-path="/analytics/mining/bayes"
             deprecated="false"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3"
-            id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3">
+            >
       </node>
       <node
             category-path="/analytics/mining/clustering"
             deprecated="false"
             factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory2"
-            id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.pivot.DBPivotNodeFactory"
-            id="org.knime.base.node.io.database.pivot.DBPivotNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             deprecated="false"
             factory-class="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory"
-            id="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeFactory"
-            id="org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             deprecated="false"
             factory-class="org.knime.base.node.io.database.binning.numeric.DBNumericBinnerNodeFactory"
-            id="org.knime.base.node.io.database.binning.numeric.DBNumericBinnerNodeFactory">
+            >
       </node>
       <node
             category-path="/database/database-manipulation"
             deprecated="false"
             factory-class="org.knime.base.node.io.database.binning.apply.DBApplyBinnerNodeFactory"
-            id="org.knime.base.node.io.database.binning.apply.DBApplyBinnerNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-filter"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-transform"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
-            id="org.knime.base.node.preproc.rank.RankNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-filter"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory"
-            id="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory">
+            >
       </node>
       <node
             category-path="/manipulation/row/row-transform"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
-            id="org.knime.base.node.preproc.rank.RankNodeFactory">
+            >
+      </node>
+      <node
+            after="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
+            category-path="/manipulation/column/column-convert+replace"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.double2int2.DoubleToIntNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
+            category-path="/io/read"
+            deprecated="false"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2">
       </node>
    </extension>
    
@@ -2050,7 +1967,7 @@
            </FileExtension>
         </FileExtensionMapping>
         <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
+              NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2">
            <FileExtension
                  extension=".pmml">
            </FileExtension>

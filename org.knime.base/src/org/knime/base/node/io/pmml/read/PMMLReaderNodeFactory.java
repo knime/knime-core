@@ -69,7 +69,7 @@ public class PMMLReaderNodeFactory
      */
     @Override
     public PMMLReaderNodeModel createNodeModel() {
-        return new PMMLReaderNodeModel();
+        return new PMMLReaderNodeModel(true);
     }
 
     /**

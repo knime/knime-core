@@ -151,7 +151,9 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      * @throws IOException If stream corruption happens.
      */
     void writeDataCell(final DataCell cell, final DCObjectOutputVersion2 outStream) throws IOException {
-        if (cell.isMissing()) {
+        if (cell == DataType.getMissingCell()) {
+            // only write 'missing' byte if that's the singleton missing cell;
+            // missing cells with error cause are handled like ordinary cells below (via serializer)
             outStream.writeControlByte(BYTE_TYPE_MISSING);
             return;
         }

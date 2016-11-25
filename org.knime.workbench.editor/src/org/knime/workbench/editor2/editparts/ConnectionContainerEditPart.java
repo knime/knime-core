@@ -53,12 +53,12 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
-import org.eclipse.gef.editparts.ZoomListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
@@ -70,14 +70,17 @@ import org.knime.core.node.workflow.ConnectionProgressListener;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
+import org.knime.workbench.editor2.figures.CurvedPolylineConnection;
 import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 
 /**
@@ -90,8 +93,7 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements ZoomListener, ConnectionUIInformationListener,
-        ConnectionProgressListener {
+    implements ConnectionUIInformationListener, ConnectionProgressListener {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ConnectionContainerEditPart.class);
@@ -207,20 +209,13 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     protected IFigure createFigure() {
 
-        ProgressPolylineConnection conn = new ProgressPolylineConnection();
+        ProgressPolylineConnection conn = new CurvedPolylineConnection(false);
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
                 new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
-        // register as zoom listener to adapt the line width
-        ZoomManager zoomManager =
-                (ZoomManager)getRoot().getViewer().getProperty(
-                        ZoomManager.class.toString());
-        zoomManager.addZoomListener(this);
-        conn
-                .setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
-                        .getZoom()));
+        conn.setLineWidth(getCurrentEditorSettings().getConnectionLineWidth());
 
         // make flow variable port connections look red.
         if (isFlowVariablePortConnection()) {
@@ -287,10 +282,15 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         LOGGER.debug("modelling info: " + ei);
 
         // make flow variable port connections look red.
-        PolylineConnection fig = (PolylineConnection)getFigure();
+        CurvedPolylineConnection fig = (CurvedPolylineConnection)getFigure();
         if (isFlowVariablePortConnection()) {
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
+
+        //update 'curved' settings and line width
+        EditorUIInformation uiInfo = getCurrentEditorSettings();
+        fig.setCurved(uiInfo.getHasCurvedConnections());
+        fig.setLineWidth(uiInfo.getConnectionLineWidth());
 
         // recreate list of bendpoints
         ArrayList<AbsoluteBendpoint> constraint =
@@ -306,25 +306,11 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         fig.setRoutingConstraint(constraint);
     }
 
-    private int calculateLineWidthFromZoomLevel(final double zoom) {
-        double newZoomValue = zoom;
-        // if the zoom level is larger than 100% the width
-        // is adapted accordingly
-        if (zoom < 1.0) {
-            newZoomValue = 1.0;
-        }
-        return (int) Math.round(newZoomValue);
-    }
-
-    /**
-     * Adapts the line width according to the zoom level.
-     *
-     * @param zoom the zoom level from the zoom manager
-     */
-    @Override
-    public void zoomChanged(final double zoom) {
-        ((PolylineConnection)getFigure())
-                .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
+    private EditorUIInformation getCurrentEditorSettings() {
+        //use the workflow editor (instead of the WorkflowManager) to get the settings from, otherwise
+        //the settings won't get inherited from the parent workflow (if the displayed workflow is a metanode)
+        return ((WorkflowEditor)((DefaultEditDomain)getViewer().getEditDomain()).getEditorPart())
+            .getCurrentEditorSettings();
     }
 
     /** {@inheritDoc} */

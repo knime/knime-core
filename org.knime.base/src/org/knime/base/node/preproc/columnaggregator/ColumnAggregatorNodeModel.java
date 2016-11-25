@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.CellFactory;
@@ -72,6 +73,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 
@@ -204,11 +212,17 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final FilterResult filterResult = m_aggregationCols.applyTo(origSpec);
         final List<String> selectedCols =
             Arrays.asList(filterResult.getIncludes());
+        final GlobalSettings globalSettings = GlobalSettings.builder()
+                .setFileStoreFactory(
+                        FileStoreFactory.createWorkflowFileStoreFactory(exec))
+                .setGroupColNames(selectedCols)
+                .setMaxUniqueValues(m_maxUniqueValues.getIntValue())
+                .setValueDelimiter(getDefaultValueDelimiter())
+                .setDataTableSpec(origSpec)
+                .setNoOfRows(table.size())
+                .setAggregationContext(AggregationContext.COLUMN_AGGREGATION).build();
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                origSpec, selectedCols, new GlobalSettings(
-                        FileStoreFactory.createWorkflowFileStoreFactory(exec), selectedCols,
-                        m_maxUniqueValues.getIntValue(), getDefaultValueDelimiter(), origSpec,
-                        table.size()), m_methods);
+                origSpec, selectedCols, globalSettings, m_methods);
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);
         final BufferedDataTable out =
@@ -343,6 +357,54 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
         // nothing to do
 
+    }
+
+    /* ================= STREAMING ================= */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                final DataTableSpec origSpec = (DataTableSpec)inSpecs[0];
+                final FilterResult filterResult = m_aggregationCols.applyTo(origSpec);
+                final List<String> selectedCols = Arrays.asList(filterResult.getIncludes());
+                final GlobalSettings globalSettings = GlobalSettings.builder()
+                        .setFileStoreFactory(FileStoreFactory.createWorkflowFileStoreFactory(exec))
+                        .setGroupColNames(selectedCols)
+                        .setMaxUniqueValues(m_maxUniqueValues.getIntValue())
+                        .setValueDelimiter(getDefaultValueDelimiter())
+                        .setDataTableSpec(origSpec)
+                        .setNoOfRows(-1)
+                        .setAggregationContext(AggregationContext.COLUMN_AGGREGATION).build();
+                final AggregationCellFactory cellFactory = new AggregationCellFactory(origSpec,
+                    selectedCols, globalSettings, m_methods);
+                final ColumnRearranger cr = createRearranger(origSpec, cellFactory);
+                cr.createStreamableFunction().runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
 }

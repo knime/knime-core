@@ -48,6 +48,7 @@
 package org.knime.core.data.collection;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 
 /**
  * Provides additionally access by index to the collection elements.
@@ -63,5 +64,33 @@ public interface ListDataValue extends CollectionDataValue {
      *            index zero).
      * @return the cell at the specified position in the list
      */
-    public DataCell get(final int index);
+    DataCell get(final int index);
+
+
+    /**
+     * Meta information to collection values.
+     *
+     * @see DataValue#UTILITY
+     * @since 3.3
+     */
+    UtilityFactory UTILITY = new ListUtilityFactory();
+
+    /**
+     * Implementations of the meta information of this value class.
+     *
+     * @since 3.3
+     */
+    class ListUtilityFactory extends CollectionUtilityFactory {
+        protected ListUtilityFactory() {
+            super(ListDataValue.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "List";
+        }
+    }
 }

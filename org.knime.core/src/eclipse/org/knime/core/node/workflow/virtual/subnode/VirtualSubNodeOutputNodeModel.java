@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.data.DataRow;
@@ -84,10 +85,13 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 
 
@@ -104,6 +108,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     private int m_numberOfPorts;
     private VirtualSubNodeOutputConfiguration m_configuration;
     private VirtualSubNodeExchange m_outputExchange;
+    private SubNodeContainer m_subNodeContainer;
 
     /** @param outTypes Output types of subnode (which are input to this node) */
     public VirtualSubNodeOutputNodeModel(final PortType[] outTypes) {
@@ -200,7 +205,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                 Node.invokeGetAvailableFlowVariables(this, Type.values()));
         FilterResult result = m_configuration.getFilterConfiguration().applyTo(filter);
         filter.keySet().retainAll(Arrays.asList(result.getIncludes()));
-        return filter.values();
+        return filter.values().stream().filter(e -> !e.isGlobalConstant()).collect(Collectors.toList());
     }
 
     /** @return the configuration - used in test framework, no API.*/
@@ -241,6 +246,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             throws InvalidSettingsException {
         VirtualSubNodeOutputConfiguration config = new VirtualSubNodeOutputConfiguration(m_numberOfPorts);
         config.loadConfigurationInModel(settings);
+        String[] portNames = config.getPortNames();
+
+        //propagate the port names to the containing subnode container
+        //(if sub node container has been set)
+        if (m_subNodeContainer != null) {
+            for (int i = 0; i < portNames.length; i++) {
+                m_subNodeContainer.getOutPort(i + 1).setPortName(portNames[i]);
+                m_subNodeContainer.getOutPort(i + 1).stateChanged(new NodeStateEvent(m_subNodeContainer));
+            }
+        }
         m_configuration = config;
     }
 
@@ -275,6 +290,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             return true;
         }
         return false;
+    }
+
+    /**
+     * Sets the sub node container this virtual output node is part of.
+     *
+     * @param subNodeContainer the sub node container
+     * @since 3.3
+     */
+    public void setSubNodeContainer(final SubNodeContainer subNodeContainer) {
+        m_subNodeContainer = subNodeContainer;
     }
 
     /** Called by testing framework to force all available flow variables into output.
@@ -312,10 +337,10 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     }
 
     /** {@inheritDoc}
-     * @since 3.1*/
+     * @since 3.2*/
     @Override
     public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
-        final boolean isExecuted, final boolean isInactive) {
+        final CredentialsProvider credProvider, final boolean isExecuted, final boolean isInactive) {
         // before 3.1 it didn't implement POHolder so node output exchange set although executed
         // otherwise we could assert isExecute --> m_outputExchange != null
         if (isExecuted && m_outputExchange != null) {

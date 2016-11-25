@@ -54,8 +54,12 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
+import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
 import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
@@ -113,8 +117,8 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
      * @param isINSet true for "is-in", false for "is-not-in"
      */
     public TreeNodeNominalBinaryCondition(final TreeNominalColumnMetaData nomColumnMetaData,
-        final BigInteger valuesMask, final boolean isINSet) {
-        super(nomColumnMetaData);
+        final BigInteger valuesMask, final boolean isINSet, final boolean acceptsMissings) {
+        super(nomColumnMetaData, acceptsMissings);
         assert checkValuesMask(valuesMask) == null : checkValuesMask(valuesMask);
         m_valuesMask = valuesMask;
         m_setLogic = isINSet ? SetLogic.IS_IN : SetLogic.IS_NOT_IN;
@@ -122,8 +126,8 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeNominalBinaryCondition(final TreeModelDataInputStream input, final TreeMetaData metaData, final TreeBuildingInterner treeBuildingInterner)
-        throws IOException {
+    TreeNodeNominalBinaryCondition(final TreeModelDataInputStream input, final TreeMetaData metaData,
+        final TreeBuildingInterner treeBuildingInterner) throws IOException {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();
         checkTypeCorrectness(columnMetaData, TreeNominalColumnMetaData.class);
@@ -192,9 +196,10 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
         Integer assignedInteger = null;
         if (value == null) {
             //            throw new UnsupportedOperationException("Missing values currently not supported");
-            NominalValueRepresentation[] values = getColumnMetaData().getValues();
-            int l = values.length;
-            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
+            //            NominalValueRepresentation[] values = getColumnMetaData().getValues();
+            //            int l = values.length;
+            //            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
+            return acceptsMissings();
         } else if (!(value instanceof Integer)) {
             throw new IllegalArgumentException("Can't test nominal condition (" + toString()
                 + ") -- expected query object of type Integer (representing the nominal value) but got "
@@ -230,11 +235,22 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLPredicate toPMMLPredicate() {
-        PMMLSimpleSetPredicate setPredicate =
+        final PMMLSimpleSetPredicate setPredicate =
             new PMMLSimpleSetPredicate(getAttributeName(), m_setLogic.getPmmlSetOperator());
         setPredicate.setValues(Arrays.asList(getValues()));
         setPredicate.setArrayType(PMMLArrayType.STRING);
-        return setPredicate;
+        if (!acceptsMissings()) {
+            // if condition rejects missing values return the set predicate
+            return setPredicate;
+        }
+        // otherwise create compound condition that allows missing values
+        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
+        missing.setSplitAttribute(getAttributeName());
+            missing.setOperator(PMMLOperator.IS_MISSING);
+        compPredicate.addPredicate(setPredicate);
+        compPredicate.addPredicate(missing);
+        return compPredicate;
     }
 
 }

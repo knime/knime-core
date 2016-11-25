@@ -2,8 +2,12 @@ package org.knime.base.node.rules.engine.decisiontree;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate;
 import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate.BooleanOperator;
@@ -13,6 +17,7 @@ import org.dmg.pmml.PMMLDocument.PMML;
 import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod.Criterion;
 import org.dmg.pmml.RuleSetDocument.RuleSet;
 import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
+import org.dmg.pmml.ScoreDistributionDocument.ScoreDistribution;
 import org.dmg.pmml.SimplePredicateDocument.SimplePredicate;
 import org.dmg.pmml.SimplePredicateDocument.SimplePredicate.Operator.Enum;
 import org.dmg.pmml.SimpleRuleDocument.SimpleRule;
@@ -30,7 +35,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.base.node.rules.engine.totable.RuleSetToTable;
-import org.knime.base.node.rules.engine.totable.RulesToTableSettings;
+import org.knime.core.data.DataCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -55,7 +60,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  * @author Gabor Bakos
  */
 class FromDecisionTreeNodeModel extends NodeModel {
-    private final RulesToTableSettings m_rulesToTable = new RulesToTableSettings();
+    private final FromDecisionTreeSettings m_rulesToTable = new FromDecisionTreeSettings();
 
     /**
      * Constructor for the node model.
@@ -105,6 +110,27 @@ class FromDecisionTreeNodeModel extends NodeModel {
     private void addRules(final RuleSet rs, final List<DecisionTreeNode> parents, final DecisionTreeNode node) {
         if (node.isLeaf()) {
             SimpleRule rule = rs.addNewSimpleRule();
+            if (m_rulesToTable.getScorePmmlRecordCount().getBooleanValue()) {
+                //This increases the PMML quite significantly
+                BigDecimal sum = BigDecimal.ZERO;
+                final MathContext mc = new MathContext(7, RoundingMode.HALF_EVEN);
+                final boolean computeProbability = m_rulesToTable.getScorePmmlProbability().getBooleanValue();
+                if (computeProbability) {
+                    sum = new BigDecimal(node.getClassCounts().entrySet().stream().mapToDouble(e -> e.getValue().doubleValue()).sum(), mc);
+                }
+                for (final Entry<DataCell, Double> entry: node.getClassCounts().entrySet()) {
+                    final ScoreDistribution scoreDistrib = rule.addNewScoreDistribution();
+                    scoreDistrib.setValue(entry.getKey().toString());
+                    scoreDistrib.setRecordCount(entry.getValue());
+                    if (computeProbability) {
+                        if (Double.compare(entry.getValue().doubleValue(), 0.0) == 0) {
+                            scoreDistrib.setProbability(new BigDecimal(0.0));
+                        } else {
+                            scoreDistrib.setProbability(new BigDecimal(entry.getValue().doubleValue(), mc).divide(sum, mc));
+                        }
+                    }
+                }
+            }
             CompoundPredicate and = rule.addNewCompoundPredicate();
             and.setBooleanOperator(BooleanOperator.AND);
             DecisionTreeNode n = node;
@@ -253,7 +279,7 @@ class FromDecisionTreeNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new RulesToTableSettings().loadSettingsForModel(settings);
+        new FromDecisionTreeSettings().loadSettingsForModel(settings);
     }
 
     /**

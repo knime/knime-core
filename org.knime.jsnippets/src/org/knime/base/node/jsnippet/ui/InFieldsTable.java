@@ -47,8 +47,6 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
-
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
@@ -56,6 +54,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.DefaultCellEditor;
@@ -66,17 +65,17 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.type.TypeProvider;
-import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
-import org.knime.base.node.jsnippet.util.JavaField.InCol;
-import org.knime.base.node.jsnippet.util.JavaField.InVar;
 import org.knime.base.node.jsnippet.util.JavaFieldList.InColList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.InVarList;
 import org.knime.base.node.jsnippet.util.JavaSnippetFields;
+import org.knime.base.node.jsnippet.util.field.InCol;
+import org.knime.base.node.jsnippet.util.field.InVar;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.util.ConfigTablePanel;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.FlowVariableTableCellRenderer;
@@ -84,8 +83,8 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The table where java snippet fields for input columns and flow variables
- * <p>This class might change and is not meant as public API.
- * can be defined.
+ * <p>
+ * This class might change and is not meant as public API. can be defined.
  *
  * @author Heiko Hofer
  * @since 2.12
@@ -93,7 +92,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-@SuppressWarnings({"rawtypes", "serial" })
+@SuppressWarnings({"rawtypes", "serial"})
 public class InFieldsTable extends ConfigTablePanel {
     /**
      * Property fired when a row is manually added by the user.
@@ -101,7 +100,9 @@ public class InFieldsTable extends ConfigTablePanel {
     public static final String PROP_FIELD_ADDED = "prop_field_added";
 
     private InFieldsTableModel m_model;
+
     private DataTableSpec m_spec;
+
     private Map<String, FlowVariable> m_flowVars;
 
     /**
@@ -119,8 +120,7 @@ public class InFieldsTable extends ConfigTablePanel {
                 // identifier can invalidate other java identifiers (duplicate
                 // names). Therefore, force a repaint of the whole, most likely
                 // small table.
-                table.tableChanged(new TableModelEvent(m_model,
-                        0, m_model.getRowCount()));
+                table.tableChanged(new TableModelEvent(m_model, 0, m_model.getRowCount()));
             }
         });
 
@@ -145,7 +145,6 @@ public class InFieldsTable extends ConfigTablePanel {
                             cols.add(((DataColumnSpec)value).getName());
                         }
                     }
-                    defaultColTarget = null;
                     for (DataColumnSpec colSpec : m_spec) {
                         if (null == defaultColTarget) {
                             defaultColTarget = colSpec;
@@ -154,9 +153,7 @@ public class InFieldsTable extends ConfigTablePanel {
                             // Add a row and fill it
                             boolean rowAdded = addRow(colSpec);
                             if (rowAdded) {
-                                firePropertyChange(PROP_FIELD_ADDED,
-                                    m_model.getRowCount() - 1 ,
-                                    m_model.getRowCount());
+                                firePropertyChange(PROP_FIELD_ADDED, m_model.getRowCount() - 1, m_model.getRowCount());
                             }
                             return;
                         }
@@ -171,16 +168,13 @@ public class InFieldsTable extends ConfigTablePanel {
                             flowVars.add(((FlowVariable)value).getName());
                         }
                     }
-                    defaultVarTarget = !m_flowVars.isEmpty()
-                        ? m_flowVars.values().iterator().next() : null;
+                    defaultVarTarget = !m_flowVars.isEmpty() ? m_flowVars.values().iterator().next() : null;
                     for (FlowVariable flowVar : m_flowVars.values()) {
                         if (!flowVars.contains(flowVar.getName())) {
                             // Add a row and fill it
                             boolean rowAdded = addRow(flowVar);
                             if (rowAdded) {
-                                firePropertyChange(PROP_FIELD_ADDED,
-                                    m_model.getRowCount() - 1 ,
-                                    m_model.getRowCount());
+                                firePropertyChange(PROP_FIELD_ADDED, m_model.getRowCount() - 1, m_model.getRowCount());
                             }
                             return;
                         }
@@ -196,14 +190,11 @@ public class InFieldsTable extends ConfigTablePanel {
                     rowAdded = true;
                 }
                 if (rowAdded) {
-                    firePropertyChange(PROP_FIELD_ADDED,
-                        m_model.getRowCount() - 1 ,
-                        m_model.getRowCount());
+                    firePropertyChange(PROP_FIELD_ADDED, m_model.getRowCount() - 1, m_model.getRowCount());
                 }
             }
         };
     }
-
 
     /**
      * Adds a row for the given input column.
@@ -221,17 +212,15 @@ public class InFieldsTable extends ConfigTablePanel {
         for (int i = 0; i < m_model.getRowCount(); i++) {
             taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }
-        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
-                colName, taken, "c_");
+        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(colName, taken, "c_");
         m_model.setValueAt(fieldName, r, Column.JAVA_FIELD);
-        DataType elemType = colSpec.getType().isCollectionType()
-            ? colSpec.getType().getCollectionElementType()
-            : colSpec.getType();
-        DataValueToJava dvToJava =
-            TypeProvider.getDefault().getDataValueToJava(elemType,
-                    colSpec.getType().isCollectionType());
-        Class javaType = dvToJava.getPreferredJavaType();
-        m_model.setValueAt(javaType, r, Column.JAVA_TYPE);
+        final Optional<DataCellToJavaConverterFactory<?, ?>> first =
+            ConverterUtil.getFactoriesForSourceType(colSpec.getType()).stream().findFirst();
+        if (first.isPresent()) {
+            m_model.setValueAt(first.get(), r, Column.JAVA_TYPE);
+        } else {
+            return false;
+        }
         return true;
     }
 
@@ -250,11 +239,9 @@ public class InFieldsTable extends ConfigTablePanel {
         for (int i = 0; i < m_model.getRowCount(); i++) {
             taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }
-        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
-                varName, taken, "v_");
+        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(varName, taken, "v_");
         m_model.setValueAt(fieldName, r, Column.JAVA_FIELD);
-        Class javaType = TypeProvider.getDefault()
-            .getTypeConverter(var.getType()).getPreferredJavaType();
+        Class javaType = TypeProvider.getDefault().getTypeConverter(var.getType()).getPreferredJavaType();
         m_model.setValueAt(javaType, r, Column.JAVA_TYPE);
         return true;
     }
@@ -266,9 +253,8 @@ public class InFieldsTable extends ConfigTablePanel {
      * @param spec the input spec might be null
      * @param flowVars the flow variables
      */
-    void updateData(final JavaSnippetFields fields,
-            final DataTableSpec spec,
-            final Map<String, FlowVariable> flowVars) {
+    void updateData(final JavaSnippetFields fields, final DataTableSpec spec,
+        final Map<String, FlowVariable> flowVars) {
         m_spec = spec;
         m_flowVars = flowVars;
 
@@ -281,7 +267,20 @@ public class InFieldsTable extends ConfigTablePanel {
             Object value = null != colSpec ? colSpec : colName;
             m_model.setValueAt(value, r, Column.COLUMN);
             m_model.setValueAt(field.getJavaName(), r, Column.JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), r, Column.JAVA_TYPE);
+
+            Optional<?> factory = ConverterUtil.getDataCellToJavaConverterFactory(field.getConverterFactoryId());
+            if (!factory.isPresent()) {
+                // try to find another converter for the source and dest types. The one with for the stored id
+                // seems to be missing.
+                factory = ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+            }
+
+            if (factory.isPresent()) {
+                m_model.setValueAt(factory.get(), r, Column.JAVA_TYPE);
+            } else {
+                // ?
+                m_model.setValueAt(field.getJavaType(), r, Column.JAVA_TYPE);
+            }
         }
         int offset = m_model.getRowCount();
         for (int r = 0; r < fields.getInVarFields().size(); r++) {
@@ -291,28 +290,19 @@ public class InFieldsTable extends ConfigTablePanel {
             FlowVariable flowVar = m_flowVars.get(name);
             Object value = null != flowVar ? flowVar : name;
             m_model.setValueAt(value, offset + r, Column.COLUMN);
-            m_model.setValueAt(field.getJavaName(), offset + r,
-                    Column.JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), offset + r,
-                    Column.JAVA_TYPE);
+            m_model.setValueAt(field.getJavaName(), offset + r, Column.JAVA_FIELD);
+            m_model.setValueAt(field.getJavaType(), offset + r, Column.JAVA_TYPE);
         }
 
         JTable table = getTable();
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.COLUMN)).setCellRenderer(
-                new InputTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.COLUMN)).setCellEditor(
-                createInputCellEditor());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_FIELD)).setCellRenderer(
-                FieldsTableUtil.createJavaFieldTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_TYPE)).setCellRenderer(
-                FieldsTableUtil.createJavaTypeTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_TYPE)).setCellEditor(
-                FieldsTableUtil.createJavaTypeTableCellEditor());
+        table.getColumnModel().getColumn(m_model.getIndex(Column.COLUMN)).setCellRenderer(new InputTableCellRenderer());
+        table.getColumnModel().getColumn(m_model.getIndex(Column.COLUMN)).setCellEditor(createInputCellEditor());
+        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_FIELD))
+            .setCellRenderer(FieldsTableUtil.createJavaFieldTableCellRenderer());
+        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_TYPE))
+            .setCellRenderer(FieldsTableUtil.createJavaTypeTableCellRenderer());
+        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_TYPE))
+            .setCellEditor(FieldsTableUtil.createJavaTypeTableCellEditor());
     }
 
     /** Create cell editor for for the input columns / flow variables. */
@@ -329,11 +319,10 @@ public class InFieldsTable extends ConfigTablePanel {
                 comboBox.addItem(flowVar);
             }
         }
-        DefaultCellEditor editor =  new DefaultCellEditor(comboBox);
+        DefaultCellEditor editor = new DefaultCellEditor(comboBox);
         editor.setClickCountToStart(2);
         return editor;
     }
-
 
     /**
      * Get the field definitions representing input columns.
@@ -351,14 +340,13 @@ public class InFieldsTable extends ConfigTablePanel {
             if (value instanceof DataColumnSpec) {
                 DataColumnSpec colSpec = (DataColumnSpec)value;
                 InCol inCol = new InCol();
-                inCol.setKnimeType(colSpec.getType());
                 inCol.setKnimeName(colSpec.getName());
-                inCol.setJavaName(
-                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
-                Object javaTypeObject = m_model.getValueAt(r,
-                        Column.JAVA_TYPE);
-                if (javaTypeObject instanceof Class) {
-                    inCol.setJavaType((Class)javaTypeObject);
+                inCol.setJavaName((String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                Object javaTypeObject = m_model.getValueAt(r, Column.JAVA_TYPE);
+                if (javaTypeObject instanceof DataCellToJavaConverterFactory) {
+                    inCol.setConverterFactory(colSpec.getType(), (DataCellToJavaConverterFactory)javaTypeObject);
+                } else {
+                    throw new IllegalStateException("Contents of JavaType column need to be DataCellToJavaConverterFactory instances.");
                 }
                 inCols.add(inCol);
             }
@@ -382,12 +370,10 @@ public class InFieldsTable extends ConfigTablePanel {
             if (value instanceof FlowVariable) {
                 FlowVariable colSpec = (FlowVariable)value;
                 InVar inVar = new InVar();
-                inVar.setKnimeType(colSpec.getType());
+                inVar.setFlowVarType(colSpec.getType());
                 inVar.setKnimeName(colSpec.getName());
-                inVar.setJavaName(
-                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
-                inVar.setJavaType((Class)m_model.getValueAt(r,
-                        Column.JAVA_TYPE));
+                inVar.setJavaName((String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                inVar.setJavaType((Class)m_model.getValueAt(r, Column.JAVA_TYPE));
                 inCols.add(inVar);
             }
         }
@@ -395,22 +381,19 @@ public class InFieldsTable extends ConfigTablePanel {
     }
 
     /** Renders the table cells defining the input column or flow variables. */
-    private static class InputListCellRenderer
-            extends FlowVariableListCellRenderer {
+    private static class InputListCellRenderer extends FlowVariableListCellRenderer {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index,
-                final boolean isSelected, final boolean cellHasFocus) {
+        public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
             // reset values which maybe changed by previous calls of this method
             setForeground(list.getForeground());
             setBackground(list.getBackground());
             // let super class do the first step
-            super.getListCellRendererComponent(list, value, index, isSelected,
-                    cellHasFocus);
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
             if (value instanceof DataColumnSpec) {
                 DataColumnSpec col = (DataColumnSpec)value;
                 setIcon(col.getType().getIcon());
@@ -426,32 +409,25 @@ public class InFieldsTable extends ConfigTablePanel {
 
         private Color reddishBackground() {
             Color b = getBackground();
-            return new Color((b.getRed() + 255) / 2, b.getGreen() / 2,
-                    b.getBlue() / 2);
+            return new Color((b.getRed() + 255) / 2, b.getGreen() / 2, b.getBlue() / 2);
         }
     }
 
-
     /** Renders the table cells defining the input column or flow variables. */
-    private static class InputTableCellRenderer
-            extends FlowVariableTableCellRenderer {
+    private static class InputTableCellRenderer extends FlowVariableTableCellRenderer {
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public Component getTableCellRendererComponent(final JTable table,
-                final Object value, final boolean isSelected,
-                final boolean hasFocus, final int row,
-                final int column) {
+        public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
+            final boolean hasFocus, final int row, final int column) {
             // reset values which maybe changed by previous calls of this method
             setForeground(table.getForeground());
             setBackground(table.getBackground());
             setFont(getFont().deriveFont(Font.PLAIN));
             // let super class do the first step
-            super.getTableCellRendererComponent(table, value,
-                    isSelected, hasFocus,
-                    row, column);
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             FieldsTableModel model = (FieldsTableModel)table.getModel();
             if (model.isValidValue(row, column)) {
                 if (value instanceof FlowVariable) {
@@ -480,8 +456,7 @@ public class InFieldsTable extends ConfigTablePanel {
 
         private Color reddishBackground() {
             Color b = getBackground();
-            return new Color((b.getRed() + 255) / 2, b.getGreen() / 2,
-                    b.getBlue() / 2);
+            return new Color((b.getRed() + 255) / 2, b.getGreen() / 2, b.getBlue() / 2);
         }
     }
 }

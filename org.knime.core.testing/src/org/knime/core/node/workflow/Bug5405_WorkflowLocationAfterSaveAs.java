@@ -99,7 +99,10 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
         Assert.assertEquals(manager.getNodeContainerDirectory().getFile(), manager.getContext().getCurrentLocation());
         File saveAsFolder = FileUtil.createTempDir(getClass().getName());
         saveAsFolder.delete();
-        manager.saveAs(saveAsFolder, new ExecutionMonitor());
+
+        WorkflowContext.Factory fac =
+            new WorkflowContext.Factory(manager.getContext()).setCurrentLocation(saveAsFolder);
+        manager.saveAs(fac.createContext(), new ExecutionMonitor());
         Assert.assertEquals(saveAsFolder, manager.getNodeContainerDirectory().getFile());
         Assert.assertEquals(saveAsFolder, manager.getContext().getCurrentLocation());
 

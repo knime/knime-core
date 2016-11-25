@@ -181,20 +181,20 @@ public class DomainDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-            // String column domain panel
-            panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-                "domain values for nominal data"));
+        // String column domain panel
+        panel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "domain values for nominal data"));
 
-            Box valueBox = Box.createHorizontalBox();
-            valueBox.add(createStringValuesPanel());
-            valueBox.add(Box.createHorizontalGlue());
-            panel.add(valueBox);
+        Box valueBox = Box.createHorizontalBox();
+        valueBox.add(createStringValuesPanel());
+        valueBox.add(Box.createHorizontalGlue());
+        panel.add(valueBox);
 
-            panel.add(Box.createVerticalStrut(5));
-            panel.add(new JLabel("Values found in the table will be added " + "automatically."));
-            panel.add(new JLabel("Enter only additional values here that you want " + "to be in the domain"));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(new JLabel("Values found in the table will be added " + "automatically."));
+        panel.add(new JLabel("Enter only additional values here that you want " + "to be in the domain"));
 
-            return panel;
+        return panel;
 
     }
 
@@ -202,106 +202,106 @@ public class DomainDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-            panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Domain values"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Domain values"));
 
-            // Integer column domain panel
+        // Integer column domain panel
 
-            Box nomBox = Box.createHorizontalBox();
+        Box nomBox = Box.createHorizontalBox();
 
-            JPanel up = new JPanel();
-            up.setLayout(new BoxLayout(up, BoxLayout.X_AXIS));
-            JLabel upperBoundLabel = new JLabel("Upper Bound: ");
-            up.add(upperBoundLabel);
+        JPanel up = new JPanel();
+        up.setLayout(new BoxLayout(up, BoxLayout.X_AXIS));
+        JLabel upperBoundLabel = new JLabel("Upper Bound: ");
+        up.add(upperBoundLabel);
 
-            m_upperBoundField = new JFormattedTextField(new AbstractFormatter() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public Object stringToValue(final String text) throws ParseException {
-                    try {
-                        if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
-                            return Double.parseDouble(text);
-                        }
-                        if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
-                            return Integer.parseInt(text);
-                        }
-                        // should not happen
-                        throw new NumberFormatException("Impossible column type.");
-                    } catch (NumberFormatException nfe) {
-                        throw new ParseException("Contains non-numeric chars", 0);
+        m_upperBoundField = new JFormattedTextField(new AbstractFormatter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Object stringToValue(final String text) throws ParseException {
+                try {
+                    if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                        return Double.parseDouble(text);
                     }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public String valueToString(final Object value) throws ParseException {
-                    return value == null ? null : value.toString();
-                }
-            });
-            m_upperBoundField.setColumns(8);
-            up.add(m_upperBoundField);
-
-            JPanel low = new JPanel();
-            low.setLayout(new BoxLayout(low, BoxLayout.X_AXIS));
-            JLabel lowerBoundLabel = new JLabel("Lower Bound: ");
-            low.add(lowerBoundLabel);
-
-            m_lowerBoundField = new JFormattedTextField(new AbstractFormatter() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public Object stringToValue(final String text) throws ParseException {
-                    try {
-                        if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
-                            return Double.parseDouble(text);
-                        }
-                        if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
-                            return Integer.parseInt(text);
-                        }
-                        // should not happen
-                        throw new NumberFormatException("Impossible column type.");
-                    } catch (NumberFormatException nfe) {
-                        throw new ParseException("Contains non-numeric chars", 0);
+                    if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                        return Integer.parseInt(text);
                     }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public String valueToString(final Object value) throws ParseException {
-                    return value == null ? null : value.toString();
-                }
-            });
-            m_lowerBoundField.setColumns(8);
-            low.add(m_lowerBoundField);
-
-            if (m_colProp.getColumnSpec().getDomain().getUpperBound() != null) {
-                if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
-                    m_upperBoundField.setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getUpperBound())
-                        .getIntValue());
-                    m_lowerBoundField.setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getLowerBound())
-                        .getIntValue());
-                }
-            }
-            if (m_colProp.getColumnSpec().getDomain().getLowerBound() != null) {
-                if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
-                    m_upperBoundField.setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getUpperBound())
-                        .getDoubleValue());
-                    m_lowerBoundField.setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getLowerBound())
-                        .getDoubleValue());
+                    // should not happen
+                    throw new NumberFormatException("Impossible column type.");
+                } catch (NumberFormatException nfe) {
+                    throw new ParseException("Contains non-numeric chars", 0);
                 }
             }
 
-            panel.add(low);
-            panel.add(up);
-            panel.add(nomBox);
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String valueToString(final Object value) throws ParseException {
+                return value == null ? null : value.toString();
+            }
+        });
+        m_upperBoundField.setColumns(8);
+        up.add(m_upperBoundField);
 
-            return panel;
+        JPanel low = new JPanel();
+        low.setLayout(new BoxLayout(low, BoxLayout.X_AXIS));
+        JLabel lowerBoundLabel = new JLabel("Lower Bound: ");
+        low.add(lowerBoundLabel);
+
+        m_lowerBoundField = new JFormattedTextField(new AbstractFormatter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Object stringToValue(final String text) throws ParseException {
+                try {
+                    if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                        return Double.parseDouble(text);
+                    }
+                    if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                        return Integer.parseInt(text);
+                    }
+                    // should not happen
+                    throw new NumberFormatException("Impossible column type.");
+                } catch (NumberFormatException nfe) {
+                    throw new ParseException("Contains non-numeric chars", 0);
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String valueToString(final Object value) throws ParseException {
+                return value == null ? null : value.toString();
+            }
+        });
+        m_lowerBoundField.setColumns(8);
+        low.add(m_lowerBoundField);
+
+        if (m_colProp.getColumnSpec().getDomain().getUpperBound() != null) {
+            if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                m_upperBoundField
+                    .setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getUpperBound()).getIntValue());
+                m_lowerBoundField
+                    .setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getLowerBound()).getIntValue());
+            }
+        }
+        if (m_colProp.getColumnSpec().getDomain().getLowerBound() != null) {
+            if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                m_upperBoundField
+                    .setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getUpperBound()).getDoubleValue());
+                m_lowerBoundField
+                    .setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getLowerBound()).getDoubleValue());
+            }
+        }
+
+        panel.add(low);
+        panel.add(up);
+        panel.add(nomBox);
+
+        return panel;
     }
 
     /*

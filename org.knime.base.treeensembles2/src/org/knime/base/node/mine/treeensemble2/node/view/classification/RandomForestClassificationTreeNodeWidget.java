@@ -156,7 +156,7 @@ public class RandomForestClassificationTreeNodeWidget extends RandomForestAbstra
 
     private JPanel createTablePanel(final float scale) {
         TreeNodeClassification node = (TreeNodeClassification)getUserObject();
-        double[] targetDistribution = node.getTargetDistribution();
+        final float[] targetDistribution = node.getTargetDistribution();
         double totalClassCount = 0.0;
         for (double classCount : targetDistribution) {
             totalClassCount += classCount;
@@ -200,7 +200,7 @@ public class RandomForestClassificationTreeNodeWidget extends RandomForestAbstra
             p.add(scaledLabel(convertPercentage(classFreq), scale,
                     SwingConstants.RIGHT), c);
             c.gridx++;
-            Double classCountValue = targetDistribution[i];
+            final Float classCountValue = targetDistribution[i];
             p.add(scaledLabel(convertCount(classCountValue), scale,
                     SwingConstants.RIGHT), c);
             if (i == majorityClassIndex) {
@@ -226,7 +226,7 @@ public class RandomForestClassificationTreeNodeWidget extends RandomForestAbstra
         double nominator = 0.0;
         TreeNodeClassification root = (TreeNodeClassification)getGraphView().getRootNode();
         if (root != null) {
-            double[] rootTargetDistribution = root.getTargetDistribution();
+            final float[] rootTargetDistribution = root.getTargetDistribution();
             double rootTotalClassCount = 0.0;
             for (double classCount : rootTargetDistribution) {
                 rootTotalClassCount += classCount;
@@ -254,7 +254,7 @@ public class RandomForestClassificationTreeNodeWidget extends RandomForestAbstra
 
         TreeNodeClassification node = (TreeNodeClassification)getUserObject();
         String majorityClass = node.getMajorityClassName();
-        double[] targetDistribution = node.getTargetDistribution();
+        final float[] targetDistribution = node.getTargetDistribution();
         double majorityClassCount = targetDistribution[node.getMajorityClassIndex()];
         boolean displayTargetDistribution = false;
         double totalClassCount = 0;

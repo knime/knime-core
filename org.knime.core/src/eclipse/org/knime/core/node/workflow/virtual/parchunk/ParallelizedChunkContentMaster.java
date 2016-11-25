@@ -73,7 +73,7 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
     /** Create new chunk object master - also knows Workflowmanager
      * the chunks are located in.
      *
-     * @param wfm the workflowmanager holding the chunks
+     * @param wfm the workflowmanager holding the chunks - can be <code>null</code> if no 'remote' chunks are available
      * @param endNode corresponding end node of the loop
      * @param chunkCount the number of chunks.
      */
@@ -195,7 +195,7 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
                     m_chunks[i] = null;
                 }
             }
-            if (m_manager.getParent().containsNodeContainer(m_manager.getID())) {
+            if ((m_manager != null) && m_manager.getParent().containsNodeContainer(m_manager.getID())) {
                 NodeContainer nc = m_manager.getParent().getNodeContainer(m_manager.getID());
                 if (m_manager == nc) {
                     // need to make sure that this is not just another node

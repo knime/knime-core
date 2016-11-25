@@ -66,7 +66,7 @@ public final class GradientBoostingClassificationPredictorNodeDialogPane extends
     /**
      *  */
     public GradientBoostingClassificationPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(false);
+        m_predictorPanel = new TreeEnsemblePredictorPanel(false, false);
         addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
     }
 

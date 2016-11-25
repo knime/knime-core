@@ -11,6 +11,8 @@
    <extension-point id="PortType" name="PortType" schema="schema/PortType.exsd"/>
    <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
    <extension-point id="TableFormat" name="TableFormat" schema="schema/TableFormat.exsd"/>
+   <extension-point id="JavaToDataCellConverter" name="JavaToDataCellConverter" schema="schema/JavaToDataCellConverter.exsd"/>
+   <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -98,6 +100,28 @@
       </dataValue>
       <dataValue
             valueClass="org.knime.core.data.collection.CollectionDataValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.collection.CollectionValueRenderer$ShortRendererFactory"
+               suggestAsDefault="true">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.collection.CollectionValueRenderer$FullRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.collection.ListDataValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.collection.CollectionValueRenderer$ShortRendererFactory"
+               suggestAsDefault="true">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.collection.CollectionValueRenderer$FullRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.collection.SetDataValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.collection.CollectionValueRenderer$ShortRendererFactory"
                suggestAsDefault="true">
@@ -225,18 +249,6 @@
    </extension>
    <extension
          point="org.knime.core.DatabaseUtility">
-      <databaseUtility
-            class="org.knime.core.node.port.database.SQLiteUtility"
-            database="sqlite">
-      </databaseUtility>
-      <databaseUtility
-            class="org.knime.core.node.port.database.MySQLUtility"
-            database="mysql">
-      </databaseUtility>
-      <databaseUtility
-            class="org.knime.core.node.port.database.PostgreSQLUtility"
-            database="postgresql">
-      </databaseUtility>
       <databaseUtility
             class="org.knime.core.node.port.database.OracleUtility"
             database="oracle">
@@ -481,6 +493,13 @@
          <serializer
                cellClass="org.knime.core.data.xml.PMMLBlobCell"
                serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.MissingCell">
+         <serializer
+               cellClass="org.knime.core.data.MissingCell"
+               serializerClass="org.knime.core.data.MissingCell$MissingSerializer">
          </serializer>
       </DataType>
    </extension>

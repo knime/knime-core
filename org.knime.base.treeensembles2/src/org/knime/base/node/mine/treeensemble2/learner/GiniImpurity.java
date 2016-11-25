@@ -50,11 +50,14 @@ package org.knime.base.node.mine.treeensemble2.learner;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnData;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class GiniImpurity implements IImpurity {
 
+    /**
+     * Instance of GiniImpurity (this class is a singleton)
+     */
     public static final GiniImpurity INSTANCE = new GiniImpurity();
 
     private GiniImpurity() {

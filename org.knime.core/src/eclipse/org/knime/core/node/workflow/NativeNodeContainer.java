@@ -98,6 +98,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -288,16 +290,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.getNrViews();
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean hasInteractiveView() {
-        return m_node.hasInteractiveView();
+    public InteractiveWebViewsResult getInteractiveWebViews() {
+        Builder builder = InteractiveWebViewsResult.newBuilder();
+        if (m_node.hasWizardView()) {
+            builder.add(this);
+        }
+        return builder.build();
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean hasInteractiveWebView() {
-        return m_node.hasWizardView();
+    public boolean hasInteractiveView() {
+        return m_node.hasInteractiveView();
     }
 
     /** {@inheritDoc} */
@@ -812,7 +817,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 && nodePersistor instanceof FileSingleNodeContainerPersistor) {
             CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
             credNode.doAfterLoadFromDisc(((FileSingleNodeContainerPersistor)nodePersistor).getLoadHelper(),
-                isExecuted, isInactive());
+                getCredentialsProvider(), isExecuted, isInactive());
             saveNodeSettingsToDefault();
         }
         return null;

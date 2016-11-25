@@ -90,6 +90,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 
 /**
@@ -527,7 +528,7 @@ public class NaiveBayesModel {
     /**
      * @param bayesModel the {@link NaiveBayesModelDocument} document to export to
      */
-    void exportToPMML(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel) {
+    void exportToPMML(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel, final DerivedFieldMapper mapper) {
         bayesModel.setIsScorable(true);
         bayesModel.setModelName("KNIME PMML Naive Bayes model");
         bayesModel.setThreshold(m_pmmlZeroProbThreshold.doubleValue());
@@ -543,7 +544,7 @@ public class NaiveBayesModel {
                 classAttributeModel = (ClassAttributeModel) attributeModel;
             } else {
                 final BayesInput bayesInput = bayesInputs.addNewBayesInput();
-                attributeModel.exportToPMML(bayesInput);
+                attributeModel.exportToPMML(bayesInput, mapper);
             }
         }
         if (!bitVecotorModelNames.isEmpty()) {

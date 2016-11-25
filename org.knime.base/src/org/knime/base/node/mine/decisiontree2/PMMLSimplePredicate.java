@@ -159,7 +159,8 @@ public class PMMLSimplePredicate extends PMMLPredicate {
                 // not a double, use fallback
             }
         }
-        return getSplitAttribute() + " " + getOperator().getSymbol() + " " + value;
+        String prefix = getSplitAttribute() + " " + getOperator().getSymbol();
+        return value == null ? prefix : prefix + " " + value;
     }
 
     /** {@inheritDoc} */

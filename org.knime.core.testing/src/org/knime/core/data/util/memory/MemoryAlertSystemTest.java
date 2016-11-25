@@ -93,7 +93,7 @@ public class MemoryAlertSystemTest {
      *
      * @throws Exception if an error occurs
      */
-    @Test(timeout = 15000)
+    @Test(timeout = 20000)
     public void testSleepWhileLow() throws Exception {
         int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
             * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory())) + (32 << 20);
@@ -107,7 +107,6 @@ public class MemoryAlertSystemTest {
         final AtomicReference<byte[]> buffer = new AtomicReference<byte[]>(new byte[reserveSize]);
         // force buffer into tenured space
         forceGC();
-        forceGC();
 
         Thread.sleep(1000);
         // we should return after 1 seconds
@@ -115,7 +114,7 @@ public class MemoryAlertSystemTest {
         assertThat("Was not sleeping although memory usage is above threshold: " + MemoryAlertSystem.getUsage(),
             memoryAvailable, is(false));
 
-        new Thread(new Runnable() {
+        Thread clearThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -123,17 +122,19 @@ public class MemoryAlertSystemTest {
                     buffer.set(null);
                     NodeLogger.getLogger(getClass()).debug("Cleared buffer, memory should be freed now");
                     forceGC();
-                    forceGC();
                 } catch (Exception ex) {
                     // ignore
                 }
             }
-        }).start();
+        });
+        clearThread.start();
 
         NodeLogger.getLogger(getClass()).debug(
             "Going to sleep, memory usage is " + MemoryAlertSystem.getUsage());
-        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 20000);
+        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 25000);
         // should return quite fast and not time out the test method
+        clearThread.interrupt();
+        clearThread.join();
     }
 
     /**
@@ -227,14 +228,14 @@ public class MemoryAlertSystemTest {
         SoftReference<Object> ref2 = new SoftReference<>(obj2);
         obj1 = null;
         int max = 10;
-        while ((ref1.get() != null) && (max-- > 0)) {
+        while ((ref1.get() != null) && (max-- > 0) && !Thread.currentThread().isInterrupted()) {
             System.gc();
             Thread.sleep(50);
         }
 
         obj2 = null;
         max = 10;
-        while ((ref2.get() != null) && (max-- > 0)) {
+        while ((ref2.get() != null) && (max-- > 0) && !Thread.currentThread().isInterrupted()) {
             System.gc();
             Thread.sleep(50);
         }

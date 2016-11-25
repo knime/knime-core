@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
@@ -1413,7 +1414,8 @@ public class FileNodePersistor implements NodePersistor {
                     PortTypeRegistry.getInstance().getObjectSerializer(object.getClass()).get();
             serializer.savePortObject(object, out, exec);
             if (object instanceof FileStorePortObject) {
-                List<FileStoreKey> fileStoreKeys = FileStoreUtil.translateToLocal((FileStorePortObject)object);
+                List<FileStoreKey> fileStoreKeys = FileStoreUtil.getFileStores((FileStorePortObject)object).stream()
+                    .map(FileStoreUtil::getFileStoreKey).collect(Collectors.toList());
                 File fileStoreXML = new File(objectDir, "filestore.xml");
                 final ModelContent fileStoreModelContent = new ModelContent("filestore");
                 ModelContentWO keysContent = fileStoreModelContent.addModelContent("filestore_keys");

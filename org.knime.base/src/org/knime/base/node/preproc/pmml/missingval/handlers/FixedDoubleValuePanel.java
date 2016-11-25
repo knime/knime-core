@@ -65,7 +65,6 @@ public class FixedDoubleValuePanel extends DefaultMissingValueHandlerPanel {
     public FixedDoubleValuePanel() {
         addDialogComponent(new DialogComponentNumber(
                                   FixedDoubleValueMissingCellHandler.createDoubleValueSettingsModel(),
-                                  "Value", 0.1));
+                                  "Value", 0.1, 6));
     }
-
 }

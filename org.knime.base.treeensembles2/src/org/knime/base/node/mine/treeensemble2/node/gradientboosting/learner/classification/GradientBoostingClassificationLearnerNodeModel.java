@@ -53,8 +53,8 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeDataCreator;
-import org.knime.base.node.mine.treeensemble2.learner.AbstractGradientBoostingLearner;
-import org.knime.base.node.mine.treeensemble2.learner.LKGradientBoostedTreesLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.AbstractGradientBoostingLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.LKGradientBoostedTreesLearner;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
@@ -104,6 +104,7 @@ public class GradientBoostingClassificationLearnerNodeModel extends NodeModel {
 //        if (warn != null) {
 //            setWarningMessage(warn);
 //        }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         ensembleSpec.assertTargetTypeMatches(false);
@@ -148,6 +149,7 @@ public class GradientBoostingClassificationLearnerNodeModel extends NodeModel {
         exec.setMessage("Learning trees");
         AbstractGradientBoostingLearner learner = new LKGradientBoostedTreesLearner(m_configuration, data);
         AbstractGradientBoostingModel model;
+//        m_configuration.setMissingValueHandling(MissingValueHandling.XGBoost);
 //        try {
             model = learner.learn(learnExec);
 //        } catch (ExecutionException e) {

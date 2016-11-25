@@ -45,14 +45,15 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.OptionalInt;
+
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -129,12 +130,19 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
-            // first port is flow var port
-            if (cont.getNrOutPorts() >= 2) {
-                return true;
-            }
+            return getPortIndex(cont).isPresent();
         }
         return false;
+    }
+
+    /** "first" port index -- for ordinary nodes that's port index 1 as the first port is the flow variable
+     * port; for workflow managers it's 0
+     * @param nc the node in question.
+     * @return that index or an empty optional if the node has no such port.
+     */
+    private static OptionalInt getPortIndex(final NodeContainer nc) {
+        int portOfInterest = nc instanceof WorkflowManager ? 0 : 1;
+        return portOfInterest < nc.getNrOutPorts() ? OptionalInt.of(portOfInterest) : OptionalInt.empty();
     }
 
     /**
@@ -148,18 +156,17 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+            final java.awt.Rectangle knimeWindowBounds = OpenViewAction.getAppBoundsAsAWTRec();
             // first port is flow var port
-            if (cont.getNrOutPorts() >= 2) {
+            final OptionalInt portIndex = getPortIndex(cont);
+            if (portIndex.isPresent()) {
                 SwingUtilities.invokeLater(new Runnable() {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
-                        NodeOutPort port = cont.getOutPort(1);
-                        LOGGER.debug("Open First Out-Port View "
-                           + cont.getName() + " on port " + port.getPortName());
-                        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                        port.openPortView(port.getPortName(), bounds);
+                        NodeOutPort port = cont.getOutPort(portIndex.getAsInt());
+                        LOGGER.debug("Open First Out-Port View " + cont.getName() + " on port " + port.getPortName());
+                        port.openPortView(port.getPortName(), knimeWindowBounds);
                     }
                 });
             }

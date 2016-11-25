@@ -54,8 +54,8 @@ import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -87,8 +87,9 @@ public final class DatabaseDriverLoader {
         NodeLogger.getLogger(DatabaseDriverLoader.class);
 
     /** Map from driver file to driver class. */
-    private static final Map<String, File> DRIVERFILE_TO_DRIVERCLASS
-        = new LinkedHashMap<String, File>();
+    private static final Map<String, File[]> DRIVERFILE_TO_DRIVERCLASS = new LinkedHashMap<>();
+
+    private static final Set<File> DRIVERFILES = new LinkedHashSet<>();
 
     /**
      * Name of the standard JDBC-ODBC database driver,
@@ -104,8 +105,8 @@ public final class DatabaseDriverLoader {
      */
     public static final String[] EXTENSIONS = {".jar", ".zip"};
 
-    private static final Map<String, DatabaseWrappedDriver> DRIVER_MAP
-        = new HashMap<String, DatabaseWrappedDriver>();
+    private static final Map<String, DatabaseWrappedDriver> EXTENSION_POINT_DRIVER_MAP = new LinkedHashMap<>();
+    private static final Map<String, DatabaseWrappedDriver> USER_DEFINED_DRIVER_MAP = new LinkedHashMap<>();
 
     /**
      * Creates a mapping from JDBC driver class names to the corresponding JDBC connection strings.
@@ -128,6 +129,7 @@ public final class DatabaseDriverLoader {
         DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase://");
         DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds://");
         DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite://");
+        DRIVER_TO_URL.put("com.exasol.jdbc.EXADriver", "jdbc:exa:");
     }
 
     private static final boolean ODBC_AVAILABLE;
@@ -161,7 +163,7 @@ public final class DatabaseDriverLoader {
             String driverName = d.toString();
             LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
             // DriverManager.registerDriver(d);
-            DRIVER_MAP.put(driverName, d);
+            EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
             return true;
         } catch (Throwable t) {
             LOGGER.debug("Could not load JDBC ODBC driver class '" + JDBC_ODBC_DRIVER + "'. Class has been removed in Java 8.");
@@ -175,12 +177,30 @@ public final class DatabaseDriverLoader {
     }
 
     /**
+     * @param driver class name of the driver to get
+     * @return SQL Driver
+     * @throws InvalidSettingsException
+     */
+    static Driver getDriver(final String driver) throws InvalidSettingsException {
+        try {
+            final Driver wrappedDriver = DatabaseDriverLoader.getWrappedDriver(driver);
+            return wrappedDriver;
+        } catch (Throwable t) {
+            throw new InvalidSettingsException("Could not find database driver \"" + driver + "\", reason: "
+        + t.getMessage(), t);
+        }
+    }
+
+    /**
      * Registers given <code>Driver</code> at the <code>DriverManager</code>.
      * @param driver to register
      * @return SQL Driver
      * @throws InvalidSettingsException if the database drivers could not
      *             registered
+     * @deprecated use the {@link DatabaseUtility#getConnectionFactory()} method instead since this is
+     * only one source for database drivers
      */
+    @Deprecated
     public static Driver registerDriver(final String driver)
             throws InvalidSettingsException {
         try {
@@ -189,8 +209,8 @@ public final class DatabaseDriverLoader {
             DriverManager.registerDriver(wrappedDriver);
             return wrappedDriver;
         } catch (Throwable t) {
-            throw new InvalidSettingsException("Could not register database"
-                  + " driver \"" + driver + "\", reason: " + t.getMessage(), t);
+            throw new InvalidSettingsException("Could not register database driver \"" + driver + "\", reason: "
+        + t.getMessage(), t);
         }
     }
 
@@ -201,57 +221,99 @@ public final class DatabaseDriverLoader {
      * @throws IOException {@link IOException}
      */
     public static void loadDriver(final File file) throws IOException {
-        loadDriver(file, null);
+        loadDriver(file, null, true);
     }
 
-    private static void loadDriver(final File file, final ClassLoader bundleClassloader) throws IOException {
+    private static void loadDriver(final File file, final ClassLoader bundleClassloader, final boolean external)
+            throws IOException {
         if ((file == null) || !file.exists()) {
             throw new IOException("File \"" + file + "\" does not exist.");
         }
         if (file.isDirectory()) {
-            throw new IOException("File \"" + file
-                    + "\" can't be a directory.");
+            readDir(file, bundleClassloader, external);
+        } else {
+            final String fileName = file.getAbsolutePath();
+            if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
+                throw new IOException("Unsupported file \"" + file + "\","
+                    + " only zip and jar files are allowed.");
+            }
+            readZip(file, bundleClassloader, external);
         }
-        final String fileName = file.getAbsolutePath();
-        if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
-            throw new IOException("Unsupported file \"" + file + "\","
-                + " only zip and jar files are allowed.");
-        }
-        if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
-            return;
-        }
-
-        readZip(file, bundleClassloader);
     }
 
 
-    private static void readZip(final File file, final ClassLoader bundleClassLoader) throws IOException {
-        final ClassLoader fileClassLoader =
-            new URLClassLoader(new URL[]{file.toURI().toURL()}, ClassLoader.getSystemClassLoader());
+    /**
+     * @param file
+     * @param bundleClassloader
+     * @param external
+     * @throws IOException
+     */
+    private static void readDir(final File file, final ClassLoader bundleClassloader, final boolean external)
+            throws IOException {
+        LOGGER.debug("Load driver from directory: " + file.getAbsolutePath());
+        readZipFiles(bundleClassloader, external, file.listFiles());
+    }
 
-        try (ZipInputStream is = new ZipInputStream(new FileInputStream(file))) {
-            ZipEntry entry;
-            while ((entry = is.getNextEntry()) != null) {
-                String name = entry.getName();
-                if (name.endsWith(".class")) {
-                    Class<?> driverClass = loadClass(name, bundleClassLoader, fileClassLoader);
-                    if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass) &&
-                            ((driverClass.getModifiers() & Modifier.ABSTRACT) == 0)) {
-                        try {
-                            DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
-                            String driverName = d.toString();
-                            LOGGER.debug("Database driver " + driverName +
-                                " loaded successful from file " + file.toString() +
-                                ". Driver info: " + d.getInfo());
-                            DRIVER_MAP.put(driverName, d);
-                            DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
-                        } catch (InstantiationException | IllegalAccessException | ExceptionInInitializerError
-                                | NoClassDefFoundError ex) {
-                            Throwable cause = (ex.getCause() != null) ? ExceptionUtils.getRootCause(ex) : ex;
+    private static void readZip(final File file, final ClassLoader bundleClassLoader, final boolean external)
+            throws IOException {
+        LOGGER.debug("Load driver from file: " + file.getAbsolutePath());
+        readZipFiles(bundleClassLoader, external, file);
+    }
 
-                            // also catching a few errors, see bug #5582 for details
-                            LOGGER.info("Could not create instance of JDBC driver class '" + driverClass.getName()
-                                + "': " + cause.getMessage(), cause);
+    private static void readZipFiles(final ClassLoader bundleClassLoader, final boolean external, final File... files)
+            throws IOException {
+        final URL[] classURLs = new URL[files.length];
+        for (int i = 0, length = files.length; i < length; i++) {
+            classURLs[i] = files[i].toURI().toURL();
+        }
+        @SuppressWarnings("resource")
+        final ClassLoader fileClassLoader = new URLClassLoader(classURLs, ClassLoader.getSystemClassLoader());
+        for (File file : files) {
+            if (!DRIVERFILES.add(file)) {
+                continue;
+            }
+            final String fileName = file.getName();
+            if (!fileName.endsWith(".jar") && !fileName.endsWith(".zip")) {
+                //skip none jar or zip files
+                continue;
+            }
+            try (ZipInputStream is = new ZipInputStream(new FileInputStream(file))) {
+                ZipEntry entry;
+                while ((entry = is.getNextEntry()) != null) {
+                    String name = entry.getName();
+                    if (name.endsWith(".class")) {
+                        Class<?> driverClass = loadClass(name, bundleClassLoader, fileClassLoader);
+                        if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass) &&
+                                ((driverClass.getModifiers() & Modifier.ABSTRACT) == 0)) {
+                            try {
+                                // each driver has its own class loader
+                                final ClassLoader driverClassLoader = new URLClassLoader(classURLs, ClassLoader.getSystemClassLoader());
+                                driverClass = loadClass(name, bundleClassLoader, driverClassLoader);
+                                final DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
+                                final String driverName = d.toString();
+                                LOGGER.debug("Database driver " + driverName +
+                                    " loaded successful from file " + file.toString() +
+                                    ". Driver info: " + d.getInfo());
+                                final DatabaseWrappedDriver duplicate;
+                                if (external) {
+                                    LOGGER.debug("Adding driver to user map: " + driverName);
+                                    duplicate = USER_DEFINED_DRIVER_MAP.put(driverName, d);
+                                } else {
+                                    LOGGER.debug("Adding driver to buildin map: " + driverName);
+                                    duplicate = EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
+                                }
+                                if (duplicate != null) {
+                                    throw new IllegalStateException("Duplicate driver found for name:" + duplicate);
+                                }
+                                DRIVERFILE_TO_DRIVERCLASS.put(driverName, files);
+                            } catch (InstantiationException | IllegalAccessException | ExceptionInInitializerError
+                                    | NoClassDefFoundError ex) {
+                                Throwable cause = (ex.getCause() != null) ? ExceptionUtils.getRootCause(ex) : ex;
+
+                                // also catching a few errors, see bug #5582 for details
+                                LOGGER.info("Could not create instance of JDBC driver class '" + driverClass.getName()
+                                    + "': " + cause.getMessage(), cause);
+                            }
                         }
                     }
                 }
@@ -260,10 +322,30 @@ public final class DatabaseDriverLoader {
     }
 
     /**
-     * @return A set if loaded driver names.
+     * @return a {@link Set} with the class names of the user defined JDBC drivers
+     * @since 3.2
      */
+    public static Set<String> getUserDefinedDriver() {
+        return USER_DEFINED_DRIVER_MAP.keySet();
+    }
+
+    /**
+     * @return a {@link Set} with the class names of JDBC drivers registered via the deprecated extension point
+     * @since 3.2
+     */
+    public static Set<String> getExtensionPointDriver(){
+        return EXTENSION_POINT_DRIVER_MAP.keySet();
+    }
+
+    /**
+     * @return A set of automatically loaded driver names.
+     * @deprecated use {@link DatabaseUtility#getJDBCDriverClasses()}
+     */
+    @Deprecated
     public static Set<String> getLoadedDriver() {
-        return DRIVER_MAP.keySet();
+        final Set<String> allNames = new LinkedHashSet<String>(getUserDefinedDriver());
+        allNames.addAll(getExtensionPointDriver());
+        return allNames;
     }
 
     /**
@@ -278,20 +360,26 @@ public final class DatabaseDriverLoader {
             throw new SQLException(
                 "JDBC-ODBC driver is not available on this Linux system due to missing native ODBC libraries");
         }
-
-        DatabaseWrappedDriver wdriver = DRIVER_MAP.get(driverName);
+        DatabaseWrappedDriver wdriver = USER_DEFINED_DRIVER_MAP.get(driverName);
         if (wdriver != null) {
-            LOGGER.debug("Database driver " + driverName + " retrieved from driver map");
+            LOGGER.debug("Database driver retrieved from user defined drivers: " + driverName
+                +  "Driver info: " + wdriver.getInfo());
             return wdriver;
         }
-        LOGGER.debug("Loading database driver " + driverName);
+
+        wdriver = EXTENSION_POINT_DRIVER_MAP.get(driverName);
+        if (wdriver != null) {
+            LOGGER.debug("Database driver retrieved from buildin drivers: " + driverName
+                +  "Driver info: " + wdriver.getInfo());
+            return wdriver;
+        }
+        LOGGER.debug("Searching database driver in classpath:" + driverName);
         // otherwise try to load new driver from registered classes
-        Class<?> c = Class.forName(driverName, true,
-                ClassLoader.getSystemClassLoader());
-        DatabaseWrappedDriver d = new DatabaseWrappedDriver(
-                (Driver) c.newInstance());
-        LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
-        DRIVER_MAP.put(driverName, d);
+        Class<?> c = Class.forName(driverName, true, ClassLoader.getSystemClassLoader());
+        DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver) c.newInstance());
+        LOGGER.debug("Database driver retireved from classpath " + driverName
+            +  "Driver info: " + d.getInfo());
+        EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
         return d;
     }
 
@@ -331,12 +419,29 @@ public final class DatabaseDriverLoader {
      * been loaded.
      * @param driverClass driver class name
      * @return driver file location
+     * @deprecated use the {@link #getDriverFilesForDriverClass(String)} since this method will return only one
+     * of possibly multiple files that the driver requires
      */
+    @Deprecated
     public static File getDriverFileForDriverClass(
+            final String driverClass) {
+        final File[] files = getDriverFilesForDriverClass(driverClass);
+        return files != null ? files[0] : null;
+    }
+
+    /**
+     *
+     * @param driverClass driver class name
+     * @return driver file location
+     * @deprecated use the {@link DatabaseUtility#getConnectionFactory()} method instead since this is
+     * only one source for database drivers
+     * @since 3.2
+     */
+    @Deprecated
+    public static File[] getDriverFilesForDriverClass(
             final String driverClass) {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
     }
-
 
     /**
      * Loads all JDBC driver registered via the extension point.
@@ -359,7 +464,7 @@ public final class DatabaseDriverLoader {
                 if (jdbcUrl != null) {
                     ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
                     try {
-                        loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
+                        loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader, false);
                     } catch (IOException ex) {
                         LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
                     }

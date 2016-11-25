@@ -80,6 +80,9 @@ public class DialogComponentDate extends DialogComponent {
         this(model, label, true);
     }
 
+    public DialogComponentDate(final SettingsModelDate model, final String label, final boolean optional) {
+        this(model,label, optional, false);
+    }
     /**
      * Instantiates a new DateDialogComponent, where the model stores the user input and the label is put as a
      * description on to the dialog. Using this constructor the date can be optional or mandatory.
@@ -88,12 +91,16 @@ public class DialogComponentDate extends DialogComponent {
      * @param model to store the inputed date
      * @param label to place on the dialog
      * @param optional specifies whether the date is optional (true) or mandatory (false)
+     * @since 3.3
      */
-    public DialogComponentDate(final SettingsModelDate model, final String label, final boolean optional) {
+    public DialogComponentDate(final SettingsModelDate model, final String label, final boolean optional, final boolean optionalTime) {
         super(model);
         m_datemodel = model;
+        if (optionalTime) {
         m_dialogcomp = new DateInputDialog(DateInputDialog.Mode.SECONDS, optional);
-
+        } else {
+            m_dialogcomp = new DateInputDialog(DateInputDialog.Mode.SECONDS, optional, optionalTime);
+        }
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), label));

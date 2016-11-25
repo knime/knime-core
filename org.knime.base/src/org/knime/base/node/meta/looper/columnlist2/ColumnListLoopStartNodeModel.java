@@ -61,6 +61,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
@@ -72,6 +73,14 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStartNodeTerminator {
+
+    /** Config identifier for columns for execution policy if no input
+     * columns are selected. */
+    static final String CFG_NO_COLUMNS_POLICY = "no_columns_policy";
+
+    /** Boolean Settings to store the execution policy if no input columns are selected.
+     * True means to run one iteration and False means the node should fail. */
+    private final SettingsModelBoolean m_noColumnsSettings = createNoColumnsPolicySetings();
 
     private DataColumnSpecFilterConfiguration m_filterConfig;
 
@@ -113,12 +122,22 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStart
         m_included = filter.getIncludes();
         m_alwaysIncludedColumns = filter.getExcludes();
 
+        boolean runOneIter = m_noColumnsSettings.getBooleanValue();
+        if (m_included.length == 0 && !runOneIter) {
+            throw new InvalidSettingsException("No columns selected.");
+        }
+
         ColumnRearranger crea = createRearranger(inSpecs[0]);
 
         return new DataTableSpec[]{crea.createSpec()};
     }
 
     private ColumnRearranger createRearranger(final DataTableSpec inSpec) {
+
+        boolean runOneIter = m_noColumnsSettings.getBooleanValue();
+        if (m_included.length == 0 && runOneIter) {
+            return new ColumnRearranger(inSpec);
+        }
 
         int alwaysInclColLength = m_alwaysIncludedColumns.length + 1;
         String[] newColChunk = new String[alwaysInclColLength];
@@ -191,6 +210,8 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStart
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
         m_filterConfig = conf;
+        // added in 3.2
+        m_noColumnsSettings.setBooleanValue(settings.getBoolean(CFG_NO_COLUMNS_POLICY, true));
     }
 
     /**
@@ -199,6 +220,7 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStart
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_filterConfig.saveConfiguration(settings);
+        m_noColumnsSettings.saveSettingsTo(settings);
     }
 
     /**
@@ -228,5 +250,15 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStart
      */
     static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
         return new DataColumnSpecFilterConfiguration("column-filter");
+    }
+
+    /**
+     * Create a new {@link SettingsModelBoolean} to store the execution policy
+     * if no input columns are selected.
+     *
+     * @return settings model
+     */
+    static final SettingsModelBoolean createNoColumnsPolicySetings() {
+        return new SettingsModelBoolean(CFG_NO_COLUMNS_POLICY, true);
     }
 }

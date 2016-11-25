@@ -48,9 +48,12 @@
 package org.knime.core.node.workflow;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -89,18 +92,30 @@ public final class CredentialsProvider {
     /** Read a credentials variable from the store.
      * @param name The identifier of the credentials parameter of interest.
      * @return The credentials for the identifier.
-     * @throws IllegalArgumentException If the name is invalid
-     * (no such credentials)
+     * @throws IllegalArgumentException If the name is invalid (no such credentials)
      */
     public ICredentials get(final String name) {
-        if (m_store.contains(name)) {
+        // what this does (related to AP-5974):
+        //   - check if a workflow credential is available and has a password set; if so, return it
+        //   - check if a flow variable credential is available; if so, return it
+        //   - if a workflow credential is defined (no password set), return it
+        //   - fail with no IllArgExc.
+        Optional<Credentials> storeCredOptional = m_store.getAsOptional(name);
+        boolean hasPassword = storeCredOptional.map(c -> StringUtils.isNotEmpty(c.getPassword())).orElse(false);
+        if (hasPassword) {
             return m_store.get(name, m_client);
         } else {
             FlowObjectStack flowVarStack = m_client.getFlowObjectStack();
-            Map<String, FlowVariable> credentialsStackMap = flowVarStack.getAvailableFlowVariables(Type.CREDENTIALS);
+            Map<String, FlowVariable> credentialsStackMap = flowVarStack != null ?
+                flowVarStack.getAvailableFlowVariables(Type.CREDENTIALS) : Collections.emptyMap();
             FlowVariable variable = credentialsStackMap.get(name);
-            variable = CheckUtils.checkArgumentNotNull(variable, "No credentials stored to name \"%s\"", name);
-            return variable.getCredentialsValue();
+            if (variable != null) {
+                return variable.getCredentialsValue();
+            } else if (storeCredOptional.isPresent()) {
+                return m_store.get(name, m_client);
+            } else {
+                throw new IllegalArgumentException(String.format("No credentials stored to name \"%s\"", name));
+            }
         }
     }
 

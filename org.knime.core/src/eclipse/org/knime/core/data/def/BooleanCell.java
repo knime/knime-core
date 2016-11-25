@@ -65,6 +65,7 @@ import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * A data cell implementation holding a boolean value by storing this value in
@@ -300,6 +301,7 @@ public final class BooleanCell extends DataCell implements BooleanValue,
          * @param b a boolean
          * @return a new data cell
          */
+        @DataCellFactoryMethod(name = "Boolean")
         public static DataCell create(final boolean b) {
             return b ? TRUE : FALSE;
         }

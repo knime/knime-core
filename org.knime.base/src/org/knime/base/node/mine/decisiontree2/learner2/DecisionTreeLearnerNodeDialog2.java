@@ -52,7 +52,10 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
 import org.knime.base.node.mine.decisiontree2.PMMLNoTrueChildStrategy;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -63,6 +66,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.ColumnFilter;
+import org.knime.core.node.util.CombinedColumnFilter;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * Dialog for a decision tree learner node.
@@ -80,10 +86,9 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
     public DecisionTreeLearnerNodeDialog2() {
         createNewGroup("General");
         // class column selection
-        this.addDialogComponent(new DialogComponentColumnNameSelection(
-                createSettingsClassColumn(),
-                "Class column", DecisionTreeLearnerNodeModel2.DATA_INPORT,
-                NominalValue.class));
+        DialogComponentColumnNameSelection classCol = new DialogComponentColumnNameSelection(
+            createSettingsClassColumn(), "Class column", DecisionTreeLearnerNodeModel2.DATA_INPORT, NominalValue.class);
+        this.addDialogComponent(classCol);
 
         // quality measure
         String[] qualityMethods =
@@ -132,6 +137,46 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
         this.addDialogComponent(new DialogComponentBoolean(
                 createSettingsSkipNominalColumnsWithoutDomain(),
                 "Skip nominal columns without domain information"));
+
+        createNewGroup("Root split");
+        // check box to specify use of first split column
+        DialogComponentBoolean useFirstSplitCol =
+            new DialogComponentBoolean(createSettingsUseFirstSplitColumn(), "Force root split column");
+        this.addDialogComponent(useFirstSplitCol);
+
+        ColumnFilter classNameFilter = new ColumnFilter() {
+
+            @Override
+            public boolean includeColumn(final DataColumnSpec colSpec) {
+                return !colSpec.getName().equals(((SettingsModelString)classCol.getModel()).getStringValue());
+            }
+
+            @Override
+            public String allFilteredMsg() {
+                return "Filtered all columns";
+            }
+
+        };
+
+        ColumnFilter combinedFilter = new CombinedColumnFilter(new DataValueColumnFilter(NominalValue.class, DoubleValue.class), classNameFilter);
+
+        DialogComponentColumnNameSelection firstSplitCol = new DialogComponentColumnNameSelection(createSettingsFirstSplitColumn(
+            (SettingsModelBoolean)useFirstSplitCol.getModel()),
+            "Root split column", 0, combinedFilter);
+        this.addDialogComponent(firstSplitCol);
+
+        // change possible values for firstCol depending on classCol (the same column can't be class and first split column)
+        classCol.getModel().addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                try {
+                    firstSplitCol.setColumnFilter(combinedFilter);
+                } catch (NotConfigurableException e1) {
+                    // This is only possible if there is only one ordinary column in the spec
+                }
+            }
+        });
 
         createNewGroup("Binary nominal splits");
         // binary nominal split mode
@@ -344,6 +389,7 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
                         skipNominalColumnsWithoutDomainModel.getBooleanValue());
             }
         });
+        model.setEnabled(skipNominalColumnsWithoutDomainModel.getBooleanValue());
         return model;
     }
 
@@ -351,9 +397,31 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
      * @return number processors to use
      */
     static SettingsModelIntegerBounded createSettingsNumProcessors() {
-        return new SettingsModelIntegerBounded(
-                    DecisionTreeLearnerNodeModel2.KEY_NUM_PROCESSORS,
-                    DecisionTreeLearnerNodeModel2.DEFAULT_NUM_PROCESSORS, 1,
-                    Integer.MAX_VALUE);
+        return new SettingsModelIntegerBounded(DecisionTreeLearnerNodeModel2.KEY_NUM_PROCESSORS,
+            DecisionTreeLearnerNodeModel2.DEFAULT_NUM_PROCESSORS, 1, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return name of column to perform first split on
+     */
+    static SettingsModelString createSettingsFirstSplitColumn(final SettingsModelBoolean useFirstSplitCol) {
+        SettingsModelString firstSplitCol = new SettingsModelString(DecisionTreeLearnerNodeModel2.KEY_FIRST_SPLIT_COL, null);
+        useFirstSplitCol.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                firstSplitCol.setEnabled(((SettingsModelBoolean)e.getSource()).getBooleanValue());
+            }
+
+        });
+        firstSplitCol.setEnabled(useFirstSplitCol.getBooleanValue());
+        return firstSplitCol;
+    }
+
+    /**
+     *
+     */
+    static SettingsModelBoolean createSettingsUseFirstSplitColumn() {
+        return new SettingsModelBoolean(DecisionTreeLearnerNodeModel2.KEY_USE_FIRST_SPLIT_COL, false);
     }
 }

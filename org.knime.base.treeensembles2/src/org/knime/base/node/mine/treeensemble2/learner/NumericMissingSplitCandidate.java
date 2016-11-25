@@ -57,9 +57,11 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition.Num
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class NumericMissingSplitCandidate extends NumericSplitCandidate {
+
+    private static BitSet NO_MISSINGS_BS = new BitSet(0);
 
     final boolean m_missingsGoLeft;
 
@@ -72,7 +74,7 @@ public class NumericMissingSplitCandidate extends NumericSplitCandidate {
     public NumericMissingSplitCandidate(final TreeNumericColumnData treeNumericColumnData, final double splitValue,
         final double gainValue, final boolean missingsGoLeft) {
         // A SplitCandidate of this kind does not miss any row
-        super(treeNumericColumnData, splitValue, gainValue, new BitSet());
+        super(treeNumericColumnData, splitValue, gainValue, NO_MISSINGS_BS, NO_MISSINGS);
         m_missingsGoLeft = missingsGoLeft;
     }
 
@@ -80,11 +82,11 @@ public class NumericMissingSplitCandidate extends NumericSplitCandidate {
     public TreeNodeNumericCondition[] getChildConditions() {
         TreeNumericColumnMetaData meta = getColumnData().getMetaData();
         if (m_missingsGoLeft) {
-            return new TreeNodeNumericCondition[] { new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LessThanOrEqualOrMissing),
-                new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LargerThan)};
+            return new TreeNodeNumericCondition[] { new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LessThanOrEqualOrMissing, true),
+                new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LargerThan, false)};
         } else {
-            return new TreeNodeNumericCondition[] { new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LessThanOrEqual),
-                new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LargerThanOrMissing)};
+            return new TreeNodeNumericCondition[] { new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LessThanOrEqual, true),
+                new TreeNodeNumericCondition(meta, getSplitValue(), NumericOperator.LargerThanOrMissing, false)};
         }
     }
 

@@ -1,6 +1,5 @@
 package org.knime.base.node.rules.engine.decisiontree;
 
-import org.knime.base.node.rules.engine.totable.RulesToTableNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -52,7 +51,7 @@ public class FromDecisionTreeNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RulesToTableNodeDialog();//new FromDecisionTreeNodeDialog();
+        return new FromDecisionTreeNodeDialog();
     }
 }
 

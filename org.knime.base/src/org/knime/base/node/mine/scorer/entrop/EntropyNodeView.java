@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,52 +41,37 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 13, 2006 (wiswedel): created
  */
 package org.knime.base.node.mine.scorer.entrop;
 
-import org.knime.core.node.NodeView;
-
 /**
- * 
- * @author Bernd Wiswedel, University of Konstanz
+ * This implements the {@link AbstractEntropyNodeView} for the EntropyNodeModel.
+ *
+ * @author Ole Ostergaard
  */
-public class EntropyNodeView extends NodeView<EntropyNodeModel> {
-    private final EntropyView m_view;
+public class EntropyNodeView extends AbstractEntropyNodeView<EntropyNodeModel> {
 
     /**
      * Delegates to super class.
-     * 
+     *
      * @param nodeModel the node model to look at
+     * @since 3.2 Implements abstract super class
      */
-    EntropyNodeView(final EntropyNodeModel nodeModel) {
+    protected EntropyNodeView(final EntropyNodeModel nodeModel) {
         super(nodeModel);
-        m_view = new EntropyView();
-        setComponent(m_view);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void modelChanged() {
         EntropyCalculator calculator = getNodeModel().getCalculator();
-        m_view.update(calculator);
-        m_view.setHiliteHandler(calculator == null ? null : getNodeModel()
+        getEntropyView().update(calculator);
+        getEntropyView().setHiliteHandler(calculator == null ? null : getNodeModel()
                 .getViewHiliteHandler());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onOpen() {
-    }
 }

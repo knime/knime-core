@@ -48,6 +48,9 @@
 package org.knime.base.node.io.csvwriter;
 
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -95,8 +98,6 @@ class QuotePanel extends JPanel {
         add(createQuotePanel());
         add(Box.createVerticalStrut(5));
         add(createWhenPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalGlue());
     }
 
     private JPanel createQuotePanel() {
@@ -122,14 +123,16 @@ class QuotePanel extends JPanel {
         m_rightQuote.setMaximumSize(TEXTFIELDDIM);
         patternBox.add(m_rightQuote);
         patternBox.add(Box.createHorizontalGlue());
-        patternBox.add(Box.createHorizontalGlue());
+        patternBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel quotePanel = new JPanel();
         quotePanel.setLayout(new BoxLayout(quotePanel, BoxLayout.Y_AXIS));
         quotePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Quote Pattern"));
         quotePanel.add(textBox);
+        quotePanel.add(Box.createVerticalStrut(10));
         quotePanel.add(patternBox);
+        quotePanel.add(Box.createVerticalStrut(10));
 
         return quotePanel;
     }
@@ -198,35 +201,51 @@ class QuotePanel extends JPanel {
         alwaysBox.add(Box.createHorizontalStrut(leftInset));
         alwaysBox.add(m_always);
         alwaysBox.add(Box.createHorizontalGlue());
+        alwaysBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_always.getMaximumSize().height));
 
         Box neededBox = Box.createHorizontalBox();
         neededBox.add(Box.createHorizontalStrut(leftInset));
         neededBox.add(m_ifNeeded);
         neededBox.add(Box.createHorizontalGlue());
+        neededBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_ifNeeded.getMaximumSize().height));
 
         Box stringBox = Box.createHorizontalBox();
         stringBox.add(Box.createHorizontalStrut(leftInset));
         stringBox.add(m_string);
         stringBox.add(Box.createHorizontalGlue());
+        stringBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_string.getMaximumSize().height));
 
         Box neverBox = Box.createHorizontalBox();
         neverBox.add(Box.createHorizontalStrut(leftInset));
         neverBox.add(m_never);
         neverBox.add(Box.createHorizontalGlue());
+        neverBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_never.getMaximumSize().height));
 
-        Box replQuoteBox = Box.createHorizontalBox();
-        replQuoteBox.add(Box.createHorizontalStrut(leftInset + 20));
-        replQuoteBox.add(new JLabel("replace right quote in data with"));
-        replQuoteBox.add(Box.createHorizontalStrut(5));
-        replQuoteBox.add(m_quoteReplacement);
-        replQuoteBox.add(Box.createHorizontalGlue());
+        JPanel replacePanel = new JPanel(new GridBagLayout());
 
-        Box replSepBox = Box.createHorizontalBox();
-        replSepBox.add(Box.createHorizontalStrut(leftInset + 20));
-        replSepBox.add(new JLabel("replace separator in data with"));
-        replSepBox.add(Box.createHorizontalStrut(5));
-        replSepBox.add(m_sepReplacement);
-        replSepBox.add(Box.createHorizontalGlue());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, leftInset, 0, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        replacePanel.add(new JLabel("replace right quote in data with"), gbc);
+        gbc.gridx++;
+        gbc.insets = new Insets(10, 10, 0, 0);
+        replacePanel.add(m_quoteReplacement, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.insets = new Insets(10, leftInset, 0, 0);
+        replacePanel.add(new JLabel("replace separator in data with"), gbc);
+        gbc.gridx++;
+        gbc.insets = new Insets(10, 10, 0, 0);
+        replacePanel.add(m_sepReplacement, gbc);
+
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        replacePanel.add(new JPanel(), gbc);
 
         JPanel whenPanel = new JPanel();
         whenPanel.setLayout(new BoxLayout(whenPanel, BoxLayout.Y_AXIS));
@@ -237,8 +256,7 @@ class QuotePanel extends JPanel {
         whenPanel.add(neededBox);
         whenPanel.add(stringBox);
         whenPanel.add(neverBox);
-        whenPanel.add(replQuoteBox);
-        whenPanel.add(replSepBox);
+        whenPanel.add(replacePanel);
 
         return whenPanel;
     }

@@ -141,25 +141,7 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
             //combine rows
             compute(tableIt1, tableIt2, inSpecs[0].getNumColumns() + inSpecs[1].getNumColumns(),
-                row -> container.addRowToTable(row), new Progress() {
-
-                    long rowCount;
-
-                    long numRows;
-
-                    {
-                        rowCount = 0;
-                        numRows = Math.max(inData[0].size(), inData[1].size());
-                    }
-
-                    @Override
-                    public void check() throws CanceledExecutionException {
-                        exec.checkCanceled();
-                        exec.setProgress(rowCount / (double)numRows);
-                        rowCount++;
-
-                    }
-                });
+                row -> container.addRowToTable(row), exec, inData[0].size(), inData[1].size());
 
             container.close();
             out = container.getTable();
@@ -169,14 +151,28 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
     /* combines the rows in case a new table is created */
     private void compute(final CustomRowIterator rowIt1, final CustomRowIterator rowIt2, final int numColsTotal,
-        final RowConsumer output, final Progress progress) throws InterruptedException, CanceledExecutionException {
+        final RowConsumer output, final ExecutionContext exec, final long numRowsTab1, final long numRowsTab2) throws InterruptedException, CanceledExecutionException {
 
         boolean useRowKeysFromFirstTable = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[0]);
         boolean useRowKeysFromSecondTable = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[1]);
         boolean generateRowKeys = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[2]);
 
         long rowCount = 0;
+        long numRows;
+        if (numRowsTab1 != -1) {
+            numRows = useRowKeysFromFirstTable ? numRowsTab1
+                : (useRowKeysFromSecondTable ? numRowsTab2 : Math.max(numRowsTab1, numRowsTab2));
+        } else {
+            numRows = -1;
+        }
         while (rowIt1.hasNext() && rowIt2.hasNext()) {
+            if (numRows != -1) {
+                exec.setProgress(rowCount / (double)numRows);
+                final long rowCountFinal = rowCount;
+                exec.setMessage(() -> "Appending columns (row " + rowCountFinal + "/" + numRows + ")");
+            }
+            exec.checkCanceled();
+
             DataRow row1 = rowIt1.next();
             DataRow row2 = rowIt2.next();
             if (m_wrapTable.getBooleanValue() && !row1.getKey().equals(row2.getKey())) {
@@ -205,7 +201,12 @@ final class ColumnAppenderNodeModel extends NodeModel {
         /* --add missing cells if row counts mismatch --*/
         long extraRowsTab1 = 0;
         while (((rowIt1.hasNext() && useRowKeysFromFirstTable) || (rowIt1.hasNext() && generateRowKeys)) && !rowIt2.hasNext()) {
-            progress.check();
+            if (numRows != -1) {
+                exec.setProgress((rowCount + extraRowsTab1) / (double)numRows);
+                final long rowCountFinal = rowCount + extraRowsTab1;
+                exec.setMessage(() -> "Appending columns (row " + rowCountFinal + "/" + numRows + ")");
+            }
+            exec.checkCanceled();
 
             DataRow row = rowIt1.next();
             ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
@@ -228,8 +229,12 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
         long extraRowsTab2 = 0;
         while (((rowIt2.hasNext() && useRowKeysFromSecondTable) || (rowIt2.hasNext() && generateRowKeys)) && !rowIt1.hasNext()) {
-
-            progress.check();
+            if (numRows != -1) {
+                exec.setProgress((rowCount + extraRowsTab2) / (double)numRows);
+                final long rowCountFinal = rowCount + extraRowsTab2;
+                exec.setMessage(() -> "Appending columns (row " + rowCountFinal + "/" + numRows + ")");
+            }
+            exec.checkCanceled();
 
             DataRow row = rowIt2.next();
             ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
@@ -272,7 +277,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
         //throw error messages if the "wrap"-option is set and tables vary in size
         if(m_wrapTable.getBooleanValue()) {
-            errorDifferingTableSize(rowCount + extraRowsTab1, rowCount + extraRowsTab2);
+            if (extraRowsTab1 != extraRowsTab2) {
+                errorDifferingTableSize(rowCount + extraRowsTab1, rowCount + extraRowsTab2);
+            }
         }
     }
 
@@ -397,9 +404,8 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
                 compute(tableIt1, tableIt2,
                     in1.getDataTableSpec().getNumColumns() + in2.getDataTableSpec().getNumColumns(), row -> {
-                    out.push(row);
-                } , () -> {
-                });
+                        out.push(row);
+                    }, exec, -1, -1);
 
                 //poll all the remaining rows if there are any but don't do anything with them
                 while (tableIt1.hasNext()) {
@@ -434,7 +440,7 @@ final class ColumnAppenderNodeModel extends NodeModel {
             return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
-    //////////////// HELPER CLASSES /////////////////////
+    //////////////// HELPER CLASSES for the compute-method /////////////////////
 
     static interface CustomRowIterator {
 
@@ -505,12 +511,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
     }
 
-    static interface RowConsumer {
+    private static interface RowConsumer {
 
         void consume(DataRow row) throws InterruptedException;
     }
 
-    static interface Progress {
-            void check() throws CanceledExecutionException;
-    }
 }

@@ -55,6 +55,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -159,8 +160,7 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
 
     private void validateFromTo(final Calendar start, final Calendar end)
         throws InvalidSettingsException {
-        if (end.before(start)
-                || end.getTimeInMillis() == start.getTimeInMillis()) {
+        if (end.before(start)) {
             throw new InvalidSettingsException("End point "
                     + end.getTime().toString()
                     + " must be after starting point "
@@ -174,20 +174,19 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        boolean useTime = m_fromDate.useTime() || m_toDate.useTime();
         BufferedDataTable in = inData[0];
         DataTableSpec outs = in.getDataTableSpec();
-        final int colIndex = outs
-                .findColumnIndex(m_columnName.getStringValue());
+        final int colIndex = outs.findColumnIndex(m_columnName.getStringValue());
         BufferedDataContainer t = exec.createDataContainer(outs);
-        final int totalRowCount = in.getRowCount();
+        final long totalRowCount = in.size();
         int currentIteration = 0;
         try {
             for (DataRow r : in) {
                 // increment before printing to achieve a 1-based index
                 currentIteration++;
                 exec.checkCanceled();
-                exec.setProgress(
-                        currentIteration / (double)totalRowCount,
+                exec.setProgress(currentIteration / (double)totalRowCount,
                         "Processing row " + currentIteration);
 
                 DataCell cell = r.getCell(colIndex);
@@ -199,6 +198,9 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
                 // use "compareTo" in order to include also the dates on the
                 // interval borders (instead of using "after" and "before",
                 // which is implemented as a real < or >
+                if (!useTime) {
+                    DateAndTimeCell.resetTimeFields(time);
+                }
                 if (time.compareTo(m_fromDate.getCalendar()) >= 0
                         && time.compareTo(m_toDate.getCalendar()) <= 0) {
                     t.addRowToTable(r);
@@ -225,8 +227,7 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
                     .createCloneWithValidatedValue(settings)).getCalendar();
         Calendar to = ((SettingsModelCalendar)m_toDate
                 .createCloneWithValidatedValue(settings)).getCalendar();
-        if (from.getTimeInMillis() == to.getTimeInMillis()
-                || to.before(from)) {
+        if (to.before(from)) {
             throw new InvalidSettingsException(
                     "The starting point must be before the end point!");
         }

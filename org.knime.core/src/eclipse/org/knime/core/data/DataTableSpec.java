@@ -45,6 +45,7 @@
 package org.knime.core.data;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -60,10 +62,12 @@ import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -335,6 +339,9 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
 
+    /** The indices of all columns holding the FilterHandler. */
+    private final int[] m_filterHandlerColIndices;
+
     /** See {@link #getProperties()}. */
     private final Map<String, String> m_properties;
 
@@ -420,6 +427,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         int colorHdlIdx = -1;
         int sizeHdlIdx  = -1;
         int shapeHdlIdx = -1;
+        List<Integer> filterHandlerIndices = new ArrayList<>();
+
         for (int i = 0; i < colCount; i++) {
             // disallow duplicates
             String currentName = colSpecs[i].getName();
@@ -475,11 +484,17 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 }
             }
 
+            if (colSpecs[i].getFilterHandler().isPresent()) {
+                filterHandlerIndices.add(i);
+            }
+
             m_columnSpecs[i] = cr.createSpec();
         }
         m_sizeHandlerColIndex  = sizeHdlIdx;
         m_colorHandlerColIndex = colorHdlIdx;
         m_shapeHandlerColIndex = shapeHdlIdx;
+        m_filterHandlerColIndices = filterHandlerIndices.isEmpty() ? ArrayUtils.EMPTY_INT_ARRAY :
+            filterHandlerIndices.stream().mapToInt(i -> i).toArray();
         m_properties = properties.isEmpty() ? Collections.<String, String>emptyMap()
                 : new LinkedHashMap<String, String>(properties);
     }
@@ -791,6 +806,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
+
+    /**
      * Return the size (in percent) that an object should have when displaying
      * information concerning this row (for instance in a scatterplot). The size
      * is determined by the {@link SizeHandler} of this spec, which is
@@ -827,6 +844,17 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler()
             .getSizeFactor(row.getCell(m_sizeHandlerColIndex));
+    }
+
+    /** Consults all columns that have a {@link FilterHandler} assigned and returns true if <i>all</i> handlers
+     * return <code>true</code> on {@link FilterHandler#isInFilter(DataCell)}.
+     * @param row The row in question.
+     * @return If all handlers return true (also true if no handler is registered).
+     * @since 3.3
+     */
+    public boolean isInFilter(final DataRow row) {
+        return Arrays.stream(m_filterHandlerColIndices)
+                .allMatch(i -> m_columnSpecs[i].getFilterHandler().get().isInFilter(row.getCell(i)));
     }
 
     /**

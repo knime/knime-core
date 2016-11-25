@@ -51,10 +51,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IProject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
@@ -65,6 +67,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.ThreadUtils;
 
 /**
  * This class represents a link between projects (file system representation of
@@ -374,26 +377,48 @@ public final class ProjectWorkflowMap {
      */
     public static void remove(final URI path) {
         MapWFKey p = new MapWFKey(path);
-        WorkflowManager manager = (WorkflowManager)PROJECTS.get(p);
+        final WorkflowManager manager = (WorkflowManager)PROJECTS.get(p);
         // workflow is only in client map if there is at least one client
         if (manager != null && !WORKFLOW_CLIENTS.containsKey(p)) {
-            PROJECTS.remove(p);
-            WF_LISTENER.workflowChanged(new WorkflowEvent(
-                    WorkflowEvent.Type.NODE_REMOVED, manager.getID(),
-                    manager, null));
-            manager.removeListener(WF_LISTENER);
-            manager.removeNodeStateChangeListener(NSC_LISTENER);
-            manager.removeNodeMessageListener(MSG_LISTENER);
-            manager.removeNodePropertyChangedListener(NODE_PROP_LISTENER);
+            NodeContext.pushContext(manager);
             try {
-                manager.shutdown();
-            } catch (Throwable t) {
-                // at least we have tried it
-                LOGGER.error(
-                        "Could not cancel workflow manager for workflow "
-                        + p, t);
+                PROJECTS.remove(p);
+                WF_LISTENER.workflowChanged(
+                    new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, manager.getID(), manager, null));
+                manager.removeListener(WF_LISTENER);
+                manager.removeNodeStateChangeListener(NSC_LISTENER);
+                manager.removeNodeMessageListener(MSG_LISTENER);
+                manager.removeNodePropertyChangedListener(NODE_PROP_LISTENER);
+                try {
+                    manager.shutdown();
+                } catch (Throwable t) {
+                    // at least we have tried it
+                    LOGGER.error("Could not cancel workflow manager for workflow " + p, t);
+                } finally {
+                    if (manager.getNodeContainerState().isExecutionInProgress()) {
+                        ThreadUtils.threadWithContext(() -> {
+                            final int timeout = 20;
+                            LOGGER.debugWithFormat("Workflow still in execution after canceling it - "
+                                + "waiting %d seconds max....", timeout);
+                            try {
+                                manager.waitWhileInExecution(timeout, TimeUnit.SECONDS);
+                            } catch (InterruptedException ie) {
+                                LOGGER.fatal("interrupting thread that no one has access to", ie);
+                            }
+                            if (manager.getNodeContainerState().isExecutionInProgress()) {
+                                LOGGER.errorWithFormat("Workflow did not react on cancel within %d seconds, giving up",
+                                    timeout);
+                            } else {
+                                LOGGER.debug("Workflow now canceled - will remove from parent");
+                            }
+                            WorkflowManager.ROOT.removeProject(manager.getID());
+                        }, "Removal workflow - " + manager.getNameWithID()).start();
+                    } else {
+                        WorkflowManager.ROOT.removeProject(manager.getID());
+                    }
+                }
             } finally {
-                WorkflowManager.ROOT.removeProject(manager.getID());
+                NodeContext.removeLastContext();
             }
         }
     }

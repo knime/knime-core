@@ -104,7 +104,6 @@ public final class RepositoryFactory {
      */
     @SuppressWarnings("unchecked")
     public static NodeTemplate createNode(final IConfigurationElement element) {
-        String id = element.getAttribute("id");
 
         // Try to load the node factory class...
         NodeFactory<? extends NodeModel> factory;
@@ -128,14 +127,12 @@ public final class RepositoryFactory {
                     + " registered as normal node factory.");
         }
 
-        String pluginID =
-                element.getDeclaringExtension().getNamespaceIdentifier();
-        NodeTemplate node = new NodeTemplate(id, factory.getNodeName(), pluginID);
+        String pluginID = element.getDeclaringExtension().getNamespaceIdentifier();
+        NodeTemplate node = new NodeTemplate((Class<NodeFactory<? extends NodeModel>>)factory.getClass(),
+            factory.getNodeName(), pluginID);
         node.setAfterID(str(element.getAttribute("after"), ""));
-        node.setFactory((Class<NodeFactory<? extends NodeModel>>)factory
-                .getClass());
 
-        node.setType(str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
+        node.setType(factory.getType());
 
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
@@ -334,7 +331,6 @@ public final class RepositoryFactory {
      */
     public static Collection<DynamicNodeTemplate> createNodeSet(
             final Root root, final IConfigurationElement element) {
-        String id = element.getAttribute("id");
         String iconPath = element.getAttribute("default-category-icon");
 
         // Try to load the node set factory class...
@@ -360,8 +356,9 @@ public final class RepositoryFactory {
 
         // for all nodes in the node set
         for (String factoryId : nodeSet.getNodeFactoryIds()) {
-            Class<? extends NodeFactory<? extends NodeModel>> factoryClass =
-                    nodeSet.getNodeFactory(factoryId);
+            @SuppressWarnings("unchecked")
+            Class<NodeFactory<? extends NodeModel>> factoryClass =
+                (Class<NodeFactory<? extends NodeModel>>)nodeSet.getNodeFactory(factoryId);
 
             // Try to load the node factory class...
             NodeFactory<? extends NodeModel> factory;
@@ -380,10 +377,7 @@ public final class RepositoryFactory {
                 GlobalClassCreator.lock.unlock();
             }
 
-            DynamicNodeTemplate node =
-                    new DynamicNodeTemplate(id, factoryId, nodeSet,
-                            factory.getNodeName());
-            node.setFactory(factoryClass);
+            DynamicNodeTemplate node = new DynamicNodeTemplate(factoryClass, factoryId, nodeSet, factory.getNodeName());
 
             node.setAfterID(nodeSet.getAfterID(factoryId));
 

@@ -53,7 +53,9 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
 
 /**
- * Extension of {@link FlowVariableProvider} to be able to get the row index too.
+ * Extension of {@link FlowVariableProvider} to be able to get the row index too. <br/>
+ * Please override {@link #getRowIndexLong()} and provide an always failing implementation for {@link #getRowIndex()}
+ * for new implementations.
  *
  * @author Gabor Bakos
  * @since 2.8
@@ -66,7 +68,7 @@ public interface VariableProvider extends FlowVariableProvider {
      * @since 2.8
      */
     abstract class SingleCellFactoryProto extends SingleCellFactory implements VariableProvider {
-        private int m_index = 0;
+        private long m_index = 0L;
 
         /**
          * Constructs {@link SingleCellFactoryProto}.
@@ -101,15 +103,26 @@ public interface VariableProvider extends FlowVariableProvider {
          * @see SingleCellFactory#SingleCellFactory(boolean, int, int, DataColumnSpec)
          */
         public SingleCellFactoryProto(final boolean processConcurrently, final int workerCount, final int maxQueueSize,
-                                      final DataColumnSpec newColSpec) {
+            final DataColumnSpec newColSpec) {
             super(processConcurrently, workerCount, maxQueueSize, newColSpec);
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @deprecated Use {@link #getRowIndexLong()}
+         */
+        @Override
+        @Deprecated
+        public int getRowIndex() {
+            return (int)m_index;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public int getRowIndex() {
+        public long getRowIndexLong() {
             return m_index;
         }
 
@@ -117,8 +130,8 @@ public interface VariableProvider extends FlowVariableProvider {
          * {@inheritDoc}
          */
         @Override
-        public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
-                                final ExecutionMonitor exec) {
+        public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey,
+            final ExecutionMonitor exec) {
             m_index = curRowNr;
             super.setProgress(curRowNr, rowCount, lastKey, exec);
         }
@@ -126,6 +139,16 @@ public interface VariableProvider extends FlowVariableProvider {
 
     /**
      * @return The row index (the first row is {@code 0}.
+     * @deprecated Use {@link #getRowIndexLong()}.
      */
+    @Deprecated
     int getRowIndex();
+
+    /**
+     * @return The row index (the first row is {@code 0}.
+     * @since 3.2
+     */
+    default long getRowIndexLong() {
+        return getRowIndex();
+    }
 }

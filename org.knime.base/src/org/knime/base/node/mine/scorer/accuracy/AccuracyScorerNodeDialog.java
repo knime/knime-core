@@ -76,6 +76,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
@@ -84,7 +85,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class AccuracyScorerNodeDialog extends NodeDialogPane {
+public class AccuracyScorerNodeDialog extends NodeDialogPane {
     /*
      * The text field for the first column to compare The first column
      * represents the real classes of the data
@@ -121,19 +122,30 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
     /** Radio button to fail on missing values. */
     private final JRadioButton m_failOnMissingValues = new JRadioButton("Fail", false);
 
+    private boolean m_missingValueOption;
     /**
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
      * columns to compare.
      */
     public AccuracyScorerNodeDialog() {
-        super();
+        this(true);
+    }
 
+    /**
+     * Creates a new {@link NodeDialogPane} for scoring in order to set the two
+     * columns to compare.
+     * @param missingValueOption whether the missing value option should be shown in the dialogue
+     * @since 3.2 Added flag for optional display of the missing value option.
+     */
+    public AccuracyScorerNodeDialog(final boolean missingValueOption) {
+        super();
+        m_missingValueOption = missingValueOption;
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        m_firstColumns = new JComboBox<DataColumnSpec>();
+        m_firstColumns = new JComboBox<>();
         m_firstColumns.setRenderer(new DataColumnSpecListCellRenderer());
-        m_secondColumns = new JComboBox<DataColumnSpec>();
+        m_secondColumns = new JComboBox<>();
         m_secondColumns.setRenderer(new DataColumnSpecListCellRenderer());
         m_sortingOptions = new SortingOptionPanel();
         m_sortingOptions.setBorder(new TitledBorder("Sorting of values in tables"));
@@ -200,12 +212,12 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                 }
                 if (specFirst.getType().isCompatible(DoubleValue.class)
                     && specSecond.getType().isCompatible(DoubleValue.class)) {
-                    m_sortingOptions.setPossibleSortingStrategies(SUPPORTED_NUMBER_SORT_STRATEGIES);
+                    m_sortingOptions.setPossibleSortingStrategies(getSupportedNumberSortStrategies());
                 } else if (specFirst.getType().isCompatible(StringValue.class)
                     && specSecond.getType().isCompatible(StringValue.class)) {
-                    m_sortingOptions.setPossibleSortingStrategies(SUPPORTED_STRING_SORT_STRATEGIES);
+                    m_sortingOptions.setPossibleSortingStrategies(getSupportedStringSortStrategies());
                 } else {
-                    m_sortingOptions.setPossibleSortingStrategies(SortingStrategy.InsertionOrder);
+                    m_sortingOptions.setPossibleSortingStrategies(getFallbackStrategy());
                 }
             }
         };
@@ -213,24 +225,27 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         m_secondColumns.addItemListener(colChangeListener);
         m_sortingOptions.updateControls();
 
-        ButtonGroup missingValueGroup = new ButtonGroup();
-        missingValueGroup.add(m_ignoreMissingValues);
-        missingValueGroup.add(m_failOnMissingValues);
-        JPanel missingValues = new JPanel(new GridBagLayout());
-        missingValues.setBorder(new TitledBorder("Missing values"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        JLabel label = new JLabel("In case of missing values...");
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        missingValues.add(label, gbc);
-        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
-        gbc.gridx = 1;
-        missingValues.add(m_ignoreMissingValues, gbc);
-        gbc.gridy = 1;
-        missingValues.add(m_failOnMissingValues, gbc);
-        p.add(missingValues);
+        if (m_missingValueOption) {
+            ButtonGroup missingValueGroup = new ButtonGroup();
+            missingValueGroup.add(m_ignoreMissingValues);
+            missingValueGroup.add(m_failOnMissingValues);
+            JPanel missingValues = new JPanel(new GridBagLayout());
+            missingValues.setBorder(new TitledBorder("Missing values"));
+            GridBagConstraints gbc = new GridBagConstraints();
+            JLabel label = new JLabel("In case of missing values...");
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            missingValues.add(label, gbc);
+            gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+            gbc.gridx = 1;
+            missingValues.add(m_ignoreMissingValues, gbc);
+            gbc.gridy = 1;
+            missingValues.add(m_failOnMissingValues, gbc);
+            p.add(missingValues);
+        }
         super.addTab("Scorer", p);
     } // ScorerNodeDialog(NodeModel)
+
 
     /**
      * Fills the two combo boxes with all column names retrieved from the input
@@ -247,7 +262,7 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
 
-        DataTableSpec spec = specs[AccuracyScorerNodeModel.INPORT];
+        DataTableSpec spec = specs[getDataInputPortIndex()];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
             throw new NotConfigurableException("Scorer needs an input table "
@@ -264,14 +279,13 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         String col2DefaultName = (numCols > 0) ? spec.getColumnSpec(numCols - 1).getName() : null;
         String col1DefaultName = (numCols > 1) ? spec.getColumnSpec(numCols - 2).getName() : col2DefaultName;
         DataColumnSpec col1 =
-            spec.getColumnSpec(settings.getString(AccuracyScorerNodeModel.FIRST_COMP_ID, col1DefaultName));
+            spec.getColumnSpec(settings.getString(getFirstCompID(), col1DefaultName));
         DataColumnSpec col2 =
-            spec.getColumnSpec(settings.getString(AccuracyScorerNodeModel.SECOND_COMP_ID, col2DefaultName));
+            spec.getColumnSpec(settings.getString(getSecondCompID(), col2DefaultName));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
 
-        String varPrefix = settings.getString(
-        		AccuracyScorerNodeModel.FLOW_VAR_PREFIX, null);
+        String varPrefix = settings.getString(getFlowVarPrefix(), null);
 
         boolean useFlowVar = varPrefix != null;
 
@@ -285,13 +299,15 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         try {
             m_sortingOptions.loadDefault(settings);
         } catch (InvalidSettingsException e) {
-            m_sortingOptions.setSortingStrategy(SortingStrategy.InsertionOrder);
+            m_sortingOptions.setSortingStrategy(getFallbackStrategy());
             m_sortingOptions.setReverseOrder(false);
         }
         m_sortingOptions.updateControls();
-        boolean ignoreMissingValues = settings.getBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, AccuracyScorerNodeModel.DEFAULT_IGNORE_MISSING_VALUES);
-        m_ignoreMissingValues.setSelected(ignoreMissingValues);
-        m_failOnMissingValues.setSelected(!ignoreMissingValues);
+        if (m_missingValueOption) {
+            boolean ignoreMissingValues = settings.getBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, AccuracyScorerNodeModel.DEFAULT_IGNORE_MISSING_VALUES);
+            m_ignoreMissingValues.setSelected(ignoreMissingValues);
+            m_failOnMissingValues.setSelected(!ignoreMissingValues);
+        }
     }
 
     /**
@@ -319,19 +335,110 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
             throw new InvalidSettingsException(
                     "First and second column cannot be the same.");
         }
-        settings.addString(AccuracyScorerNodeModel.FIRST_COMP_ID, firstColumn);
-        settings.addString(
-            AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
+        settings.addString(getFirstCompID(), firstColumn);
+        settings.addString(getSecondCompID(), secondColumn);
 
 
         boolean useFlowVar = m_flowvariableBox.isSelected();
 
         String flowVariableName = m_flowVariablePrefixTextField.getText();
 
-        settings.addString(AccuracyScorerNodeModel.FLOW_VAR_PREFIX,
+        settings.addString(getFlowVarPrefix(),
         		useFlowVar ? flowVariableName : null);
 
         m_sortingOptions.saveDefault(settings);
-        settings.addBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, m_ignoreMissingValues.isSelected());
+
+        if (m_missingValueOption) {
+            settings.addBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, m_ignoreMissingValues.isSelected());
+        }
+    }
+
+    /**
+     * Returns the supported number sorting strategies.
+     * These may change due to the node model used.
+     *
+     * @return the supported number sorting strategies
+     * @since 3.2
+     */
+    protected SortingStrategy[] getSupportedNumberSortStrategies() {
+        return SUPPORTED_NUMBER_SORT_STRATEGIES;
+    }
+
+    /**
+     * Returns the supported string sorting strategies.
+     * These may change due to the node model used.
+     *
+     * @return the supported string sorting strategies
+     * @since 3.2
+     */
+    protected SortingStrategy[] getSupportedStringSortStrategies() {
+        return SUPPORTED_STRING_SORT_STRATEGIES;
+    }
+
+    /**
+     * Returns the fall back sorting strategy.
+     * These may change due to the node model used.
+     *
+     * @return the fall back sorting strategy
+     * @since 3.2
+     */
+    protected  SortingStrategy getFallbackStrategy() {
+        return SortingStrategy.InsertionOrder;
+    }
+
+    /**
+     * Returns the index of the data input port from the node model.
+     * These may change due to the node model used.
+     *
+     * @return  the input port of from the node model
+     * @since 3.2
+     */
+    protected int getDataInputPortIndex() {
+        return AccuracyScorerNodeModel.INPORT;
+    }
+
+    /**
+     * Returns the identifier to address the first column name to compare.
+     * These may change due to the node model used.
+     *
+     * @return the identifier to address the first column name to compare
+     * @since 3.2
+     */
+    protected String getFirstCompID() {
+        return AccuracyScorerNodeModel.FIRST_COMP_ID;
+    }
+
+    /**
+     * Returns the identifier to address the second column name to compare.
+     * These may change due to the node model used.
+     *
+     * @return  the identifier to address the second column name to compare
+     * @since 3.2
+     */
+    protected String getSecondCompID() {
+        return AccuracyScorerNodeModel.SECOND_COMP_ID;
+    }
+
+    /**
+     * Returns the flow variable prefix from the node model.
+     * These may change due to the node model used.
+     *
+     * @return the flow variable prefix from the node model
+     * @since 3.2
+     */
+    protected String getFlowVarPrefix() {
+        return AccuracyScorerNodeModel.FLOW_VAR_PREFIX;
+    }
+
+    /**
+     * Returns the DataTableSpec from the data input port of the node model
+     *
+     * @param specs the node's {@link PortObjectSpec}
+     * @return the corresponding {@link DataTableSpec} for the {@link PortObjectSpec}
+     * @throws NotConfigurableException if the specs are not valid
+     * @since 3.2
+     */
+    protected DataTableSpec getTableSpec(final DataTableSpec[] specs) throws NotConfigurableException {
+        return specs[getDataInputPortIndex()];
     }
 }

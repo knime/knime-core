@@ -139,6 +139,9 @@ public class RulePanel extends JPanel {
 
     private RuleNodeSettings m_nodeType;
 
+    /** See {@link RuleEngineSettings#isDisallowLongOutputForCompatibility()} -- compatibility workaround */
+    private boolean m_disallowLongOutputForCompatibility;
+
     /**
      * Constructs the {@link RulePanel}.
      *
@@ -358,7 +361,8 @@ public class RulePanel extends JPanel {
                 final long startDate = new Date().getTime();
                 try {
                     final List<Rule> rules = computeRules();
-                    final DataType outputType = RuleEngineNodeModel.computeOutputType(rules, m_nodeType);
+                    final DataType outputType = RuleEngineNodeModel.computeOutputType(
+                        rules, m_nodeType, m_disallowLongOutputForCompatibility);
                     ViewUtils.invokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
@@ -610,6 +614,7 @@ public class RulePanel extends JPanel {
                 m_replaceColumn.setSelectedColumn(ruleSettings.getReplaceColumn());
             }
         }
+        m_disallowLongOutputForCompatibility = ruleSettings.isDisallowLongOutputForCompatibility();
         update(m_spec, availableFlowVariables);
         final KnimeSyntaxTextArea textEditor = m_mainPanel.getTextEditor();
         textEditor.setText("");

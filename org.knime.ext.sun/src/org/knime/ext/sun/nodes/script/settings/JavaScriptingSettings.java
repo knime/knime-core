@@ -58,6 +58,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -457,11 +459,12 @@ public final class JavaScriptingSettings {
                 type = t.getKNIMEDataType(isArrayReturn);
             }
         }
-        if (type == null) {
-            throw new InvalidSettingsException("Illegal return type: "
-                    + returnType.getName());
+        CheckUtils.checkSettingNotNull(type, "Illegal return type: %s", returnType.getName());
+        if (isReplace()) {
+            return new DataColumnSpecCreator(colName, type).createSpec();
+        } else {
+            return new UniqueNameGenerator(m_inputSpec).newColumn(colName, type);
         }
-        return new DataColumnSpecCreator(colName, type).createSpec();
     }
 
 

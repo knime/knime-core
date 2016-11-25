@@ -73,7 +73,6 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
     private final String CFG_TABLESPEC = "learnTableSpec";
     private final String CFG_MODELCONTENT = "modelContent";
 
-//    private TreeEnsembleModelPortObject m_ensemblePO = null;
     private TreeEnsembleModel m_ensembleModel;
     private DataTableSpec m_learnTableSpec;
 
@@ -82,7 +81,6 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
      */
     public RandomForestDistanceConfig(final TreeEnsembleModelPortObject ensemblePO) {
         super(ensemblePO.getSpec().getLearnTableSpec().getColumnNames());
-//        m_ensemblePO = ensemblePO;
         m_ensembleModel = ensemblePO.getEnsembleModel();
         m_learnTableSpec = ensemblePO.getSpec().getLearnTableSpec();
     }
@@ -107,7 +105,6 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
     @Override
     public RandomForestDistance createDistanceMeasure(final DataTableSpec spec, final FlowVariableProvider flowVariableProvider)
         throws InvalidSettingsException {
-//        return new RandomForestDistance(this, spec, m_ensemblePO.getEnsembleModel(), m_ensemblePO.getSpec());
         return new RandomForestDistance(this, spec, m_ensembleModel, m_learnTableSpec);
     }
 
@@ -119,7 +116,6 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
     protected void saveInternals(final String prefix, final PortObjectZipOutputStream outputStream, final ExecutionMonitor exec)
         throws CanceledExecutionException, IOException {
         outputStream.putNextEntry(new ZipEntry("model.zip"));
-//        PortUtil.writeObjectToStream(m_ensemblePO, outputStream, exec);
         m_ensembleModel.save(outputStream, exec);
         outputStream.closeEntry();
         outputStream.putNextEntry(new ZipEntry("spec.zip"));
@@ -139,7 +135,6 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
         if (new ZipEntry("model.zip").equals(nextEntry)) {
             throw new IOException("Expected model.zip entry");
         }
-//        m_ensemblePO = (TreeEnsembleModelPortObject)PortUtil.readObjectFromStream(inputStream, exec);
         m_ensembleModel = TreeEnsembleModel.load(inputStream, exec);
         inputStream.closeEntry();
         nextEntry = inputStream.getNextEntry();

@@ -166,7 +166,7 @@ public class AddMetaNodeWizard extends Wizard {
             outPorts[i] = BufferedDataTable.TYPE;
         }
         // removed the port "ratio" from the name
-        String name = "MetaNode " + nrInPorts + " : " + nrOutPorts;
+        String name = "Metanode " + nrInPorts + " : " + nrOutPorts;
         createMetaNodeFromPorts(inPorts, outPorts, name);
     }
 

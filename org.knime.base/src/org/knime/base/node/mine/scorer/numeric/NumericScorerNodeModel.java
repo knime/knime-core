@@ -54,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -77,9 +78,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * This is the model implementation of NumericScorer. Computes the distance between the a numeric column's values and
@@ -115,55 +114,11 @@ class NumericScorerNodeModel extends NodeModel {
     private static final String R2 = "R2";
 
     /**
-     *
-     */
-    private static final String INTERNALS_XML_GZ = "internals.xml.gz";
+    *
+    */
+   private static final String INTERNALS_XML_GZ = "internals.xml.gz";
 
-    static final String CFGKEY_REFERENCE = "reference";
-
-    static final String DEFAULT_REFERENCE = "";
-
-    static final String CFGKEY_PREDICTED = "predicted";
-
-    static final String DEFAULT_PREDICTED = "";
-
-    static final String CFGKEY_OUTPUT = "output column";
-
-    static final String DEFAULT_OUTPUT = "";
-
-    private static final String CFGKEY_OVERRIDE_OUTPUT = "override default output name";
-
-    static final boolean DEFAULT_OVERRIDE_OUTPUT = false;
-
-    static final SettingsModelColumnName createReference() {
-        return new SettingsModelColumnName(CFGKEY_REFERENCE, DEFAULT_REFERENCE);
-    }
-
-    static final SettingsModelColumnName createPredicted() {
-        return new SettingsModelColumnName(CFGKEY_PREDICTED, DEFAULT_PREDICTED);
-    }
-
-    /**
-     * @return The {@link SettingsModelBoolean} for the overriding output.
-     */
-    static SettingsModelBoolean createOverrideOutput() {
-        return new SettingsModelBoolean(CFGKEY_OVERRIDE_OUTPUT, DEFAULT_OVERRIDE_OUTPUT);
-    }
-
-    /**
-     * @return A new {@link SettingsModelString} for the output column name.
-     */
-    static SettingsModelString createOutput() {
-        return new SettingsModelString(CFGKEY_OUTPUT, DEFAULT_OUTPUT);
-    }
-
-    private final SettingsModelColumnName m_reference = createReference();
-
-    private final SettingsModelColumnName m_predicted = createPredicted();
-
-    private final SettingsModelBoolean m_overrideOutput = createOverrideOutput();
-
-    private final SettingsModelString m_outputColumnName = createOutput();
+    private final NumericScorerSettings m_numericScorerSettings = new NumericScorerSettings();
 
     private double m_rSquare = Double.NaN, m_meanAbsError = Double.NaN, m_meanSquaredError = Double.NaN,
             m_rmsd = Double.NaN, m_meanSignedDifference = Double.NaN;
@@ -183,8 +138,8 @@ class NumericScorerNodeModel extends NodeModel {
         throws Exception {
         DataTableSpec spec = inData[0].getSpec();
         BufferedDataContainer container = exec.createDataContainer(createOutputSpec(spec));
-        int referenceIdx = spec.findColumnIndex(m_reference.getColumnName());
-        int predictionIdx = spec.findColumnIndex(m_predicted.getColumnName());
+        int referenceIdx = spec.findColumnIndex(m_numericScorerSettings.getReferenceColumnName());
+        int predictionIdx = spec.findColumnIndex(m_numericScorerSettings.getPredictionColumnName());
         final Mean meanObserved = new Mean(), meanPredicted = new Mean();
         final Mean absError = new Mean(), squaredError = new Mean();
         final Mean signedDiff = new Mean();
@@ -231,6 +186,8 @@ class NumericScorerNodeModel extends NodeModel {
             setWarningMessage("Skipped " + skippedRowCount
                 + " rows, because the reference column contained missing values there.");
         }
+
+        pushFlowVars(false);
         return new BufferedDataTable[]{container.getTable()};
     }
 
@@ -239,9 +196,56 @@ class NumericScorerNodeModel extends NodeModel {
      * @return Output table spec.
      */
     private DataTableSpec createOutputSpec(final DataTableSpec spec) {
-        String o = m_outputColumnName.getStringValue();
-        final String output = m_overrideOutput.getBooleanValue() ? o : m_predicted.getColumnName();
+        String o = m_numericScorerSettings.getOutputColumnName();
+        final String output = m_numericScorerSettings.doOverride() ? o : m_numericScorerSettings.getPredictionColumnName();
         return new DataTableSpec("Scores", new DataColumnSpecCreator(output, DoubleCell.TYPE).createSpec());
+    }
+
+    /**
+     * Pushes the results to flow variables.
+     *
+     * @param isConfigureOnly true enable overwriting check
+     */
+    private void pushFlowVars(final boolean isConfigureOnly) {
+
+        if (m_numericScorerSettings.doFlowVariables()) {
+            Map<String, FlowVariable> vars = getAvailableFlowVariables();
+
+            String prefix = m_numericScorerSettings.getFlowVariablePrefix();
+            String rsquareName = prefix + "R^2";
+            String meanAbsName = prefix + "mean absolute error";
+            String meanSquareName = prefix + "mean squared error";
+            String rootmeanName = prefix + "root mean squared deviation";
+            String meanSignedName = prefix + "mean signed difference";
+            if (isConfigureOnly
+                && (vars.containsKey(rsquareName) || vars.containsKey(meanAbsName) || vars.containsKey(meanSquareName)
+                    || vars.containsKey(rootmeanName) || vars.containsKey(meanSignedName))) {
+                addWarning("A flow variable was replaced!");
+            }
+
+            double rsquare = isConfigureOnly ? 0.0 : m_rSquare;
+            double meanAbs = isConfigureOnly ? 0.0 : m_meanAbsError;
+            double meanSquare = isConfigureOnly ? 0 : m_meanSquaredError;
+            double rootmean = isConfigureOnly ? 0 : m_rmsd;
+            double meanSigned = isConfigureOnly ? 0 : m_meanSignedDifference;
+            pushFlowVariableDouble(rsquareName, rsquare);
+            pushFlowVariableDouble(meanAbsName, meanAbs);
+            pushFlowVariableDouble(meanSquareName, meanSquare);
+            pushFlowVariableDouble(rootmeanName, rootmean);
+            pushFlowVariableDouble(meanSignedName, meanSigned);
+        }
+    }
+
+    /**
+     * @param string
+     */
+    private void addWarning(final String string) {
+        String warningMessage = getWarningMessage();
+        if (warningMessage == null || warningMessage.isEmpty()) {
+            setWarningMessage(string);
+        } else {
+            setWarningMessage(warningMessage + "\n" + string);
+        }
     }
 
     /**
@@ -257,28 +261,29 @@ class NumericScorerNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        final DataColumnSpec reference = inSpecs[0].getColumnSpec(m_reference.getColumnName());
+        final DataColumnSpec reference = inSpecs[0].getColumnSpec(m_numericScorerSettings.getReferenceColumnName());
         if (reference == null) {
-            if (m_reference.getColumnName().equals(DEFAULT_REFERENCE)) {
+            if (m_numericScorerSettings.getReferenceColumnName().equals(NumericScorerSettings.DEFAULT_REFERENCE)) {
                 throw new InvalidSettingsException("No columns selected for reference");
             }
-            throw new InvalidSettingsException("No such column in input table: " + m_reference.getColumnName());
+            throw new InvalidSettingsException("No such column in input table: " + m_numericScorerSettings.getReferenceColumnName());
         }
         if (!reference.getType().isCompatible(DoubleValue.class)) {
-            throw new InvalidSettingsException("The reference column (" + m_reference.getColumnName()
+            throw new InvalidSettingsException("The reference column (" + m_numericScorerSettings.getReferenceColumnName()
                 + ") is not double valued: " + reference.getType());
         }
-        final DataColumnSpec predicted = inSpecs[0].getColumnSpec(m_predicted.getColumnName());
+        final DataColumnSpec predicted = inSpecs[0].getColumnSpec(m_numericScorerSettings.getPredictionColumnName());
         if (predicted == null) {
-            if (m_predicted.getColumnName().equals(DEFAULT_PREDICTED)) {
+            if (m_numericScorerSettings.getPredictionColumnName().equals(NumericScorerSettings.DEFAULT_PREDICTED)) {
                 throw new InvalidSettingsException("No columns selected for prediction");
             }
-            throw new InvalidSettingsException("No such column in input table: " + m_predicted.getColumnName());
+            throw new InvalidSettingsException("No such column in input table: " + m_numericScorerSettings.getPredictionColumnName());
         }
         if (!predicted.getType().isCompatible(DoubleValue.class)) {
-            throw new InvalidSettingsException("The prediction column (" + m_predicted.getColumnName()
+            throw new InvalidSettingsException("The prediction column (" + m_numericScorerSettings.getPredictionColumnName()
                 + ") is not double valued: " + predicted.getType());
         }
+        pushFlowVars(true);
         return new DataTableSpec[]{createOutputSpec(inSpecs[0])};
     }
 
@@ -287,10 +292,7 @@ class NumericScorerNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_reference.saveSettingsTo(settings);
-        m_predicted.saveSettingsTo(settings);
-        m_overrideOutput.saveSettingsTo(settings);
-        m_outputColumnName.saveSettingsTo(settings);
+        m_numericScorerSettings.saveSettingsTo(settings);
     }
 
     /**
@@ -298,10 +300,7 @@ class NumericScorerNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_reference.loadSettingsFrom(settings);
-        m_predicted.loadSettingsFrom(settings);
-        m_overrideOutput.loadSettingsFrom(settings);
-        m_outputColumnName.loadSettingsFrom(settings);
+        m_numericScorerSettings.loadSettingsFrom(settings);
     }
 
     /**
@@ -309,10 +308,7 @@ class NumericScorerNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_reference.validateSettings(settings);
-        m_predicted.validateSettings(settings);
-        m_overrideOutput.validateSettings(settings);
-        m_outputColumnName.validateSettings(settings);
+        m_numericScorerSettings.validateSettings(settings);
     }
 
     /**
@@ -386,4 +382,5 @@ class NumericScorerNodeModel extends NodeModel {
     public double getMeanSignedDifference() {
         return m_meanSignedDifference;
     }
+
 }

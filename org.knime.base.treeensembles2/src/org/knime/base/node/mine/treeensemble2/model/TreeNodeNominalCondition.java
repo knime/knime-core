@@ -50,6 +50,8 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
@@ -71,8 +73,9 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
      * @param nomColumnMetaData
      * @param valueIndex
      */
-    public TreeNodeNominalCondition(final TreeNominalColumnMetaData nomColumnMetaData, final int valueIndex) {
-        super(nomColumnMetaData);
+    public TreeNodeNominalCondition(final TreeNominalColumnMetaData nomColumnMetaData, final int valueIndex,
+        final boolean acceptsMissings) {
+        super(nomColumnMetaData, acceptsMissings);
         assert valueIndex < nomColumnMetaData.getValues().length;
         m_valueIndex = valueIndex;
     }
@@ -116,7 +119,8 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         int valIdx = -1;
         if (value == null) {
-            throw new UnsupportedOperationException("Missing values currently not supported");
+            //            throw new UnsupportedOperationException("Missing values currently not supported");
+            return acceptsMissings();
         }
         if (!(value instanceof Integer)) {
             throw new IllegalArgumentException("Can't test nominal condition (" + toString()
@@ -143,7 +147,20 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLPredicate toPMMLPredicate() {
-        return new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
+        final PMMLSimplePredicate simplePredicate =
+            new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
+        if (!acceptsMissings()) {
+            // return simple predicate if condition rejects missing values
+            return simplePredicate;
+        }
+        // add compound predicate to allow for missing values
+        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        compPredicate.addPredicate(simplePredicate);
+        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
+        missing.setSplitAttribute(getAttributeName());
+        missing.setOperator(PMMLOperator.IS_MISSING);
+        compPredicate.addPredicate(missing);
+        return compPredicate;
     }
 
 }

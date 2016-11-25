@@ -113,12 +113,7 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString fileNameModel =
-            m_fileName.createCloneWithValidatedValue(settings);
-        String fileName = fileNameModel.getStringValue();
-        if (fileName == null || fileName.length() == 0) {
-            throw new InvalidSettingsException("No output file specified");
-        }
+        m_fileName.validateSettings(settings);
         // must not verify overwriteOK (added in v2.1)
     }
 

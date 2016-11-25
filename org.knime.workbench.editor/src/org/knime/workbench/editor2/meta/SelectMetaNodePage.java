@@ -69,10 +69,10 @@ import org.knime.workbench.core.util.ImageRepository;
  */
 public class SelectMetaNodePage extends WizardPage {
 
-    private static final String TITLE = "Select MetaNode Template";
-    private static final String DESCRIPTION = "If you want to create a MetaNode"
+    private static final String TITLE = "Select Metanode Template";
+    private static final String DESCRIPTION = "If you want to create a Metanode"
         + " with a usual number of data in and out ports, select one; \n"
-        + "otherwise click next to define a custom MetaNode";
+        + "otherwise click next to define a custom Metanode";
 
     static final String ZERO_ONE = "0:1";
     static final String ONE_ONE = "1:1";

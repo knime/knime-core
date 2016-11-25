@@ -36,7 +36,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -101,7 +101,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         //m_defaultsPanel.setPreferredSize(new Dimension(500, 300));
         m_typeSettingsPanel = new JPanel(new GridBagLayout());
         m_defaultsPanel.add(m_typeSettingsPanel, BorderLayout.CENTER);
-        m_defaultsPanel.setBorder(new EmptyBorder(10, 10, 10, 10) );
+        m_defaultsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         m_pmmlLabel1 = new JLabel(PMML_WARNING);
         m_pmmlLabel2 = new JLabel(PMML_WARNING);
         m_pmmlLabel1.setHorizontalAlignment(SwingConstants.CENTER);
@@ -188,11 +188,11 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             }
         });
 
-        m_columnsPanel.add(m_searchableListPanel, BorderLayout.CENTER);
+        m_columnsPanel.add(m_searchableListPanel, BorderLayout.WEST);
+        m_columnsPanel.setPreferredSize(new Dimension(650, 500));
 
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
-        //scroller.setPreferredSize(new Dimension(0, 0));
-        m_columnsPanel.add(scroller, BorderLayout.EAST);
+        m_columnsPanel.add(scroller, BorderLayout.CENTER);
         addTab("Column Settings", new JScrollPane(m_columnsPanel));
     }
 
@@ -273,8 +273,6 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         panel.addPropertyChangeListener(new FactoryChangedListener());
         m_individualsPanel.add(panel);
         m_individualsPanel.revalidate();
-        //        force the outer parent to render out first individual if there does none exist previously
-        //        getPanel().repaint();
     }
 
     /**
@@ -423,8 +421,9 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     private class IndividualsPanel extends JPanel implements Scrollable {
 
         private final ColumnHandlingFactorySelectionPanel m_dummy = createDummyPanel();
+
         private ColumnHandlingFactorySelectionPanel createDummyPanel() {
-            DataColumnSpec cspec = new DataColumnSpecCreator("____________________", StringCell.TYPE).createSpec();
+            DataColumnSpec cspec = new DataColumnSpecCreator("____________________", DoubleCell.TYPE).createSpec();
             List<DataColumnSpec> cspecs = Arrays.asList(cspec);
             return new ColumnHandlingFactorySelectionPanel(cspecs, new PortObjectSpec[]{new DataTableSpec(cspec)}, 0);
         }
@@ -458,7 +457,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         /** {@inheritDoc} */
         @Override
         public boolean getScrollableTracksViewportWidth() {
-            return false;
+            return true;
         }
 
         /** {@inheritDoc} */
@@ -467,7 +466,9 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             return getComponentCount() > 0 ? getComponent(0).getHeight() : 100;
         }
 
-        /** {@inheritDoc} */
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public Dimension getPreferredSize() {
             if (getComponentCount() < 1) {

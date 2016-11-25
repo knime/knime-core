@@ -72,6 +72,18 @@ public final class HalfDoubleMatrix {
     private final double[] m_matrix;
 
     /**
+     * Creates a {@link HalfDoubleMatrix} based on the given single double array and diagonal flag.
+     *
+     * @param matrix the matrix as a single double array
+     * @param withDiagonal <code>true</code> if the diagonal is stored in the array otherwise <code>false</code>
+     * @since 3.2
+     */
+    public HalfDoubleMatrix(final double[] matrix, final boolean withDiagonal) {
+        m_matrix = matrix;
+        m_withDiagonal = withDiagonal;
+    }
+
+    /**
      * Creates a new half-matrix of doubles.
      *
      * @param rows the number of rows (and columns) in the matrix

@@ -72,7 +72,9 @@ public class RandomForestDistance extends DistanceMeasure<RandomForestDistanceCo
 
     /**
      * @param config
-     * @param spec
+     * @param spec DataTableSpec of the input table
+     * @param ensembleModel model containing the tree ensemble
+     * @param learnTableSpec DataTableSpec that was used for learning the tree ensemble
      * @throws InvalidSettingsException
      */
     protected RandomForestDistance(final RandomForestDistanceConfig config, final DataTableSpec spec,

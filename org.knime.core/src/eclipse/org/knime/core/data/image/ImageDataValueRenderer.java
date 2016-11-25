@@ -99,7 +99,9 @@ public class ImageDataValueRenderer extends AbstractPainterDataValueRenderer {
         if (m_content == null) {
             return new Dimension(16, 16);
         }
-        return m_content.getPreferredSize();
+        final Dimension contentPrefSize = m_content.getPreferredSize();
+        // increment by one due border in super class (see AP-6534)
+        return new Dimension(contentPrefSize.width + 1, contentPrefSize.height + 1);
     }
 
 }

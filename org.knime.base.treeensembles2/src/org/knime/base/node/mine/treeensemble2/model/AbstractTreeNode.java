@@ -60,6 +60,8 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 
 /**
+ * Abstract implementation of a tree node.
+ * The subclasses of this class are the main component of the trees in a tree ensemble.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -74,6 +76,9 @@ public abstract class AbstractTreeNode {
     private TreeNodeCondition m_condition;
 
     /**
+     * @param signature
+     * @param targetMetaData
+     * @param childNodes
      *  */
     public AbstractTreeNode(final TreeNodeSignature signature, final TreeTargetColumnMetaData targetMetaData,
         final AbstractTreeNode[] childNodes) {
@@ -116,10 +121,19 @@ public abstract class AbstractTreeNode {
         return m_condition;
     }
 
+    /**
+     * Registers <b>child</b> as new child node with index <b>childIndex</b>.
+     *
+     * @param childIndex
+     * @param child
+     */
     public final void registerChild(final int childIndex, final AbstractTreeNode child) {
         m_childNodes[childIndex] = child;
     }
 
+    /**
+     * @return the index of the attribute the next split is performed on.
+     */
     public int getSplitAttributeIndex() {
         final int nrChildren = getNrChildren();
         int splitAttributeIndex = -1;
@@ -148,6 +162,9 @@ public abstract class AbstractTreeNode {
         return splitAttributeIndex;
     }
 
+    /**
+     * @return the number of children this node has.
+     */
     public int getNrChildren() {
         return m_childNodes.length;
     }
@@ -159,14 +176,28 @@ public abstract class AbstractTreeNode {
         return m_signature;
     }
 
+    /**
+     * @param index
+     * @return the child with <b>index</b>
+     */
     public AbstractTreeNode getChild(final int index) {
         return m_childNodes[index];
     }
 
+    /**
+     * @return a list of the child nodes of this node.
+     */
+    @SuppressWarnings("unchecked")
     public <T extends AbstractTreeNode> List<T> getChildren() {
         return (List<T>)Collections.unmodifiableList(Arrays.asList(m_childNodes));
     }
 
+    /**
+     * Finds the matching child node for the <b>record</b>
+     *
+     * @param record
+     * @return the child node whose condition accepts <b>record</b>
+     */
     public final <T extends AbstractTreeNode> T findMatchingChild(final PredictorRecord record) {
         List<T> children = getChildren();
         for (T child : children) {
@@ -178,6 +209,13 @@ public abstract class AbstractTreeNode {
         return null;
     }
 
+    /**
+     * Is used in path-proximity. <br>
+     * Probably not needed because the TreeNodeSignature contains the same information.
+     *
+     * @param record
+     * @return the index of the child node whose condition accepts<b>record</b>
+     */
     public final <T extends AbstractTreeNode> int findNextPathTurn(final PredictorRecord record) {
         List<T> children = getChildren();
         Iterator<T> childIterator = children.iterator();
@@ -198,6 +236,12 @@ public abstract class AbstractTreeNode {
         return m_targetMetaData;
     }
 
+    /**
+     * Saves this node to <b>out</b>
+     *
+     * @param out
+     * @throws IOException
+     */
     public final void save(final DataOutputStream out) throws IOException {
         if (m_condition == null) {
             throw new IllegalStateException(

@@ -47,7 +47,6 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -63,6 +62,7 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
@@ -77,16 +77,18 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
-import org.knime.base.node.jsnippet.ui.OutFieldsTable.FieldType;
-import org.knime.base.node.jsnippet.util.JavaField;
-import org.knime.base.node.jsnippet.util.JavaField.OutCol;
-import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.field.JavaField;
+import org.knime.base.node.jsnippet.util.field.JavaField.FieldType;
+import org.knime.base.node.jsnippet.util.field.OutCol;
+import org.knime.base.node.jsnippet.util.field.OutVar;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.DataTypeListCellRenderer;
@@ -95,7 +97,8 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A dialog with most basic settings for an output field.
- * <p>This class might change and is not meant as public API.
+ * <p>
+ * This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
  * @since 2.12
@@ -107,19 +110,26 @@ public final class AddOutFieldDialog extends JDialog {
     private JavaField m_result;
 
     private final OutFieldsTableModel m_model;
+
     private final DataTableSpec m_spec;
+
     private final Map<String, FlowVariable> m_flowVars;
+
     private final boolean m_flowVarsOnly;
 
     private final JComboBox m_fieldType;
+
     private final JCheckBox m_isArray;
+
     private final JRadioButton m_replace;
+
     private final JRadioButton m_append;
 
     private final JComboBox m_replacedKnimeName;
-    private final JTextField m_knimeName;
-    private final JComboBox m_knimeType;
 
+    private final JTextField m_knimeName;
+
+    private final JComboBox m_knimeType;
 
     /**
      * Create a new dialog.
@@ -130,11 +140,8 @@ public final class AddOutFieldDialog extends JDialog {
      * @param flowVars the flow variables on the input
      * @param flowVarsOnly true when only flow variables can be defined
      */
-    private AddOutFieldDialog(final Frame parent,
-            final OutFieldsTableModel model,
-            final DataTableSpec spec,
-            final Map<String, FlowVariable> flowVars,
-            final boolean flowVarsOnly) {
+    private AddOutFieldDialog(final Frame parent, final OutFieldsTableModel model, final DataTableSpec spec,
+        final Map<String, FlowVariable> flowVars, final boolean flowVarsOnly) {
         super(parent, true);
 
         m_model = model;
@@ -212,7 +219,6 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridwidth = 1;
         c.weightx = 0;
 
-
         m_fieldType.addItem(FieldType.Column);
         m_fieldType.addItem(FieldType.FlowVariable);
         if (!m_flowVarsOnly) {
@@ -227,8 +233,7 @@ public final class AddOutFieldDialog extends JDialog {
                 public void actionPerformed(final ActionEvent e) {
                     initKnimeTypeComboBox();
                     initKnimeNameComboBox();
-                    if (m_fieldType.getSelectedItem().equals(
-                            FieldType.FlowVariable)) {
+                    if (m_fieldType.getSelectedItem().equals(FieldType.FlowVariable)) {
                         m_isArray.setSelected(false);
                         m_isArray.setEnabled(false);
                     } else {
@@ -242,11 +247,9 @@ public final class AddOutFieldDialog extends JDialog {
             c.gridx = 0;
             c.insets = leftInsets;
 
-
         } else {
             m_fieldType.setSelectedIndex(1);
         }
-
 
         m_replace.addActionListener(new ActionListener() {
 
@@ -258,7 +261,6 @@ public final class AddOutFieldDialog extends JDialog {
         });
         p.add(m_replace, c);
 
-
         c.gridx++;
         c.insets = rightInsets;
 
@@ -268,7 +270,6 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridy++;
         c.gridx = 0;
         c.insets = leftInsets;
-
 
         m_append.addActionListener(new ActionListener() {
 
@@ -293,7 +294,6 @@ public final class AddOutFieldDialog extends JDialog {
         group.add(m_replace);
         group.add(m_append);
 
-
         c.gridy++;
         c.gridx = 0;
         c.insets = leftInsets;
@@ -304,7 +304,6 @@ public final class AddOutFieldDialog extends JDialog {
 
         initKnimeTypeComboBox();
         p.add(m_knimeType, c);
-
 
         if (!m_flowVarsOnly) {
             c.gridy++;
@@ -326,14 +325,12 @@ public final class AddOutFieldDialog extends JDialog {
             for (DataColumnSpec colSpec : m_spec) {
                 m_replacedKnimeName.addItem(colSpec);
             }
-            m_replacedKnimeName.setRenderer(
-                    new DataColumnSpecListCellRenderer());
+            m_replacedKnimeName.setRenderer(new DataColumnSpecListCellRenderer());
         } else {
             for (FlowVariable flowVar : m_flowVars.values()) {
                 // test if a flow variable of this name might be
                 // created.
-                if (FieldsTableUtil.verifyNameOfFlowVariable(
-                        flowVar.getName())) {
+                if (FieldsTableUtil.verifyNameOfFlowVariable(flowVar.getName())) {
                     m_replacedKnimeName.addItem(flowVar);
                 }
             }
@@ -355,11 +352,8 @@ public final class AddOutFieldDialog extends JDialog {
     private void initKnimeTypeComboBox() {
         m_knimeType.removeAllItems();
         if (m_fieldType.getSelectedItem().equals(FieldType.Column)) {
-            TypeProvider typeProvider = TypeProvider.getDefault();
-            for (DataType type : typeProvider.getOutputDataTypes()) {
+            for (final DataType type : ConverterUtil.getAllDestinationDataTypes()) {
                 m_knimeType.addItem(type);
-                // skip collection types which is now done by a checkbox
-                // m_knimeType.addItem(ListCell.getCollectionType(type));
             }
             m_knimeType.setRenderer(new DataTypeListCellRenderer());
         } else {
@@ -380,10 +374,8 @@ public final class AddOutFieldDialog extends JDialog {
             OutCol outCol = new OutCol();
             boolean isReplacing = m_replace.isSelected();
             outCol.setReplaceExisting(isReplacing);
-            String colName = isReplacing
-                ? ((DataColumnSpec)m_replacedKnimeName.getSelectedItem())
-                        .getName()
-                : m_knimeName.getText();
+            String colName =
+                isReplacing ? ((DataColumnSpec)m_replacedKnimeName.getSelectedItem()).getName() : m_knimeName.getText();
             outCol.setKnimeName(colName);
 
             Set<String> taken = new HashSet<>();
@@ -391,56 +383,50 @@ public final class AddOutFieldDialog extends JDialog {
                 taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
             }
 
-
             // collection is now done by a separate checkbox
-//            DataType dataType = (DataType)m_knimeType.getSelectedItem();
-//            DataType elemType =
-//                    dataType.isCollectionType() ? dataType
-//                            .getCollectionElementType() : dataType;
+            //            DataType dataType = (DataType)m_knimeType.getSelectedItem();
+            //            DataType elemType =
+            //                    dataType.isCollectionType() ? dataType
+            //                            .getCollectionElementType() : dataType;
             // boolean isCollection = dataType.isCollectionType();
-            DataType elemType = (DataType)m_knimeType.getSelectedItem();
-            boolean isCollection = m_isArray.isSelected();
-            DataType dataType = isCollection
-                ? ListCell.getCollectionType(elemType) : elemType;
 
-            TypeProvider typeProvider = TypeProvider.getDefault();
-            if (!typeProvider.getOutputDataTypes().contains(elemType)) {
-                elemType = new StringCell("").getType();
-                isCollection = false;
+            DataType dataType = (DataType)m_knimeType.getSelectedItem();
+            if (m_isArray.isSelected()) {
+                dataType = ListCell.getCollectionType(dataType);
             }
 
-            String javaName = FieldsTableUtil.createUniqueJavaIdentifier(
-                            colName, taken, "out_");
-            Class javaType = typeProvider.getJavaToDataCell(elemType,
-                    isCollection).getPreferredJavaType();
+            final Optional<JavaToDataCellConverterFactory<?>> selectedFactory =
+                ConverterUtil.getPreferredFactoryForDestinationType(dataType);
 
-            outCol.setKnimeType(dataType);
+            if (!selectedFactory.isPresent()) {
+                // Default to string converter, which always exists. Should not happen, though.
+                outCol.setConverterFactory(ConverterUtil.getPreferredFactoryForDestinationType(StringCell.TYPE).get());
+            } else {
+                outCol.setConverterFactory(selectedFactory.get());
+            }
+
+            final String javaName = FieldsTableUtil.createUniqueJavaIdentifier(colName, taken, "out_");
             outCol.setJavaName(javaName);
-            outCol.setJavaType(javaType);
             return outCol;
         } else { // flow variable
             OutVar outVar = new OutVar();
             boolean isReplacing = m_replace.isSelected();
             outVar.setReplaceExisting(isReplacing);
-            String colName = isReplacing
-                ? ((FlowVariable)m_replacedKnimeName.getSelectedItem())
-                        .getName()
-                : m_knimeName.getText();
+            String colName =
+                isReplacing ? ((FlowVariable)m_replacedKnimeName.getSelectedItem()).getName() : m_knimeName.getText();
             outVar.setKnimeName(colName);
 
             Set<String> taken = new HashSet<>();
             for (int i = 0; i < m_model.getRowCount(); i++) {
                 taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
             }
-            String javaName = FieldsTableUtil.createUniqueJavaIdentifier(
-                    colName, taken, "out_");
+            String javaName = FieldsTableUtil.createUniqueJavaIdentifier(colName, taken, "out_");
 
             FlowVariable.Type type = (FlowVariable.Type)m_knimeType.getSelectedItem();
             TypeProvider typeProvider = TypeProvider.getDefault();
-            Class javaType = typeProvider.getTypeConverter(
-                    type).getPreferredJavaType();
+            Class javaType = typeProvider.getTypeConverter(type).getPreferredJavaType();
 
-            outVar.setKnimeType(type);
+            outVar.setFlowVarType(type);
             outVar.setJavaName(javaName);
             outVar.setJavaType(javaType);
             return outVar;
@@ -470,15 +456,11 @@ public final class AddOutFieldDialog extends JDialog {
         setVisible(false);
     }
 
-
     /**
-     * Opens a Dialog to receive user settings. If the user cancels the dialog
-     * <code>null</code> will be returned. If okay is pressed, the
-     * settings from the dialog will be stored in a new
-     * {@link JavaField} object, which is either of type {@link OutCol}
-     * or {@link OutVar}.<br>
-     * If user's settings are incorrect an error
-     * dialog pops up and the user values are discarded.
+     * Opens a Dialog to receive user settings. If the user cancels the dialog <code>null</code> will be returned. If
+     * okay is pressed, the settings from the dialog will be stored in a new {@link JavaField} object, which is either
+     * of type {@link OutCol} or {@link OutVar}.<br>
+     * If user's settings are incorrect an error dialog pops up and the user values are discarded.
      *
      * @param parent frame who owns this dialog
      * @param model the model used for validation
@@ -487,18 +469,14 @@ public final class AddOutFieldDialog extends JDialog {
      * @param flowVarsOnly true when only flow variables can be defined
      * @return new settings are null in case of cancellation
      */
-    public static JavaField openUserDialog(final Frame parent,
-            final OutFieldsTableModel model, final DataTableSpec spec,
-            final Map<String, FlowVariable> flowVars,
-            final boolean flowVarsOnly) {
-        AddOutFieldDialog dialog = new AddOutFieldDialog(parent, model, spec,
-                flowVars, flowVarsOnly);
+    public static JavaField openUserDialog(final Frame parent, final OutFieldsTableModel model,
+        final DataTableSpec spec, final Map<String, FlowVariable> flowVars, final boolean flowVarsOnly) {
+        AddOutFieldDialog dialog = new AddOutFieldDialog(parent, model, spec, flowVars, flowVarsOnly);
         return dialog.showDialog();
     }
 
     /**
-     * Shows the dialog and waits for it to return. If the user
-     * pressed Ok it returns the OutCol definition
+     * Shows the dialog and waits for it to return. If the user pressed Ok it returns the OutCol definition
      */
     private JavaField showDialog() {
         pack();
@@ -511,21 +489,17 @@ public final class AddOutFieldDialog extends JDialog {
     }
 
     /**
-     * Sets this dialog in the center of the screen observing the current screen
-     * size.
+     * Sets this dialog in the center of the screen observing the current screen size.
      */
     private void centerDialog() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         Dimension size = getSize();
-        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0,
-                (screenSize.height - size.height) / 2), Math.min(
-                screenSize.width, size.width), Math.min(screenSize.height,
-                size.height));
+        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0, (screenSize.height - size.height) / 2),
+            Math.min(screenSize.width, size.width), Math.min(screenSize.height, size.height));
     }
 
     /** Renders the flow variable type. */
-    private static class TypeListCellRender extends
-            FlowVariableListCellRenderer {
+    private static class TypeListCellRender extends FlowVariableListCellRenderer {
         private Map<FlowVariable.Type, FlowVariable> m_flowVars;
 
         public TypeListCellRender() {
@@ -539,13 +513,11 @@ public final class AddOutFieldDialog extends JDialog {
          * {@inheritDoc}
          */
         @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index,
-                final boolean isSelected, final boolean cellHasFocus) {
+        public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
             Object v = m_flowVars.get(value);
             // let super class do the work
-            super.getListCellRendererComponent(list, v, index, isSelected,
-                    cellHasFocus);
+            super.getListCellRendererComponent(list, v, index, isSelected, cellHasFocus);
 
             return this;
         }

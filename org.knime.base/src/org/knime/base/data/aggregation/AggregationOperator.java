@@ -410,8 +410,7 @@ public abstract class AggregationOperator implements AggregationMethod {
         } catch (Throwable t) {
             final String msg = "Computing '" + getOperatorData().getLabel() + "' on column '" + getOperatorColumnSettings().getOriginalColSpec().getName()
                     + "' failed. Error: " + t.getMessage();
-            LOGGER.error(msg, t);
-            throw new IllegalStateException(msg);
+            throw new IllegalStateException(msg, t);
         }
     }
 
@@ -707,11 +706,13 @@ public abstract class AggregationOperator implements AggregationMethod {
         if (other.hasOptionalSettings()) {
             if (hasOptionalSettings()) {
                 //check the optional settings as well
-                final NodeSettings s1 = new NodeSettings("s1");
+                //USE THE SAME KEY FOR BOTH SETTINGS!
+                final String key = "key";
+                final NodeSettings s1 = new NodeSettings(key);
                 other.saveSettingsTo(s1);
-                final NodeSettings s2 = new NodeSettings("s2");
+                final NodeSettings s2 = new NodeSettings(key);
                 saveSettingsTo(s2);
-                return !s1.equals(s2);
+                return s1.equals(s2);
             } else {
                 return true;
             }

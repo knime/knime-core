@@ -51,7 +51,6 @@ package org.knime.base.node.jsnippet.template;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -89,7 +88,7 @@ public abstract class AbstractJSnippetTemplateProvider<T extends JSnippetTemplat
     public AbstractJSnippetTemplateProvider(final TemplateRepository<T> defaultRepository) {
         m_defaultRepo = defaultRepository;
         m_repos = new LinkedList<>();
-        m_templates = new HashMap<>();
+        m_templates = new LinkedHashMap<>();
     }
 
     /**

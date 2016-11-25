@@ -5,7 +5,7 @@
     <shortDescription>WrappedNode input handle</shortDescription>
     <fullDescription>
     <intro>
-        WrappedNode input handle. It represents the input data of the Wrapped ode in the parent workflow.
+        WrappedNode input handle. It represents the input data of the WrappedNode in the parent workflow.
     </intro>
     </fullDescription>
     <ports>

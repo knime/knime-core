@@ -67,10 +67,9 @@ import org.knime.base.node.mine.treeensemble2.sample.column.AllColumnSampleStrat
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.column.RFSubsetColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.column.SubsetColumnSampleStrategy;
-import org.knime.base.node.mine.treeensemble2.sample.row.DefaultRowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.SubsetNoReplacementRowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.SubsetWithReplacementRowSample;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSampler;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory.RowSamplingMode;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -85,6 +84,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
@@ -145,21 +145,18 @@ public class TreeEnsembleLearnerConfiguration {
 
     public static final String KEY_COLUMN_FILTER_CONFIG = "columnFilterConfig";
 
+    private static final String KEY_ROW_SAMPLING_MODE = "rowSamplingMode";
+
     public enum MissingValueHandling {
             /**
              * Use surrogates to handle missing values
              */
         Surrogate("Surrogate"),
 
-            /**
-             * Calculate direction for missing values based on which gives the better gain during training
-             */
-        XGBoost("XGBoost"),
-
-            /**
-             * Don't do any missing value handling
-             */
-        None("None");
+        /**
+         * Calculate direction for missing values based on which gives the better gain during training
+         */
+        XGBoost("XGBoost");
 
         private final String m_string;
 
@@ -184,15 +181,15 @@ public class TreeEnsembleLearnerConfiguration {
              */
         InformationGain("Information Gain"),
 
-            /**
-             * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information
-             * on the subject.
-             */
+        /**
+         * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information on
+         * the subject.
+         */
         InformationGainRatio("Information Gain Ratio"),
 
-            /**
-             * Gini Index See https://en.wikipedia.org/wiki/Gini_coefficient for further information on the subject.
-             */
+        /**
+         * Gini Index See https://en.wikipedia.org/wiki/Gini_coefficient for further information on the subject.
+         */
         Gini("Gini Index");
 
         private final String m_string;
@@ -214,24 +211,24 @@ public class TreeEnsembleLearnerConfiguration {
      */
     public enum ColumnSamplingMode {
 
-            /**
-             * Use a linear fraction of the available attributes for training
-             */
+        /**
+         * Use a linear fraction of the available attributes for training
+         */
         Linear,
 
-            /**
-             * Use the sqrt of the number of available attributes for training (standard for random forests)
-             */
+        /**
+         * Use the sqrt of the number of available attributes for training (standard for random forests)
+         */
         SquareRoot,
 
-            /**
-             * Use an absolute number of the available attributes for training
-             */
+        /**
+         * Use an absolute number of the available attributes for training
+         */
         Absolute,
 
-            /**
-             * Use the full set of available attributes for training
-             */
+        /**
+         * Use the full set of available attributes for training
+         */
         None
     }
 
@@ -245,6 +242,8 @@ public class TreeEnsembleLearnerConfiguration {
     public static final int MIN_CHILD_SIZE_UNDEFINED = -1;
 
     static final int DEF_MAX_LEVEL = MAX_LEVEL_INFINITE;
+
+    static final RowSamplingMode DEF_ROW_SAMPLING_MODE = RowSamplingMode.Random;
 
     /**
      * Default for data fraction
@@ -286,7 +285,7 @@ public class TreeEnsembleLearnerConfiguration {
      */
     public static final boolean DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES = false;
 
-    private static final MissingValueHandling DEF_MISSING_VALUE_HANDLING = MissingValueHandling.None;
+    private static final MissingValueHandling DEF_MISSING_VALUE_HANDLING = MissingValueHandling.XGBoost;
 
     private String m_targetColumn;
 
@@ -323,10 +322,6 @@ public class TreeEnsembleLearnerConfiguration {
 
     private String m_fingerprintColumn;
 
-    private String[] m_includeColumns;
-    //
-    //    private boolean m_includeAllColumns;
-
     private String m_hardCodedRootColumn;
 
     private boolean m_ignoreColumnsWithoutDomain;
@@ -338,6 +333,8 @@ public class TreeEnsembleLearnerConfiguration {
     private DataColumnSpecFilterConfiguration m_columnFilterConfig;
 
     private final boolean m_isRegression;
+
+    private RowSamplingMode m_rowSamplingMode = DEF_ROW_SAMPLING_MODE;
 
     /**
      * @param isRegression
@@ -369,6 +366,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_targetColumn = targetColumn;
     }
+
 
     /**
      * @return the random seed to be used for deterministic behavior or null to have another random initialization with
@@ -706,21 +704,6 @@ public class TreeEnsembleLearnerConfiguration {
         m_fingerprintColumn = fingerprintColumn;
     }
 
-    /**
-     * @return The names of the columns in the input table to use as attributes, null when learning from fingerprint
-     *         data. It might contain the target column, which will be ignored as learning column.
-     */
-    public String[] getIncludeColumns() {
-        return m_includeColumns;
-    }
-
-    /**
-     * @param includeColumns the includeColumns to set, see {@link #isIncludeAllColumns()}.
-     */
-    public void setIncludeColumns(final String[] includeColumns) {
-        m_includeColumns = includeColumns;
-    }
-
     public DataColumnSpecFilterConfiguration getColumnFilterConfig() {
         return m_columnFilterConfig;
     }
@@ -795,6 +778,20 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
+     * @return the {@link RowSamplingMode} used to train the current model.
+     */
+    public RowSamplingMode getRowSamplingMode() {
+        return m_rowSamplingMode;
+    }
+
+    /**
+     * @param mode the {@link RowSamplingMode} that should be used to train the current model.
+     */
+    public void setRowSamplingMode(final RowSamplingMode mode) {
+        m_rowSamplingMode = mode;
+    }
+
+    /**
      * Saves the settings.
      *
      * @param settings
@@ -819,17 +816,17 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_USE_AVERAGE_SPLIT_POINTS, m_useAverageSplitPoints);
         settings.addBoolean(KEY_USE_BINARY_NOMINAL_SPLITS, m_useBinaryNominalSplits);
         settings.addString(KEY_FINGERPRINT_COLUMN, m_fingerprintColumn);
-        settings.addStringArray(KEY_INCLUDE_COLUMNS, m_includeColumns);
         //        m_columnFilterConfig = new DataColumnSpecFilterConfiguration(KEY_COLUMN_FILTER_CONFIG);
         m_columnFilterConfig.saveConfiguration(settings);
         //        settings.addBoolean(KEY_INCLUDE_ALL_COLUMNS, m_includeAllColumns);
         settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, m_ignoreColumnsWithoutDomain);
         settings.addInt(KEY_NR_HILITE_PATTERNS, m_nrHilitePatterns);
         settings.addBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, m_saveTargetDistributionInNodes);
+        settings.addString(KEY_ROW_SAMPLING_MODE, m_rowSamplingMode.name());
     }
 
     /**
-     * Loads the settings. Inteded for the use in the NodeModel.
+     * Loads the settings. Intended for the use in the NodeModel.
      *
      * @param settings
      * @throws InvalidSettingsException
@@ -894,24 +891,26 @@ public class TreeEnsembleLearnerConfiguration {
         setUseAverageSplitPoints(settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS));
         setUseBinaryNominalSplits(settings.getBoolean(KEY_USE_BINARY_NOMINAL_SPLITS, false));
         setFingerprintColumn(settings.getString(KEY_FINGERPRINT_COLUMN));
-        setIncludeColumns(settings.getStringArray(KEY_INCLUDE_COLUMNS));
         m_columnFilterConfig.loadConfigurationInModel(settings);
         //        setIncludeAllColumns(settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS));
-        if (m_fingerprintColumn != null) {
-            // use fingerprint data, OK
-        } else if (m_includeColumns != null && m_includeColumns.length > 0) {
-            // some attributes set, OK
-            //        } else if (m_includeAllColumns) {
-            //            // use all appropriate columns, OK
-        } else {
-            throw new InvalidSettingsException("No attribute columns selected");
-        }
+        //        if (m_fingerprintColumn != null) {
+        //            // use fingerprint data, OK
+        //        } else if (m_includeColumns != null && m_includeColumns.length > 0 || m_columnFilterConfig.) {
+        //            // some attributes set, OK
+        //            //        } else if (m_includeAllColumns) {
+        //            //            // use all appropriate columns, OK
+        //        } else {
+        //            throw new InvalidSettingsException("No attribute columns selected");
+        //        }
         // added after first preview, be backward compatible (true as default)
         setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
         setNrHilitePatterns(settings.getInt(KEY_NR_HILITE_PATTERNS, -1));
         // added in 2.10
         setSaveTargetDistributionInNodes(settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, true));
+
+        setRowSamplingMode(
+            RowSamplingMode.valueOf(settings.getString(KEY_ROW_SAMPLING_MODE, DEF_ROW_SAMPLING_MODE.name())));
     }
 
     /**
@@ -984,7 +983,7 @@ public class TreeEnsembleLearnerConfiguration {
             }
         }
 
-        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
+        //        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
         //        m_includeAllColumns = settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS, true);
         m_columnFilterConfig.loadConfigurationInDialog(settings, inSpec);
 
@@ -1090,9 +1089,10 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_missingValueHandling = missingValueHandling;
 
+        FilterResult filterResult = m_columnFilterConfig.applyTo(inSpec);
         if (m_fingerprintColumn != null) {
             // use fingerprint data, OK
-        } else if (m_includeColumns != null && m_includeColumns.length > 0) {
+        } else if (filterResult.getIncludes().length > 0) {
             // some attributes set, OK
             //        } else if (m_includeAllColumns) {
             // use all appropriate columns, OK
@@ -1106,6 +1106,38 @@ public class TreeEnsembleLearnerConfiguration {
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
         m_saveTargetDistributionInNodes =
             settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
+
+        setRowSamplingMode(
+            RowSamplingMode.valueOf(settings.getString(KEY_ROW_SAMPLING_MODE, DEF_ROW_SAMPLING_MODE.name())));
+    }
+
+    /**
+     * To be used in the configure of the learner nodes. Checks if the column selection makes sense and throws an
+     * InvalidSettingsException otherwise. The sanity checks include: <br>
+     * Existence and type check of fingerprint columns if specified. <br>
+     * Check if any attributes are selected if no fingerprint column is used for learning.
+     *
+     * @param inSpec Spec of the incoming table
+     * @throws InvalidSettingsException thrown if the column selection makes no sense
+     */
+    public void checkColumnSelection(final DataTableSpec inSpec) throws InvalidSettingsException {
+        FilterResult filterResult = m_columnFilterConfig.applyTo(inSpec);
+        if (m_fingerprintColumn != null) {
+            DataColumnSpec colSpec = inSpec.getColumnSpec(m_fingerprintColumn);
+            if (colSpec == null) {
+                throw new InvalidSettingsException("The fingerprint column is not contained in the incoming table.");
+            }
+            DataType colType = colSpec.getType();
+            if (!(colType.isCompatible(BitVectorValue.class) || colType.isCompatible(ByteVectorValue.class)
+                || colType.isCompatible(DoubleVectorValue.class))) {
+                throw new InvalidSettingsException(
+                    "The specified fingerprint column is not of a compatible vector type.");
+            }
+        } else if (filterResult.getIncludes().length > 0) {
+            // ok, there are some features selected
+        } else {
+            throw new InvalidSettingsException("No attributes are selected.");
+        }
     }
 
     /**
@@ -1124,10 +1156,14 @@ public class TreeEnsembleLearnerConfiguration {
             throw new InvalidSettingsException(
                 "Target column \"" + m_targetColumn + "\" does not exist or is not of the " + "correct type");
         }
+        FilterResult filterResult = m_columnFilterConfig.applyTo(spec);
         List<String> noDomainColumns = new ArrayList<String>();
         FilterLearnColumnRearranger rearranger = new FilterLearnColumnRearranger(spec);
         if (m_fingerprintColumn == null) { // use ordinary data
-            Set<String> incl = new HashSet<String>(Arrays.asList(m_includeColumns));
+            Set<String> incl = new HashSet<String>(Arrays.asList(filterResult.getIncludes()));
+            // the target column can possibly show up in the include list of the filter result
+            // therefore we have to remove it
+            incl.remove(targetCol.getName());
             for (DataColumnSpec col : spec) {
                 String colName = col.getName();
                 if (colName.equals(m_targetColumn)) {
@@ -1137,18 +1173,6 @@ public class TreeEnsembleLearnerConfiguration {
                 boolean ignoreColumn = false;
                 boolean isAppropriateType =
                     type.isCompatible(DoubleValue.class) || type.isCompatible(NominalValue.class);
-                //                if (m_includeAllColumns) {
-                //                    if (isAppropriateType) {
-                //                        if (shouldIgnoreLearnColumn(col)) {
-                //                            ignoreColumn = true;
-                //                            noDomainColumns.add(colName);
-                //                        } else {
-                //                            // accept column
-                //                        }
-                //                    } else {
-                //                        ignoreColumn = true;
-                //                    }
-                //                } else {
                 if (incl.remove(colName)) { // is attribute in selection set
                     // accept unless type mismatch
                     if (!isAppropriateType) {
@@ -1269,19 +1293,14 @@ public class TreeEnsembleLearnerConfiguration {
         return new RandomDataImpl(randomGenerator);
     }
 
+
     /**
-     * @param nrRows
-     * @param rd
-     * @return random row sample with <b>nrRows</b> rows based on RandomData <b>rd</b>
+     * @param data TreeData object that was created from the input table
+     * @return the {@link RowSampler} that fits the configuration
      */
-    public RowSample createRowSample(final int nrRows, final RandomData rd) {
-        if (m_isDataSelectionWithReplacement) {
-            return new SubsetWithReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
-        } else if (m_dataFractionPerTree >= 1.0) {
-            return new DefaultRowSample(nrRows);
-        } else {
-            return new SubsetNoReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
-        }
+    public RowSampler createRowSampler(final TreeData data) {
+        return RowSamplerFactory.createRowSampler(data.getTargetColumn(), m_rowSamplingMode, m_dataFractionPerTree,
+            m_isDataSelectionWithReplacement);
     }
 
     /**
@@ -1349,7 +1368,7 @@ public class TreeEnsembleLearnerConfiguration {
         /**
          * @param warning the warning to set
          */
-        void setWarning(final String warning) {
+            void setWarning(final String warning) {
             m_warning = warning;
         }
 

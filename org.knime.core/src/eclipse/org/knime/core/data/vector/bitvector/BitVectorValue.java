@@ -53,6 +53,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.convert.DataValueAccessMethod;
 
 /**
  * Implementing {@link DataCell}s store '0's and '1's at specific positions in
@@ -159,6 +160,7 @@ public interface BitVectorValue extends DataValue {
      *
      * @return the binary (0/1) representation of this bit vector.
      */
+    @DataValueAccessMethod(name = "String")
     String toBinaryString();
 
     /**

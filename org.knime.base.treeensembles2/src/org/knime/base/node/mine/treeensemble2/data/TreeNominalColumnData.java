@@ -86,7 +86,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     private final int[] m_originalIndexInColumnList;
 
-    private final boolean m_containsMissingValues;
+    private final int m_idxOfFirstMissing;
 
     TreeNominalColumnData(final TreeNominalColumnMetaData metaData,
         final TreeEnsembleLearnerConfiguration configuration, final int[] nominalValueCounts,
@@ -94,7 +94,15 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         super(metaData, configuration);
         m_nominalValueCounts = nominalValueCounts;
         m_originalIndexInColumnList = originalIndexInColumnList;
-        m_containsMissingValues = containsMissingValues;
+        if (containsMissingValues) {
+            int lengthNonMissing = 0;
+            for (int i = 0; i < m_nominalValueCounts.length - 1; i++) {
+                lengthNonMissing += m_nominalValueCounts[i];
+            }
+            m_idxOfFirstMissing = lengthNonMissing;
+        } else {
+            m_idxOfFirstMissing = -1;
+        }
     }
 
     /** {@inheritDoc} */
@@ -104,21 +112,19 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
     }
 
     private BitSet getMissedRows(final ColumnMemberships columnMemberships) {
-        final BitSet missedRows = new BitSet();
         // during creation it is ensured that if there are missing values, they are the last nominal value
-        if (m_containsMissingValues) {
-            int indexOfFirstMissing = 0;
-            for (int i = 0; i < m_nominalValueCounts.length - 1; i++) {
-                indexOfFirstMissing += m_nominalValueCounts[i];
-            }
-            if (columnMemberships.nextIndexFrom(indexOfFirstMissing)) {
+        if (m_idxOfFirstMissing != -1) {
+            final BitSet missedRows = new BitSet();
+            if (columnMemberships.nextIndexFrom(m_idxOfFirstMissing)) {
                 do {
                     missedRows.set(columnMemberships.getIndexInDataMemberships());
                 } while (columnMemberships.next());
             }
+            columnMemberships.reset();
+            return missedRows;
+        } else {
+            return NO_MISSED_ROWS;
         }
-        columnMemberships.reset();
-        return missedRows;
     }
 
     /** {@inheritDoc} */
@@ -154,23 +160,28 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final IImpurity impCriterion, final NominalValueRepresentation[] nomVals,
         final NominalValueRepresentation[] targetVals, final RandomData rd) {
 
+        final boolean useXGBoostMissingValueHandling =
+            getConfiguration().getMissingValueHandling() == MissingValueHandling.XGBoost;
         // missing values are stored as last nominal value
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
 
         // distribution of target for each attribute value
-        final double[] targetCountsSplit = new double[targetVals.length];
+        final double[][] targetCountsSplit = new double[lengthNonMissing][targetVals.length];
         // number of valid records for each attribute value
         final double[] attWeights = new double[lengthNonMissing];
         // entropy wrt target column for each attribute value
         final double[] attEntropys = new double[lengthNonMissing];
         // number (sum) of total valid values
         double totalWeight = 0.0;
+        boolean branchContainsMissingValues = containsMissingValues();
+        double highestWeight = 0.0;
+        int missingsGoWithIdx = -1;
 
         int start = 0;
         columnMemberships.next();
         for (int att = 0; att < lengthNonMissing; att++) {
             int end = start + m_nominalValueCounts[att];
-            Arrays.fill(targetCountsSplit, 0.0);
+            Arrays.fill(targetCountsSplit[att], 0.0);
             double currentAttValWeight = 0.0;
             boolean reachedEnd = false;
             for (int index = columnMemberships.getIndexInColumn(); index < end; index =
@@ -178,8 +189,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 final double weight = columnMemberships.getRowWeight();
 
                 assert weight > EPSILON : "Instances in columnMemberships must have weights larger than EPSILON.";
-                int target = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
-                targetCountsSplit[target] += weight;
+                final int target = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                targetCountsSplit[att][target] += weight;
                 currentAttValWeight += weight;
                 if (!columnMemberships.next()) {
                     // reached end of columnMemberships
@@ -190,15 +201,88 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             }
             totalWeight += currentAttValWeight;
             attWeights[att] = currentAttValWeight;
-            attEntropys[att] = impCriterion.getPartitionImpurity(targetCountsSplit, currentAttValWeight);
+            //            attEntropys[att] = impCriterion.getPartitionImpurity(targetCountsSplit, currentAttValWeight);
             start = end;
+            if (currentAttValWeight > highestWeight) {
+                missingsGoWithIdx = att;
+                highestWeight = currentAttValWeight;
+            }
             if (reachedEnd) {
                 break;
             }
         }
-        double postSplitImpurity = impCriterion.getPostSplitImpurity(attEntropys, attWeights, totalWeight);
-        double gain = impCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity, attWeights, totalWeight);
-        return new NominalMultiwaySplitCandidate(this, gain, attWeights, getMissedRows(columnMemberships));
+
+        // account for missing values and their weight
+        double missingWeight = 0.0;
+        double[] missingClassCounts = null;
+        // if there are missing values in the branch, start represents the beginning of the missing values
+        // otherwise the current indexInColumn won't be larger than start
+        if (columnMemberships.getIndexInColumn() >= start) {
+            missingClassCounts = new double[targetVals.length];
+            do {
+                final double recordWeight = columnMemberships.getRowWeight();
+                final int recordClass = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                missingWeight += recordWeight;
+                missingClassCounts[recordClass] += recordWeight;
+            } while (columnMemberships.next());
+        }
+
+        if (missingWeight > EPSILON) {
+            branchContainsMissingValues = true;
+        }
+
+        final double priorImpurity =
+            useXGBoostMissingValueHandling ? targetPriors.getPriorImpurity() : impCriterion.getPartitionImpurity(
+                subtractMissingClassCounts(targetPriors.getDistribution(), missingClassCounts), totalWeight);
+
+        double gain = Double.NEGATIVE_INFINITY;
+        if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
+            // send missing values with each possible nominal value and take the best
+            for (int i = 0; i < lengthNonMissing; i++) {
+                // send missing values with current attribute
+                attWeights[i] += missingWeight;
+                for (int j = 0; j < lengthNonMissing; j++) {
+                    if (i == j) {
+                        attEntropys[j] = impCriterion.getPartitionImpurity(
+                            addMissingClassCounts(targetCountsSplit[i], missingClassCounts), attWeights[j]);
+                    } else {
+                        attEntropys[j] = impCriterion.getPartitionImpurity(targetCountsSplit[j], attWeights[j]);
+                    }
+                }
+
+                final double postSplitImpurity =
+                    impCriterion.getPostSplitImpurity(attEntropys, attWeights, totalWeight + missingWeight);
+                final double tempGain =
+                    impCriterion.getGain(priorImpurity, postSplitImpurity, attWeights, totalWeight + missingWeight);
+                if (tempGain > gain) {
+                    gain = tempGain;
+                    missingsGoWithIdx = i;
+                }
+                // restore weight of current attribute
+                attWeights[i] -= missingWeight;
+            }
+        } else {
+            for (int i = 0; i < lengthNonMissing; i++) {
+                attEntropys[i] = impCriterion.getPartitionImpurity(targetCountsSplit[i], attWeights[i]);
+            }
+            double postSplitImpurity = impCriterion.getPostSplitImpurity(attEntropys, attWeights, totalWeight);
+            gain = impCriterion.getGain(priorImpurity, postSplitImpurity, attWeights, totalWeight);
+        }
+        if (useXGBoostMissingValueHandling) {
+            if (!branchContainsMissingValues) {
+                // ensure that missing values are sent to the child that the majority of the rows are sent to.
+                double majorityWeight = 0.0;
+                for (int i = 0; i < attWeights.length; i++) {
+                    if (attWeights[i] > majorityWeight) {
+                        missingsGoWithIdx = i;
+                        majorityWeight = attWeights[i];
+                    }
+                }
+            }
+            return new NominalMultiwaySplitCandidate(this, gain, attWeights, NO_MISSED_ROWS, missingsGoWithIdx);
+        }
+        return new NominalMultiwaySplitCandidate(this, gain, attWeights, getMissedRows(columnMemberships),
+            NominalMultiwaySplitCandidate.NO_MISSINGS);
     }
 
     NominalBinarySplitCandidate calcBestSplitClassificationBinary(final ColumnMemberships columnMemberships,
@@ -210,7 +294,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         }
         final int minChildSize = getConfiguration().getMinChildSize();
 
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
 
         // distribution of target for each attribute value
         final double[][] targetCountsSplitPerAttribute = new double[lengthNonMissing][targetVals.length];
@@ -294,7 +378,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         } while (splitEnumeration.next());
         if (bestPartitionGain > 0.0) {
             return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask,
-                getMissedRows(columnMemberships));
+                getMissedRows(columnMemberships), NominalBinarySplitCandidate.NO_MISSINGS);
         }
         return null;
     }
@@ -328,9 +412,11 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         columnMemberships.next();
         double totalWeight = 0.0;
+        boolean branchContainsMissingValues = containsMissingValues();
         int start = 0;
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
-        for (int att = 0; att < lengthNonMissing; att++) {
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
+        final int attToConsider = useXGBoostMissingValueHandling ? nomVals.length : lengthNonMissing;
+        for (int att = 0; att < lengthNonMissing /*attToConsider*/; att++) {
             int end = start + m_nominalValueCounts[att];
             double attWeight = 0.0;
             final double[] classFrequencies = new double[targetVals.length];
@@ -349,6 +435,11 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 if (!columnMemberships.next()) {
                     // reached end of columnMemberships
                     reachedEnd = true;
+                    if (att == nomVals.length - 1) {
+                        // if the column contains no missing values, the last possible nominal value is
+                        // not the missing value and therefore branchContainsMissingValues needs to be false
+                        branchContainsMissingValues = branchContainsMissingValues && true;
+                    }
                     break;
                 }
             }
@@ -378,14 +469,39 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             }
         }
 
+        // account for missing values and their weight
+        double missingWeight = 0.0;
+        double[] missingClassCounts = null;
+        // if there are missing values in the branch, start represents the beginning of the missing values
+        // otherwise the current indexInColumn won't be larger than start
+        if (columnMemberships.getIndexInColumn() >= start) {
+            missingClassCounts = new double[targetVals.length];
+            do {
+                final double recordWeight = columnMemberships.getRowWeight();
+                final int recordClass = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                missingWeight += recordWeight;
+                missingClassCounts[recordClass] += recordWeight;
+            } while (columnMemberships.next());
+        }
+
+        if (missingWeight > EPSILON) {
+            branchContainsMissingValues = true;
+        } else {
+            branchContainsMissingValues = false;
+        }
+
         ArrayList<CombinedAttributeValues> attValList = Lists.newArrayList(combinedAttValsMap.values());
         CombinedAttributeValues[] attVals =
             combinedAttValsMap.values().toArray(new CombinedAttributeValues[combinedAttValsMap.size()]);
 
         attVals = BinaryNominalSplitsPCA.calculatePCAOrdering(attVals, totalWeight, targetVals.length);
+        // EigenDecomposition failed
+        if (attVals == null) {
+            return null;
+        }
 
         // Start searching for split candidates
-        final int highestBitPosition = getMetaData().getValues().length - 1;
+        final int highestBitPosition = containsMissingValues() ? nomVals.length - 2 : nomVals.length - 1;
 
         final double[] binaryImpurityValues = new double[2];
         final double[] binaryPartitionWeights = new double[2];
@@ -402,11 +518,20 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         double bestPartitionGain = Double.NEGATIVE_INFINITY;
         BigInteger bestPartitionMask = null;
         boolean isBestSplitValid = false;
+        boolean missingsGoLeft = false;
 
-        for (int i = 0; i < attValList.size() - 1; i++) {
-            CombinedAttributeValues currAttVal = attValList.get(i);
+        final double priorImpurity =
+            useXGBoostMissingValueHandling ? targetPriors.getPriorImpurity() : impCriterion.getPartitionImpurity(
+                subtractMissingClassCounts(targetPriors.getDistribution(), missingClassCounts), totalWeight);
+
+        // no need to iterate over full list because at least one value must remain on the other side of the split
+        for (int i = 0; i < attVals.length - 1; i++) {
+            CombinedAttributeValues currAttVal = attVals[i];
             sumCurrPartitionWeight += currAttVal.m_totalWeight;
             sumRemainingWeights -= currAttVal.m_totalWeight;
+
+            assert sumCurrPartitionWeight
+                + sumRemainingWeights == totalWeight : "The weights of the partitions do not sum up to the total weight.";
 
             targetFrequenciesCurrentPartition =
                 targetFrequenciesCurrentPartition.add(currAttVal.m_classFrequencyVector);
@@ -415,22 +540,74 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             currPartitionBitMask = currPartitionBitMask.or(currAttVal.m_bitMask);
             boolean partitionIsRightBranch = currPartitionBitMask.testBit(highestBitPosition);
 
-            // TODO if invalid splits should not be considered skip partition
-            boolean isValidSplit = sumCurrPartitionWeight >= minChildSize && sumRemainingWeights >= minChildSize;
+            boolean isValidSplit;
+            double gain;
+            boolean tempMissingsGoLeft = true;
 
-            binaryImpurityValues[0] =
-                impCriterion.getPartitionImpurity(targetFrequenciesCurrentPartition.toArray(), sumCurrPartitionWeight);
-            binaryImpurityValues[1] =
-                impCriterion.getPartitionImpurity(targetFrequenciesRemaining.toArray(), sumRemainingWeights);
+            if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
+                // send missing values with partition
+                boolean isValidSplitFirst =
+                    sumCurrPartitionWeight + missingWeight >= minChildSize && sumRemainingWeights >= minChildSize;
+                binaryImpurityValues[0] = impCriterion.getPartitionImpurity(
+                    addMissingClassCounts(targetFrequenciesCurrentPartition.toArray(), missingClassCounts),
+                    sumCurrPartitionWeight + missingWeight);
+                binaryImpurityValues[1] =
+                    impCriterion.getPartitionImpurity(targetFrequenciesRemaining.toArray(), sumRemainingWeights);
 
-            binaryPartitionWeights[0] = sumCurrPartitionWeight;
-            binaryPartitionWeights[1] = sumRemainingWeights;
+                binaryPartitionWeights[0] = sumCurrPartitionWeight + missingWeight;
+                binaryPartitionWeights[1] = sumRemainingWeights;
 
-            double postSplitImpurity =
-                impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights, totalWeight);
+                double postSplitImpurity = impCriterion.getPostSplitImpurity(binaryImpurityValues,
+                    binaryPartitionWeights, totalWeight + missingWeight);
 
-            double gain = impCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity,
-                binaryPartitionWeights, totalWeight);
+                double gainFirst = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights,
+                    totalWeight + missingWeight);
+
+                //send missing values with remaining
+                boolean isValidSplitSecond =
+                    sumCurrPartitionWeight >= minChildSize && sumRemainingWeights + missingWeight >= minChildSize;
+                binaryImpurityValues[0] = impCriterion.getPartitionImpurity(targetFrequenciesCurrentPartition.toArray(),
+                    sumCurrPartitionWeight);
+                binaryImpurityValues[1] = impCriterion.getPartitionImpurity(
+                    addMissingClassCounts(targetFrequenciesRemaining.toArray(), missingClassCounts),
+                    sumRemainingWeights + missingWeight);
+
+                binaryPartitionWeights[0] = sumCurrPartitionWeight;
+                binaryPartitionWeights[1] = sumRemainingWeights + missingWeight;
+
+                postSplitImpurity = impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights,
+                    totalWeight + missingWeight);
+
+                double gainSecond = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights,
+                    totalWeight + missingWeight);
+
+                // choose alternative with better gain
+                if (gainFirst >= gainSecond) {
+                    gain = gainFirst;
+                    isValidSplit = isValidSplitFirst;
+                    tempMissingsGoLeft = !partitionIsRightBranch;
+                } else {
+                    gain = gainSecond;
+                    isValidSplit = isValidSplitSecond;
+                    tempMissingsGoLeft = partitionIsRightBranch;
+                }
+            } else {
+                // TODO if invalid splits should not be considered skip partition
+                isValidSplit = sumCurrPartitionWeight >= minChildSize && sumRemainingWeights >= minChildSize;
+
+                binaryImpurityValues[0] = impCriterion.getPartitionImpurity(targetFrequenciesCurrentPartition.toArray(),
+                    sumCurrPartitionWeight);
+                binaryImpurityValues[1] =
+                    impCriterion.getPartitionImpurity(targetFrequenciesRemaining.toArray(), sumRemainingWeights);
+
+                binaryPartitionWeights[0] = sumCurrPartitionWeight;
+                binaryPartitionWeights[1] = sumRemainingWeights;
+
+                double postSplitImpurity =
+                    impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights, totalWeight);
+
+                gain = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights, totalWeight);
+            }
             // use random tie breaker if gains are equal
             boolean randomTieBreaker = gain == bestPartitionGain ? rd.nextInt(0, 1) == 1 : false;
             // store if better than before or first valid split
@@ -440,27 +617,59 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     bestPartitionMask = partitionIsRightBranch ? currPartitionBitMask : BigInteger.ZERO
                         .setBit(highestBitPosition + 1).subtract(BigInteger.ONE).xor(currPartitionBitMask);
                     isBestSplitValid = isValidSplit;
+                    if (branchContainsMissingValues) {
+                        missingsGoLeft = tempMissingsGoLeft;
+                        // missing values are encountered during the search for the best split
+                        //                        missingsGoLeft = partitionIsRightBranch;
+                    } else {
+                        // no missing values were encountered during the search for the best split
+                        // missing values should be sent with the majority
+                        missingsGoLeft = partitionIsRightBranch ? sumCurrPartitionWeight < sumRemainingWeights
+                            : sumCurrPartitionWeight >= sumRemainingWeights;
+                    }
                 }
             }
-
         }
 
         if (isBestSplitValid && bestPartitionGain > 0.0) {
+            if (useXGBoostMissingValueHandling) {
+                return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask, NO_MISSED_ROWS,
+                    missingsGoLeft ? NominalBinarySplitCandidate.MISSINGS_GO_LEFT
+                        : NominalBinarySplitCandidate.MISSINGS_GO_RIGHT);
+            }
             return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask,
-                getMissedRows(columnMemberships));
+                getMissedRows(columnMemberships), NominalBinarySplitCandidate.NO_MISSINGS);
         }
 
         return null;
     }
 
-    private double truncateDouble(final int positions, final double value) {
+    static double[] subtractMissingClassCounts(final double[] originalClassCounts,
+        final double[] missingClassCounts) {
+        final double[] result = new double[originalClassCounts.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = originalClassCounts[i] - missingClassCounts[i];
+        }
+        return result;
+    }
+
+    private static double[] addMissingClassCounts(final double[] nonMissingClassCounts,
+        final double[] missingClassCounts) {
+        final double[] result = new double[nonMissingClassCounts.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = nonMissingClassCounts[i] + missingClassCounts[i];
+        }
+        return result;
+    }
+
+    private static double truncateDouble(final int positions, final double value) {
         Double toTruncate = Double.valueOf(value);
         BigDecimal truncated = new BigDecimal(toTruncate).setScale(positions, BigDecimal.ROUND_HALF_UP);
 
         return truncated.doubleValue();
     }
 
-    private class ClassProbabilityVector {
+    private static class ClassProbabilityVector {
         private final double[] m_data;
 
         public ClassProbabilityVector(final double[] data) {
@@ -469,7 +678,13 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         @Override
         public boolean equals(final Object obj) {
-            if (obj instanceof ClassProbabilityVector) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
                 ClassProbabilityVector that = (ClassProbabilityVector)obj;
                 if (m_data.length == that.m_data.length) {
                     return Arrays.equals(m_data, that.m_data);
@@ -493,8 +708,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         if (targetColumn.getMetaData().getValues().length != 2) {
             throw new IllegalArgumentException("This method can only be used for two class problems.");
         }
-
-        final int minChildSize = getConfiguration().getMinChildSize();
+        final TreeEnsembleLearnerConfiguration config = getConfiguration();
+        final int minChildSize = config.getMinChildSize();
+        final boolean useXGBoostMissingValueHandling = config.getMissingValueHandling() == MissingValueHandling.XGBoost;
 
         int start = 0;
         final int firstClass = targetColumn.getMetaData().getValues()[0].getAssignedInteger();
@@ -504,9 +720,11 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         if (!columnMemberships.next()) {
             throw new IllegalStateException("The columnMemberships has not been reset or is empty.");
         }
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
+        //        final int attToConsider = useXGBoostMissingValueHandling ? nomVals.length : lengthNonMissing;
+        boolean branchContainsMissingValues = containsMissingValues();
         // calculate probabilities for first class in each nominal value
-        for (int att = 0; att < lengthNonMissing; att++) {
+        for (int att = 0; att < /*attToConsider*/ lengthNonMissing; att++) {
             int end = start + m_nominalValueCounts[att];
             double attFirstClassWeight = 0;
             double attWeight = 0;
@@ -528,6 +746,11 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 if (!columnMemberships.next()) {
                     // reached end of columnMemberships
                     reachedEnd = true;
+                    if (att == nomVals.length - 1) {
+                        // if the column contains no missing values, the last possible nominal value is
+                        // not the missing value and therefore branchContainsMissingValues needs to be false
+                        branchContainsMissingValues = branchContainsMissingValues && true;
+                    }
                     break;
                 }
             }
@@ -543,6 +766,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             if (reachedEnd) {
                 break;
             }
+        }
+
+        // account for missing values and their weight
+        double missingWeight = 0.0;
+        double missingWeightFirstClass = 0.0;
+        // if there are missing values in the branch, start represents the beginning of the missing values
+        // otherwise the current indexInColumn won't be larger than start
+        if (columnMemberships.getIndexInColumn() >= start) {
+            do {
+                final double recordWeight = columnMemberships.getRowWeight();
+                missingWeight += recordWeight;
+                final int recordClass = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                if (recordClass == firstClass) {
+                    missingWeightFirstClass += recordWeight;
+                }
+            } while (columnMemberships.next());
+        }
+
+        if (missingWeight > EPSILON) {
+            branchContainsMissingValues = true;
         }
 
         nomValProbabilities.sort(null);
@@ -565,7 +808,13 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         double sumWeightsPartitionTotal = 0.0;
         double sumWeightsPartitionFirstClass = 0.0;
+        boolean missingsGoLeft = false;
 
+        final double priorImpurity = useXGBoostMissingValueHandling ? targetPriors.getPriorImpurity()
+            : impCriterion.getPartitionImpurity(subtractMissingClassCounts(targetPriors.getDistribution(),
+                createMissingClassCountsTwoClass(missingWeight, missingWeightFirstClass)), totalWeight);
+
+        // we don't need to iterate over the full list because we always need some value on the other side
         for (int i = 0; i < nomValProbabilities.size() - 1; i++) {
             NomValProbabilityPair nomVal = nomValProbabilities.get(i);
             sumWeightsPartitionTotal += nomVal.m_sumWeights;
@@ -575,27 +824,89 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             // check if split represented by currentSplitList is in the right branch
             // by convention a split goes towards the right branch if the highest possible bit is set to 1
             final boolean isRightBranch = partitionMask.testBit(highestBitPosition);
+            double gain;
+            boolean isValidSplit;
+            boolean tempMissingsGoLeft = true;
+            if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
+                // send missing values both ways and take the better direction
 
-            // assign weights to branches
-            targetCountsSplitPartition[0] = sumWeightsPartitionFirstClass;
-            targetCountsSplitPartition[1] = sumWeightsPartitionTotal - sumWeightsPartitionFirstClass;
-            binaryPartitionWeights[1] = sumWeightsPartitionTotal;
+                // send missings left
+                targetCountsSplitPartition[0] = sumWeightsPartitionFirstClass + missingWeightFirstClass;
+                targetCountsSplitPartition[1] =
+                    sumWeightsPartitionTotal + missingWeight - targetCountsSplitPartition[0];
+                binaryPartitionWeights[1] = sumWeightsPartitionTotal + missingWeight;
 
-            targetCountsSplitRemaining[0] = totalFirstClassWeight - sumWeightsPartitionFirstClass;
-            targetCountsSplitRemaining[1] = totalWeight - sumWeightsPartitionTotal - targetCountsSplitRemaining[0];
-            binaryPartitionWeights[0] = totalWeight - sumWeightsPartitionTotal;
+                // totalFirstClassWeight and totalWeight only include non missing values
+                targetCountsSplitRemaining[0] = totalFirstClassWeight - sumWeightsPartitionFirstClass;
+                targetCountsSplitRemaining[1] = totalWeight - sumWeightsPartitionTotal - targetCountsSplitRemaining[0];
+                binaryPartitionWeights[0] = totalWeight - sumWeightsPartitionTotal;
 
-            boolean isValidSplit =
-                binaryPartitionWeights[0] >= minChildSize && binaryPartitionWeights[1] >= minChildSize;
-            binaryImpurityValues[0] =
-                impCriterion.getPartitionImpurity(targetCountsSplitRemaining, binaryPartitionWeights[0]);
-            binaryImpurityValues[1] =
-                impCriterion.getPartitionImpurity(targetCountsSplitPartition, binaryPartitionWeights[1]);
+                boolean isValidSplitLeft =
+                    binaryPartitionWeights[0] >= minChildSize && binaryPartitionWeights[1] >= minChildSize;
+                binaryImpurityValues[0] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitRemaining, binaryPartitionWeights[0]);
+                binaryImpurityValues[1] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitPartition, binaryPartitionWeights[1]);
+                double postSplitImpurity = impCriterion.getPostSplitImpurity(binaryImpurityValues,
+                    binaryPartitionWeights, totalWeight + missingWeight);
+                double gainLeft = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights,
+                    totalWeight + missingWeight);
 
-            double postSplitImpurity =
-                impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights, totalWeight);
-            double gain = impCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity,
-                binaryPartitionWeights, totalWeight);
+                // send missings right
+                targetCountsSplitPartition[0] = sumWeightsPartitionFirstClass;
+                targetCountsSplitPartition[1] = sumWeightsPartitionTotal - sumWeightsPartitionFirstClass;
+                binaryPartitionWeights[1] = sumWeightsPartitionTotal;
+
+                targetCountsSplitRemaining[0] =
+                    totalFirstClassWeight - sumWeightsPartitionFirstClass + missingWeightFirstClass;
+                targetCountsSplitRemaining[1] =
+                    totalWeight - sumWeightsPartitionTotal + missingWeight - targetCountsSplitRemaining[0];
+                binaryPartitionWeights[0] = totalWeight + missingWeight - sumWeightsPartitionTotal;
+
+                boolean isValidSplitRight =
+                    binaryPartitionWeights[0] >= minChildSize && binaryPartitionWeights[1] >= minChildSize;
+                binaryImpurityValues[0] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitRemaining, binaryPartitionWeights[0]);
+                binaryImpurityValues[1] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitPartition, binaryPartitionWeights[1]);
+                postSplitImpurity = impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights,
+                    totalWeight + missingWeight);
+                double gainRight = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights,
+                    totalWeight + missingWeight);
+
+                // decide which is better (better gain)
+                if (gainLeft >= gainRight) {
+                    gain = gainLeft;
+                    isValidSplit = isValidSplitLeft;
+                    tempMissingsGoLeft = true;
+                } else {
+                    gain = gainRight;
+                    isValidSplit = isValidSplitRight;
+                    tempMissingsGoLeft = false;
+                }
+
+            } else {
+
+                // assign weights to branches
+                targetCountsSplitPartition[0] = sumWeightsPartitionFirstClass;
+                targetCountsSplitPartition[1] = sumWeightsPartitionTotal - sumWeightsPartitionFirstClass;
+                binaryPartitionWeights[1] = sumWeightsPartitionTotal;
+
+                targetCountsSplitRemaining[0] = totalFirstClassWeight - sumWeightsPartitionFirstClass;
+                targetCountsSplitRemaining[1] = totalWeight - sumWeightsPartitionTotal - targetCountsSplitRemaining[0];
+                binaryPartitionWeights[0] = totalWeight - sumWeightsPartitionTotal;
+
+                isValidSplit = binaryPartitionWeights[0] >= minChildSize && binaryPartitionWeights[1] >= minChildSize;
+                binaryImpurityValues[0] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitRemaining, binaryPartitionWeights[0]);
+                binaryImpurityValues[1] =
+                    impCriterion.getPartitionImpurity(targetCountsSplitPartition, binaryPartitionWeights[1]);
+
+                double postSplitImpurity =
+                    impCriterion.getPostSplitImpurity(binaryImpurityValues, binaryPartitionWeights, totalWeight);
+                gain = impCriterion.getGain(priorImpurity, postSplitImpurity, binaryPartitionWeights, totalWeight);
+            }
+
             // use random tie breaker if gains are equal
             boolean randomTieBreaker = gain == bestPartitionGain ? rd.nextInt(0, 1) == 1 : false;
             // store if better than before or first valid split
@@ -605,20 +916,43 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     bestPartitionMask = isRightBranch ? partitionMask
                         : BigInteger.ZERO.setBit(highestBitPosition + 1).subtract(BigInteger.ONE).xor(partitionMask);
                     isBestSplitValid = isValidSplit;
+                    // missingsGoLeft is only used later on if XGBoost Missing Value Handling is used
+                    if (branchContainsMissingValues) {
+                        //                        missingsGoLeft = isRightBranch;
+                        missingsGoLeft = tempMissingsGoLeft;
+                    } else {
+                        // no missing values in this branch
+                        // send missing values with the majority
+                        missingsGoLeft = isRightBranch ? sumWeightsPartitionTotal < 0.5 * totalWeight
+                            : sumWeightsPartitionTotal >= 0.5 * totalWeight;
+                    }
                 }
             }
 
         }
 
         if (isBestSplitValid && bestPartitionGain > 0.0) {
+            if (useXGBoostMissingValueHandling) {
+                return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask, NO_MISSED_ROWS,
+                    missingsGoLeft ? NominalBinarySplitCandidate.MISSINGS_GO_LEFT
+                        : NominalBinarySplitCandidate.MISSINGS_GO_RIGHT);
+            }
             return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask,
-                getMissedRows(columnMemberships));
+                getMissedRows(columnMemberships), NominalBinarySplitCandidate.NO_MISSINGS);
         }
 
         return null;
     }
 
-    private class NomValProbabilityPair implements Comparable<NomValProbabilityPair> {
+    private static double[] createMissingClassCountsTwoClass(final double totalMissingWeight,
+        final double missingWeightFirstClass) {
+        final double[] result = new double[2];
+        result[0] = missingWeightFirstClass;
+        result[1] = totalMissingWeight - missingWeightFirstClass;
+        return result;
+    }
+
+    private static class NomValProbabilityPair implements Comparable<NomValProbabilityPair> {
 
         private final NominalValueRepresentation m_nomValRep;
 
@@ -637,6 +971,50 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             m_bitMask = BigInteger.ZERO.setBit(nomValRep.getAssignedInteger());
             m_sumWeights = sumWeights;
             m_firstClassSumWeights = firstClassSumWeights;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((m_bitMask == null) ? 0 : m_bitMask.hashCode());
+            result = prime * result + ((m_nomValRep == null) ? 0 : m_nomValRep.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            NomValProbabilityPair other = (NomValProbabilityPair)obj;
+            if (m_bitMask == null) {
+                if (other.m_bitMask != null) {
+                    return false;
+                }
+            } else if (!m_bitMask.equals(other.m_bitMask)) {
+                return false;
+            }
+            if (m_nomValRep == null) {
+                if (other.m_nomValRep != null) {
+                    return false;
+                }
+            } else if (!m_nomValRep.equals(other.m_nomValRep)) {
+                return false;
+            }
+            return true;
         }
 
         /**
@@ -681,11 +1059,10 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
-        final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
 
-        double criterionAfterSplit = 0.0;
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
         final double[] sumWeightsAttributes = new double[lengthNonMissing];
+        final double[] sumYAttributes = new double[lengthNonMissing];
         // number (sum) of total valid values
         double totalWeight = 0.0;
         int start = 0;
@@ -708,20 +1085,80 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     break;
                 }
             }
-            if (weightSum > EPSILON) {
-                criterionAfterSplit += ySum * ySum / weightSum;
-            }
             sumWeightsAttributes[att] = weightSum;
+            sumYAttributes[att] = ySum;
             totalWeight += weightSum;
             start = end;
+            if (reachedEnd == true) {
+                break;
+            }
         }
 
-        //        assert Math.abs((ySumTotal - totalWeight) / ySumTotal) < EPSILON
-        //            : "Expected similar values: " + ySumTotal + " vs. " + totalWeight;
+        final boolean useXGBoostMissingValueHandling =
+            getConfiguration().getMissingValueHandling() == MissingValueHandling.XGBoost;
+        boolean branchContainsMissingValues = containsMissingValues();
+        double missingWeight = 0.0;
+        double missingY = 0.0;
+        if (branchContainsMissingValues) {
+            columnMemberships.goToLast();
+            while (columnMemberships.getIndexInColumn() >= m_idxOfFirstMissing) {
+                final double weight = columnMemberships.getRowWeight();
+                missingWeight += weight;
+                missingY += weight * targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                if (!columnMemberships.previous()) {
+                    break;
+                }
+            }
+            branchContainsMissingValues = missingWeight > EPSILON;
+        }
+        // if xgboost mvh is used all records must be used for prior impurity, else the records with missing values are ignored
+        final double criterionTotal = useXGBoostMissingValueHandling ? ySumTotal * ySumTotal / nrRecordsTotal
+            : (ySumTotal - missingY) * (ySumTotal - missingY) / (nrRecordsTotal - missingWeight);
+
+        if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
+            double best = 0.0;
+            int missingsGoWith = -1;
+
+            for (int i = 0; i < lengthNonMissing; i++) {
+                double crit = 0.0;
+                for (int j = 0; j < lengthNonMissing; j++) {
+                    if (i == j) {
+                        double weightWithMissing = sumWeightsAttributes[j] + missingWeight;
+                        double yWithMissing = sumYAttributes[j] + missingY;
+                        crit += yWithMissing * yWithMissing / weightWithMissing;
+                    } else {
+                        crit += sumYAttributes[j] * sumYAttributes[j] / sumWeightsAttributes[j];
+                    }
+                }
+                if (crit > best) {
+                    missingsGoWith = i;
+                    best = crit;
+                }
+            }
+            return new NominalMultiwaySplitCandidate(this, best - criterionTotal, sumWeightsAttributes, NO_MISSED_ROWS,
+                missingsGoWith);
+        }
+        double criterionAfterSplit = 0.0;
+        for (int i = 0; i < lengthNonMissing; i++) {
+            criterionAfterSplit += sumYAttributes[i] * sumYAttributes[i] / sumWeightsAttributes[i];
+        }
         final double gain = criterionAfterSplit - criterionTotal;
         if (gain > 0.0) {
-            return new NominalMultiwaySplitCandidate(this, gain, sumWeightsAttributes,
-                getMissedRows(columnMemberships));
+            if (useXGBoostMissingValueHandling) {
+                int missingsGoWith = -1;
+                double maxWeight = 0.0;
+                for (int i = 0; i < sumWeightsAttributes.length; i++) {
+                    if (sumWeightsAttributes[i] > maxWeight) {
+                        maxWeight = sumWeightsAttributes[i];
+                        missingsGoWith = i;
+                    }
+                }
+                // send missing values with majority
+                return new NominalMultiwaySplitCandidate(this, gain, sumWeightsAttributes, NO_MISSED_ROWS,
+                    missingsGoWith);
+            }
+            return new NominalMultiwaySplitCandidate(this, gain, sumWeightsAttributes, getMissedRows(columnMemberships),
+                NominalMultiwaySplitCandidate.NO_MISSINGS);
         }
         return null;
     }
@@ -810,7 +1247,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         } while (splitEnumeration.next());
         if (bestPartitionGain > 0.0) {
             return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask,
-                getMissedRows(columnMemberships));
+                getMissedRows(columnMemberships), NominalBinarySplitCandidate.NO_MISSINGS);
         }
         return null;
     }
@@ -833,15 +1270,41 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final NominalValueRepresentation[] nomVals, final RandomData rd) {
 
         final int minChildSize = getConfiguration().getMinChildSize();
-        final double sumYTotal = targetPriors.getYSum();
-        final double sumWeightTotal = targetPriors.getNrRecords();
-        final double criterionTotal = sumYTotal * sumYTotal / sumWeightTotal;
+        double sumYTotal = targetPriors.getYSum();
+        double sumWeightTotal = targetPriors.getNrRecords();
+        final boolean useXGBoostMissingValueHandling =
+            getConfiguration().getMissingValueHandling() == MissingValueHandling.XGBoost;
+        boolean branchContainsMissingValues = containsMissingValues();
+
+        double missingWeight = 0.0;
+        double missingY = 0.0;
+        if (branchContainsMissingValues) {
+            columnMemberships.goToLast();
+            while (columnMemberships.getIndexInColumn() >= m_idxOfFirstMissing) {
+                final double weight = columnMemberships.getRowWeight();
+                missingWeight += weight;
+                missingY += weight * targetColumn.getValueFor(columnMemberships.getOriginalIndex());
+                if (!columnMemberships.previous()) {
+                    break;
+                }
+            }
+            sumYTotal -= missingY;
+            sumWeightTotal -= missingWeight;
+            branchContainsMissingValues = missingWeight > 0.0;
+            columnMemberships.reset();
+        }
+        final double criterionTotal;
+        if (useXGBoostMissingValueHandling) {
+            criterionTotal = (sumYTotal + missingY) * (sumYTotal + missingY) / (sumWeightTotal + missingWeight);
+        } else {
+            criterionTotal = sumYTotal + sumYTotal / sumWeightTotal;
+        }
 
         final ArrayList<AttValTupleRegression> attValList = Lists.newArrayList();
 
         columnMemberships.next();
         int start = 0;
-        final int lengthNonMissing = m_containsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
         for (int att = 0; att < lengthNonMissing; att++) {
             double sumY = 0.0;
             double sumWeight = 0.0;
@@ -877,6 +1340,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 break;
             }
         }
+        assert sumWeights(
+            attValList) == sumWeightTotal : "The weights of the attribute values does not sum up to the total weight";
 
         // sort attribute values according to their mean Y value
         attValList.sort(null);
@@ -884,26 +1349,61 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         BigInteger bestPartitionMask = null;
         boolean isBestSplitValid = false;
         double bestPartitionGain = Double.NEGATIVE_INFINITY;
-        final int highestBitPosition = nomVals.length - 1;
+        final int highestBitPosition = containsMissingValues() ? nomVals.length - 2 : nomVals.length - 1;
 
         double sumYPartition = 0.0;
         double sumWeightPartition = 0.0;
         BigInteger partitionMask = BigInteger.ZERO;
         double sumYRemaining = sumYTotal;
         double sumWeightRemaining = sumWeightTotal;
+        boolean missingsGoLeft = true;
 
+        // no need to iterate over full list because at least one value must remain on the other side of the split
         for (int i = 0; i < attValList.size() - 1; i++) {
             AttValTupleRegression attVal = attValList.get(i);
             sumYPartition += attVal.m_sumY;
             sumWeightPartition += attVal.m_sumWeight;
             sumYRemaining -= attVal.m_sumY;
             sumWeightRemaining -= attVal.m_sumWeight;
+            assert AbsIsSmallerEpsilon(sumYTotal - (sumYRemaining + sumYPartition)) : "The the Ys left and right of the split do not add up to the total sum of Y.";
+            assert AbsIsSmallerEpsilon(sumWeightTotal - sumWeightRemaining - sumWeightPartition) : "The weights left and right of the split do not add up to the total weight.";
+            assert sumWeightPartition > 0.0 : "The weight of the partition is zero.";
+            assert sumWeightRemaining > 0.0 : "The weight of the remaining is zero.";
             partitionMask = partitionMask.or(attVal.m_bitMask);
 
-            boolean isValidSplit = sumWeightPartition >= minChildSize && sumWeightRemaining >= minChildSize;
+            double gain;
+            boolean isValidSplit;
+            boolean tempMissingsGoLeft = true;
+            if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
+                boolean isValidSplitPartitionWithMissing =
+                    sumWeightPartition + missingWeight >= minChildSize && sumWeightRemaining >= minChildSize;
+                double sumYMissingWithPartition = sumYPartition + missingY;
+                double gainMissingWithPartition =
+                    sumYMissingWithPartition * sumYMissingWithPartition / (sumWeightPartition + missingWeight)
+                        + sumYRemaining * sumYRemaining / sumWeightRemaining - criterionTotal;
 
-            double gain = sumYPartition * sumYPartition / sumWeightPartition
-                + sumYRemaining * sumYRemaining / sumWeightRemaining - criterionTotal;
+                boolean isValidSplitRemainingWithMissing =
+                    sumWeightPartition >= minChildSize && sumWeightRemaining + missingWeight >= minChildSize;
+                double sumYMissingWithRemaining = sumYRemaining + missingY;
+                double gainMissingWithRemaining = sumYPartition * sumYPartition / sumWeightPartition
+                    + sumYMissingWithRemaining * sumYMissingWithRemaining / (sumWeightRemaining + missingWeight)
+                    - criterionTotal;
+
+                if (gainMissingWithPartition >= gainMissingWithRemaining) {
+                    gain = gainMissingWithPartition;
+                    isValidSplit = isValidSplitPartitionWithMissing;
+                    tempMissingsGoLeft = !partitionMask.testBit(highestBitPosition);
+                } else {
+                    gain = gainMissingWithRemaining;
+                    isValidSplit = isValidSplitRemainingWithMissing;
+                    tempMissingsGoLeft = partitionMask.testBit(highestBitPosition);
+                }
+            } else {
+                isValidSplit = sumWeightPartition >= minChildSize && sumWeightRemaining >= minChildSize;
+
+                gain = sumYPartition * sumYPartition / sumWeightPartition
+                    + sumYRemaining * sumYRemaining / sumWeightRemaining - criterionTotal;
+            }
 
             // use random tie breaker if gains are equal
             boolean randomTieBreaker = gain == bestPartitionGain ? rd.nextInt(0, 1) == 1 : false;
@@ -917,20 +1417,42 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     bestPartitionMask = partitionMask.testBit(highestBitPosition) ? partitionMask
                         : BigInteger.ZERO.setBit(highestBitPosition + 1).subtract(BigInteger.ONE).xor(partitionMask);
                     isBestSplitValid = isValidSplit;
+                    if (branchContainsMissingValues) {
+                        missingsGoLeft = tempMissingsGoLeft;
+                    } else {
+                        // no missings in this branch, but we still have to provide a direction for missing values
+                        // send missings in the direction the most records in the node are sent to
+                        boolean sendWithPartition = sumWeightPartition >= sumWeightRemaining;
+                        missingsGoLeft = sendWithPartition ? !partitionMask.testBit(highestBitPosition)
+                            : partitionMask.testBit(highestBitPosition);
+                    }
                 }
             }
 
         }
 
         if (bestPartitionGain > 0.0 && isBestSplitValid) {
+            if (useXGBoostMissingValueHandling) {
+                return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask, NO_MISSED_ROWS,
+                    missingsGoLeft ? NominalBinarySplitCandidate.MISSINGS_GO_LEFT
+                        : NominalBinarySplitCandidate.MISSINGS_GO_RIGHT);
+            }
             return new NominalBinarySplitCandidate(this, bestPartitionGain, bestPartitionMask,
-                getMissedRows(columnMemberships));
+                getMissedRows(columnMemberships), NominalBinarySplitCandidate.NO_MISSINGS);
         }
 
         return null;
     }
 
-    private class AttValTupleRegression implements Comparable<AttValTupleRegression> {
+    private static double sumWeights(final ArrayList<AttValTupleRegression> attVals) {
+        double sum = 0.0;
+        for (final AttValTupleRegression attVal : attVals) {
+            sum += attVal.m_sumWeight;
+        }
+        return sum;
+    }
+
+    private static class AttValTupleRegression implements Comparable<AttValTupleRegression> {
 
         private final double m_sumY;
 
@@ -949,6 +1471,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             m_sumWeight = sumWeight;
             m_meanY = meanY;
             m_bitMask = BigInteger.ZERO.setBit(nomVal.getAssignedInteger());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
+                final AttValTupleRegression that = (AttValTupleRegression)obj;
+                if (this.m_bitMask.equals(that.m_bitMask)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -979,7 +1521,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final DataMemberships parentMemberships) {
         String value = nomCondition.getValue();
         int att = -1;
-        for (NominalValueRepresentation rep : getMetaData().getValues()) {
+        final NominalValueRepresentation[] reps = getMetaData().getValues();
+        for (final NominalValueRepresentation rep : reps) {
             if (rep.getNominalValue().equals(value)) {
                 att = rep.getAssignedInteger();
                 break;
@@ -999,12 +1542,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         if (!columnMemberships.nextIndexFrom(start)) {
             return inChild;
         }
+        boolean reachedEnd = false;
         int end = start + m_nominalValueCounts[att];
         for (int index = columnMemberships.getIndexInColumn(); index < end; index =
             columnMemberships.getIndexInColumn()) {
             inChild.set(columnMemberships.getIndexInDataMemberships());
             if (!columnMemberships.next()) {
+                reachedEnd = true;
                 break;
+            }
+        }
+
+        if (!reachedEnd && containsMissingValues() && nomCondition.acceptsMissings()) {
+            // move to missing values
+            for (int i = att; i < reps.length - 1; i++) {
+                start += m_nominalValueCounts[i];
+            }
+            if (columnMemberships.nextIndexFrom(start)) {
+                do {
+                    inChild.set(columnMemberships.getIndexInDataMemberships());
+                } while (columnMemberships.next());
             }
         }
 
@@ -1019,8 +1576,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         // TODO Check if this can be done more efficiently
         NominalValueRepresentation[] reps = getMetaData().getValues();
         int start = 0;
-        for (NominalValueRepresentation rep : getMetaData().getValues()) {
-            int att = rep.getAssignedInteger();
+        boolean reachedEnd = false;
+        final int lengthNonMissing = containsMissingValues() ? reps.length - 1 : reps.length;
+        for (int att = 0; att < lengthNonMissing; att++) {
             if (childBinaryCondition.testCondition(att)) {
                 // move columnMemberships to correct position
                 if (!columnMemberships.nextIndexFrom(start)) {
@@ -1032,11 +1590,20 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     columnMemberships.getIndexInColumn()) {
                     inChild.set(columnMemberships.getIndexInDataMemberships());
                     if (!columnMemberships.next()) {
+                        reachedEnd = true;
                         break;
                     }
                 }
             }
             start += m_nominalValueCounts[att];
+        }
+
+        if (!reachedEnd && containsMissingValues() && childBinaryCondition.acceptsMissings()) {
+            if (columnMemberships.nextIndexFrom(start)) {
+                do {
+                    inChild.set(columnMemberships.getIndexInDataMemberships());
+                } while (columnMemberships.next());
+            }
         }
 
         return inChild;
@@ -1223,7 +1790,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
      */
     @Override
     public boolean containsMissingValues() {
-        return m_containsMissingValues;
+        return m_idxOfFirstMissing != -1;
     }
 
     /**

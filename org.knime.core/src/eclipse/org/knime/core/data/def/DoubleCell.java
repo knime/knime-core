@@ -64,6 +64,7 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 
 /**
@@ -293,6 +294,7 @@ public final class DoubleCell extends DataCell
          * @param d any double value
          * @return a new data cell
          */
+        @DataCellFactoryMethod(name = "Double")
         public static DataCell create(final double d) {
             return new DoubleCell(d);
         }

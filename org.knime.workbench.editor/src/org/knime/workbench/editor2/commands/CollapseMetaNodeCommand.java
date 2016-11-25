@@ -206,7 +206,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
             // let the user enter a name
             String name = "Metanode";
             InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
-                    "Enter Name of Metanode", "Enter name of metanode:", name, null);
+                    "Enter Name of Metanode", "Enter name of Metanode:", name, null);
             int dialogreturn = idia.open();
             if (dialogreturn == Window.CANCEL) {
                 return Optional.empty();

@@ -50,12 +50,14 @@ package org.knime.base.node.io.filereader;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
@@ -67,12 +69,13 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 /**
- * Implements the tab panel for the character set settings (in the advanced
- * settings dialog).
+ * Implements the tab panel for the character set settings (in the advanced settings dialog).
  *
  * @author Peter Ohl, University of Konstanz
  */
 public class CharsetNamePanel extends JPanel {
+
+    private static final long serialVersionUID = 2016L;
 
     // action command for the "default" button
     private static final String DEFAULT_LABEL = "default";
@@ -101,8 +104,7 @@ public class CharsetNamePanel extends JPanel {
     private JTextField m_customName;
 
     /**
-     * Creates a panel to select the character set name and initializes it from
-     * the passed object.
+     * Creates a panel to select the character set name and initializes it from the passed object.
      *
      * @param settings the settings to initialize to panel from
      * @since 3.1
@@ -110,16 +112,8 @@ public class CharsetNamePanel extends JPanel {
     public CharsetNamePanel(final FileReaderSettings settings) {
         this.setSize(520, 375);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        add(Box.createVerticalStrut(20));
-        add(Box.createVerticalGlue());
-        add(getTextBox());
-        add(Box.createVerticalStrut(10));
         add(getSelectionPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalStrut(20));
-
         loadSettings(settings);
-
     }
 
     private Container getSelectionPanel() {
@@ -130,8 +124,7 @@ public class CharsetNamePanel extends JPanel {
          * directly as parameter). Except for "default" and "user defined".
          */
         m_default = new JRadioButton(DEFAULT_LABEL);
-        m_default.setToolTipText("uses the default decoding set by the "
-                + "operating system");
+        m_default.setToolTipText("uses the default decoding set by the operating system");
         m_default.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -139,14 +132,9 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_default);
-        Box defaultBox = Box.createHorizontalBox();
-        defaultBox.add(Box.createHorizontalStrut(20));
-        defaultBox.add(m_default);
-        defaultBox.add(Box.createHorizontalGlue());
 
         m_iso8859 = new JRadioButton("ISO-8859-1");
-        m_iso8859.setToolTipText("ISO Latin Alphabet No. 1, "
-                + "a.k.a. ISO-LATIN-1");
+        m_iso8859.setToolTipText("ISO Latin Alphabet No. 1, a.k.a. ISO-LATIN-1");
         m_iso8859.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -154,10 +142,6 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_iso8859);
-        Box iso8859Box = Box.createHorizontalBox();
-        iso8859Box.add(Box.createHorizontalStrut(20));
-        iso8859Box.add(m_iso8859);
-        iso8859Box.add(Box.createHorizontalGlue());
 
         m_utf8 = new JRadioButton("UTF-8");
         m_utf8.setToolTipText("Eight-bit UCS Transformation Format");
@@ -168,14 +152,9 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf8);
-        Box utf8Box = Box.createHorizontalBox();
-        utf8Box.add(Box.createHorizontalStrut(20));
-        utf8Box.add(m_utf8);
-        utf8Box.add(Box.createHorizontalGlue());
 
         m_utf16le = new JRadioButton("UTF-16LE");
-        m_utf16le.setToolTipText("Sixteen-bit UCS Transformation Format, "
-                + "little-endian byte order");
+        m_utf16le.setToolTipText("Sixteen-bit UCS Transformation Format, little-endian byte order");
         m_utf16le.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -183,14 +162,9 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16le);
-        Box utf16leBox = Box.createHorizontalBox();
-        utf16leBox.add(Box.createHorizontalStrut(20));
-        utf16leBox.add(m_utf16le);
-        utf16leBox.add(Box.createHorizontalGlue());
 
         m_utf16be = new JRadioButton("UTF-16BE");
-        m_utf16be.setToolTipText("Sixteen-bit UCS Transformation Format, "
-                + "big-endian byte order");
+        m_utf16be.setToolTipText("Sixteen-bit UCS Transformation Format, big-endian byte order");
         m_utf16be.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -198,15 +172,10 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16be);
-        Box utf16beBox = Box.createHorizontalBox();
-        utf16beBox.add(Box.createHorizontalStrut(20));
-        utf16beBox.add(m_utf16be);
-        utf16beBox.add(Box.createHorizontalGlue());
 
         m_utf16 = new JRadioButton("UTF-16");
-        m_utf16.setToolTipText("Sixteen-bit UCS Transformation Format, "
-                + "byte order identified by an optional "
-                + "byte-order mark in the file");
+        m_utf16.setToolTipText("Sixteen-bit UCS Transformation Format, byte order identified by an optional "
+            + "byte-order mark in the file");
         m_utf16.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -214,14 +183,9 @@ public class CharsetNamePanel extends JPanel {
             }
         });
         m_group.add(m_utf16);
-        Box utf16Box = Box.createHorizontalBox();
-        utf16Box.add(Box.createHorizontalStrut(20));
-        utf16Box.add(m_utf16);
-        utf16Box.add(Box.createHorizontalGlue());
 
         m_custom = new JRadioButton(CUSTOM_LABEL);
-        m_custom.setToolTipText("Enter a valid charset name supported by "
-                + "the Java Virtual Machine");
+        m_custom.setToolTipText("Enter a valid charset name supported by the Java Virtual Machine");
         m_custom.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -249,26 +213,36 @@ public class CharsetNamePanel extends JPanel {
                 checkCustomCharsetName();
             }
         });
-        Box customBox = Box.createHorizontalBox();
-        customBox.add(Box.createHorizontalStrut(20));
-        customBox.add(m_custom);
-        customBox.add(Box.createHorizontalStrut(5));
-        customBox.add(m_customName);
-        customBox.add(Box.createHorizontalGlue());
 
+        JPanel result = new JPanel(new GridBagLayout());
+        result.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+            "Select a character set for decoding:"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        result.add(m_default, gbc);
+        gbc.gridy++;
+        result.add(m_iso8859, gbc);
+        gbc.gridy++;
+        result.add(m_utf8, gbc);
+        gbc.gridy++;
+        result.add(m_utf16le, gbc);
+        gbc.gridy++;
+        result.add(m_utf16be, gbc);
+        gbc.gridy++;
+        result.add(m_utf16, gbc);
+        gbc.gridy++;
+        result.add(m_custom, gbc);
+        gbc.gridx++;
+        result.add(m_customName, gbc);
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx=1;
+        gbc.weighty=1;
+        result.add(new JPanel(), gbc);
 
-        JPanel result = new JPanel();
-        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
-        result.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Select a character set for decoding:"));
-
-        result.add(defaultBox);
-        result.add(iso8859Box);
-        result.add(utf8Box);
-        result.add(utf16leBox);
-        result.add(utf16beBox);
-        result.add(utf16Box);
-        result.add(customBox);
         return result;
     }
 
@@ -281,11 +255,9 @@ public class CharsetNamePanel extends JPanel {
     }
 
     /**
-     * Tests the entered charset name (if the textfield is enabled), and colors
-     * the textfield in case of an error.
+     * Tests the entered charset name (if the textfield is enabled), and colors the textfield in case of an error.
      *
-     * @return true if the entered charset name is supported or the textfield is
-     *         disabled.
+     * @return true if the entered charset name is supported or the textfield is disabled.
      */
     private boolean checkCustomCharsetName() {
         if (!m_custom.isSelected()) {
@@ -305,11 +277,6 @@ public class CharsetNamePanel extends JPanel {
             m_customName.setForeground(Color.RED);
             return false;
         }
-    }
-
-    private Container getTextBox() {
-        Box result = Box.createHorizontalBox();
-        return result;
     }
 
     /**
@@ -344,8 +311,7 @@ public class CharsetNamePanel extends JPanel {
     /**
      * Checks if the settings in the panel are good for applying them.
      *
-     * @return null if all settings are okay, or an error message if settings
-     *         can't be taken over.
+     * @return null if all settings are okay, or an error message if settings can't be taken over.
      * @since 3.1
      *
      */
@@ -358,13 +324,11 @@ public class CharsetNamePanel extends JPanel {
             if (b.isSelected()) {
                 foundIt = true;
                 if (CUSTOM_LABEL.equals(b.getActionCommand())) {
-                    if ((m_custom.getText() == null)
-                            || (m_custom.getText().length() == 0)) {
+                    if ((m_custom.getText() == null) || (m_custom.getText().length() == 0)) {
                         return "Please enter a character set name";
                     }
                     if (!checkCustomCharsetName()) {
-                        return "The entered character set name is not supported"
-                                + " by this Java VM";
+                        return "The entered character set name is not supported by this Java VM";
                     }
                 }
                 break;
@@ -381,9 +345,9 @@ public class CharsetNamePanel extends JPanel {
      *
      * @param settings the object to write settings in
      * @return true if the new settings are different from the one passed in.
-     * @since 3.1
+     * @since 3.2
      */
-    public boolean overrideSettings(final FileReaderSettings settings) {
+    public boolean overrideSettings(final FileReaderNodeSettings settings) {
         String oldCSN = settings.getCharsetName();
         String newCSN = null;
 
@@ -404,11 +368,16 @@ public class CharsetNamePanel extends JPanel {
             }
         }
 
+        boolean changed;
         if (oldCSN == null) {
-            return (newCSN != null);
+            changed = newCSN != null;
         } else {
-            return !oldCSN.equals(newCSN);
+            changed = !oldCSN.equals(newCSN);
         }
+        if (changed) {
+            settings.setCharsetUserSet(true);
+        }
+        return changed;
 
     }
 }

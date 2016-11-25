@@ -53,8 +53,8 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeDataCreator;
-import org.knime.base.node.mine.treeensemble2.learner.AbstractGradientBoostingLearner;
-import org.knime.base.node.mine.treeensemble2.learner.MGradientBoostedTreesLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.AbstractGradientBoostingLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.MGradientBoostedTreesLearner;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
@@ -104,6 +104,7 @@ public class GradientBoostingRegressionLearnerNodeModel extends NodeModel {
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         // the following call may return null, which is OK during configure

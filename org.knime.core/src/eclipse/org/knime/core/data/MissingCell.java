@@ -48,8 +48,6 @@ package org.knime.core.data;
 
 import java.io.IOException;
 
-import org.knime.core.node.util.ConvenienceMethods;
-
 /** Cell implementation to {@linkplain MissingValue}.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -119,12 +117,14 @@ public final class MissingCell extends DataCell implements MissingValue {
         return "?"; // don't show error here (result is displayed in table view)
     }
 
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ConvenienceMethods.areEqual(m_error, ((MissingCell)dc).m_error);
+        // missing cells are always equal, see DataCell.equals; this code will never be reached
+        return dc instanceof MissingCell;
     }
 
     /**
@@ -132,7 +132,8 @@ public final class MissingCell extends DataCell implements MissingValue {
      */
     @Override
     public int hashCode() {
-        return m_error == null ? 0 : m_error.hashCode();
+        // missing cells are always equal, regardless of the error message; therefore the hashcode must be equal, too
+        return 42;
     }
 
     /**

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
-Bundle-Version: 3.1.1.qualifier
+Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: editor.jar,
  lib/WindowsDNDHelper.jar
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
@@ -30,7 +30,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  org.knime.workbench.core;bundle-version="[3.0.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
  org.knime.workbench.ui;bundle-version="[3.0.0,4.0.0)",
- org.knime.base;bundle-version="[3.0.0,4.0.0)",
+ org.knime.base;bundle-version="[3.2.0,4.0.0)",
  org.knime.workbench.help;bundle-version="[3.0.0,4.0.0)",
  org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
  org.knime.workbench.explorer.view;bundle-version="[7.0.0,8.0.0)",
@@ -40,7 +40,12 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  com.fifesoft.rsyntaxtextarea;bundle-version="[2.5.8,3.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.5.2,3.0.0)",
  com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.5.2,3.0.0)",
- com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.5.2,3.0.0)"
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.5.2,3.0.0)",
+ org.eclipse.equinox.p2.ui;bundle-version="[2.4.0,3.0.0)",
+ org.eclipse.equinox.p2.core;bundle-version="[2.4.0,3.0.0)",
+ org.eclipse.equinox.p2.metadata;bundle-version="[2.3.0,3.0.0)",
+ org.eclipse.equinox.p2.operations;bundle-version="[2.4.100,3.0.0)",
+ org.eclipse.equinox.p2.repository;bundle-version="[2.3.100,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Eclipse-RegisterBuddy: org.knime.base

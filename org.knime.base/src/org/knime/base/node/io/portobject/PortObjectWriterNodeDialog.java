@@ -79,8 +79,9 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
     public PortObjectWriterNodeDialog() {
         final DialogComponentFileChooser fileChooser =
             new DialogComponentFileChooser(new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
-                PortObjectWriterNodeDialog.class.getName(), JFileChooser.SAVE_DIALOG, false, createFlowVariableModel(
-                    PortObjectWriterNodeModel.FILENAME, Type.STRING), ".zip");
+                PortObjectWriterNodeDialog.class.getName(), JFileChooser.SAVE_DIALOG, false,
+                createFlowVariableModel(PortObjectWriterNodeModel.FILENAME, Type.STRING), ".zip");
+        fileChooser.setDialogTypeSaveWithExtension(".zip");
 
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
             PortObjectWriterNodeModel.CFG_OVERWRITE_OK, false),
@@ -102,6 +103,7 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
 
             }
         });
+        fileChooser.setBorderTitle("Output location");
 
         addDialogComponent(fileChooser);
         addDialogComponent(overwriteOK);

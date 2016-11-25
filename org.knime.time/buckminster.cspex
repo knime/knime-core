@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
+  <dependencies>
+    <!-- needed so that the KNIME_Documentation_Builder application is available 
+             for the knime.create.helpfiles action. -->
+    <dependency name="org.knime.workbench.help" componentType="osgi.bundle"/>
+    <dependency name="org.knime.config" componentType="osgi.bundle"/>
+  </dependencies>
+  <actions>
+    <!-- Dynamically build the files for the Eclipse help. -->
+    <private name="knime.create.helpfiles" actor="knime.docBuilder">
+      <!-- 
+			<actorProperties>
+				<property key="pluginPattern" value="\Qorg.knime.base\E" />
+			</actorProperties>
+			-->
+      <prerequisites>
+        <attribute name="eclipse.build.source"/>
+        <attribute name="manifest"/>
+      </prerequisites>
+      <products alias="action.output" base="${buckminster.output}/knime.helpfiles/" upToDatePolicy="ACTOR"/>
+    </private>
+  </actions>
+  <alterGroups>
+    <private name="jar.contents">
+      <attribute name="knime.create.helpfiles"/>
+    </private>
+  </alterGroups>
+  <alterArtifacts>
+    <private name="bin.includes">
+      <!-- The plugin.xml is taken from the created help files because
+				 the TOC entries were dynamically added. -->
+      <removePath path="plugin.xml"/>
+    </private>
+  </alterArtifacts>
+</cspecExtension>

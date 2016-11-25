@@ -48,22 +48,25 @@
  */
 package org.knime.base.node.mine.treeensemble2.data.memberships;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 class ByteWeightContainer implements WeightContainer {
     private final byte[] m_weights;
 
-    ByteWeightContainer(final List<Integer> rowCountList) {
+    ByteWeightContainer(final Collection<Integer> rowCountList) {
         m_weights = new byte[rowCountList.size()];
         int i = 0;
         for (int count : rowCountList) {
             if (count > 255) {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                     "Counts larger than 255 can not be handled by this WeightContainer implementation.");
+            } else if (count < 0) {
+                throw new IllegalArgumentException("Counts smaller zero are not permitted.");
             }
             m_weights[i++] = (byte)count;
         }

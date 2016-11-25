@@ -54,12 +54,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 
 /**
@@ -107,21 +110,18 @@ public class JavaSnippetCompiler {
         if (m_compiler == null) {
             m_compileArgs = new ArrayList<>();
             File[] classpaths = m_snippet.getClassPath();
-            if (classpaths != null && classpaths.length > 0) {
-                m_compileArgs.add("-classpath");
-                StringBuilder b = new StringBuilder();
-                for (int i = 0; i < classpaths.length; i++) {
-                    if (i > 0) {
-                        b.append(File.pathSeparatorChar);
-                    }
-                    b.append(classpaths[i]);
-                }
-                m_compileArgs.add(b.toString());
-            }
+
+            m_compileArgs.add("-classpath");
+            m_compileArgs.add(Arrays.stream(classpaths)
+                .map(f -> f.getAbsolutePath()).map(FilenameUtils::normalize)
+                .collect(Collectors.joining(File.pathSeparator)));
+
             m_compileArgs.add("-source");
             m_compileArgs.add("1.8");
             m_compileArgs.add("-target");
             m_compileArgs.add("1.8");
+            m_compileArgs.add("-encoding");
+            m_compileArgs.add("UTF-8");
 
             m_compiler  = new EclipseCompiler();
         }

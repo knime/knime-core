@@ -58,7 +58,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -85,6 +85,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.KnimeEncryption;
 
@@ -355,8 +356,7 @@ public final class DBDialogPane extends JPanel {
 
     private void updateDriver() {
         m_driver.removeAllItems();
-        Set<String> driverNames = new HashSet<String>(
-                DatabaseDriverLoader.getLoadedDriver());
+        Set<String> driverNames = new LinkedHashSet<>(DatabaseUtility.getJDBCDriverClasses());
         for (String driverName
                 : DatabaseConnectionSettings.DRIVER_ORDER.getHistory()) {
             if (driverNames.contains(driverName)) {

@@ -50,16 +50,20 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
@@ -99,6 +103,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     private File m_mountpointRoot;
 
+    private URI m_mountpointURI;
+
     private Throwable m_throwable = null;
 
     /** Message, which is non-null if the user canceled to the load. */
@@ -108,11 +114,14 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
      * Creates a new runnable that load a workflow.
      *
      * @param editor the {@link WorkflowEditor} for which the workflow should be loaded
+     * @param uri the URI from the explorer
      * @param workflowFile the workflow file from which the workflow should be loaded (or created = empty workflow file)
      * @param mountpointRoot the root directory of the mountpoint in which the workflow is contained
      */
-    public LoadWorkflowRunnable(final WorkflowEditor editor, final File workflowFile, final File mountpointRoot) {
+    public LoadWorkflowRunnable(final WorkflowEditor editor, final URI uri, final File workflowFile,
+        final File mountpointRoot) {
         m_editor = editor;
+        m_mountpointURI = uri;
         m_workflowFile = workflowFile;
         m_mountpointRoot = mountpointRoot;
     }
@@ -148,8 +157,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             File workflowDirectory = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
-            GUIWorkflowLoadHelper loadHelper =
-                new GUIWorkflowLoadHelper(d, workflowDirectory.getName(), workflowDirectory, m_mountpointRoot);
+            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, workflowDirectory.getName(),
+                m_mountpointURI, workflowDirectory, m_mountpointRoot);
             final WorkflowLoadResult result =
                 WorkflowManager.loadProject(workflowDirectory, new ExecutionMonitor(progressMonitor), loadHelper);
             final WorkflowManager wm = result.getWorkflowManager();
@@ -161,7 +170,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             }
 
             final IStatus status = createStatus(result, !result.getGUIMustReportDataLoadErrors());
-            final String message;
+            String message;
             switch (status.getSeverity()) {
                 case IStatus.OK:
                     message = "No problems during load.";
@@ -176,13 +185,9 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                     logPreseveLineBreaks(
                         "Errors during load: " + result.getFilteredError("", LoadResultEntryType.Warning), true);
             }
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    // will not open if status is OK.
-                    ErrorDialog.openError(Display.getDefault().getActiveShell(), "Workflow Load", message, status);
-                }
-            });
+            if (!status.isOK()) {
+                showLoadErrorDialog(result, status, message);
+            }
             final List<NodeID> linkedMNs = wm.getLinkedMetaNodes(true);
             if (!linkedMNs.isEmpty()) {
                 final WorkflowEditor editor = m_editor;
@@ -190,7 +195,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                     @Override
                     public void run() {
                         postLoadCheckForMetaNodeUpdates(editor, wm, linkedMNs);
-                    };
+                    }
                 });
             }
         } catch (FileNotFoundException fnfe) {
@@ -242,6 +247,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
                 WorkflowContext.Factory fac = new WorkflowContext.Factory(m_workflowFile.getParentFile());
                 fac.setMountpointRoot(m_mountpointRoot);
+                fac.setMountpointURI(m_mountpointURI);
                 creationHelper.setWorkflowContext(fac.createContext());
 
                 m_editor.setWorkflowManager(WorkflowManager.ROOT.createAndAddProject(name, creationHelper));
@@ -263,6 +269,33 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             m_workflowFile = null;
             m_mountpointRoot = null;
         }
+    }
+
+    private void showLoadErrorDialog(final WorkflowLoadResult result, final IStatus status, final String message) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                Shell shell = Display.getCurrent().getActiveShell();
+                if (result.getMissingNodes().isEmpty()) {
+                    // will not open if status is OK.
+                    ErrorDialog.openError(shell, "Workflow Load", message, status);
+                } else {
+                    String missing = result.getMissingNodes().stream().map(i -> i.getNodeNameNotNull()).distinct()
+                        .collect(Collectors.joining(", "));
+
+                    String[] dialogButtonLabels = {IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL};
+                    MessageDialog dialog = new MessageDialog(shell, "Workflow contains missing nodes", null,
+                        message + " due to missing nodes (" + missing
+                            + "). Do you want to search and install the required extensions?",
+                        MessageDialog.WARNING, dialogButtonLabels, 0);
+                    if (dialog.open() == 0) {
+                        Job j = new InstallMissingNodesJob(result.getMissingNodes());
+                        j.setUser(true);
+                        j.schedule();
+                    }
+                }
+            }
+        });
     }
 
     /** @return True if the load process has been interrupted. */

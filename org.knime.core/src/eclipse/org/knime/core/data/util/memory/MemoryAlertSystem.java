@@ -58,8 +58,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -127,9 +130,13 @@ public final class MemoryAlertSystem {
 
     private final MemoryPoolMXBean m_memPool = OLD_GEN_POOL;
 
-    private final Object m_lowMemoryNotificationLock = new Object();
+    private final ReentrantLock m_aboveThresholdLock = new ReentrantLock();
 
-    private final Object m_gcEventLock = new Object();
+    private final Condition m_aboveThresholdEvent = m_aboveThresholdLock.newCondition();
+
+    private final ReentrantLock m_gcEventLock = new ReentrantLock();
+
+    private final Condition m_gcEvent = m_gcEventLock.newCondition();
 
     private final AtomicBoolean m_lowMemory = new AtomicBoolean();
 
@@ -205,8 +212,11 @@ public final class MemoryAlertSystem {
             m_lowMemory.set(false);
         }
 
-        synchronized(m_gcEventLock) {
-            m_gcEventLock.notifyAll();
+        m_gcEventLock.lock();
+        try {
+            m_gcEvent.signalAll();
+        } finally {
+            m_gcEventLock.unlock();
         }
     }
 
@@ -214,8 +224,11 @@ public final class MemoryAlertSystem {
      * Send a memory alert events to all registered listeners. Should only be used for testing purposes.
      */
     public void sendMemoryAlert() {
-        synchronized(m_lowMemoryNotificationLock) {
-            m_lowMemoryNotificationLock.notifyAll();
+        m_aboveThresholdLock.lock();
+        try {
+            m_aboveThresholdEvent.signalAll();
+        } finally {
+            m_aboveThresholdLock.unlock();
         }
     }
 
@@ -265,12 +278,13 @@ public final class MemoryAlertSystem {
             @Override
             public void run() {
                 while (!isInterrupted()) {
-                    synchronized(m_lowMemoryNotificationLock) {
-                        try {
-                            m_lowMemoryNotificationLock.wait();
-                        } catch (InterruptedException ex) {
-                            break;
-                        }
+                    m_aboveThresholdLock.lock();
+                    try {
+                        m_aboveThresholdEvent.await();
+                    } catch (InterruptedException ex) {
+                        break;
+                    } finally {
+                        m_aboveThresholdLock.unlock();
                     }
                     notifyListeners();
                 }
@@ -384,19 +398,22 @@ public final class MemoryAlertSystem {
 
         if (m_lowMemory.get()) {
             long remainingTime = timeout;
-            synchronized (m_gcEventLock) {
+            m_gcEventLock.lock();
+            try {
                 double usage = getUsage();
                 while (m_lowMemory.get() && (usage > threshold)) {
                     if (remainingTime <= 0) {
                         return false;
                     }
                     long diff = System.currentTimeMillis();
-                    m_gcEventLock.wait(remainingTime);
+                    m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS);
                     remainingTime -= System.currentTimeMillis() - diff;
                     usage = getUsage();
                     LOGGER.debug("Wakeup in sleepWhileLow, current usage: " + usage);
                 }
                 return true;
+            } finally {
+                m_gcEventLock.unlock();
             }
         } else {
             return true;

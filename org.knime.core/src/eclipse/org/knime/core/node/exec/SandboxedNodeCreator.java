@@ -78,6 +78,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.CredentialsStore;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -218,14 +219,16 @@ public final class SandboxedNodeCreator {
         if (!m_copyDataIntoNewContext) {
             ctxFactory = new WorkflowContext.Factory(origContext);
             if (m_localWorkflowDir != null) {
-                ctxFactory.setOriginalLocation(origContext.getCurrentLocation());
-                ctxFactory.setCurrentLocation(m_localWorkflowDir);
+                ctxFactory.setOriginalLocation(origContext.getCurrentLocation())
+                    .setCurrentLocation(m_localWorkflowDir);
             }
         } else if (m_localWorkflowDir != null) {
             ctxFactory = new WorkflowContext.Factory(m_localWorkflowDir);
         } else {
             ctxFactory = new WorkflowContext.Factory(FileUtil.createTempDir("sandbox-" + m_nc.getNameWithID()));
         }
+        origContext.getMountpointURI().ifPresent(u -> ctxFactory.setMountpointURI(u));
+
         WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
         creationHelper.setWorkflowContext(ctxFactory.createContext());
         if (!m_copyDataIntoNewContext) {
@@ -257,6 +260,14 @@ public final class SandboxedNodeCreator {
                 tempWFM.saveNodeSettings(inID, s);
                 PortObjectInNodeModel.setInputNodeSettings(s,
                     portObjectRepositoryID, flowVars, m_copyDataIntoNewContext);
+
+                //update credentials store of the workflow
+                CredentialsStore cs  = tempWFM.getCredentialsStore();
+                flowVars.stream()
+                    .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
+                    .filter(f -> !cs.contains(f.getName()))
+                    .forEach(cs::addFromFlowVariable);
+
                 tempWFM.loadNodeSettings(inID, s);
                 ins[i] = inID;
             }

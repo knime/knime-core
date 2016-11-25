@@ -50,6 +50,9 @@ package org.knime.base.node.preproc.columnresorter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
@@ -67,12 +70,12 @@ import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 /**
  * The node model of the column resorter node, re sorting columns based on
  * dialog settings.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
 
-    private String[] m_order = new String[] {};
+    private String[] m_order = new String[0];
 
 
     /**
@@ -91,7 +94,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
         ColumnRearranger rearranger = createColumnRearranger(original);
         return new DataTableSpec[]{rearranger.createSpec()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -100,17 +103,17 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
         DataTableSpec original = in.getDataTableSpec();
-        
+
         // if node has not been configured, just pass input data table through
         if (m_order.length <= 0) {
             return new BufferedDataTable[] {in};
         }
-        
+
         ColumnRearranger rearranger = createColumnRearranger(original);
         return new BufferedDataTable[] {exec.createColumnRearrangeTable(
                 in, rearranger, exec)};
     }
-    
+
     /**
      * Creates and returns an instance of the column rearranger which re sorts
      * the input columns in a user specified way.
@@ -125,23 +128,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
         rearranger.permute(newColOder);
         return rearranger;
     }
-    
-    /**
-     * Returns <code>true</code> if given column name is contained in order
-     * array, otherwise <code>false</code>.
-     * @param col The column name to search for
-     * @return <code>true</code> if given column name is contained in order
-     * array, otherwise <code>false</code>.
-     */
-    private boolean isContainedInOrder(final String col) {
-        for (String s : m_order) {
-            if (s.equals(col)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
+
     /**
      * Creates and returns arrays of column names in new order, based on the
      * dialog settings.
@@ -150,28 +137,29 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
      */
     private String[] getNewOrder(final DataTableSpec orig) {
         String[] newOrder = new String[orig.getNumColumns()];
-        
+
         // collect unknown columns which are not in order settings so far
+        Collection<String> orderListAsHash = new HashSet<>(Arrays.asList(m_order));
         List<String> unknownNewColumns = new ArrayList<String>();
         for (int i = 0; i < orig.getNumColumns(); i++) {
             DataColumnSpec col = orig.getColumnSpec(i);
-            if (!isContainedInOrder(col.getName())) {
+            if (!orderListAsHash.contains(col.getName())) {
                 unknownNewColumns.add(col.getName());
             }
         }
         int delta = unknownNewColumns.size();
-        
+
         // walk through cols and (re)define order
         int j = 0;
         for (int i = 0; i < newOrder.length; i++) {
             // get next column from dialog to order
             String colName = m_order[j];
             j++;
-            
+
             // if col exists in orig spec, put it at index i
             if (orig.containsName(colName)) {
                 newOrder[i] = colName;
-                
+
             // if col to resort is the dummy place holder
             } else if (DataColumnSpecListDummyCellRenderer.UNKNOWN_COL_DUMMY
                     .getName().equals(colName)) {
@@ -185,7 +173,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
                             i++;
                         }
                     }
-                // if no columns to insert for place holder decrease insert 
+                // if no columns to insert for place holder decrease insert
                 // index
                 } else {
                     i--;
@@ -198,7 +186,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
         }
         return newOrder;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -238,7 +226,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
@@ -248,7 +236,7 @@ class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...

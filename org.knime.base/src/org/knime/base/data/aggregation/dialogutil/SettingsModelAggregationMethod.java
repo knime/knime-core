@@ -85,6 +85,8 @@ public class SettingsModelAggregationMethod extends SettingsModel {
 
     private static final String CFG_METHOD_ID = "aggregationMethodId";
 
+    private static final String CFG_INCL_MISSING = "includeMissing";
+
     private final int m_inputPortIndex;
 
     private AggregationMethod m_method;
@@ -122,7 +124,6 @@ public class SettingsModelAggregationMethod extends SettingsModel {
         this(configName, inputPortIndex, DEFAULT_SETTINGS.getValueDelimiter(),
              DEFAULT_SETTINGS.getMaxUniqueValues(), defaultMethod);
     }
-
     /**
      * Creates a new object holding an {@link AggregationMethod}.
      *
@@ -132,7 +133,6 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      * @param separator the default separator to use
      * @param maxUniqueValues the number of maximum unique values
      * @param defaultMethod the default {@link AggregationMethod} to use
-     *
      */
     public SettingsModelAggregationMethod(final String configName, final int inputPortIndex,
                   final String separator, final int maxUniqueValues, final AggregationMethod defaultMethod) {
@@ -163,8 +163,15 @@ public class SettingsModelAggregationMethod extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelAggregationMethod createClone() {
+        AggregationOperator operator = (AggregationOperator)m_method;
+        final AggregationMethod clone;
+        if (!operator.hasOptionalSettings()) {
+            clone = operator;
+        } else {
+            clone = operator.createInstance(operator.getGlobalSettings(), operator.getOperatorColumnSettings());
+        }
         return new SettingsModelAggregationMethod(m_configName, m_inputPortIndex, m_valueDelimiter,
-            m_maxUniqueValues, m_method);
+            m_maxUniqueValues, clone);
     }
 
     /**
@@ -182,7 +189,6 @@ public class SettingsModelAggregationMethod extends SettingsModel {
     protected String getConfigName() {
         return m_configName;
     }
-
     /**
      * @param method the possibly new {@link AggregationMethod}
      * @param valueDelimiter the possibly new value separator
@@ -342,31 +348,18 @@ public class SettingsModelAggregationMethod extends SettingsModel {
         try {
             final NodeSettingsRO subSettings = settings.getNodeSettings(m_configName);
             final String methodId = subSettings.getString(CFG_METHOD_ID);
-            final AggregationMethod method = AggregationMethods.getMethod4Id(methodId);
+            final AggregationOperator method = (AggregationOperator)AggregationMethods.getMethod4Id(methodId);
+            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
+            //update the missing value option in the method based on the settings
+            method.getOperatorColumnSettings().setInclMissing(includeMissing);
             if (method.hasOptionalSettings()) {
                 final NodeSettingsRO methodSettings = subSettings.getNodeSettings(CFG_METHOD_SETTINGS);
                 method.loadValidatedSettings(methodSettings);
             }
             // no default value, throw an exception instead
-            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR),
-                      subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
+            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR), subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
         } catch (final IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        final NodeSettingsWO subSettings = settings.addNodeSettings(m_configName);
-        subSettings.addString(CFG_METHOD_ID, m_method.getId());
-        subSettings.addString(CFG_VALUE_SEPARATOR, m_valueDelimiter);
-        subSettings.addInt(CFG_MAX_UNIQUE_VALUES, m_maxUniqueValues);
-        if (m_method.hasOptionalSettings()) {
-            final NodeSettingsWO methodSettings = subSettings.addNodeSettings(CFG_METHOD_SETTINGS);
-            m_method.saveSettingsTo(methodSettings);
         }
     }
 
@@ -389,16 +382,34 @@ public class SettingsModelAggregationMethod extends SettingsModel {
             }
             final NodeSettingsRO subSettings = settings.getNodeSettings(m_configName);
             final String methodId = subSettings.getString(CFG_METHOD_ID);
-            final AggregationMethod method = AggregationMethods.getMethod4Id(methodId);
+            final AggregationOperator method = (AggregationOperator)AggregationMethods.getMethod4Id(methodId);
+            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
+            //update the missing value option in the method based on the settings
+            method.getOperatorColumnSettings().setInclMissing(includeMissing);
             if (method.hasOptionalSettings()) {
                 final NodeSettingsRO methodSettings = subSettings.getNodeSettings(CFG_METHOD_SETTINGS);
                 method.loadSettingsFrom(methodSettings, spec);
             }
             // no default value, throw an exception instead
-            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR),
-                      subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
+            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR), subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
         } catch (final Exception iae) {
             throw new NotConfigurableException(iae.getMessage());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
+        final NodeSettingsWO subSettings = settings.addNodeSettings(m_configName);
+        subSettings.addString(CFG_METHOD_ID, m_method.getId());
+        subSettings.addBoolean(CFG_INCL_MISSING, m_method.inclMissingCells());
+        subSettings.addString(CFG_VALUE_SEPARATOR, m_valueDelimiter);
+        subSettings.addInt(CFG_MAX_UNIQUE_VALUES, m_maxUniqueValues);
+        if (m_method.hasOptionalSettings()) {
+            final NodeSettingsWO methodSettings = subSettings.addNodeSettings(CFG_METHOD_SETTINGS);
+            m_method.saveSettingsTo(methodSettings);
         }
     }
 

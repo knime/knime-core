@@ -610,7 +610,8 @@ public class BaseRuleParser<PredicateType> {
         if (booleanOutcome != null && booleanOutcome) {
             state.skipWS();
             Expression constantBoolean = parseConstantBoolean(state);
-            if (constantBoolean != null) {
+            state.skipWS();
+            if (state.isEnd() && constantBoolean != null) {
                 return new GenericOutcome(constantBoolean);
             }
             throw new ParseException("Expected " + BooleanConstants.TRUE + " or " + BooleanConstants.FALSE + ".",

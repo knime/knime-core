@@ -281,7 +281,7 @@ public class SampleDataNodeModel extends NodeModel {
                 DataRow r = createRow(RowKey.createRowKey(pattern), d, cl);
                 dataOutput.push(r);
                 final int patternTempFinal = pattern;
-                exec.setProgress(pattern / totalCount, () -> "Added row " + patternTempFinal);
+                exec.setProgress(pattern / totalCount, () -> ("Added row " + patternTempFinal));
                 exec.checkCanceled();
                 pattern++;
             }
@@ -296,7 +296,7 @@ public class SampleDataNodeModel extends NodeModel {
             DataCell cl = colNames[colNames.length - 1];
             DataRow r = createRow(RowKey.createRowKey(index), d, cl);
             dataOutput.push(r);
-            exec.setProgress(index / totalCount, "Added row " + index);
+            exec.setProgress(index / totalCount, () -> ("Added row " + index));
             exec.checkCanceled();
         }
         dataOutput.close();

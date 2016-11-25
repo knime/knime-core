@@ -398,7 +398,7 @@ public final class RepositoryManager {
 
             } catch (Throwable t) {
                 String message =
-                        "Node " + elem.getAttribute("id") + "' from plugin '"
+                        "Node " + elem.getAttribute("factory-class") + "' from plugin '"
                                 + elem.getNamespaceIdentifier()
                                 + "' could not be created: "
                                 + t.getMessage();
@@ -475,7 +475,7 @@ public final class RepositoryManager {
                 }
 
             } catch (Throwable t) {
-                String message = "Node " + elem.getAttribute("id")
+                String message = "Node " + elem.getAttribute("factory-class")
                         + "' from plugin '" + elem.getNamespaceIdentifier()
                         + "' could not be created.";
                 Bundle bundle = Platform.getBundle(elem
@@ -617,10 +617,11 @@ public final class RepositoryManager {
     }
 
     /**
-     * Returns the node template with the given id, or <code>null</code> if no
-     * such node exists.
+     * Returns the node template with the given id, or <code>null</code> if no such node exists.
      *
-     * @param id the node's id
+     * @param id the node's id consisting of the factory's class name in case of the {@link NodeTemplate}, or in
+     *            combination with the node's name ( <code>&#60;node-factory class name&#62;#&#60;node name&#62;</code>)
+     *            in case of the {@link DynamicNodeTemplate}.
      * @return a node template or <code>null</code>
      * @since 2.4
      */

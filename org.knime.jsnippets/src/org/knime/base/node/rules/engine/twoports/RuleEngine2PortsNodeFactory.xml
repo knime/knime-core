@@ -120,6 +120,7 @@ $Col0$ > 5 => $${SCol1}$$
                 <tt>/</tt>
                 )
             </option>
+            <option name="Treat values starting with $ as references">When checked, the values in the string -outcome- column starting with <tt>$</tt> are not treated as string constants with that value, but are tried to be parsed as references to flow variables, columns or table properties.</option>
             <option name="Append column">Name of the newly appended column, which contains the outcome of the rules.</option>
             <option name="Replace column">The column to replace</option>
             <option name="Errors">The errors found in the input table parsing the rules column</option>

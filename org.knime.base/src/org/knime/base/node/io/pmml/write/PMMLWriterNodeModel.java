@@ -203,11 +203,6 @@ public class PMMLWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_outfile.validateSettings(settings);
-        String fileName = ((SettingsModelString)m_outfile.
-                createCloneWithValidatedValue(settings)).getStringValue();
-        if (fileName == null || fileName.length() == 0) {
-            throw new InvalidSettingsException("No output file specified");
-        }
         // overwriteOk added in v2.1 - can't validate
     }
 

@@ -46,6 +46,8 @@
  */
 package org.knime.base.node.rules.engine.pmml;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -87,7 +89,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -102,11 +104,22 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
@@ -132,14 +145,20 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         final BufferedDataTable table = (BufferedDataTable)inData[0];
+        RearrangerAndPMMLModel m = createRearrangerAndPMMLModel(table.getDataTableSpec());
+        return new PortObject[]{exec.createColumnRearrangeTable(table, m.getRearranger(), exec), m.getPMMLPortObject()};
+    }
+
+    private RearrangerAndPMMLModel createRearrangerAndPMMLModel(final DataTableSpec spec)
+            throws ParseException, InvalidSettingsException {
         final PMMLDocument doc = PMMLDocument.Factory.newInstance();
         final PMML pmml = doc.addNewPMML();
         RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
         RuleSet ruleSet = ruleSetModel.addNewRuleSet();
-        PMMLRuleParser parser = new PMMLRuleParser(table.getSpec(), getAvailableInputFlowVariables());
-        ColumnRearranger rearranger = createRearranger(table.getDataTableSpec(), ruleSet, parser);
+        PMMLRuleParser parser = new PMMLRuleParser(spec, getAvailableInputFlowVariables());
+        ColumnRearranger rearranger = createRearranger(spec, ruleSet, parser);
         PMMLPortObject ret =
-            new PMMLPortObject(createPMMLPortObjectSpec(rearranger.createSpec(), parser.getUsedColumns()));
+                new PMMLPortObject(createPMMLPortObjectSpec(rearranger.createSpec(), parser.getUsedColumns()));
 //        if (inData[1] != null) {
 //            PMMLPortObject po = (PMMLPortObject)inData[1];
 //            TransformationDictionary dict = TransformationDictionary.Factory.newInstance();
@@ -155,7 +174,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         modelTranslator.initializeFrom(doc);
         ret.addModelTranslater(modelTranslator);
         ret.validate();
-        return new PortObject[]{exec.createColumnRearrangeTable(table, rearranger, exec), ret};
+        return new RearrangerAndPMMLModel(rearranger, ret);
     }
 
     /**
@@ -288,8 +307,8 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         String targetCol =
             m_settings.isAppendColumn() ? spec.getColumnSpec(spec.getNumColumns() - 1).getName() : m_settings
                 .getReplaceColumn();
-        Set<String> set = new LinkedHashSet<String>(usedColumns);
-        List<String> learnCols = new LinkedList<String>();
+        Set<String> set = new LinkedHashSet<>(usedColumns);
+        List<String> learnCols = new LinkedList<>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec columnSpec = spec.getColumnSpec(i);
             String col = columnSpec.getName();
@@ -319,7 +338,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
                 if (outcomeType.isCompatible(StringValue.class)) {
                     cellValues.add(new StringCell(val));
                 } else if (outcomeType.isCompatible(BooleanValue.class)) {
-                    cellValues.add(BooleanCell.get(Boolean.parseBoolean(val)));
+                    cellValues.add(BooleanCellFactory.create(Boolean.parseBoolean(val)));
                 } else if (outcomeType.isCompatible(IntValue.class)) {
                     cellValues.add(new IntCell(Integer.parseInt(val)));
                 } else if (outcomeType.isCompatible(DoubleValue.class)) {
@@ -412,6 +431,176 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        final InputPortRole[] inputPortRoles = super.getInputPortRoles();
+        inputPortRoles[0] = InputPortRole.DISTRIBUTED_STREAMABLE;
+        return inputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        final OutputPortRole[] outputPortRoles = super.getOutputPortRoles();
+        outputPortRoles[0] = OutputPortRole.DISTRIBUTED;
+        return outputPortRoles;
+    }
+
+    /**
+     * This should be private, but cannot be unfortunately because it's deserialized by the framework.
+     * @noinstantiate This class is not intended to be instantiated by clients.
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.2
+     */
+    public static final class StreamInternalForPMMLPortObject extends StreamableOperatorInternals {
+        private PMMLPortObject m_object;
+
+        /**
+         */
+        public StreamInternalForPMMLPortObject() {
+        }
+        /**
+         * @return the object
+         */
+        PMMLPortObject getObject() {
+            return m_object;
+        }
+
+        /**
+         * @param object the object to set
+         * @return The update internal object.
+         */
+        StreamInternalForPMMLPortObject setObject(final PMMLPortObject object) {
+            m_object = object;
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void load(final DataInputStream input) throws IOException {
+            try {
+                m_object = (PMMLPortObject)PortUtil.readObjectFromStream(input, new ExecutionMonitor());
+            } catch (CanceledExecutionException e) {
+                throw new IOException(e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void save(final DataOutputStream output) throws IOException {
+            try {
+                PortUtil.writeObjectToStream(m_object, output, new ExecutionMonitor());
+            } catch (CanceledExecutionException e) {
+                throw new IOException(e);
+            }
+        }
+    }
+
+    /** {@inheritDoc}
+     * @since 3.2 */
+    @Override
+    public StreamInternalForPMMLPortObject createInitialStreamableOperatorInternals() {
+        return new StreamInternalForPMMLPortObject();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MergeOperator createMergeOperator() {
+        //This could probably be a functional interface.
+        return new MergeOperator() {
+            @Override
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+                return operators[0];
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        final PortObjectSpec[] computeFinalOutputSpecs = super.computeFinalOutputSpecs(internals, inSpecs);
+        // TODO should this be done some place else (finish)?
+        StreamInternalForPMMLPortObject poInternals = (StreamInternalForPMMLPortObject)internals;
+        try {
+            DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+            RearrangerAndPMMLModel m = createRearrangerAndPMMLModel(tableSpec);
+            poInternals.setObject(m.getPMMLPortObject());
+        } catch (ParseException e) {
+            throw new InvalidSettingsException(e);
+        }
+
+        return computeFinalOutputSpecs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        final DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        return new StreamableOperator() {
+            private ColumnRearranger m_rearrangerx;
+            private PMMLPortObject m_portObject;
+            {
+                try {
+                    final PMMLDocument doc = PMMLDocument.Factory.newInstance();
+                    final PMML pmml = doc.addNewPMML();
+                    RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
+                    RuleSet ruleSet = ruleSetModel.addNewRuleSet();
+                    PMMLRuleParser parser = new PMMLRuleParser(tableSpec, getAvailableInputFlowVariables());
+                    m_rearrangerx= createRearranger(tableSpec, ruleSet, parser);
+                } catch (ParseException e) {
+                    throw new InvalidSettingsException(e);
+                }
+            }
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                m_rearrangerx.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void loadInternals(final StreamableOperatorInternals internals) {
+                super.loadInternals(internals);
+                m_portObject = ((StreamInternalForPMMLPortObject)internals).getObject();
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return createInitialStreamableOperatorInternals().setObject(m_portObject);
+            }
+
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        final StreamInternalForPMMLPortObject poInternals = (StreamInternalForPMMLPortObject)internals;
+        PMMLPortObject ret = poInternals.getObject();
+        ret.validate();
+        ((PortObjectOutput)output[1]).setPortObject(ret);
+    }
+
+    /**
      * Computes the specs after applying the derived fields.
      *
      * @param specs The input table and the possible preprocessing port.
@@ -430,5 +619,30 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
             creator.addColumns(spec);
         }
         return creator.createSpec();
+    }
+
+    /** Pair combining a rearranger and PO. */
+    private static final class RearrangerAndPMMLModel {
+        private final ColumnRearranger m_rearranger;
+        private final PMMLPortObject m_pmmlPortObject;
+        /**
+         * @param rearranger
+         * @param pmmlPortObject
+         */
+        RearrangerAndPMMLModel(final ColumnRearranger rearranger, final PMMLPortObject pmmlPortObject) {
+            m_rearranger = CheckUtils.checkArgumentNotNull(rearranger);
+            m_pmmlPortObject = CheckUtils.checkArgumentNotNull(pmmlPortObject);
+        }
+
+        /** @return the pmmlPortObject */
+        PMMLPortObject getPMMLPortObject() {
+            return m_pmmlPortObject;
+        }
+
+        /** @return the rearranger */
+        ColumnRearranger getRearranger() {
+            return m_rearranger;
+        }
+
     }
 }
