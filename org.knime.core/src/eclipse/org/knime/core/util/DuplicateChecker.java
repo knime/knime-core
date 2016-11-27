@@ -270,7 +270,8 @@ public class DuplicateChecker {
     }
 
     /**
-     * Checks for duplicates in all added keys.
+     * Checks for duplicates in all added keys. This method must only be called once after all keys have been added!
+     * Multiple calls may lead to exceptions and excessive resource usage.
      *
      * @throws DuplicateKeyException if a duplicate key has been detected
      * @throws IOException if an I/O error occurs
