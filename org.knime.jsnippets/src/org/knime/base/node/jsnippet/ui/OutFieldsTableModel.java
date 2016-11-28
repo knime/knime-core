@@ -420,6 +420,8 @@ public class OutFieldsTableModel extends FieldsTableModel {
     public void setValueAt(final Object aValue, final int row, final int column) {
         // make sure setValue(Object, int, Column) is always called.
         Column col = getColumnForIndex(column);
+        final FieldType fieldType = (m_flowVarsOnly) ? FieldType.FlowVariable : (FieldType)getValueAt(row, Column.FIELD_TYPE);
+
         if (col == Column.COLUMN) {
             if (aValue instanceof FlowVariable) {
                 // make sure we do not keep a ConverterFactory in the JavaType column
@@ -445,7 +447,7 @@ public class OutFieldsTableModel extends FieldsTableModel {
                     }
                 }
             }
-        } else if (col == Column.DATA_TYPE) {
+        } else if (fieldType == FieldType.Column && col == Column.DATA_TYPE) {
             Object type = getValueAt(row, Column.JAVA_TYPE);
             Boolean isCollection = (Boolean)getValueAt(row, Column.IS_COLLECTION);
 
