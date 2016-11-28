@@ -50,9 +50,18 @@ package org.knime.core.gateway.serverproxy.service;
 
 import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.api.node.workflow.project.WorkflowGroup;
+import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
@@ -78,8 +87,21 @@ public abstract class AbstractWorkflowService implements WorkflowService {
     public WorkflowEnt getWorkflow(final WorkflowEntID id) {
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
         IWorkflowManager wfm = null;
-        wfm.getAllNodeContainers();
-        return builder(WorkflowEntBuilder.class).setNodes(null).setConnections(null).build();
+        Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
+        List<NodeEnt> nodes = nodeContainers.stream().map(nc -> {
+            return builder(NodeEntBuilder.class).build();
+        }).collect(Collectors.toList());
+        return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(null).build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<WorkflowEntID> getAllWorkflows() {
+        WorkflowGroup rootWorkflowGroup = WorkflowProjectManager.getRootWorkflowGroup();
+        //TODO traverse and get all workflow projects (possibly only the local ones)
+        return null;
     }
 
 }

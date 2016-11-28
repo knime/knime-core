@@ -57,6 +57,9 @@ import org.knime.core.gateway.v0.workflow.service.GatewayService;
  */
 public interface ServiceFactory {
 
+    static final String EXT_POINT_ID = "org.knime.core.gateway.services.ServiceFactory";
+    static final String EXT_POINT_ATTR = "ServiceFactory";
+
     <S extends GatewayService> S createService(Class<S> serviceInterface);
 
 }

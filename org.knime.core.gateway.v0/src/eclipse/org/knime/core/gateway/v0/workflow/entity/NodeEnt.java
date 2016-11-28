@@ -54,7 +54,7 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEnt extends Identifiable {
+public interface NodeEnt extends Identifiable, GatewayEntity {
 
     @Override
     NodeEntID getID();

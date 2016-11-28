@@ -44,33 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 11, 2016 (hornm): created
+ *   Nov 23, 2016 (hornm): created
  */
 package org.knime.core.thrift;
 
-import org.knime.core.gateway.entities.EntityBuilderFactory;
-import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
+import java.util.Collections;
 
-/**
- *
- * @author Martin Horn, University of Konstanz
- */
-public class TEntityBuilderFactory implements EntityBuilderFactory {
+import org.knime.core.thrift.workflow.service.TTestServiceImpl;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+
+import com.facebook.swift.codec.ThriftCodecManager;
+import com.facebook.swift.service.ThriftServer;
+import com.facebook.swift.service.ThriftServerConfig;
+import com.facebook.swift.service.ThriftServiceProcessor;
+
+public class ThriftPlugin implements BundleActivator {
+
+    private ThriftServer m_server;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
-        createEntityBuilder(final Class<B> builderInterface) {
-        //TODO don't use if here but a map or annotations
-        if (builderInterface.isAssignableFrom(TestEntBuilder.class)) {
-            return (B)new TTestEnt.TTestEntBuilder();
-        }
-        return null;
+    public void start(final BundleContext context) throws Exception {
+        ThriftServiceProcessor thriftServiceProcessor =
+            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceImpl());
+        m_server = new ThriftServer(thriftServiceProcessor, new ThriftServerConfig().setPort(2000)).start();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void stop(final BundleContext context) throws Exception {
+        m_server.close();
     }
 
 }

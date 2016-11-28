@@ -48,8 +48,13 @@
  */
 package org.knime.core.gateway.entities;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+import org.knime.core.util.ExtPointUtils;
 
 /**
  *
@@ -59,14 +64,33 @@ public class EntityBuilderManager {
 
     private static EntityBuilderFactory BUILDER_FACTORY;
 
+    /* BUILDER SINGLETON INSTANCES */
+    private static Map<Class<? extends GatewayEntityBuilder>, GatewayEntityBuilder> BUILDERS =
+        new HashMap<Class<? extends GatewayEntityBuilder>, GatewayEntityBuilder>();
+
     private EntityBuilderManager() {
         //utility class
     }
 
     public static <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
         builder(final Class<B> builderInterface) {
-        //TODO caching
-        return BUILDER_FACTORY.createEntityBuilder(builderInterface);
+        B builder = (B) BUILDERS.get(builderInterface);
+        if(builder == null) {
+            if(BUILDER_FACTORY == null) {
+                BUILDER_FACTORY = createBuilderFactory();
+            }
+            builder = BUILDER_FACTORY.createEntityBuilder(builderInterface);
+            BUILDERS.put(builderInterface, builder);
+        }
+        return builder;
+    }
+
+    private static EntityBuilderFactory createBuilderFactory() {
+        List<EntityBuilderFactory> instances =
+            ExtPointUtils.collectExecutableExtensions(EntityBuilderFactory.EXT_POINT_ID, EntityBuilderFactory.EXT_POINT_ATTR);
+        //TODO
+        assert instances.size() == 1;
+        return instances.get(0);
     }
 
 }

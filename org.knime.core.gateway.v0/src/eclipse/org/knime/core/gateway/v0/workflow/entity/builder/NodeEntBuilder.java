@@ -44,33 +44,25 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 11, 2016 (hornm): created
+ *   Nov 28, 2016 (hornm): created
  */
-package org.knime.core.thrift;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.entities.EntityBuilderFactory;
-import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TEntityBuilderFactory implements EntityBuilderFactory {
+public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
-        createEntityBuilder(final Class<B> builderInterface) {
-        //TODO don't use if here but a map or annotations
-        if (builderInterface.isAssignableFrom(TestEntBuilder.class)) {
-            return (B)new TTestEnt.TTestEntBuilder();
-        }
-        return null;
-    }
+    NodeEntBuilder setID(NodeEntID id);
+
+    NodeEntBuilder setParent(WorkflowEntID id);
+
+    NodeEntBuilder setJobManager(JobManagerEnt jobManager);
 
 }

@@ -58,6 +58,9 @@ import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
  */
 public interface EntityBuilderFactory {
 
+    static final String EXT_POINT_ID = "org.knime.core.gateway.entities.EntityBuilderFactory";
+    static final String EXT_POINT_ATTR = "EntityBuilderFactory";
+
     <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B createEntityBuilder(Class<B> builderInterface);
 
 }

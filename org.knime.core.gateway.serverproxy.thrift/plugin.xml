@@ -7,5 +7,11 @@
             ServiceFactory="org.knime.core.thrift.TServiceFactory">
       </ServiceFactory>
    </extension>
+   <extension
+         point="org.knime.core.gateway.entities.EntityBuilderFactory">
+      <EntityBuilderFactory
+            EntityBuilderFactory="org.knime.core.thrift.TEntityBuilderFactory">
+      </EntityBuilderFactory>
+   </extension>
 
 </plugin>

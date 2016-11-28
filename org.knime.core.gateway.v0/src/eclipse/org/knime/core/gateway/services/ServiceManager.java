@@ -49,9 +49,11 @@
 package org.knime.core.gateway.services;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.util.ExtPointUtils;
 
 /**
  *
@@ -72,9 +74,20 @@ public class ServiceManager {
     public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
         S service = (S)SERVICES.get(serviceInterface);
         if (service == null) {
+            if(SERVICE_FACTORY == null) {
+               SERVICE_FACTORY = createServiceFactory();
+            }
             service = SERVICE_FACTORY.createService(serviceInterface);
             SERVICES.put(serviceInterface, service);
         }
         return service;
+    }
+
+    private static ServiceFactory createServiceFactory() {
+        List<ServiceFactory> instances =
+            ExtPointUtils.collectExecutableExtensions(ServiceFactory.EXT_POINT_ID, ServiceFactory.EXT_POINT_ATTR);
+        //TODO
+        assert instances.size() == 1;
+        return instances.get(0);
     }
 }
