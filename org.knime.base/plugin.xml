@@ -1893,6 +1893,11 @@
             deprecated="false"
             factory-class="org.knime.base.node.preproc.filter.definition.apply.FilterApplyNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.filter.definition.apply.rowsplitter.FilterApplyRowSplitterNodeFactory">
+      </node>
    </extension>
    
       
