@@ -303,10 +303,11 @@ public class DataCellToJavaConversionTest {
             DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(Integer.class).stream()
                 .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertThat("Not enough converters for conversion to Integer", sourceTypes.size(), is(greaterThanOrEqualTo(3)));
+        assertThat("Not enough converters for conversion to Integer", sourceTypes.size(), is(greaterThanOrEqualTo(2)));
         assertTrue(sourceTypes.contains(IntValue.class));
         assertTrue(sourceTypes.contains(MissingValue.class));
-        assertTrue(sourceTypes.contains(StringCell.class)); // Test extension point
+        // disable, see class header org.knime.core.data.convert.ExtensionPointTest
+        // assertTrue(sourceTypes.contains(StringCell.class)); // Test extension point
     }
 
     /**

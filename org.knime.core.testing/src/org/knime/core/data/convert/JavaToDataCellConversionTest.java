@@ -50,6 +50,7 @@ package org.knime.core.data.convert;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -297,7 +298,8 @@ public class JavaToDataCellConversionTest {
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream.class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
-        assertEquals(3, supertypeDestTypes.size());
+        assertThat("Not enough converters for conversion from FileInputStream",
+            supertypeDestTypes.size(), is(greaterThanOrEqualTo(3)));
         assertTrue(supertypeDestTypes.contains(BinaryObjectDataCell.TYPE));
         assertTrue(supertypeDestTypes.contains(XMLCell.TYPE));
         assertTrue(supertypeDestTypes.contains(StringCell.TYPE));
@@ -319,7 +321,8 @@ public class JavaToDataCellConversionTest {
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
-        assertEquals(3, supertypeDestTypes.size());
+        assertThat("Not enough converters for conversion from FileInputStream[]",
+            supertypeDestTypes.size(), is(greaterThanOrEqualTo(3)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(BinaryObjectDataCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(XMLCell.TYPE)));
         assertTrue(supertypeDestTypes.contains(ListCell.getCollectionType(StringCell.TYPE)));
@@ -351,9 +354,10 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(2, factories.size());
+        assertThat("Not enough converters for conversion to IntCell list ", factories.size(), is(greaterThanOrEqualTo(1)));
         assertTrue(set.contains(Integer[].class));
-        assertTrue(set.contains(String[].class));
+        // disabled, see class header org.knime.core.data.convert.ExtensionPointTest
+        // assertTrue(set.contains(String[].class));
     }
 
     /**
