@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.wrapped;
 
 import org.knime.core.api.node.workflow.IWorkflowInPort;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

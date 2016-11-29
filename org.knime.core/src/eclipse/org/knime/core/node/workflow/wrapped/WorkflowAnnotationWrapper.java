@@ -56,6 +56,7 @@ import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

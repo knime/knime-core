@@ -50,6 +50,7 @@ package org.knime.core.node.workflow.wrapped;
 
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.api.node.workflow.INodeInPort;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

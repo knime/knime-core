@@ -54,6 +54,7 @@ import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

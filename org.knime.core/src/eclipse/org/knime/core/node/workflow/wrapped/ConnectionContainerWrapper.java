@@ -56,6 +56,7 @@ import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

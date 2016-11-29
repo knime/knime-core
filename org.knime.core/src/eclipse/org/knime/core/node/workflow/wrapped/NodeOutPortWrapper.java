@@ -53,6 +53,7 @@ import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *

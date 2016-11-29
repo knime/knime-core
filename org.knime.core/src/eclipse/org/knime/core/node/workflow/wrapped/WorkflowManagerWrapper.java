@@ -87,6 +87,7 @@ import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  * Implements the {@link IWorkflowManager} interface by simply wrapping the {@link WorkflowManager} implementation.

@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.wrapped;
 
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.util.WrapperMapUtil;
 import org.w3c.dom.Element;
 
 /**
