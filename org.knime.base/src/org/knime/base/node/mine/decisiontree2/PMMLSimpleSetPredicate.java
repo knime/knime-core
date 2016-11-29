@@ -53,6 +53,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -304,5 +306,43 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
         conf.addString(ARRAY_TYPE, m_arrayType.toString());
         conf.addStringArray(VALUES, m_values.toArray(
                 new String[m_values.size()]));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        PMMLSimpleSetPredicate other = (PMMLSimpleSetPredicate)obj;
+        return new EqualsBuilder()
+                .appendSuper(super.equals(obj))
+                .append(m_arrayType, other.m_arrayType)
+                .append(m_doubleValues, other.m_doubleValues)
+                .append(m_op, other.m_op)
+                .append(m_values, other.m_values)
+                .isEquals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(super.hashCode())
+                .append(m_arrayType)
+                .append(m_doubleValues)
+                .append(m_op)
+                .append(m_values)
+                .toHashCode();
     }
 }

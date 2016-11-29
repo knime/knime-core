@@ -50,6 +50,8 @@ package org.knime.base.node.mine.decisiontree2;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,6 +60,7 @@ import org.knime.core.node.config.Config;
 /**
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
  */
 public class PMMLCompoundPredicate extends PMMLPredicate {
 
@@ -317,5 +320,39 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        PMMLCompoundPredicate other = (PMMLCompoundPredicate)obj;
+        return new EqualsBuilder()
+                .appendSuper(super.equals(obj))
+                .append(m_op, other.m_op)
+                .append(m_predicates, other.m_predicates)
+                .isEquals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .appendSuper(super.hashCode())
+                .append(m_op)
+                .append(m_predicates)
+                .toHashCode();
     }
 }

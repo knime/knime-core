@@ -52,6 +52,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Contains the operators that are specified in PMML for SimplePredicates.
  *
@@ -96,6 +99,7 @@ public enum PMMLOperator {
      * {@inheritDoc}
      */
     @Override
+    @JsonValue
     public String toString() {
         return m_represent;
     }
@@ -107,6 +111,7 @@ public enum PMMLOperator {
      * @return the operator
      * @throws InstantiationException - if no such PMML operator exists
      */
+    @JsonCreator
     public static PMMLOperator get(final String represent)
             throws InstantiationException {
         PMMLOperator pmmlOperator = LOOKUP.get(represent);

@@ -50,6 +50,8 @@ package org.knime.base.node.mine.decisiontree2;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -219,6 +221,38 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         conf.addString(PMMLPredicate.ATTRIBUTE_KEY, getSplitAttribute());
         conf.addString(PMMLPredicate.OPERATOR_KEY, getOperator().toString());
         conf.addString(THRESHOLD_KEY, m_threshold);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        PMMLSimplePredicate other = (PMMLSimplePredicate)obj;
+        return new EqualsBuilder()
+                .appendSuper(super.equals(obj))
+                .append(m_threshold, other.m_threshold)
+                .isEquals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .appendSuper(super.hashCode())
+                .append(m_threshold)
+                .toHashCode();
     }
 
 }

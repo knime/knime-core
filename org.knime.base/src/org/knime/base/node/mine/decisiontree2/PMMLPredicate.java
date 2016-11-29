@@ -53,12 +53,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Base class for Predicate as specified in PMML
@@ -67,6 +72,8 @@ import org.knime.core.node.config.Config;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  * @noextend
  */
+@JsonAutoDetect
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class PMMLPredicate {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER
@@ -220,6 +227,38 @@ public abstract class PMMLPredicate {
             }
             m_previousSpec = spec;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        PMMLPredicate other = (PMMLPredicate)obj;
+        return new EqualsBuilder()
+                .append(m_op, other.m_op)
+                .append(m_splitAttribute, other.m_splitAttribute)
+                .isEquals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(m_op)
+                .append(m_splitAttribute)
+                .toHashCode();
     }
 
     /**

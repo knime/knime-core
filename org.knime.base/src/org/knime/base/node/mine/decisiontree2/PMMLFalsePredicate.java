@@ -114,5 +114,4 @@ public class PMMLFalsePredicate extends PMMLPredicate {
     }
 
 
-
 }

@@ -113,4 +113,5 @@ public class PMMLTruePredicate extends PMMLPredicate {
     public void saveToPredParams(final Config conf) {
         conf.addString(PMMLPredicate.TYPE_KEY, NAME);
     }
+
 }
