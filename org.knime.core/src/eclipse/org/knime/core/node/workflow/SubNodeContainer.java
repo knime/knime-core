@@ -185,17 +185,15 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         boolean setObject(final PortObject object) {
             boolean differ = ObjectUtils.notEqual(m_object, object);
+            String summary = object != null ? object.getSummary() : null;
+            differ = differ || ObjectUtils.notEqual(m_summary, summary);
             m_object = object;
+            m_summary = summary;
             return differ;
         }
         boolean setHiliteHdl(final HiLiteHandler hiliteHdl) {
             boolean differ = ObjectUtils.notEqual(m_hiliteHdl, hiliteHdl);
             m_hiliteHdl = hiliteHdl;
-            return differ;
-        }
-        boolean setSummary(final String summary) {
-            boolean differ = ObjectUtils.notEqual(m_summary, summary);
-            m_summary = summary;
             return differ;
         }
         PortType getType() {
@@ -1402,7 +1400,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public String getOutputObjectSummary(final int portIndex) {
-        return "Wrapped Metanode Output: " + m_outputs[portIndex].getSummary();
+        return m_outputs[portIndex].getSummary();
     }
 
     /* ------------- HiLite Support ---------------- */
