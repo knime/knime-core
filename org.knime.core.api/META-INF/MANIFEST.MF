@@ -9,10 +9,9 @@ Export-Package: org.knime.core.api,
  org.knime.core.api.node,
  org.knime.core.api.node.port,
  org.knime.core.api.node.workflow,
- org.knime.core.api.node.workflow.action
-Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
- com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",
- org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
+ org.knime.core.api.node.workflow.action,
+ org.knime.core.api.node.workflow.project
+Require-Bundle: org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
  org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
  org.junit;bundle-version="4.12.0"
 Eclipse-RegisterBuddy: org.apache.log4j
