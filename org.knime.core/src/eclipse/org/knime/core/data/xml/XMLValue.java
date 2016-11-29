@@ -67,7 +67,7 @@ public interface XMLValue extends DataValue {
      * the returned document must not be modified by clients as data cells are read-only.
      * @return the DOM
      */
-    @DataValueAccessMethod(name = "Document")
+    @DataValueAccessMethod(name = "Document (XML)")
     Document getDocument();
 
     /**
