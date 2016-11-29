@@ -349,7 +349,9 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
                         // ignore
                 }
             }
-            m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
+            if (availableFlowVariables.containsValue(newName)){
+                m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
+            }
         } else {
             // will select newColName only if it is in the spec list
             try {

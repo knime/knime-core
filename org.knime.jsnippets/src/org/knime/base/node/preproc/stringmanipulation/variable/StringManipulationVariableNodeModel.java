@@ -51,6 +51,7 @@ package org.knime.base.node.preproc.stringmanipulation.variable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings;
 import org.knime.core.data.DataCell;
@@ -128,7 +129,12 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
 
         // calculate the result
         ColumnCalculator cc = new ColumnCalculator(settings, this);
-        DataCell calculate = cc.calculate(new DefaultRow(new RowKey(""), new DataCell[]{}));
+        DataCell calculate = null;
+        try {
+            calculate = cc.calculate(new DefaultRow(new RowKey(""), new DataCell[]{}));
+        } catch (NoSuchElementException e){
+            throw new InvalidSettingsException(e.getMessage());
+        }
         String newVariableName;
         Map<String, FlowVariable> inputFlowVariables = getAvailableInputFlowVariables();
         if (m_settings.isReplace()) {
