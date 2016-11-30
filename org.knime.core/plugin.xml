@@ -253,10 +253,6 @@
             database="oracle">
       </databaseUtility>
       <databaseUtility
-            class="org.knime.core.node.port.database.SQLServerUtility"
-            database="sqlserver">
-      </databaseUtility>
-      <databaseUtility
             class="org.knime.core.node.port.database.DB2Utility"
             database="db2">
       </databaseUtility>
