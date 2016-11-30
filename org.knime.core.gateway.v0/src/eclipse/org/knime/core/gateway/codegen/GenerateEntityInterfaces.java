@@ -44,25 +44,19 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
-
-import java.util.List;
+package org.knime.core.gateway.codegen;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends Identifiable, GatewayEntity {
+public class GenerateEntityInterfaces {
 
-    @Override
-    WorkflowEntID getID();
-
-    List<NodeEnt> getNodes();
-
-    List<ConnectionEnt> getConnections();
-
-    int test();
+    public static void main(final String[] args) {
+        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
+            "src/generated/org/knime/core/gateway/v0/workflow/entity/", "##entityName##").generate();
+    }
 
 }

@@ -3,7 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core Gateway v0
 Bundle-SymbolicName: org.knime.core.gateway.v0;singleton:=true
 Bundle-Version: 3.3.0.qualifier
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ lib/velocity-1.7-dep.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
  org.knime.core;bundle-version="3.3.0"
@@ -11,7 +12,8 @@ Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.knime.core.gateway.entities,
+Export-Package: org.knime.core.gateway.codegen,
+ org.knime.core.gateway.entities,
  org.knime.core.gateway.services,
  org.knime.core.gateway.v0.workflow.entity,
  org.knime.core.gateway.v0.workflow.entity.builder,

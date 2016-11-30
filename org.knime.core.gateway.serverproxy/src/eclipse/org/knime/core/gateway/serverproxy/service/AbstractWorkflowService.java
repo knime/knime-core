@@ -54,10 +54,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowGroup;
+import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
@@ -86,11 +89,28 @@ public abstract class AbstractWorkflowService implements WorkflowService {
     @Override
     public WorkflowEnt getWorkflow(final WorkflowEntID id) {
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
-        IWorkflowManager wfm = null;
+        IWorkflowManager wfm = WorkflowProjectManager.openProject(new WorkflowProject() {
+
+            @Override
+            public String getName() {
+                return id.getID();
+            }
+
+            @Override
+            public WorkflowProjectType getType() {
+                return null;
+            }
+
+        });
         Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
         List<NodeEnt> nodes = nodeContainers.stream().map(nc -> {
-            return builder(NodeEntBuilder.class).build();
+            return builder(NodeEntBuilder.class)
+                    .build();
         }).collect(Collectors.toList());
+        Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
+        List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
+           return builder().build();
+        });
         return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(null).build();
     }
 

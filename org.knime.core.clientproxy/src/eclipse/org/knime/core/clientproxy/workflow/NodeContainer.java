@@ -459,15 +459,6 @@ public class NodeContainer implements INodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public boolean hasInteractiveWebView() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getInteractiveViewName() {
         // TODO Auto-generated method stub
         return null;

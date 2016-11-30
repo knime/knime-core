@@ -48,6 +48,18 @@
  */
 package org.knime.core.api.node.workflow.project;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.util.HostUtils;
+
 /**
  * TODO
  *
@@ -55,9 +67,13 @@ package org.knime.core.api.node.workflow.project;
  *
  * e.g. the org.knime.workbench.ui.navigator.KnimeResourceContentProvider should make use of this one
  *
+ * probably needs to be reworked in order to fit into mount points etc.
+ *
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowProjectManager {
+
+    private static final Logger LOGGER = Logger.getLogger(HostUtils.class);
 
     /**
      * The root of all workflow projects, no matter from which source
@@ -74,6 +90,84 @@ public class WorkflowProjectManager {
             //TODO
         }
         return ROOT;
+    }
+
+    public static IWorkflowManager openProject(final WorkflowProject wfp) {
+        return null;
+    }
+
+    /**
+     * COPIED from ExtPointUtils in org.knime.core.
+     *
+     * Methods the collects and instantiates objects of a 'java'-type attribute (i.e. a abstract class or interface) of
+     * an extension point.
+     *
+     * @param extPointID the extension point id
+     * @param extPointAttr the extension point attributes of the class to get the instances for
+     * @return the list of all instances for the class-extension point attribute
+     */
+    private static <C> List<C> collectExecutableExtensions(final String extPointID, final String extPointAttr) {
+
+        List<C> instances = new ArrayList<C>();
+
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(extPointID);
+        if (point == null) {
+            LOGGER.error("Invalid extension point: " + extPointID);
+            throw new IllegalStateException("ACTIVATION ERROR: " + " --> Invalid extension point: " + extPointID);
+        }
+
+        for (IConfigurationElement elem : point.getConfigurationElements()) {
+            String attr = elem.getAttribute(extPointAttr);
+            String decl = elem.getDeclaringExtension().getUniqueIdentifier();
+
+            if (attr == null || attr.isEmpty()) {
+                LOGGER.error(
+                    "The extension '" + decl + "' doesn't provide the required attribute '" + extPointAttr + "'");
+                LOGGER.error("Extension " + decl + " ignored.");
+                continue;
+            }
+
+            // try instantiating.
+            C instance = null;
+            try {
+                instance = (C)elem.createExecutableExtension(extPointAttr);
+            } catch (UnsatisfiedLinkError ule) {
+                // in case an implementation tries to load an external lib
+                // when the factory class gets loaded
+                LOGGER.error("Unable to load a library required for '" + attr + "'");
+                LOGGER.error(
+                    "Either specify it in the -Djava.library.path " + "option at the program's command line, or");
+                LOGGER.error("include it in the LD_LIBRARY_PATH variable.");
+                LOGGER.error("Extension " + attr + " ('" + decl + "') ignored.", ule);
+            } catch (CoreException ex) {
+                Throwable cause = ex.getStatus().getException();
+                if (cause != null) {
+                    LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr + "': " + cause.getMessage(), ex);
+                    if (decl != null) {
+                        LOGGER.error("Extension " + decl + " ignored.");
+                    }
+                } else {
+                    LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr + "'", ex);
+                    if (decl != null) {
+                        LOGGER.error("Extension " + decl + " ignored.");
+                    }
+                }
+            } catch (Throwable t) {
+                LOGGER.error("Problems during initialization of executable extension with attribute id '"
+                    + attr + "'", t);
+                if (decl != null) {
+                    LOGGER.error("Extension " + decl + " ignored.");
+                }
+            }
+
+            if (instance != null) {
+                instances.add(instance);
+            }
+        }
+
+        return instances;
+
     }
 
 }

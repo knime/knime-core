@@ -44,49 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Nov 29, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.clientproxy.workflow.project;
 
-import java.util.List;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.api.node.workflow.project.WorkflowGroup;
+import org.knime.core.api.node.workflow.project.WorkflowProject;
+import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
+import org.knime.core.clientproxy.workflow.wrapped.WorkflowManagerWrapper;
 
 /**
+ * Mainly for testing and prototyping purposes.
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEnt extends Identifiable, GatewayEntity {
+public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    NodeEntID getID();
+    public IWorkflowManager openProject(final WorkflowProject id) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /**
-     * @return
+     * {@inheritDoc}
      */
-    WorkflowEntID getParent();
+    @Override
+    public WorkflowGroup getProjectTree() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
     /**
-     *
-     * @return
+     * {@inheritDoc}
      */
-    JobManagerEnt getJobManager();
-
-    NodeMessageEnt getNodeMessage();
-
-    String getNodeState();
-
-    List<NodeInPortEnt> getInPorts();
-
-    List<NodeOutPortEnt> getOutPorts();
-
-    String getName();
-
-    String getNodeID();
-
-    String getNodeType();
-
-    BoundsEnt getBounds();
-
-    boolean isDeletable();
-
+    @Override
+    public IWorkflowManager wrap(final IWorkflowManager wfm) {
+        //server has already been started with the bundle activation
+        //return 'client' workflow manager
+        return WorkflowManagerWrapper.wrap(wfm);
+    }
 
 }

@@ -44,14 +44,62 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Oct 18, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.clientproxy.workflow.wrapped;
+
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.util.WrapperMapUtil;
+import org.w3c.dom.Element;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ConnectionEntID extends ID {
+public class SingleNodeContainerWrapper extends NodeContainerWrapper implements ISingleNodeContainer {
 
+    private ISingleNodeContainer m_delegate;
+
+    /**
+     *
+     */
+    private SingleNodeContainerWrapper(final ISingleNodeContainer delegate) {
+        super(delegate);
+        m_delegate = delegate;
+    }
+
+    public static final SingleNodeContainerWrapper wrap(final ISingleNodeContainer snc) {
+        return WrapperMapUtil.getOrCreate(snc, o -> new SingleNodeContainerWrapper(o), SingleNodeContainerWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
+    @Override
+    public boolean isMemberOfScope() {
+        return m_delegate.isMemberOfScope();
+    }
+
+    @Override
+    public boolean isInactive() {
+        return m_delegate.isInactive();
+    }
+
+    @Override
+    public Element getXMLDescription() {
+        return m_delegate.getXMLDescription();
+    }
 }

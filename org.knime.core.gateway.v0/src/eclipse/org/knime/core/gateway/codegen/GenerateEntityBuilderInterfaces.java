@@ -44,25 +44,19 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 28, 2016 (hornm): created
+ *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
-
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+package org.knime.core.gateway.codegen;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
+public class GenerateEntityBuilderInterfaces {
 
-    NodeEntBuilder setID(NodeEntID id);
-
-    NodeEntBuilder setParent(WorkflowEntID id);
-
-    NodeEntBuilder setJobManager(JobManagerEnt jobManager);
+    public static void main(final String[] args) {
+        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/EntityBuilderInterface.vm",
+            "src/generated/org/knime/core/gateway/v0/workflow/entity/builder/", "##entityName##Builder").generate();
+    }
 
 }

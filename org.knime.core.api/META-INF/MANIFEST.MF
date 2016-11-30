@@ -13,7 +13,9 @@ Export-Package: org.knime.core.api,
  org.knime.core.api.node.workflow.project
 Require-Bundle: org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
  org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
- org.junit;bundle-version="4.12.0"
+ org.junit;bundle-version="4.12.0",
+ org.eclipse.core.runtime;bundle-version="3.12.0",
+ org.apache.log4j;bundle-version="1.2.15"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

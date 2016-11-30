@@ -44,14 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Oct 13, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.clientproxy.workflow.wrapped;
+
+import org.knime.core.api.node.workflow.IWorkflowOutPort;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEntID extends ID {
+public class WorkflowOutPortWrapper extends NodeOutPortWrapper implements IWorkflowOutPort {
+
+    private IWorkflowOutPort m_delegate;
+
+    /**
+     * @param delegate the implementation to delegate to
+     */
+    public WorkflowOutPortWrapper(final IWorkflowOutPort delegate) {
+        super(delegate);
+        m_delegate = delegate;
+    }
+
+    public static final WorkflowOutPortWrapper wrap(final IWorkflowOutPort wop) {
+        return WrapperMapUtil.getOrCreate(wop, o -> new WorkflowOutPortWrapper(o), WorkflowOutPortWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIndex(final int portIndex) {
+        m_delegate.setPortIndex(portIndex);
+    }
+
 
 }

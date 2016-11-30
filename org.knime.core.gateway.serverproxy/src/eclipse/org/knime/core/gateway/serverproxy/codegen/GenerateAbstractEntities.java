@@ -44,16 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2016 (hornm): created
+ *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.serverproxy.codegen;
+
+import org.knime.core.gateway.codegen.EntityGenerator;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NativeNodeEnt extends NodeEnt {
+public class GenerateAbstractEntities {
 
-    NodeFactoryEntID getNodeFactoryID();
+    public static void main(final String[] args) {
+        new EntityGenerator("src/eclipse/org/knime/core/gateway/serverproxy/codegen/AbstractEntity.vm",
+            "src/generated/org/knime/core/gateway/serverproxy/entity/", "Abstract##entityName##").generate();
+    }
 
 }

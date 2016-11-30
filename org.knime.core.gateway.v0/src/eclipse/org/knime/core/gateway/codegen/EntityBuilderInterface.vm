@@ -43,15 +43,17 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeOutPortEnt extends NodePortEnt {
+public interface ${name}Builder extends GatewayEntityBuilder<${name}> {
 
+#foreach( $prop in $properties )
+	${name}Builder set$prop.getName()($prop.getType() $prop.getName());
+
+#end
 }

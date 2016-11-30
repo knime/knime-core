@@ -48,29 +48,14 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.List;
-
 /**
  *
- * @author Martin Horn, University of Konstanz
+ * @author Martin Horn
  */
-public interface ConnectionEnt extends Identifiable {
-
-    @Override
-    ConnectionEntID getID();
-
-    NodeEntID getDest();
-
-    int getDestPort();
-
-    NodeEntID getSource();
-
-    int getSourcePort();
-
-    boolean isDeleteable();
-
-    List<XYEnt> getBendPoints();
+public interface EntityID {
 
     String getType();
+
+    String getID();
 
 }

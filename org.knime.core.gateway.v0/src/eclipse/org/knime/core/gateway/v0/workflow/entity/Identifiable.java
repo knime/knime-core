@@ -55,6 +55,6 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface Identifiable {
 
-    ID getID();
+    EntityID getID();
 
 }

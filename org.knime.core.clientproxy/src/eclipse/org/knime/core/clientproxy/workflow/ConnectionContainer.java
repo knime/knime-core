@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2016 (hornm): created
+ *   Oct 13, 2016 (hornm): created
  */
 package org.knime.core.clientproxy.workflow;
 
@@ -59,7 +59,6 @@ import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEntID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.service.NodeService;
 import org.knime.core.node.workflow.NodeID;
@@ -75,8 +74,8 @@ public class ConnectionContainer implements IConnectionContainer {
     /**
      *
      */
-    public ConnectionContainer(final ConnectionEntID connID) {
-
+    public ConnectionContainer(final ConnectionEnt conn) {
+        m_connection = conn;
     }
 
     /**
@@ -124,7 +123,7 @@ public class ConnectionContainer implements IConnectionContainer {
     @Override
     public NodeID getSource() {
         //TODO here the whole node needs to be download just in order to get the node's ID ...
-        //TODO should be chached
+        //TODO should be cached
         return NodeID.fromString(service(NodeService.class).getNode(m_connection.getSource()).getNodeID());
     }
 

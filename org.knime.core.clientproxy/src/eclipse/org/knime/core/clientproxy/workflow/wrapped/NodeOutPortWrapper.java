@@ -44,37 +44,110 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 28, 2016 (hornm): created
+ *   Oct 13, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow.project;
+package org.knime.core.clientproxy.workflow.wrapped;
 
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.NodeContainerState;
+import org.knime.core.api.node.workflow.NodeStateChangeListener;
+import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowProjectFactory {
+public class NodeOutPortWrapper implements INodeOutPort {
 
-    static final String EXT_POINT_ID = "org.knime.core.api.node.workflow.project.WorkflowProjectFactory";
-    static final String EXT_POINT_ATTR = "WorkflowProjectFactory";
-
-    IWorkflowManager openProject(WorkflowProject id);
+    private INodeOutPort m_delegate;
 
     /**
-     * TODO
-     *
-     * @return the root workflow group
+     * @param delegate the implementation to delegate to
      */
-    WorkflowGroup getProjectTree();
+    protected NodeOutPortWrapper(final INodeOutPort delegate) {
+        m_delegate = delegate;
+    }
+
+    public static final NodeOutPortWrapper wrap(final INodeOutPort nop) {
+        return WrapperMapUtil.getOrCreate(nop, o -> new NodeOutPortWrapper(o), NodeOutPortWrapper.class);
+    }
 
     /**
-     * FIXME: Temporary method only for testing and prototyping. To be deleted!
-     *
-     * @param wfm
-     * @return another workflow manager that makes use of the passed one
+     * {@inheritDoc}
      */
-    @Deprecated
-    IWorkflowManager wrap(IWorkflowManager wfm);
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
+        m_delegate.stateChanged(state);
+    }
+
+    @Override
+    public NodeContainerState getNodeContainerState() {
+        return m_delegate.getNodeContainerState();
+    }
+
+    @Override
+    public int getPortIndex() {
+        return m_delegate.getPortIndex();
+    }
+
+    @Override
+    public String getPortSummary() {
+        return m_delegate.getPortSummary();
+    }
+
+    @Override
+    public PortTypeUID getPortTypeUID() {
+        return m_delegate.getPortTypeUID();
+    }
+
+    @Override
+    public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
+        return m_delegate.addNodeStateChangeListener(listener);
+    }
+
+    @Override
+    public String getPortName() {
+        return m_delegate.getPortName();
+    }
+
+    @Override
+    public void setPortName(final String portName) {
+        m_delegate.setPortName(portName);
+    }
+
+    @Override
+    public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
+        return m_delegate.removeNodeStateChangeListener(listener);
+    }
+
+    @Override
+    public boolean isInactive() {
+        return m_delegate.isInactive();
+    }
+
+    @Override
+    public NodeContainerState getNodeState() {
+        return m_delegate.getNodeState();
+    }
+
+    @Override
+    public void notifyNodeStateChangeListener(final NodeStateEvent e) {
+        m_delegate.notifyNodeStateChangeListener(e);
+    }
 
 }

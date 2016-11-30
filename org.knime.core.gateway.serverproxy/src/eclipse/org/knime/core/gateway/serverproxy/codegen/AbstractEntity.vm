@@ -43,19 +43,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 8, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.serverproxy.entity;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeMessageEnt {
+public class Abstract${name} implements ${name} {
 
-    String getMessage();
+#foreach( $prop in $properties )
+	private $prop.getType() m_$prop.getName();
+#end
 
-    String getType();
+    /**
+     *
+     */
+    protected Abstract${name}(final Abstract${name}Builder builder) {
+#foreach( $prop in $properties )
+		m_$prop.getName() = builder.m_$prop.getName();
+#end
+    }
+    
+#foreach( $prop in $properties )
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public $prop.getType() get$prop.getName()() {
+        return m_$prop.getName();
+    }
+    
+#end
+
+
+
+    public static abstract class Abstract${name}Builder implements ${name}Builder {
+
+#foreach( $prop in $properties )
+		private $prop.getType() m_$prop.getName();
+#end
+
+#foreach( $prop in $properties )
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ${name}Builder set$prop.getName()(final $prop.getType() $prop.getName()) {
+        	m_$prop.getName() = $prop.getName();
+            return this;
+        }
+        
+#end
+
+
+
+    }
 
 }

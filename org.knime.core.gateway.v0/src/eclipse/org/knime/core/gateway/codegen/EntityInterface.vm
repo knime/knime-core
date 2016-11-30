@@ -43,8 +43,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
@@ -52,10 +50,13 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface XYEnt {
+public interface $name extends Identifiable, GatewayEntity#if ($hasSuperClass), $superClass #else #end {
 
-    int getX();
-
-    int getY();
-
+    @Override
+    EntityID getID();
+    
+ #foreach( $property in $properties )
+ 	$property.getType() get$property.getName()();
+ 	
+ #end   
 }

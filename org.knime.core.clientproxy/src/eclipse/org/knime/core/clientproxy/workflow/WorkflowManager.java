@@ -48,8 +48,6 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import static org.knime.core.gateway.services.ServiceManager.service;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
@@ -59,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.knime.core.api.node.NodeFactoryUID;
 import org.knime.core.api.node.port.MetaPortInfo;
@@ -87,8 +86,6 @@ import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -96,6 +93,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.Pair;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
@@ -108,10 +106,10 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     /**
      * @param node
      */
-    public WorkflowManager(final WorkflowEntID id) {
+    public WorkflowManager(final WorkflowEnt workflow) {
         //TODO
         super(null);
-        m_workflow = service(WorkflowService.class).getWorkflow(id);
+        m_workflow = workflow;
     }
 
     /**
@@ -190,7 +188,8 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      * {@inheritDoc}
      */
     @Override
-    public IWorkflowManager createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts, final String name) {
+    public IWorkflowManager createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts,
+        final String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -208,7 +207,8 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      * {@inheritDoc}
      */
     @Override
-    public IConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
+    public IConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest,
+        final int destPort) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -226,7 +226,8 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      * {@inheritDoc}
      */
     @Override
-    public boolean canAddNewConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
+    public boolean canAddNewConnection(final NodeID source, final int sourcePort, final NodeID dest,
+        final int destPort) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -290,7 +291,6 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public IConnectionContainer getConnection(final ConnectionID id) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -487,8 +487,8 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      * {@inheritDoc}
      */
     @Override
-    public ICollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotationID[] orgAnnos,
-        final String name) {
+    public ICollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs,
+        final WorkflowAnnotationID[] orgAnnos, final String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -679,7 +679,10 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public Collection<INodeContainer> getAllNodeContainers() {
         List<NodeEnt> nodes = m_workflow.getNodes();
-        return null;
+        //return exactly the same node container instance for the same node entity
+        return nodes.stream()
+            .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new NodeContainer(n), NodeContainer.class))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -687,8 +690,12 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Collection<IConnectionContainer> getConnectionContainers() {
+        //TODO e.g. put the entities into a hash map for quicker access
         List<ConnectionEnt> connections = m_workflow.getConnections();
-        return null;
+        //return exactly the same connection container instance for the same connection entity
+        return connections.stream()
+            .map(c -> WrapperMapUtil.getOrCreate(c, k -> new ConnectionContainer(c), ConnectionContainer.class))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -696,8 +703,11 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public INodeContainer getNodeContainer(final NodeID id) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO e.g. put the node entities into a hash map for quicker access
+        final NodeEnt nodeEnt =
+            m_workflow.getNodes().stream().filter(n -> n.getNodeID() == id.toString()).findFirst().get();
+        //return exactly the same node container instance for the same node entity
+        return WrapperMapUtil.getOrCreate(id, k -> new NodeContainer(nodeEnt), NodeContainer.class);
     }
 
     /**
@@ -1167,6 +1177,5 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         // TODO Auto-generated method stub
 
     }
-
 
 }

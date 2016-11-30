@@ -44,14 +44,65 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2016 (hornm): created
+ *   Oct 13, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.clientproxy.workflow.wrapped;
+
+import org.knime.core.api.node.workflow.IWorkflowInPort;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeInPortEnt extends NodePortEnt {
+public class WorkflowInPortWrapper extends NodeInPortWrapper implements IWorkflowInPort {
+
+    private IWorkflowInPort m_delegate;
+
+    /**
+     * @param delegate the implementation to delegate to
+     *
+     */
+    private WorkflowInPortWrapper(final IWorkflowInPort delegate) {
+        super(delegate);
+        m_delegate = delegate;
+    }
+
+    public static final WorkflowInPortWrapper wrap(final IWorkflowInPort wip) {
+        return WrapperMapUtil.getOrCreate(wip, o -> new WorkflowInPortWrapper(o), WorkflowInPortWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIndex(final int portIndex) {
+        m_delegate.setPortIndex(portIndex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeOutPortWrapper getUnderlyingPort() {
+        return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort());
+    }
+
 
 }
