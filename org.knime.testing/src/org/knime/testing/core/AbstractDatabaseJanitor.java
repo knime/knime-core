@@ -136,7 +136,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      *
      * @return the prefix (ending with ".")
      */
-    protected final String getVariablePrefix() {
+    protected String getVariablePrefix() {
         return getJDBCUrl("db").split(":")[1] + ".";
     }
 
