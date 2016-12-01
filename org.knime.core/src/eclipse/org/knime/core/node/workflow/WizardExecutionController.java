@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -417,7 +418,7 @@ public final class WizardExecutionController extends ExecutionController {
         }
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
         String pageLayout = subNC.getLayoutJSONString();
-        if (pageLayout == null || "".equals(pageLayout)) {
+        if (StringUtils.isEmpty(pageLayout)) {
             try {
                 pageLayout = LayoutUtil.createDefaultLayout(resultMap);
             } catch (IOException ex) {
@@ -559,6 +560,11 @@ public final class WizardExecutionController extends ExecutionController {
             return resultMap;
         }
         // validation succeeded, reset subnode and apply
+        if (!subNodeNC.getInternalState().isExecuted()) { // this used to be an error but see SRV-745
+            LOGGER.warnWithFormat("Wrapped metanode (%s) not fully executed on appyling new values -- "
+                    + "consider to change wrapped metanode layout to have self-contained executable units",
+                    subNodeNC.getNameWithID());
+        }
         manager.resetHaltedSubnode(currentID);
 //        manager.resetAndConfigureNode(currentID);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {

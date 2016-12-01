@@ -4737,17 +4737,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Called by the wizard execution prior setting new values into an executed subnode. It will reset the node but not
-     * propagate any new configuration.
+     * propagate any new configuration. Usually the workflow (metanode) will be fully executed when this method is
+     * called but it's not asserted (see also SRV-745).
      * @param id The subnode id
      * @throws IllegalArgumentException If subnode does not exist
-     * @throws IllegalStateException If subnode is not executed (new values in wizard are set on executed subnodes)
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
     void resetHaltedSubnode(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-            CheckUtils.checkState(snc.getInternalState().isExecuted(),
-                "Wrapped Metanode %s not executed", snc.getNameWithID());
             for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
