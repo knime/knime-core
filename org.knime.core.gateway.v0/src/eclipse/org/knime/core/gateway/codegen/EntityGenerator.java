@@ -185,15 +185,14 @@ public final class EntityGenerator {
                 new DefaultEntityField("ClassName", "String"),
                 new DefaultEntityField("NodeName", "String")),
             new DefaultEntityDef("ConnectionEnt",
-                new DefaultEntityField("Dest", "EntityID"),
+                new DefaultEntityField("Dest", "String"),
                 new DefaultEntityField("DestPort", "int"),
-                new DefaultEntityField("Source", "EntityID"),
+                new DefaultEntityField("Source", "String"),
                 new DefaultEntityField("SourcePort", "int"),
                 new DefaultEntityField("IsDeleteable", "boolean"),
                 new DefaultEntityField("BendPoints", "List<XYEnt>"),
                 new DefaultEntityField("Type", "String"))
-                .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID",
-                    "org.knime.core.gateway.v0.workflow.entity.XYEnt",
+                .addImports("org.knime.core.gateway.v0.workflow.entity.XYEnt",
                     "java.util.List"),
             new DefaultEntityDef("NodePortEnt",
                 new DefaultEntityField("PortIndex", "int"),
@@ -234,7 +233,10 @@ public final class EntityGenerator {
             new DefaultEntityDef("WorkflowEnt",
                 new DefaultEntityField("Nodes", "List<NodeEnt>"),
                 new DefaultEntityField("Connections", "List<ConnectionEnt>"))
-                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt"));
+                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt"),
+            new DefaultEntityDef("EntityID",
+                new DefaultEntityField("ID", "String"),
+                new DefaultEntityField("Type", "String")));
     }
 
 

@@ -57,13 +57,8 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractNodeFactoryIDEnt implements NodeFactoryIDEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private String m_ClassName;
 	private String m_NodeName;
-
-	
 
     /**
      *
@@ -71,14 +66,6 @@ public class AbstractNodeFactoryIDEnt implements NodeFactoryIDEnt {
     protected AbstractNodeFactoryIDEnt(final AbstractNodeFactoryIDEntBuilder builder) {
 		m_ClassName = builder.m_ClassName;
 		m_NodeName = builder.m_NodeName;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

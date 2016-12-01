@@ -50,6 +50,8 @@ package org.knime.core.api.node.workflow.project;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.CoreException;
@@ -75,6 +77,12 @@ public class WorkflowProjectManager {
 
     private static final Logger LOGGER = Logger.getLogger(HostUtils.class);
 
+    private static final List<WorkflowProjectFactory> FACTORIES =
+        collectExecutableExtensions(WorkflowProjectFactory.EXT_POINT_ID, WorkflowProjectFactory.EXT_POINT_ATTR);
+
+    //TODO just temporary for testing
+    private static final Map<String, IWorkflowManager> WRAPPED_WFS = new WeakHashMap<String, IWorkflowManager>();
+
     /**
      * The root of all workflow projects, no matter from which source
      */
@@ -85,7 +93,7 @@ public class WorkflowProjectManager {
     }
 
     public static WorkflowGroup getRootWorkflowGroup() {
-        if(ROOT == null) {
+        if (ROOT == null) {
             //load all other root workflow groups from the extension points
             //TODO
         }
@@ -93,7 +101,20 @@ public class WorkflowProjectManager {
     }
 
     public static IWorkflowManager openProject(final WorkflowProject wfp) {
-        return null;
+        //TODO just for testing
+        return WRAPPED_WFS.get(wfp.getName());
+    }
+
+    /**
+     * Just a temporary method for testing - to be deleted in near future
+     *
+     * @param wfm
+     * @return
+     */
+    @Deprecated
+    public static IWorkflowManager wrap(final IWorkflowManager wfm) {
+        WRAPPED_WFS.put(wfm.getID().toString(), wfm);
+        return FACTORIES.get(0).wrap(wfm);
     }
 
     /**
@@ -143,19 +164,21 @@ public class WorkflowProjectManager {
             } catch (CoreException ex) {
                 Throwable cause = ex.getStatus().getException();
                 if (cause != null) {
-                    LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr + "': " + cause.getMessage(), ex);
+                    LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr
+                        + "': " + cause.getMessage(), ex);
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.");
                     }
                 } else {
-                    LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr + "'", ex);
+                    LOGGER.error(
+                        "Problems during initialization of executable extension with attribute id '" + attr + "'", ex);
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.");
                     }
                 }
             } catch (Throwable t) {
-                LOGGER.error("Problems during initialization of executable extension with attribute id '"
-                    + attr + "'", t);
+                LOGGER.error("Problems during initialization of executable extension with attribute id '" + attr + "'",
+                    t);
                 if (decl != null) {
                     LOGGER.error("Extension " + decl + " ignored.");
                 }

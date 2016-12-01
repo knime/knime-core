@@ -43,20 +43,76 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.serverproxy.entity;
+
+
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
- * Test entity.
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public interface TestEnt extends GatewayEntity {
+public class AbstractEntityID implements EntityID {
 
-    String getAttr1();
+	private String m_ID;
+	private String m_Type;
 
-    int getAttr2();
+    /**
+     *
+     */
+    protected AbstractEntityID(final AbstractEntityIDBuilder builder) {
+		m_ID = builder.m_ID;
+		m_Type = builder.m_Type;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getID() {
+        return m_ID;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getType() {
+        return m_Type;
+    }
+    
+
+
+
+    public static abstract class AbstractEntityIDBuilder implements EntityIDBuilder {
+
+		private String m_ID;
+		private String m_Type;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EntityIDBuilder setID(final String ID) {
+        	m_ID = ID;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EntityIDBuilder setType(final String Type) {
+        	m_Type = Type;
+            return this;
+        }
+        
+
+
+
+    }
 
 }

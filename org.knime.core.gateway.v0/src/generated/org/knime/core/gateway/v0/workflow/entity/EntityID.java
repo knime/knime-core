@@ -43,73 +43,18 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Dec 1, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractEntityID;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
-import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
-
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
-import com.facebook.swift.codec.ThriftStruct;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@ThriftStruct(builder = TEntityIDBuilder.class)
-public class TEntityID extends AbstractEntityID {
+public interface EntityID extends GatewayEntity {
 
-    /**
-     * @param builder
-     */
-    public TEntityID(final AbstractEntityIDBuilder builder) {
-        super(builder);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @ThriftField
-    public String getType() {
-        return super.getType();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @ThriftField
-    public String getID() {
-        return super.getID();
-    }
-
-    public static class TEntityIDBuilder extends AbstractEntityIDBuilder {
-
-        @Override
-        @ThriftConstructor
-        public TEntityID build() {
-            return new TEntityID(this);
-        }
-
-        @Override
-        @ThriftField
-        public EntityIDBuilder setID(final String id) {
-            return super.setID(id);
-        }
-
-        @Override
-        @ThriftField
-        public EntityIDBuilder setType(final String type) {
-            return super.setType(type);
-        }
-
-
-
-    }
-
-}
+  	String getID();
+ 	
+  	String getType();
+ 	
+ }

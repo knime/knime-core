@@ -54,11 +54,8 @@ import $import;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface $name extends Identifiable, GatewayEntity {
+public interface $name extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
  #foreach( $field in $fields )
  	$field.getType() get$field.getName()();
  	

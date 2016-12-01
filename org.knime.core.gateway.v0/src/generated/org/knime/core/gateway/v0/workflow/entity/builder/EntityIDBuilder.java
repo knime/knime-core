@@ -43,18 +43,19 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 7, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity.builder;
+
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
- * Marks an object that has an ID.
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface Identifiable {
+public interface EntityIDBuilder extends GatewayEntityBuilder<EntityID> {
 
-    EntityID getID();
+	EntityIDBuilder setID(String ID);
+
+	EntityIDBuilder setType(String Type);
 
 }

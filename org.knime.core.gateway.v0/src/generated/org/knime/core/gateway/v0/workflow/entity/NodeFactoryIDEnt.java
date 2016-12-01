@@ -51,11 +51,8 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeFactoryIDEnt extends Identifiable, GatewayEntity {
+public interface NodeFactoryIDEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	String getClassName();
  	
   	String getNodeName();

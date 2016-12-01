@@ -60,13 +60,8 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractWorkflowEnt implements WorkflowEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private List<NodeEnt> m_Nodes;
 	private List<ConnectionEnt> m_Connections;
-
-	
 
     /**
      *
@@ -74,14 +69,6 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
     protected AbstractWorkflowEnt(final AbstractWorkflowEntBuilder builder) {
 		m_Nodes = builder.m_Nodes;
 		m_Connections = builder.m_Connections;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

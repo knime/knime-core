@@ -51,11 +51,8 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface JobManagerEnt extends Identifiable, GatewayEntity {
+public interface JobManagerEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	String getName();
  	
   	String getJobManagerID();

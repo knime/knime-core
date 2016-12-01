@@ -48,11 +48,17 @@
  */
 package org.knime.core.clientproxy.workflow.project;
 
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
+import static org.knime.core.gateway.services.ServiceManager.service;
+
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowGroup;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
-import org.knime.core.clientproxy.workflow.wrapped.WorkflowManagerWrapper;
+import org.knime.core.clientproxy.workflow.WorkflowManager;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
 /**
  * Mainly for testing and prototyping purposes.
@@ -85,8 +91,13 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
     @Override
     public IWorkflowManager wrap(final IWorkflowManager wfm) {
         //server has already been started with the bundle activation
+        //but here: make sure that the "server" knows the workflow
+
         //return 'client' workflow manager
-        return WorkflowManagerWrapper.wrap(wfm);
+        //download 'workflow' from server'
+        EntityID workflowId =
+                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
+        return new WorkflowManager(service(WorkflowService.class).getWorkflow(workflowId));
     }
 
 }

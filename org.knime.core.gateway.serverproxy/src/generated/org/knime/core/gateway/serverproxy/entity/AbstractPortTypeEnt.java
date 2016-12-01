@@ -57,16 +57,11 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractPortTypeEnt implements PortTypeEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private String m_Name;
 	private String m_PortObjectClassName;
 	private boolean m_IsOptional;
 	private int m_Color;
 	private boolean m_IsHidden;
-
-	
 
     /**
      *
@@ -77,14 +72,6 @@ public class AbstractPortTypeEnt implements PortTypeEnt {
 		m_IsOptional = builder.m_IsOptional;
 		m_Color = builder.m_Color;
 		m_IsHidden = builder.m_IsHidden;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

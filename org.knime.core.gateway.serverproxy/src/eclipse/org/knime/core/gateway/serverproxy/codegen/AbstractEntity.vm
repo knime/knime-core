@@ -60,14 +60,9 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class Abstract${name} implements ${name} {
 
-	//TODO set id
-	private EntityID m_id;
-
 #foreach( $field in $fields )
 	private $field.getType() m_$field.getName();
 #end
-
-	
 
     /**
      *
@@ -76,14 +71,6 @@ public class Abstract${name} implements ${name} {
 #foreach( $field in $fields )
 		m_$field.getName() = builder.m_$field.getName();
 #end
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 #foreach( $field in $fields )

@@ -57,13 +57,8 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractNodeMessageEnt implements NodeMessageEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private String m_Message;
 	private String m_Type;
-
-	
 
     /**
      *
@@ -71,14 +66,6 @@ public class AbstractNodeMessageEnt implements NodeMessageEnt {
     protected AbstractNodeMessageEnt(final AbstractNodeMessageEntBuilder builder) {
 		m_Message = builder.m_Message;
 		m_Type = builder.m_Type;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

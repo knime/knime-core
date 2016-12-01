@@ -54,11 +54,8 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends Identifiable, GatewayEntity {
+public interface WorkflowEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	List<NodeEnt> getNodes();
  	
   	List<ConnectionEnt> getConnections();

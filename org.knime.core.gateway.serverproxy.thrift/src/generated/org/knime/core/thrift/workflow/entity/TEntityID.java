@@ -43,31 +43,68 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.clientproxy.workflow;
+package org.knime.core.thrift.workflow.entity;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
-import static org.knime.core.gateway.services.ServiceManager.service;
 
-import org.knime.core.api.node.workflow.ITest;
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.gateway.v0.workflow.service.TestService;
+import com.facebook.swift.codec.ThriftConstructor;
+import com.facebook.swift.codec.ThriftField;
+import com.facebook.swift.codec.ThriftStruct;
+
+import org.knime.core.gateway.serverproxy.entity.AbstractEntityID;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
+
 
 /**
- * Test class that calls a method from the {@link TestService}.
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class Test implements ITest {
+@ThriftStruct(builder = TEntityIDBuilder.class)
+public class TEntityID extends AbstractEntityID {
+
+    /**
+     * @param builder
+     */
+    protected TEntityID(final AbstractEntityIDBuilder builder) {
+        super(builder);
+    }
 
     @Override
-    public String method(final String param) {
-        TestService service = service(TestService.class);
-        TestEnt testEnt = builder(TestEntBuilder.class).setAttr1(param).setAttr2(3).build();
-        return service.method(testEnt).getAttr1();
+    @ThriftField
+    public String getID() {
+        return super.getID();
+    }
+    
+    @Override
+    @ThriftField
+    public String getType() {
+        return super.getType();
+    }
+    
+
+    public static class TEntityIDBuilder extends AbstractEntityIDBuilder {
+
+        @Override
+        @ThriftConstructor
+        public TEntityID build() {
+            return new TEntityID(this);
+        }
+
+        @Override
+        @ThriftField
+        public TEntityIDBuilder setID(final String ID) {
+            super.setID(ID);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TEntityIDBuilder setType(final String Type) {
+            super.setType(Type);
+            return this;
+        }
+        
     }
 
 }

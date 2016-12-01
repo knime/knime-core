@@ -58,11 +58,8 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEnt extends Identifiable, GatewayEntity {
+public interface NodeEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	EntityID getParent();
  	
   	JobManagerEnt getJobManager();

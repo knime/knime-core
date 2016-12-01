@@ -59,14 +59,9 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractNodeInPortEnt implements NodeInPortEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private int m_PortIndex;
 	private PortTypeEnt m_PortType;
 	private String m_PortName;
-
-	
 
     /**
      *
@@ -75,14 +70,6 @@ public class AbstractNodeInPortEnt implements NodeInPortEnt {
 		m_PortIndex = builder.m_PortIndex;
 		m_PortType = builder.m_PortType;
 		m_PortName = builder.m_PortName;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

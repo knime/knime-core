@@ -53,11 +53,8 @@ import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeOutPortEnt extends Identifiable, GatewayEntity {
+public interface NodeOutPortEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	int getPortIndex();
  	
   	PortTypeEnt getPortType();

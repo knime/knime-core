@@ -57,13 +57,8 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractJobManagerEnt implements JobManagerEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private String m_Name;
 	private String m_JobManagerID;
-
-	
 
     /**
      *
@@ -71,14 +66,6 @@ public class AbstractJobManagerEnt implements JobManagerEnt {
     protected AbstractJobManagerEnt(final AbstractJobManagerEntBuilder builder) {
 		m_Name = builder.m_Name;
 		m_JobManagerID = builder.m_JobManagerID;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

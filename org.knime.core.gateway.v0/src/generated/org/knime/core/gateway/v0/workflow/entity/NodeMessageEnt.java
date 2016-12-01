@@ -51,11 +51,8 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeMessageEnt extends Identifiable, GatewayEntity {
+public interface NodeMessageEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	String getMessage();
  	
   	String getType();

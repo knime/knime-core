@@ -73,6 +73,7 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
@@ -87,11 +88,24 @@ public class NodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
 
+    //can also be a workflow (so far no inheritance in entity classes)
+    //TODO use either the workflow or the node entity
+    protected final WorkflowEnt m_workflow;
+
     /**
      * @param node
      */
     public NodeContainer(final NodeEnt node) {
         m_node = node;
+        m_workflow = null;
+    }
+
+    /**
+     *
+     */
+    public NodeContainer(final WorkflowEnt workflow) {
+        m_workflow = workflow;
+        m_node = null;
     }
 
     /**
@@ -108,8 +122,11 @@ public class NodeContainer implements INodeContainer {
     @Override
     public IWorkflowManager getParent() {
         EntityID parent = m_node.getParent();
+        assert parent.getType().equals("WorkflowEnt");
+        //download 'workflow' from 'server'
+        WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent);
         //TODO return same instance if the instance for this ID has already been created
-        return new WorkflowManager(service(WorkflowService.class).getWorkflow(parent));
+        return new WorkflowManager(workflow);
     }
 
     /**
@@ -338,7 +355,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean canExecuteUpToHere() {
-        return service(ExecutionService.class).canExecuteUpToHere(m_node.getID());
+        return service(ExecutionService.class).canExecuteUpToHere(null);
     }
 
     /**

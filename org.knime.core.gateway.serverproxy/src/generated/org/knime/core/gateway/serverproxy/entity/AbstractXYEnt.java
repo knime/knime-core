@@ -57,13 +57,8 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractXYEnt implements XYEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private int m_X;
 	private int m_Y;
-
-	
 
     /**
      *
@@ -71,14 +66,6 @@ public class AbstractXYEnt implements XYEnt {
     protected AbstractXYEnt(final AbstractXYEntBuilder builder) {
 		m_X = builder.m_X;
 		m_Y = builder.m_Y;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

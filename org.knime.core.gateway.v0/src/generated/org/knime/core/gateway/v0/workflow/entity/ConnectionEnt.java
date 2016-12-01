@@ -54,11 +54,8 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ConnectionEnt extends Identifiable, GatewayEntity {
+public interface ConnectionEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	EntityID getDest();
  	
   	int getDestPort();

@@ -52,11 +52,8 @@ import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowAnnotationEnt extends Identifiable, GatewayEntity {
+public interface WorkflowAnnotationEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	String getText();
  	
   	BoundsEnt getBounds();

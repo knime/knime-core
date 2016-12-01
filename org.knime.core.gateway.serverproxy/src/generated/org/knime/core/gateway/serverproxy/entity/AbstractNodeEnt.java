@@ -64,9 +64,6 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractNodeEnt implements NodeEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private EntityID m_Parent;
 	private JobManagerEnt m_JobManager;
 	private NodeMessageEnt m_NodeMessage;
@@ -78,8 +75,6 @@ public class AbstractNodeEnt implements NodeEnt {
 	private BoundsEnt m_Bounds;
 	private boolean m_IsDeletable;
 	private String m_NodeState;
-
-	
 
     /**
      *
@@ -96,14 +91,6 @@ public class AbstractNodeEnt implements NodeEnt {
 		m_Bounds = builder.m_Bounds;
 		m_IsDeletable = builder.m_IsDeletable;
 		m_NodeState = builder.m_NodeState;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

@@ -51,11 +51,8 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface BoundsEnt extends Identifiable, GatewayEntity {
+public interface BoundsEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	int getX();
  	
   	int getY();

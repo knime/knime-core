@@ -59,11 +59,8 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NativeNodeEnt extends Identifiable, GatewayEntity {
+public interface NativeNodeEnt extends GatewayEntity {
 
-    @Override
-    EntityID getID();
-    
   	NodeFactoryIDEnt getNodeFactoryID();
  	
   	EntityID getParent();

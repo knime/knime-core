@@ -58,9 +58,6 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private String m_Text;
 	private BoundsEnt m_Bounds;
 	private int m_BgColor;
@@ -68,8 +65,6 @@ public class AbstractWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
 	private int m_BorderColor;
 	private int m_FontSize;
 	private String m_Alignment;
-
-	
 
     /**
      *
@@ -82,14 +77,6 @@ public class AbstractWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
 		m_BorderColor = builder.m_BorderColor;
 		m_FontSize = builder.m_FontSize;
 		m_Alignment = builder.m_Alignment;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

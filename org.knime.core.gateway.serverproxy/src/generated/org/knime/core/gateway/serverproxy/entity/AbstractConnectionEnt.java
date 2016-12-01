@@ -60,9 +60,6 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractConnectionEnt implements ConnectionEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private EntityID m_Dest;
 	private int m_DestPort;
 	private EntityID m_Source;
@@ -70,8 +67,6 @@ public class AbstractConnectionEnt implements ConnectionEnt {
 	private boolean m_IsDeleteable;
 	private List<XYEnt> m_BendPoints;
 	private String m_Type;
-
-	
 
     /**
      *
@@ -84,14 +79,6 @@ public class AbstractConnectionEnt implements ConnectionEnt {
 		m_IsDeleteable = builder.m_IsDeleteable;
 		m_BendPoints = builder.m_BendPoints;
 		m_Type = builder.m_Type;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**

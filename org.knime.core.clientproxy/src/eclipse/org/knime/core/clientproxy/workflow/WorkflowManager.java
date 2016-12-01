@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,15 +102,19 @@ import org.knime.core.util.WrapperMapUtil;
  */
 public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
-    private WorkflowEnt m_workflow;
+    private Map<String, NodeEnt> m_nodeMap = new HashMap<String, NodeEnt>();
 
     /**
      * @param node
      */
     public WorkflowManager(final WorkflowEnt workflow) {
-        //TODO
-        super(null);
-        m_workflow = workflow;
+        //'download' workflow from 'server'
+        super(workflow);
+
+        //fill data structures for quicker access
+        for(NodeEnt n : workflow.getNodes()) {
+            m_nodeMap.put(n.getNodeID().toString(), n);
+        }
     }
 
     /**
@@ -291,6 +296,13 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public IConnectionContainer getConnection(final ConnectionID id) {
+        //TODO introduce a more efficient data structure to access the right connection
+        for (ConnectionEnt c : m_workflow.getConnections()) {
+            if (m_nodeMap.get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
+                && id.getDestinationPort() == c.getDestPort()) {
+                return new ConnectionContainer(c);
+            }
+        }
         return null;
     }
 

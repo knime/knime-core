@@ -57,15 +57,10 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractBoundsEnt implements BoundsEnt {
 
-	//TODO set id
-	private EntityID m_id;
-
 	private int m_X;
 	private int m_Y;
 	private int m_Width;
 	private int m_Height;
-
-	
 
     /**
      *
@@ -75,14 +70,6 @@ public class AbstractBoundsEnt implements BoundsEnt {
 		m_Y = builder.m_Y;
 		m_Width = builder.m_Width;
 		m_Height = builder.m_Height;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityID getID() {
-        return m_id;
     }
     
 	/**
