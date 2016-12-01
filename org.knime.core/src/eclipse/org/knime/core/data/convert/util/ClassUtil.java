@@ -57,6 +57,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataType;
 import org.knime.core.util.Pair;
@@ -68,13 +69,14 @@ import org.knime.core.util.Pair;
  * @since 3.2
  */
 public class ClassUtil {
+
     private ClassUtil() {
         // no instantiation
     }
 
-
     /**
-     * Execute a consumer for a class, every interface and its superclass recursively.
+     * Execute a consumer for a class, every interface and its superclass recursively, breadth-first superclass before
+     * interfaces order.
      *
      * @param cls Class to map to
      * @param lambda {@link Consumer} to execute for every {@link Class}
@@ -101,7 +103,24 @@ public class ClassUtil {
     }
 
     /**
-     * Execute a consumer for a collection of classes, every interface and their superclass recursively.
+     * Create a sequential stream of the entire class hierarchy of given class including the class itself, in
+     * depth-first superclass before interfaces order.
+     *
+     * @param cls the class
+     * @return Stream of the class hierarchy
+     * @since 3.3
+     */
+    public static Stream<Class<?>> streamForClassHierarchy(final Class<?> cls) {
+        return Stream.concat(
+            Stream.of(cls),
+            Stream.concat(Stream.of(cls.getSuperclass()), Arrays.stream(cls.getInterfaces()))
+                .filter(c -> c != null)
+                .flatMap(c -> streamForClassHierarchy(c)));
+    }
+
+    /**
+     * Execute a consumer for a collection of classes, every interface and their superclass recursively, breadth-first
+     * superclass before interfaces order.
      *
      * @param clss Classes to map to
      * @param lambda {@link Consumer} to execute for every {@link Class}

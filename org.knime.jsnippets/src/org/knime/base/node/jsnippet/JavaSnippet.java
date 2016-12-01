@@ -93,8 +93,6 @@ import javax.tools.JavaFileObject.Kind;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseFileObject;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
-import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
-import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.knime.base.node.jsnippet.expression.Abort;
@@ -137,6 +135,7 @@ import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.java.CollectionConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
+import org.knime.core.data.convert.util.ClassUtil;
 import org.knime.core.data.convert.util.MultiParentClassLoader;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataTable;
@@ -1180,15 +1179,15 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             return javaTypeCache;
         }
 
-        final ClassLoader l = javaType.getClassLoader();
         final Set<File> result = new LinkedHashSet<>();
         final Set<URL> urls = new LinkedHashSet<>();
 
-        if (l instanceof ModuleClassLoader) {
-            final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)l;
-            final ClasspathManager classpathManager = moduleClassLoader.getClasspathManager();
-
-            for (ClasspathEntry entry : classpathManager.getHostClasspathEntries()) {
+        ClassUtil.streamForClassHierarchy(javaType)
+            .filter(c -> c.getClassLoader() instanceof ModuleClassLoader)
+            .flatMap(c -> {
+                final ModuleClassLoader moduleClassLoader = (ModuleClassLoader)c.getClassLoader();
+                return Arrays.stream(moduleClassLoader.getClasspathManager().getHostClasspathEntries());
+            }).forEach(entry -> {
                 final BundleFile file = entry.getBundleFile();
                 try {
                     final URL url = file.getBaseFile().toURI().toURL();
@@ -1198,8 +1197,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                         + "\" while assembling build path for custom java type \"" + javaType.getName() + "\"");
                 }
                 result.add(file.getBaseFile());
-            }
-        }
+            });
 
         /* Check whether the java snippet compiler can later find the class with this classpath */
         try (final URLClassLoader classpathClassLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]))) {
