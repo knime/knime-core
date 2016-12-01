@@ -82,7 +82,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -208,7 +210,7 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
     private JLabel m_errorDetail;
 
-    private JLabel m_analyzeWarn;
+    private JTextArea m_analyzeWarn;
 
     private JPanel m_previewPanel;
 
@@ -458,8 +460,14 @@ class FileReaderNodeDialog extends NodeDialogPane {
         tableBox.add(m_previewTableView);
 
         // add the analyzer warning at the bottom
-        m_analyzeWarn = new JLabel("");
+        m_analyzeWarn = new JTextArea("");
         m_analyzeWarn.setForeground(Color.red);
+        m_analyzeWarn.setWrapStyleWord(true);
+        m_analyzeWarn.setLineWrap(true);
+        m_analyzeWarn.setOpaque(false);
+        m_analyzeWarn.setEditable(false);
+        m_analyzeWarn.setFocusable(false);
+        m_analyzeWarn.setFont(UIManager.getFont("Label.font"));
         JPanel analBox = new JPanel();
         analBox.setLayout(new BoxLayout(analBox, BoxLayout.X_AXIS));
         analBox.add(Box.createHorizontalGlue());
