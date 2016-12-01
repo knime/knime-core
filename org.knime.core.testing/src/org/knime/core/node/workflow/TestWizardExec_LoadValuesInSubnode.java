@@ -59,6 +59,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.TestWizardExec_Loop_Simple.WizardHold;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 
@@ -130,7 +131,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
             checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
             currentWizardPage = wizardController.getCurrentWizardPage();
             assertEquals("Labeling page should have 3 components", 3, currentWizardPage.getPageMap().size());
-            assertNotNull("Labeling page should contain string input", currentWizardPage.getPageMap().get(stringInputID));
+            assertNotNull("Labeling page should contain string input", currentWizardPage.getPageMap().get(NodeIDSuffix.fromString(stringInputID)));
             valueMap.clear();
             //label for cluster
             valueMap.put(stringInputID, "{\"string\":\"Cluster " + curLoop + "\"}");
