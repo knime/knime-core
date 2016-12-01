@@ -48,7 +48,7 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  *
@@ -60,6 +60,6 @@ public interface SettingsService {
      * @param id
      * TODO return type
      */
-    void getSettings(NodeEntID id);
+    void getSettings(EntityID id);
 
 }

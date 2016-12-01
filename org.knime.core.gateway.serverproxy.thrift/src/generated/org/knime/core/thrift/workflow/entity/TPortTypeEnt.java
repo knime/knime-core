@@ -43,25 +43,107 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 11, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.thrift.workflow.entity;
 
-import java.util.List;
 
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import com.facebook.swift.codec.ThriftConstructor;
+import com.facebook.swift.codec.ThriftField;
+import com.facebook.swift.codec.ThriftStruct;
+
+import org.knime.core.gateway.serverproxy.entity.AbstractPortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
+
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
+@ThriftStruct(builder = TPortTypeEntBuilder.class)
+public class TPortTypeEnt extends AbstractPortTypeEnt {
 
-    WorkflowEntBuilder setNodes(List<NodeEnt> nodes);
+    /**
+     * @param builder
+     */
+    protected TPortTypeEnt(final AbstractPortTypeEntBuilder builder) {
+        super(builder);
+    }
 
-    WorkflowEntBuilder setConnections(List<ConnectionEnt> connections);
+    @Override
+    @ThriftField
+    public String getName() {
+        return super.getName();
+    }
+    
+    @Override
+    @ThriftField
+    public String getPortObjectClassName() {
+        return super.getPortObjectClassName();
+    }
+    
+    @Override
+    @ThriftField
+    public boolean getIsOptional() {
+        return super.getIsOptional();
+    }
+    
+    @Override
+    @ThriftField
+    public int getColor() {
+        return super.getColor();
+    }
+    
+    @Override
+    @ThriftField
+    public boolean getIsHidden() {
+        return super.getIsHidden();
+    }
+    
+
+    public static class TPortTypeEntBuilder extends AbstractPortTypeEntBuilder {
+
+        @Override
+        @ThriftConstructor
+        public TPortTypeEnt build() {
+            return new TPortTypeEnt(this);
+        }
+
+        @Override
+        @ThriftField
+        public TPortTypeEntBuilder setName(final String Name) {
+            super.setName(Name);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TPortTypeEntBuilder setPortObjectClassName(final String PortObjectClassName) {
+            super.setPortObjectClassName(PortObjectClassName);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TPortTypeEntBuilder setIsOptional(final boolean IsOptional) {
+            super.setIsOptional(IsOptional);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TPortTypeEntBuilder setColor(final int Color) {
+            super.setColor(Color);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TPortTypeEntBuilder setIsHidden(final boolean IsHidden) {
+            super.setIsHidden(IsHidden);
+            return this;
+        }
+        
+    }
 
 }

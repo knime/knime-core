@@ -43,35 +43,111 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.serverproxy.entity;
 
-import org.knime.core.gateway.serverproxy.service.AbstractTestService;
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
- * TODO: probably needs to be a singleton class
- * TODO auto-generate!
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class TTestServiceDelegate extends AbstractTestService {
+public class AbstractNodeInPortEnt implements NodeInPortEnt {
 
-    private final TTestService m_service;
+	//TODO set id
+	private EntityID m_id;
 
-    public TTestServiceDelegate(final TTestService service) {
-        m_service = service;
+	private int m_PortIndex;
+	private PortTypeEnt m_PortType;
+	private String m_PortName;
+
+	
+
+    /**
+     *
+     */
+    protected AbstractNodeInPortEnt(final AbstractNodeInPortEntBuilder builder) {
+		m_PortIndex = builder.m_PortIndex;
+		m_PortType = builder.m_PortType;
+		m_PortName = builder.m_PortName;
     }
-
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public TestEnt method(final TestEnt param) {
-        return m_service.Tmethod((TTestEnt) param);
+    public EntityID getID() {
+        return m_id;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public int getPortIndex() {
+        return m_PortIndex;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public PortTypeEnt getPortType() {
+        return m_PortType;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getPortName() {
+        return m_PortName;
+    }
+    
+
+
+
+    public static abstract class AbstractNodeInPortEntBuilder implements NodeInPortEntBuilder {
+
+		private int m_PortIndex;
+		private PortTypeEnt m_PortType;
+		private String m_PortName;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NodeInPortEntBuilder setPortIndex(final int PortIndex) {
+        	m_PortIndex = PortIndex;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NodeInPortEntBuilder setPortType(final PortTypeEnt PortType) {
+        	m_PortType = PortType;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NodeInPortEntBuilder setPortName(final String PortName) {
+        	m_PortName = PortName;
+            return this;
+        }
+        
+
+
+
     }
 
 }

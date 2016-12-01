@@ -43,27 +43,89 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 10, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.serverproxy.entity;
 
-import org.knime.core.gateway.serverproxy.service.AbstractTestService;
-import org.knime.core.thrift.workflow.entity.TTestEnt;
+
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
- * TODO auto-generate
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class TTestServiceImpl extends AbstractTestService implements TTestService {
+public class AbstractXYEnt implements XYEnt {
 
+	//TODO set id
+	private EntityID m_id;
+
+	private int m_X;
+	private int m_Y;
+
+	
+
+    /**
+     *
+     */
+    protected AbstractXYEnt(final AbstractXYEntBuilder builder) {
+		m_X = builder.m_X;
+		m_Y = builder.m_Y;
+    }
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public TTestEnt Tmethod(final TTestEnt param) {
-        return (TTestEnt)super.method(param);
+    public EntityID getID() {
+        return m_id;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public int getX() {
+        return m_X;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public int getY() {
+        return m_Y;
+    }
+    
+
+
+
+    public static abstract class AbstractXYEntBuilder implements XYEntBuilder {
+
+		private int m_X;
+		private int m_Y;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public XYEntBuilder setX(final int X) {
+        	m_X = X;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public XYEntBuilder setY(final int Y) {
+        	m_Y = Y;
+            return this;
+        }
+        
+
+
+
     }
 
 }

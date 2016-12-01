@@ -86,7 +86,7 @@ public class NodeOutPort implements INodeOutPort {
     public PortTypeUID getPortTypeUID() {
         PortTypeEnt pte = m_outPort.getPortType();
         return PortTypeUID.builder(pte.getPortObjectClassName()).setName(pte.getName()).setColor(pte.getColor())
-            .setIsHidden(pte.isHidden()).setIsOptional(pte.isOptional()).build();
+            .setIsHidden(pte.getIsHidden()).setIsOptional(pte.getIsOptional()).build();
     }
 
     /**

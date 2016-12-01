@@ -238,7 +238,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public ConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        return ConnectionContainer.wrap(m_delegate.addConnection(source, sourcePort, dest, destPort));
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -294,7 +294,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
-        return m_delegate.getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
+        throw new UnsupportedOperationException();
+//        return m_delegate.getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -304,7 +305,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
-        return m_delegate.getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
+        throw new UnsupportedOperationException();
+//        return m_delegate.getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -315,7 +317,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public ConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
-        return ConnectionContainer.wrap(m_delegate.getIncomingConnectionFor(id, portIdx));
+          throw new UnsupportedOperationException();
+//        return ConnectionContainer.wrap(m_delegate.getIncomingConnectionFor(id, portIdx));
     }
 
     /**
@@ -325,7 +328,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public Set<IConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
-        return m_delegate.getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
+        throw new UnsupportedOperationException();
+//        return m_delegate.getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -335,7 +339,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public ConnectionContainer getConnection(final ConnectionID id) {
-        return ConnectionContainer.wrap(m_delegate.getConnection(id));
+        throw new UnsupportedOperationException();
+//        return ConnectionContainer.wrap(m_delegate.getConnection(id));
     }
 
     /**
@@ -729,7 +734,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public Collection<IConnectionContainer> getConnectionContainers() {
-        return m_delegate.getConnectionContainers().stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toList());
+        throw new UnsupportedOperationException();
+//        return m_delegate.getConnectionContainers().stream().map(cc -> ConnectionContainer.wrap(cc)).collect(Collectors.toList());
     }
 
     /**

@@ -140,7 +140,7 @@ public class ConnectionContainer implements IConnectionContainer {
      */
     @Override
     public boolean isDeletable() {
-        return m_connection.isDeleteable();
+        return m_connection.getIsDeleteable();
     }
 
     /**

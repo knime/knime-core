@@ -50,23 +50,40 @@ package org.knime.core.gateway.serverproxy.entity;
 import $import;
 #end
 
+import org.knime.core.gateway.v0.workflow.entity.${name};
+import org.knime.core.gateway.v0.workflow.entity.builder.${name}Builder;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class Abstract${name} implements ${name} {
 
-#foreach( $field in $properties )
+	//TODO set id
+	private EntityID m_id;
+
+#foreach( $field in $fields )
 	private $field.getType() m_$field.getName();
 #end
+
+	
 
     /**
      *
      */
     protected Abstract${name}(final Abstract${name}Builder builder) {
-#foreach( $field in $properties )
+#foreach( $field in $fields )
 		m_$field.getName() = builder.m_$field.getName();
 #end
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EntityID getID() {
+        return m_id;
     }
     
 #foreach( $field in $fields )

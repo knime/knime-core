@@ -52,7 +52,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  *
  * @author Martin Horn
  */
-public interface EntityID {
+public interface EntityID extends GatewayEntity {
 
     String getType();
 

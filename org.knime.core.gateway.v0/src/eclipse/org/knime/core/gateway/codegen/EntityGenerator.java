@@ -52,7 +52,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -61,6 +63,8 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 
 /**
+ * NOTES:
+ * there are no inheritance hierarchies among entities. However, to avoid the repeated definition of fields, they can be taken over from other entities via ...
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -92,16 +96,26 @@ public final class EntityGenerator {
             VelocityContext context = new VelocityContext();
             List<EntityDef> entityDefs = getEntityDefs();
 
+            Map<String, EntityDef> entitiyDefMap = new HashMap<String, EntityGenerator.EntityDef>();
+            for(EntityDef entityDef : entityDefs) {
+                entitiyDefMap.put(entityDef.getName(), entityDef);
+            }
+
             for (EntityDef entityDef : entityDefs) {
                 context.put("name", entityDef.getName());
-                context.put("fields", entityDef.getFields());
-                context.put("imports", entityDef.getImports());
 
-                //TODO: support multiple super classes
-                context.put("hasSuperClass", entityDef.getSuperClasses().size() > 0);
-                if (entityDef.getSuperClasses().size() > 0) {
-                    context.put("superClass", entityDef.getSuperClasses().get(0));
+                List<EntityField> fields = new ArrayList<EntityGenerator.EntityField>(entityDef.getFields());
+                List<String> imports = new ArrayList<String>(entityDef.getImports());
+
+                //add fields and imports from other entities, too
+                for(String other : entityDef.getCommonEntities()) {
+                    fields.addAll(entitiyDefMap.get(other).getFields());
+                    imports.addAll(entitiyDefMap.get(other).getImports());
                 }
+
+                context.put("fields", fields);
+
+                context.put("imports", imports);
 
                 Template template = null;
                 try {
@@ -144,7 +158,7 @@ public final class EntityGenerator {
 
         return Arrays.asList(
             new DefaultEntityDef("NodeEnt",
-                new DefaultEntityField("Parent", "WorkflowEntID"),
+                new DefaultEntityField("Parent", "EntityID"),
                 new DefaultEntityField("JobManager", "JobManagerEnt"),
                 new DefaultEntityField("NodeMessage", "NodeMessageEnt"),
                 new DefaultEntityField("InPorts", "List<NodeInPortEnt>"),
@@ -153,9 +167,10 @@ public final class EntityGenerator {
                 new DefaultEntityField("NodeID", "String"),
                 new DefaultEntityField("NodeType", "String"),
                 new DefaultEntityField("Bounds", "BoundsEnt"),
-                new DefaultEntityField("IsDeletable", "boolean"))
+                new DefaultEntityField("IsDeletable", "boolean"),
+                new DefaultEntityField("NodeState", "String"))
                 .addImports(
-                    "org.knime.core.gateway.v0.workflow.entity.WorkflowEntID",
+                    "org.knime.core.gateway.v0.workflow.entity.EntityID",
                     "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt",
                     "org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt",
                     "org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt",
@@ -164,7 +179,7 @@ public final class EntityGenerator {
                     "java.util.List"),
             new DefaultEntityDef("NativeNodeEnt",
                 new DefaultEntityField("NodeFactoryID", "NodeFactoryIDEnt"))
-                .addSuperClasses("NodeEnt")
+                .addFieldsFrom("NodeEnt")
                 .addImports("org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"),
             new DefaultEntityDef("NodeFactoryIDEnt",
                 new DefaultEntityField("ClassName", "String"),
@@ -172,7 +187,7 @@ public final class EntityGenerator {
             new DefaultEntityDef("ConnectionEnt",
                 new DefaultEntityField("Dest", "EntityID"),
                 new DefaultEntityField("DestPort", "int"),
-                new DefaultEntityField("Source", "int"),
+                new DefaultEntityField("Source", "EntityID"),
                 new DefaultEntityField("SourcePort", "int"),
                 new DefaultEntityField("IsDeleteable", "boolean"),
                 new DefaultEntityField("BendPoints", "List<XYEnt>"),
@@ -185,8 +200,8 @@ public final class EntityGenerator {
                 new DefaultEntityField("PortType", "PortTypeEnt"),
                 new DefaultEntityField("PortName", "String"))
                 .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
-            new DefaultEntityDef("NodeInPortEnt").addSuperClasses("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
-            new DefaultEntityDef("NodeOutPortEnt").addSuperClasses("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
+            new DefaultEntityDef("NodeInPortEnt").addFieldsFrom("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
+            new DefaultEntityDef("NodeOutPortEnt").addFieldsFrom("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
             new DefaultEntityDef("PortTypeEnt",
                 new DefaultEntityField("Name", "String"),
                 new DefaultEntityField("PortObjectClassName", "String"),
@@ -198,7 +213,7 @@ public final class EntityGenerator {
                 new DefaultEntityField("Type", "String")),
             new DefaultEntityDef("JobManagerEnt",
                 new DefaultEntityField("Name", "String"),
-                new DefaultEntityField("ID", "String")),
+                new DefaultEntityField("JobManagerID", "String")),
             new DefaultEntityDef("BoundsEnt",
                 new DefaultEntityField("X", "int"),
                 new DefaultEntityField("Y", "int"),
@@ -215,7 +230,7 @@ public final class EntityGenerator {
                 new DefaultEntityField("BorderColor", "int"),
                 new DefaultEntityField("FontSize", "int"),
                 new DefaultEntityField("Alignment", "String"))
-                .addImports("org.knime.core.gateway.v0.workflow.entity.BondsEnt"),
+                .addImports("org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
             new DefaultEntityDef("WorkflowEnt",
                 new DefaultEntityField("Nodes", "List<NodeEnt>"),
                 new DefaultEntityField("Connections", "List<ConnectionEnt>"))
@@ -229,7 +244,7 @@ public final class EntityGenerator {
 
         List<EntityField> getFields();
 
-        List<String> getSuperClasses();
+        List<String> getCommonEntities();
 
         List<String> getImports();
 
@@ -248,7 +263,7 @@ public final class EntityGenerator {
 
         private String m_name;
 
-        private List<String> m_superClasses = new ArrayList<String>();
+        private List<String> m_commonEntities = new ArrayList<String>();
 
         private List<String> m_imports = new ArrayList<String>();
 
@@ -260,9 +275,9 @@ public final class EntityGenerator {
             m_name = name;
         }
 
-        public DefaultEntityDef addSuperClasses(final String... classes) {
-            for(String s : classes) {
-                m_superClasses.add(s);
+        public DefaultEntityDef addFieldsFrom(final String... entities) {
+            for(String s : entities) {
+                m_commonEntities.add(s);
             }
             return this;
         }
@@ -294,8 +309,8 @@ public final class EntityGenerator {
          * {@inheritDoc}
          */
         @Override
-        public List<String> getSuperClasses() {
-            return m_superClasses;
+        public List<String> getCommonEntities() {
+            return m_commonEntities;
         }
 
         /**

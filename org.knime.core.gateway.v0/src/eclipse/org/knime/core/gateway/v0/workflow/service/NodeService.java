@@ -50,9 +50,8 @@ package org.knime.core.gateway.v0.workflow.service;
 
 import java.util.List;
 
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 
 /**
  *
@@ -62,9 +61,9 @@ public interface NodeService extends GatewayService {
 
     void updateNode(NodeEnt n);
 
-    NodeEnt getNode(NodeEntID id);
+    NodeEnt getNode(EntityID id);
 
-    WorkflowEntID getParent(NodeEntID id);
+    EntityID getParent(EntityID id);
 
     List<String> getNodeTypes();
 

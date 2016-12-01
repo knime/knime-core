@@ -43,25 +43,25 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 10, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.thrift.workflow.entity.TTestEnt;
-
-import com.facebook.swift.service.ThriftMethod;
-import com.facebook.swift.service.ThriftService;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 /**
- * TODO auto-generate
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-@ThriftService
-public interface TTestService {
+public interface PortTypeEntBuilder extends GatewayEntityBuilder<PortTypeEnt> {
 
-        @ThriftMethod
-        TTestEnt Tmethod(final TTestEnt param);
+	PortTypeEntBuilder setName(String Name);
+
+	PortTypeEntBuilder setPortObjectClassName(String PortObjectClassName);
+
+	PortTypeEntBuilder setIsOptional(boolean IsOptional);
+
+	PortTypeEntBuilder setColor(int Color);
+
+	PortTypeEntBuilder setIsHidden(boolean IsHidden);
 
 }

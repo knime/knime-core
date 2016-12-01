@@ -48,7 +48,7 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  *
@@ -56,8 +56,8 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEntID;
  */
 public interface ExecutionService extends GatewayService {
 
-    boolean canExecuteUpToHere(NodeEntID n);
+    boolean canExecuteUpToHere(EntityID n);
 
-    boolean canExecuteNode(NodeEntID n);
+    boolean canExecuteNode(EntityID n);
 
 }

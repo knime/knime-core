@@ -61,10 +61,13 @@ import org.knime.core.api.node.workflow.project.WorkflowGroup;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
+import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
@@ -87,7 +90,7 @@ public abstract class AbstractWorkflowService implements WorkflowService {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEnt getWorkflow(final WorkflowEntID id) {
+    public WorkflowEnt getWorkflow(final EntityID id) {
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
         IWorkflowManager wfm = WorkflowProjectManager.openProject(new WorkflowProject() {
 
@@ -103,22 +106,33 @@ public abstract class AbstractWorkflowService implements WorkflowService {
 
         });
         Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
+        builder(NodeEntBuilder.class).setIsDeletable(false).setBounds(null).build();
         List<NodeEnt> nodes = nodeContainers.stream().map(nc -> {
+            int[] bounds = nc.getUIInformation().getBounds();
             return builder(NodeEntBuilder.class)
+                    .setName(nc.getName())
+                    .setNodeID(nc.getID().toString())
+                    .setNodeMessage(builder(NodeMessageEntBuilder.class).setMessage(nc.getNodeMessage().getMessage()).setType(nc.getNodeMessage().getMessageType().toString()).build())
+                    .setNodeType(nc.getType().toString())
+                    .setBounds(builder(BoundsEntBuilder.class).setX(bounds[0]).setY(bounds[1]).setWidth(bounds[2]).setHeight(bounds[3]).build())
+                    .setIsDeletable(nc.isDeletable())
                     .build();
         }).collect(Collectors.toList());
         Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
         List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
-           return builder().build();
-        });
-        return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(null).build();
+           return builder(ConnectionEntBuilder.class)
+                   .setDest(null)
+                   .setDestPort(cc.getDestPort())
+                   .build();
+        }).collect(Collectors.toList());
+        return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(connections).build();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<WorkflowEntID> getAllWorkflows() {
+    public List<EntityID> getAllWorkflows() {
         WorkflowGroup rootWorkflowGroup = WorkflowProjectManager.getRootWorkflowGroup();
         //TODO traverse and get all workflow projects (possibly only the local ones)
         return null;

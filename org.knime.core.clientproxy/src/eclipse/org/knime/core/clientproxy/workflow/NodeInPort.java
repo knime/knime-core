@@ -83,7 +83,7 @@ public class NodeInPort implements INodeInPort {
     public PortTypeUID getPortTypeUID() {
         PortTypeEnt pte = m_inPort.getPortType();
         return PortTypeUID.builder(pte.getPortObjectClassName()).setName(pte.getName()).setColor(pte.getColor())
-            .setIsHidden(pte.isHidden()).setIsOptional(pte.isOptional()).build();
+            .setIsHidden(pte.getIsHidden()).setIsOptional(pte.getIsOptional()).build();
     }
 
     /**

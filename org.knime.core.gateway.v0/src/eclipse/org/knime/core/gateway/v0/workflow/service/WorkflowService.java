@@ -50,8 +50,8 @@ package org.knime.core.gateway.v0.workflow.service;
 
 import java.util.List;
 
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 
 /**
  *
@@ -61,9 +61,9 @@ public interface WorkflowService extends GatewayService {
 
     void updateWorkflow(WorkflowEnt wf);
 
-    WorkflowEnt getWorkflow(WorkflowEntID id);
+    WorkflowEnt getWorkflow(EntityID id);
 
     //TODO workflow groups, workflow metadata (e.g. permissions), etc.?
-    List<WorkflowEntID> getAllWorkflows();
+    List<EntityID> getAllWorkflows();
 
 }

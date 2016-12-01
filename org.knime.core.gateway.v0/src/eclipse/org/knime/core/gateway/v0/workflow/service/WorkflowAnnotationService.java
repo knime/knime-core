@@ -50,8 +50,8 @@ package org.knime.core.gateway.v0.workflow.service;
 
 import java.util.List;
 
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 
 /**
  *
@@ -60,6 +60,6 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 public interface WorkflowAnnotationService {
 
     //TODO annotations for metanodes?
-    List<WorkflowAnnotationEnt> getWorkflowAnnotations(WorkflowEntID id);
+    List<WorkflowAnnotationEnt> getWorkflowAnnotations(EntityID id);
 
 }

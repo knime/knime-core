@@ -54,7 +54,7 @@ import $import;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface $name extends Identifiable, GatewayEntity#if ($hasSuperClass), $superClass #else #end {
+public interface $name extends Identifiable, GatewayEntity {
 
     @Override
     EntityID getID();

@@ -50,6 +50,15 @@ package org.knime.core.thrift.workflow.entity;
 import $import;
 #end
 
+import com.facebook.swift.codec.ThriftConstructor;
+import com.facebook.swift.codec.ThriftField;
+import com.facebook.swift.codec.ThriftStruct;
+
+import org.knime.core.gateway.serverproxy.entity.Abstract${name};
+import org.knime.core.gateway.v0.workflow.entity.${name};
+import org.knime.core.thrift.workflow.entity.T${name}.T${name}Builder;
+
+
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -60,7 +69,7 @@ public class T${name} extends Abstract${name} {
     /**
      * @param builder
      */
-    protected T${name}(final ${name}BuilderImpl builder) {
+    protected T${name}(final Abstract${name}Builder builder) {
         super(builder);
     }
 
@@ -73,7 +82,7 @@ public class T${name} extends Abstract${name} {
     
 #end
 
-    public static class T${name}Builder extends ${name}BuilderImpl {
+    public static class T${name}Builder extends Abstract${name}Builder {
 
         @Override
         @ThriftConstructor

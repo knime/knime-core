@@ -57,7 +57,7 @@ import org.knime.core.gateway.codegen.EntityGenerator;
 public class GenerateEntityImpls {
 
     public static void main(final String[] args) {
-        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/EntityImpl.vm",
+        new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/EntityImpl.vm",
             "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
     }
 

@@ -69,11 +69,12 @@ import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEntID;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -106,9 +107,9 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public IWorkflowManager getParent() {
-        WorkflowEntID parent = m_node.getParent();
+        EntityID parent = m_node.getParent();
         //TODO return same instance if the instance for this ID has already been created
-        return new WorkflowManager(parent);
+        return new WorkflowManager(service(WorkflowService.class).getWorkflow(parent));
     }
 
     /**
@@ -119,7 +120,7 @@ public class NodeContainer implements INodeContainer {
         JobManagerEnt jobManager = m_node.getJobManager();
         JobManagerUID jobManagerUID = null;
         if(jobManager != null) {
-            jobManagerUID = JobManagerUID.builder(jobManager.getID()).setName(jobManager.getName()).build();
+            jobManagerUID = JobManagerUID.builder(jobManager.getJobManagerID()).setName(jobManager.getName()).build();
         }
         return Optional.ofNullable(jobManagerUID);
     }
@@ -565,7 +566,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean isDeletable() {
-        return m_node.isDeletable();
+        return m_node.getIsDeletable();
     }
 
     /**

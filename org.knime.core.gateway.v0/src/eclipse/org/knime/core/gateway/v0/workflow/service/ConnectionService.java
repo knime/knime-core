@@ -49,7 +49,7 @@
 package org.knime.core.gateway.v0.workflow.service;
 
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEntID;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  *
@@ -59,6 +59,6 @@ public interface ConnectionService {
 
     void updateConnection(ConnectionEnt con);
 
-    ConnectionEnt getConnection(ConnectionEntID id);
+    ConnectionEnt getConnection(EntityID id);
 
 }
