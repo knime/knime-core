@@ -46,32 +46,36 @@
  */
 package org.knime.core.gateway.serverproxy.entity;
 
+#foreach( $import in $imports)
+import $import;
+#end
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class Abstract${name} implements ${name} {
 
-#foreach( $prop in $properties )
-	private $prop.getType() m_$prop.getName();
+#foreach( $field in $properties )
+	private $field.getType() m_$field.getName();
 #end
 
     /**
      *
      */
     protected Abstract${name}(final Abstract${name}Builder builder) {
-#foreach( $prop in $properties )
-		m_$prop.getName() = builder.m_$prop.getName();
+#foreach( $field in $properties )
+		m_$field.getName() = builder.m_$field.getName();
 #end
     }
     
-#foreach( $prop in $properties )
+#foreach( $field in $fields )
 	/**
     * {@inheritDoc}
     */
     @Override
-    public $prop.getType() get$prop.getName()() {
-        return m_$prop.getName();
+    public $field.getType() get$field.getName()() {
+        return m_$field.getName();
     }
     
 #end
@@ -80,17 +84,17 @@ public class Abstract${name} implements ${name} {
 
     public static abstract class Abstract${name}Builder implements ${name}Builder {
 
-#foreach( $prop in $properties )
-		private $prop.getType() m_$prop.getName();
+#foreach( $field in $fields )
+		private $field.getType() m_$field.getName();
 #end
 
-#foreach( $prop in $properties )
+#foreach( $field in $fields )
         /**
          * {@inheritDoc}
          */
         @Override
-        public ${name}Builder set$prop.getName()(final $prop.getType() $prop.getName()) {
-        	m_$prop.getName() = $prop.getName();
+        public ${name}Builder set$field.getName()(final $field.getType() $field.getName()) {
+        	m_$field.getName() = $field.getName();
             return this;
         }
         

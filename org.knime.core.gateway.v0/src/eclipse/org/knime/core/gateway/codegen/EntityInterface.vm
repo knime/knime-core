@@ -46,6 +46,10 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
+#foreach( $import in $imports)
+import $import;
+#end
+
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -55,8 +59,8 @@ public interface $name extends Identifiable, GatewayEntity#if ($hasSuperClass), 
     @Override
     EntityID getID();
     
- #foreach( $property in $properties )
- 	$property.getType() get$property.getName()();
+ #foreach( $field in $fields )
+ 	$field.getType() get$field.getName()();
  	
  #end   
 }

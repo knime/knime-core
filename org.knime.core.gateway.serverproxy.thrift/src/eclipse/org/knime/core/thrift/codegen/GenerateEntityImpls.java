@@ -44,66 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2016 (hornm): created
+ *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.thrift.codegen;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractTestEnt;
-import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
-
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
-import com.facebook.swift.codec.ThriftStruct;
+import org.knime.core.gateway.codegen.EntityGenerator;
 
 /**
- * TODO auto-generate!
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-@ThriftStruct(builder = TTestEntBuilder.class)
-public class TTestEnt extends AbstractTestEnt {
+public class GenerateEntityImpls {
 
-    /**
-     * @param builder
-     */
-    protected TTestEnt(final TestEntBuilderImpl builder) {
-        super(builder);
-    }
-
-    @Override
-    @ThriftField(1)
-    public String getAttr1() {
-        return super.getAttr1();
-    }
-
-    @Override
-    @ThriftField(2)
-    public int getAttr2() {
-        return super.getAttr2();
-    }
-
-    public static class TTestEntBuilder extends TestEntBuilderImpl {
-
-        @Override
-        @ThriftConstructor
-        public TTestEnt build() {
-            return new TTestEnt(this);
-        }
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setAttr1(final String s) {
-            super.setAttr1(s);
-            return this;
-        }
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setAttr2(final int i) {
-            super.setAttr2(i);
-            return this;
-        }
-
+    public static void main(final String[] args) {
+        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/EntityImpl.vm",
+            "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
     }
 
 }

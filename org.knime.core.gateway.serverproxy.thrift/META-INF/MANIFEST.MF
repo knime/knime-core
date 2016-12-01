@@ -7,7 +7,7 @@ Bundle-ClassPath: .,
  lib/thrift-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.core.thrift,
- org.knime.core.thrift.workflow.entity,
+ org.knime.core.thrift.codegen,
  org.knime.core.thrift.workflow.service
 Require-Bundle: org.knime.core.gateway.v0;bundle-version="3.3.0",
  org.knime.core.gateway.serverproxy;bundle-version="3.3.0",

@@ -46,14 +46,19 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
+#foreach( $import in $imports)
+import $import;
+#end
+import org.knime.core.gateway.v0.workflow.entity.${name};
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public interface ${name}Builder extends GatewayEntityBuilder<${name}> {
 
-#foreach( $prop in $properties )
-	${name}Builder set$prop.getName()($prop.getType() $prop.getName());
+#foreach( $field in $fields )
+	${name}Builder set$field.getName()($field.getType() $field.getName());
 
 #end
 }

@@ -53,7 +53,6 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -95,15 +94,14 @@ public final class EntityGenerator {
 
             for (EntityDef entityDef : entityDefs) {
                 context.put("name", entityDef.getName());
-                context.put("properties", entityDef.getProperties());
+                context.put("fields", entityDef.getFields());
+                context.put("imports", entityDef.getImports());
 
                 //TODO: support multiple super classes
                 context.put("hasSuperClass", entityDef.getSuperClasses().size() > 0);
-                if(entityDef.getSuperClasses().size() > 0) {
+                if (entityDef.getSuperClasses().size() > 0) {
                     context.put("superClass", entityDef.getSuperClasses().get(0));
                 }
-
-                //TODO keep a map of imports and add them to the context
 
                 Template template = null;
                 try {
@@ -146,83 +144,98 @@ public final class EntityGenerator {
 
         return Arrays.asList(
             new DefaultEntityDef("NodeEnt",
-                new DefaultEntityProperty("Parent", "WorkflowEntID"),
-                new DefaultEntityProperty("JobManager", "JobManagerEnt"),
-                new DefaultEntityProperty("NodeMessage", "NodeMessageEnt"),
-                new DefaultEntityProperty("InPorts", "List<NodeInPortEnt>"),
-                new DefaultEntityProperty("OutPorts", "List<NodeOutPortEnt>"),
-                new DefaultEntityProperty("Name", "String"),
-                new DefaultEntityProperty("NodeID", "String"),
-                new DefaultEntityProperty("NodeType", "String"),
-                new DefaultEntityProperty("Bounds", "BoundsEnt"),
-                new DefaultEntityProperty("IsDeletable", "boolean")),
+                new DefaultEntityField("Parent", "WorkflowEntID"),
+                new DefaultEntityField("JobManager", "JobManagerEnt"),
+                new DefaultEntityField("NodeMessage", "NodeMessageEnt"),
+                new DefaultEntityField("InPorts", "List<NodeInPortEnt>"),
+                new DefaultEntityField("OutPorts", "List<NodeOutPortEnt>"),
+                new DefaultEntityField("Name", "String"),
+                new DefaultEntityField("NodeID", "String"),
+                new DefaultEntityField("NodeType", "String"),
+                new DefaultEntityField("Bounds", "BoundsEnt"),
+                new DefaultEntityField("IsDeletable", "boolean"))
+                .addImports(
+                    "org.knime.core.gateway.v0.workflow.entity.WorkflowEntID",
+                    "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt",
+                    "org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt",
+                    "org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt",
+                    "org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt",
+                    "org.knime.core.gateway.v0.workflow.entity.BoundsEnt",
+                    "java.util.List"),
             new DefaultEntityDef("NativeNodeEnt",
-                new DefaultEntityProperty("NodeFactoryID", "NodeFactoryIDEnt")).addSuperClass("NodeEnt"),
+                new DefaultEntityField("NodeFactoryID", "NodeFactoryIDEnt"))
+                .addSuperClasses("NodeEnt")
+                .addImports("org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"),
             new DefaultEntityDef("NodeFactoryIDEnt",
-                new DefaultEntityProperty("ClassName", "String"),
-                new DefaultEntityProperty("NodeName", "String")),
+                new DefaultEntityField("ClassName", "String"),
+                new DefaultEntityField("NodeName", "String")),
             new DefaultEntityDef("ConnectionEnt",
-                new DefaultEntityProperty("Dest", "EntityID"),
-                new DefaultEntityProperty("DestPort", "int"),
-                new DefaultEntityProperty("Source", "int"),
-                new DefaultEntityProperty("SourcePort", "int"),
-                new DefaultEntityProperty("IsDeleteable", "boolean"),
-                new DefaultEntityProperty("BendPoints", "List<XYEnt>"),
-                new DefaultEntityProperty("Type", "String")),
+                new DefaultEntityField("Dest", "EntityID"),
+                new DefaultEntityField("DestPort", "int"),
+                new DefaultEntityField("Source", "int"),
+                new DefaultEntityField("SourcePort", "int"),
+                new DefaultEntityField("IsDeleteable", "boolean"),
+                new DefaultEntityField("BendPoints", "List<XYEnt>"),
+                new DefaultEntityField("Type", "String"))
+                .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID",
+                    "org.knime.core.gateway.v0.workflow.entity.XYEnt",
+                    "java.util.List"),
             new DefaultEntityDef("NodePortEnt",
-                new DefaultEntityProperty("PortIndex", "int"),
-                new DefaultEntityProperty("PortType", "PortTypeEnt"),
-                new DefaultEntityProperty("PortName", "String")),
-            new DefaultEntityDef("NodeInPortEnt").addSuperClass("NodePortEnt"),
-            new DefaultEntityDef("NodeOutPortEnt").addSuperClass("NodePortEnt"),
+                new DefaultEntityField("PortIndex", "int"),
+                new DefaultEntityField("PortType", "PortTypeEnt"),
+                new DefaultEntityField("PortName", "String"))
+                .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
+            new DefaultEntityDef("NodeInPortEnt").addSuperClasses("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
+            new DefaultEntityDef("NodeOutPortEnt").addSuperClasses("NodePortEnt").addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
             new DefaultEntityDef("PortTypeEnt",
-                new DefaultEntityProperty("Name", "String"),
-                new DefaultEntityProperty("PortObjectClassName", "String"),
-                new DefaultEntityProperty("IsOptional", "boolean"),
-                new DefaultEntityProperty("Color", "int"),
-                new DefaultEntityProperty("IsHidden", "boolean")),
+                new DefaultEntityField("Name", "String"),
+                new DefaultEntityField("PortObjectClassName", "String"),
+                new DefaultEntityField("IsOptional", "boolean"),
+                new DefaultEntityField("Color", "int"),
+                new DefaultEntityField("IsHidden", "boolean")),
             new DefaultEntityDef("NodeMessageEnt",
-                new DefaultEntityProperty("Message", "String"),
-                new DefaultEntityProperty("Type", "String")),
+                new DefaultEntityField("Message", "String"),
+                new DefaultEntityField("Type", "String")),
             new DefaultEntityDef("JobManagerEnt",
-                new DefaultEntityProperty("Name", "String"),
-                new DefaultEntityProperty("ID", "String")),
+                new DefaultEntityField("Name", "String"),
+                new DefaultEntityField("ID", "String")),
             new DefaultEntityDef("BoundsEnt",
-                new DefaultEntityProperty("X", "int"),
-                new DefaultEntityProperty("Y", "int"), new DefaultEntityProperty("Width", "int"),
-                new DefaultEntityProperty("Height", "int")),
-            new DefaultEntityDef("XY",
-                new DefaultEntityProperty("X", "int"),
-                new DefaultEntityProperty("Y", "int")),
+                new DefaultEntityField("X", "int"),
+                new DefaultEntityField("Y", "int"),
+                new DefaultEntityField("Width", "int"),
+                new DefaultEntityField("Height", "int")),
+            new DefaultEntityDef("XYEnt",
+                new DefaultEntityField("X", "int"),
+                new DefaultEntityField("Y", "int")),
             new DefaultEntityDef("WorkflowAnnotationEnt",
-                new DefaultEntityProperty("Text", "String"),
-                new DefaultEntityProperty("Bounds", "BoundsEnt"),
-                new DefaultEntityProperty("BgColor", "int"),
-                new DefaultEntityProperty("BorderSize", "int"),
-                new DefaultEntityProperty("BorderColor", "int"),
-                new DefaultEntityProperty("FontSize", "int"),
-                new DefaultEntityProperty("Alignment", "String")),
+                new DefaultEntityField("Text", "String"),
+                new DefaultEntityField("Bounds", "BoundsEnt"),
+                new DefaultEntityField("BgColor", "int"),
+                new DefaultEntityField("BorderSize", "int"),
+                new DefaultEntityField("BorderColor", "int"),
+                new DefaultEntityField("FontSize", "int"),
+                new DefaultEntityField("Alignment", "String"))
+                .addImports("org.knime.core.gateway.v0.workflow.entity.BondsEnt"),
             new DefaultEntityDef("WorkflowEnt",
-                new DefaultEntityProperty("Nodes", "List<NodeEnt>"),
-                new DefaultEntityProperty("Connections", "List<ConnectionEnt>")));
+                new DefaultEntityField("Nodes", "List<NodeEnt>"),
+                new DefaultEntityField("Connections", "List<ConnectionEnt>"))
+                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt"));
     }
 
-    public static Map<String, String> getImportsMap() {
-        //TODO
-        return null;
-    }
 
     public static interface EntityDef {
 
         String getName();
 
-        List<EntityProperty> getProperties();
+        List<EntityField> getFields();
 
         List<String> getSuperClasses();
 
+        List<String> getImports();
+
     }
 
-    public static interface EntityProperty {
+    public static interface EntityField {
 
         String getName();
 
@@ -231,22 +244,33 @@ public final class EntityGenerator {
 
     private static class DefaultEntityDef implements EntityDef {
 
-        private List<EntityProperty> m_properties;
+        private List<EntityField> m_fields;
 
         private String m_name;
 
         private List<String> m_superClasses = new ArrayList<String>();
 
+        private List<String> m_imports = new ArrayList<String>();
+
         /**
          *
          */
-        public DefaultEntityDef(final String name, final EntityProperty... entityProperties) {
-            m_properties = Arrays.asList(entityProperties);
+        public DefaultEntityDef(final String name, final EntityField... entityFields) {
+            m_fields = Arrays.asList(entityFields);
             m_name = name;
         }
 
-        public EntityDef addSuperClass(final String clazz) {
-            m_superClasses.add(clazz);
+        public DefaultEntityDef addSuperClasses(final String... classes) {
+            for(String s : classes) {
+                m_superClasses.add(s);
+            }
+            return this;
+        }
+
+        public DefaultEntityDef addImports(final String... imports) {
+            for(String s : imports) {
+                m_imports.add(s);
+            }
             return this;
         }
 
@@ -262,8 +286,8 @@ public final class EntityGenerator {
          * {@inheritDoc}
          */
         @Override
-        public List<EntityProperty> getProperties() {
-            return m_properties;
+        public List<EntityField> getFields() {
+            return m_fields;
         }
 
         /**
@@ -273,9 +297,17 @@ public final class EntityGenerator {
         public List<String> getSuperClasses() {
             return m_superClasses;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<String> getImports() {
+            return m_imports;
+        }
     }
 
-    private static class DefaultEntityProperty implements EntityProperty {
+    private static class DefaultEntityField implements EntityField {
 
         private String m_name;
 
@@ -284,7 +316,7 @@ public final class EntityGenerator {
         /**
          *
          */
-        public DefaultEntityProperty(final String name, final String type) {
+        public DefaultEntityField(final String name, final String type) {
             m_name = name;
             m_type = type;
         }
