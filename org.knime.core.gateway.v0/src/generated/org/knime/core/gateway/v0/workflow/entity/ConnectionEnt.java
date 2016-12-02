@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
 
@@ -56,11 +55,11 @@ import java.util.List;
  */
 public interface ConnectionEnt extends GatewayEntity {
 
-  	EntityID getDest();
+  	String getDest();
  	
   	int getDestPort();
  	
-  	EntityID getSource();
+  	String getSource();
  	
   	int getSourcePort();
  	

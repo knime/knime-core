@@ -50,6 +50,7 @@ package org.knime.core.gateway.serverproxy.service;
 
 import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,11 +65,13 @@ import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
 /**
@@ -120,9 +123,18 @@ public abstract class AbstractWorkflowService implements WorkflowService {
         }).collect(Collectors.toList());
         Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
         List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
-           return builder(ConnectionEntBuilder.class)
-                   .setDest(null)
+            int[][] allBendpoints = cc.getUIInfo().getAllBendpoints();
+            List<XYEnt> bendpoints = Arrays.stream(allBendpoints).map(a -> {
+               return builder(XYEntBuilder.class).setX(a[0]).setY(a[1]).build();
+            }).collect(Collectors.toList());
+            return builder(ConnectionEntBuilder.class)
+                   .setDest(cc.getDest().toString())
                    .setDestPort(cc.getDestPort())
+                   .setSource(cc.getSource().toString())
+                   .setSourcePort(cc.getSourcePort())
+                   .setIsDeleteable(cc.isDeletable())
+                   .setType(cc.getType().toString())
+                   .setBendPoints(bendpoints)
                    .build();
         }).collect(Collectors.toList());
         return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(connections).build();

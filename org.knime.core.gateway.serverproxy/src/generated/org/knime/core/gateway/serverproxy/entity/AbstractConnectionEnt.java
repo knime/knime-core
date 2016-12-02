@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.serverproxy.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
 
@@ -60,9 +59,9 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public class AbstractConnectionEnt implements ConnectionEnt {
 
-	private EntityID m_Dest;
+	private String m_Dest;
 	private int m_DestPort;
-	private EntityID m_Source;
+	private String m_Source;
 	private int m_SourcePort;
 	private boolean m_IsDeleteable;
 	private List<XYEnt> m_BendPoints;
@@ -85,7 +84,7 @@ public class AbstractConnectionEnt implements ConnectionEnt {
     * {@inheritDoc}
     */
     @Override
-    public EntityID getDest() {
+    public String getDest() {
         return m_Dest;
     }
     
@@ -101,7 +100,7 @@ public class AbstractConnectionEnt implements ConnectionEnt {
     * {@inheritDoc}
     */
     @Override
-    public EntityID getSource() {
+    public String getSource() {
         return m_Source;
     }
     
@@ -142,9 +141,9 @@ public class AbstractConnectionEnt implements ConnectionEnt {
 
     public static abstract class AbstractConnectionEntBuilder implements ConnectionEntBuilder {
 
-		private EntityID m_Dest;
+		private String m_Dest;
 		private int m_DestPort;
-		private EntityID m_Source;
+		private String m_Source;
 		private int m_SourcePort;
 		private boolean m_IsDeleteable;
 		private List<XYEnt> m_BendPoints;
@@ -154,7 +153,7 @@ public class AbstractConnectionEnt implements ConnectionEnt {
          * {@inheritDoc}
          */
         @Override
-        public ConnectionEntBuilder setDest(final EntityID Dest) {
+        public ConnectionEntBuilder setDest(final String Dest) {
         	m_Dest = Dest;
             return this;
         }
@@ -172,7 +171,7 @@ public class AbstractConnectionEnt implements ConnectionEnt {
          * {@inheritDoc}
          */
         @Override
-        public ConnectionEntBuilder setSource(final EntityID Source) {
+        public ConnectionEntBuilder setSource(final String Source) {
         	m_Source = Source;
             return this;
         }

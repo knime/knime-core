@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
@@ -57,11 +56,11 @@ import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
  */
 public interface ConnectionEntBuilder extends GatewayEntityBuilder<ConnectionEnt> {
 
-	ConnectionEntBuilder setDest(EntityID Dest);
+	ConnectionEntBuilder setDest(String Dest);
 
 	ConnectionEntBuilder setDestPort(int DestPort);
 
-	ConnectionEntBuilder setSource(EntityID Source);
+	ConnectionEntBuilder setSource(String Source);
 
 	ConnectionEntBuilder setSourcePort(int SourcePort);
 

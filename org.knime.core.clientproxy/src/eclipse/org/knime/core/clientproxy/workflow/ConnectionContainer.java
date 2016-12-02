@@ -48,8 +48,6 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import static org.knime.core.gateway.services.ServiceManager.service;
-
 import java.util.List;
 
 import org.knime.core.api.node.workflow.ConnectionID;
@@ -60,7 +58,6 @@ import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
-import org.knime.core.gateway.v0.workflow.service.NodeService;
 import org.knime.core.node.workflow.NodeID;
 
 /**
@@ -106,7 +103,7 @@ public class ConnectionContainer implements IConnectionContainer {
      */
     @Override
     public NodeID getDest() {
-        return NodeID.fromString(service(NodeService.class).getNode(m_connection.getDest()).getNodeID());
+        return NodeID.fromString(m_connection.getDest());
     }
 
     /**
@@ -122,9 +119,7 @@ public class ConnectionContainer implements IConnectionContainer {
      */
     @Override
     public NodeID getSource() {
-        //TODO here the whole node needs to be download just in order to get the node's ID ...
-        //TODO should be cached
-        return NodeID.fromString(service(NodeService.class).getNode(m_connection.getSource()).getNodeID());
+        return NodeID.fromString(m_connection.getSource());
     }
 
     /**

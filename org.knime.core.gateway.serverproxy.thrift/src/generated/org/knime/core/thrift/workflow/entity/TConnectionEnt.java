@@ -46,7 +46,6 @@
  */
 package org.knime.core.thrift.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
 
@@ -75,7 +74,7 @@ public class TConnectionEnt extends AbstractConnectionEnt {
 
     @Override
     @ThriftField
-    public EntityID getDest() {
+    public String getDest() {
         return super.getDest();
     }
     
@@ -87,7 +86,7 @@ public class TConnectionEnt extends AbstractConnectionEnt {
     
     @Override
     @ThriftField
-    public EntityID getSource() {
+    public String getSource() {
         return super.getSource();
     }
     
@@ -126,7 +125,7 @@ public class TConnectionEnt extends AbstractConnectionEnt {
 
         @Override
         @ThriftField
-        public TConnectionEntBuilder setDest(final EntityID Dest) {
+        public TConnectionEntBuilder setDest(final String Dest) {
             super.setDest(Dest);
             return this;
         }
@@ -140,7 +139,7 @@ public class TConnectionEnt extends AbstractConnectionEnt {
         
         @Override
         @ThriftField
-        public TConnectionEntBuilder setSource(final EntityID Source) {
+        public TConnectionEntBuilder setSource(final String Source) {
             super.setSource(Source);
             return this;
         }
