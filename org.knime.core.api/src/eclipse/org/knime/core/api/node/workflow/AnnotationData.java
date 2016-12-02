@@ -418,9 +418,9 @@ public class AnnotationData {
 
         /** @param width the width to set
          * @return this*/
-        public final Builder setWidth(final int width) {
+        public final B setWidth(final int width) {
             m_width = width;
-            return this;
+            return (B)this;
         }
 
         /** @param height the height to set
