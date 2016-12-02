@@ -106,16 +106,20 @@ public final class EntityGenerator {
 
                 List<EntityField> fields = new ArrayList<EntityGenerator.EntityField>(entityDef.getFields());
                 List<String> imports = new ArrayList<String>(entityDef.getImports());
+                List<String> superClasses = new ArrayList<String>();
 
                 //add fields and imports from other entities, too
                 for(String other : entityDef.getCommonEntities()) {
                     fields.addAll(entitiyDefMap.get(other).getFields());
                     imports.addAll(entitiyDefMap.get(other).getImports());
+                    superClasses.add(other);
                 }
 
                 context.put("fields", fields);
 
                 context.put("imports", imports);
+
+                context.put("superClasses", superClasses);
 
                 Template template = null;
                 try {
@@ -168,7 +172,9 @@ public final class EntityGenerator {
                 new DefaultEntityField("NodeType", "String"),
                 new DefaultEntityField("Bounds", "BoundsEnt"),
                 new DefaultEntityField("IsDeletable", "boolean"),
-                new DefaultEntityField("NodeState", "String"))
+                new DefaultEntityField("NodeState", "String"),
+                new DefaultEntityField("HasDialog", "boolean"),
+                new DefaultEntityField("NodeAnnotation", "NodeAnnotationEnt"))
                 .addImports(
                     "org.knime.core.gateway.v0.workflow.entity.EntityID",
                     "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt",
@@ -176,6 +182,7 @@ public final class EntityGenerator {
                     "org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt",
                     "org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt",
                     "org.knime.core.gateway.v0.workflow.entity.BoundsEnt",
+                    "org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt",
                     "java.util.List"),
             new DefaultEntityDef("NativeNodeEnt",
                 new DefaultEntityField("NodeFactoryID", "NodeFactoryIDEnt"))
@@ -233,10 +240,26 @@ public final class EntityGenerator {
             new DefaultEntityDef("WorkflowEnt",
                 new DefaultEntityField("Nodes", "List<NodeEnt>"),
                 new DefaultEntityField("Connections", "List<ConnectionEnt>"))
-                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt"),
+                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt")
+                .addFieldsFrom("NodeEnt"),
             new DefaultEntityDef("EntityID",
                 new DefaultEntityField("ID", "String"),
-                new DefaultEntityField("Type", "String")));
+                new DefaultEntityField("Type", "String")),
+            new DefaultEntityDef("AnnotationEnt",
+                new DefaultEntityField("Text", "String"),
+                new DefaultEntityField("BackgroundColor", "int"),
+                new DefaultEntityField("X", "int"),
+                new DefaultEntityField("Y", "int"),
+                new DefaultEntityField("Width", "int"),
+                new DefaultEntityField("Height", "int"),
+                new DefaultEntityField("TextAlignment", "String"),
+                new DefaultEntityField("BorderSize", "int"),
+                new DefaultEntityField("BorderColor", "int"),
+                new DefaultEntityField("DefaultFontSize", "int"),
+                new DefaultEntityField("Version", "int")),
+            new DefaultEntityDef("NodeAnnotationEnt",
+                new DefaultEntityField("Node", "String"))
+                .addFieldsFrom("AnnotationEnt"));
     }
 
 

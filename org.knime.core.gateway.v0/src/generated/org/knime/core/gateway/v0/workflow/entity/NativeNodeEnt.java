@@ -53,13 +53,14 @@ import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import java.util.List;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NativeNodeEnt extends GatewayEntity {
+public interface NativeNodeEnt extends GatewayEntity, NodeEnt  {
 
   	NodeFactoryIDEnt getNodeFactoryID();
  	
@@ -84,5 +85,9 @@ public interface NativeNodeEnt extends GatewayEntity {
   	boolean getIsDeletable();
  	
   	String getNodeState();
+ 	
+  	boolean getHasDialog();
+ 	
+  	NodeAnnotationEnt getNodeAnnotation();
  	
  }

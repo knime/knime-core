@@ -49,6 +49,14 @@ package org.knime.core.gateway.serverproxy.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import java.util.List;
 
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
@@ -62,6 +70,19 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
 
 	private List<NodeEnt> m_Nodes;
 	private List<ConnectionEnt> m_Connections;
+	private EntityID m_Parent;
+	private JobManagerEnt m_JobManager;
+	private NodeMessageEnt m_NodeMessage;
+	private List<NodeInPortEnt> m_InPorts;
+	private List<NodeOutPortEnt> m_OutPorts;
+	private String m_Name;
+	private String m_NodeID;
+	private String m_NodeType;
+	private BoundsEnt m_Bounds;
+	private boolean m_IsDeletable;
+	private String m_NodeState;
+	private boolean m_HasDialog;
+	private NodeAnnotationEnt m_NodeAnnotation;
 
     /**
      *
@@ -69,6 +90,19 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
     protected AbstractWorkflowEnt(final AbstractWorkflowEntBuilder builder) {
 		m_Nodes = builder.m_Nodes;
 		m_Connections = builder.m_Connections;
+		m_Parent = builder.m_Parent;
+		m_JobManager = builder.m_JobManager;
+		m_NodeMessage = builder.m_NodeMessage;
+		m_InPorts = builder.m_InPorts;
+		m_OutPorts = builder.m_OutPorts;
+		m_Name = builder.m_Name;
+		m_NodeID = builder.m_NodeID;
+		m_NodeType = builder.m_NodeType;
+		m_Bounds = builder.m_Bounds;
+		m_IsDeletable = builder.m_IsDeletable;
+		m_NodeState = builder.m_NodeState;
+		m_HasDialog = builder.m_HasDialog;
+		m_NodeAnnotation = builder.m_NodeAnnotation;
     }
     
 	/**
@@ -87,6 +121,110 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
         return m_Connections;
     }
     
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public EntityID getParent() {
+        return m_Parent;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public JobManagerEnt getJobManager() {
+        return m_JobManager;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public NodeMessageEnt getNodeMessage() {
+        return m_NodeMessage;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public List<NodeInPortEnt> getInPorts() {
+        return m_InPorts;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public List<NodeOutPortEnt> getOutPorts() {
+        return m_OutPorts;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getName() {
+        return m_Name;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getNodeID() {
+        return m_NodeID;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getNodeType() {
+        return m_NodeType;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public BoundsEnt getBounds() {
+        return m_Bounds;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public boolean getIsDeletable() {
+        return m_IsDeletable;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public String getNodeState() {
+        return m_NodeState;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public boolean getHasDialog() {
+        return m_HasDialog;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public NodeAnnotationEnt getNodeAnnotation() {
+        return m_NodeAnnotation;
+    }
+    
 
 
 
@@ -94,6 +232,19 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
 
 		private List<NodeEnt> m_Nodes;
 		private List<ConnectionEnt> m_Connections;
+		private EntityID m_Parent;
+		private JobManagerEnt m_JobManager;
+		private NodeMessageEnt m_NodeMessage;
+		private List<NodeInPortEnt> m_InPorts;
+		private List<NodeOutPortEnt> m_OutPorts;
+		private String m_Name;
+		private String m_NodeID;
+		private String m_NodeType;
+		private BoundsEnt m_Bounds;
+		private boolean m_IsDeletable;
+		private String m_NodeState;
+		private boolean m_HasDialog;
+		private NodeAnnotationEnt m_NodeAnnotation;
 
         /**
          * {@inheritDoc}
@@ -110,6 +261,123 @@ public class AbstractWorkflowEnt implements WorkflowEnt {
         @Override
         public WorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
         	m_Connections = Connections;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setParent(final EntityID Parent) {
+        	m_Parent = Parent;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setJobManager(final JobManagerEnt JobManager) {
+        	m_JobManager = JobManager;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
+        	m_NodeMessage = NodeMessage;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
+        	m_InPorts = InPorts;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
+        	m_OutPorts = OutPorts;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setName(final String Name) {
+        	m_Name = Name;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setNodeID(final String NodeID) {
+        	m_NodeID = NodeID;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setNodeType(final String NodeType) {
+        	m_NodeType = NodeType;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setBounds(final BoundsEnt Bounds) {
+        	m_Bounds = Bounds;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setIsDeletable(final boolean IsDeletable) {
+        	m_IsDeletable = IsDeletable;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setNodeState(final String NodeState) {
+        	m_NodeState = NodeState;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setHasDialog(final boolean HasDialog) {
+        	m_HasDialog = HasDialog;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+        	m_NodeAnnotation = NodeAnnotation;
             return this;
         }
         

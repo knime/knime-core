@@ -44,48 +44,35 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
+public interface AnnotationEnt extends GatewayEntity {
 
-	NodeEntBuilder setParent(EntityID Parent);
-
-	NodeEntBuilder setJobManager(JobManagerEnt JobManager);
-
-	NodeEntBuilder setNodeMessage(NodeMessageEnt NodeMessage);
-
-	NodeEntBuilder setInPorts(List<NodeInPortEnt> InPorts);
-
-	NodeEntBuilder setOutPorts(List<NodeOutPortEnt> OutPorts);
-
-	NodeEntBuilder setName(String Name);
-
-	NodeEntBuilder setNodeID(String NodeID);
-
-	NodeEntBuilder setNodeType(String NodeType);
-
-	NodeEntBuilder setBounds(BoundsEnt Bounds);
-
-	NodeEntBuilder setIsDeletable(boolean IsDeletable);
-
-	NodeEntBuilder setNodeState(String NodeState);
-
-	NodeEntBuilder setHasDialog(boolean HasDialog);
-
-	NodeEntBuilder setNodeAnnotation(NodeAnnotationEnt NodeAnnotation);
-
-}
+  	String getText();
+ 	
+  	int getBackgroundColor();
+ 	
+  	int getX();
+ 	
+  	int getY();
+ 	
+  	int getWidth();
+ 	
+  	int getHeight();
+ 	
+  	String getTextAlignment();
+ 	
+  	int getBorderSize();
+ 	
+  	int getBorderColor();
+ 	
+  	int getDefaultFontSize();
+ 	
+  	int getVersion();
+ 	
+ }

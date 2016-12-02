@@ -49,6 +49,14 @@ package org.knime.core.gateway.v0.workflow.entity.builder;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 /**
@@ -60,5 +68,31 @@ public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
 	WorkflowEntBuilder setNodes(List<NodeEnt> Nodes);
 
 	WorkflowEntBuilder setConnections(List<ConnectionEnt> Connections);
+
+	WorkflowEntBuilder setParent(EntityID Parent);
+
+	WorkflowEntBuilder setJobManager(JobManagerEnt JobManager);
+
+	WorkflowEntBuilder setNodeMessage(NodeMessageEnt NodeMessage);
+
+	WorkflowEntBuilder setInPorts(List<NodeInPortEnt> InPorts);
+
+	WorkflowEntBuilder setOutPorts(List<NodeOutPortEnt> OutPorts);
+
+	WorkflowEntBuilder setName(String Name);
+
+	WorkflowEntBuilder setNodeID(String NodeID);
+
+	WorkflowEntBuilder setNodeType(String NodeType);
+
+	WorkflowEntBuilder setBounds(BoundsEnt Bounds);
+
+	WorkflowEntBuilder setIsDeletable(boolean IsDeletable);
+
+	WorkflowEntBuilder setNodeState(String NodeState);
+
+	WorkflowEntBuilder setHasDialog(boolean HasDialog);
+
+	WorkflowEntBuilder setNodeAnnotation(NodeAnnotationEnt NodeAnnotation);
 
 }

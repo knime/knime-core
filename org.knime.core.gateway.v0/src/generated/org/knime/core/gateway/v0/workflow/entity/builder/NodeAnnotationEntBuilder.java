@@ -46,46 +46,36 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
+public interface NodeAnnotationEntBuilder extends GatewayEntityBuilder<NodeAnnotationEnt> {
 
-	NodeEntBuilder setParent(EntityID Parent);
+	NodeAnnotationEntBuilder setNode(String Node);
 
-	NodeEntBuilder setJobManager(JobManagerEnt JobManager);
+	NodeAnnotationEntBuilder setText(String Text);
 
-	NodeEntBuilder setNodeMessage(NodeMessageEnt NodeMessage);
+	NodeAnnotationEntBuilder setBackgroundColor(int BackgroundColor);
 
-	NodeEntBuilder setInPorts(List<NodeInPortEnt> InPorts);
+	NodeAnnotationEntBuilder setX(int X);
 
-	NodeEntBuilder setOutPorts(List<NodeOutPortEnt> OutPorts);
+	NodeAnnotationEntBuilder setY(int Y);
 
-	NodeEntBuilder setName(String Name);
+	NodeAnnotationEntBuilder setWidth(int Width);
 
-	NodeEntBuilder setNodeID(String NodeID);
+	NodeAnnotationEntBuilder setHeight(int Height);
 
-	NodeEntBuilder setNodeType(String NodeType);
+	NodeAnnotationEntBuilder setTextAlignment(String TextAlignment);
 
-	NodeEntBuilder setBounds(BoundsEnt Bounds);
+	NodeAnnotationEntBuilder setBorderSize(int BorderSize);
 
-	NodeEntBuilder setIsDeletable(boolean IsDeletable);
+	NodeAnnotationEntBuilder setBorderColor(int BorderColor);
 
-	NodeEntBuilder setNodeState(String NodeState);
+	NodeAnnotationEntBuilder setDefaultFontSize(int DefaultFontSize);
 
-	NodeEntBuilder setHasDialog(boolean HasDialog);
-
-	NodeEntBuilder setNodeAnnotation(NodeAnnotationEnt NodeAnnotation);
+	NodeAnnotationEntBuilder setVersion(int Version);
 
 }

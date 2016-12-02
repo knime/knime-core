@@ -88,24 +88,13 @@ public class NodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
 
-    //can also be a workflow (so far no inheritance in entity classes)
-    //TODO use either the workflow or the node entity
-    protected final WorkflowEnt m_workflow;
-
     /**
+     * If the underlying entity is a node.
+     *
      * @param node
      */
     public NodeContainer(final NodeEnt node) {
         m_node = node;
-        m_workflow = null;
-    }
-
-    /**
-     *
-     */
-    public NodeContainer(final WorkflowEnt workflow) {
-        m_workflow = workflow;
-        m_node = null;
     }
 
     /**
@@ -381,8 +370,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean hasDialog() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_node.getHasDialog();
     }
 
     /**
@@ -547,8 +535,8 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public INodeAnnotation getNodeAnnotation() {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO return the same node annotation instance in multiple calls
+        return new NodeAnnotation(m_node.getNodeAnnotation(), this);
     }
 
     /**

@@ -49,15 +49,49 @@ package org.knime.core.gateway.v0.workflow.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import java.util.List;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends GatewayEntity {
+public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
 
   	List<NodeEnt> getNodes();
  	
   	List<ConnectionEnt> getConnections();
+ 	
+  	EntityID getParent();
+ 	
+  	JobManagerEnt getJobManager();
+ 	
+  	NodeMessageEnt getNodeMessage();
+ 	
+  	List<NodeInPortEnt> getInPorts();
+ 	
+  	List<NodeOutPortEnt> getOutPorts();
+ 	
+  	String getName();
+ 	
+  	String getNodeID();
+ 	
+  	String getNodeType();
+ 	
+  	BoundsEnt getBounds();
+ 	
+  	boolean getIsDeletable();
+ 	
+  	String getNodeState();
+ 	
+  	boolean getHasDialog();
+ 	
+  	NodeAnnotationEnt getNodeAnnotation();
  	
  }

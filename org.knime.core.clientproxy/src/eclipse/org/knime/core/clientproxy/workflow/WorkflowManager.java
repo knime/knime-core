@@ -102,14 +102,17 @@ import org.knime.core.util.WrapperMapUtil;
  */
 public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
-    private Map<String, NodeEnt> m_nodeMap = new HashMap<String, NodeEnt>();
+    private final Map<String, NodeEnt> m_nodeMap = new HashMap<String, NodeEnt>();
+
+    private final WorkflowEnt m_workflow;
 
     /**
-     * @param node
+     * @param workflow
      */
     public WorkflowManager(final WorkflowEnt workflow) {
         //'download' workflow from 'server'
         super(workflow);
+        m_workflow = workflow;
 
         //fill data structures for quicker access
         for(NodeEnt n : workflow.getNodes()) {

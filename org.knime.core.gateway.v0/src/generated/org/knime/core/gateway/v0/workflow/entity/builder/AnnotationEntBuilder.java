@@ -46,46 +46,34 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
+public interface AnnotationEntBuilder extends GatewayEntityBuilder<AnnotationEnt> {
 
-	NodeEntBuilder setParent(EntityID Parent);
+	AnnotationEntBuilder setText(String Text);
 
-	NodeEntBuilder setJobManager(JobManagerEnt JobManager);
+	AnnotationEntBuilder setBackgroundColor(int BackgroundColor);
 
-	NodeEntBuilder setNodeMessage(NodeMessageEnt NodeMessage);
+	AnnotationEntBuilder setX(int X);
 
-	NodeEntBuilder setInPorts(List<NodeInPortEnt> InPorts);
+	AnnotationEntBuilder setY(int Y);
 
-	NodeEntBuilder setOutPorts(List<NodeOutPortEnt> OutPorts);
+	AnnotationEntBuilder setWidth(int Width);
 
-	NodeEntBuilder setName(String Name);
+	AnnotationEntBuilder setHeight(int Height);
 
-	NodeEntBuilder setNodeID(String NodeID);
+	AnnotationEntBuilder setTextAlignment(String TextAlignment);
 
-	NodeEntBuilder setNodeType(String NodeType);
+	AnnotationEntBuilder setBorderSize(int BorderSize);
 
-	NodeEntBuilder setBounds(BoundsEnt Bounds);
+	AnnotationEntBuilder setBorderColor(int BorderColor);
 
-	NodeEntBuilder setIsDeletable(boolean IsDeletable);
+	AnnotationEntBuilder setDefaultFontSize(int DefaultFontSize);
 
-	NodeEntBuilder setNodeState(String NodeState);
-
-	NodeEntBuilder setHasDialog(boolean HasDialog);
-
-	NodeEntBuilder setNodeAnnotation(NodeAnnotationEnt NodeAnnotation);
+	AnnotationEntBuilder setVersion(int Version);
 
 }

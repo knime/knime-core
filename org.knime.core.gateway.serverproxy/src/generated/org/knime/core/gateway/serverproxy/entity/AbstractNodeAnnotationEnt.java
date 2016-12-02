@@ -46,187 +46,168 @@
  */
 package org.knime.core.gateway.serverproxy.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
 
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class AbstractNodeEnt implements NodeEnt {
+public class AbstractNodeAnnotationEnt implements NodeAnnotationEnt {
 
-	private EntityID m_Parent;
-	private JobManagerEnt m_JobManager;
-	private NodeMessageEnt m_NodeMessage;
-	private List<NodeInPortEnt> m_InPorts;
-	private List<NodeOutPortEnt> m_OutPorts;
-	private String m_Name;
-	private String m_NodeID;
-	private String m_NodeType;
-	private BoundsEnt m_Bounds;
-	private boolean m_IsDeletable;
-	private String m_NodeState;
-	private boolean m_HasDialog;
-	private NodeAnnotationEnt m_NodeAnnotation;
+	private String m_Node;
+	private String m_Text;
+	private int m_BackgroundColor;
+	private int m_X;
+	private int m_Y;
+	private int m_Width;
+	private int m_Height;
+	private String m_TextAlignment;
+	private int m_BorderSize;
+	private int m_BorderColor;
+	private int m_DefaultFontSize;
+	private int m_Version;
 
     /**
      *
      */
-    protected AbstractNodeEnt(final AbstractNodeEntBuilder builder) {
-		m_Parent = builder.m_Parent;
-		m_JobManager = builder.m_JobManager;
-		m_NodeMessage = builder.m_NodeMessage;
-		m_InPorts = builder.m_InPorts;
-		m_OutPorts = builder.m_OutPorts;
-		m_Name = builder.m_Name;
-		m_NodeID = builder.m_NodeID;
-		m_NodeType = builder.m_NodeType;
-		m_Bounds = builder.m_Bounds;
-		m_IsDeletable = builder.m_IsDeletable;
-		m_NodeState = builder.m_NodeState;
-		m_HasDialog = builder.m_HasDialog;
-		m_NodeAnnotation = builder.m_NodeAnnotation;
+    protected AbstractNodeAnnotationEnt(final AbstractNodeAnnotationEntBuilder builder) {
+		m_Node = builder.m_Node;
+		m_Text = builder.m_Text;
+		m_BackgroundColor = builder.m_BackgroundColor;
+		m_X = builder.m_X;
+		m_Y = builder.m_Y;
+		m_Width = builder.m_Width;
+		m_Height = builder.m_Height;
+		m_TextAlignment = builder.m_TextAlignment;
+		m_BorderSize = builder.m_BorderSize;
+		m_BorderColor = builder.m_BorderColor;
+		m_DefaultFontSize = builder.m_DefaultFontSize;
+		m_Version = builder.m_Version;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public EntityID getParent() {
-        return m_Parent;
+    public String getNode() {
+        return m_Node;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public JobManagerEnt getJobManager() {
-        return m_JobManager;
+    public String getText() {
+        return m_Text;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public NodeMessageEnt getNodeMessage() {
-        return m_NodeMessage;
+    public int getBackgroundColor() {
+        return m_BackgroundColor;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public List<NodeInPortEnt> getInPorts() {
-        return m_InPorts;
+    public int getX() {
+        return m_X;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public List<NodeOutPortEnt> getOutPorts() {
-        return m_OutPorts;
+    public int getY() {
+        return m_Y;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public String getName() {
-        return m_Name;
+    public int getWidth() {
+        return m_Width;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public String getNodeID() {
-        return m_NodeID;
+    public int getHeight() {
+        return m_Height;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public String getNodeType() {
-        return m_NodeType;
+    public String getTextAlignment() {
+        return m_TextAlignment;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public BoundsEnt getBounds() {
-        return m_Bounds;
+    public int getBorderSize() {
+        return m_BorderSize;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public boolean getIsDeletable() {
-        return m_IsDeletable;
+    public int getBorderColor() {
+        return m_BorderColor;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public String getNodeState() {
-        return m_NodeState;
+    public int getDefaultFontSize() {
+        return m_DefaultFontSize;
     }
     
 	/**
     * {@inheritDoc}
     */
     @Override
-    public boolean getHasDialog() {
-        return m_HasDialog;
-    }
-    
-	/**
-    * {@inheritDoc}
-    */
-    @Override
-    public NodeAnnotationEnt getNodeAnnotation() {
-        return m_NodeAnnotation;
+    public int getVersion() {
+        return m_Version;
     }
     
 
 
 
-    public static abstract class AbstractNodeEntBuilder implements NodeEntBuilder {
+    public static abstract class AbstractNodeAnnotationEntBuilder implements NodeAnnotationEntBuilder {
 
-		private EntityID m_Parent;
-		private JobManagerEnt m_JobManager;
-		private NodeMessageEnt m_NodeMessage;
-		private List<NodeInPortEnt> m_InPorts;
-		private List<NodeOutPortEnt> m_OutPorts;
-		private String m_Name;
-		private String m_NodeID;
-		private String m_NodeType;
-		private BoundsEnt m_Bounds;
-		private boolean m_IsDeletable;
-		private String m_NodeState;
-		private boolean m_HasDialog;
-		private NodeAnnotationEnt m_NodeAnnotation;
+		private String m_Node;
+		private String m_Text;
+		private int m_BackgroundColor;
+		private int m_X;
+		private int m_Y;
+		private int m_Width;
+		private int m_Height;
+		private String m_TextAlignment;
+		private int m_BorderSize;
+		private int m_BorderColor;
+		private int m_DefaultFontSize;
+		private int m_Version;
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setParent(final EntityID Parent) {
-        	m_Parent = Parent;
+        public NodeAnnotationEntBuilder setNode(final String Node) {
+        	m_Node = Node;
             return this;
         }
         
@@ -234,8 +215,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setJobManager(final JobManagerEnt JobManager) {
-        	m_JobManager = JobManager;
+        public NodeAnnotationEntBuilder setText(final String Text) {
+        	m_Text = Text;
             return this;
         }
         
@@ -243,8 +224,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
-        	m_NodeMessage = NodeMessage;
+        public NodeAnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
+        	m_BackgroundColor = BackgroundColor;
             return this;
         }
         
@@ -252,8 +233,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
-        	m_InPorts = InPorts;
+        public NodeAnnotationEntBuilder setX(final int X) {
+        	m_X = X;
             return this;
         }
         
@@ -261,8 +242,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
-        	m_OutPorts = OutPorts;
+        public NodeAnnotationEntBuilder setY(final int Y) {
+        	m_Y = Y;
             return this;
         }
         
@@ -270,8 +251,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setName(final String Name) {
-        	m_Name = Name;
+        public NodeAnnotationEntBuilder setWidth(final int Width) {
+        	m_Width = Width;
             return this;
         }
         
@@ -279,8 +260,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setNodeID(final String NodeID) {
-        	m_NodeID = NodeID;
+        public NodeAnnotationEntBuilder setHeight(final int Height) {
+        	m_Height = Height;
             return this;
         }
         
@@ -288,8 +269,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setNodeType(final String NodeType) {
-        	m_NodeType = NodeType;
+        public NodeAnnotationEntBuilder setTextAlignment(final String TextAlignment) {
+        	m_TextAlignment = TextAlignment;
             return this;
         }
         
@@ -297,8 +278,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setBounds(final BoundsEnt Bounds) {
-        	m_Bounds = Bounds;
+        public NodeAnnotationEntBuilder setBorderSize(final int BorderSize) {
+        	m_BorderSize = BorderSize;
             return this;
         }
         
@@ -306,8 +287,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setIsDeletable(final boolean IsDeletable) {
-        	m_IsDeletable = IsDeletable;
+        public NodeAnnotationEntBuilder setBorderColor(final int BorderColor) {
+        	m_BorderColor = BorderColor;
             return this;
         }
         
@@ -315,8 +296,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setNodeState(final String NodeState) {
-        	m_NodeState = NodeState;
+        public NodeAnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
+        	m_DefaultFontSize = DefaultFontSize;
             return this;
         }
         
@@ -324,17 +305,8 @@ public class AbstractNodeEnt implements NodeEnt {
          * {@inheritDoc}
          */
         @Override
-        public NodeEntBuilder setHasDialog(final boolean HasDialog) {
-        	m_HasDialog = HasDialog;
-            return this;
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public NodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
-        	m_NodeAnnotation = NodeAnnotation;
+        public NodeAnnotationEntBuilder setVersion(final int Version) {
+        	m_Version = Version;
             return this;
         }
         

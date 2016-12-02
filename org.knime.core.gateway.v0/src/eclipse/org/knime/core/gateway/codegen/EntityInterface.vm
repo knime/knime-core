@@ -54,7 +54,7 @@ import $import;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface $name extends GatewayEntity {
+public interface $name extends GatewayEntity#foreach ($superClass in $superClasses), ${superClass} #end {
 
  #foreach( $field in $fields )
  	$field.getType() get$field.getName()();

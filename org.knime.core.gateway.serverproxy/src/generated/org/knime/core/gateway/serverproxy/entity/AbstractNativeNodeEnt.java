@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import java.util.List;
 
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
@@ -77,6 +78,8 @@ public class AbstractNativeNodeEnt implements NativeNodeEnt {
 	private BoundsEnt m_Bounds;
 	private boolean m_IsDeletable;
 	private String m_NodeState;
+	private boolean m_HasDialog;
+	private NodeAnnotationEnt m_NodeAnnotation;
 
     /**
      *
@@ -94,6 +97,8 @@ public class AbstractNativeNodeEnt implements NativeNodeEnt {
 		m_Bounds = builder.m_Bounds;
 		m_IsDeletable = builder.m_IsDeletable;
 		m_NodeState = builder.m_NodeState;
+		m_HasDialog = builder.m_HasDialog;
+		m_NodeAnnotation = builder.m_NodeAnnotation;
     }
     
 	/**
@@ -192,6 +197,22 @@ public class AbstractNativeNodeEnt implements NativeNodeEnt {
         return m_NodeState;
     }
     
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public boolean getHasDialog() {
+        return m_HasDialog;
+    }
+    
+	/**
+    * {@inheritDoc}
+    */
+    @Override
+    public NodeAnnotationEnt getNodeAnnotation() {
+        return m_NodeAnnotation;
+    }
+    
 
 
 
@@ -209,6 +230,8 @@ public class AbstractNativeNodeEnt implements NativeNodeEnt {
 		private BoundsEnt m_Bounds;
 		private boolean m_IsDeletable;
 		private String m_NodeState;
+		private boolean m_HasDialog;
+		private NodeAnnotationEnt m_NodeAnnotation;
 
         /**
          * {@inheritDoc}
@@ -315,6 +338,24 @@ public class AbstractNativeNodeEnt implements NativeNodeEnt {
         @Override
         public NativeNodeEntBuilder setNodeState(final String NodeState) {
         	m_NodeState = NodeState;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NativeNodeEntBuilder setHasDialog(final boolean HasDialog) {
+        	m_HasDialog = HasDialog;
+            return this;
+        }
+        
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public NativeNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+        	m_NodeAnnotation = NodeAnnotation;
             return this;
         }
         

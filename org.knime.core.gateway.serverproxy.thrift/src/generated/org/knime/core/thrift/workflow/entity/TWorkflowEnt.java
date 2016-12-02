@@ -49,6 +49,14 @@ package org.knime.core.thrift.workflow.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import java.util.List;
 
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
@@ -85,6 +93,84 @@ public class TWorkflowEnt extends AbstractWorkflowEnt {
         return super.getConnections();
     }
     
+    @Override
+    @ThriftField
+    public EntityID getParent() {
+        return super.getParent();
+    }
+    
+    @Override
+    @ThriftField
+    public JobManagerEnt getJobManager() {
+        return super.getJobManager();
+    }
+    
+    @Override
+    @ThriftField
+    public NodeMessageEnt getNodeMessage() {
+        return super.getNodeMessage();
+    }
+    
+    @Override
+    @ThriftField
+    public List<NodeInPortEnt> getInPorts() {
+        return super.getInPorts();
+    }
+    
+    @Override
+    @ThriftField
+    public List<NodeOutPortEnt> getOutPorts() {
+        return super.getOutPorts();
+    }
+    
+    @Override
+    @ThriftField
+    public String getName() {
+        return super.getName();
+    }
+    
+    @Override
+    @ThriftField
+    public String getNodeID() {
+        return super.getNodeID();
+    }
+    
+    @Override
+    @ThriftField
+    public String getNodeType() {
+        return super.getNodeType();
+    }
+    
+    @Override
+    @ThriftField
+    public BoundsEnt getBounds() {
+        return super.getBounds();
+    }
+    
+    @Override
+    @ThriftField
+    public boolean getIsDeletable() {
+        return super.getIsDeletable();
+    }
+    
+    @Override
+    @ThriftField
+    public String getNodeState() {
+        return super.getNodeState();
+    }
+    
+    @Override
+    @ThriftField
+    public boolean getHasDialog() {
+        return super.getHasDialog();
+    }
+    
+    @Override
+    @ThriftField
+    public NodeAnnotationEnt getNodeAnnotation() {
+        return super.getNodeAnnotation();
+    }
+    
 
     public static class TWorkflowEntBuilder extends AbstractWorkflowEntBuilder {
 
@@ -105,6 +191,97 @@ public class TWorkflowEnt extends AbstractWorkflowEnt {
         @ThriftField
         public TWorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
             super.setConnections(Connections);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setParent(final EntityID Parent) {
+            super.setParent(Parent);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setJobManager(final JobManagerEnt JobManager) {
+            super.setJobManager(JobManager);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
+            super.setNodeMessage(NodeMessage);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
+            super.setInPorts(InPorts);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
+            super.setOutPorts(OutPorts);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setName(final String Name) {
+            super.setName(Name);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setNodeID(final String NodeID) {
+            super.setNodeID(NodeID);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setNodeType(final String NodeType) {
+            super.setNodeType(NodeType);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setBounds(final BoundsEnt Bounds) {
+            super.setBounds(Bounds);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setIsDeletable(final boolean IsDeletable) {
+            super.setIsDeletable(IsDeletable);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setNodeState(final String NodeState) {
+            super.setNodeState(NodeState);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setHasDialog(final boolean HasDialog) {
+            super.setHasDialog(HasDialog);
+            return this;
+        }
+        
+        @Override
+        @ThriftField
+        public TWorkflowEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+            super.setNodeAnnotation(NodeAnnotation);
             return this;
         }
         
