@@ -44,27 +44,46 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import java.util.List;
+
+import java.util.stream.Collectors;
+
+import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.serverproxy.service.AbstractWorkflowService;
 
 /**
+ * TODO: probably needs to be a singleton class
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class TWorkflowServiceDelegate extends AbstractWorkflowService {
 
-#foreach( $method in $methods )
-#if($method.getReturnType().isList())
-	#set($ret="List<$method.getReturnType().getType()>")
-#elseif($method.getReturnType().isVoid())
-	#set($ret="void")
-#else
-	#set($ret="$method.getReturnType().getType()")
-#end
-	$ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
+    private final TWorkflowService m_service;
+
+    public TWorkflowServiceDelegate(final TWorkflowService service) {
+        m_service = service;
+    }
+    
+	@Override
+	public WorkflowEnt getWorkflow(final EntityID id) {
+		 return m_service.TgetWorkflow((TEntityID) id);
+				
+	}
 	
-#end
+	@Override
+	public void updateWorkflow(final WorkflowEnt wf) {
+		 m_service.TupdateWorkflow((TWorkflowEnt) wf);
+				
+	}
+	
+	@Override
+	public List<EntityID> getAllWorkflows() {
+		 return m_service.TgetAllWorkflows().stream().map(t -> (EntityID)t).collect(Collectors.toList());
+				
+	}
+	
 }

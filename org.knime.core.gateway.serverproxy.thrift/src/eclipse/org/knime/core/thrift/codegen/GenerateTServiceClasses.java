@@ -44,45 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 10, 2016 (hornm): created
+ *   Dec 2, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.thrift.codegen;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.knime.core.gateway.serverproxy.service.AbstractWorkflowService;
-import org.knime.core.thrift.workflow.entity.TEntityID;
-import org.knime.core.thrift.workflow.entity.TWorkflowEnt;
+import org.knime.core.gateway.codegen.ServiceGenerator;
 
 /**
- * TODO auto-generate
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultTWorkflowService extends AbstractWorkflowService implements TWorkflowService {
+public class GenerateTServiceClasses {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void TupdateWorkflow(final TWorkflowEnt wf) {
-        super.updateWorkflow(wf);
+    public static void main(final String[] args) {
+        new ServiceGenerator("src/eclipse/org/knime/core/thrift/codegen/TServiceInterface.vm",
+            "src/generated/org/knime/core/thrift/workflow/service/", "T##serviceName##").generate();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TWorkflowEnt TgetWorkflow(final TEntityID id) {
-        return (TWorkflowEnt)super.getWorkflow(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<TEntityID> TgetAllWorkflows() {
-        return super.getAllWorkflows().stream().map(e -> (TEntityID)e).collect(Collectors.toList());
-    }
 }

@@ -44,18 +44,30 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
 #foreach( $import in $imports)
 import $import;
 #end
 
+import java.util.stream.Collectors;
+
+import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.serverproxy.service.Abstract${name};
+
 /**
+ * TODO: probably needs to be a singleton class
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class T${name}Delegate extends Abstract${name} {
 
+    private final T${name} m_service;
+
+    public T${name}Delegate(final T${name} service) {
+        m_service = service;
+    }
+    
 #foreach( $method in $methods )
 #if($method.getReturnType().isList())
 	#set($ret="List<$method.getReturnType().getType()>")
@@ -64,7 +76,11 @@ public interface ${name} extends GatewayService {
 #else
 	#set($ret="$method.getReturnType().getType()")
 #end
-	$ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
+	@Override
+	public $ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end) {
+		#if($ret!="void") return#end m_service.T$method.getName()(#foreach($param in $method.getParameters())(T$param.getType()) $param.getName()#if( $foreach.hasNext ),#end#end)#if($method.getReturnType().isList()).stream().map(t -> ($method.getReturnType().getType())t).collect(Collectors.toList())#end;
+				
+	}
 	
 #end
 }

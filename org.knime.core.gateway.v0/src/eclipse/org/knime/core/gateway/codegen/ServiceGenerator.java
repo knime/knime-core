@@ -145,10 +145,16 @@ public class ServiceGenerator {
     public static List<ServiceDef> getServiceDefs() {
         return Arrays.asList(
             new DefaultServiceDef("WorkflowService",
-                new DefaultServiceMethod("getWorfklow", "WorkflowEnt", "EntityID"))
+                new DefaultServiceMethod("getWorkflow",
+                    new DefaultReturnType("WorkflowEnt", false),
+                    new DefaultMethodParam("id", "EntityID")),
+                new DefaultServiceMethod("updateWorkflow", DefaultReturnType.VOID,
+                    new DefaultMethodParam("wf", "WorkflowEnt")),
+                new DefaultServiceMethod("getAllWorkflows", new DefaultReturnType("EntityID", true)))
             .addImports(
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
-                "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"));
+                "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
+                "java.util.List"));
     }
 
     public static interface ServiceDef {
@@ -163,12 +169,28 @@ public class ServiceGenerator {
 
     public static interface ServiceMethod {
 
-        String getMethodName();
+        String getName();
 
-        String getReturnType();
+        ReturnType getReturnType();
 
-        List<String> getParameterTypes();
+        List<MethodParam> getParameters();
 
+    }
+
+    public static interface MethodParam {
+
+        String getName();
+
+        String getType();
+    }
+
+    public static interface ReturnType {
+
+        String getType();
+
+        boolean isList();
+
+        boolean isVoid();
     }
 
     private static class DefaultServiceDef implements ServiceDef {
@@ -221,31 +243,31 @@ public class ServiceGenerator {
     private static class DefaultServiceMethod implements ServiceMethod {
 
         private String m_name;
-        private String m_returnType;
-        private List<String> m_parameterTypes;
+        private ReturnType m_returnType;
+        private List<MethodParam> m_parameters;
 
         /**
          *
          */
-        public DefaultServiceMethod(final String name, final String returnType, final String... parameterTypes) {
+        public DefaultServiceMethod(final String name, final ReturnType returnType, final MethodParam... parameters) {
             m_name = name;
             m_returnType = returnType;
-            m_parameterTypes = Arrays.asList(parameterTypes);
+            m_parameters = Arrays.asList(parameters);
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public String getMethodName() {
-            return null;
+        public String getName() {
+            return m_name;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public String getReturnType() {
+        public ReturnType getReturnType() {
             return m_returnType;
         }
 
@@ -253,9 +275,83 @@ public class ServiceGenerator {
          * {@inheritDoc}
          */
         @Override
-        public List<String> getParameterTypes() {
-            return m_parameterTypes;
+        public List<MethodParam> getParameters() {
+            return m_parameters;
         }
+
+    }
+
+    private static class DefaultMethodParam implements MethodParam {
+
+        private String m_name;
+        private String m_type;
+
+        /**
+         *
+         */
+        public DefaultMethodParam(final String name, final String type) {
+            m_name = name;
+            m_type = type;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return m_name;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getType() {
+            return m_type;
+        }
+    }
+
+    private static class DefaultReturnType implements ReturnType {
+
+        public static final ReturnType VOID = new DefaultReturnType(null, false);
+
+        private String m_type;
+        private boolean m_isList;
+
+        /**
+         * @param type <code>null</code> if void
+         * @param isList
+         *
+         */
+        public DefaultReturnType(final String type, final boolean isList) {
+            m_type = type;
+            m_isList = isList;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getType() {
+            return m_type;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isList() {
+            return m_isList;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isVoid() {
+            return m_type == null;
+        }
+
 
     }
 

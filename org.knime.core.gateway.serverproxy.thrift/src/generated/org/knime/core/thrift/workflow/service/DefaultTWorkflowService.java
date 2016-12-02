@@ -44,27 +44,36 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import java.util.List;
+
+import java.util.stream.Collectors;
+
+import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.serverproxy.service.AbstractWorkflowService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class DefaultTWorkflowService extends AbstractWorkflowService implements TWorkflowService {
 
-#foreach( $method in $methods )
-#if($method.getReturnType().isList())
-	#set($ret="List<$method.getReturnType().getType()>")
-#elseif($method.getReturnType().isVoid())
-	#set($ret="void")
-#else
-	#set($ret="$method.getReturnType().getType()")
-#end
-	$ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
+	@Override
+	public TWorkflowEnt TgetWorkflow(final TEntityID id) {
+		 return (TWorkflowEnt) super.getWorkflow(id);
+	}
 	
-#end
+	@Override
+	public void TupdateWorkflow(final TWorkflowEnt wf) {
+		 super.updateWorkflow(wf);
+	}
+	
+	@Override
+	public List<TEntityID> TgetAllWorkflows() {
+		 return  super.getAllWorkflows().stream().map(t -> (TEntityID)t).collect(Collectors.toList());
+	}
+	
 }

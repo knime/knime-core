@@ -43,55 +43,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 9, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.gateway.v0.workflow.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.knime.core.gateway.serverproxy.service.AbstractWorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.thrift.workflow.entity.TEntityID;
-import org.knime.core.thrift.workflow.entity.TWorkflowEnt;
+import java.util.List;
 
 /**
- * TODO: probably needs to be a singleton class TODO auto-generate!
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TWorkflowServiceDelegate extends AbstractWorkflowService {
+public interface WorkflowService extends GatewayService {
 
-    private final TWorkflowService m_service;
-
-    public TWorkflowServiceDelegate(final TWorkflowService service) {
-        m_service = service;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateWorkflow(final WorkflowEnt wf) {
-        m_service.TupdateWorkflow((TWorkflowEnt)wf);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEnt getWorkflow(final EntityID id) {
-        return m_service.TgetWorkflow((TEntityID)id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<EntityID> getAllWorkflows() {
-        return m_service.TgetAllWorkflows().stream().map(t -> (EntityID)t).collect(Collectors.toList());
-    }
-
+	WorkflowEnt getWorkflow(final EntityID id);
+	
+	void updateWorkflow(final WorkflowEnt wf);
+	
+	List<EntityID> getAllWorkflows();
+	
 }

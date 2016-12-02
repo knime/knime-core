@@ -44,26 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 27, 2016 (hornm): created
+ *   Dec 2, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.codegen;
 
-import java.util.List;
-
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.codegen.ServiceGenerator;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowService extends GatewayService {
+public class GenerateDefaultTServiceClasses {
 
-    void updateWorkflow(WorkflowEnt wf);
-
-    WorkflowEnt getWorkflow(EntityID id);
-
-    //TODO workflow groups, workflow metadata (e.g. permissions), etc.?
-    List<EntityID> getAllWorkflows();
+    public static void main(final String[] args) {
+        new ServiceGenerator("src/eclipse/org/knime/core/thrift/codegen/DefaultTServiceClass.vm",
+            "src/generated/org/knime/core/thrift/workflow/service/", "DefaultT##serviceName##").generate();
+    }
 
 }

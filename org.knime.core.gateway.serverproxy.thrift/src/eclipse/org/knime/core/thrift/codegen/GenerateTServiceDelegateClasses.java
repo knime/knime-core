@@ -43,28 +43,22 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 2, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.codegen;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import org.knime.core.gateway.codegen.ServiceGenerator;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class GenerateTServiceDelegateClasses {
 
-#foreach( $method in $methods )
-#if($method.getReturnType().isList())
-	#set($ret="List<$method.getReturnType().getType()>")
-#elseif($method.getReturnType().isVoid())
-	#set($ret="void")
-#else
-	#set($ret="$method.getReturnType().getType()")
-#end
-	$ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
-	
-#end
+    public static void main(final String[] args) {
+        new ServiceGenerator("src/eclipse/org/knime/core/thrift/codegen/TServiceDelegateClass.vm",
+            "src/generated/org/knime/core/thrift/workflow/service/", "T##serviceName##Delegate").generate();
+    }
+
 }

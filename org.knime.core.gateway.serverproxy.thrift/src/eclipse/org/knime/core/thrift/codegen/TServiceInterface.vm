@@ -44,27 +44,34 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
 #foreach( $import in $imports)
 import $import;
 #end
 
+import org.knime.core.thrift.workflow.entity.*;
+
+import com.facebook.swift.service.ThriftMethod;
+import com.facebook.swift.service.ThriftService;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+@ThriftService
+public interface T${name} {
 
 #foreach( $method in $methods )
+	@ThriftMethod
 #if($method.getReturnType().isList())
-	#set($ret="List<$method.getReturnType().getType()>")
+	#set($ret="List<T$method.getReturnType().getType()>")
 #elseif($method.getReturnType().isVoid())
 	#set($ret="void")
 #else
-	#set($ret="$method.getReturnType().getType()")
+	#set($ret="T$method.getReturnType().getType()")
 #end
-	$ret $method.getName()(#foreach($param in $method.getParameters())final $param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
+ 	$ret T$method.getName()(#foreach($param in $method.getParameters())final T$param.getType() $param.getName()#if( $foreach.hasNext ),#end#end);
 	
 #end
 }
