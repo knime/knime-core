@@ -91,6 +91,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableColumn;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -2027,6 +2028,12 @@ class FileReaderNodeDialog extends NodeDialogPane {
 
     private void setAnalWarningText(final String text) {
         m_analyzeWarn.setText(text);
+        // fixes AP-6763: dialog broken on Windows systems
+        if (StringUtils.isNotEmpty(text)) {
+            m_analyzeWarn.setPreferredSize(null);
+        } else {
+            m_analyzeWarn.setPreferredSize(new Dimension(0, 0));
+        }
         getPanel().revalidate();
         getPanel().repaint();
     }

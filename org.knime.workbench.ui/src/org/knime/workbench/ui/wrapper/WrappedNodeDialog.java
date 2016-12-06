@@ -56,6 +56,7 @@ import java.util.function.Predicate;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
@@ -644,9 +645,18 @@ public class WrappedNodeDialog extends Dialog {
 
     // these are extra height and width value since the parent dialog
     // does not return the right sizes for the underlying dialog pane
-    private static final int EXTRA_WIDTH = 25;
+    private static final int EXTRA_WIDTH;
 
-    private static final int EXTRA_HEIGHT = 20;
+    private static final int EXTRA_HEIGHT;
+
+    static {
+        // why scroll bar width/height? It fixes layout issues in all dialogs having preview
+        // panes that when filled show a scroll bar and this additional scroll bar space
+        // will make the 'outer' scroll bar to show
+        int scrollBarWidthOrHeight = ((Integer)UIManager.get("ScrollBar.width")).intValue();
+        EXTRA_WIDTH = 25 + scrollBarWidthOrHeight;
+        EXTRA_HEIGHT = 25 + scrollBarWidthOrHeight;
+    }
 
     /**
      * This calculates the initial size of the dialog. As the wrapped AWT-Panel
