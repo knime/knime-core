@@ -56,6 +56,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
  */
 public interface NodeOutPortEntBuilder extends GatewayEntityBuilder<NodeOutPortEnt> {
 
+
 	NodeOutPortEntBuilder setPortIndex(int PortIndex);
 
 	NodeOutPortEntBuilder setPortType(PortTypeEnt PortType);

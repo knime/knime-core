@@ -50,7 +50,7 @@ package org.knime.core.thrift;
 
 import java.util.Collections;
 
-import org.knime.core.thrift.workflow.service.DefaultTWorkflowService;
+import org.knime.core.thrift.workflow.service.TTestServiceFromThrift;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -69,7 +69,7 @@ public class ThriftPlugin implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new DefaultTWorkflowService());
+            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceFromThrift());
         m_server = new ThriftServer(thriftServiceProcessor, new ThriftServerConfig().setPort(2000)).start();
     }
 

@@ -61,10 +61,12 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.knime.core.gateway.codegen.types.DefaultEntityDef;
+import org.knime.core.gateway.codegen.types.DefaultEntityField;
+import org.knime.core.gateway.codegen.types.EntityDef;
+import org.knime.core.gateway.codegen.types.EntityField;
 
 /**
- * NOTES:
- * there are no inheritance hierarchies among entities. However, to avoid the repeated definition of fields, they can be taken over from other entities via ...
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -96,7 +98,7 @@ public final class EntityGenerator {
             VelocityContext context = new VelocityContext();
             List<EntityDef> entityDefs = getEntityDefs();
 
-            Map<String, EntityDef> entitiyDefMap = new HashMap<String, EntityGenerator.EntityDef>();
+            Map<String, EntityDef> entitiyDefMap = new HashMap<String, EntityDef>();
             for(EntityDef entityDef : entityDefs) {
                 entitiyDefMap.put(entityDef.getName(), entityDef);
             }
@@ -104,7 +106,7 @@ public final class EntityGenerator {
             for (EntityDef entityDef : entityDefs) {
                 context.put("name", entityDef.getName());
 
-                List<EntityField> fields = new ArrayList<EntityGenerator.EntityField>(entityDef.getFields());
+                List<EntityField> fields = new ArrayList<EntityField>(entityDef.getFields());
                 List<String> imports = new ArrayList<String>(entityDef.getImports());
                 List<String> superClasses = new ArrayList<String>();
 
@@ -259,123 +261,12 @@ public final class EntityGenerator {
                 new DefaultEntityField("Version", "int")),
             new DefaultEntityDef("NodeAnnotationEnt",
                 new DefaultEntityField("Node", "String"))
-                .addFieldsFrom("AnnotationEnt"));
+                .addFieldsFrom("AnnotationEnt"),
+            new DefaultEntityDef("TestEnt",
+                new DefaultEntityField("xy", "XYEnt"),
+                new DefaultEntityField("xylist", "List<XYEnt>"),
+                new DefaultEntityField("other", "String"))
+            .addImports("org.knime.core.gateway.v0.workflow.entity.XYEnt",
+                    "java.util.List"));
     }
-
-
-    public static interface EntityDef {
-
-        String getName();
-
-        List<EntityField> getFields();
-
-        List<String> getCommonEntities();
-
-        List<String> getImports();
-
-    }
-
-    public static interface EntityField {
-
-        String getName();
-
-        String getType();
-    }
-
-    private static class DefaultEntityDef implements EntityDef {
-
-        private List<EntityField> m_fields;
-
-        private String m_name;
-
-        private List<String> m_commonEntities = new ArrayList<String>();
-
-        private List<String> m_imports = new ArrayList<String>();
-
-        /**
-         *
-         */
-        public DefaultEntityDef(final String name, final EntityField... entityFields) {
-            m_fields = Arrays.asList(entityFields);
-            m_name = name;
-        }
-
-        public DefaultEntityDef addFieldsFrom(final String... entities) {
-            for(String s : entities) {
-                m_commonEntities.add(s);
-            }
-            return this;
-        }
-
-        public DefaultEntityDef addImports(final String... imports) {
-            for(String s : imports) {
-                m_imports.add(s);
-            }
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<EntityField> getFields() {
-            return m_fields;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<String> getCommonEntities() {
-            return m_commonEntities;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<String> getImports() {
-            return m_imports;
-        }
-    }
-
-    private static class DefaultEntityField implements EntityField {
-
-        private String m_name;
-
-        private String m_type;
-
-        /**
-         *
-         */
-        public DefaultEntityField(final String name, final String type) {
-            m_name = name;
-            m_type = type;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getType() {
-            return m_type;
-        }
-    }
-
 }

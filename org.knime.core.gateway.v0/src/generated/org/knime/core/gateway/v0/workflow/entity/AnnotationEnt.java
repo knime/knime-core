@@ -53,6 +53,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface AnnotationEnt extends GatewayEntity {
 
+
   	String getText();
  	
   	int getBackgroundColor();

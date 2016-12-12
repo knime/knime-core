@@ -53,6 +53,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface NodeFactoryIDEnt extends GatewayEntity {
 
+
   	String getClassName();
  	
   	String getNodeName();

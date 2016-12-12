@@ -52,9 +52,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractWorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnnotationEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -62,112 +65,134 @@ import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnn
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TWorkflowAnnotationEntBuilder.class)
-public class TWorkflowAnnotationEnt extends AbstractWorkflowAnnotationEnt {
+public class TWorkflowAnnotationEnt {
+
+
+
+	private String m_Text;
+	private TBoundsEnt m_Bounds;
+	private int m_BgColor;
+	private int m_BorderSize;
+	private int m_BorderColor;
+	private int m_FontSize;
+	private String m_Alignment;
 
     /**
      * @param builder
      */
-    protected TWorkflowAnnotationEnt(final AbstractWorkflowAnnotationEntBuilder builder) {
-        super(builder);
+    private TWorkflowAnnotationEnt(final TWorkflowAnnotationEntBuilder builder) {
+		m_Text = builder.m_Text;
+		m_Bounds = builder.m_Bounds;
+		m_BgColor = builder.m_BgColor;
+		m_BorderSize = builder.m_BorderSize;
+		m_BorderColor = builder.m_BorderColor;
+		m_FontSize = builder.m_FontSize;
+		m_Alignment = builder.m_Alignment;
+    }
+    
+    protected TWorkflowAnnotationEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getText() {
-        return super.getText();
+        return m_Text;
     }
     
-    @Override
-    @ThriftField
-    public BoundsEnt getBounds() {
-        return super.getBounds();
+    @ThriftField(2)
+    public TBoundsEnt getBounds() {
+        return m_Bounds;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public int getBgColor() {
-        return super.getBgColor();
+        return m_BgColor;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(4)
     public int getBorderSize() {
-        return super.getBorderSize();
+        return m_BorderSize;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(5)
     public int getBorderColor() {
-        return super.getBorderColor();
+        return m_BorderColor;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(6)
     public int getFontSize() {
-        return super.getFontSize();
+        return m_FontSize;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(7)
     public String getAlignment() {
-        return super.getAlignment();
+        return m_Alignment;
     }
     
 
-    public static class TWorkflowAnnotationEntBuilder extends AbstractWorkflowAnnotationEntBuilder {
+	public static TWorkflowAnnotationEntBuilder builder() {
+		return new TWorkflowAnnotationEntBuilder();
+	}
+	
+    public static class TWorkflowAnnotationEntBuilder implements ThriftEntityBuilder<WorkflowAnnotationEnt> {
+    
+		private String m_Text;
+		private TBoundsEnt m_Bounds;
+		private int m_BgColor;
+		private int m_BorderSize;
+		private int m_BorderColor;
+		private int m_FontSize;
+		private String m_Alignment;
 
-        @Override
         @ThriftConstructor
         public TWorkflowAnnotationEnt build() {
             return new TWorkflowAnnotationEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<WorkflowAnnotationEnt> wrap() {
+            return new TWorkflowAnnotationEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TWorkflowAnnotationEntBuilder setText(final String Text) {
-            super.setText(Text);
+			m_Text = Text;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowAnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
-            super.setBounds(Bounds);
+        public TWorkflowAnnotationEntBuilder setBounds(final TBoundsEnt Bounds) {
+			m_Bounds = Bounds;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowAnnotationEntBuilder setBgColor(final int BgColor) {
-            super.setBgColor(BgColor);
+			m_BgColor = BgColor;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowAnnotationEntBuilder setBorderSize(final int BorderSize) {
-            super.setBorderSize(BorderSize);
+			m_BorderSize = BorderSize;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowAnnotationEntBuilder setBorderColor(final int BorderColor) {
-            super.setBorderColor(BorderColor);
+			m_BorderColor = BorderColor;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowAnnotationEntBuilder setFontSize(final int FontSize) {
-            super.setFontSize(FontSize);
+			m_FontSize = FontSize;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowAnnotationEntBuilder setAlignment(final String Alignment) {
-            super.setAlignment(Alignment);
+			m_Alignment = Alignment;			
             return this;
         }
         

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.knime.core.api.node.workflow.project.WorkflowProjectFactory">
+      <WorkflowProjectFactory
+            WorkflowProjectFactory="org.knime.core.clientproxy.workflow.project.ClientProxyWorkflowProjectFactory">
+      </WorkflowProjectFactory>
+   </extension>
+
+</plugin>

@@ -55,6 +55,7 @@ import java.util.List;
  */
 public interface ConnectionEnt extends GatewayEntity {
 
+
   	String getDest();
  	
   	int getDestPort();
@@ -65,7 +66,7 @@ public interface ConnectionEnt extends GatewayEntity {
  	
   	boolean getIsDeleteable();
  	
-  	List<XYEnt> getBendPoints();
+  	List<? extends XYEnt> getBendPoints();
  	
   	String getType();
  	

@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
  */
 public interface NodeAnnotationEntBuilder extends GatewayEntityBuilder<NodeAnnotationEnt> {
 
+
 	NodeAnnotationEntBuilder setNode(String Node);
 
 	NodeAnnotationEntBuilder setText(String Text);

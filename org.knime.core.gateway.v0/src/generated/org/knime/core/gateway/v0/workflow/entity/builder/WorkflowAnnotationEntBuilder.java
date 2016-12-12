@@ -55,6 +55,7 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
  */
 public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<WorkflowAnnotationEnt> {
 
+
 	WorkflowAnnotationEntBuilder setText(String Text);
 
 	WorkflowAnnotationEntBuilder setBounds(BoundsEnt Bounds);

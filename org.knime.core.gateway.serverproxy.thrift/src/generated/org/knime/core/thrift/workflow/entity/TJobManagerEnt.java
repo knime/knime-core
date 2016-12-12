@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractJobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,47 +64,64 @@ import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilde
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TJobManagerEntBuilder.class)
-public class TJobManagerEnt extends AbstractJobManagerEnt {
+public class TJobManagerEnt {
+
+
+
+	private String m_Name;
+	private String m_JobManagerID;
 
     /**
      * @param builder
      */
-    protected TJobManagerEnt(final AbstractJobManagerEntBuilder builder) {
-        super(builder);
+    private TJobManagerEnt(final TJobManagerEntBuilder builder) {
+		m_Name = builder.m_Name;
+		m_JobManagerID = builder.m_JobManagerID;
+    }
+    
+    protected TJobManagerEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getName() {
-        return super.getName();
+        return m_Name;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getJobManagerID() {
-        return super.getJobManagerID();
+        return m_JobManagerID;
     }
     
 
-    public static class TJobManagerEntBuilder extends AbstractJobManagerEntBuilder {
+	public static TJobManagerEntBuilder builder() {
+		return new TJobManagerEntBuilder();
+	}
+	
+    public static class TJobManagerEntBuilder implements ThriftEntityBuilder<JobManagerEnt> {
+    
+		private String m_Name;
+		private String m_JobManagerID;
 
-        @Override
         @ThriftConstructor
         public TJobManagerEnt build() {
             return new TJobManagerEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<JobManagerEnt> wrap() {
+            return new TJobManagerEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TJobManagerEntBuilder setName(final String Name) {
-            super.setName(Name);
+			m_Name = Name;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TJobManagerEntBuilder setJobManagerID(final String JobManagerID) {
-            super.setJobManagerID(JobManagerID);
+			m_JobManagerID = JobManagerID;			
             return this;
         }
         

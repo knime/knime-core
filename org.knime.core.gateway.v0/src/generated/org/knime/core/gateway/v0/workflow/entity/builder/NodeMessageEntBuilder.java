@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
  */
 public interface NodeMessageEntBuilder extends GatewayEntityBuilder<NodeMessageEnt> {
 
+
 	NodeMessageEntBuilder setMessage(String Message);
 
 	NodeMessageEntBuilder setType(String Type);

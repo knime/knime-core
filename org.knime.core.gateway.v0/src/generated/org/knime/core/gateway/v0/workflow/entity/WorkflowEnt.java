@@ -64,9 +64,10 @@ import java.util.List;
  */
 public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
 
-  	List<NodeEnt> getNodes();
+
+  	List<? extends NodeEnt> getNodes();
  	
-  	List<ConnectionEnt> getConnections();
+  	List<? extends ConnectionEnt> getConnections();
  	
   	EntityID getParent();
  	
@@ -74,9 +75,9 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
  	
   	NodeMessageEnt getNodeMessage();
  	
-  	List<NodeInPortEnt> getInPorts();
+  	List<? extends NodeInPortEnt> getInPorts();
  	
-  	List<NodeOutPortEnt> getOutPorts();
+  	List<? extends NodeOutPortEnt> getOutPorts();
  	
   	String getName();
  	

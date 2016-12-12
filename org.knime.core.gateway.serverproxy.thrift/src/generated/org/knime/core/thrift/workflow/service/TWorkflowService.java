@@ -62,13 +62,14 @@ import com.facebook.swift.service.ThriftService;
 @ThriftService
 public interface TWorkflowService {
 
+
 	@ThriftMethod
- 	TWorkflowEnt TgetWorkflow(final TEntityID id);
+	TWorkflowEnt TgetWorkflow(final TEntityID id);
 	
 	@ThriftMethod
- 	void TupdateWorkflow(final TWorkflowEnt wf);
+	void TupdateWorkflow(final TWorkflowEnt wf);
 	
 	@ThriftMethod
- 	List<TEntityID> TgetAllWorkflows();
+	List<TEntityID> TgetAllWorkflows();
 	
 }

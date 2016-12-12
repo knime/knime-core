@@ -62,9 +62,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractWorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -72,216 +75,246 @@ import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TWorkflowEntBuilder.class)
-public class TWorkflowEnt extends AbstractWorkflowEnt {
+public class TWorkflowEnt {
+
+
+
+	private List<TNodeEnt> m_Nodes;
+	private List<TConnectionEnt> m_Connections;
+	private TEntityID m_Parent;
+	private TJobManagerEnt m_JobManager;
+	private TNodeMessageEnt m_NodeMessage;
+	private List<TNodeInPortEnt> m_InPorts;
+	private List<TNodeOutPortEnt> m_OutPorts;
+	private String m_Name;
+	private String m_NodeID;
+	private String m_NodeType;
+	private TBoundsEnt m_Bounds;
+	private boolean m_IsDeletable;
+	private String m_NodeState;
+	private boolean m_HasDialog;
+	private TNodeAnnotationEnt m_NodeAnnotation;
 
     /**
      * @param builder
      */
-    protected TWorkflowEnt(final AbstractWorkflowEntBuilder builder) {
-        super(builder);
+    private TWorkflowEnt(final TWorkflowEntBuilder builder) {
+		m_Nodes = builder.m_Nodes;
+		m_Connections = builder.m_Connections;
+		m_Parent = builder.m_Parent;
+		m_JobManager = builder.m_JobManager;
+		m_NodeMessage = builder.m_NodeMessage;
+		m_InPorts = builder.m_InPorts;
+		m_OutPorts = builder.m_OutPorts;
+		m_Name = builder.m_Name;
+		m_NodeID = builder.m_NodeID;
+		m_NodeType = builder.m_NodeType;
+		m_Bounds = builder.m_Bounds;
+		m_IsDeletable = builder.m_IsDeletable;
+		m_NodeState = builder.m_NodeState;
+		m_HasDialog = builder.m_HasDialog;
+		m_NodeAnnotation = builder.m_NodeAnnotation;
+    }
+    
+    protected TWorkflowEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
-    public List<NodeEnt> getNodes() {
-        return super.getNodes();
+    @ThriftField(1)
+    public List<TNodeEnt> getNodes() {
+        return m_Nodes;
     }
     
-    @Override
-    @ThriftField
-    public List<ConnectionEnt> getConnections() {
-        return super.getConnections();
+    @ThriftField(2)
+    public List<TConnectionEnt> getConnections() {
+        return m_Connections;
     }
     
-    @Override
-    @ThriftField
-    public EntityID getParent() {
-        return super.getParent();
+    @ThriftField(3)
+    public TEntityID getParent() {
+        return m_Parent;
     }
     
-    @Override
-    @ThriftField
-    public JobManagerEnt getJobManager() {
-        return super.getJobManager();
+    @ThriftField(4)
+    public TJobManagerEnt getJobManager() {
+        return m_JobManager;
     }
     
-    @Override
-    @ThriftField
-    public NodeMessageEnt getNodeMessage() {
-        return super.getNodeMessage();
+    @ThriftField(5)
+    public TNodeMessageEnt getNodeMessage() {
+        return m_NodeMessage;
     }
     
-    @Override
-    @ThriftField
-    public List<NodeInPortEnt> getInPorts() {
-        return super.getInPorts();
+    @ThriftField(6)
+    public List<TNodeInPortEnt> getInPorts() {
+        return m_InPorts;
     }
     
-    @Override
-    @ThriftField
-    public List<NodeOutPortEnt> getOutPorts() {
-        return super.getOutPorts();
+    @ThriftField(7)
+    public List<TNodeOutPortEnt> getOutPorts() {
+        return m_OutPorts;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(8)
     public String getName() {
-        return super.getName();
+        return m_Name;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(9)
     public String getNodeID() {
-        return super.getNodeID();
+        return m_NodeID;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(10)
     public String getNodeType() {
-        return super.getNodeType();
+        return m_NodeType;
     }
     
-    @Override
-    @ThriftField
-    public BoundsEnt getBounds() {
-        return super.getBounds();
+    @ThriftField(11)
+    public TBoundsEnt getBounds() {
+        return m_Bounds;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(12)
     public boolean getIsDeletable() {
-        return super.getIsDeletable();
+        return m_IsDeletable;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(13)
     public String getNodeState() {
-        return super.getNodeState();
+        return m_NodeState;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(14)
     public boolean getHasDialog() {
-        return super.getHasDialog();
+        return m_HasDialog;
     }
     
-    @Override
-    @ThriftField
-    public NodeAnnotationEnt getNodeAnnotation() {
-        return super.getNodeAnnotation();
+    @ThriftField(15)
+    public TNodeAnnotationEnt getNodeAnnotation() {
+        return m_NodeAnnotation;
     }
     
 
-    public static class TWorkflowEntBuilder extends AbstractWorkflowEntBuilder {
+	public static TWorkflowEntBuilder builder() {
+		return new TWorkflowEntBuilder();
+	}
+	
+    public static class TWorkflowEntBuilder implements ThriftEntityBuilder<WorkflowEnt> {
+    
+		private List<TNodeEnt> m_Nodes;
+		private List<TConnectionEnt> m_Connections;
+		private TEntityID m_Parent;
+		private TJobManagerEnt m_JobManager;
+		private TNodeMessageEnt m_NodeMessage;
+		private List<TNodeInPortEnt> m_InPorts;
+		private List<TNodeOutPortEnt> m_OutPorts;
+		private String m_Name;
+		private String m_NodeID;
+		private String m_NodeType;
+		private TBoundsEnt m_Bounds;
+		private boolean m_IsDeletable;
+		private String m_NodeState;
+		private boolean m_HasDialog;
+		private TNodeAnnotationEnt m_NodeAnnotation;
 
-        @Override
         @ThriftConstructor
         public TWorkflowEnt build() {
             return new TWorkflowEnt(this);
         }
+        
+        @Override
+        public GatewayEntityBuilder<WorkflowEnt> wrap() {
+            return new TWorkflowEntBuilderFromThrift(this);
+        }
 
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setNodes(final List<NodeEnt> Nodes) {
-            super.setNodes(Nodes);
+        public TWorkflowEntBuilder setNodes(final List<TNodeEnt> Nodes) {
+			m_Nodes = Nodes;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
-            super.setConnections(Connections);
+        public TWorkflowEntBuilder setConnections(final List<TConnectionEnt> Connections) {
+			m_Connections = Connections;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setParent(final EntityID Parent) {
-            super.setParent(Parent);
+        public TWorkflowEntBuilder setParent(final TEntityID Parent) {
+			m_Parent = Parent;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setJobManager(final JobManagerEnt JobManager) {
-            super.setJobManager(JobManager);
+        public TWorkflowEntBuilder setJobManager(final TJobManagerEnt JobManager) {
+			m_JobManager = JobManager;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
-            super.setNodeMessage(NodeMessage);
+        public TWorkflowEntBuilder setNodeMessage(final TNodeMessageEnt NodeMessage) {
+			m_NodeMessage = NodeMessage;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
-            super.setInPorts(InPorts);
+        public TWorkflowEntBuilder setInPorts(final List<TNodeInPortEnt> InPorts) {
+			m_InPorts = InPorts;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
-            super.setOutPorts(OutPorts);
+        public TWorkflowEntBuilder setOutPorts(final List<TNodeOutPortEnt> OutPorts) {
+			m_OutPorts = OutPorts;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setName(final String Name) {
-            super.setName(Name);
+			m_Name = Name;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setNodeID(final String NodeID) {
-            super.setNodeID(NodeID);
+			m_NodeID = NodeID;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setNodeType(final String NodeType) {
-            super.setNodeType(NodeType);
+			m_NodeType = NodeType;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setBounds(final BoundsEnt Bounds) {
-            super.setBounds(Bounds);
+        public TWorkflowEntBuilder setBounds(final TBoundsEnt Bounds) {
+			m_Bounds = Bounds;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setIsDeletable(final boolean IsDeletable) {
-            super.setIsDeletable(IsDeletable);
+			m_IsDeletable = IsDeletable;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setNodeState(final String NodeState) {
-            super.setNodeState(NodeState);
+			m_NodeState = NodeState;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TWorkflowEntBuilder setHasDialog(final boolean HasDialog) {
-            super.setHasDialog(HasDialog);
+			m_HasDialog = HasDialog;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TWorkflowEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
-            super.setNodeAnnotation(NodeAnnotation);
+        public TWorkflowEntBuilder setNodeAnnotation(final TNodeAnnotationEnt NodeAnnotation) {
+			m_NodeAnnotation = NodeAnnotation;			
             return this;
         }
         

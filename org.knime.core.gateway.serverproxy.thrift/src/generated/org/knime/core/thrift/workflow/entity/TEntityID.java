@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractEntityID;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
+
 import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,47 +64,64 @@ import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TEntityIDBuilder.class)
-public class TEntityID extends AbstractEntityID {
+public class TEntityID {
+
+
+
+	private String m_ID;
+	private String m_Type;
 
     /**
      * @param builder
      */
-    protected TEntityID(final AbstractEntityIDBuilder builder) {
-        super(builder);
+    private TEntityID(final TEntityIDBuilder builder) {
+		m_ID = builder.m_ID;
+		m_Type = builder.m_Type;
+    }
+    
+    protected TEntityID() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getID() {
-        return super.getID();
+        return m_ID;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getType() {
-        return super.getType();
+        return m_Type;
     }
     
 
-    public static class TEntityIDBuilder extends AbstractEntityIDBuilder {
+	public static TEntityIDBuilder builder() {
+		return new TEntityIDBuilder();
+	}
+	
+    public static class TEntityIDBuilder implements ThriftEntityBuilder<EntityID> {
+    
+		private String m_ID;
+		private String m_Type;
 
-        @Override
         @ThriftConstructor
         public TEntityID build() {
             return new TEntityID(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<EntityID> wrap() {
+            return new TEntityIDBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TEntityIDBuilder setID(final String ID) {
-            super.setID(ID);
+			m_ID = ID;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TEntityIDBuilder setType(final String Type) {
-            super.setType(Type);
+			m_Type = Type;			
             return this;
         }
         

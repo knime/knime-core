@@ -51,14 +51,16 @@ package org.knime.core.clientproxy.workflow.project;
 import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 import static org.knime.core.gateway.services.ServiceManager.service;
 
+import java.util.Arrays;
+
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowGroup;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
-import org.knime.core.clientproxy.workflow.WorkflowManager;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+import org.knime.core.gateway.v0.workflow.service.TestService;
 
 /**
  * Mainly for testing and prototyping purposes.
@@ -93,11 +95,16 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
         //server has already been started with the bundle activation
         //but here: make sure that the "server" knows the workflow
 
+        //just for testing / proof-of-concept
+        XYEnt xy = builder(XYEntBuilder.class).setX(10).setY(25).build();
+        service(TestService.class).test(builder(TestEntBuilder.class).setxy(xy).setother("hello1234").setxylist(Arrays.asList(xy)).build());
+
         //return 'client' workflow manager
         //download 'workflow' from server'
-        EntityID workflowId =
-                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
-        return new WorkflowManager(service(WorkflowService.class).getWorkflow(workflowId));
+//        EntityID workflowId =
+//                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
+//        return new WorkflowManager(service(WorkflowService.class).getWorkflow(workflowId));
+        return null;
     }
 
 }

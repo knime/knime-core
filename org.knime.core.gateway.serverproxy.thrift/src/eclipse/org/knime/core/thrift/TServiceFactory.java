@@ -52,9 +52,9 @@ import java.util.concurrent.ExecutionException;
 
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
-import org.knime.core.thrift.workflow.service.TWorkflowService;
-import org.knime.core.thrift.workflow.service.TWorkflowServiceDelegate;
+import org.knime.core.gateway.v0.workflow.service.TestService;
+import org.knime.core.thrift.workflow.service.TTestService;
+import org.knime.core.thrift.workflow.service.TTestServiceToThrift;
 
 import com.facebook.nifty.client.FramedClientConnector;
 import com.facebook.swift.service.ThriftClientManager;
@@ -76,9 +76,17 @@ public class TServiceFactory implements ServiceFactory {
     @Override
     public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
         //TODO don't use if here but a automatically filled map or annotations
-        if (serviceInterface.isAssignableFrom(WorkflowService.class)) {
+//        if (serviceInterface.isAssignableFrom(WorkflowService.class)) {
+//            try {
+//                return (S)new TWorkflowServiceDelegate(clientManager.createClient(connector, TWorkflowService.class).get());
+//            } catch (InterruptedException | ExecutionException ex) {
+//                //TODO
+//                throw new RuntimeException(ex);
+//            }
+//        }
+        if (serviceInterface.isAssignableFrom(TestService.class)) {
             try {
-                return (S)new TWorkflowServiceDelegate(clientManager.createClient(connector, TWorkflowService.class).get());
+                return (S)new TTestServiceToThrift(clientManager.createClient(connector, TTestService.class).get());
             } catch (InterruptedException | ExecutionException ex) {
                 //TODO
                 throw new RuntimeException(ex);

@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
  */
 public interface NodeFactoryIDEntBuilder extends GatewayEntityBuilder<NodeFactoryIDEnt> {
 
+
 	NodeFactoryIDEntBuilder setClassName(String ClassName);
 
 	NodeFactoryIDEntBuilder setNodeName(String NodeName);

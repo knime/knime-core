@@ -53,13 +53,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.knime.core.thrift.workflow.entity.*;
-import org.knime.core.gateway.serverproxy.service.AbstractWorkflowService;
+import org.knime.core.gateway.serverproxy.service.DefaultWorkflowService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultTWorkflowService extends AbstractWorkflowService implements TWorkflowService {
+public class DefaultTWorkflowService extends DefaultWorkflowService implements TWorkflowService {
 
 	@Override
 	public TWorkflowEnt TgetWorkflow(final TEntityID id) {

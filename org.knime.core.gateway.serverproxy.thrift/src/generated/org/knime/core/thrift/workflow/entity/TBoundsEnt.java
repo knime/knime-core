@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractBoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TBoundsEnt.TBoundsEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,73 +64,92 @@ import org.knime.core.thrift.workflow.entity.TBoundsEnt.TBoundsEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TBoundsEntBuilder.class)
-public class TBoundsEnt extends AbstractBoundsEnt {
+public class TBoundsEnt {
+
+
+
+	private int m_X;
+	private int m_Y;
+	private int m_Width;
+	private int m_Height;
 
     /**
      * @param builder
      */
-    protected TBoundsEnt(final AbstractBoundsEntBuilder builder) {
-        super(builder);
+    private TBoundsEnt(final TBoundsEntBuilder builder) {
+		m_X = builder.m_X;
+		m_Y = builder.m_Y;
+		m_Width = builder.m_Width;
+		m_Height = builder.m_Height;
+    }
+    
+    protected TBoundsEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public int getX() {
-        return super.getX();
+        return m_X;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public int getY() {
-        return super.getY();
+        return m_Y;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public int getWidth() {
-        return super.getWidth();
+        return m_Width;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(4)
     public int getHeight() {
-        return super.getHeight();
+        return m_Height;
     }
     
 
-    public static class TBoundsEntBuilder extends AbstractBoundsEntBuilder {
+	public static TBoundsEntBuilder builder() {
+		return new TBoundsEntBuilder();
+	}
+	
+    public static class TBoundsEntBuilder implements ThriftEntityBuilder<BoundsEnt> {
+    
+		private int m_X;
+		private int m_Y;
+		private int m_Width;
+		private int m_Height;
 
-        @Override
         @ThriftConstructor
         public TBoundsEnt build() {
             return new TBoundsEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<BoundsEnt> wrap() {
+            return new TBoundsEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TBoundsEntBuilder setX(final int X) {
-            super.setX(X);
+			m_X = X;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TBoundsEntBuilder setY(final int Y) {
-            super.setY(Y);
+			m_Y = Y;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TBoundsEntBuilder setWidth(final int Width) {
-            super.setWidth(Width);
+			m_Width = Width;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TBoundsEntBuilder setHeight(final int Height) {
-            super.setHeight(Height);
+			m_Height = Height;			
             return this;
         }
         

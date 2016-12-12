@@ -62,6 +62,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
  */
 public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
 
+
 	NodeEntBuilder setParent(EntityID Parent);
 
 	NodeEntBuilder setJobManager(JobManagerEnt JobManager);

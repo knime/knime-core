@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractPortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,86 +64,106 @@ import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TPortTypeEntBuilder.class)
-public class TPortTypeEnt extends AbstractPortTypeEnt {
+public class TPortTypeEnt {
+
+
+
+	private String m_Name;
+	private String m_PortObjectClassName;
+	private boolean m_IsOptional;
+	private int m_Color;
+	private boolean m_IsHidden;
 
     /**
      * @param builder
      */
-    protected TPortTypeEnt(final AbstractPortTypeEntBuilder builder) {
-        super(builder);
+    private TPortTypeEnt(final TPortTypeEntBuilder builder) {
+		m_Name = builder.m_Name;
+		m_PortObjectClassName = builder.m_PortObjectClassName;
+		m_IsOptional = builder.m_IsOptional;
+		m_Color = builder.m_Color;
+		m_IsHidden = builder.m_IsHidden;
+    }
+    
+    protected TPortTypeEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getName() {
-        return super.getName();
+        return m_Name;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getPortObjectClassName() {
-        return super.getPortObjectClassName();
+        return m_PortObjectClassName;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public boolean getIsOptional() {
-        return super.getIsOptional();
+        return m_IsOptional;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(4)
     public int getColor() {
-        return super.getColor();
+        return m_Color;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(5)
     public boolean getIsHidden() {
-        return super.getIsHidden();
+        return m_IsHidden;
     }
     
 
-    public static class TPortTypeEntBuilder extends AbstractPortTypeEntBuilder {
+	public static TPortTypeEntBuilder builder() {
+		return new TPortTypeEntBuilder();
+	}
+	
+    public static class TPortTypeEntBuilder implements ThriftEntityBuilder<PortTypeEnt> {
+    
+		private String m_Name;
+		private String m_PortObjectClassName;
+		private boolean m_IsOptional;
+		private int m_Color;
+		private boolean m_IsHidden;
 
-        @Override
         @ThriftConstructor
         public TPortTypeEnt build() {
             return new TPortTypeEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<PortTypeEnt> wrap() {
+            return new TPortTypeEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TPortTypeEntBuilder setName(final String Name) {
-            super.setName(Name);
+			m_Name = Name;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TPortTypeEntBuilder setPortObjectClassName(final String PortObjectClassName) {
-            super.setPortObjectClassName(PortObjectClassName);
+			m_PortObjectClassName = PortObjectClassName;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TPortTypeEntBuilder setIsOptional(final boolean IsOptional) {
-            super.setIsOptional(IsOptional);
+			m_IsOptional = IsOptional;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TPortTypeEntBuilder setColor(final int Color) {
-            super.setColor(Color);
+			m_Color = Color;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TPortTypeEntBuilder setIsHidden(final boolean IsHidden) {
-            super.setIsHidden(IsHidden);
+			m_IsHidden = IsHidden;			
             return this;
         }
         

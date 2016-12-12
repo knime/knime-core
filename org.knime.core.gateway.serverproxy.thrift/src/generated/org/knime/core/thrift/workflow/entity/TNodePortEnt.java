@@ -52,9 +52,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodePortEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodePortEnt.TNodePortEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -62,60 +65,78 @@ import org.knime.core.thrift.workflow.entity.TNodePortEnt.TNodePortEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodePortEntBuilder.class)
-public class TNodePortEnt extends AbstractNodePortEnt {
+public class TNodePortEnt {
+
+
+
+	private int m_PortIndex;
+	private TPortTypeEnt m_PortType;
+	private String m_PortName;
 
     /**
      * @param builder
      */
-    protected TNodePortEnt(final AbstractNodePortEntBuilder builder) {
-        super(builder);
+    private TNodePortEnt(final TNodePortEntBuilder builder) {
+		m_PortIndex = builder.m_PortIndex;
+		m_PortType = builder.m_PortType;
+		m_PortName = builder.m_PortName;
+    }
+    
+    protected TNodePortEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public int getPortIndex() {
-        return super.getPortIndex();
+        return m_PortIndex;
     }
     
-    @Override
-    @ThriftField
-    public PortTypeEnt getPortType() {
-        return super.getPortType();
+    @ThriftField(2)
+    public TPortTypeEnt getPortType() {
+        return m_PortType;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public String getPortName() {
-        return super.getPortName();
+        return m_PortName;
     }
     
 
-    public static class TNodePortEntBuilder extends AbstractNodePortEntBuilder {
+	public static TNodePortEntBuilder builder() {
+		return new TNodePortEntBuilder();
+	}
+	
+    public static class TNodePortEntBuilder implements ThriftEntityBuilder<NodePortEnt> {
+    
+		private int m_PortIndex;
+		private TPortTypeEnt m_PortType;
+		private String m_PortName;
 
-        @Override
         @ThriftConstructor
         public TNodePortEnt build() {
             return new TNodePortEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<NodePortEnt> wrap() {
+            return new TNodePortEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TNodePortEntBuilder setPortIndex(final int PortIndex) {
-            super.setPortIndex(PortIndex);
+			m_PortIndex = PortIndex;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodePortEntBuilder setPortType(final PortTypeEnt PortType) {
-            super.setPortType(PortType);
+        public TNodePortEntBuilder setPortType(final TPortTypeEnt PortType) {
+			m_PortType = PortType;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodePortEntBuilder setPortName(final String PortName) {
-            super.setPortName(PortName);
+			m_PortName = PortName;			
             return this;
         }
         

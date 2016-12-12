@@ -53,9 +53,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -63,60 +66,78 @@ import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilde
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodeInPortEntBuilder.class)
-public class TNodeInPortEnt extends AbstractNodeInPortEnt {
+public class TNodeInPortEnt {
+
+
+
+	private int m_PortIndex;
+	private TPortTypeEnt m_PortType;
+	private String m_PortName;
 
     /**
      * @param builder
      */
-    protected TNodeInPortEnt(final AbstractNodeInPortEntBuilder builder) {
-        super(builder);
+    private TNodeInPortEnt(final TNodeInPortEntBuilder builder) {
+		m_PortIndex = builder.m_PortIndex;
+		m_PortType = builder.m_PortType;
+		m_PortName = builder.m_PortName;
+    }
+    
+    protected TNodeInPortEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public int getPortIndex() {
-        return super.getPortIndex();
+        return m_PortIndex;
     }
     
-    @Override
-    @ThriftField
-    public PortTypeEnt getPortType() {
-        return super.getPortType();
+    @ThriftField(2)
+    public TPortTypeEnt getPortType() {
+        return m_PortType;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public String getPortName() {
-        return super.getPortName();
+        return m_PortName;
     }
     
 
-    public static class TNodeInPortEntBuilder extends AbstractNodeInPortEntBuilder {
+	public static TNodeInPortEntBuilder builder() {
+		return new TNodeInPortEntBuilder();
+	}
+	
+    public static class TNodeInPortEntBuilder implements ThriftEntityBuilder<NodeInPortEnt> {
+    
+		private int m_PortIndex;
+		private TPortTypeEnt m_PortType;
+		private String m_PortName;
 
-        @Override
         @ThriftConstructor
         public TNodeInPortEnt build() {
             return new TNodeInPortEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<NodeInPortEnt> wrap() {
+            return new TNodeInPortEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TNodeInPortEntBuilder setPortIndex(final int PortIndex) {
-            super.setPortIndex(PortIndex);
+			m_PortIndex = PortIndex;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeInPortEntBuilder setPortType(final PortTypeEnt PortType) {
-            super.setPortType(PortType);
+        public TNodeInPortEntBuilder setPortType(final TPortTypeEnt PortType) {
+			m_PortType = PortType;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeInPortEntBuilder setPortName(final String PortName) {
-            super.setPortName(PortName);
+			m_PortName = PortName;			
             return this;
         }
         

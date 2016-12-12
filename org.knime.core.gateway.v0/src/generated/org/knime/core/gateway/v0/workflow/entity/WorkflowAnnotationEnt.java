@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
  */
 public interface WorkflowAnnotationEnt extends GatewayEntity {
 
+
   	String getText();
  	
   	BoundsEnt getBounds();

@@ -53,6 +53,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface PortTypeEnt extends GatewayEntity {
 
+
   	String getName();
  	
   	String getPortObjectClassName();

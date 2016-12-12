@@ -62,6 +62,7 @@ import java.util.List;
  */
 public interface NativeNodeEnt extends GatewayEntity, NodeEnt  {
 
+
   	NodeFactoryIDEnt getNodeFactoryID();
  	
   	EntityID getParent();
@@ -70,9 +71,9 @@ public interface NativeNodeEnt extends GatewayEntity, NodeEnt  {
  	
   	NodeMessageEnt getNodeMessage();
  	
-  	List<NodeInPortEnt> getInPorts();
+  	List<? extends NodeInPortEnt> getInPorts();
  	
-  	List<NodeOutPortEnt> getOutPorts();
+  	List<? extends NodeOutPortEnt> getOutPorts();
  	
   	String getName();
  	

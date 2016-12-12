@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodeFactoryIDEnt.TNodeFactoryIDEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,47 +64,64 @@ import org.knime.core.thrift.workflow.entity.TNodeFactoryIDEnt.TNodeFactoryIDEnt
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodeFactoryIDEntBuilder.class)
-public class TNodeFactoryIDEnt extends AbstractNodeFactoryIDEnt {
+public class TNodeFactoryIDEnt {
+
+
+
+	private String m_ClassName;
+	private String m_NodeName;
 
     /**
      * @param builder
      */
-    protected TNodeFactoryIDEnt(final AbstractNodeFactoryIDEntBuilder builder) {
-        super(builder);
+    private TNodeFactoryIDEnt(final TNodeFactoryIDEntBuilder builder) {
+		m_ClassName = builder.m_ClassName;
+		m_NodeName = builder.m_NodeName;
+    }
+    
+    protected TNodeFactoryIDEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getClassName() {
-        return super.getClassName();
+        return m_ClassName;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getNodeName() {
-        return super.getNodeName();
+        return m_NodeName;
     }
     
 
-    public static class TNodeFactoryIDEntBuilder extends AbstractNodeFactoryIDEntBuilder {
+	public static TNodeFactoryIDEntBuilder builder() {
+		return new TNodeFactoryIDEntBuilder();
+	}
+	
+    public static class TNodeFactoryIDEntBuilder implements ThriftEntityBuilder<NodeFactoryIDEnt> {
+    
+		private String m_ClassName;
+		private String m_NodeName;
 
-        @Override
         @ThriftConstructor
         public TNodeFactoryIDEnt build() {
             return new TNodeFactoryIDEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<NodeFactoryIDEnt> wrap() {
+            return new TNodeFactoryIDEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TNodeFactoryIDEntBuilder setClassName(final String ClassName) {
-            super.setClassName(ClassName);
+			m_ClassName = ClassName;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeFactoryIDEntBuilder setNodeName(final String NodeName) {
-            super.setNodeName(NodeName);
+			m_NodeName = NodeName;			
             return this;
         }
         

@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractXYEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,47 +64,64 @@ import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TXYEntBuilder.class)
-public class TXYEnt extends AbstractXYEnt {
+public class TXYEnt {
+
+
+
+	private int m_X;
+	private int m_Y;
 
     /**
      * @param builder
      */
-    protected TXYEnt(final AbstractXYEntBuilder builder) {
-        super(builder);
+    private TXYEnt(final TXYEntBuilder builder) {
+		m_X = builder.m_X;
+		m_Y = builder.m_Y;
+    }
+    
+    protected TXYEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public int getX() {
-        return super.getX();
+        return m_X;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public int getY() {
-        return super.getY();
+        return m_Y;
     }
     
 
-    public static class TXYEntBuilder extends AbstractXYEntBuilder {
+	public static TXYEntBuilder builder() {
+		return new TXYEntBuilder();
+	}
+	
+    public static class TXYEntBuilder implements ThriftEntityBuilder<XYEnt> {
+    
+		private int m_X;
+		private int m_Y;
 
-        @Override
         @ThriftConstructor
         public TXYEnt build() {
             return new TXYEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<XYEnt> wrap() {
+            return new TXYEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TXYEntBuilder setX(final int X) {
-            super.setX(X);
+			m_X = X;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TXYEntBuilder setY(final int Y) {
-            super.setY(Y);
+			m_Y = Y;			
             return this;
         }
         

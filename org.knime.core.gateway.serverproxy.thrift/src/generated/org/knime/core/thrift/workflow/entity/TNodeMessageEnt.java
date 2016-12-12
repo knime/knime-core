@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,47 +64,64 @@ import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuil
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodeMessageEntBuilder.class)
-public class TNodeMessageEnt extends AbstractNodeMessageEnt {
+public class TNodeMessageEnt {
+
+
+
+	private String m_Message;
+	private String m_Type;
 
     /**
      * @param builder
      */
-    protected TNodeMessageEnt(final AbstractNodeMessageEntBuilder builder) {
-        super(builder);
+    private TNodeMessageEnt(final TNodeMessageEntBuilder builder) {
+		m_Message = builder.m_Message;
+		m_Type = builder.m_Type;
+    }
+    
+    protected TNodeMessageEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getMessage() {
-        return super.getMessage();
+        return m_Message;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getType() {
-        return super.getType();
+        return m_Type;
     }
     
 
-    public static class TNodeMessageEntBuilder extends AbstractNodeMessageEntBuilder {
+	public static TNodeMessageEntBuilder builder() {
+		return new TNodeMessageEntBuilder();
+	}
+	
+    public static class TNodeMessageEntBuilder implements ThriftEntityBuilder<NodeMessageEnt> {
+    
+		private String m_Message;
+		private String m_Type;
 
-        @Override
         @ThriftConstructor
         public TNodeMessageEnt build() {
             return new TNodeMessageEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<NodeMessageEnt> wrap() {
+            return new TNodeMessageEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TNodeMessageEntBuilder setMessage(final String Message) {
-            super.setMessage(Message);
+			m_Message = Message;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeMessageEntBuilder setType(final String Type) {
-            super.setType(Type);
+			m_Type = Type;			
             return this;
         }
         

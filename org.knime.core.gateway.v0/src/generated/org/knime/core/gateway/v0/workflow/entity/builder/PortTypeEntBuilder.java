@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
  */
 public interface PortTypeEntBuilder extends GatewayEntityBuilder<PortTypeEnt> {
 
+
 	PortTypeEntBuilder setName(String Name);
 
 	PortTypeEntBuilder setPortObjectClassName(String PortObjectClassName);

@@ -48,20 +48,15 @@
  */
 package org.knime.core.thrift;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.thrift.workflow.entity.TBoundsEnt.TBoundsEntBuilder;
-import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilder;
-import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
-import org.knime.core.thrift.workflow.entity.TNativeNodeEnt.TNativeNodeEntBuilder;
-import org.knime.core.thrift.workflow.entity.TNodeEnt.TNodeEntBuilder;
-import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilder;
-import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
-import org.knime.core.thrift.workflow.entity.TNodeOutPortEnt.TNodeOutPortEntBuilder;
-import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
-import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnnotationEntBuilder;
-import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+import org.knime.core.thrift.workflow.entity.TTestEntTmp.TTestEntBuilder;
 import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;
 
 /**
@@ -70,20 +65,13 @@ import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;
  */
 public class TEntityBuilderFactory implements EntityBuilderFactory {
 
-    private static Class<? extends GatewayEntityBuilder>[] ENTITIES = new Class[]{
-            TNodeEntBuilder.class,
-            TNativeNodeEntBuilder.class,
-            TBoundsEntBuilder.class,
-            TConnectionEntBuilder.class,
-            TPortTypeEntBuilder.class,
-            TJobManagerEntBuilder.class,
-            TWorkflowAnnotationEntBuilder.class,
-            TWorkflowEntBuilder.class,
-            TNodeMessageEntBuilder.class,
-            TNodeInPortEntBuilder.class,
-            TNodeOutPortEntBuilder.class,
-            TXYEntBuilder.class
-        };
+    private static Map<Class<? extends GatewayEntityBuilder>, Class<? extends ThriftEntityBuilder>> ENTITY_BUILDER_MAP =
+        new HashMap<>();
+
+    {
+        ENTITY_BUILDER_MAP.put(TestEntBuilder.class, TTestEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(XYEntBuilder.class, TXYEntBuilder.class);
+    }
 
     /**
      * {@inheritDoc}
@@ -91,18 +79,15 @@ public class TEntityBuilderFactory implements EntityBuilderFactory {
     @Override
     public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
         createEntityBuilder(final Class<B> builderInterface) {
-        for (Class<? extends GatewayEntityBuilder> c : ENTITIES) {
-
-            //check against the actual builder interface
-            if (builderInterface.isAssignableFrom(c.getSuperclass().getInterfaces()[0])) {
-                try {
-                    return (B)c.newInstance();
-                } catch (InstantiationException | IllegalAccessException ex) {
-                    // TODO better exception handling
-                    throw new RuntimeException();
-                }
-            }
+        try {
+            return (B)ENTITY_BUILDER_MAP.get(builderInterface).newInstance().wrap();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            // TODO better exception handling
+            throw new RuntimeException();
         }
-        return null;
+    }
+
+    public static interface ThriftEntityBuilder<E extends GatewayEntity> {
+        GatewayEntityBuilder<E> wrap();
     }
 }

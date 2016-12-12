@@ -61,15 +61,16 @@ import java.util.List;
  */
 public interface NodeEnt extends GatewayEntity {
 
+
   	EntityID getParent();
  	
   	JobManagerEnt getJobManager();
  	
   	NodeMessageEnt getNodeMessage();
  	
-  	List<NodeInPortEnt> getInPorts();
+  	List<? extends NodeInPortEnt> getInPorts();
  	
-  	List<NodeOutPortEnt> getOutPorts();
+  	List<? extends NodeOutPortEnt> getOutPorts();
  	
   	String getName();
  	

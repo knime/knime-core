@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
  */
 public interface NativeNodeEntBuilder extends GatewayEntityBuilder<NativeNodeEnt> {
 
+
 	NativeNodeEntBuilder setNodeFactoryID(NodeFactoryIDEnt NodeFactoryID);
 
 	NativeNodeEntBuilder setParent(EntityID Parent);

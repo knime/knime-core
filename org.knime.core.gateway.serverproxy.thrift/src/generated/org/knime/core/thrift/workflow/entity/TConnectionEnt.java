@@ -53,9 +53,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -63,112 +66,134 @@ import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilde
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TConnectionEntBuilder.class)
-public class TConnectionEnt extends AbstractConnectionEnt {
+public class TConnectionEnt {
+
+
+
+	private String m_Dest;
+	private int m_DestPort;
+	private String m_Source;
+	private int m_SourcePort;
+	private boolean m_IsDeleteable;
+	private List<TXYEnt> m_BendPoints;
+	private String m_Type;
 
     /**
      * @param builder
      */
-    protected TConnectionEnt(final AbstractConnectionEntBuilder builder) {
-        super(builder);
+    private TConnectionEnt(final TConnectionEntBuilder builder) {
+		m_Dest = builder.m_Dest;
+		m_DestPort = builder.m_DestPort;
+		m_Source = builder.m_Source;
+		m_SourcePort = builder.m_SourcePort;
+		m_IsDeleteable = builder.m_IsDeleteable;
+		m_BendPoints = builder.m_BendPoints;
+		m_Type = builder.m_Type;
+    }
+    
+    protected TConnectionEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getDest() {
-        return super.getDest();
+        return m_Dest;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public int getDestPort() {
-        return super.getDestPort();
+        return m_DestPort;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public String getSource() {
-        return super.getSource();
+        return m_Source;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(4)
     public int getSourcePort() {
-        return super.getSourcePort();
+        return m_SourcePort;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(5)
     public boolean getIsDeleteable() {
-        return super.getIsDeleteable();
+        return m_IsDeleteable;
     }
     
-    @Override
-    @ThriftField
-    public List<XYEnt> getBendPoints() {
-        return super.getBendPoints();
+    @ThriftField(6)
+    public List<TXYEnt> getBendPoints() {
+        return m_BendPoints;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(7)
     public String getType() {
-        return super.getType();
+        return m_Type;
     }
     
 
-    public static class TConnectionEntBuilder extends AbstractConnectionEntBuilder {
+	public static TConnectionEntBuilder builder() {
+		return new TConnectionEntBuilder();
+	}
+	
+    public static class TConnectionEntBuilder implements ThriftEntityBuilder<ConnectionEnt> {
+    
+		private String m_Dest;
+		private int m_DestPort;
+		private String m_Source;
+		private int m_SourcePort;
+		private boolean m_IsDeleteable;
+		private List<TXYEnt> m_BendPoints;
+		private String m_Type;
 
-        @Override
         @ThriftConstructor
         public TConnectionEnt build() {
             return new TConnectionEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<ConnectionEnt> wrap() {
+            return new TConnectionEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TConnectionEntBuilder setDest(final String Dest) {
-            super.setDest(Dest);
+			m_Dest = Dest;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TConnectionEntBuilder setDestPort(final int DestPort) {
-            super.setDestPort(DestPort);
+			m_DestPort = DestPort;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TConnectionEntBuilder setSource(final String Source) {
-            super.setSource(Source);
+			m_Source = Source;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TConnectionEntBuilder setSourcePort(final int SourcePort) {
-            super.setSourcePort(SourcePort);
+			m_SourcePort = SourcePort;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TConnectionEntBuilder setIsDeleteable(final boolean IsDeleteable) {
-            super.setIsDeleteable(IsDeleteable);
+			m_IsDeleteable = IsDeleteable;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TConnectionEntBuilder setBendPoints(final List<XYEnt> BendPoints) {
-            super.setBendPoints(BendPoints);
+        public TConnectionEntBuilder setBendPoints(final List<TXYEnt> BendPoints) {
+			m_BendPoints = BendPoints;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TConnectionEntBuilder setType(final String Type) {
-            super.setType(Type);
+			m_Type = Type;			
             return this;
         }
         

@@ -53,6 +53,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface NodeAnnotationEnt extends GatewayEntity, AnnotationEnt  {
 
+
   	String getNode();
  	
   	String getText();

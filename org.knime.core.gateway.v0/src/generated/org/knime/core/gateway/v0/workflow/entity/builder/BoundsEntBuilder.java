@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
  */
 public interface BoundsEntBuilder extends GatewayEntityBuilder<BoundsEnt> {
 
+
 	BoundsEntBuilder setX(int X);
 
 	BoundsEntBuilder setY(int Y);

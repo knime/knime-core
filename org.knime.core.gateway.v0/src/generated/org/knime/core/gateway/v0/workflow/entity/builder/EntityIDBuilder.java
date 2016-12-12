@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public interface EntityIDBuilder extends GatewayEntityBuilder<EntityID> {
 
+
 	EntityIDBuilder setID(String ID);
 
 	EntityIDBuilder setType(String Type);

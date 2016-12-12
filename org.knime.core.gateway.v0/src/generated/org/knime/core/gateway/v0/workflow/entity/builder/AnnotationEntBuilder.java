@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
  */
 public interface AnnotationEntBuilder extends GatewayEntityBuilder<AnnotationEnt> {
 
+
 	AnnotationEntBuilder setText(String Text);
 
 	AnnotationEntBuilder setBackgroundColor(int BackgroundColor);

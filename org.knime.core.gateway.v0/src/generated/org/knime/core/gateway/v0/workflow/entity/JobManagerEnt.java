@@ -53,6 +53,7 @@ package org.knime.core.gateway.v0.workflow.entity;
  */
 public interface JobManagerEnt extends GatewayEntity {
 
+
   	String getName();
  	
   	String getJobManagerID();

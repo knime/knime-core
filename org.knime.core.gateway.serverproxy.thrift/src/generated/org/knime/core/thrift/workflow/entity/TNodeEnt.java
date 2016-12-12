@@ -59,9 +59,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodeEnt.TNodeEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -69,190 +72,218 @@ import org.knime.core.thrift.workflow.entity.TNodeEnt.TNodeEntBuilder;
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodeEntBuilder.class)
-public class TNodeEnt extends AbstractNodeEnt {
+public class TNodeEnt {
+
+
+
+	private TEntityID m_Parent;
+	private TJobManagerEnt m_JobManager;
+	private TNodeMessageEnt m_NodeMessage;
+	private List<TNodeInPortEnt> m_InPorts;
+	private List<TNodeOutPortEnt> m_OutPorts;
+	private String m_Name;
+	private String m_NodeID;
+	private String m_NodeType;
+	private TBoundsEnt m_Bounds;
+	private boolean m_IsDeletable;
+	private String m_NodeState;
+	private boolean m_HasDialog;
+	private TNodeAnnotationEnt m_NodeAnnotation;
 
     /**
      * @param builder
      */
-    protected TNodeEnt(final AbstractNodeEntBuilder builder) {
-        super(builder);
+    private TNodeEnt(final TNodeEntBuilder builder) {
+		m_Parent = builder.m_Parent;
+		m_JobManager = builder.m_JobManager;
+		m_NodeMessage = builder.m_NodeMessage;
+		m_InPorts = builder.m_InPorts;
+		m_OutPorts = builder.m_OutPorts;
+		m_Name = builder.m_Name;
+		m_NodeID = builder.m_NodeID;
+		m_NodeType = builder.m_NodeType;
+		m_Bounds = builder.m_Bounds;
+		m_IsDeletable = builder.m_IsDeletable;
+		m_NodeState = builder.m_NodeState;
+		m_HasDialog = builder.m_HasDialog;
+		m_NodeAnnotation = builder.m_NodeAnnotation;
+    }
+    
+    protected TNodeEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
-    public EntityID getParent() {
-        return super.getParent();
+    @ThriftField(1)
+    public TEntityID getParent() {
+        return m_Parent;
     }
     
-    @Override
-    @ThriftField
-    public JobManagerEnt getJobManager() {
-        return super.getJobManager();
+    @ThriftField(2)
+    public TJobManagerEnt getJobManager() {
+        return m_JobManager;
     }
     
-    @Override
-    @ThriftField
-    public NodeMessageEnt getNodeMessage() {
-        return super.getNodeMessage();
+    @ThriftField(3)
+    public TNodeMessageEnt getNodeMessage() {
+        return m_NodeMessage;
     }
     
-    @Override
-    @ThriftField
-    public List<NodeInPortEnt> getInPorts() {
-        return super.getInPorts();
+    @ThriftField(4)
+    public List<TNodeInPortEnt> getInPorts() {
+        return m_InPorts;
     }
     
-    @Override
-    @ThriftField
-    public List<NodeOutPortEnt> getOutPorts() {
-        return super.getOutPorts();
+    @ThriftField(5)
+    public List<TNodeOutPortEnt> getOutPorts() {
+        return m_OutPorts;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(6)
     public String getName() {
-        return super.getName();
+        return m_Name;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(7)
     public String getNodeID() {
-        return super.getNodeID();
+        return m_NodeID;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(8)
     public String getNodeType() {
-        return super.getNodeType();
+        return m_NodeType;
     }
     
-    @Override
-    @ThriftField
-    public BoundsEnt getBounds() {
-        return super.getBounds();
+    @ThriftField(9)
+    public TBoundsEnt getBounds() {
+        return m_Bounds;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(10)
     public boolean getIsDeletable() {
-        return super.getIsDeletable();
+        return m_IsDeletable;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(11)
     public String getNodeState() {
-        return super.getNodeState();
+        return m_NodeState;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(12)
     public boolean getHasDialog() {
-        return super.getHasDialog();
+        return m_HasDialog;
     }
     
-    @Override
-    @ThriftField
-    public NodeAnnotationEnt getNodeAnnotation() {
-        return super.getNodeAnnotation();
+    @ThriftField(13)
+    public TNodeAnnotationEnt getNodeAnnotation() {
+        return m_NodeAnnotation;
     }
     
 
-    public static class TNodeEntBuilder extends AbstractNodeEntBuilder {
+	public static TNodeEntBuilder builder() {
+		return new TNodeEntBuilder();
+	}
+	
+    public static class TNodeEntBuilder implements ThriftEntityBuilder<NodeEnt> {
+    
+		private TEntityID m_Parent;
+		private TJobManagerEnt m_JobManager;
+		private TNodeMessageEnt m_NodeMessage;
+		private List<TNodeInPortEnt> m_InPorts;
+		private List<TNodeOutPortEnt> m_OutPorts;
+		private String m_Name;
+		private String m_NodeID;
+		private String m_NodeType;
+		private TBoundsEnt m_Bounds;
+		private boolean m_IsDeletable;
+		private String m_NodeState;
+		private boolean m_HasDialog;
+		private TNodeAnnotationEnt m_NodeAnnotation;
 
-        @Override
         @ThriftConstructor
         public TNodeEnt build() {
             return new TNodeEnt(this);
         }
+        
+        @Override
+        public GatewayEntityBuilder<NodeEnt> wrap() {
+            return new TNodeEntBuilderFromThrift(this);
+        }
 
-        @Override
         @ThriftField
-        public TNodeEntBuilder setParent(final EntityID Parent) {
-            super.setParent(Parent);
+        public TNodeEntBuilder setParent(final TEntityID Parent) {
+			m_Parent = Parent;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setJobManager(final JobManagerEnt JobManager) {
-            super.setJobManager(JobManager);
+        public TNodeEntBuilder setJobManager(final TJobManagerEnt JobManager) {
+			m_JobManager = JobManager;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
-            super.setNodeMessage(NodeMessage);
+        public TNodeEntBuilder setNodeMessage(final TNodeMessageEnt NodeMessage) {
+			m_NodeMessage = NodeMessage;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
-            super.setInPorts(InPorts);
+        public TNodeEntBuilder setInPorts(final List<TNodeInPortEnt> InPorts) {
+			m_InPorts = InPorts;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
-            super.setOutPorts(OutPorts);
+        public TNodeEntBuilder setOutPorts(final List<TNodeOutPortEnt> OutPorts) {
+			m_OutPorts = OutPorts;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setName(final String Name) {
-            super.setName(Name);
+			m_Name = Name;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setNodeID(final String NodeID) {
-            super.setNodeID(NodeID);
+			m_NodeID = NodeID;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setNodeType(final String NodeType) {
-            super.setNodeType(NodeType);
+			m_NodeType = NodeType;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setBounds(final BoundsEnt Bounds) {
-            super.setBounds(Bounds);
+        public TNodeEntBuilder setBounds(final TBoundsEnt Bounds) {
+			m_Bounds = Bounds;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setIsDeletable(final boolean IsDeletable) {
-            super.setIsDeletable(IsDeletable);
+			m_IsDeletable = IsDeletable;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setNodeState(final String NodeState) {
-            super.setNodeState(NodeState);
+			m_NodeState = NodeState;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeEntBuilder setHasDialog(final boolean HasDialog) {
-            super.setHasDialog(HasDialog);
+			m_HasDialog = HasDialog;			
             return this;
         }
         
-        @Override
         @ThriftField
-        public TNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
-            super.setNodeAnnotation(NodeAnnotation);
+        public TNodeEntBuilder setNodeAnnotation(final TNodeAnnotationEnt NodeAnnotation) {
+			m_NodeAnnotation = NodeAnnotation;			
             return this;
         }
         

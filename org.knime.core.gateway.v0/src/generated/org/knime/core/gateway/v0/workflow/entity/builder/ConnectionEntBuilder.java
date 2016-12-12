@@ -56,6 +56,7 @@ import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
  */
 public interface ConnectionEntBuilder extends GatewayEntityBuilder<ConnectionEnt> {
 
+
 	ConnectionEntBuilder setDest(String Dest);
 
 	ConnectionEntBuilder setDestPort(int DestPort);

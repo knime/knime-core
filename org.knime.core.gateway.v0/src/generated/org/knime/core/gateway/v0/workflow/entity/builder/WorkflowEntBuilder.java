@@ -65,6 +65,7 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
  */
 public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
 
+
 	WorkflowEntBuilder setNodes(List<NodeEnt> Nodes);
 
 	WorkflowEntBuilder setConnections(List<ConnectionEnt> Connections);

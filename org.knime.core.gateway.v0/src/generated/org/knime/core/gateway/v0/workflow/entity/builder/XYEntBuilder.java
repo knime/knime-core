@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.XYEnt;
  */
 public interface XYEntBuilder extends GatewayEntityBuilder<XYEnt> {
 
+
 	XYEntBuilder setX(int X);
 
 	XYEntBuilder setY(int Y);

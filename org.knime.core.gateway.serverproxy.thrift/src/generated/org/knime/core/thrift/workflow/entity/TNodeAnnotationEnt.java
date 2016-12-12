@@ -51,9 +51,12 @@ import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
 
-import org.knime.core.gateway.serverproxy.entity.AbstractNodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TNodeAnnotationEnt.TNodeAnnotationEntBuilder;
+
+import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
 
 
 /**
@@ -61,177 +64,204 @@ import org.knime.core.thrift.workflow.entity.TNodeAnnotationEnt.TNodeAnnotationE
  * @author Martin Horn, University of Konstanz
  */
 @ThriftStruct(builder = TNodeAnnotationEntBuilder.class)
-public class TNodeAnnotationEnt extends AbstractNodeAnnotationEnt {
+public class TNodeAnnotationEnt {
+
+
+
+	private String m_Node;
+	private String m_Text;
+	private int m_BackgroundColor;
+	private int m_X;
+	private int m_Y;
+	private int m_Width;
+	private int m_Height;
+	private String m_TextAlignment;
+	private int m_BorderSize;
+	private int m_BorderColor;
+	private int m_DefaultFontSize;
+	private int m_Version;
 
     /**
      * @param builder
      */
-    protected TNodeAnnotationEnt(final AbstractNodeAnnotationEntBuilder builder) {
-        super(builder);
+    private TNodeAnnotationEnt(final TNodeAnnotationEntBuilder builder) {
+		m_Node = builder.m_Node;
+		m_Text = builder.m_Text;
+		m_BackgroundColor = builder.m_BackgroundColor;
+		m_X = builder.m_X;
+		m_Y = builder.m_Y;
+		m_Width = builder.m_Width;
+		m_Height = builder.m_Height;
+		m_TextAlignment = builder.m_TextAlignment;
+		m_BorderSize = builder.m_BorderSize;
+		m_BorderColor = builder.m_BorderColor;
+		m_DefaultFontSize = builder.m_DefaultFontSize;
+		m_Version = builder.m_Version;
+    }
+    
+    protected TNodeAnnotationEnt() {
+    	//
     }
 
-    @Override
-    @ThriftField
+    @ThriftField(1)
     public String getNode() {
-        return super.getNode();
+        return m_Node;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(2)
     public String getText() {
-        return super.getText();
+        return m_Text;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(3)
     public int getBackgroundColor() {
-        return super.getBackgroundColor();
+        return m_BackgroundColor;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(4)
     public int getX() {
-        return super.getX();
+        return m_X;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(5)
     public int getY() {
-        return super.getY();
+        return m_Y;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(6)
     public int getWidth() {
-        return super.getWidth();
+        return m_Width;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(7)
     public int getHeight() {
-        return super.getHeight();
+        return m_Height;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(8)
     public String getTextAlignment() {
-        return super.getTextAlignment();
+        return m_TextAlignment;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(9)
     public int getBorderSize() {
-        return super.getBorderSize();
+        return m_BorderSize;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(10)
     public int getBorderColor() {
-        return super.getBorderColor();
+        return m_BorderColor;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(11)
     public int getDefaultFontSize() {
-        return super.getDefaultFontSize();
+        return m_DefaultFontSize;
     }
     
-    @Override
-    @ThriftField
+    @ThriftField(12)
     public int getVersion() {
-        return super.getVersion();
+        return m_Version;
     }
     
 
-    public static class TNodeAnnotationEntBuilder extends AbstractNodeAnnotationEntBuilder {
+	public static TNodeAnnotationEntBuilder builder() {
+		return new TNodeAnnotationEntBuilder();
+	}
+	
+    public static class TNodeAnnotationEntBuilder implements ThriftEntityBuilder<NodeAnnotationEnt> {
+    
+		private String m_Node;
+		private String m_Text;
+		private int m_BackgroundColor;
+		private int m_X;
+		private int m_Y;
+		private int m_Width;
+		private int m_Height;
+		private String m_TextAlignment;
+		private int m_BorderSize;
+		private int m_BorderColor;
+		private int m_DefaultFontSize;
+		private int m_Version;
 
-        @Override
         @ThriftConstructor
         public TNodeAnnotationEnt build() {
             return new TNodeAnnotationEnt(this);
         }
-
+        
         @Override
+        public GatewayEntityBuilder<NodeAnnotationEnt> wrap() {
+            return new TNodeAnnotationEntBuilderFromThrift(this);
+        }
+
         @ThriftField
         public TNodeAnnotationEntBuilder setNode(final String Node) {
-            super.setNode(Node);
+			m_Node = Node;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setText(final String Text) {
-            super.setText(Text);
+			m_Text = Text;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
-            super.setBackgroundColor(BackgroundColor);
+			m_BackgroundColor = BackgroundColor;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setX(final int X) {
-            super.setX(X);
+			m_X = X;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setY(final int Y) {
-            super.setY(Y);
+			m_Y = Y;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setWidth(final int Width) {
-            super.setWidth(Width);
+			m_Width = Width;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setHeight(final int Height) {
-            super.setHeight(Height);
+			m_Height = Height;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setTextAlignment(final String TextAlignment) {
-            super.setTextAlignment(TextAlignment);
+			m_TextAlignment = TextAlignment;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setBorderSize(final int BorderSize) {
-            super.setBorderSize(BorderSize);
+			m_BorderSize = BorderSize;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setBorderColor(final int BorderColor) {
-            super.setBorderColor(BorderColor);
+			m_BorderColor = BorderColor;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
-            super.setDefaultFontSize(DefaultFontSize);
+			m_DefaultFontSize = DefaultFontSize;			
             return this;
         }
         
-        @Override
         @ThriftField
         public TNodeAnnotationEntBuilder setVersion(final int Version) {
-            super.setVersion(Version);
+			m_Version = Version;			
             return this;
         }
         

@@ -59,6 +59,10 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.knime.core.gateway.codegen.types.DefaultMethodParam;
+import org.knime.core.gateway.codegen.types.DefaultServiceDef;
+import org.knime.core.gateway.codegen.types.DefaultServiceMethod;
+import org.knime.core.gateway.codegen.types.ServiceDef;
 
 /**
  *
@@ -145,214 +149,25 @@ public class ServiceGenerator {
     public static List<ServiceDef> getServiceDefs() {
         return Arrays.asList(
             new DefaultServiceDef("WorkflowService",
-                new DefaultServiceMethod("getWorkflow",
-                    new DefaultReturnType("WorkflowEnt", false),
+                new DefaultServiceMethod("getWorkflow", "WorkflowEnt",
                     new DefaultMethodParam("id", "EntityID")),
-                new DefaultServiceMethod("updateWorkflow", DefaultReturnType.VOID,
+                new DefaultServiceMethod("updateWorkflow", "void",
                     new DefaultMethodParam("wf", "WorkflowEnt")),
-                new DefaultServiceMethod("getAllWorkflows", new DefaultReturnType("EntityID", true)))
+                new DefaultServiceMethod("getAllWorkflows", "List<EntityID>"))
             .addImports(
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
-                "java.util.List"));
-    }
-
-    public static interface ServiceDef {
-
-        String getName();
-
-        List<ServiceMethod> getMethods();
-
-        List<String> getImports();
-
-    }
-
-    public static interface ServiceMethod {
-
-        String getName();
-
-        ReturnType getReturnType();
-
-        List<MethodParam> getParameters();
-
-    }
-
-    public static interface MethodParam {
-
-        String getName();
-
-        String getType();
-    }
-
-    public static interface ReturnType {
-
-        String getType();
-
-        boolean isList();
-
-        boolean isVoid();
-    }
-
-    private static class DefaultServiceDef implements ServiceDef {
-
-        private String m_name;
-        private List<ServiceMethod> m_methods;
-        private List<String> m_imports = new ArrayList<String>();
-
-        /**
-         *
-         */
-        public DefaultServiceDef(final String name, final ServiceMethod... methods) {
-            m_name = name;
-            m_methods = Arrays.asList(methods);
-        }
-
-        public DefaultServiceDef addImports(final String... imports) {
-            for(String s : imports) {
-                m_imports.add(s);
-            }
-            return this;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<ServiceMethod> getMethods() {
-            return m_methods;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<String> getImports() {
-            return m_imports;
-        }
-
-    }
-
-    private static class DefaultServiceMethod implements ServiceMethod {
-
-        private String m_name;
-        private ReturnType m_returnType;
-        private List<MethodParam> m_parameters;
-
-        /**
-         *
-         */
-        public DefaultServiceMethod(final String name, final ReturnType returnType, final MethodParam... parameters) {
-            m_name = name;
-            m_returnType = returnType;
-            m_parameters = Arrays.asList(parameters);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public ReturnType getReturnType() {
-            return m_returnType;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<MethodParam> getParameters() {
-            return m_parameters;
-        }
-
-    }
-
-    private static class DefaultMethodParam implements MethodParam {
-
-        private String m_name;
-        private String m_type;
-
-        /**
-         *
-         */
-        public DefaultMethodParam(final String name, final String type) {
-            m_name = name;
-            m_type = type;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getType() {
-            return m_type;
-        }
-    }
-
-    private static class DefaultReturnType implements ReturnType {
-
-        public static final ReturnType VOID = new DefaultReturnType(null, false);
-
-        private String m_type;
-        private boolean m_isList;
-
-        /**
-         * @param type <code>null</code> if void
-         * @param isList
-         *
-         */
-        public DefaultReturnType(final String type, final boolean isList) {
-            m_type = type;
-            m_isList = isList;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getType() {
-            return m_type;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isList() {
-            return m_isList;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean isVoid() {
-            return m_type == null;
-        }
-
-
+                "java.util.List"),
+            new DefaultServiceDef("TestService",
+                new DefaultServiceMethod("test", "TestEnt",
+                    new DefaultMethodParam("id", "TestEnt")),
+                new DefaultServiceMethod("testList", "List<TestEnt>",
+                    new DefaultMethodParam("list", "List<TestEnt>")),
+                new DefaultServiceMethod("primitives", "double",
+                    new DefaultMethodParam("s", "String"),
+                    new DefaultMethodParam("stringlist", "List<String>")))
+            .addImports("org.knime.core.gateway.v0.workflow.entity.TestEnt",
+                        "java.util.List"));
     }
 
 }
