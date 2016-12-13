@@ -736,8 +736,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
                         : DataTableSpec.getUniqueColumnName(preSpec, m_outputColumn.getStringValue()),
                     m_addConfidence.getBooleanValue(), m_confidenceColumn.getStringValue(),
-                    /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
-                    true);
+                    /*no validation column*/-1, /* was originally set true, but to fix AP-6766 it was set to false*/
+                    false);
                 final DataTableSpec tableSpec = rearranger.createSpec();
                 if (m_doReplaceColumn.getBooleanValue()) {
                     DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
