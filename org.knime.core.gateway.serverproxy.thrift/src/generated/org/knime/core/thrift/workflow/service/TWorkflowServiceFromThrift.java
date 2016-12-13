@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  */
 public class TWorkflowServiceFromThrift implements TWorkflowService {
 
-	private WorkflowService m_service = new DefaultWorkflowService();
+	private final WorkflowService m_service = new DefaultWorkflowService();
 
 	@Override
  	public TWorkflowEnt TgetWorkflow(final TEntityID id) {

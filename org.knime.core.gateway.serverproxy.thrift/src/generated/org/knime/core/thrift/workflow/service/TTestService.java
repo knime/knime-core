@@ -63,10 +63,10 @@ public interface TTestService {
 
 
 	@ThriftMethod
-	TTestEntTmp Ttest(final TTestEntTmp id);
+	TTestEnt Ttest(final TTestEnt id);
 	
 	@ThriftMethod
-	List<TTestEntTmp> TtestList(final List<TTestEntTmp> list);
+	List<TTestEnt> TtestList(final List<TTestEnt> list);
 	
 	@ThriftMethod
 	double Tprimitives(final String s,final List<String> stringlist);

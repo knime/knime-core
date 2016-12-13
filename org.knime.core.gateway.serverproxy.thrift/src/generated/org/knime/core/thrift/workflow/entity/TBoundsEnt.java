@@ -55,8 +55,9 @@ import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TBoundsEnt.TBoundsEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TBoundsEntFromThrift.TBoundsEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

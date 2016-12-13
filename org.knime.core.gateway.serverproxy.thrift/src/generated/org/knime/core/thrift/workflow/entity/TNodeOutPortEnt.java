@@ -57,8 +57,9 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TNodeOutPortEnt.TNodeOutPortEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TNodeOutPortEntFromThrift.TNodeOutPortEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

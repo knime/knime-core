@@ -64,8 +64,9 @@ import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TNativeNodeEnt.TNativeNodeEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TNativeNodeEntFromThrift.TNativeNodeEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

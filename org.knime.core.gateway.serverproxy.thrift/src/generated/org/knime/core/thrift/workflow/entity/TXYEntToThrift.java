@@ -48,9 +48,12 @@ package org.knime.core.thrift.workflow.entity;
 
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TXYEntFromThrift.TXYEntBuilderFromThrift;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
 
 
 /**
@@ -59,67 +62,54 @@ import org.knime.core.thrift.workflow.entity.TXYEntFromThrift.TXYEntBuilderFromT
  */
 public class TXYEntToThrift extends TXYEnt {
 
-    private final XYEnt m_e;
+	private final XYEnt m_e;
+	
+	public TXYEntToThrift(final XYEnt e) {
+		m_e = e;
+	}
 
-
-    public TXYEntToThrift(final XYEnt e) {
-        m_e = e;
-    }
-
-
-    @Override
+	@Override
     public int getX() {
-        return m_e.getX();
-    }
-
-    @Override
+        	return m_e.getX();
+        }
+    
+	@Override
     public int getY() {
-        return m_e.getY();
-    }
+        	return m_e.getY();
+        }
+    
 
     public static class TXYEntBuilderToThrift extends TXYEntBuilder {
+    
+    	private XYEntBuilder m_b;
+    	
+    	public TXYEntBuilderToThrift(final XYEntBuilder b) {
+    		m_b = b;
+    	}
 
-        private XYEntBuilder m_b;
-
-        public TXYEntBuilderToThrift(final XYEntBuilder b) {
-            m_b = b;
-
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
+    
+    	@Override
         public TXYEnt build() {
             return new TXYEntToThrift(m_b.build());
         }
-
-        /**
-         * {@inheritDoc}
-         */
+        
         @Override
         public GatewayEntityBuilder<XYEnt> wrap() {
             return new TXYEntBuilderFromThrift(this);
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public TXYEntBuilder setX(final int X) {
-            m_b.setX(X);
-            return this;
+		@Override
+        public TXYEntBuilderToThrift setX(final int X) {
+					m_b.setX(X);
+		            return this;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public TXYEntBuilder setY(final int Y) {
-            m_b.setY(Y);
-            return this;
+        
+		@Override
+        public TXYEntBuilderToThrift setY(final int Y) {
+					m_b.setY(Y);
+		            return this;
         }
-
+        
     }
 
 }

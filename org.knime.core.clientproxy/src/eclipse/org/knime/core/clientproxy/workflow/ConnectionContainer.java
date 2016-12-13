@@ -89,10 +89,10 @@ public class ConnectionContainer implements IConnectionContainer {
      */
     @Override
     public ConnectionUIInformation getUIInfo() {
-        List<XYEnt> bendpoints = m_connection.getBendPoints();
+        List<? extends XYEnt> bendPoints = m_connection.getBendPoints();
         ConnectionUIInformation.Builder builder = ConnectionUIInformation.builder();
-        for (int i = 0; i < bendpoints.size(); i++) {
-            XYEnt xy = bendpoints.get(i);
+        for (int i = 0; i < bendPoints.size(); i++) {
+            XYEnt xy = bendPoints.get(i);
             builder.addBendpoint(xy.getX(), xy.getY(), i);
         }
         return builder.build();

@@ -55,8 +55,9 @@ import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TJobManagerEntFromThrift.TJobManagerEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

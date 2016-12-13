@@ -85,7 +85,7 @@ $n#end
  	#else
  		#set($params = "${params}new T${param.getType().getName()}FromThrift($param.getName())")
  	#end
- 	#if($foreach.hashNext)#set($params = "${params}, ")#end
+ 	#if($foreach.hasNext)#set($params = "${params}, ")#end
  #end
  #if($method.getReturnType().isPrimitive())
  		return m_service.$method.getName()($params);

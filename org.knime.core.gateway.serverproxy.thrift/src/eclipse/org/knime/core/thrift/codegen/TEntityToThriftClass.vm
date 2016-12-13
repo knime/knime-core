@@ -44,36 +44,87 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.thrift.workflow.service;
+package org.knime.core.thrift.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import java.util.List;
+#foreach( $import in $imports)
+import $import;
+#end
+
+import org.knime.core.gateway.v0.workflow.entity.${name};
+import org.knime.core.gateway.v0.workflow.entity.builder.${name}Builder;
+
+import org.knime.core.thrift.workflow.entity.T${name}FromThrift.T${name}BuilderFromThrift;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 import java.util.stream.Collectors;
 
-import org.knime.core.thrift.workflow.entity.*;
-import org.knime.core.gateway.serverproxy.service.DefaultWorkflowService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultTWorkflowService extends DefaultWorkflowService implements TWorkflowService {
+public class T${name}ToThrift extends T${name} {
 
-	@Override
-	public TWorkflowEnt TgetWorkflow(final TEntityID id) {
-		 return (TWorkflowEnt) super.getWorkflow(id);
-	}
+#macro(ttype $t)
+#set($n = $t.getName())
+#if(!$t.isPrimitive())#set($n = "T$n")#end
+#if($field.getType().isList())
+List<$n>#else
+$n#end
+#end
+	private final ${name} m_e;
 	
-	@Override
-	public void TupdateWorkflow(final TWorkflowEnt wf) {
-		 super.updateWorkflow(wf);
+	public T${name}ToThrift(final ${name} e) {
+		m_e = e;
 	}
-	
+
+#foreach( $field in $fields )
 	@Override
-	public List<TEntityID> TgetAllWorkflows() {
-		 return  super.getAllWorkflows().stream().map(t -> (TEntityID)t).collect(Collectors.toList());
-	}
-	
+    public #ttype($field.getType()) get$field.getName()() {
+    #if($field.getType().isPrimitive())
+    	return m_e.get${field.getName()}();
+    #elseif($field.getType().isList())
+    	return m_e.get${field.getName()}().stream().map(l -> new T${field.getType().getName()}ToThrift(l)).collect(Collectors.toList());
+    #else
+        return new T${field.getType().getName()}ToThrift(m_e.get${field.getName()}());
+    #end
+    }
+    
+#end
+
+    public static class T${name}BuilderToThrift extends T${name}Builder {
+    
+    	private ${name}Builder m_b;
+    	
+    	public T${name}BuilderToThrift(final ${name}Builder b) {
+    		m_b = b;
+    	}
+
+    
+    	@Override
+        public T${name} build() {
+            return new T${name}ToThrift(m_b.build());
+        }
+        
+        @Override
+        public GatewayEntityBuilder<${name}> wrap() {
+            return new T${name}BuilderFromThrift(this);
+        }
+
+#foreach( $field in $fields )
+		@Override
+        public T${name}BuilderToThrift set$field.getName()(final #ttype(${field.getType()}) $field.getName()) {
+		#if($field.getType().isPrimitive())
+			m_b.set${field.getName()}(${field.getName()});
+		#elseif($field.getType().isList())
+			m_b.set${field.getName()}(${field.getName()}.stream().map(e -> new T${field.getType().getName()}FromThrift(e)).collect(Collectors.toList()));
+		#else
+			m_b.set${field.getName()}(new T${field.getType().getName()}FromThrift(${field.getName()}));
+		#end			
+            return this;
+        }
+        
+#end
+    }
+
 }

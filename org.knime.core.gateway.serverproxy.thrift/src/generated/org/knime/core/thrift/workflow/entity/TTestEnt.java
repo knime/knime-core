@@ -57,8 +57,9 @@ import org.knime.core.gateway.v0.workflow.entity.TestEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TTestEntFromThrift.TTestEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

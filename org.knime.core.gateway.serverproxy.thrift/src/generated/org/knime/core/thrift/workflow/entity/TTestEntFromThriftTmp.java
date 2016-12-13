@@ -54,8 +54,6 @@ import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.thrift.workflow.entity.TTestEntTmp.TTestEntBuilder;
 
-import com.facebook.swift.codec.ThriftConstructor;
-
 
 /**
  *
@@ -96,7 +94,6 @@ public class TTestEntFromThriftTmp implements TestEnt {
 
 
         @Override
-        @ThriftConstructor
         public TestEnt build() {
             return new TTestEntFromThriftTmp(m_b.build());
         }

@@ -55,8 +55,9 @@ import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TNodeMessageEntFromThrift.TNodeMessageEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

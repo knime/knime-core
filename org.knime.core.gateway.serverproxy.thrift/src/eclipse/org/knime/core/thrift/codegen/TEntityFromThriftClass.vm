@@ -50,17 +50,12 @@ package org.knime.core.thrift.workflow.entity;
 import $import;
 #end
 
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
-import com.facebook.swift.codec.ThriftStruct;
-
 import org.knime.core.gateway.v0.workflow.entity.${name};
 import org.knime.core.gateway.v0.workflow.entity.builder.${name}Builder;
 
 import org.knime.core.thrift.workflow.entity.T${name}.T${name}Builder;
 
-import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
-
+import java.util.stream.Collectors;
 
 /**
  *
@@ -70,18 +65,9 @@ public class T${name}FromThrift implements ${name} {
 
 #macro(type)
 #if($field.getType().isList())
-List<$field.getType().getType()>#else
-$field.getType().getType()#end
+List<$field.getType().getName()>#else
+$field.getType().getName()#end
 #end
-
-#macro(ttype $t)
-#set($n = $t.getName())
-#if(!$t.isPrimitive())#set($n = "T$n")#end
-#if($field.getType().isList())
-List<$n>#else
-$n#end
-#end
-
 	private final T${name} m_e;
 
 	public T${name}FromThrift(final T${name} e) {
@@ -90,8 +76,14 @@ $n#end
 
 #foreach( $field in $fields )
     @Override
-    public #ttype($field.getType()) get$field.getName()() {
-        return m_$field.getName();
+    public #type() get$field.getName()() {
+    	#if($field.getType().isPrimitive())
+    	return m_e.get$field.getName()();
+    	#elseif($field.getType().isList())
+    	return m_e.get$field.getName()().stream().map(l -> new T${field.getType().getName()}FromThrift(l)).collect(Collectors.toList());
+    	#else
+        return new T${field.getType().getName()}FromThrift(m_e.get$field.getName()());
+        #end
     }
     
 #end
@@ -100,23 +92,24 @@ $n#end
     
 		private T${name}Builder m_b;
 	
-		public T${name}BuilderFromThrift(final T${name} e) {
-			m_e = e;
+		public T${name}BuilderFromThrift(final T${name}Builder b) {
+			m_b = b;
 		}
 	
-        public T${name} build() {
-            return new T${name}(this);
-        }
-        
-        @Override
-        public GatewayEntityBuilder<${name}> wrap() {
-            return new T${name}BuilderFromThrift(this);
+        public ${name} build() {
+            return new T${name}FromThrift(m_b.build());
         }
 
 #foreach( $field in $fields )
 		@Override
-        public T${name}Builder set$field.getName()(final #ttype(${field.getType()}) $field.getName()) {
-			m_$field.getName() = $field.getName();			
+        public T${name}BuilderFromThrift set$field.getName()(final #type(${field.getType()}) $field.getName()) {
+        #if($field.getType().isPrimitive())
+        	m_b.set$field.getName()($field.getName());
+        #elseif($field.getType().isList())
+        	m_b.set$field.getName()(${field.getName()}.stream().map(e -> new T${field.getType().getName()}ToThrift(e)).collect(Collectors.toList()));
+        #else
+        	m_b.set$field.getName()(new T$field.getType().getName()ToThrift($field.getName()));
+        #end
             return this;
         }
         

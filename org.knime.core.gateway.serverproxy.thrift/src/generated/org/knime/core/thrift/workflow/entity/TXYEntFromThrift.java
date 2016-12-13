@@ -46,68 +46,61 @@
  */
 package org.knime.core.thrift.workflow.entity;
 
+
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
+
 import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;
+
+import java.util.stream.Collectors;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TXYEntFromThrift implements XYEnt{
+public class TXYEntFromThrift implements XYEnt {
 
-    private final TXYEnt m_e;
+	private final TXYEnt m_e;
 
-
-    public TXYEntFromThrift(final TXYEnt e) {
-        m_e = e;
-    }
-
+	public TXYEntFromThrift(final TXYEnt e) {
+		m_e = e;
+	}
 
     @Override
     public int getX() {
-        return m_e.getX();
-    }
-
+    	    	return m_e.getX();
+    	    }
+    
     @Override
     public int getY() {
-        return m_e.getY();
-    }
+    	    	return m_e.getY();
+    	    }
+    
 
     public static class TXYEntBuilderFromThrift implements XYEntBuilder {
-
-        private final TXYEntBuilder m_b;
-
-        public TXYEntBuilderFromThrift(final TXYEntBuilder b) {
-            m_b = b;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
+    
+		private TXYEntBuilder m_b;
+	
+		public TXYEntBuilderFromThrift(final TXYEntBuilder b) {
+			m_b = b;
+		}
+	
         public XYEnt build() {
             return new TXYEntFromThrift(m_b.build());
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public XYEntBuilder setX(final int X) {
-            m_b.setX(X);
-            return this;
+		@Override
+        public TXYEntBuilderFromThrift setX(final int X) {
+                	m_b.setX(X);
+                    return this;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public XYEntBuilder setY(final int Y) {
-            m_b.setY(Y);
-            return this;
+        
+		@Override
+        public TXYEntBuilderFromThrift setY(final int Y) {
+                	m_b.setY(Y);
+                    return this;
         }
-
+        
     }
 
 }

@@ -61,16 +61,16 @@ import java.util.stream.Collectors;
  */
 public class TTestServiceFromThrift implements TTestService {
 
-	private TestService m_service = new DefaultTestService();
+	private final TestService m_service = new DefaultTestService();
 
 	@Override
- 	public TTestEntTmp Ttest(final TTestEntTmp id) {
-   	 	 	  		return new TTestEntToThrift(m_service.test(new TTestEntFromThriftTmp(id)));
+ 	public TTestEnt Ttest(final TTestEnt id) {
+   	 	 	  		return new TTestEntToThrift(m_service.test(new TTestEntFromThrift(id)));
   	}
 	
 	@Override
- 	public List<TTestEntTmp> TtestList(final List<TTestEntTmp> list) {
-   	 	 	   		return m_service.testList(list.stream().map(e -> new TTestEntFromThriftTmp(e)).collect(Collectors.toList())).stream().map(e -> new TTestEntToThrift(e)).collect(Collectors.toList());
+ 	public List<TTestEnt> TtestList(final List<TTestEnt> list) {
+   	 	 	   		return m_service.testList(list.stream().map(e -> new TTestEntFromThrift(e)).collect(Collectors.toList())).stream().map(e -> new TTestEntToThrift(e)).collect(Collectors.toList());
   	}
 	
 	@Override

@@ -55,8 +55,9 @@ import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TAnnotationEnt.TAnnotationEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TAnnotationEntFromThrift.TAnnotationEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

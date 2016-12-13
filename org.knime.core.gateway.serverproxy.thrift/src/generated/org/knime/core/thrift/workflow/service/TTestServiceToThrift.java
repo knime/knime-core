@@ -69,12 +69,12 @@ public class TTestServiceToThrift implements TestService {
 
 	@Override
  	public TestEnt test(final TestEnt id) {
-   	 	 	  		return new TTestEntFromThriftTmp(m_service.Ttest(new TTestEntToThrift(id)));
+   	 	 	  		return new TTestEntFromThrift(m_service.Ttest(new TTestEntToThrift(id)));
   	}
 	
 	@Override
  	public List<TestEnt> testList(final List<TestEnt> list) {
-   	 	 	   		return m_service.TtestList(list.stream().map(e -> new TTestEntToThrift(e)).collect(Collectors.toList())).stream().map(e -> new TTestEntFromThriftTmp(e)).collect(Collectors.toList());
+   	 	 	   		return m_service.TtestList(list.stream().map(e -> new TTestEntToThrift(e)).collect(Collectors.toList())).stream().map(e -> new TTestEntFromThrift(e)).collect(Collectors.toList());
   	}
 	
 	@Override

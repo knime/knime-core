@@ -46,94 +46,83 @@
  */
 package org.knime.core.thrift.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntFromThriftTmp.TTestEntBuilderFromThrift;
 
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
+import org.knime.core.thrift.workflow.entity.TTestEntFromThrift.TTestEntBuilderFromThrift;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
 
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TTestEntToThrift extends TTestEntTmp {
+public class TTestEntToThrift extends TTestEnt {
 
-    private TestEnt m_e;
+	private final TestEnt m_e;
+	
+	public TTestEntToThrift(final TestEnt e) {
+		m_e = e;
+	}
 
-    /**
-     * @param builder
-     */
-    public TTestEntToThrift(final TestEnt e) {
-        m_e = e;
-    }
-
-
-    @Override
+	@Override
     public TXYEnt getxy() {
-        return new TXYEntToThrift(m_e.getxy());
-    }
-
-    @Override
+            return new TXYEntToThrift(m_e.getxy());
+        }
+    
+	@Override
     public List<TXYEnt> getxylist() {
-        return m_e.getxylist().stream().map(l -> new TXYEntToThrift(l)).collect(Collectors.toList());
-    }
-
-    @Override
+        	return m_e.getxylist().stream().map(l -> new TXYEntToThrift(l)).collect(Collectors.toList());
+        }
+    
+	@Override
     public String getother() {
-        return m_e.getother();
-    }
-
+        	return m_e.getother();
+        }
+    
 
     public static class TTestEntBuilderToThrift extends TTestEntBuilder {
+    
+    	private TestEntBuilder m_b;
+    	
+    	public TTestEntBuilderToThrift(final TestEntBuilder b) {
+    		m_b = b;
+    	}
 
-        private TestEntBuilder m_b;
-
-        public TTestEntBuilderToThrift(final TestEntBuilder b) {
-            m_b = b;
-        }
-
-
-        @Override
-        @ThriftConstructor
-        public TTestEntToThrift build() {
+    
+    	@Override
+        public TTestEnt build() {
             return new TTestEntToThrift(m_b.build());
         }
-
-        /**
-         * {@inheritDoc}
-         */
+        
         @Override
         public GatewayEntityBuilder<TestEnt> wrap() {
             return new TTestEntBuilderFromThrift(this);
         }
 
-        @Override
-        @ThriftField
-        public TTestEntBuilder setxy(final TXYEnt xy) {
-            m_b.setxy(new TXYEntFromThrift(xy));
-            return this;
+		@Override
+        public TTestEntBuilderToThrift setxy(final TXYEnt xy) {
+					m_b.setxy(new TXYEntFromThrift(xy));
+		            return this;
         }
-
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setxylist(final List<TXYEnt> xylist) {
-            m_b.setxylist(xylist.stream().map(e -> new TXYEntFromThrift(e)).collect(Collectors.toList()));
-            return this;
+        
+		@Override
+        public TTestEntBuilderToThrift setxylist(final List<TXYEnt> xylist) {
+					m_b.setxylist(xylist.stream().map(e -> new TXYEntFromThrift(e)).collect(Collectors.toList()));
+		            return this;
         }
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setother(final String other) {
-            m_b.setother(other);
-            return this;
+        
+		@Override
+        public TTestEntBuilderToThrift setother(final String other) {
+					m_b.setother(other);
+		            return this;
         }
+        
     }
 
 }

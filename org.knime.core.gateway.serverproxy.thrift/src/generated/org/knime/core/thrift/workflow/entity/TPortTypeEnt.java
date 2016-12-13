@@ -55,8 +55,9 @@ import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
-
+import org.knime.core.thrift.workflow.entity.TPortTypeEntFromThrift.TPortTypeEntBuilderFromThrift;
 import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 
 /**

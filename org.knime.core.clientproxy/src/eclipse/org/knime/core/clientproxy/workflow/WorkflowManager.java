@@ -693,7 +693,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Collection<INodeContainer> getAllNodeContainers() {
-        List<NodeEnt> nodes = m_workflow.getNodes();
+        List<? extends NodeEnt> nodes = m_workflow.getNodes();
         //return exactly the same node container instance for the same node entity
         return nodes.stream()
             .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new NodeContainer(n), NodeContainer.class))
@@ -706,7 +706,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public Collection<IConnectionContainer> getConnectionContainers() {
         //TODO e.g. put the entities into a hash map for quicker access
-        List<ConnectionEnt> connections = m_workflow.getConnections();
+        List<? extends ConnectionEnt> connections = m_workflow.getConnections();
         //return exactly the same connection container instance for the same connection entity
         return connections.stream()
             .map(c -> WrapperMapUtil.getOrCreate(c, k -> new ConnectionContainer(c), ConnectionContainer.class))
