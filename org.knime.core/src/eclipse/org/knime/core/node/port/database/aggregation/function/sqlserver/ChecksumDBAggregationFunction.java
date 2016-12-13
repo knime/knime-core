@@ -65,8 +65,6 @@ public final class ChecksumDBAggregationFunction extends AbstractDistinctDBAggre
 
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
-        private static final ChecksumDBAggregationFunction INSTANCE = new ChecksumDBAggregationFunction();
-
         /**
          * {@inheritDoc}
          */

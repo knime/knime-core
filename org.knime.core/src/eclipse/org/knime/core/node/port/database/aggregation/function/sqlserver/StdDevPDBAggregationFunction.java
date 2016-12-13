@@ -65,8 +65,6 @@ public final class StdDevPDBAggregationFunction extends AbstractDistinctDBAggreg
 
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
-        private static final StdDevPDBAggregationFunction INSTANCE = new StdDevPDBAggregationFunction();
-
         /**
          * {@inheritDoc}
          */

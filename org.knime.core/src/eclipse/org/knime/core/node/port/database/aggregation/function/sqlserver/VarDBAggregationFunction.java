@@ -65,8 +65,6 @@ public final class VarDBAggregationFunction extends AbstractDistinctDBAggregatio
 
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
-        private static final VarDBAggregationFunction INSTANCE = new VarDBAggregationFunction();
-
         /**
          * {@inheritDoc}
          */
