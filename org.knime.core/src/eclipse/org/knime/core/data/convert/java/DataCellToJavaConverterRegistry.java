@@ -408,6 +408,22 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
+     * Get a converter factory which converts the elements of a CollectionCell to a Java array by executing a converter
+     * factory per element.
+     *
+     * @param elementFactory converter factory to use to convert elements
+     * @return the converter factory which converts a collection of the input type of elementFactory to an array of the
+     *         output type of elementFactory.
+     * @param <DE> Destination element type
+     * @param <D> Destination array type
+     * @since 3.3
+     */
+    public <DE, D> DataCellToJavaConverterFactory<CollectionDataValue, D>
+        getCollectionConverterFactory(final DataCellToJavaConverterFactory<? extends DataValue, DE> elementFactory) {
+        return new CollectionConverterFactory<>(elementFactory);
+    }
+
+    /**
      * Register a DataCellToJavaConverterFactory.
      *
      * @param factory the factory to register

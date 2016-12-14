@@ -137,6 +137,7 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.util.ClassUtil;
 import org.knime.core.data.convert.util.MultiParentClassLoader;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -1135,18 +1136,26 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             LOGGER.warn("Custom type classpaths were aleady cached.");
             return;
         }
-        for (final DataCellToJavaConverterFactory<?, ?> factory : DataCellToJavaConverterRegistry.getInstance()
-            .getAllConverterFactories()) {
+
+        Set<DataCellToJavaConverterFactory<?, ?>> dcToJavaFactories = new LinkedHashSet<>();
+        dcToJavaFactories.addAll(DataCellToJavaConverterRegistry.getInstance().getAllConverterFactories());
+        dcToJavaFactories.addAll(ConverterUtil.getFactoriesForSourceType(DateAndTimeCell.TYPE));
+        for (final DataCellToJavaConverterFactory<?, ?> factory : dcToJavaFactories) {
             final Class<?> javaType = factory.getDestinationType();
             CLASSPATH_CACHE.put(factory.getIdentifier(),
                 resolveBuildPathForJavaType((javaType.isArray()) ? javaType.getComponentType() : javaType));
         }
-        for (JavaToDataCellConverterFactory<?> factory : JavaToDataCellConverterRegistry.getInstance()
-            .getAllConverterFactories()) {
+
+
+        Set<JavaToDataCellConverterFactory<?>> javaToDCFactories = new LinkedHashSet<>();
+        javaToDCFactories.addAll(JavaToDataCellConverterRegistry.getInstance().getAllConverterFactories());
+        javaToDCFactories.addAll(ConverterUtil.getFactoriesForDestinationType(DateAndTimeCell.TYPE));
+        for (JavaToDataCellConverterFactory<?> factory : javaToDCFactories) {
             final Class<?> javaType = factory.getSourceType();
             CLASSPATH_CACHE.put(factory.getIdentifier(),
                 resolveBuildPathForJavaType((javaType.isArray()) ? javaType.getComponentType() : javaType));
         }
+
     }
 
     /**

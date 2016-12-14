@@ -56,9 +56,15 @@ import java.util.Optional;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.convert.datacell.ArrayToCollectionConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
 import org.knime.core.data.convert.datacell.SimpleJavaToDataCellConverterFactory;
+import org.knime.core.data.convert.java.CollectionConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
@@ -142,6 +148,12 @@ public class DeprecatedDateAndTimeUtil {
             } else if (dest.isAssignableFrom(Calendar.class)) {
                 return Optional.of(toCalendarConverterFactory);
             }
+        } else if (dest.isArray() && CollectionDataValue.class.isAssignableFrom(source)) {
+            if (Date.class.isAssignableFrom(dest.getComponentType())) {
+                return Optional.of(DataCellToJavaConverterRegistry.getInstance().getCollectionConverterFactory(toDateConverterFactory));
+            } else if (Calendar.class.isAssignableFrom(dest.getComponentType())) {
+                return Optional.of(DataCellToJavaConverterRegistry.getInstance().getCollectionConverterFactory(toCalendarConverterFactory));
+            }
         }
 
         return Optional.empty();
@@ -152,7 +164,7 @@ public class DeprecatedDateAndTimeUtil {
      *
      * @param source Source type
      * @param dest Destination type
-     * @return an optional converter facory
+     * @return an optional converter factory
      */
     public static Optional<JavaToDataCellConverterFactory<?>> getConverterFactory(final Class<?> source,
         final DataType dest) {
@@ -161,6 +173,12 @@ public class DeprecatedDateAndTimeUtil {
                 return Optional.of(dateConverterFactory);
             } else if (Calendar.class.isAssignableFrom(source)) {
                 return Optional.of(calendarConverterFactory);
+            }
+        } else if (dest == ListCell.getCollectionType(DateAndTimeCell.TYPE) && source.isArray()) {
+            if (Date.class.isAssignableFrom(source.getComponentType())) {
+                return Optional.of(JavaToDataCellConverterRegistry.getInstance().getArrayConverterFactory(dateConverterFactory));
+            } else if (Calendar.class.isAssignableFrom(source.getComponentType())) {
+                return Optional.of(JavaToDataCellConverterRegistry.getInstance().getArrayConverterFactory(calendarConverterFactory));
             }
         }
 
@@ -178,7 +196,13 @@ public class DeprecatedDateAndTimeUtil {
             return Optional.empty();
         }
 
-        if (id.equals(toDateConverterFactory.getIdentifier())) {
+        if (id.startsWith(CollectionConverterFactory.class.getName())) {
+            final String elementConverterId = id.substring(CollectionConverterFactory.class.getName().length()+1, id.length()-1);
+            final Optional<DataCellToJavaConverterFactory<?, ?>> elementFactory = getDataCellToJavaConverterFactory(elementConverterId);
+            if (elementFactory.isPresent()) {
+                return Optional.of(DataCellToJavaConverterRegistry.getInstance().getCollectionConverterFactory(elementFactory.get()));
+            }
+        } else if (id.equals(toDateConverterFactory.getIdentifier())) {
             return Optional.of(toDateConverterFactory);
         } else if (id.equals(toCalendarConverterFactory.getIdentifier())) {
             return Optional.of(toCalendarConverterFactory);
@@ -198,7 +222,13 @@ public class DeprecatedDateAndTimeUtil {
             return Optional.empty();
         }
 
-        if (id.equals(calendarConverterFactory.getIdentifier())) {
+       if (id.startsWith(ArrayToCollectionConverterFactory.class.getName())) {
+            final String elementConverterId = id.substring(ArrayToCollectionConverterFactory.class.getName().length()+1, id.length()-1);
+            final Optional<JavaToDataCellConverterFactory<?>> elementFactory = getJavaToDataCellConverterFactory(elementConverterId);
+            if (elementFactory.isPresent()) {
+                return Optional.of(JavaToDataCellConverterRegistry.getInstance().getArrayConverterFactory(elementFactory.get()));
+            }
+        } else if (id.equals(calendarConverterFactory.getIdentifier())) {
             return Optional.of(calendarConverterFactory);
         } else if (id.equals(dateConverterFactory.getIdentifier())) {
             return Optional.of(dateConverterFactory);

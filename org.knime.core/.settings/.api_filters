@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Java-Snippet Changes (AP-6805)" id="924844039">
+            <message_arguments>
+                <message_argument value="3.3.1"/>
+                <message_argument value="3.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
         <filter comment="removed as part of AP-6761" id="338755678">
             <message_arguments>
