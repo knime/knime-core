@@ -167,6 +167,7 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
         templatesPanel.add(createTemplatesPanel(), BorderLayout.CENTER);
         mainSplit.setTopComponent(templatesPanel);
         m_previewPanel = new JPanel(new BorderLayout());
+        m_previewPanel.add(m_controller.getPreview(), BorderLayout.CENTER);
         m_previewPane = new JPanel(new CardLayout());
         JPanel p = new JPanel(new GridBagLayout());
         p.add(new JLabel("Please select a template."));
@@ -200,13 +201,8 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
             m_removeTemplateButton.setEnabled(removeable);
             m_applyTemplateButton.setEnabled(true);
 
-
             m_controller.setPreviewSettings(template);
 
-            if (m_previewPanel.getComponents().length == 0) {
-                m_previewPanel.add(m_controller.getPreview(),
-                        BorderLayout.CENTER);
-            }
             cl.show(m_previewPane, CARD_PREVIEW);
             this.validate();
         } else {
