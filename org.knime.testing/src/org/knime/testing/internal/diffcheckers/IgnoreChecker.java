@@ -131,6 +131,14 @@ public final class IgnoreChecker implements DifferenceChecker<DataValue> {
      * {@inheritDoc}
      */
     @Override
+    public boolean ignoreColumnElementNames() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
     }
 

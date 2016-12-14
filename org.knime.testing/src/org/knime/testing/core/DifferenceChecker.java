@@ -50,6 +50,7 @@ package org.knime.testing.core;
 import java.util.List;
 
 import org.knime.core.data.DataColumnProperties;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -185,6 +186,15 @@ public interface DifferenceChecker<T extends DataValue> {
      * @return <code>true</code> if the properties should be ignored, <code>false</code> otherwise
      */
     boolean ignoreColumnProperties();
+
+    /**
+     * In case the column is a collection ... should we ignore the
+     * {@linkplain DataColumnSpec#getElementNames() element names}?
+     *
+     * @return <code>true</code> if the element names should be ignored, <code>false</code> otherwise
+     * @since 3.3
+     */
+    boolean ignoreColumnElementNames();
 
     /**
      * Returns whether a column's domain should be ignored while comparing two tables.

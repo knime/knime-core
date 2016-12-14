@@ -363,7 +363,8 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 throw new IllegalStateException("Unexpected size handler in column '" + refColSpec.getName() + "'");
             }
 
-            if (!refColSpec.getElementNames().equals(testColSpec.getElementNames())) {
+            if (!checker.ignoreColumnElementNames() &&
+                    !refColSpec.getElementNames().equals(testColSpec.getElementNames())) {
                 throw new IllegalStateException("Wrong elements names in column '" + refColSpec.getName()
                         + "': expected '" + refColSpec.getElementNames() + "', got '" + testColSpec.getElementNames()
                         + "'");
