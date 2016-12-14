@@ -180,16 +180,6 @@ public final class KNIMEConstants {
     public static final String PROPERTY_DISABLE_VM_FILE_LOCK =
         "knime.disable.vmfilelock";
 
-    /** Java property to enable/disable loading the node repository
-     * asynchronously. By default, the node repository loads completely before
-     * the GUI is shown. If this flag is set, it will load the entire repository
-     * in the background while the GUI is already there is usable.
-     * <br>
-     * This flag only affects the KNIME client.
-     * @since v2.4 */
-    public static final String PROPERTY_ENABLE_FAST_LOADING =
-        "knime.enable.fastload";
-
     /** Java property to add a context menu entry on metanodes to allow the
      * user to lock the workflow. This feature is likely to be a KNIME.com
      * extension and is in beta stage - the action will eventually be moved
