@@ -57,10 +57,14 @@ import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowGroup;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
+import org.knime.core.clientproxy.workflow.WorkflowManager;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.TestService;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
 /**
  * Mainly for testing and prototyping purposes.
@@ -101,10 +105,9 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
 
         //return 'client' workflow manager
         //download 'workflow' from server'
-//        EntityID workflowId =
-//                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
-//        return new WorkflowManager(service(WorkflowService.class).getWorkflow(workflowId));
-        return null;
+        EntityID workflowId =
+                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
+        return new WorkflowManager(service(WorkflowService.class).getWorkflow(workflowId));
     }
 
 }

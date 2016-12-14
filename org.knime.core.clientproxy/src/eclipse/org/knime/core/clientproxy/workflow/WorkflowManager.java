@@ -110,7 +110,6 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      * @param workflow
      */
     public WorkflowManager(final WorkflowEnt workflow) {
-        //'download' workflow from 'server'
         super(workflow);
         m_workflow = workflow;
 
