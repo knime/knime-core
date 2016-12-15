@@ -532,11 +532,13 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     for (int i = 0; i < rules.size(); ++i) {
                         Rule rule = rules.get(i);
                         final SimpleRule simpleRuleArray = ruleSet.getRuleSet().getSimpleRuleArray(i);
-                        simpleRuleArray.setRecordCount(rule.getRecordCount());
-                        if (validationColumnIdx >= 0) {
-                            simpleRuleArray.setNbCorrect(rule.getNbCorrect());
-                        } else if (simpleRuleArray.isSetNbCorrect()) {
-                            simpleRuleArray.unsetNbCorrect();
+                        synchronized (simpleRuleArray) /*synchronized to test, if it fixes AP-6766 */ {
+                            simpleRuleArray.setRecordCount(rule.getRecordCount());
+                            if (validationColumnIdx >= 0) {
+                                simpleRuleArray.setNbCorrect(rule.getNbCorrect());
+                            } else if (simpleRuleArray.isSetNbCorrect()) {
+                                simpleRuleArray.unsetNbCorrect();
+                            }
                         }
                     }
                 }
@@ -736,8 +738,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
                         : DataTableSpec.getUniqueColumnName(preSpec, m_outputColumn.getStringValue()),
                     m_addConfidence.getBooleanValue(), m_confidenceColumn.getStringValue(),
-                    /*no validation column*/-1, /* was originally set true, but to fix AP-6766 it was set to false*/
-                    false);
+                    /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
+                    true);
                 final DataTableSpec tableSpec = rearranger.createSpec();
                 if (m_doReplaceColumn.getBooleanValue()) {
                     DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
