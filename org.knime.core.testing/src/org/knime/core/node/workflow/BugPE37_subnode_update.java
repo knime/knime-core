@@ -59,12 +59,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 
 /**
- * See PE-27. Configurations on linked wrapped metanodes was lost when an update is performed. Also indirectly
+ * See PE-37. Configurations on linked wrapped metanodes was lost when an update is performed. Also indirectly
  * tests AP-3120.
  *
  * @author wiswedel, University of Konstanz
  */
-public class BugPE27_subnode_update extends WorkflowTestCase {
+public class BugPE37_subnode_update extends WorkflowTestCase {
 
     private NodeID m_diffChecker_Before_5;
     private NodeID m_diffChecker_Before_8;
