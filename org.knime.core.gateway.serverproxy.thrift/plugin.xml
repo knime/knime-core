@@ -13,5 +13,11 @@
             EntityBuilderFactory="org.knime.core.thrift.TEntityBuilderFactory">
       </EntityBuilderFactory>
    </extension>
+   <extension
+         point="org.knime.core.EarlyStartup">
+      <provider
+            class="org.knime.core.thrift.EarlyStartupThriftServer">
+      </provider>
+   </extension>
 
 </plugin>

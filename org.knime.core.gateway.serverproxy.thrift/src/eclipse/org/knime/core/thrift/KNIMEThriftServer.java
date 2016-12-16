@@ -43,100 +43,24 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 15, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.thrift;
 
-import java.util.List;
-
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.thrift.TEntityBuilderFactory.ThriftEntityBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntTmp.TTestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntFromThriftTmp.TTestEntBuilderFromThrift;
-
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
-import com.facebook.swift.codec.ThriftStruct;
-
+import java.io.Closeable;
+import java.io.IOException;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@ThriftStruct(builder = TTestEntBuilder.class)
-public class TTestEntTmp {
+public interface KNIMEThriftServer extends Closeable {
 
-    private TXYEnt m_xy;
-    private List<TXYEnt> m_xylist;
-    private String m_other;
+    void start();
 
-    /**
-     * @param builder
-     */
-    private TTestEntTmp(final TTestEntBuilder builder) {
-        m_xy = builder.m_xy;
-        m_xylist = builder.m_xylist;
-        m_other = builder.m_other;
-    }
-
-    protected TTestEntTmp() {
-        //
-    }
-
-    @ThriftField(1)
-    public TXYEnt getxy() {
-        return m_xy;
-    }
-
-    @ThriftField(2)
-    public List<TXYEnt> getxylist() {
-        return m_xylist;
-    }
-
-    @ThriftField(3)
-    public String getother() {
-        return m_other;
-    }
-
-
-    public static class TTestEntBuilder implements ThriftEntityBuilder<TestEnt> {
-
-        private TXYEnt m_xy;
-        private List<TXYEnt> m_xylist;
-        private String m_other;
-
-        @ThriftConstructor
-        public TTestEntTmp build() {
-            return new TTestEntTmp(this);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public GatewayEntityBuilder<TestEnt> wrap() {
-            return new TTestEntBuilderFromThrift(this);
-        }
-
-        @ThriftField
-        public TTestEntBuilder setxy(final TXYEnt xy) {
-            m_xy = xy;
-            return this;
-        }
-
-
-        @ThriftField
-        public TTestEntBuilder setxylist(final List<TXYEnt> xylist) {
-            m_xylist = xylist;
-            return this;
-        }
-
-        @ThriftField
-        public TTestEntBuilder setother(final String other) {
-            m_other = other;
-            return this;
-        }
-
+    default void stop() throws IOException {
+        close();
     }
 
 }

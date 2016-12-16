@@ -43,80 +43,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 15, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.thrift;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.Collections;
 
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntTmp.TTestEntBuilder;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.server.TServer.Args;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TServerTransport;
+import org.knime.core.thrift.workflow.service.TTestServiceFromThrift;
+import org.knime.core.thrift.workflow.service.TWorkflowServiceFromThrift;
 
+import com.facebook.nifty.processor.NiftyProcessorAdapters;
+import com.facebook.swift.codec.ThriftCodecManager;
+import com.facebook.swift.service.ThriftServiceProcessor;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TTestEntFromThriftTmp implements TestEnt {
+public class KNIMEThriftServerForJSClient implements KNIMEThriftServer {
 
-    private TTestEntTmp m_e;
+    private TServer m_server;
 
-    public TTestEntFromThriftTmp(final TTestEntTmp e) {
-        m_e = e;
-    }
-
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public XYEnt getxy() {
-        return new TXYEntFromThrift(m_e.getxy());
+    public void close() throws IOException {
+        m_server.stop();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public List<XYEnt> getxylist() {
-        return m_e.getxylist().stream().map(l -> new TXYEntFromThrift(l)).collect(Collectors.toList());
+    public void start() {
+        try {
+
+            ThriftServiceProcessor thriftServiceProcessor =
+                    new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceFromThrift(), new TWorkflowServiceFromThrift());
+
+            TServerTransport serverTransport = new TServerSocket(2000);
+            m_server = new TSimpleServerTest(new Args(serverTransport)
+                .processor(NiftyProcessorAdapters.processorToTProcessor(thriftServiceProcessor))
+                .inputProtocolFactory(new THttpJSONProtocol.Factory())
+                .outputProtocolFactory(new THttpJSONProtocol.Factory()));
+
+            // Use this for a multithreaded server
+            // TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).processor(processor));
+
+            System.out.println("Starting the simple server...");
+            new Thread(() -> m_server.serve()).start();
+            System.out.println("Server started.");
+
+        } catch (Exception e) {
+            //TODO
+            throw new RuntimeException(e);
+        }
+
     }
 
-    @Override
-    public String getother() {
-        return m_e.getother();
-    }
-
-
-    public static class TTestEntBuilderFromThrift implements TestEntBuilder {
-
-        private TTestEntBuilder m_b;
-
-        public TTestEntBuilderFromThrift(final TTestEntBuilder b) {
-            m_b = b;
-        }
-
-
-        @Override
-        public TestEnt build() {
-            return new TTestEntFromThriftTmp(m_b.build());
-        }
-
-        @Override
-        public TestEntBuilder setxy(final XYEnt xy) {
-            m_b.setxy(new TXYEntToThrift(xy));
-            return this;
-        }
-
-
-        @Override
-        public TestEntBuilder setxylist(final List<XYEnt> xylist) {
-            m_b.setxylist(xylist.stream().map(e -> new TXYEntToThrift(e)).collect(Collectors.toList()));
-            return this;
-        }
-
-        @Override
-        public TestEntBuilder setother(final String other) {
-            m_b.setother(other);
-            return this;
-        }
-
+    public static void main(final String[] args) {
+        new KNIMEThriftServerForJSClient().start();
     }
 
 }

@@ -80,7 +80,7 @@ import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilde
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeOutPortEnt.TNodeOutPortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntTmp.TTestEntBuilder;
+import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
 import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnnotationEntBuilder;
 import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
 import org.knime.core.thrift.workflow.entity.TXYEnt.TXYEntBuilder;

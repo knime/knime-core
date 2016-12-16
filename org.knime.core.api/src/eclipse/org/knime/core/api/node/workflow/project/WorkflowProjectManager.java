@@ -81,7 +81,7 @@ public class WorkflowProjectManager {
         collectExecutableExtensions(WorkflowProjectFactory.EXT_POINT_ID, WorkflowProjectFactory.EXT_POINT_ATTR);
 
     //TODO just temporary for testing
-    private static final Map<String, IWorkflowManager> WRAPPED_WFS = new WeakHashMap<String, IWorkflowManager>();
+    private static final Map<String, IWorkflowManager> REGISTERED_WFS = new WeakHashMap<String, IWorkflowManager>();
 
     /**
      * The root of all workflow projects, no matter from which source
@@ -102,7 +102,7 @@ public class WorkflowProjectManager {
 
     public static IWorkflowManager openProject(final WorkflowProject wfp) {
         //TODO just for testing
-        return WRAPPED_WFS.get(wfp.getName());
+        return REGISTERED_WFS.get(wfp.getName());
     }
 
     /**
@@ -113,8 +113,21 @@ public class WorkflowProjectManager {
      */
     @Deprecated
     public static IWorkflowManager wrap(final IWorkflowManager wfm) {
-        WRAPPED_WFS.put(wfm.getID().toString(), wfm);
+        register(wfm);
         return FACTORIES.get(0).wrap(wfm);
+    }
+
+    /**
+     * Just a temporary method for testing - to be deleted or replaced in near future. It just helps to register an
+     * opened workflow that the server then knows of (i.e. by calling {@link #openProject(WorkflowProject)} from
+     * DefaultWorkflowService#getWorkflow)
+     *
+     * @param wfm
+     */
+    @Deprecated
+    public static void register(final IWorkflowManager wfm) {
+        REGISTERED_WFS.put(wfm.getID().toString(), wfm);
+        System.out.println("WFM ID: " + wfm.getID());
     }
 
     /**

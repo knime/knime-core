@@ -50,6 +50,7 @@ package org.knime.core.thrift;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.thrift.protocol.TJSONProtocol;
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.gateway.v0.workflow.service.TestService;
@@ -60,6 +61,7 @@ import org.knime.core.thrift.workflow.service.TWorkflowService;
 import org.knime.core.thrift.workflow.service.TWorkflowServiceToThrift;
 
 import com.facebook.nifty.client.FramedClientConnector;
+import com.facebook.nifty.duplex.TDuplexProtocolFactory;
 import com.facebook.swift.service.ThriftClientManager;
 import com.google.common.net.HostAndPort;
 
@@ -69,15 +71,37 @@ import com.google.common.net.HostAndPort;
  */
 public class TServiceFactory implements ServiceFactory {
 
+    private static final KNIMEThriftServerForJavaClient m_server = new KNIMEThriftServerForJavaClient();
+
+    static {
+        //make sure to start the thrift server for the java client first
+        m_server.start();
+
+        //TODO! shutdown server eventually (shutdown hook?)
+    }
+
+
     private ThriftClientManager clientManager = new ThriftClientManager();
 
-    private FramedClientConnector connector = new FramedClientConnector(HostAndPort.fromParts("localhost", 2000));
+    private FramedClientConnector connector = new FramedClientConnector(HostAndPort.fromParts("localhost", 2000), TDuplexProtocolFactory.fromSingleFactory(new TJSONProtocol.Factory()));
 
     /**
      * {@inheritDoc}
      */
     @Override
     public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
+
+
+//        if(connector == null) {
+//            try {
+//                connector= new HttpClientConnector("localhost:2000", "/", TDuplexProtocolFactory.fromSingleFactory(new TJSONProtocol.Factory()));
+//            } catch (URISyntaxException ex) {
+//                // TODO
+//                throw new RuntimeException(ex);
+//            }
+//        }
+
+
         //TODO don't use if here but a automatically filled map or annotations
         if (serviceInterface.isAssignableFrom(WorkflowService.class)) {
             try {

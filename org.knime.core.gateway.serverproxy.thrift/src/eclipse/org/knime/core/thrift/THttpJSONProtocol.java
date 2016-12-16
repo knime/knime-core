@@ -44,42 +44,70 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 23, 2016 (hornm): created
+ *   Dec 16, 2016 (hornm): created
  */
 package org.knime.core.thrift;
 
-import java.util.Collections;
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TJSONProtocol;
+import org.apache.thrift.protocol.TMessage;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 
-import org.knime.core.thrift.workflow.service.TTestServiceFromThrift;
-import org.knime.core.thrift.workflow.service.TWorkflowServiceFromThrift;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+/**
+ *
+ * @author Martin Horn, University of Konstanz
+ */
+public class THttpJSONProtocol extends TJSONProtocol {
 
-import com.facebook.swift.codec.ThriftCodecManager;
-import com.facebook.swift.service.ThriftServer;
-import com.facebook.swift.service.ThriftServerConfig;
-import com.facebook.swift.service.ThriftServiceProcessor;
-
-public class ThriftPlugin implements BundleActivator {
-
-    private ThriftServer m_server;
+    private StringBuffer lineBuffer_ = new StringBuffer();
 
     /**
-     * {@inheritDoc}
+     * @param trans
      */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        ThriftServiceProcessor thriftServiceProcessor =
-            new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST, new TTestServiceFromThrift(), new TWorkflowServiceFromThrift());
-        m_server = new ThriftServer(thriftServiceProcessor, new ThriftServerConfig().setPort(2000)).start();
+    public THttpJSONProtocol(final TTransport trans) {
+        super(trans);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void stop(final BundleContext context) throws Exception {
-        m_server.close();
+    public TMessage readMessageBegin() throws TException {
+        //skip http header
+        byte[] buf = new byte[1];
+        String line = " ";
+        while((line = readLine()).length() > 2) {
+            System.out.print(line);
+        }
+        //read few more bytes
+        trans_.read(buf, 0, 1);
+        return super.readMessageBegin();
     }
+
+    private String readLine() throws TTransportException {
+        byte[] buf = new byte[1];
+        lineBuffer_.setLength(0);
+        while(buf[0] != 13) {
+            trans_.read(buf, 0, 1);
+            lineBuffer_.append((char) buf[0]);
+        }
+        return lineBuffer_.toString();
+    }
+
+    public static class Factory extends TJSONProtocol.Factory {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public TProtocol getProtocol(final TTransport trans) {
+            return new THttpJSONProtocol(trans);
+        }
+
+    }
+
+
 
 }

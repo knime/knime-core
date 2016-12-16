@@ -43,94 +43,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 15, 2016 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.thrift;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.thrift.workflow.entity.TTestEntFromThriftTmp.TTestEntBuilderFromThrift;
-
-import com.facebook.swift.codec.ThriftConstructor;
-import com.facebook.swift.codec.ThriftField;
-
+import org.knime.core.util.IEarlyStartup;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TTestEntToThriftTmp extends TTestEntTmp {
+public class EarlyStartupThriftServer implements IEarlyStartup {
 
-    private TestEnt m_e;
-
-    public TTestEntToThriftTmp(final TestEnt e) {
-        m_e = e;
-    }
-
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public TXYEnt getxy() {
-        return new TXYEntToThrift(m_e.getxy());
-    }
+    public void run() {
+        new KNIMEThriftServerForJSClient().start();
 
-    @Override
-    public List<TXYEnt> getxylist() {
-        return m_e.getxylist().stream().map(l -> new TXYEntToThrift(l)).collect(Collectors.toList());
-    }
+        //TODO! Shutdown the server somehow eventually ...
 
-    @Override
-    public String getother() {
-        return m_e.getother();
-    }
-
-
-    public static class TTestEntBuilderToThrift extends TTestEntBuilder {
-
-        private TestEntBuilder m_b;
-
-        public TTestEntBuilderToThrift(final TestEntBuilder b) {
-            m_b = b;
-        }
-
-
-        @Override
-        @ThriftConstructor
-        public TTestEntToThriftTmp build() {
-            return new TTestEntToThriftTmp(m_b.build());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public GatewayEntityBuilder<TestEnt> wrap() {
-            return new TTestEntBuilderFromThrift(this);
-        }
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setxy(final TXYEnt xy) {
-            m_b.setxy(new TXYEntFromThrift(xy));
-            return this;
-        }
-
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setxylist(final List<TXYEnt> xylist) {
-            m_b.setxylist(xylist.stream().map(e -> new TXYEntFromThrift(e)).collect(Collectors.toList()));
-            return this;
-        }
-
-        @Override
-        @ThriftField
-        public TTestEntBuilder setother(final String other) {
-            m_b.setother(other);
-            return this;
-        }
     }
 
 }

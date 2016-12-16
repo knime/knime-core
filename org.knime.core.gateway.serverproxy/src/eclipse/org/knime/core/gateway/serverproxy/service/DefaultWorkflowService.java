@@ -51,6 +51,7 @@ package org.knime.core.gateway.serverproxy.service;
 import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +67,6 @@ import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.api.node.workflow.project.WorkflowGroup;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
@@ -115,6 +115,8 @@ public class DefaultWorkflowService implements WorkflowService {
     @Override
     public WorkflowEnt getWorkflow(final EntityID id) {
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
+        //might be a bit confusing here: uses the (to be newly introduced) mechanism to generally open workflow projects (no matter they are local or remote workflows)
+        //here, however, it should probably always be a local workflow that is served to clients (since this class use supposed to be used by other server implementations, e.g. thrift)
         IWorkflowManager wfm = WorkflowProjectManager.openProject(new WorkflowProject() {
 
             @Override
@@ -136,9 +138,9 @@ public class DefaultWorkflowService implements WorkflowService {
      */
     @Override
     public List<EntityID> getAllWorkflows() {
-        WorkflowGroup rootWorkflowGroup = WorkflowProjectManager.getRootWorkflowGroup();
+//        WorkflowGroup rootWorkflowGroup = WorkflowProjectManager.getRootWorkflowGroup();
         //TODO traverse and get all workflow projects (possibly only the local ones)
-        return null;
+        return Arrays.asList(builder(EntityIDBuilder.class).setID("huhutest").setType("WorkflowEnt").build());
     }
 
     private static PortTypeEnt buildPortTypeEnt(final PortTypeUID portTypeUID) {
