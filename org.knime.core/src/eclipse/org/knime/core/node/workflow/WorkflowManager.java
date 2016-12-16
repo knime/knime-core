@@ -6733,19 +6733,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 needsUpdate = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadRes, visitedTemplateMap, false);
             } catch (IOException e2) {
                 String msg = "Unable to check node update for " + tnc.getNameWithID() + ": " + e2.getMessage();
+                LOGGER.error(msg, e2);
                 loadRes.addError(msg);
                 return loadRes;
-            }
-            NodeSettings ncSettings = null;
-            if (needsUpdate) { // don't need to apply old settings as the metanode link is still up-to-date
-                ncSettings = new NodeSettings("metanode_settings");
-                try {
-                    saveNodeSettings(id, ncSettings);
-                } catch (InvalidSettingsException e1) {
-                    String error = "Unable to store metanode settings: " + e1.getMessage();
-                    LOGGER.warn(error, e1);
-                    loadRes.addError(error);
-                }
             }
             WorkflowCopyContent oldContent = new WorkflowCopyContent();
             oldContent.setNodeIDs(id);
@@ -6763,7 +6753,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 recursionManager.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
             } catch (Exception e) {
-                e.printStackTrace();
                 String error = e.getClass().getSimpleName() + " while loading template: " + e.getMessage();
                 LOGGER.error(error, e);
                 loadRes.addError(error);
@@ -6772,15 +6761,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 paste(copy);
                 return loadRes;
-            }
-            if (needsUpdate) {
-                try {
-                    loadNodeSettings(loadRes.getNCTemplate().getID(), ncSettings);
-                } catch (InvalidSettingsException e) {
-                    String error = "Can't apply previous settigs to new metanode link: " + e.getMessage();
-                    LOGGER.warn(error, e);
-                    loadRes.addError(error);
-                }
             }
             loadRes.setUndoPersistor(copy);
             return loadRes;
@@ -6813,7 +6793,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private NodeContainerTemplate updateNodeTemplateLinkInternal(final NodeID id, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
         final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
-        NodeContainerTemplate tnc = (NodeContainerTemplate)m_workflow.getNode(id);
+
+        final NodeContainerTemplate newLinkMN;
+        final NodeContainer oldLinkMN = m_workflow.getNode(id);
+        NodeContainerTemplate tnc = (NodeContainerTemplate)oldLinkMN;
         MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
         assert templInfo.getRole().equals(Role.Link);
         URI sourceURI = templInfo.getSourceURI();
@@ -6834,9 +6817,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return null;
             }
         }
-        NodeContainerTemplate newLinkMN;
         try (WorkflowLock lock = lock()) {
-            NodeUIInformation oldUI = m_workflow.getNode(id).getUIInformation();
+            NodeSettings ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
+            try {
+                saveNodeSettings(id, ncSettings);
+            } catch (InvalidSettingsException e1) {
+                String error = "Unable to store metanode settings: " + e1.getMessage();
+                LOGGER.warn(error, e1);
+                loadRes.addError(error);
+            }
+
+            NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
+            NodeUIInformation oldUI = oldLinkMN.getUIInformation();
+
             NodeUIInformation newUI = oldUI != null ? oldUI.clone() : null;
             // keep old in/out connections to later relink them
             Set<ConnectionContainer> inConns = getIncomingConnectionsFor(id);
@@ -6846,7 +6839,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             WorkflowCopyContent pasteResult = copyFromAndPasteHere(tempLink.getParent(),
                 new WorkflowCopyContent().setNodeID(tempLink.getID(), id.getIndex(), newUI));
             newLinkMN = getNodeContainer(pasteResult.getNodeIDs()[0], NodeContainerTemplate.class, true);
+            if (oldAnnoData != null && !oldAnnoData.isDefault()) {
+                ((NodeContainer)newLinkMN).getNodeAnnotation().getData().copyFrom(oldAnnoData, true);
+            }
+
             loadRes.setNCTemplate(newLinkMN);
+            try {
+                loadNodeSettings(loadRes.getNCTemplate().getID(), ncSettings);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't apply previous settigs to new metanode link: " + e.getMessage();
+                LOGGER.warn(error, e);
+                loadRes.addError(error);
+            }
 
             for (ConnectionContainer cc : inConns) {
                 NodeID s = cc.getSource();

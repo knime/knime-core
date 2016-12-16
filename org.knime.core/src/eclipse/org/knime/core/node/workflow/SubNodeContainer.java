@@ -2068,7 +2068,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** {@inheritDoc} */
     @Override
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException, LockFailedException {
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
         WorkflowManager tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
         SubNodeContainer copy = null;
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
@@ -2082,6 +2082,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             }
             NodeID cID = cnt.getNodeIDs()[0];
             copy = ((SubNodeContainer)tempParent.getNodeContainer(cID));
+            SingleNodeContainerSettings sncSettings = copy.getSingleNodeContainerSettings().clone();
+            sncSettings.setModelSettings(new NodeSettings("empty model"));
+            sncSettings.setVariablesSettings(new NodeSettings("empty variables setting"));
+            NodeSettings newSettings = new NodeSettings("new settings");
+            sncSettings.save(newSettings);
+            copy.loadSettings(newSettings);
             MetaNodeTemplateInformation template =
                     MetaNodeTemplateInformation.createNewTemplate(SubNodeContainer.class);
             synchronized (copy.m_nodeMutex) {
