@@ -58,6 +58,7 @@ import java.util.Map;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.util.LockFailedException;
 
@@ -76,9 +77,10 @@ public interface NodeContainerTemplate {
      * @throws IOException If an IO error occurs
      * @throws CanceledExecutionException If execution is canceled during the operation
      * @throws LockFailedException If locking failed
+     * @throws InvalidSettingsException if defaults can't be set (meta node settings to be reverted in template)
      */
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException, LockFailedException;
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException;
 
     /** Set new template info (not null!), fire events.
      * @param tI the new templateInformation */

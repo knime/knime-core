@@ -305,7 +305,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         public void run(final IProgressMonitor monitor)
                 throws InvocationTargetException, InterruptedException {
             monitor.beginTask("Checking Link Updates", m_candidateList.size());
-            WorkflowLoadHelper lH = new WorkflowLoadHelper(true);
+            WorkflowLoadHelper lH = new WorkflowLoadHelper(true, m_hostWFM.getContext());
             final String idName = KNIMEEditorPlugin.PLUGIN_ID;
             Status[] stats = new Status[m_candidateList.size()];
             int overallStatus = IStatus.OK;
