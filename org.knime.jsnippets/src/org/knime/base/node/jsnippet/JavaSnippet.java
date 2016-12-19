@@ -685,7 +685,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         for (JavaField field : fields) {
             Class<?> fieldType = field.getJavaType();
             if (fieldType.isArray()) {
-                fieldType = fieldType.getComponentType();
+                fieldType = ClassUtil.ensureObjectType(fieldType.getComponentType());
             }
             // java.lang.* is imported by default, we do not need to import that again.
             if (!fieldType.getName().startsWith("java.lang")) {
