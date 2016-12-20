@@ -49,6 +49,7 @@ package org.knime.core.thrift.workflow.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
@@ -87,6 +88,16 @@ public class TWorkflowEntToThrift extends TWorkflowEnt {
 	@Override
     public List<TConnectionEnt> getConnections() {
         	return m_e.getConnections().stream().map(l -> new TConnectionEntToThrift(l)).collect(Collectors.toList());
+        }
+    
+	@Override
+    public List<TMetaPortEnt> getMetaInPorts() {
+        	return m_e.getMetaInPorts().stream().map(l -> new TMetaPortEntToThrift(l)).collect(Collectors.toList());
+        }
+    
+	@Override
+    public List<TMetaPortEnt> getMetaOutPorts() {
+        	return m_e.getMetaOutPorts().stream().map(l -> new TMetaPortEntToThrift(l)).collect(Collectors.toList());
         }
     
 	@Override
@@ -183,6 +194,18 @@ public class TWorkflowEntToThrift extends TWorkflowEnt {
 		@Override
         public TWorkflowEntBuilderToThrift setConnections(final List<TConnectionEnt> Connections) {
 					m_b.setConnections(Connections.stream().map(e -> new TConnectionEntFromThrift(e)).collect(Collectors.toList()));
+		            return this;
+        }
+        
+		@Override
+        public TWorkflowEntBuilderToThrift setMetaInPorts(final List<TMetaPortEnt> MetaInPorts) {
+					m_b.setMetaInPorts(MetaInPorts.stream().map(e -> new TMetaPortEntFromThrift(e)).collect(Collectors.toList()));
+		            return this;
+        }
+        
+		@Override
+        public TWorkflowEntBuilderToThrift setMetaOutPorts(final List<TMetaPortEnt> MetaOutPorts) {
+					m_b.setMetaOutPorts(MetaOutPorts.stream().map(e -> new TMetaPortEntFromThrift(e)).collect(Collectors.toList()));
 		            return this;
         }
         

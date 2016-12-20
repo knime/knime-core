@@ -53,6 +53,7 @@ import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,7 +86,9 @@ import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -102,7 +105,7 @@ import org.knime.core.util.WrapperMapUtil;
  */
 public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
-    private final Map<String, NodeEnt> m_nodeMap = new HashMap<String, NodeEnt>();
+    private final Map<String, NodeEnt> m_nodeIDToNodeMap = new HashMap<String, NodeEnt>();
 
     private final WorkflowEnt m_workflow;
 
@@ -115,7 +118,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
         //fill data structures for quicker access
         for(NodeEnt n : workflow.getNodes()) {
-            m_nodeMap.put(n.getNodeID().toString(), n);
+            m_nodeIDToNodeMap.put(n.getNodeID().toString(), n);
         }
     }
 
@@ -160,8 +163,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public NodeID createAndAddNode(final NodeFactoryUID factoryUID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -169,8 +171,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public NodeID addNode(final NodeFactoryUID factoryUID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -187,8 +188,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public void removeNode(final NodeID nodeID) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -197,8 +197,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public IWorkflowManager createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts,
         final String name) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -216,8 +215,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public IConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest,
         final int destPort) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -225,8 +223,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public boolean canAddConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -235,8 +232,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public boolean canAddNewConnection(final NodeID source, final int sourcePort, final NodeID dest,
         final int destPort) {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -244,8 +240,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public boolean canRemoveConnection(final IConnectionContainer cc) {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -253,8 +248,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public void removeConnection(final IConnectionContainer cc) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -262,8 +256,16 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO introduce a more efficient data structure to access the right connection
+        Set<IConnectionContainer> res = new HashSet<IConnectionContainer>();
+        String nodeID = id.toString();
+        for (ConnectionEnt c : m_workflow.getConnections()) {
+            if(c.getSource().equals(nodeID) && c.getSourcePort() == portIdx) {
+                //TODO re-use connection container wrapper for the same connection entity
+                res.add(new ConnectionContainer(c));
+            }
+        }
+        return res;
     }
 
     /**
@@ -271,8 +273,16 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO introduce a more efficient data structure to access the right connection
+        Set<IConnectionContainer> res = new HashSet<IConnectionContainer>();
+        String nodeID = id.toString();
+        for (ConnectionEnt c : m_workflow.getConnections()) {
+            if(c.getSource().equals(nodeID)) {
+                //TODO re-use connection container wrapper for the same connection entity
+                res.add(new ConnectionContainer(c));
+            }
+        }
+        return res;
     }
 
     /**
@@ -280,7 +290,14 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public IConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
-        // TODO Auto-generated method stub
+        //TODO introduce a more efficient data structure to access the right connection
+        String nodeID = id.toString();
+        for (ConnectionEnt c : m_workflow.getConnections()) {
+            if(c.getDest().equals(nodeID) && c.getDestPort() == portIdx) {
+                //TODO re-use connection container wrapper for the same connection entity
+                return new ConnectionContainer(c);
+            }
+        }
         return null;
     }
 
@@ -289,8 +306,16 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Set<IConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO introduce a more efficient data structure to access the right connection
+        Set<IConnectionContainer> res = new HashSet<IConnectionContainer>();
+        String nodeID = id.toString();
+        for (ConnectionEnt c : m_workflow.getConnections()) {
+            if(c.getDest().equals(nodeID)) {
+                //TODO re-use connection container wrapper for the same connection entity
+                res.add(new ConnectionContainer(c));
+            }
+        }
+        return res;
     }
 
     /**
@@ -300,7 +325,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     public IConnectionContainer getConnection(final ConnectionID id) {
         //TODO introduce a more efficient data structure to access the right connection
         for (ConnectionEnt c : m_workflow.getConnections()) {
-            if (m_nodeMap.get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
+            if (m_nodeIDToNodeMap.get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
                 && id.getDestinationPort() == c.getDestPort()) {
                 return new ConnectionContainer(c);
             }
@@ -313,8 +338,22 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO metaNodeID necessary??
+        List<? extends MetaPortEnt> metaInPorts = m_workflow.getMetaInPorts();
+        MetaPortInfo[] res = new MetaPortInfo[metaInPorts.size()];
+        for (int i = 0; i < res.length; i++) {
+            MetaPortEnt in = metaInPorts.get(i);
+            PortTypeEnt pte = in.getPortType();
+            PortTypeUID portTypeUID = PortTypeUID.builder(pte.getPortObjectClassName()).setName(pte.getName()).setColor(pte.getColor())
+                .setIsHidden(pte.getIsHidden()).setIsOptional(pte.getIsOptional()).build();
+            res[i] = MetaPortInfo.builder()
+                    .setIsConnected(in.getIsConnected())
+                    .setMessage(in.getMessage())
+                    .setNewIndex(in.getNewIndex())
+                    .setOldIndex(in.getOldIndex())
+                    .setPortTypeUID(portTypeUID).build();
+        }
+        return res;
     }
 
     /**
@@ -322,8 +361,22 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO metaNodeID necessary
+        List<? extends MetaPortEnt> metaOutPorts = m_workflow.getMetaOutPorts();
+        MetaPortInfo[] res = new MetaPortInfo[metaOutPorts.size()];
+        for (int i = 0; i < res.length; i++) {
+            MetaPortEnt out = metaOutPorts.get(i);
+            PortTypeEnt pte = out.getPortType();
+            PortTypeUID portTypeUID = PortTypeUID.builder(pte.getPortObjectClassName()).setName(pte.getName()).setColor(pte.getColor())
+                .setIsHidden(pte.getIsHidden()).setIsOptional(pte.getIsOptional()).build();
+            res[i] = MetaPortInfo.builder()
+                    .setIsConnected(out.getIsConnected())
+                    .setMessage(out.getMessage())
+                    .setNewIndex(out.getNewIndex())
+                    .setOldIndex(out.getOldIndex())
+                    .setPortTypeUID(portTypeUID).build();
+        }
+        return res;
     }
 
     /**
@@ -718,8 +771,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public INodeContainer getNodeContainer(final NodeID id) {
         //TODO e.g. put the node entities into a hash map for quicker access
-        final NodeEnt nodeEnt =
-            m_workflow.getNodes().stream().filter(n -> n.getNodeID() == id.toString()).findFirst().get();
+        final NodeEnt nodeEnt = m_nodeIDToNodeMap.get(id.toString());
         //return exactly the same node container instance for the same node entity
         return WrapperMapUtil.getOrCreate(id, k -> new NodeContainer(nodeEnt), NodeContainer.class);
     }

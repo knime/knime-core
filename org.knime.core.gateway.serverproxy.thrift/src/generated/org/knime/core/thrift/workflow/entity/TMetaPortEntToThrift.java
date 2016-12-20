@@ -44,60 +44,106 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.thrift.workflow.entity;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
+
+import org.knime.core.thrift.workflow.entity.TMetaPortEntFromThrift.TMetaPortEntBuilderFromThrift;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
+
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
+public class TMetaPortEntToThrift extends TMetaPortEnt {
 
+	private final MetaPortEnt m_e;
+	
+	public TMetaPortEntToThrift(final MetaPortEnt e) {
+		m_e = e;
+	}
 
-  	List<? extends NodeEnt> getNodes();
- 	
-  	List<? extends ConnectionEnt> getConnections();
- 	
-  	List<? extends MetaPortEnt> getMetaInPorts();
- 	
-  	List<? extends MetaPortEnt> getMetaOutPorts();
- 	
-  	EntityID getParent();
- 	
-  	JobManagerEnt getJobManager();
- 	
-  	NodeMessageEnt getNodeMessage();
- 	
-  	List<? extends NodeInPortEnt> getInPorts();
- 	
-  	List<? extends NodeOutPortEnt> getOutPorts();
- 	
-  	String getName();
- 	
-  	String getNodeID();
- 	
-  	String getNodeType();
- 	
-  	BoundsEnt getBounds();
- 	
-  	boolean getIsDeletable();
- 	
-  	String getNodeState();
- 	
-  	boolean getHasDialog();
- 	
-  	NodeAnnotationEnt getNodeAnnotation();
- 	
- }
+	@Override
+    public TPortTypeEnt getPortType() {
+            return new TPortTypeEntToThrift(m_e.getPortType());
+        }
+    
+	@Override
+    public boolean getIsConnected() {
+        	return m_e.getIsConnected();
+        }
+    
+	@Override
+    public String getMessage() {
+        	return m_e.getMessage();
+        }
+    
+	@Override
+    public int getOldIndex() {
+        	return m_e.getOldIndex();
+        }
+    
+	@Override
+    public int getNewIndex() {
+        	return m_e.getNewIndex();
+        }
+    
+
+    public static class TMetaPortEntBuilderToThrift extends TMetaPortEntBuilder {
+    
+    	private MetaPortEntBuilder m_b;
+    	
+    	public TMetaPortEntBuilderToThrift(final MetaPortEntBuilder b) {
+    		m_b = b;
+    	}
+
+    
+    	@Override
+        public TMetaPortEnt build() {
+            return new TMetaPortEntToThrift(m_b.build());
+        }
+        
+        @Override
+        public GatewayEntityBuilder<MetaPortEnt> wrap() {
+            return new TMetaPortEntBuilderFromThrift(this);
+        }
+
+		@Override
+        public TMetaPortEntBuilderToThrift setPortType(final TPortTypeEnt PortType) {
+					m_b.setPortType(new TPortTypeEntFromThrift(PortType));
+		            return this;
+        }
+        
+		@Override
+        public TMetaPortEntBuilderToThrift setIsConnected(final boolean IsConnected) {
+					m_b.setIsConnected(IsConnected);
+		            return this;
+        }
+        
+		@Override
+        public TMetaPortEntBuilderToThrift setMessage(final String Message) {
+					m_b.setMessage(Message);
+		            return this;
+        }
+        
+		@Override
+        public TMetaPortEntBuilderToThrift setOldIndex(final int OldIndex) {
+					m_b.setOldIndex(OldIndex);
+		            return this;
+        }
+        
+		@Override
+        public TMetaPortEntBuilderToThrift setNewIndex(final int NewIndex) {
+					m_b.setNewIndex(NewIndex);
+		            return this;
+        }
+        
+    }
+
+}

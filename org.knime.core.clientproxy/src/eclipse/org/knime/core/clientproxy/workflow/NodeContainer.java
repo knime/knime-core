@@ -52,6 +52,7 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 
 import java.net.URL;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeAnnotation;
@@ -79,6 +80,7 @@ import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
@@ -87,6 +89,25 @@ import org.knime.core.node.workflow.NodeMessage;
 public class NodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
+
+    /*--------- listener administration------------*/
+
+    private final CopyOnWriteArraySet<NodeStateChangeListener>
+        m_stateChangeListeners =
+            new CopyOnWriteArraySet<NodeStateChangeListener>();
+
+    private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
+        new CopyOnWriteArraySet<NodeMessageListener>();
+
+    private final CopyOnWriteArraySet<NodeProgressListener>
+        m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
+
+    private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
+        new CopyOnWriteArraySet<NodeUIInformationListener>();
+
+    private final CopyOnWriteArraySet<NodePropertyChangedListener> m_nodePropertyChangedListeners =
+            new CopyOnWriteArraySet<NodePropertyChangedListener>();
+
 
     /**
      * If the underlying entity is a node.
@@ -113,9 +134,9 @@ public class NodeContainer implements INodeContainer {
         EntityID parent = m_node.getParent();
         assert parent.getType().equals("WorkflowEnt");
         //download 'workflow' from 'server'
-        WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent);
-        //TODO return same instance if the instance for this ID has already been created
-        return new WorkflowManager(workflow);
+        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent);
+        //return same instance if the instance for this ID has already been created
+        return WrapperMapUtil.getOrCreate(parent.getID(), we -> new WorkflowManager(workflow));
     }
 
     /**
@@ -136,7 +157,6 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public JobManagerUID findJobManagerUID() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -145,8 +165,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean addNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_nodePropertyChangedListeners.add(l);
     }
 
     /**
@@ -154,8 +173,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean removeNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_nodePropertyChangedListeners.remove(l);
     }
 
     /**
@@ -171,8 +189,10 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean addProgressListener(final NodeProgressListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        if (listener == null) {
+            throw new NullPointerException("Node progress listener must not be null");
+        }
+        return m_progressListeners.add(listener);
     }
 
     /**
@@ -180,8 +200,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean removeNodeProgressListener(final NodeProgressListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_progressListeners.add(listener);
     }
 
     /**
@@ -189,8 +208,10 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean addNodeMessageListener(final NodeMessageListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        if (listener == null) {
+            throw new NullPointerException("Node message listner must not be null!");
+        }
+        return m_messageListeners.add(listener);
     }
 
     /**
@@ -198,8 +219,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean removeNodeMessageListener(final NodeMessageListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_messageListeners.remove(listener);
     }
 
     /**
@@ -225,8 +245,10 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public void addUIInformationListener(final NodeUIInformationListener l) {
-        // TODO Auto-generated method stub
-
+        if (l == null) {
+            throw new NullPointerException("NodeUIInformationListener must not be null!");
+        }
+        m_uiListeners.add(l);
     }
 
     /**
@@ -234,7 +256,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public void removeUIInformationListener(final NodeUIInformationListener l) {
-        // TODO Auto-generated method stub
+        m_uiListeners.remove(l);
 
     }
 
@@ -262,8 +284,10 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        if (listener == null) {
+            throw new NullPointerException("Node state change listener must not be null!");
+        }
+        return m_stateChangeListeners.add(listener);
     }
 
     /**
@@ -271,8 +295,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_stateChangeListeners.remove(listener);
     }
 
     /**
@@ -326,7 +349,6 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean hasDataAwareDialogPane() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -344,6 +366,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public boolean canExecuteUpToHere() {
+        //TODO
         return service(ExecutionService.class).canExecuteUpToHere(null);
     }
 
@@ -395,7 +418,7 @@ public class NodeContainer implements INodeContainer {
      */
     @Override
     public INodeInPort getInPort(final int index) {
-        //TODO possibly return the same node in port instance for the same index
+        //possibly return the same node in port instance for the same index
         return new NodeInPort(m_node.getInPorts().get(index));
     }
 

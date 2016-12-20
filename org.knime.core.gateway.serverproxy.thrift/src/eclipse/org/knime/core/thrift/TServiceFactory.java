@@ -73,14 +73,6 @@ public class TServiceFactory implements ServiceFactory {
 
     private static final KNIMEThriftServerForJavaClient m_server = new KNIMEThriftServerForJavaClient();
 
-    static {
-        //make sure to start the thrift server for the java client first
-        m_server.start();
-
-        //TODO! shutdown server eventually (shutdown hook?)
-    }
-
-
     private ThriftClientManager clientManager = new ThriftClientManager();
 
     private FramedClientConnector connector = new FramedClientConnector(HostAndPort.fromParts("localhost", 2000), TDuplexProtocolFactory.fromSingleFactory(new TJSONProtocol.Factory()));

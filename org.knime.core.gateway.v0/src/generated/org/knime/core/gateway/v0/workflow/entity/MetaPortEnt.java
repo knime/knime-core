@@ -46,58 +46,23 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
+public interface MetaPortEnt extends GatewayEntity {
 
 
-  	List<? extends NodeEnt> getNodes();
+  	PortTypeEnt getPortType();
  	
-  	List<? extends ConnectionEnt> getConnections();
+  	boolean getIsConnected();
  	
-  	List<? extends MetaPortEnt> getMetaInPorts();
+  	String getMessage();
  	
-  	List<? extends MetaPortEnt> getMetaOutPorts();
+  	int getOldIndex();
  	
-  	EntityID getParent();
- 	
-  	JobManagerEnt getJobManager();
- 	
-  	NodeMessageEnt getNodeMessage();
- 	
-  	List<? extends NodeInPortEnt> getInPorts();
- 	
-  	List<? extends NodeOutPortEnt> getOutPorts();
- 	
-  	String getName();
- 	
-  	String getNodeID();
- 	
-  	String getNodeType();
- 	
-  	BoundsEnt getBounds();
- 	
-  	boolean getIsDeletable();
- 	
-  	String getNodeState();
- 	
-  	boolean getHasDialog();
- 	
-  	NodeAnnotationEnt getNodeAnnotation();
+  	int getNewIndex();
  	
  }

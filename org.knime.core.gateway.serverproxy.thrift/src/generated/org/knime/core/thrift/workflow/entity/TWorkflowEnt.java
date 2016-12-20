@@ -49,6 +49,7 @@ package org.knime.core.thrift.workflow.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
@@ -82,6 +83,8 @@ public class TWorkflowEnt {
 
 	private List<TNodeEnt> m_Nodes;
 	private List<TConnectionEnt> m_Connections;
+	private List<TMetaPortEnt> m_MetaInPorts;
+	private List<TMetaPortEnt> m_MetaOutPorts;
 	private TEntityID m_Parent;
 	private TJobManagerEnt m_JobManager;
 	private TNodeMessageEnt m_NodeMessage;
@@ -102,6 +105,8 @@ public class TWorkflowEnt {
     private TWorkflowEnt(final TWorkflowEntBuilder builder) {
 		m_Nodes = builder.m_Nodes;
 		m_Connections = builder.m_Connections;
+		m_MetaInPorts = builder.m_MetaInPorts;
+		m_MetaOutPorts = builder.m_MetaOutPorts;
 		m_Parent = builder.m_Parent;
 		m_JobManager = builder.m_JobManager;
 		m_NodeMessage = builder.m_NodeMessage;
@@ -132,66 +137,76 @@ public class TWorkflowEnt {
     }
     
     @ThriftField(3)
+    public List<TMetaPortEnt> getMetaInPorts() {
+        return m_MetaInPorts;
+    }
+    
+    @ThriftField(4)
+    public List<TMetaPortEnt> getMetaOutPorts() {
+        return m_MetaOutPorts;
+    }
+    
+    @ThriftField(5)
     public TEntityID getParent() {
         return m_Parent;
     }
     
-    @ThriftField(4)
+    @ThriftField(6)
     public TJobManagerEnt getJobManager() {
         return m_JobManager;
     }
     
-    @ThriftField(5)
+    @ThriftField(7)
     public TNodeMessageEnt getNodeMessage() {
         return m_NodeMessage;
     }
     
-    @ThriftField(6)
+    @ThriftField(8)
     public List<TNodeInPortEnt> getInPorts() {
         return m_InPorts;
     }
     
-    @ThriftField(7)
+    @ThriftField(9)
     public List<TNodeOutPortEnt> getOutPorts() {
         return m_OutPorts;
     }
     
-    @ThriftField(8)
+    @ThriftField(10)
     public String getName() {
         return m_Name;
     }
     
-    @ThriftField(9)
+    @ThriftField(11)
     public String getNodeID() {
         return m_NodeID;
     }
     
-    @ThriftField(10)
+    @ThriftField(12)
     public String getNodeType() {
         return m_NodeType;
     }
     
-    @ThriftField(11)
+    @ThriftField(13)
     public TBoundsEnt getBounds() {
         return m_Bounds;
     }
     
-    @ThriftField(12)
+    @ThriftField(14)
     public boolean getIsDeletable() {
         return m_IsDeletable;
     }
     
-    @ThriftField(13)
+    @ThriftField(15)
     public String getNodeState() {
         return m_NodeState;
     }
     
-    @ThriftField(14)
+    @ThriftField(16)
     public boolean getHasDialog() {
         return m_HasDialog;
     }
     
-    @ThriftField(15)
+    @ThriftField(17)
     public TNodeAnnotationEnt getNodeAnnotation() {
         return m_NodeAnnotation;
     }
@@ -205,6 +220,8 @@ public class TWorkflowEnt {
     
 		private List<TNodeEnt> m_Nodes;
 		private List<TConnectionEnt> m_Connections;
+		private List<TMetaPortEnt> m_MetaInPorts;
+		private List<TMetaPortEnt> m_MetaOutPorts;
 		private TEntityID m_Parent;
 		private TJobManagerEnt m_JobManager;
 		private TNodeMessageEnt m_NodeMessage;
@@ -238,6 +255,18 @@ public class TWorkflowEnt {
         @ThriftField
         public TWorkflowEntBuilder setConnections(final List<TConnectionEnt> Connections) {
 			m_Connections = Connections;			
+            return this;
+        }
+        
+        @ThriftField
+        public TWorkflowEntBuilder setMetaInPorts(final List<TMetaPortEnt> MetaInPorts) {
+			m_MetaInPorts = MetaInPorts;			
+            return this;
+        }
+        
+        @ThriftField
+        public TWorkflowEntBuilder setMetaOutPorts(final List<TMetaPortEnt> MetaOutPorts) {
+			m_MetaOutPorts = MetaOutPorts;			
             return this;
         }
         

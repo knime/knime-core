@@ -49,6 +49,7 @@ package org.knime.core.gateway.v0.workflow.entity.builder;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
@@ -69,6 +70,10 @@ public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
 	WorkflowEntBuilder setNodes(List<NodeEnt> Nodes);
 
 	WorkflowEntBuilder setConnections(List<ConnectionEnt> Connections);
+
+	WorkflowEntBuilder setMetaInPorts(List<MetaPortEnt> MetaInPorts);
+
+	WorkflowEntBuilder setMetaOutPorts(List<MetaPortEnt> MetaOutPorts);
 
 	WorkflowEntBuilder setParent(EntityID Parent);
 

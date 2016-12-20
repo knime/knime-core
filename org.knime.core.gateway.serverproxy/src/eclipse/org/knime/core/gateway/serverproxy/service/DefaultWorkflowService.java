@@ -154,7 +154,7 @@ public class DefaultWorkflowService implements WorkflowService {
 
     private static List<NodeInPortEnt> buildNodeInPortEnts(final INodeContainer nc) {
         List<NodeInPortEnt> inPorts = new ArrayList<>(nc.getNrInPorts());
-        for (int i = 0; i < inPorts.size(); i++) {
+        for (int i = 0; i < nc.getNrInPorts(); i++) {
             INodeInPort inPort = nc.getInPort(i);
             PortTypeEnt pType = buildPortTypeEnt(inPort.getPortTypeUID());
             inPorts.add(builder(NodeInPortEntBuilder.class)
@@ -167,7 +167,7 @@ public class DefaultWorkflowService implements WorkflowService {
 
     private static List<NodeOutPortEnt> buildNodeOutPortEnts(final INodeContainer nc) {
         List<NodeOutPortEnt> outPorts = new ArrayList<>(nc.getNrOutPorts());
-        for (int i = 0; i < outPorts.size(); i++) {
+        for (int i = 0; i < nc.getNrOutPorts(); i++) {
             INodeOutPort outPort = nc.getOutPort(i);
             PortTypeEnt pType = buildPortTypeEnt(outPort.getPortTypeUID());
             outPorts.add(builder(NodeOutPortEntBuilder.class)

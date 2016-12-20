@@ -58,8 +58,8 @@ public interface $name extends GatewayEntity#foreach ($superClass in $superClass
 
 #macro(type)
 #if($field.getType().isList())
-List<? extends $field.getType().getType()>#else
-$field.getType().getType()#end
+List<? extends $field.getType().getName()>#else
+$field.getType().getName()#end
 #end
 
  #foreach( $field in $fields )

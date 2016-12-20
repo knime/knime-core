@@ -49,6 +49,7 @@ package org.knime.core.thrift.workflow.entity;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
@@ -85,6 +86,16 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
     @Override
     public List<ConnectionEnt> getConnections() {
     	    	return m_e.getConnections().stream().map(l -> new TConnectionEntFromThrift(l)).collect(Collectors.toList());
+    	    }
+    
+    @Override
+    public List<MetaPortEnt> getMetaInPorts() {
+    	    	return m_e.getMetaInPorts().stream().map(l -> new TMetaPortEntFromThrift(l)).collect(Collectors.toList());
+    	    }
+    
+    @Override
+    public List<MetaPortEnt> getMetaOutPorts() {
+    	    	return m_e.getMetaOutPorts().stream().map(l -> new TMetaPortEntFromThrift(l)).collect(Collectors.toList());
     	    }
     
     @Override
@@ -174,6 +185,18 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
 		@Override
         public TWorkflowEntBuilderFromThrift setConnections(final List<ConnectionEnt> Connections) {
                 	m_b.setConnections(Connections.stream().map(e -> new TConnectionEntToThrift(e)).collect(Collectors.toList()));
+                    return this;
+        }
+        
+		@Override
+        public TWorkflowEntBuilderFromThrift setMetaInPorts(final List<MetaPortEnt> MetaInPorts) {
+                	m_b.setMetaInPorts(MetaInPorts.stream().map(e -> new TMetaPortEntToThrift(e)).collect(Collectors.toList()));
+                    return this;
+        }
+        
+		@Override
+        public TWorkflowEntBuilderFromThrift setMetaOutPorts(final List<MetaPortEnt> MetaOutPorts) {
+                	m_b.setMetaOutPorts(MetaOutPorts.stream().map(e -> new TMetaPortEntToThrift(e)).collect(Collectors.toList()));
                     return this;
         }
         

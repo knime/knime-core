@@ -44,60 +44,26 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
+public interface MetaPortEntBuilder extends GatewayEntityBuilder<MetaPortEnt> {
 
 
-  	List<? extends NodeEnt> getNodes();
- 	
-  	List<? extends ConnectionEnt> getConnections();
- 	
-  	List<? extends MetaPortEnt> getMetaInPorts();
- 	
-  	List<? extends MetaPortEnt> getMetaOutPorts();
- 	
-  	EntityID getParent();
- 	
-  	JobManagerEnt getJobManager();
- 	
-  	NodeMessageEnt getNodeMessage();
- 	
-  	List<? extends NodeInPortEnt> getInPorts();
- 	
-  	List<? extends NodeOutPortEnt> getOutPorts();
- 	
-  	String getName();
- 	
-  	String getNodeID();
- 	
-  	String getNodeType();
- 	
-  	BoundsEnt getBounds();
- 	
-  	boolean getIsDeletable();
- 	
-  	String getNodeState();
- 	
-  	boolean getHasDialog();
- 	
-  	NodeAnnotationEnt getNodeAnnotation();
- 	
- }
+	MetaPortEntBuilder setPortType(PortTypeEnt PortType);
+
+	MetaPortEntBuilder setIsConnected(boolean IsConnected);
+
+	MetaPortEntBuilder setMessage(String Message);
+
+	MetaPortEntBuilder setOldIndex(int OldIndex);
+
+	MetaPortEntBuilder setNewIndex(int NewIndex);
+
+}

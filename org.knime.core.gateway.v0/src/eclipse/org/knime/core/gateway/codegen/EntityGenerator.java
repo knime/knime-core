@@ -241,8 +241,10 @@ public final class EntityGenerator {
                 .addImports("org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
             new DefaultEntityDef("WorkflowEnt",
                 new DefaultEntityField("Nodes", "List<NodeEnt>"),
-                new DefaultEntityField("Connections", "List<ConnectionEnt>"))
-                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt")
+                new DefaultEntityField("Connections", "List<ConnectionEnt>"),
+                new DefaultEntityField("MetaInPorts", "List<MetaPortEnt>"),
+                new DefaultEntityField("MetaOutPorts", "List<MetaPortEnt>"))
+                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt", "org.knime.core.gateway.v0.workflow.entity.MetaPortEnt")
                 .addFieldsFrom("NodeEnt"),
             new DefaultEntityDef("EntityID",
                 new DefaultEntityField("ID", "String"),
@@ -262,6 +264,13 @@ public final class EntityGenerator {
             new DefaultEntityDef("NodeAnnotationEnt",
                 new DefaultEntityField("Node", "String"))
                 .addFieldsFrom("AnnotationEnt"),
+            new DefaultEntityDef("MetaPortEnt",
+                new DefaultEntityField("PortType", "PortTypeEnt"),
+                new DefaultEntityField("IsConnected", "boolean"),
+                new DefaultEntityField("Message", "String"),
+                new DefaultEntityField("OldIndex", "int"),
+                new DefaultEntityField("NewIndex", "int"))
+            .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
             new DefaultEntityDef("TestEnt",
                 new DefaultEntityField("xy", "XYEnt"),
                 new DefaultEntityField("xylist", "List<XYEnt>"),
