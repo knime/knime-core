@@ -47,7 +47,35 @@
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CorrDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CovarPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CovarSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrAvgXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrAvgYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrCountDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrInterceptDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrR2DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSXXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSXYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSYYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSlopeDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.CorrKDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.CorrSDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.MedianDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsCrosstabDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsKsTestDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsModeDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsWsrTestDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StdDevDBAggregationFunction;
 import org.knime.core.node.port.database.connection.DBConnectionFactory;
 import org.knime.core.node.port.database.connection.DBDriverFactory;
 import org.knime.core.node.port.database.tablecreator.DBTableCreator;
@@ -147,7 +175,21 @@ public class OracleUtility extends DatabaseUtility {
      * Constructor.
      */
     public OracleUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+        super(DATABASE_IDENTIFIER, MANIPULATOR, new AvgDistinctDBAggregationFunction.Factory(),
+            new CorrDBAggregationFunction.Factory(), new CorrSDBAggregationFunction.Factory(),
+            new CorrKDBAggregationFunction.Factory(), new CountDistinctDBAggregationFunction.Factory(),
+            new CovarPopDBAggregationFunction.Factory(), new CovarSampDBAggregationFunction.Factory(),
+            new MinDBAggregationFunction.Factory(), new MaxDBAggregationFunction.Factory(),
+            new MedianDBAggregationFunction.Factory(), new RegrSlopeDBAggregationFunction.Factory(),
+            new RegrInterceptDBAggregationFunction.Factory(), new RegrCountDBAggregationFunction.Factory(),
+            new RegrR2DBAggregationFunction.Factory(), new RegrAvgXDBAggregationFunction.Factory(),
+            new RegrAvgYDBAggregationFunction.Factory(), new RegrSXXDBAggregationFunction.Factory(),
+            new RegrSYYDBAggregationFunction.Factory(), new RegrSXYDBAggregationFunction.Factory(),
+            new StdDevDBAggregationFunction.Factory(), new StdDevPopDBAggregationFunction.Factory(),
+            new StdDevSampDBAggregationFunction.Factory(), new SumDBAggregationFunction.Factory(),
+            new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory(),
+            new StatsModeDBAggregationFunction.Factory(), new StatsCrosstabDBAggregationFunction.Factory(),
+            new StatsKsTestDBAggregationFunction.Factory(), new StatsWsrTestDBAggregationFunction.Factory());
     }
 
     /**
