@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -148,6 +149,11 @@ public class ConverterUtil {
         if (sourceType == DateAndTimeCell.TYPE) {
             return Arrays.asList(DeprecatedDateAndTimeUtil.toCalendarConverterFactory,
                 DeprecatedDateAndTimeUtil.toDateConverterFactory);
+        } else if (sourceType.isCollectionType() && sourceType.getCollectionElementType() == DateAndTimeCell.TYPE) {
+            DataCellToJavaConverterRegistry registry = DataCellToJavaConverterRegistry.getInstance();
+            return Arrays.asList(
+                registry.getCollectionConverterFactory(DeprecatedDateAndTimeUtil.toCalendarConverterFactory),
+                registry.getCollectionConverterFactory(DeprecatedDateAndTimeUtil.toDateConverterFactory));
         }
 
         return DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(sourceType);
@@ -207,8 +213,11 @@ public class ConverterUtil {
         getFactoriesForDestinationType(final DataType dataType) {
         if (dataType == DateAndTimeCell.TYPE) {
             return DeprecatedDateAndTimeUtil.getAllJavaToDataCellConverterFactories();
+        } else if (dataType.isCollectionType() && dataType.getCollectionElementType() == DateAndTimeCell.TYPE) {
+            return DeprecatedDateAndTimeUtil.getAllJavaToDataCellConverterFactories().stream()
+                    .map(s -> JavaToDataCellConverterRegistry.getInstance().getArrayConverterFactory(s))
+                    .collect(Collectors.toList());
         }
-
         return JavaToDataCellConverterRegistry.getInstance().getFactoriesForDestinationType(dataType);
     }
 

@@ -47,9 +47,7 @@ package org.knime.product.headless;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.BatchExecutor;
-import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 
@@ -73,11 +71,6 @@ public class KNIMEBatchApplication implements IApplication {
         }
         // load the ui plugin to read the preferences
         Platform.getBundle("org.knime.workbench.core").start(Bundle.START_TRANSIENT);
-
-        if (!Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING)) {
-            // load all nodes so that all plug-ins get initialized
-            RepositoryManager.INSTANCE.getRoot();
-        }
 
         String[] stringArgs = retrieveApplicationArguments(context);
         // this actually returns with a non-0 value when failed,

@@ -167,11 +167,12 @@ public class InFieldsTableModel extends FieldsTableModel {
         if (value instanceof DataCellToJavaConverterFactory) {
             if (input instanceof FlowVariable) {
                 return "DataCell converters do not work for flow variables.";
-            }
-            final DataType dataType = ((DataColumnSpec)this.getValueAt(row, Column.COLUMN)).getType();
-            if (!dataType.getValueClasses().contains(((DataCellToJavaConverterFactory)value).getSourceType())) {
-                return "Input DataCell is incompatible with this java type.";
-            }
+            } else if (input instanceof DataColumnSpec) {
+                final DataType dataType = ((DataColumnSpec)input).getType();
+                if (!dataType.getValueClasses().contains(((DataCellToJavaConverterFactory<?, ?>)value).getSourceType())) {
+                    return "Input DataCell is incompatible with this java type.";
+                }
+            } // otherwise user has to fix column/flowvar first.
         } else if (value instanceof String) {
             // converter factory id
             final String id = (String)value;

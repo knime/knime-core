@@ -125,9 +125,9 @@ public class WorkflowLoadHelper {
      *
      * @param isTemplate whether this is a template loader
      * @param workflowContext a workflow context
-     * @since 2.8
+     * @since 3.3
      */
-    protected WorkflowLoadHelper(final boolean isTemplate, final WorkflowContext workflowContext) {
+    public WorkflowLoadHelper(final boolean isTemplate, final WorkflowContext workflowContext) {
         m_isTemplate = isTemplate;
         m_workflowContext = workflowContext;
     }

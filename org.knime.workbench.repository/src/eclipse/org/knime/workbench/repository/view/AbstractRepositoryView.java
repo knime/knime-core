@@ -53,7 +53,6 @@ import java.util.ConcurrentModificationException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuListener;
@@ -223,21 +222,15 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         PlatformUI.getWorkbench().getHelpSystem()
             .setHelp(m_viewer.getControl(), "org.knime.workbench.help.repository_view_context");
 
-        boolean fastLoad = Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
-
-        if (fastLoad) {
-            final Job treeUpdater = new KNIMEJob("Node Repository Loader", FrameworkUtil.getBundle(getClass())) {
-                @Override
-                protected IStatus run(final IProgressMonitor monitor) {
-                    readRepository(parent, monitor);
-                    return Status.OK_STATUS;
-                }
-            };
-            treeUpdater.setSystem(true);
-            treeUpdater.schedule();
-        } else {
-            readRepository(parent, new NullProgressMonitor());
-        }
+        final Job treeUpdater = new KNIMEJob("Node Repository Loader", FrameworkUtil.getBundle(getClass())) {
+            @Override
+            protected IStatus run(final IProgressMonitor monitor) {
+                readRepository(parent, monitor);
+                return Status.OK_STATUS;
+            }
+        };
+        treeUpdater.setSystem(true);
+        treeUpdater.schedule();
     }
 
     /**

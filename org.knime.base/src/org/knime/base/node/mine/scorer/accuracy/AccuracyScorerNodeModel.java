@@ -309,7 +309,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             }
         }
         if (missingCount > 0) {
-            addWarning("There were missing values in the reference or in the predicition class columns.");
+            addWarning("There were missing values in the reference or in the prediction class columns.");
         }
         DataType[] colTypes = new DataType[targetValues.length];
         Arrays.fill(colTypes, IntCell.TYPE);

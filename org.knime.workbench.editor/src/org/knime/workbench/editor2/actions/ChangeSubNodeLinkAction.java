@@ -196,7 +196,7 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
 
         SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getModel();
         if (Role.Link.equals(subNode.getTemplateInformation().getRole())) {
-            WorkflowManager wfm = subNode.getProjectWFM();
+            WorkflowManager wfm = subNode.getParent();
             URI targetURI = subNode.getTemplateInformation().getSourceURI();
             LinkType linkType = LinkType.None;
             try {

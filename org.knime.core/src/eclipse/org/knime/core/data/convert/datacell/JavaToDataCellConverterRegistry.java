@@ -203,7 +203,7 @@ public final class JavaToDataCellConverterRegistry {
                 (LinkedHashSet<JavaToDataCellConverterFactory<?>>)getFactoriesForSourceType(
                     sourceType.getComponentType());
 
-            set.addAll(componentFactories.stream().map((factory) -> createToCollectionConverterFactory(factory))
+            set.addAll(componentFactories.stream().map((factory) -> getArrayConverterFactory(factory))
                 .collect(Collectors.toList()));
         }
 
@@ -231,7 +231,7 @@ public final class JavaToDataCellConverterRegistry {
             }
 
             for (final JavaToDataCellConverterFactory<?> factory : destinationTypes) {
-                set.add(createToCollectionConverterFactory(factory));
+                set.add(getArrayConverterFactory(factory));
             }
         }
 
@@ -311,7 +311,7 @@ public final class JavaToDataCellConverterRegistry {
                     sourceType.getComponentType(), destType.getCollectionElementType());
 
             final List<?> arrayFactories =
-                elementFactories.stream().map((elementFactory) -> createToCollectionConverterFactory(
+                elementFactories.stream().map((elementFactory) -> getArrayConverterFactory(
                     (JavaToDataCellConverterFactory<?>)elementFactory)).collect(Collectors.toList());
             factories.addAll((Collection<? extends JavaToDataCellConverterFactory<S>>)arrayFactories);
         }
@@ -319,13 +319,20 @@ public final class JavaToDataCellConverterRegistry {
         return factories;
     }
 
-    /*
-     * Create a ArrayToCollectionConverterFactory. Separate function to mangle
-     * generics.
+    /**
+     * Get a converter factory which converts the elements of a Java array to a CollectionCell by executing a converter
+     * factory per element.
+     *
+     * @param elementFactory converter factory to use to convert elements
+     * @return the converter factory which converts an array of the input type of elementFactory to a collection cell of
+     *         the output type of elementFactory
+     * @param <SE> Destination element type
+     * @param <D> Destination array type
+     * @since 3.3
      */
-    private <T, E> ArrayToCollectionConverterFactory<T, E>
-        createToCollectionConverterFactory(final JavaToDataCellConverterFactory<E> elementFactory) {
-        return new ArrayToCollectionConverterFactory<T, E>(elementFactory);
+    public <SE, D> JavaToDataCellConverterFactory<D>
+        getArrayConverterFactory(final JavaToDataCellConverterFactory<SE> elementFactory) {
+        return new ArrayToCollectionConverterFactory<>(elementFactory);
     }
 
     /**
