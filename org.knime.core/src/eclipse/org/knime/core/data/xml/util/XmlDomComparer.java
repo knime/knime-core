@@ -295,7 +295,13 @@ public final class XmlDomComparer {
                     return attributeComparison;
                 }
 
-                return areChildsEqual(node1, node2, l);
+                /*
+                 * @author Simon Schmid To fix AP-6684 the nodes need to be cloned. The bug was about that sometimes
+                 *         while fetching the items of the children of the nodes (in #filterChilds(..)) they got kind of
+                 *         confused (reproducible with a big loop with thousands of iterations). There is not obvious
+                 *         reason why this fix works, but it works.
+                 */
+                return areChildsEqual(node1.cloneNode(false), node2.cloneNode(false), l);
             case Node.PROCESSING_INSTRUCTION_NODE:
                 String piNode1 =  ((ProcessingInstruction)node1).getData();
                 String piNode2 =  ((ProcessingInstruction)node2).getData();
