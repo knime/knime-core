@@ -151,7 +151,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             LINEBOUNDS.setBounds(getBounds());
             LINEBOUNDS.expand(0, tolerance);
             //shrink the horizontal bounds a bit - otherwise it'll be difficult to draw a connection from a already connected node (since the connection line will get selected first)
-            LINEBOUNDS.shrink(10, 0);
+            LINEBOUNDS.shrink(15, 0);
             if (!LINEBOUNDS.contains(x, y)) {
                 return false;
             }
@@ -161,7 +161,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             LINEBOUNDS.setBounds(getBounds());
             LINEBOUNDS.expand(0, tolerance);
             //shrink the horizontal bounds a bit - otherwise it'll be difficult to draw a connection from a already connected node (since the connection line will get selected first)
-            LINEBOUNDS.shrink(10, 0);
+            LINEBOUNDS.shrink(15, 0);
             if (!LINEBOUNDS.contains(x, y)) {
                 return false;
             }
