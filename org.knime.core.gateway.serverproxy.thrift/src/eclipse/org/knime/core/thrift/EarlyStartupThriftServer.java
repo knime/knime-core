@@ -71,8 +71,8 @@ public class EarlyStartupThriftServer implements IEarlyStartup {
      */
     @Override
     public void run() {
-//                new KNIMEThriftServerForJSClient().start();
-        new KNIMEThriftServerForJavaClient().start();
+                new KNIMEThriftServerForJSClient().start();
+//        new KNIMEThriftServerForJavaClient().start();
 //        mimicClient();
 
         //TODO! Shutdown the server somehow eventually ...

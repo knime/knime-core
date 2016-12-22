@@ -75,11 +75,14 @@ public class THttpJSONProtocol extends TJSONProtocol {
      */
     @Override
     public TMessage readMessageBegin() throws TException {
+        //for a strange reason we need to write first something to the output stream in order to get it working with a javascript client
+        //(or the output stream of the underlying socket is created before the input stream, however, that's hidden in the TSocket implementation)
+        trans_.write("HTTP/1.1 200 OK".getBytes());
         //skip http header
         byte[] buf = new byte[1];
         String line = " ";
         while((line = readLine()).length() > 2) {
-//            System.out.print(line);
+            System.out.print(line);
         }
         //read few more bytes
         trans_.read(buf, 0, 1);
@@ -94,6 +97,15 @@ public class THttpJSONProtocol extends TJSONProtocol {
             lineBuffer_.append((char) buf[0]);
         }
         return lineBuffer_.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeMessageBegin(final TMessage arg0) throws TException {
+        trans_.write("\n\n".getBytes());
+        super.writeMessageBegin(arg0);
     }
 
     public static class Factory extends TJSONProtocol.Factory {
