@@ -48,6 +48,8 @@ package org.knime.core.thrift.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -102,6 +104,11 @@ public class TNodePortEnt {
         return m_PortName;
     }
     
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static TNodePortEntBuilder builder() {
 		return new TNodePortEntBuilder();

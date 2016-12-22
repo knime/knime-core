@@ -105,6 +105,11 @@ public class TWorkflowAnnotationEntToThrift extends TWorkflowAnnotationEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TWorkflowAnnotationEntBuilderToThrift extends TWorkflowAnnotationEntBuilder {
     
     	private WorkflowAnnotationEntBuilder m_b;

@@ -104,6 +104,11 @@ public class TConnectionEntFromThrift implements ConnectionEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TConnectionEntBuilderFromThrift implements ConnectionEntBuilder {
     
 		private TConnectionEntBuilder m_b;

@@ -79,6 +79,11 @@ public class TJobManagerEntToThrift extends TJobManagerEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TJobManagerEntBuilderToThrift extends TJobManagerEntBuilder {
     
     	private JobManagerEntBuilder m_b;

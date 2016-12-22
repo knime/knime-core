@@ -88,6 +88,11 @@ $field.getType().getName()#end
     
 #end
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class T${name}BuilderFromThrift implements ${name}Builder {
     
 		private T${name}Builder m_b;

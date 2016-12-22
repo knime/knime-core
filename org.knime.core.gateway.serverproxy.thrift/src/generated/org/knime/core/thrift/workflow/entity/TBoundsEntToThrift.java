@@ -89,6 +89,11 @@ public class TBoundsEntToThrift extends TBoundsEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TBoundsEntBuilderToThrift extends TBoundsEntBuilder {
     
     	private BoundsEntBuilder m_b;

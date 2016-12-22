@@ -92,6 +92,11 @@ $n#end
     
 #end
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class T${name}BuilderToThrift extends T${name}Builder {
     
     	private ${name}Builder m_b;

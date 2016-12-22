@@ -79,7 +79,7 @@ public class THttpJSONProtocol extends TJSONProtocol {
         byte[] buf = new byte[1];
         String line = " ";
         while((line = readLine()).length() > 2) {
-            System.out.print(line);
+//            System.out.print(line);
         }
         //read few more bytes
         trans_.read(buf, 0, 1);

@@ -77,6 +77,11 @@ public class TEntityIDFromThrift implements EntityID {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TEntityIDBuilderFromThrift implements EntityIDBuilder {
     
 		private TEntityIDBuilder m_b;

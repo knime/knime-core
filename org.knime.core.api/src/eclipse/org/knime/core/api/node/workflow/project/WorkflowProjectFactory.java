@@ -48,8 +48,6 @@
  */
 package org.knime.core.api.node.workflow.project;
 
-import org.knime.core.api.node.workflow.IWorkflowManager;
-
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -59,22 +57,15 @@ public interface WorkflowProjectFactory {
     static final String EXT_POINT_ID = "org.knime.core.api.node.workflow.project.WorkflowProjectFactory";
     static final String EXT_POINT_ATTR = "WorkflowProjectFactory";
 
-    IWorkflowManager openProject(WorkflowProject id);
-
     /**
      * TODO
      *
-     * @return the root workflow group
+     * @return the root of the project tree
      */
-    WorkflowGroup getProjectTree();
+    ProjectTreeNode getProjectTree();
 
     /**
-     * FIXME: Temporary method only for testing and prototyping. To be deleted!
-     *
-     * @param wfm
-     * @return another workflow manager that makes use of the passed one
+     * TODO just for testing purposes, to be removed!!
      */
-    @Deprecated
-    IWorkflowManager wrap(IWorkflowManager wfm);
-
+    void testClient();
 }

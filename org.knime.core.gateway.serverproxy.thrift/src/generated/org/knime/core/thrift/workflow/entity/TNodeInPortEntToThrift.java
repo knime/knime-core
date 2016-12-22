@@ -86,6 +86,11 @@ public class TNodeInPortEntToThrift extends TNodeInPortEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNodeInPortEntBuilderToThrift extends TNodeInPortEntBuilder {
     
     	private NodeInPortEntBuilder m_b;

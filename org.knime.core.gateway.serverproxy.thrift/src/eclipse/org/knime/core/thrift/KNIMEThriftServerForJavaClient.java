@@ -50,6 +50,7 @@ package org.knime.core.thrift;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.transport.TTransport;
@@ -68,6 +69,8 @@ import com.facebook.swift.codec.ThriftCodecManager;
 import com.facebook.swift.service.ThriftServer;
 import com.facebook.swift.service.ThriftServerConfig;
 import com.facebook.swift.service.ThriftServiceProcessor;
+
+import io.airlift.units.Duration;
 
 /**
  * Uses nifty as server (thrift on a netty server - https://github.com/facebook/nifty).
@@ -126,7 +129,7 @@ public class KNIMEThriftServerForJavaClient implements KNIMEThriftServer {
                 .protocol(TDuplexProtocolFactory.fromSingleFactory(new TJSONProtocol.Factory()))
                 .withSecurityFactory(ThriftServer.DEFAULT_SECURITY_FACTORY.niftySecurityFactory)
                 .using(config.getOrBuildWorkerExecutor(ThriftServer.DEFAULT_WORKER_EXECUTORS))
-                .taskTimeout(config.getTaskExpirationTimeout())
+                .taskTimeout(new Duration(5, TimeUnit.MINUTES))
                 .queueTimeout(config.getQueueTimeout())
                 .withSSLConfiguration(ThriftServer.DEFAULT_SSL_SERVER_CONFIGURATION.sslServerConfiguration)
                 .withTransportAttachObserver(ThriftServer.DEFAULT_TRANSPORT_ATTACH_OBSERVER.transportAttachObserver)

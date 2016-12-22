@@ -47,6 +47,8 @@
 package org.knime.core.thrift.workflow.entity;
 
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -157,6 +159,11 @@ public class TAnnotationEnt {
         return m_Version;
     }
     
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static TAnnotationEntBuilder builder() {
 		return new TAnnotationEntBuilder();

@@ -51,68 +51,203 @@ package org.knime.core.clientproxy.workflow.project;
 import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 import static org.knime.core.gateway.services.ServiceManager.service;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.project.WorkflowGroup;
+import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
-import org.knime.core.clientproxy.workflow.WorkflowManager;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
-import org.knime.core.gateway.v0.workflow.service.TestService;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+import org.knime.core.internal.KNIMEPath;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.util.LockFailedException;
 
 /**
- * Mainly for testing and prototyping purposes.
+ * Mainly for testing and prototyping purposes. It provides all workflows of the workspace as a project tree such that
+ * the analytics platform itself can serve as a server (see also DefaultWorkflowService).
  *
  * @author Martin Horn, University of Konstanz
  */
 public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory {
 
+    private ProjectTreeNode m_root;
+
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    public IWorkflowManager openProject(final WorkflowProject id) {
-        // TODO Auto-generated method stub
-        return null;
+    public ClientProxyWorkflowProjectFactory() {
+        //scan workspace to build the project tree
+        m_root = new MyProjectTreeNode(KNIMEPath.getWorkspaceDirPath().toPath());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WorkflowGroup getProjectTree() {
-        // TODO Auto-generated method stub
-        return null;
+    public ProjectTreeNode getProjectTree() {
+        return m_root;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public IWorkflowManager wrap(final IWorkflowManager wfm) {
-        //server has already been started with the bundle activation
-        //but here: make sure that the "server" knows the workflow
+    public void testClient() {
+        List<EntityID> allWorkflows = service(WorkflowService.class).getAllWorkflows();
+        allWorkflows.stream().forEach(e -> System.out.println(e.getID()));
 
-        //just for testing / proof-of-concept
-        XYEnt xy = builder(XYEntBuilder.class).setX(10).setY(25).build();
-        service(TestService.class).test(builder(TestEntBuilder.class).setxy(xy).setother("hello1234").setxylist(Arrays.asList(xy)).build());
-
-        //return 'client' workflow manager
-        //download 'workflow' from server'
-        EntityID workflowId =
-                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
-        WorkflowService workflowService = service(WorkflowService.class);
-        workflowService.getAllWorkflows();
-        WorkflowEnt workflow = workflowService.getWorkflow(workflowId);
-        System.out.println(workflow.getName());
-        return new WorkflowManager(workflow);
+        EntityID second = allWorkflows.get(1);
+        WorkflowEnt workflow = service(WorkflowService.class)
+            .getWorkflow(builder(EntityIDBuilder.class).setID(second.getID()).setType(second.getType()).build());
+        System.out.println(workflow);
     }
 
+    //    /**
+    //     * {@inheritDoc}
+    //     */
+    //    @Override
+    //    public IWorkflowManager wrap(final IWorkflowManager wfm) {
+    //        //server has already been started with the bundle activation
+    //        //but here: make sure that the "server" knows the workflow
+    //
+    //        //just for testing / proof-of-concept
+    //        XYEnt xy = builder(XYEntBuilder.class).setX(10).setY(25).build();
+    //        service(TestService.class).test(builder(TestEntBuilder.class).setxy(xy).setother("hello1234").setxylist(Arrays.asList(xy)).build());
+    //
+    //        //return 'client' workflow manager
+    //        //download 'workflow' from server'
+    //        EntityID workflowId =
+    //                builder(EntityIDBuilder.class).setID(wfm.getID().toString()).setType("WorkflowEnt").build();
+    //        WorkflowService workflowService = service(WorkflowService.class);
+    //        workflowService.getAllWorkflows();
+    //        WorkflowEnt workflow = workflowService.getWorkflow(workflowId);
+    //        System.out.println(workflow.getName());
+    //        return new WorkflowManager(workflow);
+    //    }
+
+    private class MyProjectTreeNode implements ProjectTreeNode {
+
+        private Path m_path;
+
+        private List<ProjectTreeNode> m_children = null;
+
+        private List<WorkflowProject> m_wfChildren = null;
+
+        /**
+         *
+         */
+        public MyProjectTreeNode(final Path path) {
+            m_path = path;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return m_path.getFileName().toString();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<ProjectTreeNode> getChildren() {
+            resolveChildren();
+            return m_children;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<WorkflowProject> getChildrenProjects() {
+            resolveChildren();
+            return m_wfChildren;
+        }
+
+        private void resolveChildren() {
+            if (m_children == null) {
+                //not resolved, yet
+                m_children = new ArrayList<ProjectTreeNode>();
+                m_wfChildren = new ArrayList<WorkflowProject>();
+                try {
+                    Files.list(m_path).forEach((p) -> {
+                        if (Files.isDirectory(p)) {
+                            if (Files.exists(p.resolve("workflow.knime"))) {
+                                m_wfChildren.add(new MyWorkflowProject(p));
+                            } else {
+                                m_children.add(new MyProjectTreeNode(p));
+                            }
+                        }
+                    });
+                } catch (IOException ex) {
+                    // TODO better exception handling
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
+
+    private class MyWorkflowProject implements WorkflowProject {
+
+        private Path m_path;
+
+        private IWorkflowManager m_cachedWFM;
+
+        /**
+         *
+         */
+        public MyWorkflowProject(final Path path) {
+            m_path = path;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return m_path.getFileName().toString();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowProjectType getType() {
+            return WorkflowProjectType.LOCAL;
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @throws LockFailedException
+         * @throws UnsupportedWorkflowVersionException
+         * @throws CanceledExecutionException
+         * @throws InvalidSettingsException
+         * @throws IOException
+         */
+        @Override
+        public IWorkflowManager openProject() throws IOException, InvalidSettingsException, CanceledExecutionException,
+            UnsupportedWorkflowVersionException, LockFailedException {
+            if (m_cachedWFM == null) {
+                m_cachedWFM = org.knime.core.node.workflow.WorkflowManager
+                    .loadProject(m_path.toFile(), new ExecutionMonitor(), new WorkflowLoadHelper())
+                    .getWorkflowManager();
+            }
+            return m_cachedWFM;
+        }
+
+    }
 }

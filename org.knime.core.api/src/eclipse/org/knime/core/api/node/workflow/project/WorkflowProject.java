@@ -48,7 +48,10 @@
  */
 package org.knime.core.api.node.workflow.project;
 
+import org.knime.core.api.node.workflow.IWorkflowManager;
+
 /**
+ * Represents a workflow project.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -56,10 +59,22 @@ public interface WorkflowProject {
 
     public static enum WorkflowProjectType {
         REMOTE,
-        LOCAl;
+        LOCAL;
     }
 
+    /**
+     * @return the name of the workflow
+     */
     String getName();
 
+    /**
+     * @return the type of the workflow
+     */
     WorkflowProjectType getType();
+
+    /**
+     * @return opens the the actual workflow represented by this project
+     * @throws Exception if something got wrong while loading the project
+     */
+    IWorkflowManager openProject() throws Exception;
 }

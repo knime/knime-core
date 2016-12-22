@@ -106,6 +106,11 @@ public class TConnectionEntToThrift extends TConnectionEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TConnectionEntBuilderToThrift extends TConnectionEntBuilder {
     
     	private ConnectionEntBuilder m_b;

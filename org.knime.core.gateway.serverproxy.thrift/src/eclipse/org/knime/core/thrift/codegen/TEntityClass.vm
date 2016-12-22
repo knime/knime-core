@@ -50,6 +50,8 @@ package org.knime.core.thrift.workflow.entity;
 import $import;
 #end
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -108,6 +110,11 @@ $n#end
     }
     
 #end
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static T${name}Builder builder() {
 		return new T${name}Builder();

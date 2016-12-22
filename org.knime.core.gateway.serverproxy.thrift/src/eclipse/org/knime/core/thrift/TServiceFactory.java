@@ -49,6 +49,7 @@
 package org.knime.core.thrift;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.thrift.protocol.TJSONProtocol;
 import org.knime.core.gateway.services.ServiceFactory;
@@ -62,16 +63,19 @@ import org.knime.core.thrift.workflow.service.TWorkflowServiceToThrift;
 
 import com.facebook.nifty.client.FramedClientConnector;
 import com.facebook.nifty.duplex.TDuplexProtocolFactory;
+import com.facebook.swift.service.ThriftClientConfig;
+import com.facebook.swift.service.ThriftClientEventHandler;
 import com.facebook.swift.service.ThriftClientManager;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.HostAndPort;
+
+import io.airlift.units.Duration;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class TServiceFactory implements ServiceFactory {
-
-    private static final KNIMEThriftServerForJavaClient m_server = new KNIMEThriftServerForJavaClient();
 
     private ThriftClientManager clientManager = new ThriftClientManager();
 
@@ -93,11 +97,10 @@ public class TServiceFactory implements ServiceFactory {
 //            }
 //        }
 
-
         //TODO don't use if here but a automatically filled map or annotations
         if (serviceInterface.isAssignableFrom(WorkflowService.class)) {
             try {
-                return (S)new TWorkflowServiceToThrift(clientManager.createClient(connector, TWorkflowService.class).get());
+                return (S)new TWorkflowServiceToThrift(createClientService(TWorkflowService.class));
             } catch (InterruptedException | ExecutionException ex) {
                 //TODO
                 throw new RuntimeException(ex);
@@ -105,13 +108,27 @@ public class TServiceFactory implements ServiceFactory {
         }
         if (serviceInterface.isAssignableFrom(TestService.class)) {
             try {
-                return (S)new TTestServiceToThrift(clientManager.createClient(connector, TTestService.class).get());
+                return (S)new TTestServiceToThrift(createClientService(TTestService.class));
             } catch (InterruptedException | ExecutionException ex) {
                 //TODO
                 throw new RuntimeException(ex);
             }
         }
         return null;
+    }
+
+    private <T> T createClientService(final Class<T> clazz) throws InterruptedException, ExecutionException {
+        Duration min5 = new Duration(5, TimeUnit.MINUTES);
+        return clientManager.createClient(connector,
+            clazz,
+            min5,
+            min5,
+            min5,
+            min5,
+            ThriftClientConfig.DEFAULT_MAX_FRAME_SIZE,
+            ThriftClientManager.DEFAULT_NAME,
+            ImmutableList.<ThriftClientEventHandler>of(),
+            clientManager.getDefaultSocksProxy()).get();
     }
 
 }

@@ -93,6 +93,11 @@ public class TMetaPortEntFromThrift implements MetaPortEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TMetaPortEntBuilderFromThrift implements MetaPortEntBuilder {
     
 		private TMetaPortEntBuilder m_b;

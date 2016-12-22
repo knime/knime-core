@@ -84,6 +84,11 @@ public class TTestEntFromThrift implements TestEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TTestEntBuilderFromThrift implements TestEntBuilder {
     
 		private TTestEntBuilder m_b;

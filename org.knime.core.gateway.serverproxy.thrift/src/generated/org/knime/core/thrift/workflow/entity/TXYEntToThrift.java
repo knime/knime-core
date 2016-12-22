@@ -79,6 +79,11 @@ public class TXYEntToThrift extends TXYEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TXYEntBuilderToThrift extends TXYEntBuilder {
     
     	private XYEntBuilder m_b;

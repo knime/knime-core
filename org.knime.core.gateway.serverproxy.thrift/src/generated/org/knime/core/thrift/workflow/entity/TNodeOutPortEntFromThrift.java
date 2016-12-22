@@ -84,6 +84,11 @@ public class TNodeOutPortEntFromThrift implements NodeOutPortEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TNodeOutPortEntBuilderFromThrift implements NodeOutPortEntBuilder {
     
 		private TNodeOutPortEntBuilder m_b;

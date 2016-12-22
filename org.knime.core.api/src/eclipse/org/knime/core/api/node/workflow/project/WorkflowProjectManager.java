@@ -49,9 +49,11 @@
 package org.knime.core.api.node.workflow.project;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.CoreException;
@@ -63,13 +65,11 @@ import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.util.HostUtils;
 
 /**
- * TODO
+ * Manages workflow project in a tree. The project tree (and therewith the workflow projects) are loaded from the
+ * respective extension point.
  *
- * collects all workflow projects and groups from the respective extension point
- *
- * e.g. the org.knime.workbench.ui.navigator.KnimeResourceContentProvider should make use of this one
- *
- * probably needs to be reworked in order to fit into mount points etc.
+ * TODO Eventually e.g. the org.knime.workbench.ui.navigator.KnimeResourceContentProvider (or the knime executors) should
+ * make use of this, too.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -84,51 +84,56 @@ public class WorkflowProjectManager {
     private static final Map<String, IWorkflowManager> REGISTERED_WFS = new WeakHashMap<String, IWorkflowManager>();
 
     /**
-     * The root of all workflow projects, no matter from which source
+     * The root of all workflow projects, no matter from what source
      */
-    private static WorkflowGroup ROOT = null;
+    private static ProjectTreeNode ROOT = null;
 
     private WorkflowProjectManager() {
         //static utility class
     }
 
-    public static WorkflowGroup getRootWorkflowGroup() {
+    /**
+     * @return the root project tree node
+     */
+    public static ProjectTreeNode getProjectTree() {
         if (ROOT == null) {
-            //load all other root workflow groups from the extension points
-            //TODO
+            ROOT = new ProjectTreeNode() {
+
+                @Override
+                public String getName() {
+                    return "Workflow Tree";
+                }
+
+                @Override
+                public List<WorkflowProject> getChildrenProjects() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<ProjectTreeNode> getChildren() {
+                    return FACTORIES.stream().map(f -> f.getProjectTree()).collect(Collectors.toList());
+                }
+            };
         }
         return ROOT;
     }
 
-    public static IWorkflowManager openProject(final WorkflowProject wfp) {
-        //TODO just for testing
-        return REGISTERED_WFS.get(wfp.getName());
+    /**
+     * @return all workflow projects in the workflow project tree (see {@link #getProjectTree()})
+     */
+    public static List<WorkflowProject> getWorkflowProjects() {
+        List<WorkflowProject> projects = new ArrayList<WorkflowProject>();
+        getWorkflowProjects(getProjectTree(), projects);
+        return projects;
     }
 
-    /**
-     * Just a temporary method for testing - to be deleted in near future
-     *
-     * @param wfm
-     * @return
-     */
-    @Deprecated
-    public static IWorkflowManager wrap(final IWorkflowManager wfm) {
-        register(wfm);
-        return FACTORIES.get(0).wrap(wfm);
+    private static void getWorkflowProjects(final ProjectTreeNode n, final List<WorkflowProject> l) {
+        l.addAll(n.getChildrenProjects());
+        for(ProjectTreeNode c : n.getChildren()) {
+            getWorkflowProjects(c, l);
+        }
     }
 
-    /**
-     * Just a temporary method for testing - to be deleted or replaced in near future. It just helps to register an
-     * opened workflow that the server then knows of (i.e. by calling {@link #openProject(WorkflowProject)} from
-     * DefaultWorkflowService#getWorkflow)
-     *
-     * @param wfm
-     */
-    @Deprecated
-    public static void register(final IWorkflowManager wfm) {
-        REGISTERED_WFS.put(wfm.getID().toString(), wfm);
-        System.out.println("WFM ID: " + wfm.getID());
-    }
 
     /**
      * COPIED from ExtPointUtils in org.knime.core.
@@ -204,6 +209,13 @@ public class WorkflowProjectManager {
 
         return instances;
 
+    }
+
+    /**
+     * TODO method to be removed, just for testing purposes
+     */
+    public static final void testClient() {
+        FACTORIES.stream().forEach(f -> f.testClient());
     }
 
 }

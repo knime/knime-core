@@ -79,6 +79,11 @@ public class TNodeMessageEntToThrift extends TNodeMessageEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNodeMessageEntBuilderToThrift extends TNodeMessageEntBuilder {
     
     	private NodeMessageEntBuilder m_b;

@@ -122,6 +122,11 @@ public class TAnnotationEntFromThrift implements AnnotationEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TAnnotationEntBuilderFromThrift implements AnnotationEntBuilder {
     
 		private TAnnotationEntBuilder m_b;

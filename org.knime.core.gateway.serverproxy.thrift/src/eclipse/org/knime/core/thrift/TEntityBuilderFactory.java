@@ -59,6 +59,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
@@ -74,6 +75,7 @@ import org.knime.core.thrift.workflow.entity.TBoundsEnt.TBoundsEntBuilder;
 import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilder;
 import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
 import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
+import org.knime.core.thrift.workflow.entity.TMetaPortEnt.TMetaPortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeAnnotationEnt.TNodeAnnotationEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeEnt.TNodeEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilder;
@@ -110,6 +112,7 @@ public class TEntityBuilderFactory implements EntityBuilderFactory {
         ENTITY_BUILDER_MAP.put(NodeAnnotationEntBuilder.class, TNodeAnnotationEntBuilder.class);
         ENTITY_BUILDER_MAP.put(WorkflowAnnotationEntBuilder.class, TWorkflowAnnotationEntBuilder.class);
         ENTITY_BUILDER_MAP.put(PortTypeEntBuilder.class, TPortTypeEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(MetaPortEntBuilder.class, TMetaPortEntBuilder.class);
     }
 
     /**

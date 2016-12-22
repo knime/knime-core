@@ -49,6 +49,8 @@ package org.knime.core.thrift.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -103,6 +105,11 @@ public class TTestEnt {
         return m_other;
     }
     
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static TTestEntBuilder builder() {
 		return new TTestEntBuilder();

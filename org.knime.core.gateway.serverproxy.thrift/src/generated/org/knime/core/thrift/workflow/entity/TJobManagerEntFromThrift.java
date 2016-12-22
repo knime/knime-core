@@ -77,6 +77,11 @@ public class TJobManagerEntFromThrift implements JobManagerEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TJobManagerEntBuilderFromThrift implements JobManagerEntBuilder {
     
 		private TJobManagerEntBuilder m_b;

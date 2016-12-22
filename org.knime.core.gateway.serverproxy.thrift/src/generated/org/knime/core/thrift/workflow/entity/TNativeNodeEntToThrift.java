@@ -148,6 +148,11 @@ public class TNativeNodeEntToThrift extends TNativeNodeEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNativeNodeEntBuilderToThrift extends TNativeNodeEntBuilder {
     
     	private NativeNodeEntBuilder m_b;

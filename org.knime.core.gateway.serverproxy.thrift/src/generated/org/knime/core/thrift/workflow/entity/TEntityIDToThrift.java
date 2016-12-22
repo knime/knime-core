@@ -79,6 +79,11 @@ public class TEntityIDToThrift extends TEntityID {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TEntityIDBuilderToThrift extends TEntityIDBuilder {
     
     	private EntityIDBuilder m_b;

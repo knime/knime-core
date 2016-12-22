@@ -146,6 +146,11 @@ public class TNativeNodeEntFromThrift implements NativeNodeEnt {
             }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TNativeNodeEntBuilderFromThrift implements NativeNodeEntBuilder {
     
 		private TNativeNodeEntBuilder m_b;

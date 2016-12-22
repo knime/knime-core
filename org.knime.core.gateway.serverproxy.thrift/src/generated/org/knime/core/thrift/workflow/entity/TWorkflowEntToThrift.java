@@ -166,6 +166,11 @@ public class TWorkflowEntToThrift extends TWorkflowEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TWorkflowEntBuilderToThrift extends TWorkflowEntBuilder {
     
     	private WorkflowEntBuilder m_b;

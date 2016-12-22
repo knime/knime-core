@@ -140,6 +140,11 @@ public class TNodeEntFromThrift implements NodeEnt {
             }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TNodeEntBuilderFromThrift implements NodeEntBuilder {
     
 		private TNodeEntBuilder m_b;

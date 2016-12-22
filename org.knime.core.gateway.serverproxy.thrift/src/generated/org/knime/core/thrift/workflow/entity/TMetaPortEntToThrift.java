@@ -95,6 +95,11 @@ public class TMetaPortEntToThrift extends TMetaPortEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TMetaPortEntBuilderToThrift extends TMetaPortEntBuilder {
     
     	private MetaPortEntBuilder m_b;

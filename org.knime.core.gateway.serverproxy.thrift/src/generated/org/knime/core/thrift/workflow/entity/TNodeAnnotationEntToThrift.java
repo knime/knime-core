@@ -129,6 +129,11 @@ public class TNodeAnnotationEntToThrift extends TNodeAnnotationEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNodeAnnotationEntBuilderToThrift extends TNodeAnnotationEntBuilder {
     
     	private NodeAnnotationEntBuilder m_b;

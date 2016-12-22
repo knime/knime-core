@@ -48,9 +48,19 @@
  */
 package org.knime.core.thrift;
 
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
+import static org.knime.core.gateway.services.ServiceManager.service;
+
+import java.util.List;
+
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.util.IEarlyStartup;
 
 /**
+ * More for testing and temporary use. With that the analytics platform itself can serve as a server.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -61,11 +71,22 @@ public class EarlyStartupThriftServer implements IEarlyStartup {
      */
     @Override
     public void run() {
-        new KNIMEThriftServerForJSClient().start();
-//        new KNIMEThriftServerForJavaClient().start();
+//                new KNIMEThriftServerForJSClient().start();
+        new KNIMEThriftServerForJavaClient().start();
+//        mimicClient();
 
         //TODO! Shutdown the server somehow eventually ...
 
+    }
+
+    public static void mimicClient() {
+        List<EntityID> allWorkflows = service(WorkflowService.class).getAllWorkflows();
+        allWorkflows.stream().forEach(e -> System.out.println(e.getID()));
+
+        EntityID second = allWorkflows.get(1);
+        WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(
+            builder(EntityIDBuilder.class).setID(second.getID()).setType(second.getType()).build());
+        System.out.println("test");
     }
 
 }

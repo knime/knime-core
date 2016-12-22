@@ -87,6 +87,11 @@ public class TBoundsEntFromThrift implements BoundsEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TBoundsEntBuilderFromThrift implements BoundsEntBuilder {
     
 		private TBoundsEntBuilder m_b;

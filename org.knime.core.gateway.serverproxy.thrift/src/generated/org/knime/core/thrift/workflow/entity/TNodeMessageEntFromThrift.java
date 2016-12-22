@@ -77,6 +77,11 @@ public class TNodeMessageEntFromThrift implements NodeMessageEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TNodeMessageEntBuilderFromThrift implements NodeMessageEntBuilder {
     
 		private TNodeMessageEntBuilder m_b;

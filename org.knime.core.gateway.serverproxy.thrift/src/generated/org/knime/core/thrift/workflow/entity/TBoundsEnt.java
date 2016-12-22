@@ -47,6 +47,8 @@
 package org.knime.core.thrift.workflow.entity;
 
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -108,6 +110,11 @@ public class TBoundsEnt {
         return m_Height;
     }
     
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static TBoundsEntBuilder builder() {
 		return new TBoundsEntBuilder();

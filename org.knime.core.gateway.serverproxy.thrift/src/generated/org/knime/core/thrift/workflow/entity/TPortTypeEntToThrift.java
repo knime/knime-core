@@ -94,6 +94,11 @@ public class TPortTypeEntToThrift extends TPortTypeEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TPortTypeEntBuilderToThrift extends TPortTypeEntBuilder {
     
     	private PortTypeEntBuilder m_b;

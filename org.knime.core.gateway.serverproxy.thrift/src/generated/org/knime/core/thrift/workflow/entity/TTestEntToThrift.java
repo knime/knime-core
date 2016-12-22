@@ -86,6 +86,11 @@ public class TTestEntToThrift extends TTestEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TTestEntBuilderToThrift extends TTestEntBuilder {
     
     	private TestEntBuilder m_b;

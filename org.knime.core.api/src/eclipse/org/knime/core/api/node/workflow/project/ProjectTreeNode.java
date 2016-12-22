@@ -51,15 +51,27 @@ package org.knime.core.api.node.workflow.project;
 import java.util.List;
 
 /**
+ * A node in the workflow project tree. A node is, e.g., a workflow group, mount point etc.
+ * TODO: maybe a project tree node type should be introduced eventually
+ *
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface WorkflowGroup {
+public interface ProjectTreeNode {
 
+    /**
+     * @return a name of the project tree node (e.g. the name of the workflow group)
+     */
     String getName();
 
-    List<WorkflowGroup> getChildrenGroups();
+    /**
+     * @return list of all direct tree node children, an empty list if none
+     */
+    List<ProjectTreeNode> getChildren();
 
+    /**
+     * @return list of all project children (i.e. the actual leaves of the tree), an empty list if none
+     */
     List<WorkflowProject> getChildrenProjects();
 
 }

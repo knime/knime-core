@@ -77,6 +77,11 @@ public class TNodeFactoryIDEntFromThrift implements NodeFactoryIDEnt {
     	    }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TNodeFactoryIDEntBuilderFromThrift implements NodeFactoryIDEntBuilder {
     
 		private TNodeFactoryIDEntBuilder m_b;

@@ -164,6 +164,11 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
             }
     
 
+	@Override
+    public String toString() {
+        return m_e.toString();
+    }
+
     public static class TWorkflowEntBuilderFromThrift implements WorkflowEntBuilder {
     
 		private TWorkflowEntBuilder m_b;

@@ -142,6 +142,11 @@ public class TNodeEntToThrift extends TNodeEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNodeEntBuilderToThrift extends TNodeEntBuilder {
     
     	private NodeEntBuilder m_b;

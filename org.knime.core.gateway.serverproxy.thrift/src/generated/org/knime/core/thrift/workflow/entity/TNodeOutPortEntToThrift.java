@@ -86,6 +86,11 @@ public class TNodeOutPortEntToThrift extends TNodeOutPortEnt {
         }
     
 
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+
     public static class TNodeOutPortEntBuilderToThrift extends TNodeOutPortEntBuilder {
     
     	private NodeOutPortEntBuilder m_b;

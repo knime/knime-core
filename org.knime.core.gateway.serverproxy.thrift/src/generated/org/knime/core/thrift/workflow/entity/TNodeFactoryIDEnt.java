@@ -47,6 +47,8 @@
 package org.knime.core.thrift.workflow.entity;
 
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import com.facebook.swift.codec.ThriftConstructor;
 import com.facebook.swift.codec.ThriftField;
 import com.facebook.swift.codec.ThriftStruct;
@@ -94,6 +96,11 @@ public class TNodeFactoryIDEnt {
         return m_NodeName;
     }
     
+
+	@Override
+	public String toString() {
+	    return ToStringBuilder.reflectionToString(this);
+	}
 
 	public static TNodeFactoryIDEntBuilder builder() {
 		return new TNodeFactoryIDEntBuilder();
