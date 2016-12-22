@@ -128,6 +128,7 @@ import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
+import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeContainerStateObservable;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
@@ -7057,7 +7058,8 @@ public boolean canCancelAll() {
                 WorkflowCopyContent.builder().setNodeID(tempLink.getID(), id.getIndex(), newUI).build());
             newLinkMN = getNodeContainer(pasteResult.getNodeIDs()[0], NodeContainerTemplate.class, true);
             if (oldAnnoData != null && !oldAnnoData.isDefault()) {
-                ((NodeContainer)newLinkMN).getNodeAnnotation().getData().copyFrom(oldAnnoData, true);
+                //since AnnotationData is immutable, just setting it here without copying it should be fine
+                ((NodeContainer)newLinkMN).getNodeAnnotation().setData(oldAnnoData);
             }
 
             loadRes.setNCTemplate(newLinkMN);

@@ -91,12 +91,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.TableColumn;
 
-<<<<<<< HEAD
-import org.apache.commons.lang.StringUtils;
-=======
 import org.knime.core.api.node.workflow.NodeProgressEvent;
 import org.knime.core.api.node.workflow.NodeProgressListener;
->>>>>>> AP-6480 Move NodeProgress, -Event-, and -Listener to core.api
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
