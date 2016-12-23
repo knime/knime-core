@@ -271,6 +271,17 @@ public final class EntityGenerator {
                 new DefaultEntityField("OldIndex", "int"),
                 new DefaultEntityField("NewIndex", "int"))
             .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
+            new DefaultEntityDef("RepoCategoryEnt",
+                new DefaultEntityField("Name", "String"),
+                new DefaultEntityField("IconURL", "String"),
+                new DefaultEntityField("Categories", "List<RepoCategoryEnt>"),
+                new DefaultEntityField("Nodes", "List<RepoNodeTemplateEnt>"))
+            .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt"),
+            new DefaultEntityDef("RepoNodeTemplateEnt",
+                new DefaultEntityField("Name", "String"),
+                new DefaultEntityField("Type", "String"),
+                new DefaultEntityField("ID", "String"),
+                new DefaultEntityField("IconURL", "String")),
             new DefaultEntityDef("TestEnt",
                 new DefaultEntityField("xy", "XYEnt"),
                 new DefaultEntityField("xylist", "List<XYEnt>"),

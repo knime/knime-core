@@ -57,6 +57,10 @@ import org.knime.core.gateway.codegen.ServiceGenerator;
 public class GenerateTServiceFromThriftClasses {
 
     public static void main(final String[] args) {
+        generate();
+    }
+
+    static void generate() {
         new ServiceGenerator("src/eclipse/org/knime/core/thrift/codegen/TServiceFromThriftClass.vm",
             "src/generated/org/knime/core/thrift/workflow/service/", "T##serviceName##FromThrift").generate();
     }

@@ -66,6 +66,8 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
@@ -82,6 +84,8 @@ import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilde
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeOutPortEnt.TNodeOutPortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
+import org.knime.core.thrift.workflow.entity.TRepoCategoryEnt.TRepoCategoryEntBuilder;
+import org.knime.core.thrift.workflow.entity.TRepoNodeTemplateEnt.TRepoNodeTemplateEntBuilder;
 import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
 import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnnotationEntBuilder;
 import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
@@ -113,6 +117,8 @@ public class TEntityBuilderFactory implements EntityBuilderFactory {
         ENTITY_BUILDER_MAP.put(WorkflowAnnotationEntBuilder.class, TWorkflowAnnotationEntBuilder.class);
         ENTITY_BUILDER_MAP.put(PortTypeEntBuilder.class, TPortTypeEntBuilder.class);
         ENTITY_BUILDER_MAP.put(MetaPortEntBuilder.class, TMetaPortEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(RepoCategoryEntBuilder.class, TRepoCategoryEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(RepoNodeTemplateEntBuilder.class, TRepoNodeTemplateEntBuilder.class);
     }
 
     /**

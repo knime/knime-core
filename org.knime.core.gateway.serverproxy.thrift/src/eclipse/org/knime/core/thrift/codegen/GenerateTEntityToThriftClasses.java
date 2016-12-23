@@ -57,6 +57,10 @@ import org.knime.core.gateway.codegen.EntityGenerator;
 public class GenerateTEntityToThriftClasses {
 
     public static void main(final String[] args) {
+        generate();
+    }
+
+    static void generate() {
         new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/TEntityToThriftClass.vm",
             "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##ToThrift").generate();
     }

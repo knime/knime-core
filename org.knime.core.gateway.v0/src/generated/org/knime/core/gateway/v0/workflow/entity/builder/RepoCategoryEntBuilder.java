@@ -43,26 +43,26 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.thrift.codegen;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.codegen.EntityGenerator;
+import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateTEntityClasses {
+public interface RepoCategoryEntBuilder extends GatewayEntityBuilder<RepoCategoryEnt> {
 
-    public static void main(final String[] args) {
-        generate();
-    }
 
-    static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/TEntityClass.vm",
-            "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
-    }
+	RepoCategoryEntBuilder setName(String Name);
+
+	RepoCategoryEntBuilder setIconURL(String IconURL);
+
+	RepoCategoryEntBuilder setCategories(List<RepoCategoryEnt> Categories);
+
+	RepoCategoryEntBuilder setNodes(List<RepoNodeTemplateEnt> Nodes);
 
 }

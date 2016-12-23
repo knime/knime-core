@@ -43,34 +43,101 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 7, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.entity;
 
-import java.util.List;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
+
+import org.knime.core.thrift.workflow.entity.TRepoNodeTemplateEntFromThrift.TRepoNodeTemplateEntBuilderFromThrift;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
+import java.util.HashMap;
+
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeService extends GatewayService {
+public class TRepoNodeTemplateEntToThrift extends TRepoNodeTemplateEnt {
 
-    void updateNode(NodeEnt n);
+	private final RepoNodeTemplateEnt m_e;
+	
+	public TRepoNodeTemplateEntToThrift(final RepoNodeTemplateEnt e) {
+		m_e = e;
+	}
 
-    NodeEnt getNode(EntityID id);
+	@Override
+    public String getName() {
+        	return m_e.getName();
+        }
+    
+	@Override
+    public String getType() {
+        	return m_e.getType();
+        }
+    
+	@Override
+    public String getID() {
+        	return m_e.getID();
+        }
+    
+	@Override
+    public String getIconURL() {
+        	return m_e.getIconURL();
+        }
+    
 
-    EntityID getParent(EntityID id);
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
 
-    List<String> getNodeTypes();
+    public static class TRepoNodeTemplateEntBuilderToThrift extends TRepoNodeTemplateEntBuilder {
+    
+    	private RepoNodeTemplateEntBuilder m_b;
+    	
+    	public TRepoNodeTemplateEntBuilderToThrift(final RepoNodeTemplateEntBuilder b) {
+    		m_b = b;
+    	}
 
-    /**
-     * ??????????
-     * @return
-     */
-    List<String> getNodeStates();
+    
+    	@Override
+        public TRepoNodeTemplateEnt build() {
+            return new TRepoNodeTemplateEntToThrift(m_b.build());
+        }
+        
+        @Override
+        public GatewayEntityBuilder<RepoNodeTemplateEnt> wrap() {
+            return new TRepoNodeTemplateEntBuilderFromThrift(this);
+        }
+
+		@Override
+        public TRepoNodeTemplateEntBuilderToThrift setName(final String Name) {
+					m_b.setName(Name);
+		            return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderToThrift setType(final String Type) {
+					m_b.setType(Type);
+		            return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderToThrift setID(final String ID) {
+					m_b.setID(ID);
+		            return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderToThrift setIconURL(final String IconURL) {
+					m_b.setIconURL(IconURL);
+		            return this;
+        }
+        
+    }
 
 }

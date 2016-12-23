@@ -158,6 +158,9 @@ public class ServiceGenerator {
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
                 "java.util.List"),
+            new DefaultServiceDef("NodeService",
+                new DefaultServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"))
+            .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt"),
             new DefaultServiceDef("TestService",
                 new DefaultServiceMethod("test", "TestEnt",
                     new DefaultMethodParam("id", "TestEnt")),

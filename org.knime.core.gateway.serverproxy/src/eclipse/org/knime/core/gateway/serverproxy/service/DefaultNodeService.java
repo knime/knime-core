@@ -44,25 +44,62 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Dec 23, 2016 (hornm): created
  */
-package org.knime.core.thrift.codegen;
+package org.knime.core.gateway.serverproxy.service;
 
-import org.knime.core.gateway.codegen.EntityGenerator;
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
+import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateTEntityClasses {
+public class DefaultNodeService implements NodeService {
 
-    public static void main(final String[] args) {
-        generate();
+    @Override
+    public List<RepoCategoryEnt> getNodeRepository() {
+        return Arrays.stream(RepositoryManager.INSTANCE.getRoot().getChildren()).map(r -> {
+            if(r instanceof Category) {
+                return fillNodeRepository((Category) r);
+            } else {
+                return null;
+            }
+        }).filter(r -> r != null).collect(Collectors.toList());
     }
 
-    static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/TEntityClass.vm",
-            "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
+    private RepoCategoryEnt fillNodeRepository(final Category root) {
+        List<RepoCategoryEnt> cats = new ArrayList<RepoCategoryEnt>();
+        List<RepoNodeTemplateEnt> nodes = new ArrayList<RepoNodeTemplateEnt>();
+        Arrays.stream(root.getChildren()).forEach(r -> {
+            if(r instanceof Category) {
+                cats.add(fillNodeRepository((Category) r));
+            } else if(r instanceof NodeTemplate) {
+                nodes.add(builder(RepoNodeTemplateEntBuilder.class)
+                    .setName(r.getName())
+                    .setType("TODO")
+                    .setID(r.getID())
+                    .setIconURL("TODO").build());
+            }
+         });
+        return builder(RepoCategoryEntBuilder.class)
+                .setCategories(cats)
+                .setNodes(nodes)
+                .setName(root.getName())
+                .setIconURL("TODO").build();
     }
 
 }

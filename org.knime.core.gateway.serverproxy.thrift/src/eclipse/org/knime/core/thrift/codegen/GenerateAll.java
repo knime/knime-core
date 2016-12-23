@@ -44,25 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Dec 23, 2016 (hornm): created
  */
 package org.knime.core.thrift.codegen;
-
-import org.knime.core.gateway.codegen.EntityGenerator;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateTEntityClasses {
+public class GenerateAll {
 
     public static void main(final String[] args) {
-        generate();
-    }
-
-    static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/TEntityClass.vm",
-            "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
+        GenerateTEntityClasses.generate();
+        GenerateTEntityFromThriftClasses.generate();
+        GenerateTEntityToThriftClasses.generate();
+        GenerateTServiceFromThriftClasses.generate();
+        GenerateTServiceInterfaces.generate();
+        GenerateTServiceToThriftClasses.generate();
     }
 
 }

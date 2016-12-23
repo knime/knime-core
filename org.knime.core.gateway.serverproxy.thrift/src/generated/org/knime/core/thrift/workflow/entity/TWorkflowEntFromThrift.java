@@ -188,7 +188,8 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
 
 		@Override
         public TWorkflowEntBuilderFromThrift setNodes(final Map<String, NodeEnt> Nodes) {
-                	Map<String, TNodeEnt> map = new HashMap<>();
+                	//TODO support non-primitive keys
+        	Map<String, TNodeEnt> map = new HashMap<>();
 		    Nodes.entrySet().forEach(e -> map.put(e.getKey(), new TNodeEntToThrift(e.getValue())));
             m_b.setNodes(map);
                     return this;

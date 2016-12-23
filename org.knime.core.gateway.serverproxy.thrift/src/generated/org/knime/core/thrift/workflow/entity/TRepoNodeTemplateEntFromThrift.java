@@ -43,26 +43,92 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.thrift.codegen;
+package org.knime.core.thrift.workflow.entity;
 
-import org.knime.core.gateway.codegen.EntityGenerator;
+
+import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
+
+import org.knime.core.thrift.workflow.entity.TRepoNodeTemplateEnt.TRepoNodeTemplateEntBuilder;
+
+import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateTEntityClasses {
+public class TRepoNodeTemplateEntFromThrift implements RepoNodeTemplateEnt {
 
-    public static void main(final String[] args) {
-        generate();
+	private final TRepoNodeTemplateEnt m_e;
+
+	public TRepoNodeTemplateEntFromThrift(final TRepoNodeTemplateEnt e) {
+		m_e = e;
+	}
+
+    @Override
+    public String getName() {
+    	    	return m_e.getName();
+    	    }
+    
+    @Override
+    public String getType() {
+    	    	return m_e.getType();
+    	    }
+    
+    @Override
+    public String getID() {
+    	    	return m_e.getID();
+    	    }
+    
+    @Override
+    public String getIconURL() {
+    	    	return m_e.getIconURL();
+    	    }
+    
+
+	@Override
+    public String toString() {
+        return m_e.toString();
     }
 
-    static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/thrift/codegen/TEntityClass.vm",
-            "src/generated/org/knime/core/thrift/workflow/entity/", "T##entityName##").generate();
+    public static class TRepoNodeTemplateEntBuilderFromThrift implements RepoNodeTemplateEntBuilder {
+    
+		private TRepoNodeTemplateEntBuilder m_b;
+	
+		public TRepoNodeTemplateEntBuilderFromThrift(final TRepoNodeTemplateEntBuilder b) {
+			m_b = b;
+		}
+	
+        public RepoNodeTemplateEnt build() {
+            return new TRepoNodeTemplateEntFromThrift(m_b.build());
+        }
+
+		@Override
+        public TRepoNodeTemplateEntBuilderFromThrift setName(final String Name) {
+                	m_b.setName(Name);
+                    return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderFromThrift setType(final String Type) {
+                	m_b.setType(Type);
+                    return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderFromThrift setID(final String ID) {
+                	m_b.setID(ID);
+                    return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderFromThrift setIconURL(final String IconURL) {
+                	m_b.setIconURL(IconURL);
+                    return this;
+        }
+        
     }
 
 }

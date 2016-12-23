@@ -46,14 +46,13 @@
  */
 package org.knime.core.thrift.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
-import java.util.Map;
+import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
 
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
 
-import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
+import org.knime.core.thrift.workflow.entity.TRepoCategoryEnt.TRepoCategoryEntBuilder;
 
 import java.util.stream.Collectors;
 import java.util.HashMap;
@@ -62,45 +61,32 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TTestEntFromThrift implements TestEnt {
+public class TRepoCategoryEntFromThrift implements RepoCategoryEnt {
 
-	private final TTestEnt m_e;
+	private final TRepoCategoryEnt m_e;
 
-	public TTestEntFromThrift(final TTestEnt e) {
+	public TRepoCategoryEntFromThrift(final TRepoCategoryEnt e) {
 		m_e = e;
 	}
 
     @Override
-    public XYEnt getxy() {
-    	        return new TXYEntFromThrift(m_e.getxy());
-            }
-    
-    @Override
-    public List<XYEnt> getxylist() {
-    	    	return m_e.getxylist().stream().map(l -> new TXYEntFromThrift(l)).collect(Collectors.toList());
+    public String getName() {
+    	    	return m_e.getName();
     	    }
     
     @Override
-    public String getother() {
-    	    	return m_e.getother();
+    public String getIconURL() {
+    	    	return m_e.getIconURL();
     	    }
     
     @Override
-    public List<String> getprimitivelist() {
-    	    	return m_e.getprimitivelist();
+    public List<RepoCategoryEnt> getCategories() {
+    	    	return m_e.getCategories().stream().map(l -> new TRepoCategoryEntFromThrift(l)).collect(Collectors.toList());
     	    }
     
     @Override
-    public Map<String, XYEnt> getxymap() {
-    	    	//TODO support non-primitive keys
-    	Map<String, XYEnt> res = new HashMap<>();
-        m_e.getxymap().entrySet().forEach(e -> res.put(e.getKey(), new TXYEntFromThrift(e.getValue())));
-    	return res;
-    	    }
-    
-    @Override
-    public Map<Integer, String> getprimitivemap() {
-    	    	return m_e.getprimitivemap();
+    public List<RepoNodeTemplateEnt> getNodes() {
+    	    	return m_e.getNodes().stream().map(l -> new TRepoNodeTemplateEntFromThrift(l)).collect(Collectors.toList());
     	    }
     
 
@@ -109,54 +95,39 @@ public class TTestEntFromThrift implements TestEnt {
         return m_e.toString();
     }
 
-    public static class TTestEntBuilderFromThrift implements TestEntBuilder {
+    public static class TRepoCategoryEntBuilderFromThrift implements RepoCategoryEntBuilder {
     
-		private TTestEntBuilder m_b;
+		private TRepoCategoryEntBuilder m_b;
 	
-		public TTestEntBuilderFromThrift(final TTestEntBuilder b) {
+		public TRepoCategoryEntBuilderFromThrift(final TRepoCategoryEntBuilder b) {
 			m_b = b;
 		}
 	
-        public TestEnt build() {
-            return new TTestEntFromThrift(m_b.build());
+        public RepoCategoryEnt build() {
+            return new TRepoCategoryEntFromThrift(m_b.build());
         }
 
 		@Override
-        public TTestEntBuilderFromThrift setxy(final XYEnt xy) {
-                	m_b.setxy(new TXYEntToThrift(xy));
+        public TRepoCategoryEntBuilderFromThrift setName(final String Name) {
+                	m_b.setName(Name);
                     return this;
         }
         
 		@Override
-        public TTestEntBuilderFromThrift setxylist(final List<XYEnt> xylist) {
-                	m_b.setxylist(xylist.stream().map(e -> new TXYEntToThrift(e)).collect(Collectors.toList()));
+        public TRepoCategoryEntBuilderFromThrift setIconURL(final String IconURL) {
+                	m_b.setIconURL(IconURL);
                     return this;
         }
         
 		@Override
-        public TTestEntBuilderFromThrift setother(final String other) {
-                	m_b.setother(other);
+        public TRepoCategoryEntBuilderFromThrift setCategories(final List<RepoCategoryEnt> Categories) {
+                	m_b.setCategories(Categories.stream().map(e -> new TRepoCategoryEntToThrift(e)).collect(Collectors.toList()));
                     return this;
         }
         
 		@Override
-        public TTestEntBuilderFromThrift setprimitivelist(final List<String> primitivelist) {
-                	m_b.setprimitivelist(primitivelist);
-                    return this;
-        }
-        
-		@Override
-        public TTestEntBuilderFromThrift setxymap(final Map<String, XYEnt> xymap) {
-                	//TODO support non-primitive keys
-        	Map<String, TXYEnt> map = new HashMap<>();
-		    xymap.entrySet().forEach(e -> map.put(e.getKey(), new TXYEntToThrift(e.getValue())));
-            m_b.setxymap(map);
-                    return this;
-        }
-        
-		@Override
-        public TTestEntBuilderFromThrift setprimitivemap(final Map<Integer, String> primitivemap) {
-                	m_b.setprimitivemap(primitivemap);
+        public TRepoCategoryEntBuilderFromThrift setNodes(final List<RepoNodeTemplateEnt> Nodes) {
+                	m_b.setNodes(Nodes.stream().map(e -> new TRepoNodeTemplateEntToThrift(e)).collect(Collectors.toList()));
                     return this;
         }
         

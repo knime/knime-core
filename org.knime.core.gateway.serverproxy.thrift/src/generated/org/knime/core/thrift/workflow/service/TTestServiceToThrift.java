@@ -78,7 +78,7 @@ public class TTestServiceToThrift implements TestService {
   	}
 	
 	@Override
- 	public double primitives(final String s, final List stringlist) {
+ 	public double primitives(final String s, final List<String> stringlist) {
    	 	 	  	 	 	   		return m_service.Tprimitives(s, stringlist);
   	}
 	
