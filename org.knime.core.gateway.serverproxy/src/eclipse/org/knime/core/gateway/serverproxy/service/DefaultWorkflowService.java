@@ -243,9 +243,9 @@ public class DefaultWorkflowService implements WorkflowService {
 
     private static WorkflowEnt buildWorkflowEnt(final IWorkflowManager wfm) {
         Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
-        List<NodeEnt> nodes = nodeContainers.stream().map(nc -> {
+        Map<String, NodeEnt> nodes = nodeContainers.stream().map(nc -> {
             return buildNodeEnt(nc);
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toMap(n -> n.getNodeID(), n -> n));
         Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
         List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
             return buildContainerEnt(cc);

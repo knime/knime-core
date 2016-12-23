@@ -47,6 +47,7 @@
 package org.knime.core.thrift.workflow.entity;
 
 import java.util.List;
+import java.util.Map;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
@@ -83,7 +84,7 @@ public class TWorkflowEnt {
 
 
 
-	private List<TNodeEnt> m_Nodes;
+	private Map<String, TNodeEnt> m_Nodes;
 	private List<TConnectionEnt> m_Connections;
 	private List<TMetaPortEnt> m_MetaInPorts;
 	private List<TMetaPortEnt> m_MetaOutPorts;
@@ -129,7 +130,7 @@ public class TWorkflowEnt {
     }
 
     @ThriftField(1)
-    public List<TNodeEnt> getNodes() {
+    public Map<String, TNodeEnt> getNodes() {
         return m_Nodes;
     }
     
@@ -225,7 +226,7 @@ public class TWorkflowEnt {
 	
     public static class TWorkflowEntBuilder implements ThriftEntityBuilder<WorkflowEnt> {
     
-		private List<TNodeEnt> m_Nodes;
+		private Map<String, TNodeEnt> m_Nodes;
 		private List<TConnectionEnt> m_Connections;
 		private List<TMetaPortEnt> m_MetaInPorts;
 		private List<TMetaPortEnt> m_MetaOutPorts;
@@ -254,7 +255,7 @@ public class TWorkflowEnt {
         }
 
         @ThriftField
-        public TWorkflowEntBuilder setNodes(final List<TNodeEnt> Nodes) {
+        public TWorkflowEntBuilder setNodes(final Map<String, TNodeEnt> Nodes) {
 			m_Nodes = Nodes;			
             return this;
         }

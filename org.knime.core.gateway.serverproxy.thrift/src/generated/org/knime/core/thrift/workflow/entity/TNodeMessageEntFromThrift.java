@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

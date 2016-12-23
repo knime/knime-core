@@ -47,6 +47,7 @@
 package org.knime.core.thrift.workflow.entity;
 
 import java.util.List;
+import java.util.Map;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
@@ -65,6 +66,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.thrift.workflow.entity.TWorkflowEnt.TWorkflowEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *
@@ -79,8 +81,11 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
 	}
 
     @Override
-    public List<NodeEnt> getNodes() {
-    	    	return m_e.getNodes().stream().map(l -> new TNodeEntFromThrift(l)).collect(Collectors.toList());
+    public Map<String, NodeEnt> getNodes() {
+    	    	//TODO support non-primitive keys
+    	Map<String, NodeEnt> res = new HashMap<>();
+        m_e.getNodes().entrySet().forEach(e -> res.put(e.getKey(), new TNodeEntFromThrift(e.getValue())));
+    	return res;
     	    }
     
     @Override
@@ -182,8 +187,10 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
         }
 
 		@Override
-        public TWorkflowEntBuilderFromThrift setNodes(final List<NodeEnt> Nodes) {
-                	m_b.setNodes(Nodes.stream().map(e -> new TNodeEntToThrift(e)).collect(Collectors.toList()));
+        public TWorkflowEntBuilderFromThrift setNodes(final Map<String, NodeEnt> Nodes) {
+                	Map<String, TNodeEnt> map = new HashMap<>();
+		    Nodes.entrySet().forEach(e -> map.put(e.getKey(), new TNodeEntToThrift(e.getValue())));
+            m_b.setNodes(map);
                     return this;
         }
         

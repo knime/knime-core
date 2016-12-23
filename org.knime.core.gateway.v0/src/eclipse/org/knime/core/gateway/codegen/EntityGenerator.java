@@ -240,11 +240,11 @@ public final class EntityGenerator {
                 new DefaultEntityField("Alignment", "String"))
                 .addImports("org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
             new DefaultEntityDef("WorkflowEnt",
-                new DefaultEntityField("Nodes", "List<NodeEnt>"),
+                new DefaultEntityField("Nodes", "Map<String, NodeEnt>"),
                 new DefaultEntityField("Connections", "List<ConnectionEnt>"),
                 new DefaultEntityField("MetaInPorts", "List<MetaPortEnt>"),
                 new DefaultEntityField("MetaOutPorts", "List<MetaPortEnt>"))
-                .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt", "org.knime.core.gateway.v0.workflow.entity.MetaPortEnt")
+                .addImports("java.util.List", "java.util.Map", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt", "org.knime.core.gateway.v0.workflow.entity.MetaPortEnt")
                 .addFieldsFrom("NodeEnt"),
             new DefaultEntityDef("EntityID",
                 new DefaultEntityField("ID", "String"),
@@ -274,8 +274,11 @@ public final class EntityGenerator {
             new DefaultEntityDef("TestEnt",
                 new DefaultEntityField("xy", "XYEnt"),
                 new DefaultEntityField("xylist", "List<XYEnt>"),
-                new DefaultEntityField("other", "String"))
+                new DefaultEntityField("other", "String"),
+                new DefaultEntityField("primitivelist", "List<String>"),
+                new DefaultEntityField("xymap", "Map<String, XYEnt>"),
+                new DefaultEntityField("primitivemap", "Map<Integer, String>"))
             .addImports("org.knime.core.gateway.v0.workflow.entity.XYEnt",
-                    "java.util.List"));
+                    "java.util.List", "java.util.Map"));
     }
 }

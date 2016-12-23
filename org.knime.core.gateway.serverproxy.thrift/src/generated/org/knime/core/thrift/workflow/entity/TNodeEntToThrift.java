@@ -62,6 +62,7 @@ import org.knime.core.thrift.workflow.entity.TNodeEntFromThrift.TNodeEntBuilderF
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 
 /**

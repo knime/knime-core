@@ -62,7 +62,6 @@ import com.facebook.swift.service.ThriftService;
 @ThriftService
 public interface TWorkflowService {
 
-
 	@ThriftMethod
 	TWorkflowEnt TgetWorkflow(final TEntityID id);
 	

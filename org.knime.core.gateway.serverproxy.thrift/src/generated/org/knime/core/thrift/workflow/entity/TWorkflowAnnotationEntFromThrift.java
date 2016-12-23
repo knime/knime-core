@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBu
 import org.knime.core.thrift.workflow.entity.TWorkflowAnnotationEnt.TWorkflowAnnotationEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

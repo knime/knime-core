@@ -47,6 +47,7 @@
 package org.knime.core.gateway.v0.workflow.entity;
 
 import java.util.List;
+import java.util.Map;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
@@ -66,13 +67,13 @@ import java.util.List;
 public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
 
 
-  	List<? extends NodeEnt> getNodes();
+  	Map<String, NodeEnt> getNodes();
  	
-  	List<? extends ConnectionEnt> getConnections();
+  	List<ConnectionEnt> getConnections();
  	
-  	List<? extends MetaPortEnt> getMetaInPorts();
+  	List<MetaPortEnt> getMetaInPorts();
  	
-  	List<? extends MetaPortEnt> getMetaOutPorts();
+  	List<MetaPortEnt> getMetaOutPorts();
  	
   	EntityID getParent();
  	
@@ -80,9 +81,9 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
  	
   	NodeMessageEnt getNodeMessage();
  	
-  	List<? extends NodeInPortEnt> getInPorts();
+  	List<NodeInPortEnt> getInPorts();
  	
-  	List<? extends NodeOutPortEnt> getOutPorts();
+  	List<NodeOutPortEnt> getOutPorts();
  	
   	String getName();
  	

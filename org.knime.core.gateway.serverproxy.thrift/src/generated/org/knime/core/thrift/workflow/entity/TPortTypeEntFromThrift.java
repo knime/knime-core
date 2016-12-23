@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

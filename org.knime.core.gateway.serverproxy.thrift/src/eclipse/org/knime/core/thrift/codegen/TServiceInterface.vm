@@ -62,19 +62,9 @@ import com.facebook.swift.service.ThriftService;
 @ThriftService
 public interface T${name} {
 
-#macro(type $t)
-#set($n = $t.getName())
-#if(!$t.isPrimitive()) #set($n = "T$n")#end
-#if($t.isList())
-List<$n>#elseif($t.isVoid())
-void#else
-$n#end
-#end
-
 #foreach( $method in $methods )
 	@ThriftMethod
-#set($ret="#type($method.getReturnType())")
-	$ret T$method.getName()(#foreach($param in $method.getParameters())final #type($param.getType()) $param.getName()#if( $foreach.hasNext ),#end#end);
+	$method.getReturnType().toString("T","") T$method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("T","") $param.getName()#if( $foreach.hasNext ),#end#end);
 	
 #end
 }

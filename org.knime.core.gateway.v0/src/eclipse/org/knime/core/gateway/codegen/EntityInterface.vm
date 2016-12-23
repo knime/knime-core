@@ -56,14 +56,9 @@ import $import;
  */
 public interface $name extends GatewayEntity#foreach ($superClass in $superClasses), ${superClass} #end {
 
-#macro(type)
-#if($field.getType().isList())
-List<? extends $field.getType().getName()>#else
-$field.getType().getName()#end
-#end
 
  #foreach( $field in $fields )
- 	#type() get$field.getName()();
+ 	$field.getType().toString("","") get$field.getName()();
  	
  #end   
 }

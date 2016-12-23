@@ -56,6 +56,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.${name}Builder;
 import org.knime.core.thrift.workflow.entity.T${name}.T${name}Builder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *
@@ -63,11 +64,6 @@ import java.util.stream.Collectors;
  */
 public class T${name}FromThrift implements ${name} {
 
-#macro(type)
-#if($field.getType().isList())
-List<$field.getType().getName()>#else
-$field.getType().getName()#end
-#end
 	private final T${name} m_e;
 
 	public T${name}FromThrift(final T${name} e) {
@@ -76,13 +72,18 @@ $field.getType().getName()#end
 
 #foreach( $field in $fields )
     @Override
-    public #type() get$field.getName()() {
+    public $field.getType().toString("","") get$field.getName()() {
     	#if($field.getType().isPrimitive())
     	return m_e.get$field.getName()();
     	#elseif($field.getType().isList())
-    	return m_e.get$field.getName()().stream().map(l -> new T${field.getType().getName()}FromThrift(l)).collect(Collectors.toList());
+    	return m_e.get$field.getName()().stream().map(l -> new T${field.getType().getTypeParameter(0).toString('','')}FromThrift(l)).collect(Collectors.toList());
+    	#elseif($field.getType().isMap())
+    	//TODO support non-primitive keys
+    	$field.getType().toString("","") res = new HashMap<>();
+        m_e.get$field.getName()().entrySet().forEach(e -> res.put(e.getKey(), new T$field.getType().getTypeParameter(1).toString('','')FromThrift(e.getValue())));
+    	return res;
     	#else
-        return new T${field.getType().getName()}FromThrift(m_e.get$field.getName()());
+        return new T${field.getType().toString('','')}FromThrift(m_e.get$field.getName()());
         #end
     }
     
@@ -107,13 +108,18 @@ $field.getType().getName()#end
 
 #foreach( $field in $fields )
 		@Override
-        public T${name}BuilderFromThrift set$field.getName()(final #type(${field.getType()}) $field.getName()) {
+        public T${name}BuilderFromThrift set$field.getName()(final ${field.getType().toString('','')} $field.getName()) {
         #if($field.getType().isPrimitive())
         	m_b.set$field.getName()($field.getName());
         #elseif($field.getType().isList())
-        	m_b.set$field.getName()(${field.getName()}.stream().map(e -> new T${field.getType().getName()}ToThrift(e)).collect(Collectors.toList()));
+        	m_b.set$field.getName()(${field.getName()}.stream().map(e -> new T${field.getType().getTypeParameter(0).toString('','')}ToThrift(e)).collect(Collectors.toList()));
+        #elseif($field.getType().isMap())
+        	//TODO support non-primitive keys
+        	$field.getType().toString("T","") map = new HashMap<>();
+		    ${field.getName()}.entrySet().forEach(e -> map.put(e.getKey(), new T$field.getType().getTypeParameter(1).toString('','')ToThrift(e.getValue())));
+            m_b.set$field.getName()(map);
         #else
-        	m_b.set$field.getName()(new T$field.getType().getName()ToThrift($field.getName()));
+        	m_b.set$field.getName()(new T$field.getType().toString("","")ToThrift($field.getName()));
         #end
             return this;
         }

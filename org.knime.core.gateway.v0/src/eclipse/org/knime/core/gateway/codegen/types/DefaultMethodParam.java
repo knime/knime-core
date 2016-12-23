@@ -63,11 +63,7 @@ public class DefaultMethodParam implements MethodParam {
      */
     public DefaultMethodParam(final String name, final String type) {
         m_name = name;
-        if (type.startsWith("List<")) {
-            m_type = new DefaultType(type.substring(5, type.length() - 1), true);
-        } else {
-            m_type = new DefaultType(type, false);
-        }
+        m_type = DefaultType.parse(type);
     }
 
     /**

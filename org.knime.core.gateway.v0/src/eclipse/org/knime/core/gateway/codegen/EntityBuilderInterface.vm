@@ -57,14 +57,9 @@ import org.knime.core.gateway.v0.workflow.entity.${name};
  */
 public interface ${name}Builder extends GatewayEntityBuilder<${name}> {
 
-#macro(type)
-#if($field.getType().isList())
-List<$field.getType().getName()>#else
-$field.getType().getName()#end
-#end
 
 #foreach( $field in $fields )
-	${name}Builder set$field.getName()(#type() $field.getName());
+	${name}Builder set$field.getName()($field.getType().toString("","") $field.getName());
 
 #end
 }

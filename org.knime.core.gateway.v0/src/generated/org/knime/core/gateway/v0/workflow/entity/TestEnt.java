@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -58,8 +59,14 @@ public interface TestEnt extends GatewayEntity {
 
   	XYEnt getxy();
  	
-  	List<? extends XYEnt> getxylist();
+  	List<XYEnt> getxylist();
  	
   	String getother();
+ 	
+  	List<String> getprimitivelist();
+ 	
+  	Map<String, XYEnt> getxymap();
+ 	
+  	Map<Integer, String> getprimitivemap();
  	
  }

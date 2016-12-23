@@ -68,11 +68,7 @@ public class DefaultServiceMethod implements ServiceMethod {
      */
     public DefaultServiceMethod(final String name, final String returnType, final MethodParam... parameters) {
         m_name = name;
-        if (returnType.startsWith("List<")) {
-            m_returnType = new DefaultType(returnType.substring(5, returnType.length() - 1), true);
-        } else {
-            m_returnType = new DefaultType(returnType, false);
-        }
+        m_returnType = DefaultType.parse(returnType);
         m_parameters = Arrays.asList(parameters);
     }
 

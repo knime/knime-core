@@ -62,13 +62,6 @@ import java.util.stream.Collectors;
  */
 public class T${name}ToThrift implements ${name} {
 
-#macro(type $t)
-#set($n = $t.getName())
-#if($t.isList())
-List<$n>#elseif($t.isVoid())
-void#else
-$n#end
-#end
 	private final T${name} m_service;
 	
 	public T${name}ToThrift(final T${name} service) {
@@ -77,16 +70,15 @@ $n#end
 
 #foreach( $method in $methods )
 	@Override
-#set($ret="#type($method.getReturnType())")
- 	public $ret $method.getName()(#foreach($param in $method.getParameters())final #type($param.getType()) $param.getName()#if( $foreach.hasNext ), #end#end) {
+ 	public $method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end) {
  #set($params = "")
  #foreach($param in $method.getParameters())
  	#if($param.getType().isPrimitive())
  		#set($params = "${params}$param.getName()")
  	#elseif($param.getType().isList())
- 		#set($params = "$params${param.getName()}.stream().map(e -> new T$param.getType().getName()ToThrift(e)).collect(Collectors.toList())")
+ 		#set($params = "$params${param.getName()}.stream().map(e -> new T$param.getType().getTypeParameter(0).toString('','')ToThrift(e)).collect(Collectors.toList())")
  	#else
- 		#set($params = "${params}new T${param.getType().getName()}ToThrift($param.getName())")
+ 		#set($params = "${params}new T${param.getType().toString('','')}ToThrift($param.getName())")
  	#end
  	#if($foreach.hasNext)#set($params = "${params}, ")#end
  #end
@@ -95,9 +87,9 @@ $n#end
  #elseif($method.getReturnType().isVoid())
  		m_service.T$method.getName()($params);
  #elseif($method.getReturnType().isList())
- 		return m_service.T$method.getName()($params).stream().map(e -> new T$method.getReturnType().getName()FromThrift(e)).collect(Collectors.toList());
+ 		return m_service.T$method.getName()($params).stream().map(e -> new T$method.getReturnType().getTypeParameter(0).toString("","")FromThrift(e)).collect(Collectors.toList());
  #else
-		return new T$method.getReturnType().getName()FromThrift(m_service.T$method.getName()($params));
+		return new T$method.getReturnType().toString("","")FromThrift(m_service.T$method.getName()($params));
  #end
  	}
 	

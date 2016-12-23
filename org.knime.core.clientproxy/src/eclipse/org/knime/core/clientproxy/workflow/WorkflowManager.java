@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -105,8 +104,6 @@ import org.knime.core.util.WrapperMapUtil;
  */
 public class WorkflowManager extends NodeContainer implements IWorkflowManager {
 
-    private final Map<String, NodeEnt> m_nodeIDToNodeMap = new HashMap<String, NodeEnt>();
-
     private final WorkflowEnt m_workflow;
 
     /**
@@ -115,11 +112,6 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     public WorkflowManager(final WorkflowEnt workflow) {
         super(workflow);
         m_workflow = workflow;
-
-        //fill data structures for quicker access
-        for(NodeEnt n : workflow.getNodes()) {
-            m_nodeIDToNodeMap.put(n.getNodeID().toString(), n);
-        }
     }
 
     /**
@@ -325,7 +317,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     public IConnectionContainer getConnection(final ConnectionID id) {
         //TODO introduce a more efficient data structure to access the right connection
         for (ConnectionEnt c : m_workflow.getConnections()) {
-            if (m_nodeIDToNodeMap.get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
+            if (m_workflow.getNodes().get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
                 && id.getDestinationPort() == c.getDestPort()) {
                 return new ConnectionContainer(c);
             }
@@ -745,7 +737,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
      */
     @Override
     public Collection<INodeContainer> getAllNodeContainers() {
-        List<? extends NodeEnt> nodes = m_workflow.getNodes();
+        Collection<NodeEnt> nodes = m_workflow.getNodes().values();
         //return exactly the same node container instance for the same node entity
         return nodes.stream()
             .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new NodeContainer(n), NodeContainer.class))
@@ -771,7 +763,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
     @Override
     public INodeContainer getNodeContainer(final NodeID id) {
         //TODO e.g. put the node entities into a hash map for quicker access
-        final NodeEnt nodeEnt = m_nodeIDToNodeMap.get(id.toString());
+        final NodeEnt nodeEnt = m_workflow.getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
         return WrapperMapUtil.getOrCreate(id, k -> new NodeContainer(nodeEnt), NodeContainer.class);
     }

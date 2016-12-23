@@ -61,7 +61,6 @@ import com.facebook.swift.service.ThriftService;
 @ThriftService
 public interface TTestService {
 
-
 	@ThriftMethod
 	TTestEnt Ttest(final TTestEnt id);
 	

@@ -48,6 +48,7 @@ package org.knime.core.thrift.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -76,6 +77,9 @@ public class TTestEnt {
 	private TXYEnt m_xy;
 	private List<TXYEnt> m_xylist;
 	private String m_other;
+	private List<String> m_primitivelist;
+	private Map<String, TXYEnt> m_xymap;
+	private Map<Integer, String> m_primitivemap;
 
     /**
      * @param builder
@@ -84,6 +88,9 @@ public class TTestEnt {
 		m_xy = builder.m_xy;
 		m_xylist = builder.m_xylist;
 		m_other = builder.m_other;
+		m_primitivelist = builder.m_primitivelist;
+		m_xymap = builder.m_xymap;
+		m_primitivemap = builder.m_primitivemap;
     }
     
     protected TTestEnt() {
@@ -105,6 +112,21 @@ public class TTestEnt {
         return m_other;
     }
     
+    @ThriftField(4)
+    public List<String> getprimitivelist() {
+        return m_primitivelist;
+    }
+    
+    @ThriftField(5)
+    public Map<String, TXYEnt> getxymap() {
+        return m_xymap;
+    }
+    
+    @ThriftField(6)
+    public Map<Integer, String> getprimitivemap() {
+        return m_primitivemap;
+    }
+    
 
 	@Override
 	public String toString() {
@@ -120,6 +142,9 @@ public class TTestEnt {
 		private TXYEnt m_xy;
 		private List<TXYEnt> m_xylist;
 		private String m_other;
+		private List<String> m_primitivelist;
+		private Map<String, TXYEnt> m_xymap;
+		private Map<Integer, String> m_primitivemap;
 
         @ThriftConstructor
         public TTestEnt build() {
@@ -146,6 +171,24 @@ public class TTestEnt {
         @ThriftField
         public TTestEntBuilder setother(final String other) {
 			m_other = other;			
+            return this;
+        }
+        
+        @ThriftField
+        public TTestEntBuilder setprimitivelist(final List<String> primitivelist) {
+			m_primitivelist = primitivelist;			
+            return this;
+        }
+        
+        @ThriftField
+        public TTestEntBuilder setxymap(final Map<String, TXYEnt> xymap) {
+			m_xymap = xymap;			
+            return this;
+        }
+        
+        @ThriftField
+        public TTestEntBuilder setprimitivemap(final Map<Integer, String> primitivemap) {
+			m_primitivemap = primitivemap;			
             return this;
         }
         

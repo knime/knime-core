@@ -54,6 +54,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodePortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodePortEnt.TNodePortEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

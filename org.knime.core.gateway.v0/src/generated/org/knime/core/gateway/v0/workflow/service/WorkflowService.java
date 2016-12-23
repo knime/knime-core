@@ -56,7 +56,6 @@ import java.util.List;
  */
 public interface WorkflowService extends GatewayService {
 
-
 	WorkflowEnt getWorkflow(final EntityID id);
 	
 	void updateWorkflow(final WorkflowEnt wf);

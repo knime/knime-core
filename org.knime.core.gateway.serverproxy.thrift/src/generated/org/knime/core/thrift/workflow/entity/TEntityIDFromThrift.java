@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

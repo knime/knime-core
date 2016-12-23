@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

@@ -63,11 +63,7 @@ public class DefaultEntityField implements EntityField {
      */
     public DefaultEntityField(final String name, final String returnType) {
         m_name = name;
-        if (returnType.startsWith("List<")) {
-            m_type = new DefaultType(returnType.substring(5, returnType.length() - 1), true);
-        } else {
-            m_type = new DefaultType(returnType, false);
-        }
+        m_type = DefaultType.parse(returnType);
     }
 
     /**

@@ -48,6 +48,7 @@ package org.knime.core.thrift.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
+import java.util.Map;
 
 import org.knime.core.gateway.v0.workflow.entity.TestEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
@@ -55,6 +56,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
 import org.knime.core.thrift.workflow.entity.TTestEnt.TTestEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *
@@ -81,6 +83,24 @@ public class TTestEntFromThrift implements TestEnt {
     @Override
     public String getother() {
     	    	return m_e.getother();
+    	    }
+    
+    @Override
+    public List<String> getprimitivelist() {
+    	    	return m_e.getprimitivelist();
+    	    }
+    
+    @Override
+    public Map<String, XYEnt> getxymap() {
+    	    	//TODO support non-primitive keys
+    	Map<String, XYEnt> res = new HashMap<>();
+        m_e.getxymap().entrySet().forEach(e -> res.put(e.getKey(), new TXYEntFromThrift(e.getValue())));
+    	return res;
+    	    }
+    
+    @Override
+    public Map<Integer, String> getprimitivemap() {
+    	    	return m_e.getprimitivemap();
     	    }
     
 
@@ -116,6 +136,26 @@ public class TTestEntFromThrift implements TestEnt {
 		@Override
         public TTestEntBuilderFromThrift setother(final String other) {
                 	m_b.setother(other);
+                    return this;
+        }
+        
+		@Override
+        public TTestEntBuilderFromThrift setprimitivelist(final List<String> primitivelist) {
+                	m_b.setprimitivelist(primitivelist);
+                    return this;
+        }
+        
+		@Override
+        public TTestEntBuilderFromThrift setxymap(final Map<String, XYEnt> xymap) {
+                	Map<String, TXYEnt> map = new HashMap<>();
+		    xymap.entrySet().forEach(e -> map.put(e.getKey(), new TXYEntToThrift(e.getValue())));
+            m_b.setxymap(map);
+                    return this;
+        }
+        
+		@Override
+        public TTestEntBuilderFromThrift setprimitivemap(final Map<Integer, String> primitivemap) {
+                	m_b.setprimitivemap(primitivemap);
                     return this;
         }
         

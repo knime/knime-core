@@ -56,6 +56,7 @@ import org.knime.core.thrift.workflow.entity.TNodeOutPortEntFromThrift.TNodeOutP
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 
 /**

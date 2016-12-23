@@ -66,7 +66,7 @@ public interface ConnectionEnt extends GatewayEntity {
  	
   	boolean getIsDeleteable();
  	
-  	List<? extends XYEnt> getBendPoints();
+  	List<XYEnt> getBendPoints();
  	
   	String getType();
  	

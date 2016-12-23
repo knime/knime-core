@@ -72,22 +72,10 @@ import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 @ThriftStruct(builder = T${name}Builder.class)
 public class T${name} {
 
-#macro(type)
-#if($field.getType().isList())
-List<$field.getType().getType()>#else
-$field.getType().getType()#end
-#end
 
-#macro(ttype $t)
-#set($n = $t.getName())
-#if(!$t.isPrimitive())#set($n = "T$n")#end
-#if($field.getType().isList())
-List<$n>#else
-$n#end
-#end
 
 #foreach( $field in $fields )
-	private #ttype($field.getType()) m_$field.getName();
+	private $field.getType().toString("T","") m_$field.getName();
 #end
 
     /**
@@ -105,7 +93,7 @@ $n#end
 
 #foreach( $field in $fields )
     @ThriftField($foreach.count)
-    public #ttype($field.getType()) get$field.getName()() {
+    public $field.getType().toString("T","") get$field.getName()() {
         return m_$field.getName();
     }
     
@@ -123,7 +111,7 @@ $n#end
     public static class T${name}Builder implements ThriftEntityBuilder<${name}> {
     
 #foreach( $field in $fields )
-		private #ttype($field.getType()) m_$field.getName();
+		private $field.getType().toString("T","") m_$field.getName();
 #end
 
         @ThriftConstructor
@@ -138,7 +126,7 @@ $n#end
 
 #foreach( $field in $fields )
         @ThriftField
-        public T${name}Builder set$field.getName()(final #ttype(${field.getType()}) $field.getName()) {
+        public T${name}Builder set$field.getName()(final $field.getType().toString("T","") $field.getName()) {
 			m_$field.getName() = $field.getName();			
             return this;
         }

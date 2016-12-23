@@ -54,12 +54,21 @@ package org.knime.core.gateway.codegen.types;
  */
 public interface Type {
 
-    String getName();
+    String toString(String append, String prepend);
+
+    /**
+     * !! For now a type is regarded as primitive if either the type itself or, in case of a list or map, all their type
+     * parameters are primitive !!
+     *
+     * @return
+     */
+    boolean isPrimitive();
 
     boolean isList();
 
+    boolean isMap();
+
     boolean isVoid();
 
-    boolean isPrimitive();
-
+    Type getTypeParameter(int index);
 }

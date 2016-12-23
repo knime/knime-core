@@ -71,9 +71,9 @@ public interface NativeNodeEnt extends GatewayEntity, NodeEnt  {
  	
   	NodeMessageEnt getNodeMessage();
  	
-  	List<? extends NodeInPortEnt> getInPorts();
+  	List<NodeInPortEnt> getInPorts();
  	
-  	List<? extends NodeOutPortEnt> getOutPorts();
+  	List<NodeOutPortEnt> getOutPorts();
  	
   	String getName();
  	

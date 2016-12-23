@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
+import java.util.Map;
 import org.knime.core.gateway.v0.workflow.entity.TestEnt;
 
 /**
@@ -62,5 +63,11 @@ public interface TestEntBuilder extends GatewayEntityBuilder<TestEnt> {
 	TestEntBuilder setxylist(List<XYEnt> xylist);
 
 	TestEntBuilder setother(String other);
+
+	TestEntBuilder setprimitivelist(List<String> primitivelist);
+
+	TestEntBuilder setxymap(Map<String, XYEnt> xymap);
+
+	TestEntBuilder setprimitivemap(Map<Integer, String> primitivemap);
 
 }

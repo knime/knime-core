@@ -55,6 +55,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilder;
 
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 /**
  *

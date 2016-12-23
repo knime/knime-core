@@ -62,28 +62,20 @@ import java.util.stream.Collectors;
  */
 public class T${name}FromThrift implements T${name} {
 
-#macro(ttype $t)
-#set($n = $t.getName())
-#if(!$t.isPrimitive())#set($n = "T$n")#end
-#if($t.isList())
-List<$n>#elseif($t.isVoid())
-void#else
-$n#end
-#end
 	private final ${name} m_service = new Default${name}();
 
 #foreach( $method in $methods )
 	@Override
-#set($ret="#ttype($method.getReturnType())")
- 	public $ret T$method.getName()(#foreach($param in $method.getParameters())final #ttype($param.getType()) $param.getName()#if( $foreach.hasNext ), #end#end) {
+#set($ret="$method.getReturnType().toString('T','')")
+ 	public $ret T$method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("T","") $param.getName()#if( $foreach.hasNext ), #end#end) {
  #set($params = "")
  #foreach($param in $method.getParameters())
  	#if($param.getType().isPrimitive())
  		#set($params = "${params}$param.getName()")
  	#elseif($param.getType().isList())
- 		#set($params = "$params${param.getName()}.stream().map(e -> new T$param.getType().getName()FromThrift(e)).collect(Collectors.toList())")
+ 		#set($params = "$params${param.getName()}.stream().map(e -> new T$param.getType().getTypeParameter(0).toString('','')FromThrift(e)).collect(Collectors.toList())")
  	#else
- 		#set($params = "${params}new T${param.getType().getName()}FromThrift($param.getName())")
+ 		#set($params = "${params}new T${param.getType().toString('','')}FromThrift($param.getName())")
  	#end
  	#if($foreach.hasNext)#set($params = "${params}, ")#end
  #end
@@ -92,9 +84,9 @@ $n#end
  #elseif($method.getReturnType().isVoid())
  		m_service.$method.getName()($params);
  #elseif($method.getReturnType().isList())
- 		return m_service.$method.getName()($params).stream().map(e -> new T$method.getReturnType().getName()ToThrift(e)).collect(Collectors.toList());
+ 		return m_service.$method.getName()($params).stream().map(e -> new T$method.getReturnType().getTypeParameter(0).toString("","")ToThrift(e)).collect(Collectors.toList());
  #else
-		return new T$method.getReturnType().getName()ToThrift(m_service.$method.getName()($params));
+		return new T$method.getReturnType().toString("","")ToThrift(m_service.$method.getName()($params));
  #end
  	}
 	

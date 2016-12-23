@@ -48,62 +48,152 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class DefaultType implements Type {
 
-    public static final Type VOID = new DefaultType(null, false);
+    public static enum GenericType {
+        NONE,
+        LIST,
+        MAP;
+    }
+
+    public static final Type VOID = new DefaultType("void");
 
     private String m_name;
 
-    private boolean m_isList;
+    private GenericType m_genericType;
+
+    private List<Type> m_typeParameters;
 
     /**
      * @param name <code>null</code> if void
-     * @param isList
+     * @param genericType
      *
      */
-    public DefaultType(final String name, final boolean isList) {
+    private DefaultType(final GenericType genericType, final String... typeParameters) {
+        m_genericType = genericType;
+        m_typeParameters = Arrays.stream(typeParameters).map(t -> DefaultType.parse(t)).collect(Collectors.toList());
+        switch (genericType) {
+            case LIST:
+                m_name = "List";
+                break;
+            case MAP:
+                m_name = "Map";
+            default:
+                break;
+        }
+    }
+
+    private DefaultType(final String name) {
+        m_genericType = GenericType.NONE;
         m_name = name;
-        m_isList = isList;
+        m_typeParameters = Collections.emptyList();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return m_name;
+    public String toString(final String append, final String prepend) {
+        if (isVoid()) {
+            return "void";
+        } else if (m_typeParameters.size() == 0 && isPrimitive()) {
+            return m_name;
+        } else if (m_typeParameters.size() == 0) {
+            return append + m_name + prepend;
+        } else {
+            String[] params = new String[m_typeParameters.size()];
+            for (int i = 0; i < params.length; i++) {
+                params[i] = m_typeParameters.get(i).toString(append, prepend);
+            }
+            return m_name + "<" + String.join(", ", params) + ">";
+        }
+
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
+    public Type getTypeParameter(final int index) {
+        return m_typeParameters.get(index);
+    }
+
     @Override
     public boolean isList() {
-        return m_isList;
+        return m_genericType == GenericType.LIST;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public boolean isMap() {
+        return m_genericType == GenericType.MAP;
+    }
+
     @Override
     public boolean isVoid() {
         return m_name.equals("void");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isPrimitive() {
+        if(m_typeParameters.size() == 0) {
         return m_name.equals("String") ||
                m_name.equals("int") ||
-               m_name.equals("double") ||
-               m_name.equals("float") ||
-               m_name.equals("boolean");
+               m_name.toLowerCase().equals("double") ||
+               m_name.toLowerCase().equals("float") ||
+               m_name.toLowerCase().equals("boolean") ||
+               m_name.equals("Integer");
+        } else {
+            for(Type t : m_typeParameters) {
+                if(!t.isPrimitive()) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
+
+
+    /**
+     * Parses the type from a string, e.g. Map<Integer, String>
+     * @param s
+     * @return the newly created type
+     */
+    public static Type parse(final String s) {
+        if (s.startsWith("List<")) {
+            return new DefaultType(GenericType.LIST, parseTypeParameters(s));
+        } else if (s.startsWith("Map<")) {
+            return new DefaultType(GenericType.MAP, parseTypeParameters(s));
+        } else {
+            return new DefaultType(s);
+        }
+    }
+
+    private static String[] parseTypeParameters(final String s) {
+        String[] split = s.substring(0, s.length() - 1).split("<")[1].split(",");
+        for (int i = 0; i < split.length; i++) {
+            split[i] = split[i].trim();
+        }
+        return split;
+    }
+
+    public static void main(final String[] args) {
+        System.out.println(DefaultType.parse("Map<String, Integer>").toString("", ""));
+        System.out.println(DefaultType.parse("List<Test>").toString("", ""));
+        System.out.println(DefaultType.parse("List<Test>").toString("T", ""));
+        System.out.println(DefaultType.parse("Map<String, Integer>").toString("T", ""));
+        System.out.println(DefaultType.parse("Map<Test, Test2>").toString("T", ""));
+        System.out.println(DefaultType.parse("Map<Blub, Integer>").toString("", "ToThrift"));
+
+    }
+
 
 }

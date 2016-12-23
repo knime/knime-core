@@ -55,7 +55,6 @@ import java.util.List;
  */
 public interface TestService extends GatewayService {
 
-
 	TestEnt test(final TestEnt id);
 	
 	List<TestEnt> testList(final List<TestEnt> list);
