@@ -44,47 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 11, 2016 (hornm): created
+ *   Jan 10, 2017 (hornm): created
  */
 package org.knime.core.gateway.serverproxy.service;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWorkflowEnt;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+import org.knime.core.gateway.v0.workflow.service.ExecutionService;
+import org.knime.core.node.workflow.NodeID;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultWorkflowService implements WorkflowService {
+public class DefaultExecutionService implements ExecutionService {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void updateWorkflow(final WorkflowEnt wf) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEnt getWorkflow(final EntityID id) {
-        //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
-        //might be a bit confusing here: uses the (to be newly introduced) mechanism to generally open workflow projects (no matter they are local or remote workflows)
-        //here, however, it should probably always be a local workflow that is served to clients (since this class use supposed to be used by other server implementations, e.g. thrift)
+    public boolean canExecuteUpToHere(final EntityID workflowID, final String nodeID) {
         try {
-            return buildWorkflowEnt(WorkflowProjectManager.getWorkflowProjectsMap().get(id.getID()).openProject());
+            return WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject()
+                .canExecuteNode(NodeID.fromString(nodeID));
         } catch (Exception ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);
@@ -95,11 +81,16 @@ public class DefaultWorkflowService implements WorkflowService {
      * {@inheritDoc}
      */
     @Override
-    public List<EntityID> getAllWorkflows() {
-        return WorkflowProjectManager.getWorkflowProjectsMap().values().stream().map((wp) -> {
-            return builder(EntityIDBuilder.class).setID(wp.getName()).setType("WorkflowEnt").build();
-        }).collect(Collectors.toList());
-//        return Arrays.asList(builder(EntityIDBuilder.class).setID("huhutest").setType("WorkflowEnt").build());
+    public WorkflowEnt executeUpToHere(final EntityID workflowID, final String nodeID) {
+        try {
+            IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject();
+            wfm.executeUpToHere(NodeID.fromString(nodeID));
+            //TODO only update the downstream nodes, or better: the ones that changed its status
+            return buildWorkflowEnt(wfm);
+        } catch (Exception ex) {
+            // TODO better exception handling
+            throw new RuntimeException(ex);
+        }
     }
 
 }

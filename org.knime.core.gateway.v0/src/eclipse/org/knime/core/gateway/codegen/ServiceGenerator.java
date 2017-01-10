@@ -163,6 +163,14 @@ public class ServiceGenerator {
                 new DefaultServiceMethod("getNodeDescription", "String",
                     new DefaultMethodParam("factoryID", "NodeFactoryIDEnt")))
             .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt", "org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"),
+            new DefaultServiceDef("ExecutionService",
+                new DefaultServiceMethod("canExecuteUpToHere", "boolean",
+                    new DefaultMethodParam("workflowID", "EntityID"),
+                    new DefaultMethodParam("nodeID", "String")),
+                new DefaultServiceMethod("executeUpToHere", "WorkflowEnt",
+                    new DefaultMethodParam("workflowID", "EntityID"),
+                    new DefaultMethodParam("nodeID", "String")))
+            .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID", "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"),
             new DefaultServiceDef("TestService",
                 new DefaultServiceMethod("test", "TestEnt",
                     new DefaultMethodParam("id", "TestEnt")),

@@ -43,21 +43,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Oct 27, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+
+import org.knime.core.thrift.workflow.entity.*;
+
+import com.facebook.swift.service.ThriftMethod;
+import com.facebook.swift.service.ThriftService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ExecutionService extends GatewayService {
+@ThriftService
+public interface TExecutionService {
 
-    boolean canExecuteUpToHere(EntityID n);
-
-    boolean canExecuteNode(EntityID n);
-
+	@ThriftMethod
+	boolean TcanExecuteUpToHere(final TEntityID workflowID,final String nodeID);
+	
+	@ThriftMethod
+	TWorkflowEnt TexecuteUpToHere(final TEntityID workflowID,final String nodeID);
+	
 }

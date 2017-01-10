@@ -367,7 +367,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     @Override
     public boolean canExecuteUpToHere() {
         //TODO
-        return service(ExecutionService.class).canExecuteUpToHere(null);
+        return service(ExecutionService.class).canExecuteUpToHere(null, null);
     }
 
     /**

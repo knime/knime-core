@@ -43,63 +43,38 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 11, 2016 (hornm): created
  */
-package org.knime.core.gateway.serverproxy.service;
+package org.knime.core.thrift.workflow.service;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
-import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWorkflowEnt;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+
+import org.knime.core.gateway.serverproxy.service.*;
+import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.v0.workflow.service.*;
+
+import java.util.stream.Collectors;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultWorkflowService implements WorkflowService {
+public class TExecutionServiceToThrift implements ExecutionService {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateWorkflow(final WorkflowEnt wf) {
-        // TODO Auto-generated method stub
+	private final TExecutionService m_service;
+	
+	public TExecutionServiceToThrift(final TExecutionService service) {
+		m_service = service;
+	}
 
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowEnt getWorkflow(final EntityID id) {
-        //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
-        //might be a bit confusing here: uses the (to be newly introduced) mechanism to generally open workflow projects (no matter they are local or remote workflows)
-        //here, however, it should probably always be a local workflow that is served to clients (since this class use supposed to be used by other server implementations, e.g. thrift)
-        try {
-            return buildWorkflowEnt(WorkflowProjectManager.getWorkflowProjectsMap().get(id.getID()).openProject());
-        } catch (Exception ex) {
-            // TODO better exception handling
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<EntityID> getAllWorkflows() {
-        return WorkflowProjectManager.getWorkflowProjectsMap().values().stream().map((wp) -> {
-            return builder(EntityIDBuilder.class).setID(wp.getName()).setType("WorkflowEnt").build();
-        }).collect(Collectors.toList());
-//        return Arrays.asList(builder(EntityIDBuilder.class).setID("huhutest").setType("WorkflowEnt").build());
-    }
-
+	@Override
+ 	public boolean canExecuteUpToHere(final EntityID workflowID, final String nodeID) {
+   	 	 	  	 	 	   		return m_service.TcanExecuteUpToHere(new TEntityIDToThrift(workflowID), nodeID);
+  	}
+	
+	@Override
+ 	public WorkflowEnt executeUpToHere(final EntityID workflowID, final String nodeID) {
+   	 	 	  	 	 	  		return new TWorkflowEntFromThrift(m_service.TexecuteUpToHere(new TEntityIDToThrift(workflowID), nodeID));
+  	}
+	
 }
