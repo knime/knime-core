@@ -50,6 +50,7 @@ package org.knime.core.api.node.workflow.project;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -88,6 +89,8 @@ public class WorkflowProjectManager {
      */
     private static ProjectTreeNode ROOT = null;
 
+    private static Map<String, WorkflowProject> m_workflowMap;
+
     private WorkflowProjectManager() {
         //static utility class
     }
@@ -124,7 +127,23 @@ public class WorkflowProjectManager {
     public static List<WorkflowProject> getWorkflowProjects() {
         List<WorkflowProject> projects = new ArrayList<WorkflowProject>();
         getWorkflowProjects(getProjectTree(), projects);
-        return projects;
+        return Collections.unmodifiableList(projects);
+    }
+
+    /**
+     *TODO: ensure unique keys for mapping.
+     *
+     * @return a map from the workflow name to the respective workflow project
+     *
+     */
+    public static Map<String, WorkflowProject> getWorkflowProjectsMap() {
+        if (m_workflowMap == null) {
+            m_workflowMap = new HashMap<String, WorkflowProject>();
+            WorkflowProjectManager.getWorkflowProjects().stream().forEach((wp) -> {
+                m_workflowMap.put(wp.getName(), wp);
+            });
+        }
+        return Collections.unmodifiableMap(m_workflowMap);
     }
 
     private static void getWorkflowProjects(final ProjectTreeNode n, final List<WorkflowProject> l) {

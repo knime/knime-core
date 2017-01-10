@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,7 +68,6 @@ import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
@@ -104,8 +102,6 @@ import org.knime.core.gateway.v0.workflow.service.WorkflowService;
  */
 public class DefaultWorkflowService implements WorkflowService {
 
-    private Map<String, WorkflowProject> m_workflowMap = null;
-
     /**
      * {@inheritDoc}
      */
@@ -120,12 +116,11 @@ public class DefaultWorkflowService implements WorkflowService {
      */
     @Override
     public WorkflowEnt getWorkflow(final EntityID id) {
-        fillWorkflowMap();
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
         //might be a bit confusing here: uses the (to be newly introduced) mechanism to generally open workflow projects (no matter they are local or remote workflows)
         //here, however, it should probably always be a local workflow that is served to clients (since this class use supposed to be used by other server implementations, e.g. thrift)
         try {
-            return buildWorkflowEnt(m_workflowMap.get(id.getID()).openProject());
+            return buildWorkflowEnt(WorkflowProjectManager.getWorkflowProjectsMap().get(id.getID()).openProject());
         } catch (Exception ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);
@@ -137,20 +132,10 @@ public class DefaultWorkflowService implements WorkflowService {
      */
     @Override
     public List<EntityID> getAllWorkflows() {
-        fillWorkflowMap();
-        return m_workflowMap.values().stream().map((wp) -> {
+        return WorkflowProjectManager.getWorkflowProjectsMap().values().stream().map((wp) -> {
             return builder(EntityIDBuilder.class).setID(wp.getName()).setType("WorkflowEnt").build();
         }).collect(Collectors.toList());
 //        return Arrays.asList(builder(EntityIDBuilder.class).setID("huhutest").setType("WorkflowEnt").build());
-    }
-
-    private void fillWorkflowMap() {
-        if (m_workflowMap == null) {
-            m_workflowMap = new HashMap<String, WorkflowProject>();
-            WorkflowProjectManager.getWorkflowProjects().stream().forEach((wp) -> {
-                m_workflowMap.put(wp.getName(), wp);
-            });
-        }
     }
 
     private static PortTypeEnt buildPortTypeEnt(final PortTypeUID portTypeUID) {
