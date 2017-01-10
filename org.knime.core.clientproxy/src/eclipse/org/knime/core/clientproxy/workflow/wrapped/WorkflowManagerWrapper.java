@@ -79,8 +79,6 @@ import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
-import org.knime.core.clientproxy.workflow.ConnectionContainer;
-import org.knime.core.clientproxy.workflow.WorkflowManager;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -91,7 +89,7 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.WrapperMapUtil;
 
 /**
- * Implements the {@link IWorkflowManager} interface by simply wrapping the {@link WorkflowManager} implementation.
+ * Implements the {@link IWorkflowManager} interface by simply wrapping the {@link IWorkflowManager} implementation.
  *
  * For all return types that implement an interface (from core.api), another wrapper instance is returned.
  *
@@ -237,7 +235,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      * @see org.knime.core.node.workflow.WorkflowManager#addConnection(org.knime.core.node.workflow.NodeID, int, org.knime.core.node.workflow.NodeID, int)
      */
     @Override
-    public ConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
+    public IConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
         throw new UnsupportedOperationException();
     }
 
@@ -316,7 +314,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      * @see org.knime.core.node.workflow.WorkflowManager#getIncomingConnectionFor(org.knime.core.node.workflow.NodeID, int)
      */
     @Override
-    public ConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
+    public IConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
           throw new UnsupportedOperationException();
 //        return ConnectionContainer.wrap(m_delegate.getIncomingConnectionFor(id, portIdx));
     }
@@ -338,7 +336,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      * @see org.knime.core.node.workflow.WorkflowManager#getConnection(org.knime.core.api.node.workflow.ConnectionID)
      */
     @Override
-    public ConnectionContainer getConnection(final ConnectionID id) {
+    public IConnectionContainer getConnection(final ConnectionID id) {
         throw new UnsupportedOperationException();
 //        return ConnectionContainer.wrap(m_delegate.getConnection(id));
     }
