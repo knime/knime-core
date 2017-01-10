@@ -64,6 +64,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -797,6 +798,14 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
     @Override
     void saveSettings(final NodeSettingsWO settings) {
         saveSettings(settings, false);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ConfigBaseRO getNodeSettings() {
+        NodeSettings settings = new NodeSettings("configuration");
+        saveSettings(settings, true);
+        return settings;
     }
 
     /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.

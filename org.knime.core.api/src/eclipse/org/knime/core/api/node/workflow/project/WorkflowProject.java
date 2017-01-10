@@ -48,6 +48,8 @@
  */
 package org.knime.core.api.node.workflow.project;
 
+import java.util.Optional;
+
 import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
@@ -77,4 +79,8 @@ public interface WorkflowProject {
      * @throws Exception if something got wrong while loading the project
      */
     IWorkflowManager openProject() throws Exception;
+
+    /** @return the workflow if it is open, otherwise an empty optional. */
+    Optional<IWorkflowManager> getProject();
+
 }

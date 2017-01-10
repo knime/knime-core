@@ -55,8 +55,8 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
  */
 public interface ExecutionService extends GatewayService {
 
-	boolean canExecuteUpToHere(final EntityID workflowID,final String nodeID);
+	boolean canExecuteUpToHere(final EntityID workflowID, final String nodeID);
 	
-	WorkflowEnt executeUpToHere(final EntityID workflowID,final String nodeID);
+	WorkflowEnt executeUpToHere(final EntityID workflowID, final String nodeID);
 	
 }

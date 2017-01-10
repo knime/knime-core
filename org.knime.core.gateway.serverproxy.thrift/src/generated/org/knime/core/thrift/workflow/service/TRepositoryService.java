@@ -44,20 +44,28 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
+
+import org.knime.core.thrift.workflow.entity.*;
+
+import com.facebook.swift.service.ThriftMethod;
+import com.facebook.swift.service.ThriftService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+@ThriftService
+public interface TRepositoryService {
 
-#foreach( $method in $methods )
-	$method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
+	@ThriftMethod
+	List<TRepoCategoryEnt> TgetNodeRepository();
 	
-#end
+	@ThriftMethod
+	String TgetNodeDescription(final TNodeFactoryIDEnt factoryID);
+	
 }

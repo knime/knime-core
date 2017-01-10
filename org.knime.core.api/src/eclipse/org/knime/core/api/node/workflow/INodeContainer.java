@@ -54,6 +54,7 @@ import java.util.Optional;
 import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 
@@ -251,6 +252,9 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
     int getNrOutPorts();
 
     int getNrViews();
+
+    /** @return user settings for this node, possibly empty but not <code>null</code>. */
+    ConfigBaseRO getNodeSettings();
 
     /**
      * Returns the number of views provided by the node implementation.

@@ -55,7 +55,8 @@ import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
-import org.knime.core.thrift.workflow.service.TNodeServiceFromThrift;
+import org.knime.core.thrift.workflow.service.TNodeContainerServiceFromThrift;
+import org.knime.core.thrift.workflow.service.TRepositoryServiceFromThrift;
 import org.knime.core.thrift.workflow.service.TTestServiceFromThrift;
 import org.knime.core.thrift.workflow.service.TWorkflowServiceFromThrift;
 
@@ -90,7 +91,8 @@ public class KNIMEThriftServerForJSClient implements KNIMEThriftServer {
                     new ThriftServiceProcessor(new ThriftCodecManager(), Collections.EMPTY_LIST,
                         new TTestServiceFromThrift(),
                         new TWorkflowServiceFromThrift(),
-                        new TNodeServiceFromThrift());
+                        new TRepositoryServiceFromThrift(),
+                        new TNodeContainerServiceFromThrift());
 
             TServerTransport serverTransport = new TServerSocket(2000);
             m_server = new TSimpleServerTest(new Args(serverTransport)

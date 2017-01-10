@@ -59,6 +59,6 @@ public interface TestService extends GatewayService {
 	
 	List<TestEnt> testList(final List<TestEnt> list);
 	
-	double primitives(final String s,final List<String> stringlist);
+	double primitives(final String s, final List<String> stringlist);
 	
 }

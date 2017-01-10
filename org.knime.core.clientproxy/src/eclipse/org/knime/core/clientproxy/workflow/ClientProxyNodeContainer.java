@@ -50,10 +50,12 @@ package org.knime.core.clientproxy.workflow;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.apache.commons.io.IOUtils;
 import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
@@ -76,8 +78,11 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
+import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.util.WrapperMapUtil;
@@ -342,6 +347,18 @@ public class ClientProxyNodeContainer implements INodeContainer {
                 return state.equals("configured");
             }
         };
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ConfigBaseRO getNodeSettings() {
+        String xml = service(NodeContainerService.class)
+                .getNodeSettingsXML(m_node.getParent(), m_node.getNodeID());
+        try {
+            return NodeSettings.loadFromXML(IOUtils.toInputStream(xml, "UTF-8"));
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to read NodeSettings from XML String", ex);
+        }
     }
 
     /**

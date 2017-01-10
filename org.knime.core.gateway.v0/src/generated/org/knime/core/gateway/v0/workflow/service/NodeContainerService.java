@@ -46,18 +46,14 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public interface NodeContainerService extends GatewayService {
 
-#foreach( $method in $methods )
-	$method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
+	String getNodeSettingsXML(final EntityID workflowID, final String nodeID);
 	
-#end
 }

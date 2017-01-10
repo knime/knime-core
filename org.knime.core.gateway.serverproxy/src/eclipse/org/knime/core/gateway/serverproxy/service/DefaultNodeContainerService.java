@@ -43,21 +43,48 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 23, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.gateway.serverproxy.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.apache.commons.io.IOUtils;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.api.node.workflow.project.WorkflowProject;
+import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
+import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.workflow.NodeID;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class DefaultNodeContainerService implements NodeContainerService {
 
-#foreach( $method in $methods )
-	$method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
-	
-#end
+    /** {@inheritDoc} */
+    @Override
+    public String getNodeSettingsXML(final EntityID workflowID, final String nodeID) {
+        WorkflowProject workflowProject = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID());
+        if (workflowProject == null) {
+            throw new RuntimeException("Workflow not known: " + workflowID.getID());
+        }
+        IWorkflowManager manager = workflowProject.getProject().orElseThrow(
+            () -> new RuntimeException("Workflow not open: " + workflowID));
+        INodeContainer nodeContainer = manager.getNodeContainer(NodeID.fromString(nodeID));
+        ConfigBaseRO settings = nodeContainer.getNodeSettings();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            settings.saveToXML(outputStream);
+            return IOUtils.toString(outputStream.toByteArray(), "UTF-8");
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to serialize settings into XML string", ex);
+        }
+    }
+
 }

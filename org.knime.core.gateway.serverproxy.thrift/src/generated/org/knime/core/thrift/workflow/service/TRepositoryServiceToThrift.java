@@ -50,22 +50,32 @@ import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
+import org.knime.core.gateway.serverproxy.service.*;
 import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.v0.workflow.service.*;
 
-import com.facebook.swift.service.ThriftMethod;
-import com.facebook.swift.service.ThriftService;
+import java.util.stream.Collectors;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@ThriftService
-public interface TNodeService {
+public class TRepositoryServiceToThrift implements RepositoryService {
 
-	@ThriftMethod
-	List<TRepoCategoryEnt> TgetNodeRepository();
+	private final TRepositoryService m_service;
 	
-	@ThriftMethod
-	String TgetNodeDescription(final TNodeFactoryIDEnt factoryID);
+	public TRepositoryServiceToThrift(final TRepositoryService service) {
+		m_service = service;
+	}
+
+	@Override
+ 	public List<RepoCategoryEnt> getNodeRepository() {
+    		return m_service.TgetNodeRepository().stream().map(e -> new TRepoCategoryEntFromThrift(e)).collect(Collectors.toList());
+  	}
+	
+	@Override
+ 	public String getNodeDescription(final NodeFactoryIDEnt factoryID) {
+   	 	 	   		return m_service.TgetNodeDescription(new TNodeFactoryIDEntToThrift(factoryID));
+  	}
 	
 }

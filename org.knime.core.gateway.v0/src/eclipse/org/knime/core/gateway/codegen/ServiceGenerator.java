@@ -124,19 +124,11 @@ public class ServiceGenerator {
                  *  data placed into the context.  Think of it as a  'merge'
                  *  of the template and the data to produce the output stream.
                  */
-                FileWriter fileWriter = new FileWriter(m_destDirectory + destFileName + ".java");
-                BufferedWriter writer = new BufferedWriter(fileWriter);
-
-                if (template != null) {
-                    template.merge(context, writer);
-                }
-
-                /*
-                 *  flush and cleanup
-                 */
-
-                writer.flush();
-                writer.close();
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(m_destDirectory + destFileName + ".java"))) {
+                    if (template != null) {
+                        template.merge(context, writer);
+                    }
+                };
             }
         } catch (Exception e) {
             System.out.println(e);
@@ -158,11 +150,16 @@ public class ServiceGenerator {
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
                 "java.util.List"),
-            new DefaultServiceDef("NodeService",
+            new DefaultServiceDef("RepositoryService",
                 new DefaultServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"),
                 new DefaultServiceMethod("getNodeDescription", "String",
                     new DefaultMethodParam("factoryID", "NodeFactoryIDEnt")))
             .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt", "org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"),
+            new DefaultServiceDef("NodeContainerService",
+                new DefaultServiceMethod("getNodeSettingsXML", "String",
+                    new DefaultMethodParam("workflowID", "EntityID"),
+                    new DefaultMethodParam("nodeID", "String")))
+                .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID"),
             new DefaultServiceDef("ExecutionService",
                 new DefaultServiceMethod("canExecuteUpToHere", "boolean",
                     new DefaultMethodParam("workflowID", "EntityID"),

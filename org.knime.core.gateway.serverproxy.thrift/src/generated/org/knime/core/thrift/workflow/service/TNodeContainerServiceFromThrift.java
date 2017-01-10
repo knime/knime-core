@@ -44,20 +44,27 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
-#foreach( $import in $imports)
-import $import;
-#end
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+
+import org.knime.core.gateway.serverproxy.service.*;
+import org.knime.core.thrift.workflow.entity.*;
+import org.knime.core.gateway.v0.workflow.service.*;
+
+import java.util.stream.Collectors;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ${name} extends GatewayService {
+public class TNodeContainerServiceFromThrift implements TNodeContainerService {
 
-#foreach( $method in $methods )
-	$method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
+	private final NodeContainerService m_service = new DefaultNodeContainerService();
+
+	@Override
+ 	public String TgetNodeSettingsXML(final TEntityID workflowID, final String nodeID) {
+   	 	 	  	 	 	   		return m_service.getNodeSettingsXML(new TEntityIDFromThrift(workflowID), nodeID);
+  	}
 	
-#end
 }

@@ -68,6 +68,7 @@ import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 
@@ -246,6 +247,11 @@ public abstract class NodeContainerWrapper implements INodeContainer {
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
         return m_delegate.areDialogAndNodeSettingsEqual();
+    }
+
+    @Override
+    public ConfigBaseRO getNodeSettings() {
+        return m_delegate.getNodeSettings();
     }
 
     @Override

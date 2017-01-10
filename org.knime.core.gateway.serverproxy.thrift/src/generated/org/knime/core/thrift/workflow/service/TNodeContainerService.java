@@ -44,20 +44,23 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.thrift.workflow.service;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
+import org.knime.core.gateway.v0.workflow.entity.EntityID;
+
+import org.knime.core.thrift.workflow.entity.*;
+
+import com.facebook.swift.service.ThriftMethod;
+import com.facebook.swift.service.ThriftService;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface NodeService extends GatewayService {
+@ThriftService
+public interface TNodeContainerService {
 
-	List<RepoCategoryEnt> getNodeRepository();
-	
-	String getNodeDescription(final NodeFactoryIDEnt factoryID);
+	@ThriftMethod
+	String TgetNodeSettingsXML(final TEntityID workflowID,final String nodeID);
 	
 }

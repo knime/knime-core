@@ -5571,13 +5571,20 @@ public boolean canCancelAll() {
         Map<NodeID, MetaNodeDialogNode> nodes =
                 findNodes(MetaNodeDialogNode.class, false);
         ((MetaNodeDialogPane) dialogPane).setQuickformNodes(nodes);
-        NodeSettings settings = new NodeSettings("wfm_settings");
-        saveSettings(settings);
+        NodeSettings settings = getNodeSettings();
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
                 new FlowObjectStack(getID()),
                 new CredentialsProvider(this, m_credentialsStore),
                 getDirectNCParent().isWriteProtected());
         return dialogPane;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettings getNodeSettings() {
+        NodeSettings settings = new NodeSettings("wfm_settings");
+        saveSettings(settings);
+        return settings;
     }
 
     /** {@inheritDoc} */
