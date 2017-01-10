@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/eclipse"/>
+	<classpathentry kind="src" path="src/generated"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry exported="true" kind="lib" path="lib/thrift-0.0.1-SNAPSHOT-jar-with-dependencies.jar" sourcepath="/home/hornm/.m2/repository/org/apache/thrift/libthrift/0.9.3/libthrift-0.9.3-sources.jar"/>
+	<classpathentry kind="output" path="bin/eclipse"/>
+</classpath>
