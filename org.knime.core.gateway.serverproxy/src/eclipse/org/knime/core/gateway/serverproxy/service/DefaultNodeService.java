@@ -55,20 +55,43 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
 import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
 import org.knime.core.gateway.v0.workflow.service.NodeService;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.NodeTemplate;
+import org.knime.workbench.repository.util.NodeFactoryHTMLCreator;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class DefaultNodeService implements NodeService {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeDescription(final NodeFactoryIDEnt factoryID) {
+        //TODO support for dynamic node factory (i.e. id consists of class-name#node-name)
+        NodeTemplate nodeTemplate = RepositoryManager.INSTANCE.getNodeTemplate(factoryID.getClassName());
+        try {
+            NodeFactory<? extends NodeModel> factoryInstance = nodeTemplate.createFactoryInstance();
+            String nodeDescription =
+                    NodeFactoryHTMLCreator.instance.readFullDescription(factoryInstance.getXMLDescription());
+            return nodeDescription;
+        } catch (Exception ex) {
+            //TODO better exception handling
+            throw new RuntimeException(ex);
+        }
+
+    }
 
     @Override
     public List<RepoCategoryEnt> getNodeRepository() {

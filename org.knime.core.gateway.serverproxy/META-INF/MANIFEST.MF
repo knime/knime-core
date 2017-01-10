@@ -8,7 +8,8 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
  org.knime.core.api;bundle-version="3.3.0",
  org.knime.core.gateway.v0;bundle-version="3.3.0",
- org.knime.workbench.repository
+ org.knime.workbench.repository,
+ org.knime.core
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.knime.core.gateway.serverproxy.service

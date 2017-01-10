@@ -48,6 +48,7 @@ package org.knime.core.thrift.workflow.service;
 
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 import org.knime.core.gateway.serverproxy.service.*;
 import org.knime.core.thrift.workflow.entity.*;
@@ -70,6 +71,11 @@ public class TNodeServiceToThrift implements NodeService {
 	@Override
  	public List<RepoCategoryEnt> getNodeRepository() {
     		return m_service.TgetNodeRepository().stream().map(e -> new TRepoCategoryEntFromThrift(e)).collect(Collectors.toList());
+  	}
+	
+	@Override
+ 	public String getNodeDescription(final NodeFactoryIDEnt factoryID) {
+   	 	 	   		return m_service.TgetNodeDescription(new TNodeFactoryIDEntToThrift(factoryID));
   	}
 	
 }
