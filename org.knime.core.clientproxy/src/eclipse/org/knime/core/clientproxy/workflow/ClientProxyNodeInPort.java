@@ -57,14 +57,14 @@ import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeInPort implements INodeInPort {
+public class ClientProxyNodeInPort implements INodeInPort {
 
     private NodeInPortEnt m_inPort;
 
     /**
      *
      */
-    public NodeInPort(final NodeInPortEnt inPort) {
+    public ClientProxyNodeInPort(final NodeInPortEnt inPort) {
         m_inPort = inPort;
     }
 

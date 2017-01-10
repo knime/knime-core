@@ -64,14 +64,14 @@ import org.knime.core.node.workflow.NodeID;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ConnectionContainer implements IConnectionContainer {
+public class ClientProxyConnectionContainer implements IConnectionContainer {
 
     private ConnectionEnt m_connection;
 
     /**
      *
      */
-    public ConnectionContainer(final ConnectionEnt conn) {
+    public ClientProxyConnectionContainer(final ConnectionEnt conn) {
         m_connection = conn;
     }
 

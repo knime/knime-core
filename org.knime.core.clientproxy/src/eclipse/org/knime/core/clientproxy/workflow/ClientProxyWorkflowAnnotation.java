@@ -44,189 +44,40 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Dec 2, 2016 (hornm): created
+ *   Nov 9, 2016 (hornm): created
  */
 package org.knime.core.clientproxy.workflow;
 
+import java.util.Optional;
+
+import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
-import org.knime.core.api.node.workflow.IAnnotation;
-import org.knime.core.api.node.workflow.INodeAnnotation;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeAnnotation implements INodeAnnotation {
+public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
 
-
-    private NodeAnnotationEnt m_nodeAnnotation;
-    private NodeContainer m_nc;
+    private WorkflowAnnotationEnt m_anno;
 
     /**
-     * @param nodeAnnotation
      *
      */
-    public NodeAnnotation(final NodeAnnotationEnt nodeAnnotation, final NodeContainer nc) {
-        m_nodeAnnotation = nodeAnnotation;
-        m_nc = nc;
+    public ClientProxyWorkflowAnnotation(final WorkflowAnnotationEnt anno) {
+        m_anno = anno;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeAnnotationData getData() {
-        return NodeAnnotationData.builder()
-        .setText(m_nodeAnnotation.getText())
-        .setX(m_nodeAnnotation.getX())
-        .setY(m_nodeAnnotation.getY())
-        .setBgColor(m_nodeAnnotation.getBackgroundColor())
-        .setBorderColor(m_nodeAnnotation.getBorderColor())
-        .setBorderSize(m_nodeAnnotation.getBorderSize())
-        .setDefaultFontSize(m_nodeAnnotation.getDefaultFontSize())
-        .setHeight(m_nodeAnnotation.getHeight())
-        .setWidth(m_nodeAnnotation.getWidth())
-        .setAlignment(TextAlignment.valueOf(m_nodeAnnotation.getTextAlignment())).build();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setData(final NodeAnnotationData data) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getText() {
-        return m_nodeAnnotation.getText();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StyleRange[] getStyleRanges() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getBgColor() {
-        return m_nodeAnnotation.getBackgroundColor();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getX() {
-        return m_nodeAnnotation.getX();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getY() {
-        return m_nodeAnnotation.getY();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getWidth() {
-        return m_nodeAnnotation.getWidth();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getHeight() {
-        return m_nodeAnnotation.getHeight();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TextAlignment getAlignment() {
-        return TextAlignment.valueOf(m_nodeAnnotation.getTextAlignment());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getBorderSize() {
-        return m_nodeAnnotation.getBorderSize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getBorderColor() {
-        return m_nodeAnnotation.getBorderColor();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getDefaultFontSize() {
-        return m_nodeAnnotation.getDefaultFontSize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getVersion() {
-        return m_nodeAnnotation.getVersion();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void shiftPosition(final int xOff, final int yOff) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setDimension(final int x, final int y, final int width, final int height) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setDimensionNoNotify(final int x, final int y, final int width, final int height) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IAnnotation<NodeAnnotationData> clone() {
+    public AnnotationData getData() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -235,7 +86,141 @@ public class NodeAnnotation implements INodeAnnotation {
      * {@inheritDoc}
      */
     @Override
-    public void copyFrom(final NodeAnnotationData annotationData, final boolean includeBounds) {
+    public void setData(final AnnotationData data) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return m_anno.getText();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StyleRange[] getStyleRanges() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getBgColor() {
+        return m_anno.getBgColor();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getX() {
+        return m_anno.getBounds().getX();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getY() {
+        return m_anno.getBounds().getY();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getWidth() {
+        return m_anno.getBounds().getWidth();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getHeight() {
+        return m_anno.getBounds().getHeight();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TextAlignment getAlignment() {
+        return TextAlignment.valueOf(m_anno.getAlignment());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getBorderSize() {
+        return m_anno.getBorderSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getBorderColor() {
+        return m_anno.getBorderColor();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getDefaultFontSize() {
+        return m_anno.getFontSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getVersion() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void shiftPosition(final int xOff, final int yOff) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDimension(final int x, final int y, final int width, final int height) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDimensionNoNotify(final int x, final int y, final int width, final int height) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void copyFrom(final AnnotationData annotationData, final boolean includeBounds) {
         // TODO Auto-generated method stub
 
     }
@@ -271,8 +256,27 @@ public class NodeAnnotation implements INodeAnnotation {
      * {@inheritDoc}
      */
     @Override
-    public INodeContainer getNodeContainer() {
-        return m_nc;
+    public Optional<WorkflowAnnotationID> getID() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setID(final WorkflowAnnotationID wfaID) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IWorkflowAnnotation clone() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

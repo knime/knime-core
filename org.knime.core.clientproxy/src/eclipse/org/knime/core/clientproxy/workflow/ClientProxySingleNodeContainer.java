@@ -56,12 +56,12 @@ import org.w3c.dom.Element;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class SingleNodeContainer extends NodeContainer implements ISingleNodeContainer {
+public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer implements ISingleNodeContainer {
 
     /**
      * @param node
      */
-    public SingleNodeContainer(final NodeEnt node) {
+    public ClientProxySingleNodeContainer(final NodeEnt node) {
         super(node);
         // TODO Auto-generated constructor stub
     }

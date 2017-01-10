@@ -86,7 +86,7 @@ import org.knime.core.util.WrapperMapUtil;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeContainer implements INodeContainer {
+public class ClientProxyNodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
 
@@ -114,7 +114,7 @@ public class NodeContainer implements INodeContainer {
      *
      * @param node
      */
-    public NodeContainer(final NodeEnt node) {
+    public ClientProxyNodeContainer(final NodeEnt node) {
         m_node = node;
     }
 
@@ -136,7 +136,7 @@ public class NodeContainer implements INodeContainer {
         //download 'workflow' from 'server'
         final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent);
         //return same instance if the instance for this ID has already been created
-        return WrapperMapUtil.getOrCreate(parent.getID(), we -> new WorkflowManager(workflow));
+        return WrapperMapUtil.getOrCreate(parent.getID(), we -> new ClientProxyWorkflowManager(workflow));
     }
 
     /**
@@ -419,7 +419,7 @@ public class NodeContainer implements INodeContainer {
     @Override
     public INodeInPort getInPort(final int index) {
         //possibly return the same node in port instance for the same index
-        return new NodeInPort(m_node.getInPorts().get(index));
+        return new ClientProxyNodeInPort(m_node.getInPorts().get(index));
     }
 
     /**
@@ -428,7 +428,7 @@ public class NodeContainer implements INodeContainer {
     @Override
     public INodeOutPort getOutPort(final int index) {
       //TODO possibly return the same node in port instance for the same index
-        return new NodeOutPort(m_node.getOutPorts().get(index));
+        return new ClientProxyNodeOutPort(m_node.getOutPorts().get(index));
     }
 
     /**
@@ -559,7 +559,7 @@ public class NodeContainer implements INodeContainer {
     @Override
     public INodeAnnotation getNodeAnnotation() {
         //TODO return the same node annotation instance in multiple calls
-        return new NodeAnnotation(m_node.getNodeAnnotation(), this);
+        return new ClientProxyNodeAnnotation(m_node.getNodeAnnotation(), this);
     }
 
     /**

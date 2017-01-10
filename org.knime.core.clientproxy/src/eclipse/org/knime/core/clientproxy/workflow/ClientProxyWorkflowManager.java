@@ -102,14 +102,14 @@ import org.knime.core.util.WrapperMapUtil;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowManager extends NodeContainer implements IWorkflowManager {
+public class ClientProxyWorkflowManager extends ClientProxyNodeContainer implements IWorkflowManager {
 
     private final WorkflowEnt m_workflow;
 
     /**
      * @param workflow
      */
-    public WorkflowManager(final WorkflowEnt workflow) {
+    public ClientProxyWorkflowManager(final WorkflowEnt workflow) {
         super(workflow);
         m_workflow = workflow;
     }
@@ -254,7 +254,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getSource().equals(nodeID) && c.getSourcePort() == portIdx) {
                 //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ConnectionContainer(c));
+                res.add(new ClientProxyConnectionContainer(c));
             }
         }
         return res;
@@ -271,7 +271,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getSource().equals(nodeID)) {
                 //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ConnectionContainer(c));
+                res.add(new ClientProxyConnectionContainer(c));
             }
         }
         return res;
@@ -287,7 +287,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getDest().equals(nodeID) && c.getDestPort() == portIdx) {
                 //TODO re-use connection container wrapper for the same connection entity
-                return new ConnectionContainer(c);
+                return new ClientProxyConnectionContainer(c);
             }
         }
         return null;
@@ -304,7 +304,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getDest().equals(nodeID)) {
                 //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ConnectionContainer(c));
+                res.add(new ClientProxyConnectionContainer(c));
             }
         }
         return res;
@@ -319,7 +319,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if (m_workflow.getNodes().get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
                 && id.getDestinationPort() == c.getDestPort()) {
-                return new ConnectionContainer(c);
+                return new ClientProxyConnectionContainer(c);
             }
         }
         return null;
@@ -740,7 +740,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         Collection<NodeEnt> nodes = m_workflow.getNodes().values();
         //return exactly the same node container instance for the same node entity
         return nodes.stream()
-            .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new NodeContainer(n), NodeContainer.class))
+            .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new ClientProxyNodeContainer(n), ClientProxyNodeContainer.class))
             .collect(Collectors.toList());
     }
 
@@ -753,7 +753,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         List<? extends ConnectionEnt> connections = m_workflow.getConnections();
         //return exactly the same connection container instance for the same connection entity
         return connections.stream()
-            .map(c -> WrapperMapUtil.getOrCreate(c, k -> new ConnectionContainer(c), ConnectionContainer.class))
+            .map(c -> WrapperMapUtil.getOrCreate(c, k -> new ClientProxyConnectionContainer(c), ClientProxyConnectionContainer.class))
             .collect(Collectors.toList());
     }
 
@@ -765,7 +765,7 @@ public class WorkflowManager extends NodeContainer implements IWorkflowManager {
         //TODO e.g. put the node entities into a hash map for quicker access
         final NodeEnt nodeEnt = m_workflow.getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
-        return WrapperMapUtil.getOrCreate(id, k -> new NodeContainer(nodeEnt), NodeContainer.class);
+        return WrapperMapUtil.getOrCreate(id, k -> new ClientProxyNodeContainer(nodeEnt), ClientProxyNodeContainer.class);
     }
 
     /**
