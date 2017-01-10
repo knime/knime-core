@@ -6,7 +6,15 @@ Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: .,
  lib/thrift-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: org.knime.core.thrift.codegen,
+Export-Package: org.apache.thrift,
+ org.apache.thrift.async,
+ org.apache.thrift.meta_data,
+ org.apache.thrift.protocol,
+ org.apache.thrift.scheme,
+ org.apache.thrift.server,
+ org.apache.thrift.transport,
+ org.knime.core.thrift,
+ org.knime.core.thrift.codegen,
  org.knime.core.thrift.workflow.entity,
  org.knime.core.thrift.workflow.service
 Require-Bundle: org.knime.core.gateway.v0;bundle-version="3.3.0",
