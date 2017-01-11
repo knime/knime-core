@@ -51,13 +51,19 @@ package org.knime.core.gateway.codegen.types;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang.RandomStringUtils;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public class DefaultType implements Type {
+
+    private Random m_rand = new Random();
+
 
     public static enum GenericType {
         NONE,
@@ -158,6 +164,37 @@ public class DefaultType implements Type {
                 }
             }
             return true;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object createRandomPrimitive() {
+        if(isPrimitive()) {
+            if(isList()) {
+                //TODO
+                return null;
+            } else if( isMap()) {
+                //TODO
+                return null;
+            } else {
+                if(m_name.equals("boolean")) {
+                    return m_rand.nextBoolean();
+                } else if(m_name.equals("int")) {
+                    return m_rand.nextInt();
+                } else if(m_name.equals("float")) {
+                    return m_rand.nextFloat();
+                } else if(m_name.equals("double")) {
+                    return m_rand.nextDouble();
+                } else if(m_name.equals("String")) {
+                    return "\"" + RandomStringUtils.randomAlphanumeric(5) + "\"";
+                }
+                return null;
+            }
+        } else {
+            return null;
         }
     }
 

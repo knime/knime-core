@@ -54,6 +54,14 @@ package org.knime.core.gateway.codegen.types;
  */
 public interface Type {
 
+    /**
+     * Returns the type as a string and appends or prepends the given strings iff they are not primitives. In case of
+     * primitives ({@link #isPrimitive()}) nothing will be appended or prepended.
+     *
+     * @param append string to append
+     * @param prepend string to prepend
+     * @return the type as string
+     */
     String toString(String append, String prepend);
 
     /**
@@ -71,4 +79,10 @@ public interface Type {
     boolean isVoid();
 
     Type getTypeParameter(int index);
+
+    /**
+     * @return a new random primitive or a list/map of random primitives. If not primitive, <code>null</code> will be
+     *         returned
+     */
+    Object createRandomPrimitive();
 }
