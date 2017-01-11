@@ -61,11 +61,14 @@ import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodePortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
@@ -79,11 +82,14 @@ import org.knime.core.thrift.workflow.entity.TConnectionEnt.TConnectionEntBuilde
 import org.knime.core.thrift.workflow.entity.TEntityID.TEntityIDBuilder;
 import org.knime.core.thrift.workflow.entity.TJobManagerEnt.TJobManagerEntBuilder;
 import org.knime.core.thrift.workflow.entity.TMetaPortEnt.TMetaPortEntBuilder;
+import org.knime.core.thrift.workflow.entity.TNativeNodeEnt.TNativeNodeEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeAnnotationEnt.TNodeAnnotationEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeEnt.TNodeEntBuilder;
+import org.knime.core.thrift.workflow.entity.TNodeFactoryIDEnt.TNodeFactoryIDEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeInPortEnt.TNodeInPortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeMessageEnt.TNodeMessageEntBuilder;
 import org.knime.core.thrift.workflow.entity.TNodeOutPortEnt.TNodeOutPortEntBuilder;
+import org.knime.core.thrift.workflow.entity.TNodePortEnt.TNodePortEntBuilder;
 import org.knime.core.thrift.workflow.entity.TPortTypeEnt.TPortTypeEntBuilder;
 import org.knime.core.thrift.workflow.entity.TRepoCategoryEnt.TRepoCategoryEntBuilder;
 import org.knime.core.thrift.workflow.entity.TRepoNodeTemplateEnt.TRepoNodeTemplateEntBuilder;
@@ -110,6 +116,7 @@ public class TEntityBuilderFactory implements EntityBuilderFactory {
         ENTITY_BUILDER_MAP.put(NodeEntBuilder.class, TNodeEntBuilder.class);
         ENTITY_BUILDER_MAP.put(NodeInPortEntBuilder.class, TNodeInPortEntBuilder.class);
         ENTITY_BUILDER_MAP.put(NodeOutPortEntBuilder.class, TNodeOutPortEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(NodePortEntBuilder.class, TNodePortEntBuilder.class);
         ENTITY_BUILDER_MAP.put(EntityIDBuilder.class, TEntityIDBuilder.class);
         ENTITY_BUILDER_MAP.put(BoundsEntBuilder.class, TBoundsEntBuilder.class);
         ENTITY_BUILDER_MAP.put(ConnectionEntBuilder.class, TConnectionEntBuilder.class);
@@ -120,6 +127,9 @@ public class TEntityBuilderFactory implements EntityBuilderFactory {
         ENTITY_BUILDER_MAP.put(MetaPortEntBuilder.class, TMetaPortEntBuilder.class);
         ENTITY_BUILDER_MAP.put(RepoCategoryEntBuilder.class, TRepoCategoryEntBuilder.class);
         ENTITY_BUILDER_MAP.put(RepoNodeTemplateEntBuilder.class, TRepoNodeTemplateEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(NodeFactoryIDEntBuilder.class, TNodeFactoryIDEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(NativeNodeEntBuilder.class, TNativeNodeEntBuilder.class);
+        ENTITY_BUILDER_MAP.put(RepoCategoryEntBuilder.class, TRepoCategoryEntBuilder.class);
     }
 
     /**
