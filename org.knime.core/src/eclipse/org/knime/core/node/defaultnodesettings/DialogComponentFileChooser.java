@@ -302,17 +302,20 @@ public class DialogComponentFileChooser extends DialogComponent {
     /**
      * Replaces the title displayed in the border that surrounds the editfield
      * and browse button with the specified new title. The default title of the
-     * component is "Selected File:" or "Selected Directory:".
+     * component is "Selected File:" or "Selected Directory:". If the title is
+     * <code>null</code>, the border will be removed.
      *
-     * @param newTitle the new title to display in the border.
-     *
-     * @throws IllegalArgumentException if the new title is <code>null</code>
+     * @param newTitle the new title to display in the border. <code>null</code>
+     * removes the border
      */
     public void setBorderTitle(final String newTitle) {
         if (newTitle == null) {
-            throw new IllegalArgumentException("New title to display must not be null.");
+            getComponentPanel().setBorder(null);
         }
-        m_border.setTitle(newTitle);
+        else {
+            getComponentPanel().setBorder(m_border);
+            m_border.setTitle(newTitle);
+        }
     }
 
     /**
