@@ -63,8 +63,8 @@ public class TNodeContainerServiceFromThrift implements TNodeContainerService {
 	private final NodeContainerService m_service = new DefaultNodeContainerService();
 
 	@Override
- 	public String TgetNodeSettingsXML(final TEntityID workflowID, final String nodeID) {
-   	 	 	  	 	 	   		return m_service.getNodeSettingsXML(new TEntityIDFromThrift(workflowID), nodeID);
+ 	public String TgetNodeSettingsJSON(final TEntityID workflowID, final String nodeID) {
+   	 	 	  	 	 	   		return m_service.getNodeSettingsJSON(new TEntityIDFromThrift(workflowID), nodeID);
   	}
 	
 }

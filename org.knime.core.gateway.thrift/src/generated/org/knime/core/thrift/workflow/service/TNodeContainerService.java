@@ -61,6 +61,6 @@ import com.facebook.swift.service.ThriftService;
 public interface TNodeContainerService {
 
 	@ThriftMethod
-	String TgetNodeSettingsXML(final TEntityID workflowID,final String nodeID);
+	String TgetNodeSettingsJSON(final TEntityID workflowID,final String nodeID);
 	
 }

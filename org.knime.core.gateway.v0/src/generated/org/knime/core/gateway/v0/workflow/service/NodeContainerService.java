@@ -54,6 +54,6 @@ import org.knime.core.gateway.v0.workflow.entity.EntityID;
  */
 public interface NodeContainerService extends GatewayService {
 
-	String getNodeSettingsXML(final EntityID workflowID, final String nodeID);
+	String getNodeSettingsJSON(final EntityID workflowID, final String nodeID);
 	
 }
