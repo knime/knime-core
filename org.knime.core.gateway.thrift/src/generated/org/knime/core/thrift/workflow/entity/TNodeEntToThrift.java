@@ -113,6 +113,11 @@ public class TNodeEntToThrift extends TNodeEnt {
         }
     
 	@Override
+    public String getNodeTypeID() {
+        	return m_e.getNodeTypeID();
+        }
+    
+	@Override
     public String getNodeType() {
         	return m_e.getNodeType();
         }
@@ -206,6 +211,12 @@ public class TNodeEntToThrift extends TNodeEnt {
 		@Override
         public TNodeEntBuilderToThrift setNodeID(final String NodeID) {
 					m_b.setNodeID(NodeID);
+		            return this;
+        }
+        
+		@Override
+        public TNodeEntBuilderToThrift setNodeTypeID(final String NodeTypeID) {
+					m_b.setNodeTypeID(NodeTypeID);
 		            return this;
         }
         

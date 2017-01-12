@@ -92,6 +92,10 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
  * Collects helper methods to build entity instances basically from core.api-classes (e.g. IWorkflowManager etc.).
@@ -171,13 +175,24 @@ public class EntityBuilderUtil {
     }
 
     private static NodeEnt buildNodeEnt(final INodeContainer nc) {
+
+        String nodeTypeID = "";
+        if(nc instanceof NativeNodeContainer) {
+            NodeFactory<NodeModel> factory = ((NativeNodeContainer)nc).getNode().getFactory();
+            if(factory instanceof DynamicNodeFactory) {
+                nodeTypeID = factory.getClass().getCanonicalName() + "#" + nc.getName();
+            } else {
+                nodeTypeID = factory.getClass().getCanonicalName();
+            }
+        }
         return builder(NodeEntBuilder.class).setName(nc.getName()).setNodeID(nc.getID().toString())
             .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
             .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
             .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
             .setParent(builder(EntityIDBuilder.class).setID("TODO").setType("WorkflowEnt").build())
             .setJobManager(buildJobManagerEnt(nc)).setNodeAnnotation(buildNodeAnnotationEnt(nc))
-            .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog()).build();
+            .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog())
+            .setNodeTypeID(nodeTypeID).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {

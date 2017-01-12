@@ -55,7 +55,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
 import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
@@ -78,9 +77,9 @@ public class DefaultRepositoryService implements RepositoryService {
      * {@inheritDoc}
      */
     @Override
-    public String getNodeDescription(final NodeFactoryIDEnt factoryID) {
+    public String getNodeDescription(final String nodeTypeID) {
         //TODO support for dynamic node factory (i.e. id consists of class-name#node-name)
-        NodeTemplate nodeTemplate = RepositoryManager.INSTANCE.getNodeTemplate(factoryID.getClassName());
+        NodeTemplate nodeTemplate = RepositoryManager.INSTANCE.getNodeTemplate(nodeTypeID);
         try {
             NodeFactory<? extends NodeModel> factoryInstance = nodeTemplate.createFactoryInstance();
             String nodeDescription =

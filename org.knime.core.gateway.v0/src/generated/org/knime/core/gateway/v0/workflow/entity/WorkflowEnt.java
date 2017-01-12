@@ -89,6 +89,8 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
  	
   	String getNodeID();
  	
+  	String getNodeTypeID();
+ 	
   	String getNodeType();
  	
   	BoundsEnt getBounds();

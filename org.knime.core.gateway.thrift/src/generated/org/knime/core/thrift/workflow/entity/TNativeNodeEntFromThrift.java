@@ -117,6 +117,11 @@ public class TNativeNodeEntFromThrift implements NativeNodeEnt {
     	    }
     
     @Override
+    public String getNodeTypeID() {
+    	    	return m_e.getNodeTypeID();
+    	    }
+    
+    @Override
     public String getNodeType() {
     	    	return m_e.getNodeType();
     	    }
@@ -209,6 +214,12 @@ public class TNativeNodeEntFromThrift implements NativeNodeEnt {
 		@Override
         public TNativeNodeEntBuilderFromThrift setNodeID(final String NodeID) {
                 	m_b.setNodeID(NodeID);
+                    return this;
+        }
+        
+		@Override
+        public TNativeNodeEntBuilderFromThrift setNodeTypeID(final String NodeTypeID) {
+                	m_b.setNodeTypeID(NodeTypeID);
                     return this;
         }
         

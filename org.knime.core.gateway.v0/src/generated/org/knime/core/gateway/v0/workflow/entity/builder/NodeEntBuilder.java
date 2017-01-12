@@ -77,6 +77,8 @@ public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
 
 	NodeEntBuilder setNodeID(String NodeID);
 
+	NodeEntBuilder setNodeTypeID(String NodeTypeID);
+
 	NodeEntBuilder setNodeType(String NodeType);
 
 	NodeEntBuilder setBounds(BoundsEnt Bounds);

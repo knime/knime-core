@@ -48,7 +48,6 @@ package org.knime.core.thrift.workflow.service;
 
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 import org.knime.core.thrift.workflow.entity.*;
 
@@ -66,6 +65,6 @@ public interface TRepositoryService {
 	List<TRepoCategoryEnt> TgetNodeRepository();
 	
 	@ThriftMethod
-	String TgetNodeDescription(final TNodeFactoryIDEnt factoryID);
+	String TgetNodeDescription(final String nodeTypeID);
 	
 }

@@ -171,6 +171,7 @@ public final class EntityGenerator {
                 new DefaultEntityField("OutPorts", "List<NodeOutPortEnt>"),
                 new DefaultEntityField("Name", "String"),
                 new DefaultEntityField("NodeID", "String"),
+                new DefaultEntityField("NodeTypeID", "String"),
                 new DefaultEntityField("NodeType", "String"),
                 new DefaultEntityField("Bounds", "BoundsEnt"),
                 new DefaultEntityField("IsDeletable", "boolean"),

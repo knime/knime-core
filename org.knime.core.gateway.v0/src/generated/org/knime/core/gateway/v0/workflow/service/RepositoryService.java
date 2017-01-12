@@ -48,7 +48,6 @@ package org.knime.core.gateway.v0.workflow.service;
 
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 /**
  *
@@ -58,6 +57,6 @@ public interface RepositoryService extends GatewayService {
 
 	List<RepoCategoryEnt> getNodeRepository();
 	
-	String getNodeDescription(final NodeFactoryIDEnt factoryID);
+	String getNodeDescription(final String nodeTypeID);
 	
 }

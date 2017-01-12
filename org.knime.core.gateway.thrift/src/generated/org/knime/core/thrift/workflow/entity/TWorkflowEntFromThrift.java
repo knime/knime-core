@@ -139,6 +139,11 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
     	    }
     
     @Override
+    public String getNodeTypeID() {
+    	    	return m_e.getNodeTypeID();
+    	    }
+    
+    @Override
     public String getNodeType() {
     	    	return m_e.getNodeType();
     	    }
@@ -252,6 +257,12 @@ public class TWorkflowEntFromThrift implements WorkflowEnt {
 		@Override
         public TWorkflowEntBuilderFromThrift setNodeID(final String NodeID) {
                 	m_b.setNodeID(NodeID);
+                    return this;
+        }
+        
+		@Override
+        public TWorkflowEntBuilderFromThrift setNodeTypeID(final String NodeTypeID) {
+                	m_b.setNodeTypeID(NodeTypeID);
                     return this;
         }
         

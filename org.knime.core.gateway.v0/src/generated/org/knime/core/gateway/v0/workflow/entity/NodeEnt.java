@@ -76,6 +76,8 @@ public interface NodeEnt extends GatewayEntity {
  	
   	String getNodeID();
  	
+  	String getNodeTypeID();
+ 	
   	String getNodeType();
  	
   	BoundsEnt getBounds();

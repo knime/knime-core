@@ -90,6 +90,8 @@ public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
 
 	WorkflowEntBuilder setNodeID(String NodeID);
 
+	WorkflowEntBuilder setNodeTypeID(String NodeTypeID);
+
 	WorkflowEntBuilder setNodeType(String NodeType);
 
 	WorkflowEntBuilder setBounds(BoundsEnt Bounds);

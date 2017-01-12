@@ -86,6 +86,7 @@ public class TNodeEnt {
 	private List<TNodeOutPortEnt> m_OutPorts;
 	private String m_Name;
 	private String m_NodeID;
+	private String m_NodeTypeID;
 	private String m_NodeType;
 	private TBoundsEnt m_Bounds;
 	private boolean m_IsDeletable;
@@ -104,6 +105,7 @@ public class TNodeEnt {
 		m_OutPorts = builder.m_OutPorts;
 		m_Name = builder.m_Name;
 		m_NodeID = builder.m_NodeID;
+		m_NodeTypeID = builder.m_NodeTypeID;
 		m_NodeType = builder.m_NodeType;
 		m_Bounds = builder.m_Bounds;
 		m_IsDeletable = builder.m_IsDeletable;
@@ -152,31 +154,36 @@ public class TNodeEnt {
     }
     
     @ThriftField(8)
+    public String getNodeTypeID() {
+        return m_NodeTypeID;
+    }
+    
+    @ThriftField(9)
     public String getNodeType() {
         return m_NodeType;
     }
     
-    @ThriftField(9)
+    @ThriftField(10)
     public TBoundsEnt getBounds() {
         return m_Bounds;
     }
     
-    @ThriftField(10)
+    @ThriftField(11)
     public boolean getIsDeletable() {
         return m_IsDeletable;
     }
     
-    @ThriftField(11)
+    @ThriftField(12)
     public String getNodeState() {
         return m_NodeState;
     }
     
-    @ThriftField(12)
+    @ThriftField(13)
     public boolean getHasDialog() {
         return m_HasDialog;
     }
     
-    @ThriftField(13)
+    @ThriftField(14)
     public TNodeAnnotationEnt getNodeAnnotation() {
         return m_NodeAnnotation;
     }
@@ -200,6 +207,7 @@ public class TNodeEnt {
 		private List<TNodeOutPortEnt> m_OutPorts;
 		private String m_Name;
 		private String m_NodeID;
+		private String m_NodeTypeID;
 		private String m_NodeType;
 		private TBoundsEnt m_Bounds;
 		private boolean m_IsDeletable;
@@ -256,6 +264,12 @@ public class TNodeEnt {
         @ThriftField
         public TNodeEntBuilder setNodeID(final String NodeID) {
 			m_NodeID = NodeID;			
+            return this;
+        }
+        
+        @ThriftField
+        public TNodeEntBuilder setNodeTypeID(final String NodeTypeID) {
+			m_NodeTypeID = NodeTypeID;			
             return this;
         }
         

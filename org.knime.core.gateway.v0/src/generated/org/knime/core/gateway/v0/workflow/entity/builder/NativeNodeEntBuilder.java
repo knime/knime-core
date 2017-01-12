@@ -80,6 +80,8 @@ public interface NativeNodeEntBuilder extends GatewayEntityBuilder<NativeNodeEnt
 
 	NativeNodeEntBuilder setNodeID(String NodeID);
 
+	NativeNodeEntBuilder setNodeTypeID(String NodeTypeID);
+
 	NativeNodeEntBuilder setNodeType(String NodeType);
 
 	NativeNodeEntBuilder setBounds(BoundsEnt Bounds);
