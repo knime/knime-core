@@ -45,15 +45,25 @@
  */
 package org.knime.core.node;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.ComplexNumberCell;
@@ -62,32 +72,32 @@ import org.knime.core.data.def.FuzzyIntervalCell;
 import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-
-import junit.framework.TestCase;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.base.JSONConfig;
+import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 
 /**
  * Test the <code>Config</code> class.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class NodeSettingsTest extends TestCase {
+public final class NodeSettingsTest {
 
     private NodeSettings m_settings;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         m_settings = new NodeSettings("test-settings");
     }
 
-    /** {@inheritDoc} */
-    @Override
+    @After
     public void tearDown() throws Exception {
         StringBuffer buf = new StringBuffer();
         m_settings.toString(buf);
         NodeLogger.getLogger(getClass()).debug(buf.toString());
         testFile();
         testXML();
+        testJSON();
     }
 
 //    /**
@@ -128,6 +138,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testInt() throws Exception {
         try {
             m_settings.addInt(null, 11);
@@ -158,12 +169,39 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(m_settings.getIntArray(key) == null);
     }
 
+    @Test
+    public void testBasicJSONIO() throws IOException {
+        m_settings.addBoolean("key-bool", true);
+        m_settings.addBooleanArray("key-bool-arr", new boolean[] {true, false});
+        m_settings.addString("key-string", "Sequence of Characters");
+        m_settings.addStringArray("key-string-arr", new String[] {"Sequence", "of", "Characters"});
+        m_settings.addDouble("key-double", 27.6);
+        m_settings.addDoubleArray("key-double-arr", new double[] {12.2, 15.0, -2.7});
+        m_settings.addInt("key-int", 12);
+        m_settings.addIntArray("key-int-arr", new int[] {1, 2, 3});
+        m_settings.addPassword("key-int", "secret", "the-real-password");
+        m_settings.addTransientString("key-transient", "transient-string-value");
+        Config subtree = m_settings.addConfig("key-subtree");
+        subtree.addString("key-subtree-string", "value-subtree-string");
+        subtree.addInt("key-subtree-int", 391);
+        subtree.addDouble("key-subtree-double", -13.2);
+        String jsonString = JSONConfig.toJSONString(m_settings, WriterConfig.PRETTY);
+        System.out.println(jsonString);
+        NodeSettings newCopy = JSONConfig.readJSON(new NodeSettings("test-settings"), new StringReader(jsonString));
+        // transient strings are ... transient so not saved and we restore the original value.
+        newCopy.addTransientString("key-transient", "transient-string-value");
+        Assert.assertEquals(m_settings, newCopy);
+
+        // there is more testing done in 'teardown', which includes save/load
+        m_settings.addString("key-transient", "overwritten-for-persistable-string");
+    }
+
     /**
      * Test write/read of doubles.
      *
      * @throws Exception Should not happen.
      */
-
+    @Test
     public void testDouble() throws Exception {
         try {
             m_settings.addDouble(null, 11.11);
@@ -199,6 +237,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testFloat() throws Exception {
         try {
             m_settings.addFloat(null, 11.11f);
@@ -234,6 +273,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testBoolean() throws Exception {
         try {
             m_settings.addBoolean(null, true);
@@ -269,6 +309,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testChar() throws Exception {
         try {
             m_settings.addChar(null, '5');
@@ -304,6 +345,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testShort() throws Exception {
         try {
             m_settings.addShort(null, (short)'5');
@@ -339,6 +381,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testLong() throws Exception {
         try {
             m_settings.addLong(null, 42L);
@@ -374,6 +417,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testByte() throws Exception {
         try {
             m_settings.addByte(null, (byte)'n');
@@ -409,6 +453,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testStringDataCell() throws Exception {
         try {
             m_settings.addDataCell(null, new StringCell("null"));
@@ -461,6 +506,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testDataCell() throws Exception {
         StringCell s = new StringCell("stringi");
         m_settings.addDataCell("string", s);
@@ -517,6 +563,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testDataType() throws Exception {
         try {
             m_settings.addDataType(null, StringCell.TYPE);
@@ -567,6 +614,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testString() throws Exception {
         try {
             m_settings.addString(null, "null");
@@ -611,6 +659,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testConfig() throws Exception {
         try {
             m_settings.addNodeSettings((String)null);
@@ -630,6 +679,7 @@ public final class NodeSettingsTest extends TestCase {
     /**
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.
      */
+    @Test
     public void testKeySets() {
         NodeSettings key = (NodeSettings) m_settings.addNodeSettings("test_key_set");
         key.addNodeSettings("ConfigA");
@@ -658,6 +708,7 @@ public final class NodeSettingsTest extends TestCase {
      *
      * @throws Exception Should not happen.
      */
+    @Test
     public void testSpecialStrings() throws Exception {
         NodeSettings key = (NodeSettings) m_settings.addNodeSettings(
                 "special_strings");
@@ -691,6 +742,7 @@ public final class NodeSettingsTest extends TestCase {
      * Test a 3x2x3 int array.
      * @throws InvalidSettingsException If a value could not be read.
      */
+    @Test
     public void testInt3DMatrix() throws InvalidSettingsException {
         NodeSettings config = (NodeSettings) m_settings.addNodeSettings("matrix");
         // write int matrix
@@ -717,6 +769,7 @@ public final class NodeSettingsTest extends TestCase {
     /**
      * Tests multiple keys for different types.
      */
+    @Test
     public void testKeys() {
         String key = "key-test";
         m_settings.addNodeSettings(key);
@@ -762,11 +815,20 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(settings.equals(m_settings));
     }
 
+    public void testJSON() throws Exception {
+        StringWriter writer = new StringWriter();
+        JSONConfig.writeJSON(m_settings, writer, WriterConfig.PRETTY);
+        String s = writer.toString();
+        NodeSettings copySettings = JSONConfig.readJSON(new NodeSettings("test-settings"), new StringReader(s));
+        assertTrue(copySettings.equals(m_settings));
+    }
+
     /**
      * Checks whether the add/getPassword methods work as expected.
      *
      * @throws Exception if an error occurs
      */
+    @Test
     public void testPassword() throws Exception {
         final String encKey = "LaLeLu";
 
@@ -797,18 +859,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(m_settings.getPassword("nonExistingPassword", encKey, "none").equals("none"));
     }
 
+    @Test
     public void testJapanese() throws Exception {
         m_settings.addString("japanese", "あ");
-        assertEquals("あ",   m_settings.getString("japanese"));
-    }
-
-    /**
-     * System entry point.
-     *
-     * @param args The command line arguments.
-     */
-    public static void main(final String[] args) {
-        junit.textui.TestRunner.run(NodeSettingsTest.class);
+        Assert.assertEquals("あ",   m_settings.getString("japanese"));
     }
 
 } // NodeSettingsTest
