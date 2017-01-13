@@ -63,4 +63,6 @@ public interface RepoNodeTemplateEntBuilder extends GatewayEntityBuilder<RepoNod
 
 	RepoNodeTemplateEntBuilder setIconURL(String IconURL);
 
+	RepoNodeTemplateEntBuilder setNodeTypeID(String NodeTypeID);
+
 }

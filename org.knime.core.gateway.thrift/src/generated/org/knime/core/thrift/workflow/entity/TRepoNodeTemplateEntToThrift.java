@@ -89,6 +89,11 @@ public class TRepoNodeTemplateEntToThrift extends TRepoNodeTemplateEnt {
         	return m_e.getIconURL();
         }
     
+	@Override
+    public String getNodeTypeID() {
+        	return m_e.getNodeTypeID();
+        }
+    
 
 	@Override
 	public String toString() {
@@ -135,6 +140,12 @@ public class TRepoNodeTemplateEntToThrift extends TRepoNodeTemplateEnt {
 		@Override
         public TRepoNodeTemplateEntBuilderToThrift setIconURL(final String IconURL) {
 					m_b.setIconURL(IconURL);
+		            return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderToThrift setNodeTypeID(final String NodeTypeID) {
+					m_b.setNodeTypeID(NodeTypeID);
 		            return this;
         }
         

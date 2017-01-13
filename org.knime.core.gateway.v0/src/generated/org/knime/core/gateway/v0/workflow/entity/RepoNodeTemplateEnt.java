@@ -62,4 +62,6 @@ public interface RepoNodeTemplateEnt extends GatewayEntity {
  	
   	String getIconURL();
  	
+  	String getNodeTypeID();
+ 	
  }

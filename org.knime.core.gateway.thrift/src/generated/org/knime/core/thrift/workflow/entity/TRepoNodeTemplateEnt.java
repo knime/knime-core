@@ -75,6 +75,7 @@ public class TRepoNodeTemplateEnt {
 	private String m_Type;
 	private String m_ID;
 	private String m_IconURL;
+	private String m_NodeTypeID;
 
     /**
      * @param builder
@@ -84,6 +85,7 @@ public class TRepoNodeTemplateEnt {
 		m_Type = builder.m_Type;
 		m_ID = builder.m_ID;
 		m_IconURL = builder.m_IconURL;
+		m_NodeTypeID = builder.m_NodeTypeID;
     }
     
     protected TRepoNodeTemplateEnt() {
@@ -110,6 +112,11 @@ public class TRepoNodeTemplateEnt {
         return m_IconURL;
     }
     
+    @ThriftField(5)
+    public String getNodeTypeID() {
+        return m_NodeTypeID;
+    }
+    
 
 	@Override
 	public String toString() {
@@ -126,6 +133,7 @@ public class TRepoNodeTemplateEnt {
 		private String m_Type;
 		private String m_ID;
 		private String m_IconURL;
+		private String m_NodeTypeID;
 
         @ThriftConstructor
         public TRepoNodeTemplateEnt build() {
@@ -158,6 +166,12 @@ public class TRepoNodeTemplateEnt {
         @ThriftField
         public TRepoNodeTemplateEntBuilder setIconURL(final String IconURL) {
 			m_IconURL = IconURL;			
+            return this;
+        }
+        
+        @ThriftField
+        public TRepoNodeTemplateEntBuilder setNodeTypeID(final String NodeTypeID) {
+			m_NodeTypeID = NodeTypeID;			
             return this;
         }
         

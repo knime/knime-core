@@ -87,6 +87,11 @@ public class TRepoNodeTemplateEntFromThrift implements RepoNodeTemplateEnt {
     	    	return m_e.getIconURL();
     	    }
     
+    @Override
+    public String getNodeTypeID() {
+    	    	return m_e.getNodeTypeID();
+    	    }
+    
 
 	@Override
     public String toString() {
@@ -126,6 +131,12 @@ public class TRepoNodeTemplateEntFromThrift implements RepoNodeTemplateEnt {
 		@Override
         public TRepoNodeTemplateEntBuilderFromThrift setIconURL(final String IconURL) {
                 	m_b.setIconURL(IconURL);
+                    return this;
+        }
+        
+		@Override
+        public TRepoNodeTemplateEntBuilderFromThrift setNodeTypeID(final String NodeTypeID) {
+                	m_b.setNodeTypeID(NodeTypeID);
                     return this;
         }
         

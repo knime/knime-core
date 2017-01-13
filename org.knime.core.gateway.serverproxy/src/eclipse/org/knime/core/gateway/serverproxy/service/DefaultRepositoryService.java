@@ -64,6 +64,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.util.NodeFactoryHTMLCreator;
 
@@ -110,11 +111,16 @@ public class DefaultRepositoryService implements RepositoryService {
             if(r instanceof Category) {
                 cats.add(fillNodeRepository((Category) r));
             } else if(r instanceof NodeTemplate) {
+                String nodeTypeID = ((NodeTemplate)r).getFactory().getCanonicalName();
+                if(r instanceof DynamicNodeTemplate) {
+                    nodeTypeID = nodeTypeID +  "#" + r.getName();
+                }
                 nodes.add(builder(RepoNodeTemplateEntBuilder.class)
                     .setName(r.getName())
                     .setType("TODO")
                     .setID(r.getID())
-                    .setIconURL("TODO").build());
+                    .setIconURL("TODO")
+                    .setNodeTypeID(nodeTypeID).build());
             }
          });
         return builder(RepoCategoryEntBuilder.class)
