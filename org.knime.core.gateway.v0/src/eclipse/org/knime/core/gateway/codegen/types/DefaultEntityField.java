@@ -48,37 +48,39 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultEntityField implements EntityField {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("entity")
+public class DefaultEntityField {
 
     private String m_name;
 
-    private Type m_type;
+    private DefaultType m_type;
 
     /**
      *
      */
-    public DefaultEntityField(final String name, final String returnType) {
+    public DefaultEntityField(
+        @JsonProperty("name")final String name,
+        @JsonProperty("return")final String returnType) {
         m_name = name;
         m_type = DefaultType.parse(returnType);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    @JsonProperty("name")
     public String getName() {
         return m_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Type getType() {
+    @JsonProperty("type")
+    public DefaultType getType() {
         return m_type;
     }
 

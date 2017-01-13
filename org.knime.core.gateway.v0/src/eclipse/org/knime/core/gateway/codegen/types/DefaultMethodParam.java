@@ -48,37 +48,39 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultMethodParam implements MethodParam {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("parameter")
+public class DefaultMethodParam {
 
     private String m_name;
 
-    private Type m_type;
+    private DefaultType m_type;
 
     /**
      *
      */
-    public DefaultMethodParam(final String name, final String type) {
+    public DefaultMethodParam(
+        @JsonProperty("name") final String name,
+        @JsonProperty("type") final String type) {
         m_name = name;
         m_type = DefaultType.parse(type);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    @JsonProperty("name")
     public String getName() {
         return m_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Type getType() {
+    @JsonProperty("type")
+    public DefaultType getType() {
         return m_type;
     }
 

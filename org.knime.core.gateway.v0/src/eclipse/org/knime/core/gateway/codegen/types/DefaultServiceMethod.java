@@ -51,48 +51,46 @@ package org.knime.core.gateway.codegen.types;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultServiceMethod implements ServiceMethod {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("service-method")
+public class DefaultServiceMethod {
 
     private String m_name;
 
-    private Type m_returnType;
+    private DefaultType m_returnType;
 
-    private List<MethodParam> m_parameters;
+    private List<DefaultMethodParam> m_parameters;
 
     /**
      *
      */
-    public DefaultServiceMethod(final String name, final String returnType, final MethodParam... parameters) {
+    @JsonCreator
+    public DefaultServiceMethod(
+        @JsonProperty("name") final String name,
+        @JsonProperty("return") final String returnType, final DefaultMethodParam... parameters) {
         m_name = name;
         m_returnType = DefaultType.parse(returnType);
         m_parameters = Arrays.asList(parameters);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getName() {
         return m_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Type getReturnType() {
+    public DefaultType getReturnType() {
         return m_returnType;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<MethodParam> getParameters() {
+    public List<DefaultMethodParam> getParameters() {
         return m_parameters;
     }
 

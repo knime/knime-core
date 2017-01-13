@@ -52,13 +52,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultEntityDef implements EntityDef {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("entity")
+public class DefaultEntityDef {
 
-    private List<EntityField> m_fields;
+    private List<DefaultEntityDef> m_fields;
 
     private String m_name;
 
@@ -69,7 +77,9 @@ public class DefaultEntityDef implements EntityDef {
     /**
      *
      */
-    public DefaultEntityDef(final String name, final EntityField... entityFields) {
+    @JsonIgnore
+    public DefaultEntityDef(@JsonProperty("name") final String name,
+        @JsonProperty("fields") final DefaultEntityDef... entityFields) {
         m_fields = Arrays.asList(entityFields);
         m_name = name;
     }
@@ -88,34 +98,39 @@ public class DefaultEntityDef implements EntityDef {
         return this;
     }
 
-    /**
-     * {@inheritDoc}
+    /** Constructor used by Jackson.
+     * @param name
+     * @param entityFields
+     * @param commonEntities
+     * @param imports
+     * @return new object
      */
-    @Override
+    @JsonCreator
+    public static DefaultEntityDef restoreFromJSON(
+        @JsonProperty("name") final String name,
+        @JsonProperty("fields") final DefaultEntityDef[] entityFields,
+        @JsonProperty("commonEntities") final DefaultEntityDef[] commonEntities,
+        @JsonProperty("imports") final String[] imports) {
+        DefaultEntityDef result = new DefaultEntityDef(name, entityFields);
+        result.addFieldsFrom(Arrays.stream(commonEntities).toArray(String[]::new));
+        result.addImports(imports);
+        return result;
+    }
+
+    @JsonProperty("name")
     public String getName() {
         return m_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<EntityField> getFields() {
+    @JsonProperty("fields")
+    public List<DefaultEntityDef> getFields() {
         return m_fields;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public List<String> getCommonEntities() {
         return m_commonEntities;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public List<String> getImports() {
         return m_imports;
     }

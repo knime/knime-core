@@ -52,26 +52,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.knime.core.node.util.CheckUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultServiceDef implements ServiceDef {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("service")
+public class DefaultServiceDef {
 
     private String m_name;
 
-    private List<ServiceMethod> m_methods;
+    private List<DefaultServiceMethod> m_methods;
 
     private List<String> m_imports = new ArrayList<String>();
 
     /**
      *
      */
-    public DefaultServiceDef(final String name, final ServiceMethod... methods) {
+    @JsonIgnore
+    public DefaultServiceDef(final String name, final DefaultServiceMethod... methods) {
         m_name = name;
         m_methods = Arrays.asList(methods);
     }
 
+    @JsonIgnore
     public DefaultServiceDef addImports(final String... imports) {
         for (String s : imports) {
             m_imports.add(s);
@@ -80,25 +91,27 @@ public class DefaultServiceDef implements ServiceDef {
     }
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
+    public DefaultServiceDef(@JsonProperty("name") final String name,
+        @JsonProperty("methods") final DefaultServiceMethod[] methods,
+        @JsonProperty("imports") final String[] imports) {
+        m_name = CheckUtils.checkArgumentNotNull(name);
+        m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
+        m_imports = Arrays.asList(CheckUtils.checkArgumentNotNull(imports));
+    }
+
+    @JsonProperty("name")
     public String getName() {
         return m_name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<ServiceMethod> getMethods() {
+    @JsonProperty("methods")
+    public List<DefaultServiceMethod> getMethods() {
         return m_methods;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    @JsonProperty("imports")
     public List<String> getImports() {
         return m_imports;
     }

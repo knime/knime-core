@@ -56,11 +56,19 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.RandomStringUtils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultType implements Type {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("type")
+public class DefaultType {
 
     private Random m_rand = new Random();
 
@@ -71,19 +79,20 @@ public class DefaultType implements Type {
         MAP;
     }
 
-    public static final Type VOID = new DefaultType("void");
+    public static final DefaultType VOID = new DefaultType("void");
 
     private String m_name;
 
     private GenericType m_genericType;
 
-    private List<Type> m_typeParameters;
+    private List<DefaultType> m_typeParameters;
 
     /**
      * @param name <code>null</code> if void
      * @param genericType
      *
      */
+    @JsonIgnore
     private DefaultType(final GenericType genericType, final String... typeParameters) {
         m_genericType = genericType;
         m_typeParameters = Arrays.stream(typeParameters).map(t -> DefaultType.parse(t)).collect(Collectors.toList());
@@ -98,16 +107,13 @@ public class DefaultType implements Type {
         }
     }
 
+    @JsonIgnore
     private DefaultType(final String name) {
         m_genericType = GenericType.NONE;
         m_name = name;
         m_typeParameters = Collections.emptyList();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString(final String append, final String prepend) {
         if (isVoid()) {
             return "void";
@@ -125,30 +131,27 @@ public class DefaultType implements Type {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Type getTypeParameter(final int index) {
+    @JsonIgnore
+    public DefaultType getTypeParameter(final int index) {
         return m_typeParameters.get(index);
     }
 
-    @Override
+    @JsonIgnore
     public boolean isList() {
         return m_genericType == GenericType.LIST;
     }
 
-    @Override
+    @JsonIgnore
     public boolean isMap() {
         return m_genericType == GenericType.MAP;
     }
 
-    @Override
+    @JsonIgnore
     public boolean isVoid() {
         return m_name.equals("void");
     }
 
-    @Override
+    @JsonIgnore
     public boolean isPrimitive() {
         if(m_typeParameters.size() == 0) {
         return m_name.equals("String") ||
@@ -158,7 +161,7 @@ public class DefaultType implements Type {
                m_name.toLowerCase().equals("boolean") ||
                m_name.equals("Integer");
         } else {
-            for(Type t : m_typeParameters) {
+            for (DefaultType t : m_typeParameters) {
                 if(!t.isPrimitive()) {
                     return false;
                 }
@@ -167,10 +170,6 @@ public class DefaultType implements Type {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Object createRandomPrimitive() {
         if(isPrimitive()) {
             if(isList()) {
@@ -204,7 +203,8 @@ public class DefaultType implements Type {
      * @param s
      * @return the newly created type
      */
-    public static Type parse(final String s) {
+    @JsonCreator
+    public static DefaultType parse(@JsonProperty("signature")final String s) {
         if (s.startsWith("List<")) {
             return new DefaultType(GenericType.LIST, parseTypeParameters(s));
         } else if (s.startsWith("Map<")) {
