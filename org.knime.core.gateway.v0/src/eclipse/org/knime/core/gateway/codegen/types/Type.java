@@ -60,15 +60,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-@JsonTypeName("type")
-public class DefaultType {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+public class Type {
 
     private Random m_rand = new Random();
 
@@ -79,13 +77,13 @@ public class DefaultType {
         MAP;
     }
 
-    public static final DefaultType VOID = new DefaultType("void");
+    public static final Type VOID = new Type("void");
 
     private String m_name;
 
     private GenericType m_genericType;
 
-    private List<DefaultType> m_typeParameters;
+    private List<Type> m_typeParameters;
 
     /**
      * @param name <code>null</code> if void
@@ -93,9 +91,9 @@ public class DefaultType {
      *
      */
     @JsonIgnore
-    private DefaultType(final GenericType genericType, final String... typeParameters) {
+    private Type(final GenericType genericType, final String... typeParameters) {
         m_genericType = genericType;
-        m_typeParameters = Arrays.stream(typeParameters).map(t -> DefaultType.parse(t)).collect(Collectors.toList());
+        m_typeParameters = Arrays.stream(typeParameters).map(t -> Type.parse(t)).collect(Collectors.toList());
         switch (genericType) {
             case LIST:
                 m_name = "List";
@@ -108,7 +106,7 @@ public class DefaultType {
     }
 
     @JsonIgnore
-    private DefaultType(final String name) {
+    private Type(final String name) {
         m_genericType = GenericType.NONE;
         m_name = name;
         m_typeParameters = Collections.emptyList();
@@ -132,7 +130,7 @@ public class DefaultType {
     }
 
     @JsonIgnore
-    public DefaultType getTypeParameter(final int index) {
+    public Type getTypeParameter(final int index) {
         return m_typeParameters.get(index);
     }
 
@@ -161,7 +159,7 @@ public class DefaultType {
                m_name.toLowerCase().equals("boolean") ||
                m_name.equals("Integer");
         } else {
-            for (DefaultType t : m_typeParameters) {
+            for (Type t : m_typeParameters) {
                 if(!t.isPrimitive()) {
                     return false;
                 }
@@ -204,13 +202,13 @@ public class DefaultType {
      * @return the newly created type
      */
     @JsonCreator
-    public static DefaultType parse(@JsonProperty("signature")final String s) {
+    public static Type parse(@JsonProperty("signature")final String s) {
         if (s.startsWith("List<")) {
-            return new DefaultType(GenericType.LIST, parseTypeParameters(s));
+            return new Type(GenericType.LIST, parseTypeParameters(s));
         } else if (s.startsWith("Map<")) {
-            return new DefaultType(GenericType.MAP, parseTypeParameters(s));
+            return new Type(GenericType.MAP, parseTypeParameters(s));
         } else {
-            return new DefaultType(s);
+            return new Type(s);
         }
     }
 
@@ -223,12 +221,12 @@ public class DefaultType {
     }
 
     public static void main(final String[] args) {
-        System.out.println(DefaultType.parse("Map<String, Integer>").toString("", ""));
-        System.out.println(DefaultType.parse("List<Test>").toString("", ""));
-        System.out.println(DefaultType.parse("List<Test>").toString("T", ""));
-        System.out.println(DefaultType.parse("Map<String, Integer>").toString("T", ""));
-        System.out.println(DefaultType.parse("Map<Test, Test2>").toString("T", ""));
-        System.out.println(DefaultType.parse("Map<Blub, Integer>").toString("", "ToThrift"));
+        System.out.println(Type.parse("Map<String, Integer>").toString("", ""));
+        System.out.println(Type.parse("List<Test>").toString("", ""));
+        System.out.println(Type.parse("List<Test>").toString("T", ""));
+        System.out.println(Type.parse("Map<String, Integer>").toString("T", ""));
+        System.out.println(Type.parse("Map<Test, Test2>").toString("T", ""));
+        System.out.println(Type.parse("Map<Blub, Integer>").toString("", "ToThrift"));
 
     }
 

@@ -52,25 +52,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import org.knime.core.node.util.CheckUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-@JsonTypeName("entity")
-public class DefaultEntityDef {
-
-    private List<DefaultEntityDef> m_fields;
+@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+public class ServiceDef {
 
     private String m_name;
 
-    private List<String> m_commonEntities = new ArrayList<String>();
+    private List<ServiceMethod> m_methods;
 
     private List<String> m_imports = new ArrayList<String>();
 
@@ -78,43 +75,28 @@ public class DefaultEntityDef {
      *
      */
     @JsonIgnore
-    public DefaultEntityDef(@JsonProperty("name") final String name,
-        @JsonProperty("fields") final DefaultEntityDef... entityFields) {
-        m_fields = Arrays.asList(entityFields);
+    public ServiceDef(final String name, final ServiceMethod... methods) {
         m_name = name;
+        m_methods = Arrays.asList(methods);
     }
 
-    public DefaultEntityDef addFieldsFrom(final String... entities) {
-        for (String s : entities) {
-            m_commonEntities.add(s);
-        }
-        return this;
-    }
-
-    public DefaultEntityDef addImports(final String... imports) {
+    @JsonIgnore
+    public ServiceDef addImports(final String... imports) {
         for (String s : imports) {
             m_imports.add(s);
         }
         return this;
     }
 
-    /** Constructor used by Jackson.
-     * @param name
-     * @param entityFields
-     * @param commonEntities
-     * @param imports
-     * @return new object
+    /**
+     *
      */
-    @JsonCreator
-    public static DefaultEntityDef restoreFromJSON(
-        @JsonProperty("name") final String name,
-        @JsonProperty("fields") final DefaultEntityDef[] entityFields,
-        @JsonProperty("commonEntities") final DefaultEntityDef[] commonEntities,
+    public ServiceDef(@JsonProperty("name") final String name,
+        @JsonProperty("methods") final ServiceMethod[] methods,
         @JsonProperty("imports") final String[] imports) {
-        DefaultEntityDef result = new DefaultEntityDef(name, entityFields);
-        result.addFieldsFrom(Arrays.stream(commonEntities).toArray(String[]::new));
-        result.addImports(imports);
-        return result;
+        m_name = CheckUtils.checkArgumentNotNull(name);
+        m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
+        m_imports = Arrays.asList(CheckUtils.checkArgumentNotNull(imports));
     }
 
     @JsonProperty("name")
@@ -122,15 +104,12 @@ public class DefaultEntityDef {
         return m_name;
     }
 
-    @JsonProperty("fields")
-    public List<DefaultEntityDef> getFields() {
-        return m_fields;
+    @JsonProperty("methods")
+    public List<ServiceMethod> getMethods() {
+        return m_methods;
     }
 
-    public List<String> getCommonEntities() {
-        return m_commonEntities;
-    }
-
+    @JsonProperty("imports")
     public List<String> getImports() {
         return m_imports;
     }

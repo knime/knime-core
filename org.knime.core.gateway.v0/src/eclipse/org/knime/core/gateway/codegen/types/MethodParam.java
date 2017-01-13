@@ -48,30 +48,29 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-@JsonTypeName("parameter")
-public class DefaultMethodParam {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+public class MethodParam {
 
     private String m_name;
 
-    private DefaultType m_type;
+    private Type m_type;
 
     /**
      *
      */
-    public DefaultMethodParam(
+    public MethodParam(
         @JsonProperty("name") final String name,
         @JsonProperty("type") final String type) {
         m_name = name;
-        m_type = DefaultType.parse(type);
+        m_type = Type.parse(type);
     }
 
     @JsonProperty("name")
@@ -80,7 +79,12 @@ public class DefaultMethodParam {
     }
 
     @JsonProperty("type")
-    public DefaultType getType() {
+    public String getTypeAsString() {
+        return m_type.toString("", "");
+    }
+
+    @JsonIgnore
+    public Type getType() {
         return m_type;
     }
 

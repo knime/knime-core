@@ -1,0 +1,23 @@
+{
+  "name" : "WorkflowService",
+  "methods" : [ {
+    "name" : "getWorkflow",
+    "return" : "WorkflowEnt",
+    "params" : [ {
+      "name" : "id",
+      "type" : "EntityID"
+    } ]
+  }, {
+    "name" : "updateWorkflow",
+    "return" : "void",
+    "params" : [ {
+      "name" : "wf",
+      "type" : "WorkflowEnt"
+    } ]
+  }, {
+    "name" : "getAllWorkflows",
+    "return" : "List<EntityID>",
+    "params" : [ ]
+  } ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.EntityID", "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt", "java.util.List" ]
+}

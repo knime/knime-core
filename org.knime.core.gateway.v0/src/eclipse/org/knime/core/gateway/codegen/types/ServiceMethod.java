@@ -48,30 +48,38 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
-@JsonTypeName("entity")
-public class DefaultEntityField {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+public class ServiceMethod {
 
     private String m_name;
 
-    private DefaultType m_type;
+    private Type m_returnType;
+
+    private List<MethodParam> m_parameters;
 
     /**
      *
      */
-    public DefaultEntityField(
-        @JsonProperty("name")final String name,
-        @JsonProperty("return")final String returnType) {
+    @JsonCreator
+    public ServiceMethod(
+        @JsonProperty("name") final String name,
+        @JsonProperty("return") final String returnType,
+        @JsonProperty("params") final MethodParam... parameters) {
         m_name = name;
-        m_type = DefaultType.parse(returnType);
+        m_returnType = Type.parse(returnType);
+        m_parameters = Arrays.asList(parameters);
     }
 
     @JsonProperty("name")
@@ -79,9 +87,22 @@ public class DefaultEntityField {
         return m_name;
     }
 
-    @JsonProperty("type")
-    public DefaultType getType() {
-        return m_type;
+    @JsonProperty("return")
+    public String getReturnTypeAsString() {
+        return m_returnType.toString("", "");
+    }
+
+    /**
+     * @return the returnType
+     */
+    @JsonIgnore
+    public Type getReturnType() {
+        return m_returnType;
+    }
+
+    @JsonProperty("params")
+    public List<MethodParam> getParameters() {
+        return m_parameters;
     }
 
 }

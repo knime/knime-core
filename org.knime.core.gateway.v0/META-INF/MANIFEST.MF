@@ -7,8 +7,11 @@ Bundle-ClassPath: .,
  lib/velocity-1.7-dep.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
- org.knime.core;bundle-version="3.3.0",
- org.junit
+ org.knime.core;bundle-version="[3.3.0,4.0.0)",
+ org.junit;bundle-version="[4.12.0,5.0.0)",
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.7.1,3.0.0)",
+ com.fasterxml.jackson.core.jackson-core;bundle-version="[2.7.1,3.0.0)",
+ com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.7.1,3.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

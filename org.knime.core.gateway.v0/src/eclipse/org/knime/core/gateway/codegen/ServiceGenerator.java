@@ -49,6 +49,7 @@
 package org.knime.core.gateway.codegen;
 
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,10 +60,13 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.knime.core.gateway.codegen.types.DefaultMethodParam;
-import org.knime.core.gateway.codegen.types.DefaultServiceDef;
-import org.knime.core.gateway.codegen.types.DefaultServiceMethod;
+import org.knime.core.gateway.codegen.types.MethodParam;
 import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.codegen.types.ServiceMethod;
+import org.knime.core.gateway.codegen.types.ServiceDef;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  *
@@ -128,7 +132,14 @@ public class ServiceGenerator {
                     if (template != null) {
                         template.merge(context, writer);
                     }
-                };
+                }
+                String filepath = "api/" + destFileName + ".json";
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                    mapper.writeValue(writer, serviceDef);
+                    ServiceDef d = mapper.readValue(new FileReader(filepath), ServiceDef.class);
+                }
             }
         } catch (Exception e) {
             System.out.println(e);
@@ -140,42 +151,42 @@ public class ServiceGenerator {
 
     public static List<ServiceDef> getServiceDefs() {
         return Arrays.asList(
-            new DefaultServiceDef("WorkflowService",
-                new DefaultServiceMethod("getWorkflow", "WorkflowEnt",
-                    new DefaultMethodParam("id", "EntityID")),
-                new DefaultServiceMethod("updateWorkflow", "void",
-                    new DefaultMethodParam("wf", "WorkflowEnt")),
-                new DefaultServiceMethod("getAllWorkflows", "List<EntityID>"))
+            new ServiceDef("WorkflowService",
+                new ServiceMethod("getWorkflow", "WorkflowEnt",
+                    new MethodParam("id", "EntityID")),
+                new ServiceMethod("updateWorkflow", "void",
+                    new MethodParam("wf", "WorkflowEnt")),
+                new ServiceMethod("getAllWorkflows", "List<EntityID>"))
             .addImports(
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
                 "java.util.List"),
-            new DefaultServiceDef("RepositoryService",
-                new DefaultServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"),
-                new DefaultServiceMethod("getNodeDescription", "String",
-                    new DefaultMethodParam("nodeTypeID", "String")))
+            new ServiceDef("RepositoryService",
+                new ServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"),
+                new ServiceMethod("getNodeDescription", "String",
+                    new MethodParam("nodeTypeID", "String")))
             .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt"),
-            new DefaultServiceDef("NodeContainerService",
-                new DefaultServiceMethod("getNodeSettingsJSON", "String",
-                    new DefaultMethodParam("workflowID", "EntityID"),
-                    new DefaultMethodParam("nodeID", "String")))
+            new ServiceDef("NodeContainerService",
+                new ServiceMethod("getNodeSettingsJSON", "String",
+                    new MethodParam("workflowID", "EntityID"),
+                    new MethodParam("nodeID", "String")))
                 .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID"),
-            new DefaultServiceDef("ExecutionService",
-                new DefaultServiceMethod("canExecuteUpToHere", "boolean",
-                    new DefaultMethodParam("workflowID", "EntityID"),
-                    new DefaultMethodParam("nodeID", "String")),
-                new DefaultServiceMethod("executeUpToHere", "WorkflowEnt",
-                    new DefaultMethodParam("workflowID", "EntityID"),
-                    new DefaultMethodParam("nodeID", "String")))
+            new ServiceDef("ExecutionService",
+                new ServiceMethod("canExecuteUpToHere", "boolean",
+                    new MethodParam("workflowID", "EntityID"),
+                    new MethodParam("nodeID", "String")),
+                new ServiceMethod("executeUpToHere", "WorkflowEnt",
+                    new MethodParam("workflowID", "EntityID"),
+                    new MethodParam("nodeID", "String")))
             .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID", "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"),
-            new DefaultServiceDef("TestService",
-                new DefaultServiceMethod("test", "TestEnt",
-                    new DefaultMethodParam("id", "TestEnt")),
-                new DefaultServiceMethod("testList", "List<TestEnt>",
-                    new DefaultMethodParam("list", "List<TestEnt>")),
-                new DefaultServiceMethod("primitives", "double",
-                    new DefaultMethodParam("s", "String"),
-                    new DefaultMethodParam("stringlist", "List<String>")))
+            new ServiceDef("TestService",
+                new ServiceMethod("test", "TestEnt",
+                    new MethodParam("id", "TestEnt")),
+                new ServiceMethod("testList", "List<TestEnt>",
+                    new MethodParam("list", "List<TestEnt>")),
+                new ServiceMethod("primitives", "double",
+                    new MethodParam("s", "String"),
+                    new MethodParam("stringlist", "List<String>")))
             .addImports("org.knime.core.gateway.v0.workflow.entity.TestEnt",
                         "java.util.List"));
     }

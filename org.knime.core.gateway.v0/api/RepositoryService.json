@@ -1,0 +1,16 @@
+{
+  "name" : "RepositoryService",
+  "methods" : [ {
+    "name" : "getNodeRepository",
+    "return" : "List<RepoCategoryEnt>",
+    "params" : [ ]
+  }, {
+    "name" : "getNodeDescription",
+    "return" : "String",
+    "params" : [ {
+      "name" : "nodeTypeID",
+      "type" : "String"
+    } ]
+  } ],
+  "imports" : [ "java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt" ]
+}
