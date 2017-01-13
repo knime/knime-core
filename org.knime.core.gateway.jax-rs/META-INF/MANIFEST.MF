@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME JAX-RS Entity Implementations
+Bundle-SymbolicName: org.knime.core.gateway.jax-rs;singleton:=true
+Bundle-Version: 3.3.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.knime.core.gateway.v0;bundle-version="3.3.0",
+ org.eclipse.osgi,
+ org.knime.core.api;bundle-version="3.3.0",
+ org.knime.core;bundle-version="3.3.0",
+ org.knime.core.gateway.serverproxy;bundle-version="3.3.0",
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="2.7.1",
+ com.fasterxml.jackson.core.jackson-core;bundle-version="2.7.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: org.knime.core.jaxrs.codegen,
+ org.knime.core.jaxrs.workflow.entity
