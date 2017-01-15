@@ -48,10 +48,6 @@
  */
 package org.knime.core.gateway.codegen;
 
-import java.util.List;
-
-import org.knime.core.gateway.codegen.types.ServiceDef;
-
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -59,13 +55,8 @@ import org.knime.core.gateway.codegen.types.ServiceDef;
 public class GenerateServiceInterfaces {
 
     public static void main(final String[] args) {
-        ServiceGenerator serviceGenerator = new ServiceGenerator(
-            "src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
-            "src/generated/org/knime/core/gateway/v0/workflow/service/", "##serviceName##");
-        List<ServiceDef> serviceDefs = ServiceGenerator.getServiceDefs();
-        for (ServiceDef d : serviceDefs) {
-        }
-        serviceGenerator.generate();
+        new ServiceGenerator("src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
+            "src/generated/org/knime/core/gateway/v0/workflow/service/", "##serviceName##").generate();
     }
 
 }
