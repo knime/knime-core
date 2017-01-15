@@ -76,8 +76,7 @@ public class EntityDef {
      *
      */
     @JsonIgnore
-    public EntityDef(@JsonProperty("name") final String name,
-        @JsonProperty("fields") final EntityField... entityFields) {
+    public EntityDef(final String name, final EntityField... entityFields) {
         m_fields = Arrays.asList(entityFields);
         m_name = name;
     }
@@ -107,10 +106,10 @@ public class EntityDef {
     public static EntityDef restoreFromJSON(
         @JsonProperty("name") final String name,
         @JsonProperty("fields") final EntityField[] entityFields,
-        @JsonProperty("commonEntities") final EntityDef[] commonEntities,
+        @JsonProperty("commonEntities") final String[] commonEntities,
         @JsonProperty("imports") final String[] imports) {
         EntityDef result = new EntityDef(name, entityFields);
-        result.addFieldsFrom(Arrays.stream(commonEntities).toArray(String[]::new));
+        result.addFieldsFrom(commonEntities);
         result.addImports(imports);
         return result;
     }
@@ -125,10 +124,12 @@ public class EntityDef {
         return m_fields;
     }
 
+    @JsonProperty("commonEntities")
     public List<String> getCommonEntities() {
         return m_commonEntities;
     }
 
+    @JsonProperty("imports")
     public List<String> getImports() {
         return m_imports;
     }

@@ -1,0 +1,18 @@
+{
+  "name" : "RepoNodeTemplateEnt",
+  "fields" : [ {
+    "name" : "Name",
+    "type" : "String"
+  }, {
+    "name" : "Type",
+    "type" : "String"
+  }, {
+    "name" : "ID",
+    "type" : "String"
+  }, {
+    "name" : "IconURL",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}

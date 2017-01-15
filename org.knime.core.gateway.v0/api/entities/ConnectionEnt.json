@@ -1,0 +1,27 @@
+{
+  "name" : "ConnectionEnt",
+  "fields" : [ {
+    "name" : "Dest",
+    "type" : "String"
+  }, {
+    "name" : "DestPort",
+    "type" : "int"
+  }, {
+    "name" : "Source",
+    "type" : "String"
+  }, {
+    "name" : "SourcePort",
+    "type" : "int"
+  }, {
+    "name" : "IsDeleteable",
+    "type" : "boolean"
+  }, {
+    "name" : "BendPoints",
+    "type" : "List<XYEnt>"
+  }, {
+    "name" : "Type",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.XYEnt", "java.util.List" ]
+}

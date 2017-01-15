@@ -1,0 +1,12 @@
+{
+  "name" : "EntityID",
+  "fields" : [ {
+    "name" : "ID",
+    "type" : "String"
+  }, {
+    "name" : "Type",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}

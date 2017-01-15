@@ -1,0 +1,18 @@
+{
+  "name" : "WorkflowEnt",
+  "fields" : [ {
+    "name" : "Nodes",
+    "type" : "Map<String, NodeEnt>"
+  }, {
+    "name" : "Connections",
+    "type" : "List<ConnectionEnt>"
+  }, {
+    "name" : "MetaInPorts",
+    "type" : "List<MetaPortEnt>"
+  }, {
+    "name" : "MetaOutPorts",
+    "type" : "List<MetaPortEnt>"
+  } ],
+  "commonEntities" : [ "NodeEnt" ],
+  "imports" : [ "java.util.List", "java.util.Map", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt", "org.knime.core.gateway.v0.workflow.entity.MetaPortEnt" ]
+}

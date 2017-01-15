@@ -1,0 +1,15 @@
+{
+  "name" : "NodePortEnt",
+  "fields" : [ {
+    "name" : "PortIndex",
+    "type" : "int"
+  }, {
+    "name" : "PortType",
+    "type" : "PortTypeEnt"
+  }, {
+    "name" : "PortName",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt" ]
+}

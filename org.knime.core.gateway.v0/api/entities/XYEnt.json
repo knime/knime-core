@@ -1,0 +1,12 @@
+{
+  "name" : "XYEnt",
+  "fields" : [ {
+    "name" : "X",
+    "type" : "int"
+  }, {
+    "name" : "Y",
+    "type" : "int"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}

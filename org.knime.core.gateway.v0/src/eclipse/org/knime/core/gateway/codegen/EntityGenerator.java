@@ -49,6 +49,7 @@
 package org.knime.core.gateway.codegen;
 
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +64,9 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.knime.core.gateway.codegen.types.EntityDef;
 import org.knime.core.gateway.codegen.types.EntityField;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  *
@@ -138,6 +142,15 @@ public final class EntityGenerator {
                  *  of the template and the data to produce the output stream.
                  */
                 FileWriter fileWriter = new FileWriter(m_destDirectory + destFileName + ".java");
+                String path = "api/entities/" + destFileName + ".json";
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                    mapper.writeValue(writer, entityDef);
+                    EntityDef def1 = mapper.readValue(new FileReader(path), EntityDef.class);
+                }
+
+
                 BufferedWriter writer = new BufferedWriter(fileWriter);
 
                 if (template != null) {

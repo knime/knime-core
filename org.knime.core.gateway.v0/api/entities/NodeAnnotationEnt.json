@@ -1,0 +1,9 @@
+{
+  "name" : "NodeAnnotationEnt",
+  "fields" : [ {
+    "name" : "Node",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ "AnnotationEnt" ],
+  "imports" : [ ]
+}

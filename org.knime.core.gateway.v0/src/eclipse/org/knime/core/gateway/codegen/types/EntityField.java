@@ -48,6 +48,7 @@
  */
 package org.knime.core.gateway.codegen.types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -67,7 +68,7 @@ public class EntityField {
      */
     public EntityField(
         @JsonProperty("name")final String name,
-        @JsonProperty("return")final String returnType) {
+        @JsonProperty("type")final String returnType) {
         m_name = name;
         m_type = Type.parse(returnType);
     }
@@ -78,6 +79,11 @@ public class EntityField {
     }
 
     @JsonProperty("type")
+    public String getTypeAsString() {
+        return m_type.toString("", "");
+    }
+
+    @JsonIgnore
     public Type getType() {
         return m_type;
     }

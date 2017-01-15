@@ -1,0 +1,39 @@
+{
+  "name" : "AnnotationEnt",
+  "fields" : [ {
+    "name" : "Text",
+    "type" : "String"
+  }, {
+    "name" : "BackgroundColor",
+    "type" : "int"
+  }, {
+    "name" : "X",
+    "type" : "int"
+  }, {
+    "name" : "Y",
+    "type" : "int"
+  }, {
+    "name" : "Width",
+    "type" : "int"
+  }, {
+    "name" : "Height",
+    "type" : "int"
+  }, {
+    "name" : "TextAlignment",
+    "type" : "String"
+  }, {
+    "name" : "BorderSize",
+    "type" : "int"
+  }, {
+    "name" : "BorderColor",
+    "type" : "int"
+  }, {
+    "name" : "DefaultFontSize",
+    "type" : "int"
+  }, {
+    "name" : "Version",
+    "type" : "int"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}

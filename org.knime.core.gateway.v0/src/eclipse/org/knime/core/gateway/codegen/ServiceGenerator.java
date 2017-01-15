@@ -63,7 +63,6 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.knime.core.gateway.codegen.types.MethodParam;
 import org.knime.core.gateway.codegen.types.ServiceDef;
 import org.knime.core.gateway.codegen.types.ServiceMethod;
-import org.knime.core.gateway.codegen.types.ServiceDef;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -133,7 +132,7 @@ public class ServiceGenerator {
                         template.merge(context, writer);
                     }
                 }
-                String filepath = "api/" + destFileName + ".json";
+                String filepath = "api/services/" + destFileName + ".json";
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))) {
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.enable(SerializationFeature.INDENT_OUTPUT);

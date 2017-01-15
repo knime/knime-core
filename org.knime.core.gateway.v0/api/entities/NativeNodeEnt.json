@@ -1,0 +1,9 @@
+{
+  "name" : "NativeNodeEnt",
+  "fields" : [ {
+    "name" : "NodeFactoryID",
+    "type" : "NodeFactoryIDEnt"
+  } ],
+  "commonEntities" : [ "NodeEnt" ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt" ]
+}

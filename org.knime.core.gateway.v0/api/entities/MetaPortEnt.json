@@ -1,0 +1,21 @@
+{
+  "name" : "MetaPortEnt",
+  "fields" : [ {
+    "name" : "PortType",
+    "type" : "PortTypeEnt"
+  }, {
+    "name" : "IsConnected",
+    "type" : "boolean"
+  }, {
+    "name" : "Message",
+    "type" : "String"
+  }, {
+    "name" : "OldIndex",
+    "type" : "int"
+  }, {
+    "name" : "NewIndex",
+    "type" : "int"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt" ]
+}

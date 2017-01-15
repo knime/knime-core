@@ -1,0 +1,24 @@
+{
+  "name" : "TestEnt",
+  "fields" : [ {
+    "name" : "xy",
+    "type" : "XYEnt"
+  }, {
+    "name" : "xylist",
+    "type" : "List<XYEnt>"
+  }, {
+    "name" : "other",
+    "type" : "String"
+  }, {
+    "name" : "primitivelist",
+    "type" : "List<String>"
+  }, {
+    "name" : "xymap",
+    "type" : "Map<String, XYEnt>"
+  }, {
+    "name" : "primitivemap",
+    "type" : "Map<Integer, String>"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.XYEnt", "java.util.List", "java.util.Map" ]
+}

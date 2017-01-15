@@ -1,0 +1,12 @@
+{
+  "name" : "JobManagerEnt",
+  "fields" : [ {
+    "name" : "Name",
+    "type" : "String"
+  }, {
+    "name" : "JobManagerID",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}

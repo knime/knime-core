@@ -1,0 +1,12 @@
+{
+  "name" : "NodeFactoryIDEnt",
+  "fields" : [ {
+    "name" : "ClassName",
+    "type" : "String"
+  }, {
+    "name" : "NodeName",
+    "type" : "String"
+  } ],
+  "commonEntities" : [ ],
+  "imports" : [ ]
+}
