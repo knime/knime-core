@@ -590,4 +590,16 @@
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
    </extension>
+   <extension
+         point="org.knime.core.DataCellToJavaConverter">
+      <DataCellToJavaConverter
+            factoryClass="org.knime.core.data.convert.java.BitVectorValueToBitSetConverterFactory">
+      </DataCellToJavaConverter>
+   </extension>
+   <extension
+         point="org.knime.core.JavaToDataCellConverter">
+      <JavaToDataCellConverter
+            factoryClass="org.knime.core.data.convert.datacell.BitSetToDenseBitVectorCellConverterFactory">
+      </JavaToDataCellConverter>
+   </extension>
 </plugin>
