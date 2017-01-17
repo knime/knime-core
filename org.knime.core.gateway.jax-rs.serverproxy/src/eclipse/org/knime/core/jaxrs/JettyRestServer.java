@@ -4,12 +4,12 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.knime.core.jaxrs.codegen.RSWorkflowService;
-
-import com.knime.enterprise.server.rest.providers.json.GenericJSONSerializer;
+import org.knime.core.jaxrs.providers.json.GenericJSONDeserializer;
+import org.knime.core.jaxrs.providers.json.GenericJSONSerializer;
+import org.knime.core.jaxrs.workflow.service.RSWorkflowService;
 
 /**
- * Singleton tile server (and possibly more, e.g. providing the underlying data tables etc.)
+ * Simple jetty restful service server.
  *
  * TODO: synchronize
  *
@@ -26,7 +26,8 @@ public class JettyRestServer {
         //                            "jersey.api.core.PackagesResourceConfig");
         //        sh.setInitParameter("jersey.config.property.packages", "org.knime.knip.js.imgtableserver.rest");//Set the package where the services reside
         sh.setInitParameter("jersey.config.server.provider.classnames",
-                            String.join(",", RSWorkflowService.class.getCanonicalName(), GenericJSONSerializer.class.getCanonicalName()));
+            String.join(",", RSWorkflowService.class.getCanonicalName(), GenericJSONSerializer.class.getCanonicalName(),
+                GenericJSONDeserializer.class.getCanonicalName()));
         //        sh.setInitParameter("jersey.api.json.POJOMappingFeature", "true");
 
         Server server = new Server(3000);

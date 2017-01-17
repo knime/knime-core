@@ -43,6 +43,6 @@ Require-Bundle: org.knime.core.gateway.v0;bundle-version="3.3.0",
  com.fasterxml.jackson.core.jackson-core;bundle-version="2.7.1",
  com.fasterxml.jackson.core.jackson-databind;bundle-version="2.7.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: com.knime.enterprise.server.rest.providers.json,
- org.knime.core.jaxrs,
- org.knime.core.jaxrs.codegen
+Export-Package: org.knime.core.jaxrs,
+ org.knime.core.jaxrs.codegen,
+ org.knime.core.jaxrs.providers.json
