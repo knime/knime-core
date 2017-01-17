@@ -115,6 +115,8 @@ import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -172,7 +174,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         Composite composite = new Composite(scrollPane, SWT.NONE);
         scrollPane.setContent(composite);
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
-        composite.setLayout(new GridLayout(5, false));
+        composite.setLayout(new GridLayout(7, false));
         composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
         Label titleLabel = new Label(composite, SWT.LEFT);
@@ -190,7 +192,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         Label widthLabel = new Label(composite, SWT.CENTER);
         widthLabel.setText("Width");
         widthLabel.setFont(boldFont);
-        new Composite(composite, SWT.NONE);
+        new Composite(composite, SWT.NONE); /* More placeholder */
+        new Composite(composite, SWT.NONE); /* Warning placeholder */
+        new Composite(composite, SWT.NONE); /* Remove placeholder */
 
         for (final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
             NodeID nodeID = entry.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
@@ -262,6 +266,21 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
                     // TODO Auto-generated method stub
+                }
+            });
+
+            final Label warningLabel = new Label(composite, SWT.CENTER);
+            warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
+            warningLabel.setToolTipText("Node is set to 'Hide in Wizard'");
+
+            final Button removeButton = new Button(composite, SWT.PUSH | SWT.CENTER);
+            removeButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/remove.png"));
+            removeButton.setToolTipText("Remove node from layout");
+            removeButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    // TODO Auto-generated method stub
+                    super.widgetSelected(e);
                 }
             });
         }
