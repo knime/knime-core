@@ -116,6 +116,7 @@ public final class LocalDateCellFactory implements FromSimpleString, FromComplex
      * @return the cell containing the parsed LocalDate.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "LocalDate")
     public static DataCell create(final LocalDate localDate) {
         return new LocalDateCell(CheckUtils.checkArgumentNotNull(localDate, "Argument must not be null"));
     }

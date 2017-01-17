@@ -99,6 +99,7 @@ public final class PeriodCellFactory implements FromSimpleString, FromComplexStr
      * @return the cell containing the parsed Period.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "Period")
     public static DataCell create(final Period period) {
         return new PeriodCell(CheckUtils.checkArgumentNotNull(period, "Argument must not be null"));
     }

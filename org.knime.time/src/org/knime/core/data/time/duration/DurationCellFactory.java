@@ -99,6 +99,7 @@ public final class DurationCellFactory implements FromSimpleString, FromComplexS
      * @return the cell containing the parsed Duration.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "Duration")
     public static DataCell create(final Duration duration) {
         return new DurationCell(CheckUtils.checkArgumentNotNull(duration, "Argument must not be null"));
     }

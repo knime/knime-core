@@ -85,7 +85,7 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
     /**
      * Creates a new LocalDateTimeCell from a string such as "2007-12-03T10:15:30". For details see
      * {@link LocalDateTime#parse(CharSequence)}.
-     * 
+     *
      * @param s the string to parse into {@link LocalDateTimeCell}, not null.
      * @return the cell containing the parsed LocalDateTime.
      * @throws IllegalArgumentException when the string is null.
@@ -98,7 +98,7 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
     /**
      * Creates a new LocalDateTimeCell from the arguments, see
      * {@link LocalDateTime#parse(CharSequence, DateTimeFormatter)}.
-     * 
+     *
      * @param s Non-null string to parse.
      * @param formatter Non-null formatter to use.
      * @return the cell containing the parsed LocalDateTime.
@@ -115,11 +115,12 @@ public final class LocalDateTimeCellFactory implements FromSimpleString, FromCom
 
     /**
      * Creates a new LocalDateTimeCell from the argument.
-     * 
+     *
      * @param localDateTime Non-null argument to wrap.
      * @return the cell containing the parsed LocalDateTime.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "LocalDateTime")
     public static DataCell create(final LocalDateTime localDateTime) {
         return new LocalDateTimeCell(CheckUtils.checkArgumentNotNull(localDateTime, "Argument must not be null"));
     }
