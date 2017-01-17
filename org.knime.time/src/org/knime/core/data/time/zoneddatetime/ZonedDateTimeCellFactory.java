@@ -85,7 +85,7 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
     /**
      * Creates a new ZonedDateTimeCell from a string such as "2007-12-03T10:15:30+01:00[Europe/Paris]". For details see
      * {@link ZonedDateTime#parse(CharSequence)}.
-     * 
+     *
      * @param s the string to parse into {@link ZonedDateTimeCell}, not null.
      * @return the cell containing the parsed ZonedDateTime.
      * @throws IllegalArgumentException when the string is null.
@@ -98,7 +98,7 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
     /**
      * Creates a new ZonedDateTimeCell from the arguments, see
      * {@link ZonedDateTime#parse(CharSequence, DateTimeFormatter)}.
-     * 
+     *
      * @param s Non-null string to parse.
      * @param formatter Non-null formatter to use.
      * @return the cell containing the parsed ZonedDateTime.
@@ -115,11 +115,12 @@ public final class ZonedDateTimeCellFactory implements FromSimpleString, FromCom
 
     /**
      * Creates a new ZonedDateTimeCell from the argument.
-     * 
+     *
      * @param zonedDateTime Non-null argument to wrap.
      * @return the cell containing the parsed ZonedDateTime.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "ZonedDateTime")
     public static DataCell create(final ZonedDateTime zonedDateTime) {
         return new ZonedDateTimeCell(CheckUtils.checkArgumentNotNull(zonedDateTime, "Argument must not be null"));
     }

@@ -116,6 +116,7 @@ public final class LocalTimeCellFactory implements FromSimpleString, FromComplex
      * @return the cell containing the parsed LocalTime.
      * @throws IllegalArgumentException when the argument is null.
      */
+    @DataCellFactoryMethod(name = "LocalTime")
     public static DataCell create(final LocalTime localTime) {
         return new LocalTimeCell(CheckUtils.checkArgumentNotNull(localTime, "Argument must not be null"));
     }
