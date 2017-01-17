@@ -53,18 +53,18 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which adds a time to a date cell.
+ * The node factory of the node which modifies time.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddTimeNodeFactory extends NodeFactory<AddTimeNodeModel> {
+public class ModifyTimeNodeFactory extends NodeFactory<ModifyTimeNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AddTimeNodeModel createNodeModel() {
-        return new AddTimeNodeModel();
+    public ModifyTimeNodeModel createNodeModel() {
+        return new ModifyTimeNodeModel();
     }
 
     /**
@@ -79,7 +79,7 @@ public class AddTimeNodeFactory extends NodeFactory<AddTimeNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView<AddTimeNodeModel> createNodeView(final int viewIndex, final AddTimeNodeModel nodeModel) {
+    public NodeView<ModifyTimeNodeModel> createNodeView(final int viewIndex, final ModifyTimeNodeModel nodeModel) {
         return null;
     }
 
@@ -96,7 +96,7 @@ public class AddTimeNodeFactory extends NodeFactory<AddTimeNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new AddTimeNodeDialog();
+        return new ModifyTimeNodeDialog();
     }
 
 }

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="default.png">
+	<name>Modify Time</name>
+	<shortDescription>Adds time information to a date cell.</shortDescription>
+	<fullDescription>
+		<intro>
+			<ul>
+				<li>adding a time to local date columns,</li>
+				<li>setting the time in local or zoned date&amp;time columns, or
+				</li>
+				<li>removing the time from local or zoned date&amp;time columns.
+				</li>
+			</ul>
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be modified.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				columns.
+			</option>
+		</tab>
+		<tab name="Time Selection">
+			<option name="Add Time">Adds a time to local date columns.
+				Optionally a time zone can be added too.
+			</option>
+			<option name="Set Time">
+				Sets the time of local or zoned date&amp;time
+				columns. The time zone
+				will
+				not be changed. The
+				<i>Modify Time Zone</i>
+				node can be used to change it.
+			</option>
+			<option name="Remove Time">Removes the time from local or zoned
+				date&amp;time columns. Time zones will be removed
+				too.
+			</option>
+			<option name="Hour">A fixed hour between 0 and 23.</option>
+			<option name="Minute">A fixed minute between 0 and 59</option>
+			<option name="Second">A fixed second between 0 and 59</option>
+			<option name="Nano">A fixed nanosecond between 0 and 999,999,999
+			</option>
+			<option name="Add time zone">If checked, a fixed time zone will be added.
+			</option>
+			<option name="Time Zone">
+				If
+				<i>Add time zone</i>
+				is checked, the user can choose the time zone here.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with modified time.
+		</outPort>
+	</ports>
+</knimeNode>

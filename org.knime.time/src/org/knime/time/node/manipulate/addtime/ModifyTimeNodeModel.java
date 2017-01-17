@@ -48,63 +48,66 @@
  */
 package org.knime.time.node.manipulate.addtime;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
-import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdate.LocalDateCellFactory;
 import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowInput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * The node model of the node which adds a time to a date cell.
+ * The node model of the node which modifies time.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class AddTimeNodeModel extends org.knime.core.node.NodeModel {
+class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
+
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter LOCAL_DATE_FILTER = new DataTypeColumnFilter(LocalDateValue.class);
+
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter DATE_TIME_FILTER =
+        new DataTypeColumnFilter(ZonedDateTimeValue.class, LocalDateTimeValue.class);
 
     static final String OPTION_APPEND = "Append selected columns";
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
+    static final String MODIFY_OPTION_ADD = "Add time";
+
+    static final String MODIFY_OPTION_SET = "Set time";
+
+    static final String MODIFY_OPTION_REMOVE = "Remove time";
+
+    private DataColumnSpecFilterConfiguration m_colSelect = createDCFilterConfiguration(LOCAL_DATE_FILTER);
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
@@ -122,14 +125,18 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
 
     private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
 
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalDateValue.class);
+    private final SettingsModelString m_modifyAction = createModifySelectModel();
+
+    /**
+     * @param typeColumnFilter column filter
+     * @return the column select model, used in both dialog and model.
+     */
+    static DataColumnSpecFilterConfiguration createDCFilterConfiguration(final DataTypeColumnFilter typeColumnFilter) {
+        return new DataColumnSpecFilterConfiguration("col_select", typeColumnFilter);
     }
 
     /** @return the string model, used in both dialog and model. */
-    public static SettingsModelString createReplaceAppendStringBool() {
+    static SettingsModelString createReplaceAppendStringBool() {
         return new SettingsModelString("replace_or_append", OPTION_REPLACE);
     }
 
@@ -137,8 +144,8 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
      * @param replaceOrAppendModel model for the replace/append button group
      * @return the string model, used in both dialog and model.
      */
-    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
-        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(with time)");
+    static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(modified time)");
         replaceOrAppendModel.addChangeListener(
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
@@ -146,22 +153,22 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
     }
 
     /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createHourModel() {
+    static SettingsModelIntegerBounded createHourModel() {
         return new SettingsModelIntegerBounded("hour_int", LocalTime.now().getHour(), 0, 23);
     }
 
     /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createMinuteModel() {
+    static SettingsModelIntegerBounded createMinuteModel() {
         return new SettingsModelIntegerBounded("minute_int", LocalTime.now().getMinute(), 0, 59);
     }
 
     /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createSecondModel() {
+    static SettingsModelIntegerBounded createSecondModel() {
         return new SettingsModelIntegerBounded("second_int", LocalTime.now().getSecond(), 0, 59);
     }
 
     /** @return the integer model, used in both dialog and model. */
-    public static SettingsModelIntegerBounded createNanoModel() {
+    static SettingsModelIntegerBounded createNanoModel() {
         return new SettingsModelIntegerBounded("nano_int", 0, 0, 999_999_999);
     }
 
@@ -179,161 +186,69 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
         return zoneSelectModel;
     }
 
-    /**
-     * one in, one out
-     */
-    protected AddTimeNodeModel() {
-        super(1, 1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{columnRearranger.createSpec()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-        throws Exception {
-        ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
-        return new BufferedDataTable[]{out};
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createModifySelectModel() {
+        return new SettingsModelString("modify_select", MODIFY_OPTION_ADD);
     }
 
     /**
      * @param inSpec table input spec
      * @return the CR describing the output
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
-        ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        int[] includeIndices =
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+        final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
+        final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+        final int[] includeIndices =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        int i = 0;
+
+        // determine the data type of output
         DataType dataType;
-        if (m_addZone.getBooleanValue()) {
-            dataType = ZonedDateTimeCellFactory.TYPE;
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
+            dataType = LocalDateCellFactory.TYPE;
         } else {
-            dataType = LocalDateTimeCellFactory.TYPE;
+            if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                dataType = LocalDateTimeCellFactory.TYPE;
+            } else {
+                if (m_addZone.getBooleanValue()) {
+                    dataType = ZonedDateTimeCellFactory.TYPE;
+                } else {
+                    dataType = LocalDateTimeCellFactory.TYPE;
+                }
+            }
         }
 
-        ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+        final ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
-        for (String includedCol : includeList) {
+        int i = 0;
+        for (final String includedCol : includeList) {
+            if (inSpec.getColumnSpec(includedCol).getType().equals(ZonedDateTimeCellFactory.TYPE)
+                && m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                dataType = ZonedDateTimeCellFactory.TYPE;
+            }
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
-                DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
-                AddTimeCellFactory cellFac =
-                    new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
+                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
+                final SingleCellFactory cellFac =
+                    createCellFactroy(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                DataColumnSpec dataColSpec =
+                final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                AddTimeCellFactory cellFac = new AddTimeCellFactory(dataColSpec, includeIndices[i++], zone);
+                final SingleCellFactory cellFac = createCellFactroy(dataColSpec, includeIndices[i++], zone);
                 rearranger.append(cellFac);
             }
         }
         return rearranger;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
-                throws Exception {
-                final RowInput in = (RowInput)inputs[0];
-                final RowOutput out = (RowOutput)outputs[0];
-                final DataTableSpec inSpec = in.getDataTableSpec();
-                String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
-                    .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
-                DataType dataType;
-                if (m_addZone.getBooleanValue()) {
-                    dataType = ZonedDateTimeCellFactory.TYPE;
-                } else {
-                    dataType = LocalDateTimeCellFactory.TYPE;
-                }
-
-                ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
-
-                AddTimeCellFactory[] cellFacs = new AddTimeCellFactory[includeIndeces.length];
-                if (isReplace) {
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        DataColumnSpecCreator dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includeList[i], dataType);
-                        cellFacs[i] =
-                            new AddTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i], zone);
-                    }
-                } else {
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                            .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                        cellFacs[i] = new AddTimeCellFactory(dataColSpec, includeIndeces[i], zone);
-                    }
-                }
-
-                DataRow row;
-                while ((row = in.poll()) != null) {
-                    exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndeces.length];
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        if (isReplace) {
-                            datacells[i] = cellFacs[i].getCell(row);
-                        } else {
-                            datacells[i] = cellFacs[i].getCell(row);
-                        }
-                    }
-                    if (isReplace) {
-                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
-                    } else {
-                        out.push(new AppendedColumnRow(row, datacells));
-                    }
-                }
-                in.close();
-                out.close();
-            }
-        };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
+    private SingleCellFactory createCellFactroy(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_ADD)) {
+            return new AddTimeCellFactory(dataColSpec, index, zone);
+        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+            return new SetTimeCellFactory(dataColSpec, index);
+        } else {
+            return new RemoveTimeCellFactory(dataColSpec, index);
+        }
     }
 
     /**
@@ -341,7 +256,7 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_colSelect.saveSettingsTo(settings);
+        m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_hour.saveSettingsTo(settings);
@@ -350,6 +265,7 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
         m_nano.saveSettingsTo(settings);
         m_addZone.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
+        m_modifyAction.saveSettingsTo(settings);
     }
 
     /**
@@ -357,7 +273,6 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.validateSettings(settings);
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_hour.validateSettings(settings);
@@ -366,6 +281,7 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
         m_nano.validateSettings(settings);
         m_addZone.validateSettings(settings);
         m_timeZone.validateSettings(settings);
+        m_modifyAction.validateSettings(settings);
     }
 
     /**
@@ -373,7 +289,6 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.loadSettingsFrom(settings);
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_hour.loadSettingsFrom(settings);
@@ -382,14 +297,10 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
         m_nano.loadSettingsFrom(settings);
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // no internals
+        m_modifyAction.loadSettingsFrom(settings);
+        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_ADD);
+        m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? LOCAL_DATE_FILTER : DATE_TIME_FILTER);
+        m_colSelect.loadConfigurationInModel(settings);
     }
 
     private final class AddTimeCellFactory extends SingleCellFactory {
@@ -421,6 +332,59 @@ class AddTimeNodeModel extends org.knime.core.node.NodeModel {
             } else {
                 return LocalDateTimeCellFactory.create(LocalDateTime.of(localDateCell.getLocalDate(), localTime));
             }
+        }
+    }
+
+    private final class SetTimeCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        SetTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+            super(inSpec);
+            m_colIndex = colIndex;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            }
+            final LocalTime localTime = LocalTime.of(m_hour.getIntValue(), m_minute.getIntValue(),
+                m_second.getIntValue(), m_nano.getIntValue());
+            if (cell instanceof LocalDateTimeCell) {
+                return LocalDateTimeCellFactory
+                    .create(LocalDateTime.of(((LocalDateTimeCell)cell).getLocalDateTime().toLocalDate(), localTime));
+            }
+            return ZonedDateTimeCellFactory
+                .create(ZonedDateTime.of(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDate(), localTime,
+                    ((ZonedDateTimeCell)cell).getZonedDateTime().getZone()));
+        }
+    }
+
+    private final class RemoveTimeCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        RemoveTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+            super(inSpec);
+            m_colIndex = colIndex;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            }
+            if (cell instanceof LocalDateTimeCell) {
+                return LocalDateCellFactory.create(((LocalDateTimeCell)cell).getLocalDateTime().toLocalDate());
+            }
+            return LocalDateCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDate());
         }
     }
 }
