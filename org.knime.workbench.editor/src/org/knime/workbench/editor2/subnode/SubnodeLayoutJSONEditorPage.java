@@ -53,10 +53,12 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Panel;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.BoxLayout;
@@ -67,22 +69,34 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -90,9 +104,11 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.layout.DefaultLayoutCreatorImpl;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
@@ -114,6 +130,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private static NodeLogger LOGGER = NodeLogger.getLogger(SubnodeLayoutJSONEditorPage.class);
 
     private SubNodeContainer m_subNodeContainer;
+    private WorkflowManager m_wfManager;
     private Map<NodeIDSuffix, WizardNode> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
@@ -136,7 +153,131 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      */
     @Override
     public void createControl(final Composite parent) {
+        TabFolder tabs = new TabFolder(parent, SWT.BORDER);
+        TabItem basicTab = new TabItem(tabs, SWT.NONE);
+        basicTab.setText("Basic");
+        basicTab.setControl(createBasicComposite(tabs));
 
+        TabItem jsonTab = new TabItem(tabs, SWT.NONE);
+        jsonTab.setText("Advanced");
+        jsonTab.setControl(createJSONEditorComposite(tabs));
+
+        setControl(tabs);
+    }
+
+    private Composite createBasicComposite(final Composite parent) {
+        ScrolledComposite scrollPane = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
+        scrollPane.setExpandHorizontal(true);
+        scrollPane.setExpandVertical(true);
+        Composite composite = new Composite(scrollPane, SWT.NONE);
+        scrollPane.setContent(composite);
+        scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        composite.setLayout(new GridLayout(5, false));
+        composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+
+        Label titleLabel = new Label(composite, SWT.LEFT);
+        FontData fontData = titleLabel.getFont().getFontData()[0];
+        Font boldFont = new Font(Display.getCurrent(),
+            new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+        titleLabel.setText("Node");
+        titleLabel.setFont(boldFont);
+        Label rowLabel = new Label(composite, SWT.CENTER);
+        rowLabel.setText("Row");
+        rowLabel.setFont(boldFont);
+        Label colLabel = new Label(composite, SWT.CENTER);
+        colLabel.setText("Column");
+        colLabel.setFont(boldFont);
+        Label widthLabel = new Label(composite, SWT.CENTER);
+        widthLabel.setText("Width");
+        widthLabel.setFont(boldFont);
+        new Composite(composite, SWT.NONE);
+
+        for (final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+            NodeID nodeID = entry.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
+            NodeContainer nodeContainer = m_wfManager.getNodeContainer(nodeID);
+
+            Composite labelComposite = new Composite(composite, SWT.NONE);
+            labelComposite.setLayout(new GridLayout(2, false));
+            labelComposite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+
+            Label iconLabel = new Label(labelComposite, SWT.CENTER);
+            iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
+                iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
+            } catch (IOException e) { /* do nothing */ }
+
+            Label nodeLabel = new Label(labelComposite, SWT.LEFT);
+            nodeLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            String nodeName = nodeContainer.getName();
+            String annotation = nodeContainer.getNodeAnnotation().getText();
+            if (annotation.length() > 42) {
+                nodeLabel.setToolTipText(annotation);
+            }
+            annotation = StringUtils.abbreviateMiddle(annotation, " [...] ", 50).replaceAll("[\n|\r]", "");
+            String nodeLabelText = nodeName + "\nID: " + nodeID.getIndex();
+            if (StringUtils.isNoneBlank(annotation)) {
+                nodeLabelText += "\n" + annotation;
+            }
+            nodeLabel.setText(nodeLabelText);
+
+            GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+            gridData.widthHint = 50;
+            final Spinner rowSpinner = new Spinner(composite, SWT.BORDER);
+            //initSpinner(rowSpinner, gridData);
+            rowSpinner.addModifyListener(new ModifyListener() {
+
+                @Override
+                public void modifyText(final ModifyEvent e) {
+                    // TODO Auto-generated method stub
+                }
+            });
+
+            final Spinner colSpinner = new Spinner(composite, SWT.BORDER);
+            //initSpinner(colSpinner, gridData);
+            colSpinner.addModifyListener(new ModifyListener() {
+
+                @Override
+                public void modifyText(final ModifyEvent e) {
+                    // TODO Auto-generated method stub
+
+                }
+            });
+
+            final Spinner widthSpinner = new Spinner(composite, SWT.BORDER);
+            //initSpinner(widthSpinner, gridData);
+            widthSpinner.addModifyListener(new ModifyListener() {
+
+                @Override
+                public void modifyText(final ModifyEvent e) {
+                    // TODO Auto-generated method stub
+
+                }
+            });
+
+            final Button advancedButton = new Button(composite, SWT.PUSH | SWT.CENTER);
+            advancedButton.setText("More");
+            advancedButton.setToolTipText("Additional layout settings");
+            advancedButton.addSelectionListener(new SelectionAdapter() {
+
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    // TODO Auto-generated method stub
+                }
+            });
+        }
+
+        return scrollPane;
+    }
+
+    private void initSpinner(final Spinner spinner, final GridData gridData) {
+        spinner.setMinimum(1);
+        spinner.setMaximum(999);
+        spinner.setIncrement(1);
+        spinner.setLayoutData(gridData);
+        spinner.setDigits(0);
+    }
+
+    private Composite createJSONEditorComposite(final Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(new GridLayout(1, true));
         composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
@@ -263,8 +404,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_statusLine.setLayoutData(statusGridData);
         compareNodeIDs();
 
-        setControl(composite);
-
+        return composite;
     }
 
     /**
@@ -272,7 +412,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param subnodeContainer
      * @param viewNodes
      */
-    public void setNodes(final SubNodeContainer subnodeContainer, final Map<NodeIDSuffix, WizardNode> viewNodes) {
+    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer, final Map<NodeIDSuffix, WizardNode> viewNodes) {
+        m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
         JSONLayoutPage page = null;
@@ -466,6 +607,70 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private boolean isWindows() {
         return Platform.OS_WIN32.equals(Platform.getOS());
+    }
+
+    private static class BasicLayoutInfo {
+
+        private Spinner m_row;
+        private Spinner m_col;
+        private Spinner m_colWidth;
+        private JSONLayoutViewContent m_view;
+
+        /**
+         * @return the row
+         */
+        public Spinner getRow() {
+            return m_row;
+        }
+
+        /**
+         * @param row the row to set
+         */
+        public void setRow(final Spinner row) {
+            m_row = row;
+        }
+
+        /**
+         * @return the col
+         */
+        public Spinner getCol() {
+            return m_col;
+        }
+
+        /**
+         * @param col the col to set
+         */
+        public void setCol(final Spinner col) {
+            m_col = col;
+        }
+
+        /**
+         * @return the colWidth
+         */
+        public Spinner getColWidth() {
+            return m_colWidth;
+        }
+
+        /**
+         * @param colWidth the colWidth to set
+         */
+        public void setColWidth(final Spinner colWidth) {
+            m_colWidth = colWidth;
+        }
+
+        /**
+         * @return the view
+         */
+        JSONLayoutViewContent getView() {
+            return m_view;
+        }
+        /**
+         * @param view the view to set
+         */
+        void setView(final JSONLayoutViewContent view) {
+            m_view = view;
+        }
+
     }
 
 }

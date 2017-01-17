@@ -109,7 +109,7 @@ public class SubnodeLayoutWizard extends Wizard {
         }*/
         Collections.sort(nodeIDs);
         m_page = new SubnodeLayoutJSONEditorPage("Change the layout configuration");
-        m_page.setNodes(m_subNodeContainer, resultMap);
+        m_page.setNodes(wfManager, m_subNodeContainer, resultMap);
         addPage(m_page);
     }
 
