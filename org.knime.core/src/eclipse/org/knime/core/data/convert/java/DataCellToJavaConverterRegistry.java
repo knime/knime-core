@@ -513,6 +513,8 @@ public final class DataCellToJavaConverterRegistry {
 
         // register "Object -> String" and "MissingValue -> null" converters
         // with lowest priority
+        register(new SimpleDataCellToJavaConverterFactory<>(DataValue.class, String.class, (val) -> val.toString(),
+            "String (toString())"));
         register(new SimpleDataCellToJavaConverterFactory<>(MissingValue.class, Object.class, (val) -> null,
             "Object (Null)"));
     }
