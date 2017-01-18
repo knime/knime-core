@@ -599,6 +599,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     private void updateInput(final String message) {
         changeViewerStateTo(ViewerState.MESSAGE);
         m_recommendationsAvailable = true;
+        m_lastSelection = "";
         Display.getDefault().syncExec(() -> {
             if (m_viewer != null) {
                 m_viewer.setInput(message);
