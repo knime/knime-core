@@ -46,7 +46,7 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.addtime;
+package org.knime.time.node.manipulate.modifytime;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

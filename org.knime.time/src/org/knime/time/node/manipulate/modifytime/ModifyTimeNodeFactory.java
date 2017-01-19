@@ -46,7 +46,7 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.addtime;
+package org.knime.time.node.manipulate.modifytime;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
