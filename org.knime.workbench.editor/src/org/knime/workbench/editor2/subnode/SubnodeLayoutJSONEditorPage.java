@@ -55,6 +55,7 @@ import java.awt.Panel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -140,6 +141,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private int m_caretPosition = 5;
     private Text m_text;
     private List<Integer> m_documentNodeIDs = new ArrayList<Integer>();
+    private boolean m_basicPanelAvailable = true;
+    private final Map<NodeIDSuffix, BasicLayoutInfo> m_basicMap;
 
     /**
      * @param pageName
@@ -148,6 +151,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         super(pageName);
         setDescription("Please define the layout of the view nodes.");
         m_jsonDocument = "";
+        m_basicMap = new HashMap<NodeIDSuffix, BasicLayoutInfo>();
     }
 
     /**
@@ -196,9 +200,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         new Composite(composite, SWT.NONE); /* Warning placeholder */
         new Composite(composite, SWT.NONE); /* Remove placeholder */
 
-        for (final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+        for (final Entry<NodeIDSuffix, BasicLayoutInfo> entry : m_basicMap.entrySet()) {
             NodeID nodeID = entry.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
-            NodeContainer nodeContainer = m_wfManager.getNodeContainer(nodeID);
+            NodeContainer nodeContainer = m_viewNodes.containsKey(entry.getKey()) ? m_wfManager.getNodeContainer(nodeID) : null;
+            BasicLayoutInfo layoutInfo = entry.getValue();
 
             Composite labelComposite = new Composite(composite, SWT.NONE);
             labelComposite.setLayout(new GridLayout(2, false));
@@ -206,18 +211,27 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
             Label iconLabel = new Label(labelComposite, SWT.CENTER);
             iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
-                iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
-            } catch (IOException e) { /* do nothing */ }
+            if (nodeContainer == null) {
+                //TODO iconLabel.setImage(MISSING_IMAGE);
+                iconLabel.setToolTipText("This node does not exist anymore. \nIt is suggested to delete it from the layout.");
+            } else {
+                try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
+                    iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
+                } catch (IOException e) { /* do nothing */ }
+            }
 
             Label nodeLabel = new Label(labelComposite, SWT.LEFT);
             nodeLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            String nodeName = nodeContainer.getName();
-            String annotation = nodeContainer.getNodeAnnotation().getText();
-            if (annotation.length() > 42) {
-                nodeLabel.setToolTipText(annotation);
+            String nodeName = "[MISSING]";
+            String annotation = null;
+            if (nodeContainer != null) {
+                nodeName = nodeContainer.getName();
+                annotation = nodeContainer.getNodeAnnotation().getText();
+                if (annotation.length() > 42) {
+                    nodeLabel.setToolTipText(annotation);
+                }
+                annotation = StringUtils.abbreviateMiddle(annotation, " [...] ", 50).replaceAll("[\n|\r]", "");
             }
-            annotation = StringUtils.abbreviateMiddle(annotation, " [...] ", 50).replaceAll("[\n|\r]", "");
             String nodeLabelText = nodeName + "\nID: " + nodeID.getIndex();
             if (StringUtils.isNoneBlank(annotation)) {
                 nodeLabelText += "\n" + annotation;
@@ -226,35 +240,31 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
             GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
             gridData.widthHint = 50;
-            final Spinner rowSpinner = new Spinner(composite, SWT.BORDER);
-            //initSpinner(rowSpinner, gridData);
-            rowSpinner.addModifyListener(new ModifyListener() {
+            final Spinner rowSpinner = createBasicPanelSpinner(composite, layoutInfo.getRow(), 1, 999);
+            rowSpinner.addSelectionListener(new SelectionAdapter() {
 
                 @Override
-                public void modifyText(final ModifyEvent e) {
-                    // TODO Auto-generated method stub
+                public void widgetSelected(final SelectionEvent e) {
+                    layoutInfo.setRow(rowSpinner.getSelection());
+                    //TODO: recreate JSON
                 }
             });
-
-            final Spinner colSpinner = new Spinner(composite, SWT.BORDER);
-            //initSpinner(colSpinner, gridData);
-            colSpinner.addModifyListener(new ModifyListener() {
+            final Spinner colSpinner = createBasicPanelSpinner(composite, layoutInfo.getCol(), 1, 99);
+            colSpinner.addSelectionListener(new SelectionAdapter() {
 
                 @Override
-                public void modifyText(final ModifyEvent e) {
-                    // TODO Auto-generated method stub
-
+                public void widgetSelected(final SelectionEvent e) {
+                    layoutInfo.setCol(colSpinner.getSelection());
+                    //TODO: recreate JSON
                 }
             });
-
-            final Spinner widthSpinner = new Spinner(composite, SWT.BORDER);
-            //initSpinner(widthSpinner, gridData);
-            widthSpinner.addModifyListener(new ModifyListener() {
+            final Spinner widthSpinner = createBasicPanelSpinner(composite, layoutInfo.getColWidth(), 1, 12);
+            widthSpinner.addSelectionListener(new SelectionAdapter() {
 
                 @Override
-                public void modifyText(final ModifyEvent e) {
-                    // TODO Auto-generated method stub
-
+                public void widgetSelected(final SelectionEvent e) {
+                    layoutInfo.setColWidth(widthSpinner.getSelection());
+                    //TODO: recreate JSON
                 }
             });
 
@@ -265,13 +275,16 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
-                    // TODO Auto-generated method stub
+                    //open dialog with layoutInfo.getView...
                 }
             });
 
+
             final Label warningLabel = new Label(composite, SWT.CENTER);
-            warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
-            warningLabel.setToolTipText("Node is set to 'Hide in Wizard'");
+            if (nodeContainer!= null && m_viewNodes.get(entry.getKey()).isHideInWizard()) {
+                warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
+                warningLabel.setToolTipText("Node is set to 'Hide in Wizard'. It might not be displayed in the layout.");
+            }
 
             final Button removeButton = new Button(composite, SWT.PUSH | SWT.CENTER);
             removeButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/remove.png"));
@@ -280,20 +293,28 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
                     // TODO Auto-generated method stub
-                    super.widgetSelected(e);
                 }
             });
+        }
+
+        for (final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+
         }
 
         return scrollPane;
     }
 
-    private void initSpinner(final Spinner spinner, final GridData gridData) {
-        spinner.setMinimum(1);
-        spinner.setMaximum(999);
+    private Spinner createBasicPanelSpinner(final Composite parent, final int initialValue, final int min, final int max) {
+        Spinner spinner = new Spinner(parent, SWT.BORDER);
+        spinner.setMinimum(min);
+        spinner.setMaximum(max);
         spinner.setIncrement(1);
-        spinner.setLayoutData(gridData);
         spinner.setDigits(0);
+        spinner.setSelection(initialValue);
+        GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+        gridData.widthHint = 50;
+        spinner.setLayoutData(gridData);
+        return spinner;
     }
 
     private Composite createJSONEditorComposite(final Composite parent) {
@@ -441,7 +462,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             try {
                 ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
                 page = mapper.readValue(layout, JSONLayoutPage.class);
-                m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+                if (page.getRows() == null) {
+                    page = null;
+                } else {
+                    m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+                }
             } catch (IOException e) {
                 LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
                 m_jsonDocument = layout;
@@ -453,13 +478,16 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
         if (page != null) {
             m_documentNodeIDs.clear();
-            for (JSONLayoutRow row : page.getRows()) {
+            m_basicMap.clear();
+            List<JSONLayoutRow> rows = page.getRows();
+            for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+                JSONLayoutRow row = rows.get(rowIndex);
                 populateDocumentNodeIDs(row);
+                processBasicLayoutRow(row, rowIndex);
             }
         }
+
     }
-
-
 
     private JSONLayoutPage generateInitialJson() {
         DefaultLayoutCreatorImpl creator = new DefaultLayoutCreatorImpl();
@@ -491,6 +519,31 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             String id = ((JSONLayoutViewContent)content).getNodeID();
             if (id != null && !id.isEmpty()) {
                 m_documentNodeIDs.add(Integer.parseInt(id));
+            }
+        }
+    }
+
+    /**
+     * @param row
+     * @param rowIndex
+     */
+    private void processBasicLayoutRow(final JSONLayoutRow row, final int rowIndex) {
+        List<JSONLayoutColumn> columns = row.getColumns();
+        for (int colIndex = 0; colIndex < columns.size(); colIndex++) {
+            JSONLayoutColumn column = columns.get(colIndex);
+            List<JSONLayoutContent> content = column.getContent();
+            if (content == null || content.size() != 1 || !(content.get(0) instanceof JSONLayoutViewContent)) {
+                // basic layout not possible, show only advanced tab
+                m_basicPanelAvailable = false;
+            } else {
+                JSONLayoutViewContent viewContent = (JSONLayoutViewContent)content.get(0);
+                BasicLayoutInfo basicInfo = new BasicLayoutInfo();
+                basicInfo.setRow(rowIndex + 1);
+                basicInfo.setCol(colIndex + 1);
+                basicInfo.setColWidth(column.getWidthMD());
+                basicInfo.setView(viewContent);
+                NodeIDSuffix id = NodeIDSuffix.fromString(viewContent.getNodeID());
+                m_basicMap.put(id, basicInfo);
             }
         }
     }
@@ -630,50 +683,50 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private static class BasicLayoutInfo {
 
-        private Spinner m_row;
-        private Spinner m_col;
-        private Spinner m_colWidth;
+        private int m_row;
+        private int m_col;
+        private int m_colWidth;
         private JSONLayoutViewContent m_view;
 
         /**
          * @return the row
          */
-        public Spinner getRow() {
+        public int getRow() {
             return m_row;
         }
 
         /**
          * @param row the row to set
          */
-        public void setRow(final Spinner row) {
+        public void setRow(final int row) {
             m_row = row;
         }
 
         /**
          * @return the col
          */
-        public Spinner getCol() {
+        public int getCol() {
             return m_col;
         }
 
         /**
          * @param col the col to set
          */
-        public void setCol(final Spinner col) {
+        public void setCol(final int col) {
             m_col = col;
         }
 
         /**
          * @return the colWidth
          */
-        public Spinner getColWidth() {
+        public int getColWidth() {
             return m_colWidth;
         }
 
         /**
          * @param colWidth the colWidth to set
          */
-        public void setColWidth(final Spinner colWidth) {
+        public void setColWidth(final int colWidth) {
             m_colWidth = colWidth;
         }
 
