@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+<!--      <node
+            after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
+            category-path="/analytics/mining/treeensemble"
+            factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
+            >
+      </node>-->
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+   </extension>
+   <extension
+         point="org.knime.core.NodeFactoryClassMapper">
+   </extension>
+   <extension
+         point="org.knime.core.PortType">
+   </extension>
+   <extension
+         point="org.knime.distmatrix.distanceMeasures">
+   </extension>
+
+</plugin>
