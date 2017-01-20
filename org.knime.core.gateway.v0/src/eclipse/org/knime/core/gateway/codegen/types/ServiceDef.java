@@ -65,7 +65,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class ServiceDef {
 
-    private final String m_documentation;
+    private final String m_description;
 
     private String m_pkg;
 
@@ -80,8 +80,8 @@ public class ServiceDef {
      *
      */
     @JsonIgnore
-    public ServiceDef(final String documentation, final String pkg, final String name, final ServiceMethod... methods) {
-        m_documentation = documentation;
+    public ServiceDef(final String description, final String pkg, final String name, final ServiceMethod... methods) {
+        m_description = description;
         m_pkg = pkg;
         m_name = name;
         m_methods = Arrays.asList(methods);
@@ -99,25 +99,21 @@ public class ServiceDef {
      *
      */
     public ServiceDef(
-        @JsonProperty("documentation") final String documentation,
         @JsonProperty("package") final String pkg,
         @JsonProperty("name") final String name,
+        @JsonProperty("description") final String description,
         @JsonProperty("methods") final ServiceMethod[] methods,
         @JsonProperty("imports") final String[] imports) {
-        m_documentation = documentation;
+        CheckUtils.checkArgumentNotNull(pkg);
+        CheckUtils.checkArgument(pkg.matches("[a-z]+(?:\\.[a-z]+)*"),
+            "Package '%s' invalid: must be like 'abc.def.geh'", pkg);
         m_pkg = pkg;
         m_name = CheckUtils.checkArgumentNotNull(name);
+        m_description = description;
         m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
         m_imports = Arrays.asList(CheckUtils.checkArgumentNotNull(imports));
     }
 
-    /**
-     * @return the documentation
-     */
-    @JsonProperty("documentation")
-    public String getDocumentation() {
-        return m_documentation;
-    }
     /**
      * @return the pkg
      */
@@ -129,6 +125,14 @@ public class ServiceDef {
     @JsonProperty("name")
     public String getName() {
         return m_name;
+    }
+
+    /**
+     * @return the description
+     */
+    @JsonProperty("description")
+    public String getDescription() {
+        return m_description;
     }
 
     @JsonProperty("methods")

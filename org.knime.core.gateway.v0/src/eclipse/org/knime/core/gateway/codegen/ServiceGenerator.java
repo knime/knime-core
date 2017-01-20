@@ -158,11 +158,17 @@ public class ServiceGenerator {
             new ServiceDef(
                 "Defines service methods to query and manipulate the content of a workflow.",
                 "org.knime.core.workflow", "WorkflowService",
-                new ServiceMethod("getWorkflow", "WorkflowEnt",
-                    new MethodParam("id", "EntityID")),
-                new ServiceMethod("updateWorkflow", "void",
-                    new MethodParam("wf", "WorkflowEnt")),
-                new ServiceMethod("getAllWorkflows", "List<EntityID>"))
+                new ServiceMethod(
+                    "getWorkflow",
+                    "Get the workflow entity for a given ID.", "WorkflowEnt",
+                    new MethodParam("The identifier as per #getAllWorkflows", "id", "EntityID")),
+                new ServiceMethod(
+                    "updateWorkflow",
+                    "Trigger an update of the given workflow (@Martin, what's that mean?)", "void",
+                    new MethodParam("The workflow to be updated", "wf", "WorkflowEnt")),
+                new ServiceMethod(
+                    "getAllWorkflows",
+                    "Get a list of IDs for all known workflows", "List<EntityID>"))
             .addImports(
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
@@ -170,37 +176,74 @@ public class ServiceGenerator {
             new ServiceDef(
                 "Defines service methods to query the list of available nodes and metanodes (node repository).",
                 "org.knime.core.repository", "RepositoryService",
-                new ServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"),
-                new ServiceMethod("getNodeDescription", "String",
-                    new MethodParam("nodeTypeID", "String")))
+                new ServiceMethod(
+                    "getNodeRepository",
+                    "Get the list of nodes in the node repository, categories and metanodes included.", "List<RepoCategoryEnt>"),
+                new ServiceMethod(
+                    "getNodeDescription",
+                    "Get the node description (html) for a given node", "String",
+                    new MethodParam(
+                        "The identifier for a given node",
+                        "nodeTypeID", "String")))
             .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt"),
             new ServiceDef(
                 "Defines service methods to query details on an individual node or metanode.",
                 "org.knime.core.workflow", "NodeContainerService",
-                new ServiceMethod("getNodeSettingsJSON", "String",
-                    new MethodParam("workflowID", "EntityID"),
-                    new MethodParam("nodeID", "String")))
+                new ServiceMethod(
+                    "getNodeSettingsJSON",
+                    "Get the settings tree for a given node in a JSON structure.", "String",
+                    new MethodParam(
+                        "The id of the workflow the node is in.",
+                        "workflowID", "EntityID"),
+                    new MethodParam(
+                        "The id of the node itself.",
+                        "nodeID", "String")))
                 .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID"),
             new ServiceDef(
                 "Defines service methods run or reset a workflow.",
                 "org.knime.core.workflow", "ExecutionService",
-                new ServiceMethod("canExecuteUpToHere", "boolean",
-                    new MethodParam("workflowID", "EntityID"),
-                    new MethodParam("nodeID", "String")),
-                new ServiceMethod("executeUpToHere", "WorkflowEnt",
-                    new MethodParam("workflowID", "EntityID"),
-                    new MethodParam("nodeID", "String")))
+                new ServiceMethod(
+                    "canExecuteUpToHere",
+                    "Test if a given node can be executed (e.g. not yet executed and not executing).", "boolean",
+                    new MethodParam(
+                        "The id of the workflow the node is in.",
+                        "workflowID", "EntityID"),
+                    new MethodParam(
+                        "The id of the node itself.",
+                        "nodeID", "String")),
+                new ServiceMethod(
+                    "executeUpToHere",
+                    "Trigger an execution of a single node or a chain of nodes (endpoint reference).", "WorkflowEnt",
+                    new MethodParam(
+                        "The id of the workflow the node is in.",
+                        "workflowID", "EntityID"),
+                    new MethodParam(
+                        "The id of the node itself.",
+                        "nodeID", "String")))
             .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID", "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"),
             new ServiceDef(
                 "A simple test service.",
                 "org.knime.core.test", "TestService",
-                new ServiceMethod("test", "TestEnt",
-                    new MethodParam("id", "TestEnt")),
-                new ServiceMethod("testList", "List<TestEnt>",
-                    new MethodParam("list", "List<TestEnt>")),
-                new ServiceMethod("primitives", "double",
-                    new MethodParam("s", "String"),
-                    new MethodParam("stringlist", "List<String>")))
+                new ServiceMethod(
+                    "test",
+                    "Some example documentation.", "TestEnt",
+                    new MethodParam(
+                        "Some example documentation.",
+                        "id", "TestEnt")),
+                new ServiceMethod(
+                    "testList",
+                    "Some example documentation.", "List<TestEnt>",
+                    new MethodParam(
+                        "Some example documentation.",
+                        "list", "List<TestEnt>")),
+                new ServiceMethod(
+                    "primitives",
+                    "Some example documentation.", "double",
+                    new MethodParam(
+                        "Some example documentation.",
+                        "s", "String"),
+                    new MethodParam("Some example documentation.",
+                        "stringlist", "List<String>")))
             .addImports("org.knime.core.gateway.v0.workflow.entity.TestEnt",
                         "java.util.List"));
     }

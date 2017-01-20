@@ -59,18 +59,30 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class MethodParam {
 
-    private String m_name;
+    private final String m_description;
 
-    private Type m_type;
+    private final String m_name;
+
+    private final Type m_type;
 
     /**
      *
      */
     public MethodParam(
+        @JsonProperty("description") final String description,
         @JsonProperty("name") final String name,
         @JsonProperty("type") final String type) {
+        m_description = description;
         m_name = name;
         m_type = Type.parse(type);
+    }
+
+    /**
+     * @return the description
+     */
+    @JsonProperty("description")
+    public String getDescription() {
+        return m_description;
     }
 
     @JsonProperty("name")

@@ -63,11 +63,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class ServiceMethod {
 
-    private String m_name;
+    private final String m_description;
 
-    private Type m_returnType;
+    private final String m_name;
 
-    private List<MethodParam> m_parameters;
+    private final Type m_returnType;
+
+    private final List<MethodParam> m_parameters;
 
     /**
      *
@@ -75,9 +77,11 @@ public class ServiceMethod {
     @JsonCreator
     public ServiceMethod(
         @JsonProperty("name") final String name,
+        @JsonProperty("description") final String description,
         @JsonProperty("return") final String returnType,
         @JsonProperty("params") final MethodParam... parameters) {
         m_name = name;
+        m_description = description;
         m_returnType = Type.parse(returnType);
         m_parameters = Arrays.asList(parameters);
     }
@@ -85,6 +89,14 @@ public class ServiceMethod {
     @JsonProperty("name")
     public String getName() {
         return m_name;
+    }
+
+    /**
+     * @return the description
+     */
+    @JsonProperty("description")
+    public String getDescription() {
+        return m_description;
     }
 
     @JsonProperty("return")
