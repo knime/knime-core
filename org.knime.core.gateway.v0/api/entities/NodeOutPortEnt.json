@@ -1,6 +1,0 @@
-{
-  "name" : "NodeOutPortEnt",
-  "fields" : [ ],
-  "commonEntities" : [ "NodePortEnt" ],
-  "imports" : [ "org.knime.core.gateway.v0.workflow.entity.NodePortEnt" ]
-}
