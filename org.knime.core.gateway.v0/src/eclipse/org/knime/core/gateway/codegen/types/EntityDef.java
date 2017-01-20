@@ -64,23 +64,32 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class EntityDef {
 
-    private List<EntityField> m_fields;
+    private final String m_package;
 
-    private String m_name;
+    private final String m_name;
 
-    private List<String> m_commonEntities = new ArrayList<String>();
+    private final String m_description;
 
-    private List<String> m_imports = new ArrayList<String>();
+    private final List<EntityField> m_fields;
+
+    private final List<String> m_commonEntities = new ArrayList<String>();
+
+    private final List<String> m_imports = new ArrayList<String>();
 
     /**
+     * @param pkg TODO
+     * @param description TODO
      *
      */
     @JsonIgnore
-    public EntityDef(final String name, final EntityField... entityFields) {
-        m_fields = Arrays.asList(entityFields);
+    public EntityDef(final String pkg, final String name, final String description, final EntityField... entityFields) {
+        m_package = pkg;
         m_name = name;
+        m_description = description;
+        m_fields = Arrays.asList(entityFields);
     }
 
+    @JsonIgnore
     public EntityDef addFieldsFrom(final String... entities) {
         for (String s : entities) {
             m_commonEntities.add(s);
@@ -88,6 +97,7 @@ public class EntityDef {
         return this;
     }
 
+    @JsonIgnore
     public EntityDef addImports(final String... imports) {
         for (String s : imports) {
             m_imports.add(s);
@@ -104,19 +114,37 @@ public class EntityDef {
      */
     @JsonCreator
     public static EntityDef restoreFromJSON(
+        @JsonProperty("package") final String pkg,
         @JsonProperty("name") final String name,
+        @JsonProperty("description") final String description,
         @JsonProperty("fields") final EntityField[] entityFields,
         @JsonProperty("commonEntities") final String[] commonEntities,
         @JsonProperty("imports") final String[] imports) {
-        EntityDef result = new EntityDef(name, entityFields);
+        EntityDef result = new EntityDef(pkg, name, description, entityFields);
         result.addFieldsFrom(commonEntities);
         result.addImports(imports);
         return result;
     }
 
+    /**
+     * @return the package
+     */
+    @JsonProperty("package")
+    public String getPackage() {
+        return m_package;
+    }
+
     @JsonProperty("name")
     public String getName() {
         return m_name;
+    }
+
+    /**
+     * @return the description
+     */
+    @JsonProperty("description")
+    public String getDescription() {
+        return m_description;
     }
 
     @JsonProperty("fields")
