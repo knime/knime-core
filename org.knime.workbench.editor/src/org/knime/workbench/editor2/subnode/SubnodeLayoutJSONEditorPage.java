@@ -74,6 +74,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.layout.PixelConverter;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
@@ -212,8 +213,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             Label iconLabel = new Label(labelComposite, SWT.CENTER);
             iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
             if (nodeContainer == null) {
-                //TODO iconLabel.setImage(MISSING_IMAGE);
-                iconLabel.setToolTipText("This node does not exist anymore. \nIt is suggested to delete it from the layout.");
+                iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
+                iconLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
             } else {
                 try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
                     iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
@@ -222,9 +223,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
             Label nodeLabel = new Label(labelComposite, SWT.LEFT);
             nodeLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            String nodeName = "[MISSING]";
+            String nodeName;
             String annotation = null;
-            if (nodeContainer != null) {
+            if (nodeContainer == null) {
+                nodeName = "[MISSING]";
+                FontData font = nodeLabel.getFont().getFontData()[0];
+                nodeLabel.setFont(new Font(composite.getDisplay(), new FontData(font.getName(), font.getHeight(), SWT.ITALIC)));
+                nodeLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
+            } else {
                 nodeName = nodeContainer.getName();
                 annotation = nodeContainer.getNodeAnnotation().getText();
                 if (annotation.length() > 42) {
@@ -269,13 +275,16 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             });
 
             final Button advancedButton = new Button(composite, SWT.PUSH | SWT.CENTER);
-            advancedButton.setText("More");
+            advancedButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/settings.png"));
             advancedButton.setToolTipText("Additional layout settings");
             advancedButton.addSelectionListener(new SelectionAdapter() {
 
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
-                    //open dialog with layoutInfo.getView...
+                    ViewContentSettingsDialg settingsDialog = new ViewContentSettingsDialg(layoutInfo.getView(), composite.getShell());
+                    if (settingsDialog.open() == Window.OK) {
+                        layoutInfo.setView(settingsDialog.getViewSettings());
+                    }
                 }
             });
 
