@@ -49,8 +49,10 @@
 package org.knime.core.gateway.codegen;
 
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -132,12 +134,15 @@ public class ServiceGenerator {
                         template.merge(context, writer);
                     }
                 }
-                String filepath = "api/services/" + destFileName + ".json";
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath))) {
+                String[] pathSegments = "services.".concat(serviceDef.getPackage()).split("\\.");
+                Path path = Paths.get("api", pathSegments);
+                Files.createDirectories(path);
+                Path filePath = path.resolve(destFileName + ".json");
+                try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
                     mapper.writeValue(writer, serviceDef);
-                    ServiceDef d = mapper.readValue(new FileReader(filepath), ServiceDef.class);
+                    ServiceDef d = mapper.readValue(Files.newBufferedReader(filePath), ServiceDef.class);
                 }
             }
         } catch (Exception e) {
@@ -150,7 +155,9 @@ public class ServiceGenerator {
 
     public static List<ServiceDef> getServiceDefs() {
         return Arrays.asList(
-            new ServiceDef("WorkflowService",
+            new ServiceDef(
+                "Defines service methods to query and manipulate the content of a workflow.",
+                "org.knime.core.workflow", "WorkflowService",
                 new ServiceMethod("getWorkflow", "WorkflowEnt",
                     new MethodParam("id", "EntityID")),
                 new ServiceMethod("updateWorkflow", "void",
@@ -160,17 +167,23 @@ public class ServiceGenerator {
                 "org.knime.core.gateway.v0.workflow.entity.EntityID",
                 "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt",
                 "java.util.List"),
-            new ServiceDef("RepositoryService",
+            new ServiceDef(
+                "Defines service methods to query the list of available nodes and metanodes (node repository).",
+                "org.knime.core.repository", "RepositoryService",
                 new ServiceMethod("getNodeRepository", "List<RepoCategoryEnt>"),
                 new ServiceMethod("getNodeDescription", "String",
                     new MethodParam("nodeTypeID", "String")))
             .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt"),
-            new ServiceDef("NodeContainerService",
+            new ServiceDef(
+                "Defines service methods to query details on an individual node or metanode.",
+                "org.knime.core.workflow", "NodeContainerService",
                 new ServiceMethod("getNodeSettingsJSON", "String",
                     new MethodParam("workflowID", "EntityID"),
                     new MethodParam("nodeID", "String")))
                 .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID"),
-            new ServiceDef("ExecutionService",
+            new ServiceDef(
+                "Defines service methods run or reset a workflow.",
+                "org.knime.core.workflow", "ExecutionService",
                 new ServiceMethod("canExecuteUpToHere", "boolean",
                     new MethodParam("workflowID", "EntityID"),
                     new MethodParam("nodeID", "String")),
@@ -178,7 +191,9 @@ public class ServiceGenerator {
                     new MethodParam("workflowID", "EntityID"),
                     new MethodParam("nodeID", "String")))
             .addImports("org.knime.core.gateway.v0.workflow.entity.EntityID", "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"),
-            new ServiceDef("TestService",
+            new ServiceDef(
+                "A simple test service.",
+                "org.knime.core.test", "TestService",
                 new ServiceMethod("test", "TestEnt",
                     new MethodParam("id", "TestEnt")),
                 new ServiceMethod("testList", "List<TestEnt>",

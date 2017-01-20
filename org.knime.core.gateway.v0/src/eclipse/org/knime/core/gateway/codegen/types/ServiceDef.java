@@ -65,17 +65,24 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class ServiceDef {
 
+    private final String m_documentation;
+
+    private String m_pkg;
+
     private String m_name;
 
     private List<ServiceMethod> m_methods;
 
     private List<String> m_imports = new ArrayList<String>();
 
+
     /**
      *
      */
     @JsonIgnore
-    public ServiceDef(final String name, final ServiceMethod... methods) {
+    public ServiceDef(final String documentation, final String pkg, final String name, final ServiceMethod... methods) {
+        m_documentation = documentation;
+        m_pkg = pkg;
         m_name = name;
         m_methods = Arrays.asList(methods);
     }
@@ -91,12 +98,32 @@ public class ServiceDef {
     /**
      *
      */
-    public ServiceDef(@JsonProperty("name") final String name,
+    public ServiceDef(
+        @JsonProperty("documentation") final String documentation,
+        @JsonProperty("package") final String pkg,
+        @JsonProperty("name") final String name,
         @JsonProperty("methods") final ServiceMethod[] methods,
         @JsonProperty("imports") final String[] imports) {
+        m_documentation = documentation;
+        m_pkg = pkg;
         m_name = CheckUtils.checkArgumentNotNull(name);
         m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
         m_imports = Arrays.asList(CheckUtils.checkArgumentNotNull(imports));
+    }
+
+    /**
+     * @return the documentation
+     */
+    @JsonProperty("documentation")
+    public String getDocumentation() {
+        return m_documentation;
+    }
+    /**
+     * @return the pkg
+     */
+    @JsonProperty("package")
+    public String getPackage() {
+        return m_pkg;
     }
 
     @JsonProperty("name")
