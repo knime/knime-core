@@ -1,0 +1,18 @@
+{
+    "type" : "entity",
+    "name" : "NodeMessageEnt",
+    "description" : "A node message.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "Message",
+            "description" : "The message string itself.",
+            "type" : "String"
+        },
+        {
+            "name" : "Type",
+            "description" : "The type of message (warning, error).",
+            "type" : "String"
+        }
+    ]
+}

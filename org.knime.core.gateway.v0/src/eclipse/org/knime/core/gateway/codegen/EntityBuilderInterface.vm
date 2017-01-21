@@ -52,14 +52,18 @@ import $import;
 import org.knime.core.gateway.v0.workflow.entity.${name};
 
 /**
- *
+ * Builder for {@link ${name}}.
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public interface ${name}Builder extends GatewayEntityBuilder<${name}> {
 
-
 #foreach( $field in $fields )
-	${name}Builder set$field.getName()($field.getType().toString("","") $field.getName());
+    /**
+     * @param $StringUtils.uncapitalize($field.getName()) $field.getDescription()
+     * @return <code>this</code>
+     */
+	${name}Builder set$field.getName()($field.getType().toString("","") $StringUtils.uncapitalize($field.getName()));
 
 #end
 }

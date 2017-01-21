@@ -1,0 +1,14 @@
+{
+    "type" : "entity",
+    "name" : "NativeNodeEnt",
+    "description" : "Native node extension of a NodeEnt",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "parent" : "org.knime.core.gateway.v0.workflow.entity.NodeEnt",
+    "fields" : [
+        {
+            "name" : "NodeFactoryID",
+            "description" : "The ID of the node factory defining all details.",
+            "type" : "org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"
+        }
+    ]
+}

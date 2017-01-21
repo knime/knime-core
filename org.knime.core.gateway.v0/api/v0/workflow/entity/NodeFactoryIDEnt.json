@@ -1,0 +1,18 @@
+{
+    "type" : "entity",
+    "name" : "NodeFactoryIDEnt",
+    "description" : "Details on a single node implementation",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "ClassName",
+            "description" : "The fully qualified java classname",
+            "type" : "String"
+        },
+        {
+            "name" : "NodeName",
+            "description" : "The static name of the node as appears on the screen.",
+            "type" : "String"
+        }
+    ]
+}

@@ -43,30 +43,49 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Dec 5, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.codegen.types;
 
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface TestEnt extends GatewayEntity {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+public class MethodReturn {
 
+    private final String m_description;
 
-  	XYEnt getxy();
- 	
-  	List<XYEnt> getxylist();
- 	
-  	String getother();
- 	
-  	List<String> getprimitivelist();
- 	
-  	Map<String, XYEnt> getxymap();
- 	
-  	Map<Integer, String> getprimitivemap();
- 	
- }
+    private final Type m_type;
+
+    public MethodReturn(
+        @JsonProperty("description") final String description,
+        @JsonProperty("type") final String type) {
+        m_type = Type.parse(type);
+        m_description = m_type.isVoid() ? null : description;
+    }
+
+    /**
+     * @return the description
+     */
+    @JsonProperty("description")
+    public String getDescription() {
+        return m_description;
+    }
+
+    @JsonProperty("type")
+    public String getTypeAsString() {
+        return m_type.toString("", "", false);
+    }
+
+    @JsonIgnore
+    public Type getType() {
+        return m_type;
+    }
+
+}

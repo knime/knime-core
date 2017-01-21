@@ -93,7 +93,7 @@ public class EntityField {
 
     @JsonProperty("type")
     public String getTypeAsString() {
-        return m_type.toString("", "");
+        return m_type.toString("", "", false);
     }
 
     @JsonIgnore

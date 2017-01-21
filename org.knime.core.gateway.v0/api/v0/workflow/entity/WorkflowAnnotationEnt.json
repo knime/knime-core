@@ -1,0 +1,43 @@
+{
+    "type" : "entity",
+    "name" : "WorkflowAnnotationEnt",
+    "description" : "A workflow annotation.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "Text",
+            "description" : "The text.",
+            "type" : "String"
+        },
+        {
+            "name" : "Bounds",
+            "description" : "Position/Size of an annotation.",
+            "type" : "org.knime.core.gateway.v0.workflow.entity.BoundsEnt"
+        },
+        {
+            "name" : "BgColor",
+            "description" : "Background color.",
+            "type" : "int"
+        },
+        {
+            "name" : "BorderSize",
+            "description" : "Border thickness.",
+            "type" : "int"
+        },
+        {
+            "name" : "BorderColor",
+            "description" : "Border color.",
+            "type" : "int"
+        },
+        {
+            "name" : "FontSize",
+            "description" : "The font fize.",
+            "type" : "int"
+        },
+        {
+            "name" : "Alignment",
+            "description" : "Text alignment.",
+            "type" : "String"
+        }
+    ]
+}

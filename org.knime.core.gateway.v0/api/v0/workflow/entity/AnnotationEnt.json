@@ -1,0 +1,63 @@
+{
+    "type" : "entity",
+    "name" : "AnnotationEnt",
+    "description" : "A text annotation.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "Text",
+            "description" : "The text.",
+            "type" : "String"
+        },
+        {
+            "name" : "BackgroundColor",
+            "description" : "The background color.",
+            "type" : "int"
+        },
+        {
+            "name" : "X",
+            "description" : "The x coordinate.",
+            "type" : "int"
+        },
+        {
+            "name" : "Y",
+            "description" : "The y coordinate.",
+            "type" : "int"
+        },
+        {
+            "name" : "Width",
+            "description" : "The width.",
+            "type" : "int"
+        },
+        {
+            "name" : "Height",
+            "description" : "The height.",
+            "type" : "int"
+        },
+        {
+            "name" : "TextAlignment",
+            "description" : "The text alignment.",
+            "type" : "String"
+        },
+        {
+            "name" : "BorderSize",
+            "description" : "The border width.",
+            "type" : "int"
+        },
+        {
+            "name" : "BorderColor",
+            "description" : "The border color.",
+            "type" : "int"
+        },
+        {
+            "name" : "DefaultFontSize",
+            "description" : "The default font size.",
+            "type" : "int"
+        },
+        {
+            "name" : "Version",
+            "description" : "The version.",
+            "type" : "int"
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "type" : "entity",
+    "name" : "NodeOutPortEnt",
+    "description" : "An output port of a node.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "parent" : "org.knime.core.gateway.v0.workflow.entity.NodePortEnt",
+    "fields" : [ ]
+}

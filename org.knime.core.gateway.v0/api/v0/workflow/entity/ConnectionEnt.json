@@ -1,0 +1,43 @@
+{
+    "type" : "entity",
+    "name" : "ConnectionEnt",
+    "description" : "A single connection between two nodes.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "Dest",
+            "description" : "The destination node",
+            "type" : "String"
+        },
+        {
+            "name" : "DestPort",
+            "description" : "The destination port, starting at 0",
+            "type" : "int"
+        },
+        {
+            "name" : "Source",
+            "description" : "The source node.",
+            "type" : "String"
+        },
+        {
+            "name" : "SourcePort",
+            "description" : "The source port, starting at 0.",
+            "type" : "int"
+        },
+        {
+            "name" : "IsDeleteable",
+            "description" : "Whether the connection can currently be deleted.",
+            "type" : "boolean"
+        },
+        {
+            "name" : "BendPoints",
+            "description" : "The list of handles/bend points.",
+            "type" : "List<org.knime.core.gateway.v0.workflow.entity.XYEnt>"
+        },
+        {
+            "name" : "Type",
+            "description" : "The type of the connection (standard, workflow input / output / through).",
+            "type" : "String"
+        }
+    ]
+}

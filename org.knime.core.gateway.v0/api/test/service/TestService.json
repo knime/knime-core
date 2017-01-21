@@ -1,0 +1,61 @@
+{
+    "type" : "service",
+    "name" : "TestService",
+    "description" : "A simple test service.",
+    "package" : "org.knime.core.test.service",
+    "methods" : [
+        {
+            "name" : "Test",
+            "operation" : "get",
+            "description" : "Some example documentation.",
+            "result" : {
+                "description" : "BERND",
+                "type" : "org.knime.core.test.entity.TestEnt"
+            },
+            "params" : [
+                {
+                    "description" : "Some example documentation.",
+                    "name" : "id",
+                    "type" : "org.knime.core.test.entity.TestEnt"
+                }
+            ]
+        },
+        {
+            "name" : "TestList",
+            "operation" : "get",
+            "description" : "Some example documentation.",
+            "result" : {
+                "description" : "BERND",
+                "type" : "List<org.knime.core.test.entity.TestEnt>"
+            },
+            "params" : [
+                {
+                    "description" : "Some example documentation.",
+                    "name" : "list",
+                    "type" : "List<org.knime.core.test.entity.TestEnt>"
+                }
+            ]
+        },
+        {
+            "name" : "Primitives",
+            "operation" : "get",
+            "description" : "Some example documentation.",
+            "result" : {
+                "description" : "BERND",
+                "type" : "double"
+            },
+            "params" : [
+                {
+                    "description" : "Some example documentation.",
+                    "name" : "s",
+                    "type" : "String"
+                },
+                {
+                    "description" : "Some example documentation.",
+                    "name" : "stringlist",
+                    "type" : "List<String>"
+                }
+            ]
+        }
+    ]
+}

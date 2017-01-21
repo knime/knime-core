@@ -1,0 +1,18 @@
+{
+    "type" : "entity",
+    "name" : "XYEnt",
+    "description" : "XY coordinate.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "X",
+            "description" : "X coordinate.",
+            "type" : "int"
+        },
+        {
+            "name" : "Y",
+            "description" : "Y coordinate.",
+            "type" : "int"
+        }
+    ]
+}

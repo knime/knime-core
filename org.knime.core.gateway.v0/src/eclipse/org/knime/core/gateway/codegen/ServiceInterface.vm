@@ -51,13 +51,25 @@ import $import;
 #end
 
 /**
- *
+ * $classDescription
+ * 
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public interface ${name} extends GatewayService {
 
 #foreach( $method in $methods )
-	$method.getReturnType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
+    /**
+     * $method.getDescription()
+#foreach($param in $method.getParameters())
+     * @param $param.getName() $param.getDescription()
+#end
+#if ( $method.getResult().getDescription() )
+     * @return $method.getResult().getDescription()
+#end
+     * 
+     */ 
+	$method.getResult().getType().toString("","") $method.getName()(#foreach($param in $method.getParameters())final $param.getType().toString("","") $param.getName()#if( $foreach.hasNext ), #end#end);
 	
 #end
 }

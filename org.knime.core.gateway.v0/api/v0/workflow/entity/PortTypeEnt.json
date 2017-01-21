@@ -1,0 +1,33 @@
+{
+    "type" : "entity",
+    "name" : "PortTypeEnt",
+    "description" : "The type of a port.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "Name",
+            "description" : "Port type name.",
+            "type" : "String"
+        },
+        {
+            "name" : "PortObjectClassName",
+            "description" : "Port type class name (for coloring, connection checks).",
+            "type" : "String"
+        },
+        {
+            "name" : "IsOptional",
+            "description" : "Whether the port is optional, only applies to input ports",
+            "type" : "boolean"
+        },
+        {
+            "name" : "Color",
+            "description" : "The color of a port.",
+            "type" : "int"
+        },
+        {
+            "name" : "IsHidden",
+            "description" : "Whether the port is hidden (flow variable in/output).",
+            "type" : "boolean"
+        }
+    ]
+}

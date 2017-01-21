@@ -1,0 +1,28 @@
+{
+    "type" : "entity",
+    "name" : "BoundsEnt",
+    "description" : "Node dimension -- position and size.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "X",
+            "description" : "X coordinate.",
+            "type" : "int"
+        },
+        {
+            "name" : "Y",
+            "description" : "Y coordinate.",
+            "type" : "int"
+        },
+        {
+            "name" : "Width",
+            "description" : "Width of the widget.",
+            "type" : "int"
+        },
+        {
+            "name" : "Height",
+            "description" : "Height of the widget.",
+            "type" : "int"
+        }
+    ]
+}

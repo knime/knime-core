@@ -48,22 +48,22 @@
  */
 package org.knime.core.gateway.codegen.types;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
-public class ServiceDef {
+@JsonPropertyOrder({"name", "description", "package", "methods"})
+public class ServiceDef extends AbstractDef {
 
     private final String m_description;
 
@@ -73,45 +73,25 @@ public class ServiceDef {
 
     private List<ServiceMethod> m_methods;
 
-    private List<String> m_imports = new ArrayList<String>();
-
-
-    /**
-     *
-     */
-    @JsonIgnore
-    public ServiceDef(final String description, final String pkg, final String name, final ServiceMethod... methods) {
-        m_description = description;
-        m_pkg = pkg;
-        m_name = name;
-        m_methods = Arrays.asList(methods);
-    }
-
-    @JsonIgnore
-    public ServiceDef addImports(final String... imports) {
-        for (String s : imports) {
-            m_imports.add(s);
-        }
-        return this;
-    }
-
     /**
      *
      */
     public ServiceDef(
+        @JsonProperty("description") final String description,
         @JsonProperty("package") final String pkg,
         @JsonProperty("name") final String name,
-        @JsonProperty("description") final String description,
-        @JsonProperty("methods") final ServiceMethod[] methods,
-        @JsonProperty("imports") final String[] imports) {
-        CheckUtils.checkArgumentNotNull(pkg);
-        CheckUtils.checkArgument(pkg.matches("[a-z]+(?:\\.[a-z]+)*"),
-            "Package '%s' invalid: must be like 'abc.def.geh'", pkg);
-        m_pkg = pkg;
+        @JsonProperty("methods") final ServiceMethod... methods) {
+        m_pkg = checkPackage(pkg);
         m_name = CheckUtils.checkArgumentNotNull(name);
         m_description = description;
         m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
-        m_imports = Arrays.asList(CheckUtils.checkArgumentNotNull(imports));
+    }
+
+    static String checkPackage(final String pkg) {
+        CheckUtils.checkArgumentNotNull(pkg);
+        CheckUtils.checkArgument(pkg.matches("[a-z0-9]+(?:\\.[a-z0-9]+)*"),
+            "Package '%s' invalid: must be like 'abc.def.geh'", pkg);
+        return pkg;
     }
 
     /**
@@ -140,9 +120,9 @@ public class ServiceDef {
         return m_methods;
     }
 
-    @JsonProperty("imports")
+    @JsonIgnore
     public List<String> getImports() {
-        return m_imports;
+        return m_methods.stream().flatMap(ServiceMethod::getImports).sorted().distinct().collect(Collectors.toList());
     }
 
 }

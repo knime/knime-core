@@ -1,0 +1,28 @@
+{
+    "type" : "entity",
+    "name" : "RepoCategoryEnt",
+    "description" : "A category in the node repository, including its children (nodes and categories).",
+    "package" : "org.knime.core.gateway.v0.repository.entity",
+    "fields" : [
+        {
+            "name" : "Name",
+            "description" : "The name/label.",
+            "type" : "String"
+        },
+        {
+            "name" : "IconURL",
+            "description" : "The URL of the icon..",
+            "type" : "String"
+        },
+        {
+            "name" : "Categories",
+            "description" : "Child categories.",
+            "type" : "List<org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt>"
+        },
+        {
+            "name" : "Nodes",
+            "description" : "Nodes in the category.",
+            "type" : "List<org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt>"
+        }
+    ]
+}

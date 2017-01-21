@@ -50,45 +50,101 @@ package org.knime.core.gateway.codegen.types;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
+
+import org.apache.commons.lang.StringUtils;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 @JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
+@JsonPropertyOrder({"name", "operation", "description", "result", "params"})
 public class ServiceMethod {
+
+    /** HTTP like verb. */
+    public enum Operation {
+        Get,
+        Set,
+        Update,
+        Delete;
+
+        @JsonValue
+        public String getNameLowerCase() {
+            return name().toLowerCase();
+        }
+
+        @JsonCreator
+        public static Operation parseFromLowerCase(final String key) {
+            return key == null ? null : Operation.valueOf(StringUtils.capitalize(key));
+        }
+
+    }
 
     private final String m_description;
 
     private final String m_name;
 
-    private final Type m_returnType;
+    private final Operation m_operation;
+
+    private final MethodReturn m_result;
 
     private final List<MethodParam> m_parameters;
 
     /**
+     * @param operation TODO
+     *
+     */
+    public ServiceMethod(
+        final String name,
+        final Operation operation,
+        final String description,
+        final String returnType,
+        final MethodParam... parameters) {
+        this(name, operation, description, new MethodReturn("BERND", returnType), parameters);
+    }
+
+    /**
+     * @param operation TODO
      *
      */
     @JsonCreator
     public ServiceMethod(
         @JsonProperty("name") final String name,
+        @JsonProperty("operation") final Operation operation,
         @JsonProperty("description") final String description,
-        @JsonProperty("return") final String returnType,
+        @JsonProperty("result") final MethodReturn result,
         @JsonProperty("params") final MethodParam... parameters) {
         m_name = name;
+        m_operation = CheckUtils.checkArgumentNotNull(operation, "Operation must not be null");
         m_description = description;
-        m_returnType = Type.parse(returnType);
+        m_result = result;
         m_parameters = Arrays.asList(parameters);
     }
 
     @JsonProperty("name")
-    public String getName() {
+    public String getNameNoOperation() {
         return m_name;
+    }
+
+    @JsonIgnore
+    public String getName() {
+        return m_operation.getNameLowerCase() + m_name;
+    }
+
+    /**
+     * @return the operation
+     */
+    public Operation getOperation() {
+        return m_operation;
     }
 
     /**
@@ -99,22 +155,20 @@ public class ServiceMethod {
         return m_description;
     }
 
-    @JsonProperty("return")
-    public String getReturnTypeAsString() {
-        return m_returnType.toString("", "");
-    }
-
-    /**
-     * @return the returnType
-     */
-    @JsonIgnore
-    public Type getReturnType() {
-        return m_returnType;
+    @JsonProperty("result")
+    public MethodReturn getResult() {
+        return m_result;
     }
 
     @JsonProperty("params")
     public List<MethodParam> getParameters() {
         return m_parameters;
+    }
+
+    @JsonIgnore
+    public Stream<String> getImports() {
+        return Stream.concat(getResult().getType().getImports(),
+            m_parameters.stream().map(MethodParam::getType).flatMap(Type::getImports));
     }
 
 }

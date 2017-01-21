@@ -1,0 +1,38 @@
+{
+    "type" : "entity",
+    "name" : "TestEnt",
+    "description" : "A test entity.",
+    "package" : "org.knime.core.test.entity",
+    "fields" : [
+        {
+            "name" : "xy",
+            "description" : "The xy property.",
+            "type" : "org.knime.core.gateway.v0.workflow.entity.XYEnt"
+        },
+        {
+            "name" : "xylist",
+            "description" : "The xy list property.",
+            "type" : "List<org.knime.core.gateway.v0.workflow.entity.XYEnt>"
+        },
+        {
+            "name" : "other",
+            "description" : "The other property, no not this one. The other.",
+            "type" : "String"
+        },
+        {
+            "name" : "primitivelist",
+            "description" : "Some simple list of strings.",
+            "type" : "List<String>"
+        },
+        {
+            "name" : "xymap",
+            "description" : "Some map of properties.",
+            "type" : "Map<String, org.knime.core.gateway.v0.workflow.entity.XYEnt>"
+        },
+        {
+            "name" : "primitivemap",
+            "description" : "Some simple list.",
+            "type" : "Map<Integer, String>"
+        }
+    ]
+}

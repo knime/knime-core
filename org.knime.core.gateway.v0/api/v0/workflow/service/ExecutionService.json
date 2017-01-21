@@ -1,0 +1,50 @@
+{
+    "type" : "service",
+    "name" : "ExecutionService",
+    "description" : "Defines service methods run or reset a workflow.",
+    "package" : "org.knime.core.gateway.v0.workflow.service",
+    "methods" : [
+        {
+            "name" : "CanExecuteUpToHere",
+            "operation" : "get",
+            "description" : "Test if a given node can be executed (e.g. not yet executed and not executing).",
+            "result" : {
+                "description" : "BERND",
+                "type" : "boolean"
+            },
+            "params" : [
+                {
+                    "description" : "The id of the workflow the node is in.",
+                    "name" : "workflowID",
+                    "type" : "org.knime.core.gateway.v0.workflow.entity.EntityID"
+                },
+                {
+                    "description" : "The id of the node itself.",
+                    "name" : "nodeID",
+                    "type" : "String"
+                }
+            ]
+        },
+        {
+            "name" : "ExecuteUpToHere",
+            "operation" : "set",
+            "description" : "Trigger an execution of a single node or a chain of nodes (endpoint reference).",
+            "result" : {
+                "description" : "BERND",
+                "type" : "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"
+            },
+            "params" : [
+                {
+                    "description" : "The id of the workflow the node is in.",
+                    "name" : "workflowID",
+                    "type" : "org.knime.core.gateway.v0.workflow.entity.EntityID"
+                },
+                {
+                    "description" : "The id of the node itself.",
+                    "name" : "nodeID",
+                    "type" : "String"
+                }
+            ]
+        }
+    ]
+}

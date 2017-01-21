@@ -1,0 +1,33 @@
+{
+    "type" : "entity",
+    "name" : "MetaPortEnt",
+    "description" : "The port of a metanode.",
+    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "fields" : [
+        {
+            "name" : "PortType",
+            "description" : "The type.",
+            "type" : "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"
+        },
+        {
+            "name" : "IsConnected",
+            "description" : "Whether it is connected.",
+            "type" : "boolean"
+        },
+        {
+            "name" : "Message",
+            "description" : "The message (summary of upstream node port).",
+            "type" : "String"
+        },
+        {
+            "name" : "OldIndex",
+            "description" : "The old index (@Martin, please clarify?)",
+            "type" : "int"
+        },
+        {
+            "name" : "NewIndex",
+            "description" : "The new index (@Martin, please clarify?).",
+            "type" : "int"
+        }
+    ]
+}

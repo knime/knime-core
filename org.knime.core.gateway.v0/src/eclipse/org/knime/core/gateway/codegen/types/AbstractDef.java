@@ -43,25 +43,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jan 23, 2017 (wiswedel): created
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.codegen.types;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- *
- * @author Martin Horn, University of Konstanz
+ * Base class for services and entity definitions.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface RepoNodeTemplateEnt extends GatewayEntity {
+@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="type")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value=EntityDef.class, name="entity"),
+    @JsonSubTypes.Type(value=ServiceDef.class, name="service"),
+})
+public abstract class AbstractDef {
 
-
-  	String getName();
- 	
-  	String getType();
- 	
-  	String getID();
- 	
-  	String getIconURL();
- 	
-  	String getNodeTypeID();
- 	
- }
+}

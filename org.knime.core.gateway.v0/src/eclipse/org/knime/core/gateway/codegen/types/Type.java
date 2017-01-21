@@ -51,21 +51,18 @@ package org.knime.core.gateway.codegen.types;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 
 import org.apache.commons.lang.RandomStringUtils;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.NONE)
 public class Type {
 
     private Random m_rand = new Random();
@@ -90,7 +87,6 @@ public class Type {
      * @param genericType
      *
      */
-    @JsonIgnore
     private Type(final GenericType genericType, final String... typeParameters) {
         m_genericType = genericType;
         m_typeParameters = Arrays.stream(typeParameters).map(t -> Type.parse(t)).collect(Collectors.toList());
@@ -105,7 +101,6 @@ public class Type {
         }
     }
 
-    @JsonIgnore
     private Type(final String name) {
         m_genericType = GenericType.NONE;
         m_name = name;
@@ -113,59 +108,86 @@ public class Type {
     }
 
     public String toString(final String append, final String prepend) {
+        return toString(append, prepend, true);
+    }
+
+    public String toString(final String append, final String prepend, final boolean useSimpleClassName) {
         if (isVoid()) {
             return "void";
         } else if (m_typeParameters.size() == 0 && isPrimitive()) {
             return m_name;
         } else if (m_typeParameters.size() == 0) {
-            return append + m_name + prepend;
+            String simpleClassName = useSimpleClassName ? m_name.substring(m_name.lastIndexOf('.') + 1) : m_name;
+            return append + simpleClassName + prepend;
         } else {
             String[] params = new String[m_typeParameters.size()];
             for (int i = 0; i < params.length; i++) {
-                params[i] = m_typeParameters.get(i).toString(append, prepend);
+                params[i] = m_typeParameters.get(i).toString(append, prepend, useSimpleClassName);
             }
             return m_name + "<" + String.join(", ", params) + ">";
         }
 
     }
 
-    @JsonIgnore
+    @Override
+    public String toString() {
+        return toString("", "");
+    }
+
     public Type getTypeParameter(final int index) {
         return m_typeParameters.get(index);
     }
 
-    @JsonIgnore
     public boolean isList() {
         return m_genericType == GenericType.LIST;
     }
 
-    @JsonIgnore
     public boolean isMap() {
         return m_genericType == GenericType.MAP;
     }
 
-    @JsonIgnore
     public boolean isVoid() {
         return m_name.equals("void");
     }
 
-    @JsonIgnore
+    public Stream<String> getImports() {
+        Builder<String> builder = Stream.builder();
+        switch (m_genericType) {
+            case LIST:
+                builder.add(List.class.getName());
+                break;
+            case MAP:
+                builder.add(Map.class.getName());
+                break;
+            default:
+                if (!isNamePrimitive() && !isVoid()) {
+                    builder.add(m_name);
+                }
+        }
+        m_typeParameters.stream().flatMap(t -> t.getImports()).forEach(builder::add);
+        return builder.build();
+    }
+
     public boolean isPrimitive() {
         if(m_typeParameters.size() == 0) {
-        return m_name.equals("String") ||
-               m_name.equals("int") ||
-               m_name.toLowerCase().equals("double") ||
-               m_name.toLowerCase().equals("float") ||
-               m_name.toLowerCase().equals("boolean") ||
-               m_name.equals("Integer");
+            return isNamePrimitive();
         } else {
-            for (Type t : m_typeParameters) {
-                if(!t.isPrimitive()) {
-                    return false;
-                }
-            }
-            return true;
+            return m_typeParameters.stream().allMatch(t -> t.isPrimitive());
         }
+    }
+
+    /**
+     * @return
+     */
+    private boolean isNamePrimitive() {
+        return m_name.equals("String") ||
+                m_name.equals("int") || m_name.equals("Integer") ||
+                m_name.toLowerCase().equals("byte") ||
+                m_name.toLowerCase().equals("short") ||
+                m_name.toLowerCase().equals("long") ||
+                m_name.toLowerCase().equals("float") ||
+                m_name.toLowerCase().equals("double") ||
+                m_name.toLowerCase().equals("boolean");
     }
 
     public Object createRandomPrimitive() {
@@ -201,8 +223,7 @@ public class Type {
      * @param s
      * @return the newly created type
      */
-    @JsonCreator
-    public static Type parse(@JsonProperty("signature")final String s) {
+    public static Type parse(final String s) {
         if (s.startsWith("List<")) {
             return new Type(GenericType.LIST, parseTypeParameters(s));
         } else if (s.startsWith("Map<")) {

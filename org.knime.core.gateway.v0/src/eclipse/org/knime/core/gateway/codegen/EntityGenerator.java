@@ -49,14 +49,17 @@
 package org.knime.core.gateway.codegen;
 
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -64,9 +67,14 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.knime.core.gateway.codegen.types.EntityDef;
 import org.knime.core.gateway.codegen.types.EntityField;
+import org.knime.core.node.util.CheckUtils;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  *
@@ -102,27 +110,29 @@ public final class EntityGenerator {
 
             Map<String, EntityDef> entitiyDefMap = new HashMap<String, EntityDef>();
             for(EntityDef entityDef : entityDefs) {
-                entitiyDefMap.put(entityDef.getName(), entityDef);
+                entitiyDefMap.put(entityDef.getPackage() + "." + entityDef.getName(), entityDef);
             }
 
             for (EntityDef entityDef : entityDefs) {
                 context.put("name", entityDef.getName());
+                context.put("classDescription", entityDef.getDescription());
+                context.put(StringUtils.class.getSimpleName(), StringUtils.class);
 
                 List<EntityField> fields = new ArrayList<EntityField>(entityDef.getFields());
                 List<String> imports = new ArrayList<String>(entityDef.getImports());
                 List<String> superClasses = new ArrayList<String>();
 
-                //add fields and imports from other entities, too
-                for(String other : entityDef.getCommonEntities()) {
-                    fields.addAll(entitiyDefMap.get(other).getFields());
-                    imports.addAll(entitiyDefMap.get(other).getImports());
-                    superClasses.add(other);
-                }
+                // add fields and imports from other entities, too
+                entityDef.getParentOptional().ifPresent(extendsFrom -> {
+                    EntityDef superEntity = entitiyDefMap.get(extendsFrom);
+                    CheckUtils.checkArgumentNotNull(superEntity, "No parent \"%s\" for child entity \"%s\"", extendsFrom, entityDef.getName());
+                    fields.addAll(superEntity.getFields());
+                    imports.addAll(superEntity.getImports());
+                    superClasses.add(extendsFrom);
+                });
 
                 context.put("fields", fields);
-
                 context.put("imports", imports);
-
                 context.put("superClasses", superClasses);
 
                 Template template = null;
@@ -141,13 +151,24 @@ public final class EntityGenerator {
                  *  data placed into the context.  Think of it as a  'merge'
                  *  of the template and the data to produce the output stream.
                  */
+                String[] packages = entityDef.getPackage().split("\\.");
+                Path parentPath = Paths.get("api", packages);
+                Files.createDirectories(parentPath);
+
                 FileWriter fileWriter = new FileWriter(m_destDirectory + destFileName + ".java");
-                String path = "api/entities/" + destFileName + ".json";
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+                Path path = parentPath.resolve(destFileName + ".json");
+                try (BufferedWriter writer = Files.newBufferedWriter(path)) {
                     ObjectMapper mapper = new ObjectMapper();
+                    mapper.registerModule(new Jdk8Module());
+                    mapper.setSerializationInclusion(Include.NON_NULL);
                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                    mapper.writeValue(writer, entityDef);
-                    EntityDef def1 = mapper.readValue(new FileReader(path), EntityDef.class);
+                    // 4 space indentation
+                    DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("    ", DefaultIndenter.SYS_LF);
+                    DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+                    printer.indentObjectsWith(indenter);
+                    printer.indentArraysWith(indenter);
+                    mapper.writer(printer).writeValue(writer, entityDef);
+                    EntityDef def1 = mapper.readValue(Files.newBufferedReader(path), EntityDef.class);
                 }
 
 
@@ -165,7 +186,7 @@ public final class EntityGenerator {
                 writer.close();
             }
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
 
     }
@@ -174,43 +195,33 @@ public final class EntityGenerator {
         //TODO: e.g. read from a json file
 
         return Arrays.asList(
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NodeEnt",
                 "The individual node.",
-                new EntityField("Parent", "The parent of the node.", "EntityID"),
-                new EntityField("JobManager", "The job manager (e.g. cluster or streaming).", "JobManagerEnt"),
-                new EntityField("NodeMessage", "The current node message (warning, error, none).", "NodeMessageEnt"),
-                new EntityField("InPorts", "The list of inputs.", "List<NodeInPortEnt>"),
-                new EntityField("OutPorts", "The list of outputs.", "List<NodeOutPortEnt>"),
+                new EntityField("Parent", "The parent of the node.", "org.knime.core.gateway.v0.workflow.entity.EntityID"),
+                new EntityField("JobManager", "The job manager (e.g. cluster or streaming).", "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt"),
+                new EntityField("NodeMessage", "The current node message (warning, error, none).", "org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt"),
+                new EntityField("InPorts", "The list of inputs.", "List<org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt>"),
+                new EntityField("OutPorts", "The list of outputs.", "List<org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt>"),
                 new EntityField("Name", "The name.", "String"),
                 new EntityField("NodeID", "The ID of the node.", "String"),
                 new EntityField("NodeTypeID", "The ID of the node type (metanode, native nodes, etc).", "String"),
                 new EntityField("NodeType", "The type of the node as string.", "String"),
-                new EntityField("Bounds", "The bounds / rectangle on screen of the node.", "BoundsEnt"),
+                new EntityField("Bounds", "The bounds / rectangle on screen of the node.", "org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
                 new EntityField("IsDeletable", "Whether node is deletable.", "boolean"),
                 new EntityField("NodeState", "The state of the node.", "String"),
                 new EntityField("HasDialog", "Whether the node has a configuration dialog / user settings.", "boolean"),
-                new EntityField("NodeAnnotation", "The annotation underneath the node.", "NodeAnnotationEnt"))
-                .addImports(
-                    "org.knime.core.gateway.v0.workflow.entity.EntityID",
-                    "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt",
-                    "org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt",
-                    "org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt",
-                    "org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt",
-                    "org.knime.core.gateway.v0.workflow.entity.BoundsEnt",
-                    "org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt",
-                    "java.util.List"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("NodeAnnotation", "The annotation underneath the node.", "org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt")),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NativeNodeEnt", "Native node extension of a NodeEnt",
-                new EntityField("NodeFactoryID", "The ID of the node factory defining all details.", "NodeFactoryIDEnt"))
-                .addFieldsFrom("NodeEnt")
-                .addImports("org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("NodeFactoryID", "The ID of the node factory defining all details.", "org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt"))
+                .setParent("org.knime.core.gateway.v0.workflow.entity.NodeEnt"),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NodeFactoryIDEnt",
                 "Details on a single node implementation",
                 new EntityField("ClassName", "The fully qualified java classname", "String"),
                 new EntityField("NodeName", "The static name of the node as appears on the screen.", "String")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "ConnectionEnt",
                 "A single connection between two nodes.",
                 new EntityField("Dest", "The destination node", "String"),
@@ -218,79 +229,72 @@ public final class EntityGenerator {
                 new EntityField("Source", "The source node.", "String"),
                 new EntityField("SourcePort", "The source port, starting at 0.", "int"),
                 new EntityField("IsDeleteable", "Whether the connection can currently be deleted.", "boolean"),
-                new EntityField("BendPoints", "The list of handles/bend points.", "List<XYEnt>"),
-                new EntityField("Type", "The type of the connection (standard, workflow input / output / through).", "String"))
-                .addImports("org.knime.core.gateway.v0.workflow.entity.XYEnt", "java.util.List"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("BendPoints", "The list of handles/bend points.", "List<org.knime.core.gateway.v0.workflow.entity.XYEnt>"),
+                new EntityField("Type", "The type of the connection (standard, workflow input / output / through).", "String")),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NodePortEnt",
                 "A single port to a node.",
                 new EntityField("PortIndex", "The index starting at 0.", "int"),
-                new EntityField("PortType", "The type of the port.", "PortTypeEnt"),
-                new EntityField("PortName", "The name of the port.", "String"))
-                .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
-            new EntityDef("org.knime.core.workflow", "NodeInPortEnt",
-                "An input port of a node.").addFieldsFrom("NodePortEnt")
-            .addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
-            new EntityDef("org.knime.core.workflow", "NodeOutPortEnt",
-                "An output port of a node.").addFieldsFrom("NodePortEnt")
-            .addImports("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("PortType", "The type of the port.", "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
+                new EntityField("PortName", "The name of the port.", "String")),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity", "NodeInPortEnt",
+                "An input port of a node.").setParent("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity", "NodeOutPortEnt",
+                "An output port of a node.").setParent("org.knime.core.gateway.v0.workflow.entity.NodePortEnt"),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "PortTypeEnt",
                 "The type of a port.",
                 new EntityField("Name", "Port type name.", "String"),
-                new EntityField("PortObjectClassName", "Port type class name (for coloring, connection checks).",
-                    "String"),
+                new EntityField("PortObjectClassName", "Port type class name (for coloring, connection checks).", "String"),
                 new EntityField("IsOptional", "Whether the port is optional, only applies to input ports", "boolean"),
                 new EntityField("Color", "The color of a port.", "int"),
                 new EntityField("IsHidden", "Whether the port is hidden (flow variable in/output).", "boolean")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NodeMessageEnt",
                 "A node message.",
                 new EntityField("Message", "The message string itself.", "String"),
                 new EntityField("Type", "The type of message (warning, error).", "String")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "JobManagerEnt",
                 "The job manager of a node.",
                 new EntityField("Name", "Name of manager.", "String"),
                 new EntityField("JobManagerID", "ID of manager implementation.", "String")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "BoundsEnt",
                 "Node dimension -- position and size.",
                 new EntityField("X", "X coordinate.", "int"),
                 new EntityField("Y", "Y coordinate.", "int"),
                 new EntityField("Width", "Width of the widget.", "int"),
                 new EntityField("Height", "Height of the widget.", "int")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "XYEnt",
                 "XY coordinate.",
                 new EntityField("X", "X coordinate.", "int"),
                 new EntityField("Y", "Y coordinate.", "int")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "WorkflowAnnotationEnt",
                 "A workflow annotation.",
                 new EntityField("Text", "The text.", "String"),
-                new EntityField("Bounds", "Position/Size of an annotation.", "BoundsEnt"),
+                new EntityField("Bounds", "Position/Size of an annotation.", "org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
                 new EntityField("BgColor", "Background color.", "int"),
                 new EntityField("BorderSize", "Border thickness.", "int"),
                 new EntityField("BorderColor", "Border color.", "int"),
                 new EntityField("FontSize", "The font fize.", "int"),
-                new EntityField("Alignment", "Text alignment.", "String"))
-                .addImports("org.knime.core.gateway.v0.workflow.entity.BoundsEnt"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("Alignment", "Text alignment.", "String")),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "WorkflowEnt",
                 "A complete workflow.",
-                new EntityField("Nodes", "The node map.", "Map<String, NodeEnt>"),
-                new EntityField("Connections", "The list of connections.", "List<ConnectionEnt>"),
-                new EntityField("MetaInPorts", "The inputs of a metanode (if this workflow is one).", "List<MetaPortEnt>"),
-                new EntityField("MetaOutPorts", "The outputs of a metanode (if this workflow is one).", "List<MetaPortEnt>"))
-                .addImports("java.util.List", "java.util.Map", "org.knime.core.gateway.v0.workflow.entity.ConnectionEnt", "org.knime.core.gateway.v0.workflow.entity.NodeEnt", "org.knime.core.gateway.v0.workflow.entity.MetaPortEnt")
-                .addFieldsFrom("NodeEnt"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("Nodes", "The node map.", "Map<String, org.knime.core.gateway.v0.workflow.entity.NodeEnt>"),
+                new EntityField("Connections", "The list of connections.", "List<org.knime.core.gateway.v0.workflow.entity.ConnectionEnt>"),
+                new EntityField("MetaInPorts", "The inputs of a metanode (if this workflow is one).", "List<org.knime.core.gateway.v0.workflow.entity.MetaPortEnt>"),
+                new EntityField("MetaOutPorts", "The outputs of a metanode (if this workflow is one).", "List<org.knime.core.gateway.v0.workflow.entity.MetaPortEnt>"))
+                .setParent("org.knime.core.gateway.v0.workflow.entity.NodeEnt"),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "EntityID",
                 "The id of a workflow, used for lookups.",
                 new EntityField("ID", "The ID string.", "String"),
                 new EntityField("Type", "The type.", "String")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "AnnotationEnt",
                 "A text annotation.",
                 new EntityField("Text", "The text.", "String"),
@@ -304,29 +308,27 @@ public final class EntityGenerator {
                 new EntityField("BorderColor", "The border color.", "int"),
                 new EntityField("DefaultFontSize", "The default font size.", "int"),
                 new EntityField("Version", "The version.", "int")),
-            new EntityDef("org.knime.core.workflow",
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "NodeAnnotationEnt",
                 "The annotation to a noe.",
                 new EntityField("Node", "The node to which this annotation is attached.", "String"))
-                .addFieldsFrom("AnnotationEnt"),
-            new EntityDef("org.knime.core.workflow",
+                .setParent("org.knime.core.gateway.v0.workflow.entity.AnnotationEnt"),
+            new EntityDef("org.knime.core.gateway.v0.workflow.entity",
                 "MetaPortEnt",
                 "The port of a metanode.",
-                new EntityField("PortType", "The type.", "PortTypeEnt"),
+                new EntityField("PortType", "The type.", "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
                 new EntityField("IsConnected", "Whether it is connected.", "boolean"),
                 new EntityField("Message", "The message (summary of upstream node port).", "String"),
                 new EntityField("OldIndex", "The old index (@Martin, please clarify?)", "int"),
-                new EntityField("NewIndex", "The new index (@Martin, please clarify?).", "int"))
-            .addImports("org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"),
-            new EntityDef("org.knime.core.repository",
+                new EntityField("NewIndex", "The new index (@Martin, please clarify?).", "int")),
+            new EntityDef("org.knime.core.gateway.v0.repository.entity",
                 "RepoCategoryEnt",
                 "A category in the node, including its children (nodes and categories).",
                 new EntityField("Name", "The name/label.", "String"),
                 new EntityField("IconURL", "The URL of the icon..", "String"),
-                new EntityField("Categories", "Child categories.", "List<RepoCategoryEnt>"),
-                new EntityField("Nodes", "Nodes in the category.", "List<RepoNodeTemplateEnt>"))
-            .addImports("java.util.List", "org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt"),
-            new EntityDef("org.knime.core.workflow",
+                new EntityField("Categories", "Child categories.", "List<org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt>"),
+                new EntityField("Nodes", "Nodes in the category.", "List<org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt>")),
+            new EntityDef("org.knime.core.gateway.v0.repository.entity",
                 "RepoNodeTemplateEnt",
                 "A node in the node repository.",
                 new EntityField("Name", "The name of the node.", "String"),
@@ -334,16 +336,14 @@ public final class EntityGenerator {
                 new EntityField("ID", "The ID for later references.", "String"),
                 new EntityField("IconURL", "The icon URL.", "String"),
                 new EntityField("NodeTypeID", "The node type ID (for description lookup).", "String")),
-            new EntityDef("org.knime.core.test",
+            new EntityDef("org.knime.core.test.entity",
                 "TestEnt",
                 "A test entity.",
-                new EntityField("xy", "The xy property.", "XYEnt"),
-                new EntityField("xylist", "The xy list property.", "List<XYEnt>"),
+                new EntityField("xy", "The xy property.", "org.knime.core.gateway.v0.workflow.entity.XYEnt"),
+                new EntityField("xylist", "The xy list property.", "List<org.knime.core.gateway.v0.workflow.entity.XYEnt>"),
                 new EntityField("other", "The other property, no not this one. The other.", "String"),
                 new EntityField("primitivelist", "Some simple list of strings.", "List<String>"),
-                new EntityField("xymap", "Some map of properties.", "Map<String, XYEnt>"),
-                new EntityField("primitivemap", "Some simple list.", "Map<Integer, String>"))
-            .addImports("org.knime.core.gateway.v0.workflow.entity.XYEnt",
-                    "java.util.List", "java.util.Map"));
+                new EntityField("xymap", "Some map of properties.", "Map<String, org.knime.core.gateway.v0.workflow.entity.XYEnt>"),
+                new EntityField("primitivemap", "Some simple list.", "Map<Integer, String>")));
     }
 }
