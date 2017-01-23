@@ -62,6 +62,8 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
+import javax.swing.SwingConstants;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
@@ -79,11 +81,12 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.time.Granularity;
 
 /**
  * The node dialog of the node which shifts date&time columns.
@@ -108,7 +111,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnNameSelection m_dialogCompNumericalColSelection;
 
-    private final DialogComponentNumberEdit m_dialogCompNumericalValue;
+    private final DialogComponentNumber m_dialogCompNumericalValue;
 
     private final DialogComponentStringSelection m_dialogCompNumericalGranularity;
 
@@ -121,7 +124,6 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
     final JRadioButton m_periodRadioButton;
 
     final JRadioButton m_numericalRadioButton;
-
 
     /**
      *
@@ -157,8 +159,8 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
             DateTimeShiftNodeModel.createNumericalColSelectModel(m_numericalSelectionModel), "", 0, false,
             IntValue.class, LongValue.class);
 
-        m_dialogCompNumericalValue = new DialogComponentNumberEdit(
-            DateTimeShiftNodeModel.createNumericalValueModel(m_numericalSelectionModel), "", 30);
+        m_dialogCompNumericalValue = new DialogComponentNumber(
+            DateTimeShiftNodeModel.createNumericalValueModel(m_numericalSelectionModel), "", 1, 30);
 
         final SettingsModelString granularityModel = DateTimeShiftNodeModel.createNumericalGranularityModel();
         m_dialogCompNumericalGranularity =
@@ -298,6 +300,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
         panelNumericalColumnValue.add(m_dialogCompNumericalColSelection.getComponentPanel(), gbcNumericalColumnValue);
         gbcNumericalColumnValue.gridy++;
         panelNumericalColumnValue.add(m_dialogCompNumericalValue.getComponentPanel(), gbcNumericalColumnValue);
+        ((JSpinner.DefaultEditor)((JSpinner)m_dialogCompNumericalValue.getComponentPanel().getComponent(1)).getEditor()).getTextField().setHorizontalAlignment(SwingConstants.LEFT);
         gbcNumericalSelection.weightx = 1;
         gbcNumericalSelection.gridx++;
         gbcNumericalSelection.insets = new Insets(0, 48, 0, 0);
@@ -367,6 +370,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
 
     /**
      * checks the settings for period/duration selection
+     *
      * @return the error message
      */
     private String checkPeriodOrDurationSettings() {
@@ -385,7 +389,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
                         .equals(PeriodCellFactory.TYPE)) {
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().equals(LocalTimeCellFactory.TYPE)) {
-                                return "A Period can not be applied on a LocalTime!";
+                                return "A Period cannot be applied on a LocalTime!";
                             }
                         }
                     }
@@ -393,7 +397,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
                     else {
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().equals(LocalDateCellFactory.TYPE)) {
-                                return "A Duration can not be applied on a LocalDate!";
+                                return "A Duration cannot be applied on a LocalDate!";
                             }
                         }
                     }
@@ -407,7 +411,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
                     Period.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                     for (final String include : includes) {
                         if (m_spec.getColumnSpec(include).getType().equals(LocalTimeCellFactory.TYPE)) {
-                            return "A Period can not be applied on a LocalTime!";
+                            return "A Period cannot be applied on a LocalTime!";
                         }
                     }
                 } catch (DateTimeParseException e) {
@@ -417,7 +421,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
                             ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().equals(LocalDateCellFactory.TYPE)) {
-                                return "A Duration can not be applied on a LocalDate!";
+                                return "A Duration cannot be applied on a LocalDate!";
                             }
                         }
                     } catch (DateTimeParseException e2) {
@@ -432,6 +436,7 @@ public class DateTimeShiftNodeDialog extends NodeDialogPane {
 
     /**
      * checks the settings for numerical selection
+     *
      * @return the error message
      */
     private String checkNumericalSettings() {

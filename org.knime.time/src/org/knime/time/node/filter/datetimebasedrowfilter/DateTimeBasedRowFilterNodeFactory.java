@@ -44,76 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2016 (simon): created
+ *   Jan 20, 2017 (simon): created
  */
-package org.knime.time.node.manipulate.datetimeshift;
+package org.knime.time.node.filter.datetimebasedrowfilter;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.time.duration.DurationCellFactory;
-import org.knime.core.data.time.period.PeriodCellFactory;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * An enumeration that contains all different granularities for Date&Time shifting.
+ * The node factory of the node which filters rows based on a time window on one of the new date&time columns.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public enum Granularity {
-        YEAR("Year", PeriodCellFactory.TYPE), MONTH("Month", PeriodCellFactory.TYPE),
-        WEEK("Week", PeriodCellFactory.TYPE), DAY("Day", PeriodCellFactory.TYPE),
-        HOUR("Hour", DurationCellFactory.TYPE), MINUTE("Minute", DurationCellFactory.TYPE),
-        SECOND("Second", DurationCellFactory.TYPE), MILLISECOND("Millisecond", DurationCellFactory.TYPE),
-        NANOSECOND("Nanosecond", DurationCellFactory.TYPE);
+public class DateTimeBasedRowFilterNodeFactory extends NodeFactory<DateTimeBasedRowFilterNodeModel>{
 
-    private final String m_name;
-
-    private final DataType m_dataType;
-
-    private Granularity(final String name, final DataType dataType) {
-        m_name = name;
-        m_dataType = dataType;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DateTimeBasedRowFilterNodeModel createNodeModel() {
+        return new DateTimeBasedRowFilterNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String toString() {
-        return m_name;
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
-     * @return true, if granularity belongs to a date, and false, if it belongs to a time
+     * {@inheritDoc}
      */
-    public boolean isPartOfDate(){
-        return m_dataType.equals(PeriodCellFactory.TYPE);
+    @Override
+    public NodeView<DateTimeBasedRowFilterNodeModel> createNodeView(final int viewIndex, final DateTimeBasedRowFilterNodeModel nodeModel) {
+        return null;
     }
 
     /**
-     * @return a string array containing all string representations of the enums
+     * {@inheritDoc}
      */
-    public static String[] strings() {
-        final Granularity[] granularities = values();
-        final String[] strings = new String[granularities.length];
-
-        for (int i = 0; i < granularities.length; i++) {
-            strings[i] = granularities[i].toString();
-        }
-
-        return strings;
+    @Override
+    protected boolean hasDialog() {
+        return true;
     }
 
     /**
-     * @param name name of the enum
-     * @return the {@link Granularity}
+     * {@inheritDoc}
      */
-    public static Granularity fromString(final String name) {
-        if (name != null) {
-          for (Granularity granularity : Granularity.values()) {
-            if (name.equalsIgnoreCase(granularity.name())) {
-              return granularity;
-            }
-          }
-        }
-        throw new IllegalArgumentException("No constant with text " + name + " found");
-      }
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new DateTimeBasedRowFilterNodeDialog();
+    }
+
 }
