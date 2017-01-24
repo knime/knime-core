@@ -145,6 +145,11 @@ public class EntityDef extends AbstractDef {
     }
 
     @JsonIgnore
+    public String getFullyQualifiedName() {
+        return m_package + "." + m_name;
+    }
+
+    @JsonIgnore
     public Optional<String> getParentOptional() {
         return Optional.ofNullable(m_parent);
     }
