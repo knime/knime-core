@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "EntityID",
     "description" : "The id of a workflow, used for lookups.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "ID",

@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "WorkflowAnnotationEnt",
     "description" : "A workflow annotation.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "Text",
@@ -12,7 +12,7 @@
         {
             "name" : "Bounds",
             "description" : "Position/Size of an annotation.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.BoundsEnt"
+            "type" : "workflow.entity.BoundsEnt"
         },
         {
             "name" : "BgColor",

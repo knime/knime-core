@@ -2,7 +2,7 @@
     "type" : "service",
     "name" : "RepositoryService",
     "description" : "Defines service methods to query the list of available nodes and metanodes (node repository).",
-    "package" : "org.knime.core.gateway.v0.repository.service",
+    "namespace" : "repository.service",
     "methods" : [
         {
             "name" : "NodeRepository",
@@ -10,7 +10,7 @@
             "description" : "Get the list of nodes in the node repository, categories and metanodes included.",
             "result" : {
                 "description" : "BERND",
-                "type" : "List<org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt>"
+                "type" : "List<repository.entity.RepoCategoryEnt>"
             },
             "params" : [ ]
         },

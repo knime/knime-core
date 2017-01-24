@@ -2,28 +2,28 @@
     "type" : "entity",
     "name" : "WorkflowEnt",
     "description" : "A complete workflow.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
-    "parent" : "org.knime.core.gateway.v0.workflow.entity.NodeEnt",
+    "namespace" : "workflow.entity",
+    "parent" : "workflow.entity.NodeEnt",
     "fields" : [
         {
             "name" : "Nodes",
             "description" : "The node map.",
-            "type" : "Map<String, org.knime.core.gateway.v0.workflow.entity.NodeEnt>"
+            "type" : "Map<String, workflow.entity.NodeEnt>"
         },
         {
             "name" : "Connections",
             "description" : "The list of connections.",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.ConnectionEnt>"
+            "type" : "List<workflow.entity.ConnectionEnt>"
         },
         {
             "name" : "MetaInPorts",
             "description" : "The inputs of a metanode (if this workflow is one).",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.MetaPortEnt>"
+            "type" : "List<workflow.entity.MetaPortEnt>"
         },
         {
             "name" : "MetaOutPorts",
             "description" : "The outputs of a metanode (if this workflow is one).",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.MetaPortEnt>"
+            "type" : "List<workflow.entity.MetaPortEnt>"
         }
     ]
 }

@@ -2,7 +2,7 @@
     "type" : "service",
     "name" : "WorkflowService",
     "description" : "Defines service methods to query and manipulate the content of a workflow.",
-    "package" : "org.knime.core.gateway.v0.workflow.service",
+    "namespace" : "workflow.service",
     "methods" : [
         {
             "name" : "Workflow",
@@ -10,13 +10,13 @@
             "description" : "Get the workflow entity for a given ID.",
             "result" : {
                 "description" : "BERND",
-                "type" : "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"
+                "type" : "workflow.entity.WorkflowEnt"
             },
             "params" : [
                 {
                     "description" : "The identifier as per #getAllWorkflows",
                     "name" : "id",
-                    "type" : "org.knime.core.gateway.v0.workflow.entity.EntityID"
+                    "type" : "workflow.entity.EntityID"
                 }
             ]
         },
@@ -31,7 +31,7 @@
                 {
                     "description" : "The workflow to be updated",
                     "name" : "wf",
-                    "type" : "org.knime.core.gateway.v0.workflow.entity.WorkflowEnt"
+                    "type" : "workflow.entity.WorkflowEnt"
                 }
             ]
         },
@@ -41,7 +41,7 @@
             "description" : "Get a list of IDs for all known workflows",
             "result" : {
                 "description" : "BERND",
-                "type" : "List<org.knime.core.gateway.v0.workflow.entity.EntityID>"
+                "type" : "List<workflow.entity.EntityID>"
             },
             "params" : [ ]
         }

@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "NodePortEnt",
     "description" : "A single port to a node.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "PortIndex",
@@ -12,7 +12,7 @@
         {
             "name" : "PortType",
             "description" : "The type of the port.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"
+            "type" : "workflow.entity.PortTypeEnt"
         },
         {
             "name" : "PortName",

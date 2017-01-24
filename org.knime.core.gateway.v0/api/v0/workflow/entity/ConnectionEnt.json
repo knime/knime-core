@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "ConnectionEnt",
     "description" : "A single connection between two nodes.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "Dest",
@@ -32,7 +32,7 @@
         {
             "name" : "BendPoints",
             "description" : "The list of handles/bend points.",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.XYEnt>"
+            "type" : "List<workflow.entity.XYEnt>"
         },
         {
             "name" : "Type",

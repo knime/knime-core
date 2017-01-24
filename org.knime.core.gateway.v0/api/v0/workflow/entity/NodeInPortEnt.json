@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "NodeInPortEnt",
     "description" : "An input port of a node.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
-    "parent" : "org.knime.core.gateway.v0.workflow.entity.NodePortEnt",
+    "namespace" : "workflow.entity",
+    "parent" : "workflow.entity.NodePortEnt",
     "fields" : [ ]
 }

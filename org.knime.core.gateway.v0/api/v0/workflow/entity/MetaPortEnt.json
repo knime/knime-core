@@ -2,12 +2,12 @@
     "type" : "entity",
     "name" : "MetaPortEnt",
     "description" : "The port of a metanode.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "PortType",
             "description" : "The type.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.PortTypeEnt"
+            "type" : "workflow.entity.PortTypeEnt"
         },
         {
             "name" : "IsConnected",

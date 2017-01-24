@@ -2,32 +2,32 @@
     "type" : "entity",
     "name" : "NodeEnt",
     "description" : "The individual node.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "Parent",
             "description" : "The parent of the node.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.EntityID"
+            "type" : "workflow.entity.EntityID"
         },
         {
             "name" : "JobManager",
             "description" : "The job manager (e.g. cluster or streaming).",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.JobManagerEnt"
+            "type" : "workflow.entity.JobManagerEnt"
         },
         {
             "name" : "NodeMessage",
             "description" : "The current node message (warning, error, none).",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt"
+            "type" : "workflow.entity.NodeMessageEnt"
         },
         {
             "name" : "InPorts",
             "description" : "The list of inputs.",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt>"
+            "type" : "List<workflow.entity.NodeInPortEnt>"
         },
         {
             "name" : "OutPorts",
             "description" : "The list of outputs.",
-            "type" : "List<org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt>"
+            "type" : "List<workflow.entity.NodeOutPortEnt>"
         },
         {
             "name" : "Name",
@@ -52,7 +52,7 @@
         {
             "name" : "Bounds",
             "description" : "The bounds / rectangle on screen of the node.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.BoundsEnt"
+            "type" : "workflow.entity.BoundsEnt"
         },
         {
             "name" : "IsDeletable",
@@ -72,7 +72,7 @@
         {
             "name" : "NodeAnnotation",
             "description" : "The annotation underneath the node.",
-            "type" : "org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt"
+            "type" : "workflow.entity.NodeAnnotationEnt"
         }
     ]
 }

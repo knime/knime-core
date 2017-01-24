@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "JobManagerEnt",
     "description" : "The job manager of a node.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "Name",

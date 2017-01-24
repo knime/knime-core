@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "BoundsEnt",
     "description" : "Node dimension -- position and size.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "X",

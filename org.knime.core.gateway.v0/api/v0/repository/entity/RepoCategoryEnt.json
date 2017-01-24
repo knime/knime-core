@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "RepoCategoryEnt",
     "description" : "A category in the node repository, including its children (nodes and categories).",
-    "package" : "org.knime.core.gateway.v0.repository.entity",
+    "namespace" : "repository.entity",
     "fields" : [
         {
             "name" : "Name",
@@ -17,12 +17,12 @@
         {
             "name" : "Categories",
             "description" : "Child categories.",
-            "type" : "List<org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt>"
+            "type" : "List<repository.entity.RepoCategoryEnt>"
         },
         {
             "name" : "Nodes",
             "description" : "Nodes in the category.",
-            "type" : "List<org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt>"
+            "type" : "List<repository.entity.RepoNodeTemplateEnt>"
         }
     ]
 }

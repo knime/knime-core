@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "PortTypeEnt",
     "description" : "The type of a port.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "Name",

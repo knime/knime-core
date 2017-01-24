@@ -2,7 +2,7 @@
     "type" : "service",
     "name" : "NodeContainerService",
     "description" : "Defines service methods to query details on an individual node or metanode.",
-    "package" : "org.knime.core.gateway.v0.workflow.service",
+    "namespace" : "workflow.service",
     "methods" : [
         {
             "name" : "NodeSettingsJSON",
@@ -16,7 +16,7 @@
                 {
                     "description" : "The id of the workflow the node is in.",
                     "name" : "workflowID",
-                    "type" : "org.knime.core.gateway.v0.workflow.entity.EntityID"
+                    "type" : "workflow.entity.EntityID"
                 },
                 {
                     "description" : "The id of the node itself.",

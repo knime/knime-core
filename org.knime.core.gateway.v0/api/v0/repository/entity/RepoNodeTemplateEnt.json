@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "RepoNodeTemplateEnt",
     "description" : "A node in the node repository.",
-    "package" : "org.knime.core.gateway.v0.repository.entity",
+    "namespace" : "repository.entity",
     "fields" : [
         {
             "name" : "Name",

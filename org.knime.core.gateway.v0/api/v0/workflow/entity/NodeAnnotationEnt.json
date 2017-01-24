@@ -2,8 +2,8 @@
     "type" : "entity",
     "name" : "NodeAnnotationEnt",
     "description" : "The annotation to a noe.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
-    "parent" : "org.knime.core.gateway.v0.workflow.entity.AnnotationEnt",
+    "namespace" : "workflow.entity",
+    "parent" : "workflow.entity.AnnotationEnt",
     "fields" : [
         {
             "name" : "Node",

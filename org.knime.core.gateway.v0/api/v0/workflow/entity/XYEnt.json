@@ -2,7 +2,7 @@
     "type" : "entity",
     "name" : "XYEnt",
     "description" : "XY coordinate.",
-    "package" : "org.knime.core.gateway.v0.workflow.entity",
+    "namespace" : "workflow.entity",
     "fields" : [
         {
             "name" : "X",
