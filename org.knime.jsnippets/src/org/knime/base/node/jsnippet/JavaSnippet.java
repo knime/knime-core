@@ -1047,9 +1047,19 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
 
         try {
-            ClassLoader loader = compiler.createClassLoader(
-                    getCustomClassLoader());
+            final ArrayList<ClassLoader> customTypeClassLoaders = new ArrayList<>();
+            customTypeClassLoaders.add(JavaSnippet.class.getClassLoader());
 
+            for(final InCol col : m_fields.getInColFields()) {
+                customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
+            }
+            for(final OutCol col : m_fields.getOutColFields()) {
+                customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
+            }
+
+            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(customTypeClassLoaders.stream().toArray(size -> new ClassLoader[size]));
+
+            final ClassLoader loader = compiler.createClassLoader(customTypeLoader);
             Class<? extends AbstractJSnippet> snippetClass =
                 (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
             m_snippetCache.update(getDocument(), snippetClass, m_settings);
@@ -1174,6 +1184,40 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
         final Collection<File> buildPath = CLASSPATH_CACHE.get(converterFactoryId);
         return buildPath;
+    }
+
+    /**
+     * Get the class loaders required for a specific converter factory
+     *
+     * @param converterFactoryId ID of the converter factory
+     * @return A list of class loaders required for given converter factory
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static Collection<ClassLoader> getClassLoadersFor(final String converterFactoryId) {
+        final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+            ConverterUtil.getDataCellToJavaConverterFactory(converterFactoryId);
+        if (factory.isPresent()) {
+            final ArrayList<ClassLoader> clsLoaders = new ArrayList<>(2);
+            final ClassLoader sourceCL = factory.get().getSourceType().getClassLoader();
+            if (sourceCL != null) {
+                clsLoaders.add(sourceCL);
+            }
+            final ClassLoader destCL = factory.get().getDestinationType().getClassLoader();
+            if (destCL != null) {
+                clsLoaders.add(destCL);
+            }
+            return clsLoaders;
+        } else {
+            final Optional<JavaToDataCellConverterFactory<?>> factory2 =
+                ConverterUtil.getJavaToDataCellConverterFactory(converterFactoryId);
+            if (factory2.isPresent()) {
+                final ClassLoader cl = factory2.get().getSourceType().getClassLoader();
+                if (cl != null) {
+                    return Collections.singleton(cl);
+                }
+            }
+            return Collections.emptyList();
+        }
     }
 
     /**
