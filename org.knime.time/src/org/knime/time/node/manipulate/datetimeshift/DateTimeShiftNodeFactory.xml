@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="datetimeshift.png">
+	<name>Date&amp;Time Shift</name>
+	<shortDescription>Shifts a date or time according to a period, duration or granularity.</shortDescription>
+	<fullDescription>
+		<intro> The node shifts a date or time with a defined period, duration
+			or granularity. The user can select the Date&amp;Time columns to
+			shift and the shift value.
+			The shift value can be achieved by using
+			either a period/duration column
+			or a numerical column, however, it is
+			also possible to enter
+			a constant shift value (either period/duration
+			or numerical combined
+			with a granularity).
+			If the shift value is
+			positive, it is added to
+			the selected date. A negative value will be
+			subtracted. A numerical value is
+			interpreted based on the
+			selected
+			granularity (year, month, week, day, hour, minute, second,
+			millisecond,
+			nanosecond).
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be shifted.
+				<br />
+				Note: A
+				<i>LocalTime</i>
+				can not be shifted by years, months or weeks. A
+				<i>LocalDate</i>
+				can not be shifted by hours, minutes or seconds.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				columns.
+			</option>
+		</tab>
+		<tab name="Use Period/Duration">
+			<option name="Period/Duration Column">
+				Select to choose the shift value from a period or
+				duration column.
+			</option>
+			<option name="Period/Duration Value">
+				Select to insert a format string (defined by the ISO-8601
+				<a
+					href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
+				or
+				<a
+					href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
+				) to use as
+				constant shift value.
+				<br />
+				<b>Examples for Period:</b>
+				<ul>
+					<li>"P2Y" parses as "+2 years"
+					</li>
+					<li>"P-2Y" parses as "-2 years"
+					</li>
+					<li>"P1Y2M3W4D" parses as "1 year, 2 months, 3 weeks and 4 days"
+					</li>
+				</ul>
+				<b>Examples for Duration:</b>
+				<ul>
+					<li>"PT15M" parses as "+15 minutes"
+					</li>
+					<li>"-PT15M" parses as "-15 minutes"
+					</li>
+					<li>"PT2H15M3.5S" parses as "2 hours, 15 minutes and 3.5 seconds"
+					</li>
+				</ul>
+			</option>
+		</tab>
+		<tab name="Use Numerical">
+			<option name="Numerical Column">
+				Select to choose the shift value from a numerical
+				column. A positive value will be added to the reference date or
+				time, a negative one subtracted from it.
+			</option>
+			<option name="Numerical Value">
+				Select to insert an integer to use as constant
+				shift value. A positive value will be added to the reference date or
+				time, a negative one subtracted from it.
+			</option>
+			<option name="Granularity">
+				The granularity of the numerical value
+				(in years,
+				months, weeks, days, hours, minutes, seconds, milliseconds,
+				nanoseconds).
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with shifted columns.
+		</outPort>
+	</ports>
+</knimeNode>

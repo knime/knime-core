@@ -38,6 +38,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
+      </node>
    </extension>
 
    <extension
