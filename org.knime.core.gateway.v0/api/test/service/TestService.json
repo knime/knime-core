@@ -2,7 +2,7 @@
     "type" : "service",
     "name" : "TestService",
     "description" : "A simple test service.",
-    "package" : "org.knime.core.test.service",
+    "namespace" : "test.service",
     "methods" : [
         {
             "name" : "Test",
@@ -10,13 +10,13 @@
             "description" : "Some example documentation.",
             "result" : {
                 "description" : "BERND",
-                "type" : "org.knime.core.test.entity.TestEnt"
+                "type" : "test.entity.TestEnt"
             },
             "params" : [
                 {
                     "description" : "Some example documentation.",
                     "name" : "id",
-                    "type" : "org.knime.core.test.entity.TestEnt"
+                    "type" : "test.entity.TestEnt"
                 }
             ]
         },
@@ -26,13 +26,13 @@
             "description" : "Some example documentation.",
             "result" : {
                 "description" : "BERND",
-                "type" : "List<org.knime.core.test.entity.TestEnt>"
+                "type" : "List<test.entity.TestEnt>"
             },
             "params" : [
                 {
                     "description" : "Some example documentation.",
                     "name" : "list",
-                    "type" : "List<org.knime.core.test.entity.TestEnt>"
+                    "type" : "List<test.entity.TestEnt>"
                 }
             ]
         },
