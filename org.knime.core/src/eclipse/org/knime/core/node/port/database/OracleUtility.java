@@ -65,17 +65,27 @@ import org.knime.core.node.port.database.aggregation.function.RegrSYYDBAggregati
 import org.knime.core.node.port.database.aggregation.function.RegrSlopeDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.ApproxCountDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.CorrKDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.CorrSDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.MedianDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsBinomialTestDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.StatsCrosstabDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsFTestDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.StatsKsTestDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.StatsModeDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsMwTestDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsOneWayAnovaDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsTTestIndepDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsTTestIndepUDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsTTestOneDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.StatsTTestPairedDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.StatsWsrTestDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.oracle.StdDevDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.oracle.VarianceDBAggregationFunction;
 import org.knime.core.node.port.database.connection.DBConnectionFactory;
 import org.knime.core.node.port.database.connection.DBDriverFactory;
 import org.knime.core.node.port.database.tablecreator.DBTableCreator;
@@ -186,10 +196,15 @@ public class OracleUtility extends DatabaseUtility {
             new RegrAvgYDBAggregationFunction.Factory(), new RegrSXXDBAggregationFunction.Factory(),
             new RegrSYYDBAggregationFunction.Factory(), new RegrSXYDBAggregationFunction.Factory(),
             new StdDevDBAggregationFunction.Factory(), new StdDevPopDBAggregationFunction.Factory(),
-            new StdDevSampDBAggregationFunction.Factory(), new SumDBAggregationFunction.Factory(),
+            new StdDevSampDBAggregationFunction.Factory(), new SumDistinctDBAggregationFunction.Factory(),
             new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory(),
             new StatsModeDBAggregationFunction.Factory(), new StatsCrosstabDBAggregationFunction.Factory(),
-            new StatsKsTestDBAggregationFunction.Factory(), new StatsWsrTestDBAggregationFunction.Factory());
+            new StatsKsTestDBAggregationFunction.Factory(), new StatsWsrTestDBAggregationFunction.Factory(),
+            new StatsOneWayAnovaDBAggregationFunction.Factory(), new StatsBinomialTestDBAggregationFunction.Factory(),
+            new StatsFTestDBAggregationFunction.Factory(), new StatsMwTestDBAggregationFunction.Factory(),
+            new StatsTTestPairedDBAggregationFunction.Factory(), new StatsTTestIndepDBAggregationFunction.Factory(),
+            new StatsTTestIndepUDBAggregationFunction.Factory(), new StatsTTestOneDBAggregationFunction.Factory(),
+            new ApproxCountDistinctDBAggregationFunction.Factory(), new VarianceDBAggregationFunction.Factory());
     }
 
     /**
