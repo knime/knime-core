@@ -48,20 +48,18 @@
  */
 package org.knime.core.node.port.database.aggregation.function.oracle;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
+ * @since 3.3
  */
-public final class CorrSDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public final class CorrSDBAggregationFunction extends CorrKDBAggregationFunction {
 
     private static final String ID = "CORR_S";
+
     /**Factory for parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
         /**
@@ -85,22 +83,7 @@ public final class CorrSDBAggregationFunction extends AbstractColumnDBAggregatio
      * Constructor.
      */
     private CorrSDBAggregationFunction() {
-        super("Second column: ", null, DoubleValue.class);
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return getId();
+        super();
     }
 
     /**
@@ -115,15 +98,7 @@ public final class CorrSDBAggregationFunction extends AbstractColumnDBAggregatio
      * {@inheritDoc}
      */
     @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DoubleValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getDescription() {
-        return "Computes the Spearman's rho correlation coefficient.";
+        return "Computes the Spearman's rho correlation coefficient. " + getReturnDescription();
     }
 }

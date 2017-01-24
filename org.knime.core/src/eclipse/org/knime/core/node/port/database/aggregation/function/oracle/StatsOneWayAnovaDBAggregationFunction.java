@@ -54,7 +54,8 @@ import java.util.List;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
@@ -64,14 +65,15 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Ole Ostergaard, KNIME.com
  * @since 3.3
  */
-public final class StatsKsTestDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
+public final class StatsOneWayAnovaDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
 
-    private static final String ID = "STATS_KS_TEST";
+    private static final String ID = "STATS_ONE_WAY_ANOVA";
 
     private static final String DEFAULT = "SIG";
 
     private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("SIG", "STATISTIC"));
+        Arrays.asList(DEFAULT, "SUM_SQUARES_BETWEEN", "SUM_SQUARES_WITHIN", "DF_BETWEEN",
+            "DF_WITHIN", "MEAN_SQUARES_BETWEEN", "MEAN_SQUARES_WITHIN", "F_RATIO"));
 
     /**Factory for parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
@@ -88,7 +90,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
          */
         @Override
         public DBAggregationFunction createInstance() {
-            return new StatsKsTestDBAggregationFunction();
+            return new StatsOneWayAnovaDBAggregationFunction();
         }
 
     }
@@ -96,8 +98,8 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
     /**
      * Constructor.
      */
-    private StatsKsTestDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
+    private StatsOneWayAnovaDBAggregationFunction() {
+        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DoubleValue.class);
     }
 
     /**
@@ -105,7 +107,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return StringCell.TYPE;
+        return DoubleCell.TYPE;
     }
 
     /**
@@ -129,7 +131,13 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public String getColumnName() {
-        return "KS" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
+        String selectedParameter;
+        if (getSelectedParameter().length() < 14){
+            selectedParameter = getSelectedParameter();
+        } else {
+            selectedParameter = getSelectedParameter().substring(0, 14);
+        }
+        return "OWA" + "_" + selectedParameter + "_" + getSelectedColumnName() ;
     }
 
     /**
@@ -140,14 +148,30 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
         return type.isCompatible(DataValue.class);
     }
 
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(SIG: Significance, "
+            + "SUM_SQUARES_BETWEEN: Sum of squares between groups, "
+            + "SUM_SQUARES_WITHIN: Sum of squares within groups, "
+            + "DF_BETWEEN: Degree of freedom between groups, "
+            + "DF_WITHIN: Degree of freedom within groups, "
+            + "MEAN_SQUARES_BETWEEN: Mean squares between groups, "
+            + "MEAN_SQUARES_WITHIN: Mean squares within groups, "
+            + "F_RATIO: Ratio of the mean squares between to the mean squares within)";
+    }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Kolmogorov-Smirnov function that compares two samples "
-            + "to test whether they are from the same population or from "
-            + "populations that have the same distribution. (Aggregation only works for binary columns)";
+        return "The one-way analysis of variance function tests "
+            + "differences in means (for groups or variables) for "
+            + "statistical significance by comparing two different estimates of variance. "
+            + getReturnDescription();
     }
 }

@@ -53,25 +53,26 @@ import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.parameter.AbstractNumberSelectFunctionDBAggregationFunction;
+
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
  * @since 3.3
  */
-public final class StatsKsTestDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
+public final class StatsTTestOneDBAggregationFunction extends AbstractNumberSelectFunctionDBAggregationFunction {
 
-    private static final String ID = "STATS_KS_TEST";
+    private static final String ID = "STATS_T_TEST_ONE";
 
-    private static final String DEFAULT = "SIG";
+    private static final String DEFAULT = "TWO_SIDED_SIG";
 
     private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("SIG", "STATISTIC"));
+        Arrays.asList(DEFAULT,"STATISTIC", "ONE_SIDED_SIG","DF"));
 
     /**Factory for parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
@@ -88,7 +89,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
          */
         @Override
         public DBAggregationFunction createInstance() {
-            return new StatsKsTestDBAggregationFunction();
+            return new StatsTTestOneDBAggregationFunction();
         }
 
     }
@@ -96,8 +97,8 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
     /**
      * Constructor.
      */
-    private StatsKsTestDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
+    private StatsTTestOneDBAggregationFunction() {
+        super("Constant mean to test against: ", -Double.MAX_VALUE,Double.MAX_VALUE, 0,"Return value: ", DEFAULT, RETURN_VALUES);
     }
 
     /**
@@ -105,7 +106,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return StringCell.TYPE;
+        return DoubleCell.TYPE;
     }
 
     /**
@@ -129,7 +130,11 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public String getColumnName() {
-        return "KS" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
+        String selectedFunction = getSelectedFunction();
+        if (selectedFunction.length() >= 5) {
+            selectedFunction = selectedFunction.substring(0, 5);
+        }
+        return "TOne" + "_" + getNumberParameter().toString() + "_" + selectedFunction;
     }
 
     /**
@@ -137,17 +142,26 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DataValue.class);
+        return type.isCompatible(DoubleValue.class);
     }
 
 
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(TWO_SIDED_SIG: Two-tailed significance of t, "
+            + "STATISTIC: The observed value of t, "
+            + "DF: Degree of freedom, "
+            + "ONE_SIDED_SIG: One-tailed significance of t)";
+    }
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Kolmogorov-Smirnov function that compares two samples "
-            + "to test whether they are from the same population or from "
-            + "populations that have the same distribution. (Aggregation only works for binary columns)";
+        return "Measures the significance of the difference between the sample mean against a given constant mean. "
+                + getReturnDescription();
     }
 }

@@ -48,7 +48,10 @@
  */
 package org.knime.core.node.port.database.aggregation.function.oracle;
 
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
@@ -56,6 +59,7 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
 /**
  *
  * @author Ole Ostergaard, KNIME.com
+ * @since 3.3
  */
 public class MedianDBAggregationFunction extends SimpleDBAggregationFunction {
 
@@ -84,5 +88,13 @@ public class MedianDBAggregationFunction extends SimpleDBAggregationFunction {
 
     private MedianDBAggregationFunction() {
         super(ID, "Computes the (interpolated) middle value, null values are ignored.", null, DataValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCompatible(final DataType type) {
+        return type.isCompatible(DateAndTimeValue.class) || type.isCompatible(DoubleValue.class);
     }
 }

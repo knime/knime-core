@@ -48,20 +48,31 @@
  */
 package org.knime.core.node.port.database.aggregation.function.oracle;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
+ * @since 3.3
  */
-public final class CorrKDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class CorrKDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
 
     private static final String ID = "CORR_K";
+
+    private static final String DEFAULT = "COEFFICIENT";
+
+    private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
+        Arrays.asList(DEFAULT, "ONE_SIDED_SIG", "ONE_SIDED_SIG_NEG", "TWO_SIDED_SIG"));
+
     /**Factory for parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
         /**
@@ -84,8 +95,8 @@ public final class CorrKDBAggregationFunction extends AbstractColumnDBAggregatio
     /**
      * Constructor.
      */
-    private CorrKDBAggregationFunction() {
-        super("Second column: ", null, DoubleValue.class);
+    protected CorrKDBAggregationFunction() {
+        super("Return value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DoubleValue.class);
     }
     /**
      * {@inheritDoc}
@@ -115,8 +126,39 @@ public final class CorrKDBAggregationFunction extends AbstractColumnDBAggregatio
      * {@inheritDoc}
      */
     @Override
+    public String getColumnName() {
+        String parameter = getSelectedParameter();
+        if (parameter.startsWith("ONE")) {
+            parameter = "ONES_SIG";
+            if (getSelectedParameter().endsWith("NEG")) {
+                parameter += "N";
+            }
+        } else if (parameter.startsWith("TWO")) {
+            parameter = "TWOS_S";
+        } else if (parameter.startsWith("COEF")) {
+            parameter = "COEFF";
+        }
+            return getLabel() + "_" + parameter + "_" + getSelectedColumnName();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean isCompatible(final DataType type) {
         return type.isCompatible(DoubleValue.class);
+    }
+
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(COEFFICIENT: Coefficient of correlation, "
+            + "ONE_SIDED_SIG: Positive one-tailed significance of the correlation, "
+            + "ONE_SIDED_SIG_NEG: Negative one-tailed significance of the correlation, "
+            + "TWO_SIDED_SIG: Two-tailed significance of the correlation.)";
     }
 
     /**
@@ -124,6 +166,6 @@ public final class CorrKDBAggregationFunction extends AbstractColumnDBAggregatio
      */
     @Override
     public String getDescription() {
-        return "Computes the Kendall's tau-b correlation coefficient for the two columns per group.";
+        return "Computes the Kendall's tau-b correlation coefficient. " + getReturnDescription();
     }
 }

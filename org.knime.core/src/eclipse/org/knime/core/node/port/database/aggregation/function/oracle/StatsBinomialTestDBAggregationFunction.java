@@ -54,26 +54,27 @@ import java.util.List;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.parameter.AbstractStringNumberSelectFunctionDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
  * @since 3.3
  */
-public final class StatsKsTestDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
+public final class StatsBinomialTestDBAggregationFunction
+    extends AbstractStringNumberSelectFunctionDBAggregationFunction {
 
-    private static final String ID = "STATS_KS_TEST";
+    private static final String ID = "STATS_BINOMIAL_TEST";
 
-    private static final String DEFAULT = "SIG";
+    private static final String DEFAULT = "TWO_SIDED_PROB";
 
     private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("SIG", "STATISTIC"));
+        Arrays.asList(DEFAULT, "EXACT_PROB", "ONE_SIDED_PROB_OR_MORE", "ONE_SIDED_PROB_OR_LESS"));
 
-    /**Factory for parent class.*/
+    /** Factory for parent class. */
     public static final class Factory implements DBAggregationFunctionFactory {
         /**
          * {@inheritDoc}
@@ -88,7 +89,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
          */
         @Override
         public DBAggregationFunction createInstance() {
-            return new StatsKsTestDBAggregationFunction();
+            return new StatsBinomialTestDBAggregationFunction();
         }
 
     }
@@ -96,8 +97,9 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
     /**
      * Constructor.
      */
-    private StatsKsTestDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
+    private StatsBinomialTestDBAggregationFunction() {
+        super("Value for which the proportion is expected to be: ", "", "Proportion to test against: ", 0, 1, 0,
+            "Return Value: ", DEFAULT, RETURN_VALUES);
     }
 
     /**
@@ -105,7 +107,7 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return StringCell.TYPE;
+        return DoubleCell.TYPE;
     }
 
     /**
@@ -129,7 +131,17 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public String getColumnName() {
-        return "KS" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
+        String function = getSelectedFunction();
+        if (function.contains("MORE")) {
+            function = "ONE_MORE";
+        } else if(function.contains("LESS")) {
+            function = "ONE_LESS";
+        } else {
+            function = function.substring(0, 5);
+        }
+
+        return "BINOM" + "_" + getStringParameter() + "_" +
+        getNumberParameter().toString() + "_" + function;
     }
 
     /**
@@ -140,14 +152,24 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
         return type.isCompatible(DataValue.class);
     }
 
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(TWO-SIDED-PROB: Probability that given population proportion could result in the observed proportion or a more extreme one, "
+            + "EXACT-PROB: Probability that given population proportion could result in exactly the observed proportion, "
+            + "ONE-SIDED-PROB-OR-MORE: Probability that given population proportion could result in the observed proportion or a larger one, "
+            + "ONE-SIDED-PROB-OR-LESS: Probability that given population proportion could result in the observed proportion or a smaller one)";
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Kolmogorov-Smirnov function that compares two samples "
-            + "to test whether they are from the same population or from "
-            + "populations that have the same distribution. (Aggregation only works for binary columns)";
+        return "This an exact probability test used for dichotomous variables, "
+            + "where only two possible values exist. "
+            + "It tests the difference between a sample proportion and a given proportion. " + getReturnDescription();
     }
 }

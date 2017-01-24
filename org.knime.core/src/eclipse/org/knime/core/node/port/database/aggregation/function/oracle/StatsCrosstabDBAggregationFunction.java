@@ -54,23 +54,25 @@ import java.util.List;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnParameterDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
+ * @since 3.3
  */
-public final class StatsCrosstabDBAggregationFunction extends AbstractColumnParameterDBAggregationFunction {
+public final class StatsCrosstabDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
 
     private static final String ID = "STATS_CROSSTAB";
 
     private static final String DEFAULT = "CHISQ_SIG";
 
     private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("CHISQ_SIG", "CHISQ_OBS", "CHISQ_DF", "PHI_COEFFICIENT",
+        Arrays.asList(DEFAULT, "CHISQ_OBS", "CHISQ_DF", "PHI_COEFFICIENT",
             "CRAMERS_V", "CONT_COEFFICIENT", "COHENS_K"));
 
     /**Factory for parent class.*/
@@ -97,7 +99,7 @@ public final class StatsCrosstabDBAggregationFunction extends AbstractColumnPara
      * Constructor.
      */
     private StatsCrosstabDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
+        super("Return value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
     }
 
     /**
@@ -137,15 +139,28 @@ public final class StatsCrosstabDBAggregationFunction extends AbstractColumnPara
      */
     @Override
     public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DataValue.class);
+        return type.isCompatible(DoubleValue.class);
     }
 
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(CHISQ_OBS: Observed value of chi-squared, "
+            + "CHISQ_SIG: Significance of observed chi-squared, "
+            + "CHISQ_DF: Degree of freedom for chi-squared, "
+            + "PHI-COEFFICIENT: Phi coefficient, "
+            + "CRAMERS_V: Cramer's V statistic, "
+            + "CONT_COEFFICIENT: Contingency coefficient, "
+            + "COHENS_K: Cohen's Kappa)";
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Crosstabulation is a method used to analyze two nominal variables.";
+        return "Crosstabulation is a method used to analyze two nominal variables. " + getReturnDescription();
     }
 }

@@ -44,37 +44,30 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   28.08.2014 (koetter): created
+ *   01.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation.function.oracle;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
  * @since 3.3
  */
-public final class StatsKsTestDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
+public final class ApproxCountDistinctDBAggregationFunction extends SimpleDBAggregationFunction {
 
-    private static final String ID = "STATS_KS_TEST";
+    /** Only available starting with OracleDB 12c (12.1.0.2) */
+    private static final String ID = "APPROX_COUNT_DISTINCT";
 
-    private static final String DEFAULT = "SIG";
-
-    private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("SIG", "STATISTIC"));
-
-    /**Factory for parent class.*/
+    /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final ApproxCountDistinctDBAggregationFunction INSTANCE = new ApproxCountDistinctDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -88,40 +81,8 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
          */
         @Override
         public DBAggregationFunction createInstance() {
-            return new StatsKsTestDBAggregationFunction();
+            return INSTANCE;
         }
-
-    }
-
-    /**
-     * Constructor.
-     */
-    private StatsKsTestDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return StringCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return getId();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getId() {
-        return ID;
     }
 
     /**
@@ -129,25 +90,10 @@ public final class StatsKsTestDBAggregationFunction extends AbstractColumnFuncti
      */
     @Override
     public String getColumnName() {
-        return "KS" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
+        return "APXCountD";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DataValue.class);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Kolmogorov-Smirnov function that compares two samples "
-            + "to test whether they are from the same population or from "
-            + "populations that have the same distribution. (Aggregation only works for binary columns)";
+    private ApproxCountDistinctDBAggregationFunction() {
+        super(ID, "Returns the approximate number of rows that contain distinct vallues. Available starting with OracleDB 12c [12.1.0.2]", DoubleCell.TYPE, DataValue.class);
     }
 }

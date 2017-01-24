@@ -53,24 +53,25 @@ import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnParameterDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnFunctionSelectDBAggregationFunction;
 
 /**
  *
  * @author Ole Ostergaard, KNIME.com
+ * @since 3.3
  */
-public final class StatsWsrTestDBAggregationFunction extends AbstractColumnParameterDBAggregationFunction {
+public final class StatsWsrTestDBAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
 
     private static final String ID = "STATS_WSR_TEST";
 
     private static final String DEFAULT = "TWO_SIDED_SIG";
 
     private static final List<String> RETURN_VALUES = Collections.unmodifiableList(
-        Arrays.asList("TWO_SIDED_SIG", "ONE_SIDED_SIG","STATISTIC"));
+        Arrays.asList(DEFAULT, "ONE_SIDED_SIG","STATISTIC"));
 
     /**Factory for parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
@@ -96,7 +97,7 @@ public final class StatsWsrTestDBAggregationFunction extends AbstractColumnParam
      * Constructor.
      */
     private StatsWsrTestDBAggregationFunction() {
-        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DataValue.class);
+        super("Return Value: ", DEFAULT, RETURN_VALUES, "Second column: ", null, DoubleValue.class);
     }
 
     /**
@@ -128,7 +129,7 @@ public final class StatsWsrTestDBAggregationFunction extends AbstractColumnParam
      */
     @Override
     public String getColumnName() {
-        return "KS" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
+        return "WSR" + "_" + getSelectedParameter().subSequence(0, 3) + "_" + getSelectedColumnName() ;
     }
 
     /**
@@ -136,17 +137,26 @@ public final class StatsWsrTestDBAggregationFunction extends AbstractColumnParam
      */
     @Override
     public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DataValue.class);
+        return type.isCompatible(DoubleValue.class);
     }
 
+    /**
+     * Returns the description for the return value parameters.
+     * @return Description for return value parameters
+     */
+    public String getReturnDescription() {
+        return "(STATISTIC: The observed value of Z, "
+            + "ONE_SIDED_SIG: One-tailed significance of Z, "
+            + "TWO_SIDED_SIG: Two-tailed significance of Z)";
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "Kolmogorov-Smirnov function that compares two samples "
-            + "to test whether they are from the same population or from "
-            + "populations that have the same distribution. ";
+        return "Wilcoxon Signed Ranks test of paired samples to determine "
+            + "whether the median of the differences between the samples is significantly different from zero. "
+            + getReturnDescription();
     }
 }
