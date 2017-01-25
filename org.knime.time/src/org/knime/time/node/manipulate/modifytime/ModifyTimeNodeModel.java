@@ -101,9 +101,9 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    static final String MODIFY_OPTION_ADD = "Add time";
+    static final String MODIFY_OPTION_APPEND = "Append time";
 
-    static final String MODIFY_OPTION_SET = "Set time";
+    static final String MODIFY_OPTION_CHANGE = "Change time";
 
     static final String MODIFY_OPTION_REMOVE = "Remove time";
 
@@ -188,7 +188,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createModifySelectModel() {
-        return new SettingsModelString("modify_select", MODIFY_OPTION_ADD);
+        return new SettingsModelString("modify_select", MODIFY_OPTION_APPEND);
     }
 
     /**
@@ -207,7 +207,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
             dataType = LocalDateCellFactory.TYPE;
         } else {
-            if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+            if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
                 dataType = LocalDateTimeCellFactory.TYPE;
             } else {
                 if (m_addZone.getBooleanValue()) {
@@ -223,7 +223,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         int i = 0;
         for (final String includedCol : includeList) {
             if (inSpec.getColumnSpec(includedCol).getType().equals(ZonedDateTimeCellFactory.TYPE)
-                && m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+                && m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
                 dataType = ZonedDateTimeCellFactory.TYPE;
             }
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
@@ -242,9 +242,9 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     }
 
     private SingleCellFactory createCellFactroy(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
-        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_ADD)) {
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
             return new AddTimeCellFactory(dataColSpec, index, zone);
-        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET)) {
+        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
             return new SetTimeCellFactory(dataColSpec, index);
         } else {
             return new RemoveTimeCellFactory(dataColSpec, index);
@@ -298,7 +298,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_modifyAction.loadSettingsFrom(settings);
-        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_ADD);
+        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND);
         m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? LOCAL_DATE_FILTER : DATE_TIME_FILTER);
         m_colSelect.loadConfigurationInModel(settings);
     }

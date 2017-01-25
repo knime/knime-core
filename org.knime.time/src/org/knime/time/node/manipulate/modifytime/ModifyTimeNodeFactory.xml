@@ -2,12 +2,13 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="modify_time.png">
 	<name>Modify Time</name>
-	<shortDescription>Adds time information to a date cell.</shortDescription>
+	<shortDescription>Modifies time information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
+		Modifies a column by
 			<ul>
-				<li>adding a time to local date columns,</li>
-				<li>setting the time in local or zoned date&amp;time columns, or
+				<li>appending a time to local date columns,</li>
+				<li>changing the time in local or zoned date&amp;time columns, or
 				</li>
 				<li>removing the time from local or zoned date&amp;time columns.
 				</li>
@@ -31,11 +32,11 @@
 			</option>
 		</tab>
 		<tab name="Time Selection">
-			<option name="Add Time">Adds a time to local date columns.
-				Optionally a time zone can be added too.
+			<option name="Append Time">Appends a time to local date columns.
+				Optionally a time zone can be appended too.
 			</option>
-			<option name="Set Time">
-				Sets the time of local or zoned date&amp;time
+			<option name="Change Time">
+				Changes the time of local or zoned date&amp;time
 				columns. The time zone
 				will
 				not be changed. The

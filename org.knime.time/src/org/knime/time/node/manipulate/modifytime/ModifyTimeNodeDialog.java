@@ -145,8 +145,8 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
 
         final SettingsModelString modifySelectModel = ModifyTimeNodeModel.createModifySelectModel();
         m_dialogCompModifySelect =
-            new DialogComponentButtonGroup(modifySelectModel, true, null, ModifyTimeNodeModel.MODIFY_OPTION_ADD,
-                ModifyTimeNodeModel.MODIFY_OPTION_SET, ModifyTimeNodeModel.MODIFY_OPTION_REMOVE);
+            new DialogComponentButtonGroup(modifySelectModel, true, null, ModifyTimeNodeModel.MODIFY_OPTION_APPEND,
+                ModifyTimeNodeModel.MODIFY_OPTION_CHANGE, ModifyTimeNodeModel.MODIFY_OPTION_REMOVE);
 
         /*
          * create panel with gbc
@@ -253,7 +253,8 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
 
         // change listener for column filter
         modifySelectModel.addChangeListener(e -> {
-            boolean isAddOption = modifySelectModel.getStringValue().equals(ModifyTimeNodeModel.MODIFY_OPTION_ADD);
+            String stringValue = modifySelectModel.getStringValue();
+            boolean isAppendOption = modifySelectModel.getStringValue().equals(ModifyTimeNodeModel.MODIFY_OPTION_APPEND);
             boolean isRemoveOption =
                 modifySelectModel.getStringValue().equals(ModifyTimeNodeModel.MODIFY_OPTION_REMOVE);
 
@@ -261,10 +262,10 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
             minuteModel.setEnabled(!isRemoveOption);
             secondModel.setEnabled(!isRemoveOption);
             nanoModel.setEnabled(!isRemoveOption);
-            zoneModelBool.setEnabled(isAddOption);
-            zoneSelectModel.setEnabled(isAddOption && zoneModelBool.getBooleanValue());
+            zoneModelBool.setEnabled(isAppendOption);
+            zoneSelectModel.setEnabled(isAppendOption && zoneModelBool.getBooleanValue());
 
-            m_filterOnlyLocalDate = isAddOption;
+            m_filterOnlyLocalDate = isAppendOption;
 
             final DataTypeColumnFilter filter = m_filterOnlyLocalDate ? ModifyTimeNodeModel.LOCAL_DATE_FILTER
                 : ModifyTimeNodeModel.DATE_TIME_FILTER;
@@ -286,7 +287,7 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         boolean filterOnlyLocalDate = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
-                .equals(ModifyTimeNodeModel.MODIFY_OPTION_ADD);
+                .equals(ModifyTimeNodeModel.MODIFY_OPTION_APPEND);
             DataColumnSpecFilterConfiguration filterConfiguration =
                     ModifyTimeNodeModel.createDCFilterConfiguration(filterOnlyLocalDate
                     ? ModifyTimeNodeModel.LOCAL_DATE_FILTER : ModifyTimeNodeModel.DATE_TIME_FILTER);
@@ -320,7 +321,7 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
         m_dialogCompModifySelect.loadSettingsFrom(settings, specs);
         m_filterOnlyLocalDate = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
-                .equals(ModifyTimeNodeModel.MODIFY_OPTION_ADD);
+                .equals(ModifyTimeNodeModel.MODIFY_OPTION_APPEND);
             final DataColumnSpecFilterConfiguration filterConfiguration =
                     ModifyTimeNodeModel.createDCFilterConfiguration(m_filterOnlyLocalDate
                     ? ModifyTimeNodeModel.LOCAL_DATE_FILTER : ModifyTimeNodeModel.DATE_TIME_FILTER);
