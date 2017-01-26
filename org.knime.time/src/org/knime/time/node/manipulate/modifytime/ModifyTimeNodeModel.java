@@ -229,19 +229,19 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 final SingleCellFactory cellFac =
-                    createCellFactroy(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
+                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final SingleCellFactory cellFac = createCellFactroy(dataColSpec, includeIndices[i++], zone);
+                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], zone);
                 rearranger.append(cellFac);
             }
         }
         return rearranger;
     }
 
-    private SingleCellFactory createCellFactroy(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
+    private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
             return new AddTimeCellFactory(dataColSpec, index, zone);
         } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {

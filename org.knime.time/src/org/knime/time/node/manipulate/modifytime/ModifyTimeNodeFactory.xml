@@ -5,12 +5,12 @@
 	<shortDescription>Modifies time information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
-		Modifies a column by
+		Modifies date&amp;time columns by
 			<ul>
-				<li>appending a time to local date columns,</li>
+				<li>appending a time to local date columns (output type is local date time column),</li>
 				<li>changing the time in local or zoned date&amp;time columns, or
 				</li>
-				<li>removing the time from local or zoned date&amp;time columns.
+				<li>removing the time from local or zoned date&amp;time columns (output type is local date).
 				</li>
 			</ul>
 		</intro>
