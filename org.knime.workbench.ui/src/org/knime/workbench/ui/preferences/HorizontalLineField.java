@@ -60,9 +60,9 @@ public class HorizontalLineField extends FieldEditor {
     private Label m_line;
 
     /**
-     * @param parent
+     * @param parent the parent of the field editor's control
      */
-    HorizontalLineField(final Composite parent) {
+    public HorizontalLineField(final Composite parent) {
         super("HOR_LINE", "", parent);
     }
 

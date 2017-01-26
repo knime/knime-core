@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.SwingWorkerWithContext;
 
 /**
@@ -242,58 +243,21 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
         panels[0].setName(dataView.getName());
         panels[0].add(p, BorderLayout.NORTH);
         panels[0].add(dataView, BorderLayout.CENTER);
+        //store the NodeContext to explicitly set the NodeContext when the fetch rows button is pressed
+        final NodeContext nodeContext = NodeContext.getContext();
         b.addActionListener(new ActionListener() {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
-                final AtomicInteger value = new AtomicInteger(100);
-                try {
-                    int v = Integer.parseInt(cacheRows.getText().trim());
-                    value.set(v);
-                } catch (NumberFormatException nfe) {
-                    cacheRows.setText(Integer.toString(value.get()));
+                //explicitly set the NodeContext to get the current workflow user that is used in Kerberos secured
+                //db connection
+                NodeContext.pushContext(nodeContext);
+                try{
+                    loadTablePreview(panels, p, cacheRows);
+                } finally {
+                    //remove the previously set NodeContext
+                    NodeContext.removeLastContext();
                 }
-                panels[0].removeAll();
-                panels[0].add(new JLabel("Fetching " + value.get()
-                        + " rows from database..."), BorderLayout.NORTH);
-                panels[0].repaint();
-                panels[0].revalidate();
-                new SwingWorkerWithContext<DataTable, Void>() {
-                    /** {@inheritDoc} */
-                    @Override
-                    protected DataTable doInBackgroundWithContext() throws Exception {
-                        return getDataTable(value.get());
-                    }
-                    /** {@inheritDoc} */
-                    @Override
-                    protected void doneWithContext() {
-                        DataTable dt = null;
-                        try {
-                            dt = super.get();
-                        } catch (ExecutionException ee) {
-                            LOGGER.warn("Error during fetching data from "
-                                + "database, reason: " + ee.getMessage(), ee);
-                        } catch (InterruptedException ie) {
-                            LOGGER.warn("Error during fetching data from "
-                                + "database, reason: " + ie.getMessage(), ie);
-                        }
-                        @SuppressWarnings("serial")
-                        final BufferedDataTableView dataView2 = new BufferedDataTableView(dt) {
-                            /** {@inheritDoc} */
-                            @Override
-                            public String getName() {
-                                return "Table Preview";
-                            }
-                        };
-                        dataView2.setName("Table Preview");
-                        panels[0].removeAll();
-                        panels[0].add(p, BorderLayout.NORTH);
-                        panels[0].add(dataView2, BorderLayout.CENTER);
-                        panels[0].setName(dataView2.getName());
-                        panels[0].repaint();
-                        panels[0].revalidate();
-                    }
-                }.execute();
             }
         });
         for (int i = 1; i < panels.length; i++) {
@@ -312,5 +276,56 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
             return false;
         }
         return super.equals(obj);
+    }
+
+    private void loadTablePreview(final JComponent[] panels, final JPanel p, final JTextField cacheRows) {
+        final AtomicInteger value = new AtomicInteger(100);
+        try {
+            int v = Integer.parseInt(cacheRows.getText().trim());
+            value.set(v);
+        } catch (NumberFormatException nfe) {
+            cacheRows.setText(Integer.toString(value.get()));
+        }
+        panels[0].removeAll();
+        panels[0].add(new JLabel("Fetching " + value.get()
+                + " rows from database..."), BorderLayout.NORTH);
+        panels[0].repaint();
+        panels[0].revalidate();
+        new SwingWorkerWithContext<DataTable, Void>() {
+            /** {@inheritDoc} */
+            @Override
+            protected DataTable doInBackgroundWithContext() throws Exception {
+                return getDataTable(value.get());
+            }
+            /** {@inheritDoc} */
+            @Override
+            protected void doneWithContext() {
+                DataTable dt = null;
+                try {
+                    dt = super.get();
+                } catch (ExecutionException ee) {
+                    LOGGER.warn("Error during fetching data from "
+                        + "database, reason: " + ee.getMessage(), ee);
+                } catch (InterruptedException ie) {
+                    LOGGER.warn("Error during fetching data from "
+                        + "database, reason: " + ie.getMessage(), ie);
+                }
+                @SuppressWarnings("serial")
+                final BufferedDataTableView dataView2 = new BufferedDataTableView(dt) {
+                    /** {@inheritDoc} */
+                    @Override
+                    public String getName() {
+                        return "Table Preview";
+                    }
+                };
+                dataView2.setName("Table Preview");
+                panels[0].removeAll();
+                panels[0].add(p, BorderLayout.NORTH);
+                panels[0].add(dataView2, BorderLayout.CENTER);
+                panels[0].setName(dataView2.getName());
+                panels[0].repaint();
+                panels[0].revalidate();
+            }
+        }.execute();
     }
 }

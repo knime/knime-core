@@ -68,10 +68,10 @@ public class LabelField extends FieldEditor {
     private Link m_link;
 
     /**
-     * @param parent
+     * @param parent the parent of the field editor's control
      * @param text to show
      */
-    LabelField(final Composite parent, final String text) {
+    public LabelField(final Composite parent, final String text) {
         super("TXT_FIELD", "", parent);
         m_link.setText(text);
         m_link.addSelectionListener(new SelectionAdapter() {
@@ -92,11 +92,11 @@ public class LabelField extends FieldEditor {
     }
 
     /**
-     * @param parent
+     * @param parent the parent of the field editor's control
      * @param text to show
      * @param swtFontStyleConstants additional style constants like SWT.BOLD.
      */
-    LabelField(final Composite parent, final String text, final int swtFontStyleConstants) {
+    public LabelField(final Composite parent, final String text, final int swtFontStyleConstants) {
         this(parent, text);
         FontData fontData = m_link.getFont().getFontData()[0];
         Font font = new Font(m_link.getDisplay(), new FontData(fontData.getName(), fontData
