@@ -13,7 +13,9 @@
 				<li>removing the time from local or zoned date&amp;time columns (output type is local date).
 				</li>
 			</ul>
-		</intro>
+            This node is not used to add ("plus") or subtract ("minus") time. Use the <i>Date&amp;Time Shift</i>
+            node for that.
+        </intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
 				Only the included columns will be modified.
