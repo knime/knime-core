@@ -252,7 +252,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
                     layoutInfo.setRow(rowSpinner.getSelection());
-                    //TODO: recreate JSON
+                    tryUpdateJsonFromBasic();
                 }
             });
             final Spinner colSpinner = createBasicPanelSpinner(composite, layoutInfo.getCol(), 1, 99);
@@ -261,7 +261,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
                     layoutInfo.setCol(colSpinner.getSelection());
-                    //TODO: recreate JSON
+                    tryUpdateJsonFromBasic();
                 }
             });
             final Spinner widthSpinner = createBasicPanelSpinner(composite, layoutInfo.getColWidth(), 1, 12);
@@ -270,7 +270,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
                     layoutInfo.setColWidth(widthSpinner.getSelection());
-                    //TODO: recreate JSON
+                    tryUpdateJsonFromBasic();
                 }
             });
 
@@ -281,9 +281,10 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
-                    ViewContentSettingsDialg settingsDialog = new ViewContentSettingsDialg(layoutInfo.getView(), composite.getShell());
+                    ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(layoutInfo.getView(), composite.getShell());
                     if (settingsDialog.open() == Window.OK) {
                         layoutInfo.setView(settingsDialog.getViewSettings());
+                        tryUpdateJsonFromBasic();
                     }
                 }
             });
@@ -554,6 +555,50 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 NodeIDSuffix id = NodeIDSuffix.fromString(viewContent.getNodeID());
                 m_basicMap.put(id, basicInfo);
             }
+        }
+    }
+
+    private void tryUpdateJsonFromBasic() {
+        try {
+            basicLayoutToJson();
+        } catch (Exception e) {
+            //TODO show error in dialog
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    private void basicLayoutToJson() throws Exception{
+        JSONLayoutPage page = new JSONLayoutPage();
+        List<JSONLayoutRow> rows = new ArrayList<JSONLayoutRow>();
+        for (BasicLayoutInfo basicLayoutInfo : m_basicMap.values()) {
+            while(rows.size() < basicLayoutInfo.getRow()) {
+                rows.add(new JSONLayoutRow());
+            }
+            JSONLayoutRow row = rows.get(basicLayoutInfo.getRow() - 1);
+            if (row.getColumns() == null) {
+                row.setColumns(new ArrayList<JSONLayoutColumn>());
+            }
+            List<JSONLayoutColumn> columns = row.getColumns();
+            while (columns.size() < basicLayoutInfo.getCol()) {
+                columns.add(new JSONLayoutColumn());
+            }
+            JSONLayoutColumn column = columns.get(basicLayoutInfo.getCol() - 1);
+            column.setWidthMD(basicLayoutInfo.getColWidth());
+            List<JSONLayoutContent> contentList = column.getContent();
+            if (contentList == null) {
+                contentList = new ArrayList<JSONLayoutContent>(1);
+            }
+            contentList.add(basicLayoutInfo.getView());
+            column.setContent(contentList);
+        }
+        page.setRows(rows);
+        ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
+        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
+        m_jsonDocument = json;
+        if (isWindows()) {
+            m_textArea.setText(m_jsonDocument);
+        } else {
+            m_text.setText(m_jsonDocument);
         }
     }
 
