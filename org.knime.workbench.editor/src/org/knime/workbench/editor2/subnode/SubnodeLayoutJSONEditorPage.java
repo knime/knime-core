@@ -572,18 +572,25 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         for (int colIndex = 0; colIndex < columns.size(); colIndex++) {
             JSONLayoutColumn column = columns.get(colIndex);
             List<JSONLayoutContent> content = column.getContent();
-            if (content == null || content.size() != 1 || !(content.get(0) instanceof JSONLayoutViewContent)) {
-                // basic layout not possible, show only advanced tab
-                m_basicPanelAvailable = false;
-            } else {
-                JSONLayoutViewContent viewContent = (JSONLayoutViewContent)content.get(0);
-                BasicLayoutInfo basicInfo = new BasicLayoutInfo();
-                basicInfo.setRow(rowIndex + 1);
-                basicInfo.setCol(colIndex + 1);
-                basicInfo.setColWidth(column.getWidthMD());
-                basicInfo.setView(viewContent);
-                NodeIDSuffix id = NodeIDSuffix.fromString(viewContent.getNodeID());
-                m_basicMap.put(id, basicInfo);
+            if (content != null) {
+                for (JSONLayoutContent jsonLayoutContent : content) {
+                    if (jsonLayoutContent != null) {
+                        if (jsonLayoutContent instanceof JSONLayoutViewContent) {
+                            JSONLayoutViewContent viewContent = (JSONLayoutViewContent)jsonLayoutContent;
+                            BasicLayoutInfo basicInfo = new BasicLayoutInfo();
+                            basicInfo.setRow(rowIndex + 1);
+                            basicInfo.setCol(colIndex + 1);
+                            basicInfo.setColWidth(column.getWidthMD());
+                            basicInfo.setView(viewContent);
+                            NodeIDSuffix id = NodeIDSuffix.fromString(viewContent.getNodeID());
+                            m_basicMap.put(id, basicInfo);
+                        } else {
+                            // basic layout not possible, show only advanced tab
+                            m_basicPanelAvailable = false;
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
