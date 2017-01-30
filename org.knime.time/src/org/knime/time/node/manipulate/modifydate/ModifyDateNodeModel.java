@@ -46,10 +46,8 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.adddate;
+package org.knime.time.node.manipulate.modifydate;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -57,56 +55,61 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
-import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
 import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowInput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * The node model of the node which adds a date to a time cell.
+ * The node dialog of the node which modifies date.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class AddDateNodeModel extends NodeModel {
+class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
+
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter LOCAL_TIME_FILTER = new DataTypeColumnFilter(LocalTimeValue.class);
+
+    @SuppressWarnings("unchecked")
+    static final DataTypeColumnFilter DATE_TIME_FILTER =
+        new DataTypeColumnFilter(ZonedDateTimeValue.class, LocalDateTimeValue.class);
+
 
     static final String OPTION_APPEND = "Append selected columns";
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
+    static final String MODIFY_OPTION_APPEND = "Append date";
+
+    static final String MODIFY_OPTION_CHANGE = "Change date";
+
+    static final String MODIFY_OPTION_REMOVE = "Remove date";
+
+    private DataColumnSpecFilterConfiguration m_colSelect = createDCFilterConfiguration(LOCAL_TIME_FILTER);
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
@@ -122,10 +125,15 @@ class AddDateNodeModel extends NodeModel {
 
     private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
 
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", LocalTimeValue.class);
+    private final SettingsModelString m_modifyAction = createModifySelectModel();
+
+
+    /**
+     * @param typeColumnFilter column filter
+     * @return the column select model, used in both dialog and model.
+     */
+    static DataColumnSpecFilterConfiguration createDCFilterConfiguration(final DataTypeColumnFilter typeColumnFilter) {
+        return new DataColumnSpecFilterConfiguration("col_select", typeColumnFilter);
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -138,7 +146,7 @@ class AddDateNodeModel extends NodeModel {
      * @return the string model, used in both dialog and model.
      */
     public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
-        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(with date)");
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(modified date)");
         replaceOrAppendModel.addChangeListener(
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
@@ -174,163 +182,70 @@ class AddDateNodeModel extends NodeModel {
         return zoneSelectModel;
     }
 
-    /**
-     * one in, one out
-     */
-    protected AddDateNodeModel() {
-        super(1, 1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{columnRearranger.createSpec()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-        throws Exception {
-        final ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
-        final BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
-        return new BufferedDataTable[]{out};
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createModifySelectModel() {
+        return new SettingsModelString("modify_select", MODIFY_OPTION_APPEND);
     }
 
     /**
      * @param inSpec table input spec
      * @return the CR describing the output
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndices =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        int i = 0;
-        final DataType dataType;
-        if (m_addZone.getBooleanValue()) {
-            dataType = ZonedDateTimeCellFactory.TYPE;
+
+        // determine the data type of output
+        DataType dataType;
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
+            dataType = LocalTimeCellFactory.TYPE;
         } else {
-            dataType = LocalDateTimeCellFactory.TYPE;
+            if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
+                dataType = LocalDateTimeCellFactory.TYPE;
+            } else {
+                if (m_addZone.getBooleanValue()) {
+                    dataType = ZonedDateTimeCellFactory.TYPE;
+                } else {
+                    dataType = LocalDateTimeCellFactory.TYPE;
+                }
+            }
         }
 
-        Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
-        ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+        final Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
+        final ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
-        for (String includedCol : includeList) {
+        int i = 0;
+        for (final String includedCol : includeList) {
+            if (inSpec.getColumnSpec(includedCol).getType().equals(ZonedDateTimeCellFactory.TYPE)
+                && m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
+                dataType = ZonedDateTimeCellFactory.TYPE;
+            }
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
-                DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
-                AddDateCellFactory cellFac =
-                    new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], month, zone);
+                final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
+                final SingleCellFactory cellFac =
+                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], month, zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                DataColumnSpec dataColSpec =
+                final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                AddDateCellFactory cellFac = new AddDateCellFactory(dataColSpec, includeIndices[i++], month, zone);
+                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], month, zone);
                 rearranger.append(cellFac);
             }
         }
         return rearranger;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
-                throws Exception {
-                final RowInput in = (RowInput)inputs[0];
-                final RowOutput out = (RowOutput)outputs[0];
-                final DataTableSpec inSpec = in.getDataTableSpec();
-                String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
-                    .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
-                DataType dataType;
-                if (m_addZone.getBooleanValue()) {
-                    dataType = ZonedDateTimeCellFactory.TYPE;
-                } else {
-                    dataType = LocalDateTimeCellFactory.TYPE;
-                }
-
-                Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
-                ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
-
-                AddDateCellFactory[] cellFacs = new AddDateCellFactory[includeIndeces.length];
-                if (isReplace) {
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        DataColumnSpecCreator dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includeList[i], dataType);
-                        cellFacs[i] =
-                            new AddDateCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i], month, zone);
-                    }
-                } else {
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
-                            .newColumn(includeList[i] + m_suffix.getStringValue(), dataType);
-                        cellFacs[i] = new AddDateCellFactory(dataColSpec, includeIndeces[i], month, zone);
-                    }
-                }
-
-                DataRow row;
-                while ((row = in.poll()) != null) {
-                    exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndeces.length];
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        if (isReplace) {
-                            datacells[i] = cellFacs[i].getCell(row);
-                        } else {
-                            datacells[i] = cellFacs[i].getCell(row);
-                        }
-                    }
-                    if (isReplace) {
-                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
-                    } else {
-                        out.push(new AppendedColumnRow(row, datacells));
-                    }
-                }
-                in.close();
-                out.close();
-            }
-        };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
+    private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final Month month, final ZoneId zone) {
+        if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
+            return new AppendDateCellFactory(dataColSpec, index, month, zone);
+        } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
+            return new ChangeDateCellFactory(dataColSpec, index, month);
+        } else {
+            return new RemoveDateCellFactory(dataColSpec, index);
+        }
     }
 
     /**
@@ -338,7 +253,7 @@ class AddDateNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_colSelect.saveSettingsTo(settings);
+        m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_year.saveSettingsTo(settings);
@@ -346,6 +261,7 @@ class AddDateNodeModel extends NodeModel {
         m_day.saveSettingsTo(settings);
         m_addZone.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
+        m_modifyAction.saveSettingsTo(settings);
     }
 
     /**
@@ -353,7 +269,6 @@ class AddDateNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.validateSettings(settings);
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_year.validateSettings(settings);
@@ -361,6 +276,7 @@ class AddDateNodeModel extends NodeModel {
         m_day.validateSettings(settings);
         m_addZone.validateSettings(settings);
         m_timeZone.validateSettings(settings);
+        m_modifyAction.validateSettings(settings);
     }
 
     /**
@@ -368,7 +284,6 @@ class AddDateNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_colSelect.loadSettingsFrom(settings);
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_year.loadSettingsFrom(settings);
@@ -376,24 +291,21 @@ class AddDateNodeModel extends NodeModel {
         m_day.loadSettingsFrom(settings);
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
+        m_modifyAction.loadSettingsFrom(settings);
+        boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND);
+        m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? LOCAL_TIME_FILTER : DATE_TIME_FILTER);
+        m_colSelect.loadConfigurationInModel(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // no internals
-    }
 
-    private final class AddDateCellFactory extends SingleCellFactory {
+    private final class AppendDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
         private final ZoneId m_zone;
 
         private final Month m_monthValue;
 
-        AddDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month, final ZoneId zone) {
+        AppendDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
             m_monthValue = month;
@@ -417,6 +329,61 @@ class AddDateNodeModel extends NodeModel {
             } else {
                 return LocalDateTimeCellFactory.create(LocalDateTime.of(localDate, localTimeCell.getLocalTime()));
             }
+        }
+    }
+
+    private final class ChangeDateCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        private final Month m_monthValue;
+
+        ChangeDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month) {
+            super(inSpec);
+            m_colIndex = colIndex;
+            m_monthValue = month;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            }
+            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_monthValue, m_day.getIntValue());
+            if (cell instanceof LocalDateTimeCell) {
+                return LocalDateTimeCellFactory
+                    .create(LocalDateTime.of(localDate, ((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime()));
+            }
+            return ZonedDateTimeCellFactory
+                .create(ZonedDateTime.of(localDate, ((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime(),
+                    ((ZonedDateTimeCell)cell).getZonedDateTime().getZone()));
+        }
+    }
+
+    private final class RemoveDateCellFactory extends SingleCellFactory {
+        private final int m_colIndex;
+
+        RemoveDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+            super(inSpec);
+            m_colIndex = colIndex;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            final DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            }
+            if (cell instanceof LocalDateTimeCell) {
+                return LocalTimeCellFactory.create(((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime());
+            }
+            return LocalTimeCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime());
         }
     }
 }

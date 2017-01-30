@@ -46,25 +46,25 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.adddate;
+package org.knime.time.node.manipulate.modifydate;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which adds a date to a time cell.
+ * The node dialog of the node which modifies date.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class AddDateNodeFactory extends NodeFactory<AddDateNodeModel> {
+public class ModifyDateNodeFactory extends NodeFactory<ModifyDateNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AddDateNodeModel createNodeModel() {
-        return new AddDateNodeModel();
+    public ModifyDateNodeModel createNodeModel() {
+        return new ModifyDateNodeModel();
     }
 
     /**
@@ -79,7 +79,7 @@ public class AddDateNodeFactory extends NodeFactory<AddDateNodeModel> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView<AddDateNodeModel> createNodeView(final int viewIndex, final AddDateNodeModel nodeModel) {
+    public NodeView<ModifyDateNodeModel> createNodeView(final int viewIndex, final ModifyDateNodeModel nodeModel) {
         return null;
     }
 
@@ -96,7 +96,7 @@ public class AddDateNodeFactory extends NodeFactory<AddDateNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new AddDateNodeDialog();
+        return new ModifyDateNodeDialog();
     }
 
 }

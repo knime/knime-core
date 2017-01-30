@@ -46,7 +46,7 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.adddate;
+package org.knime.time.node.manipulate.modifydate;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -64,18 +64,17 @@ import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
@@ -83,14 +82,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
- * The node dialog of the node which adds a date to a time cell.
+ * The node dialog of the node which modifies date.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class AddDateNodeDialog extends NodeDialogPane {
-    private final DialogComponentColumnFilter2 m_dialogCompColFilter;
+class ModifyDateNodeDialog extends NodeDialogPane {
+    private final DataColumnSpecFilterPanel m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
 
@@ -106,20 +108,27 @@ class AddDateNodeDialog extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
 
+    private final DialogComponentButtonGroup m_dialogCompModifySelect;
+
+    private DataTableSpec m_spec;
+
+    private boolean m_filterOnlyLocalDate;
+
     /**
      * Setting up all DialogComponents.
      */
-    public AddDateNodeDialog() {
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(AddDateNodeModel.createColSelectModel(), 0);
+    public ModifyDateNodeDialog() {
+        m_filterOnlyLocalDate = true;
+        m_dialogCompColFilter = new DataColumnSpecFilterPanel();
 
-        final SettingsModelString replaceOrAppendModel = AddDateNodeModel.createReplaceAppendStringBool();
+        final SettingsModelString replaceOrAppendModel = ModifyDateNodeModel.createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
-            AddDateNodeModel.OPTION_APPEND, AddDateNodeModel.OPTION_REPLACE);
+            ModifyDateNodeModel.OPTION_APPEND, ModifyDateNodeModel.OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = AddDateNodeModel.createSuffixModel(replaceOrAppendModel);
+        final SettingsModelString suffixModel = ModifyDateNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        final SettingsModelIntegerBounded yearModel = AddDateNodeModel.createYearModel();
+        final SettingsModelIntegerBounded yearModel = ModifyDateNodeModel.createYearModel();
         m_dialogCompYear = new DialogComponentNumberEdit(yearModel, "Year:", 4);
 
         final Month[] months = Month.values();
@@ -128,20 +137,25 @@ class AddDateNodeDialog extends NodeDialogPane {
             monthsStrings[i] = months[i].getDisplayName(TextStyle.FULL, Locale.ENGLISH);
         }
 
-        final SettingsModelString monthModel = AddDateNodeModel.createMonthModel();
+        final SettingsModelString monthModel = ModifyDateNodeModel.createMonthModel();
         m_dialogCompMonth = new DialogComponentStringSelection(monthModel, "Month:", monthsStrings);
 
-        final SettingsModelInteger dayModel = AddDateNodeModel.createDayModel();
+        final SettingsModelInteger dayModel = ModifyDateNodeModel.createDayModel();
         m_dialogCompDay = new DialogComponentNumberEdit(dayModel, "Day:");
 
-        final SettingsModelBoolean zoneModelBool = AddDateNodeModel.createZoneModelBool();
+        final SettingsModelBoolean zoneModelBool = ModifyDateNodeModel.createZoneModelBool();
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
 
-        final SettingsModelString zoneSelectModel = AddDateNodeModel.createTimeZoneSelectModel(zoneModelBool);
+        final SettingsModelString zoneSelectModel = ModifyDateNodeModel.createTimeZoneSelectModel(zoneModelBool);
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
         m_dialogCompTimeZoneSelec = new DialogComponentStringSelection(zoneSelectModel, "", availableZoneIdsArray);
+
+        final SettingsModelString modifySelectModel = ModifyDateNodeModel.createModifySelectModel();
+        m_dialogCompModifySelect =
+            new DialogComponentButtonGroup(modifySelectModel, true, null, ModifyDateNodeModel.MODIFY_OPTION_APPEND,
+                ModifyDateNodeModel.MODIFY_OPTION_CHANGE, ModifyDateNodeModel.MODIFY_OPTION_REMOVE);
 
         /*
          * create panel with gbc
@@ -158,7 +172,7 @@ class AddDateNodeDialog extends NodeDialogPane {
         /*
          * add column filter
          */
-        panel.add(m_dialogCompColFilter.getComponentPanel(), gbc);
+        panel.add(m_dialogCompColFilter, gbc);
 
         /*
          * add replace/append selection
@@ -184,11 +198,25 @@ class AddDateNodeDialog extends NodeDialogPane {
         panel.add(panelReplace, gbc);
 
         /*
-         * add date settings
+         * add date and operation settings
          */
         gbc.gridy++;
+        final JPanel panelSelection = new JPanel(new GridBagLayout());
+        panelSelection.setBorder(BorderFactory.createTitledBorder("Date Selection"));
+        final GridBagConstraints gbcSelection = new GridBagConstraints();
+        gbcSelection.fill = GridBagConstraints.VERTICAL;
+        gbcSelection.gridx = 0;
+        gbcSelection.gridy = 0;
+        gbcSelection.weighty = 0;
+        gbcSelection.anchor = GridBagConstraints.WEST;
+        /*
+         * build operation selection panel
+         */
+        panelSelection.add(m_dialogCompModifySelect.getComponentPanel(), gbcSelection);
+        /*
+         * add date settings
+         */
         final JPanel panelDate = new JPanel(new GridBagLayout());
-        panelDate.setBorder(BorderFactory.createTitledBorder("Add Date"));
         final GridBagConstraints gbcDate = new GridBagConstraints();
         //add year
         gbcDate.fill = GridBagConstraints.VERTICAL;
@@ -222,7 +250,12 @@ class AddDateNodeDialog extends NodeDialogPane {
         gbcDate.gridwidth = 4;
         gbcDate.gridy++;
         panelDate.add(panelZoneSelec, gbcDate);
-        panel.add(panelDate, gbc);
+        gbcSelection.gridx++;
+        gbcSelection.insets = new Insets(0, 50, 0, 0);
+        gbcSelection.gridwidth = 2;
+        gbcSelection.weightx = 1;
+        panelSelection.add(panelDate, gbcSelection);
+        panel.add(panelSelection, gbc);
 
         /*
          * add tab
@@ -233,27 +266,52 @@ class AddDateNodeDialog extends NodeDialogPane {
          * Change listeners
          */
 
-        final ChangeListener dateListener = new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                try {
-                    LocalDate.of(yearModel.getIntValue(), Month.valueOf(monthModel.getStringValue().toUpperCase()),
-                        dayModel.getIntValue());
-                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).setBorder(null);
-                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).updateUI();
-                    m_dialogCompDay.setToolTipText(null);
-                } catch (DateTimeException exc) {
-                    System.out.println(exc);
-                    ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1))
-                        .setBorder(BorderFactory.createLineBorder(Color.RED));
-                    m_dialogCompDay.setToolTipText(exc.getMessage());
-                }
+        final ChangeListener dateListener = e -> {
+            try {
+                LocalDate.of(yearModel.getIntValue(), Month.valueOf(monthModel.getStringValue().toUpperCase()),
+                    dayModel.getIntValue());
+                ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).setBorder(null);
+                ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1)).updateUI();
+                m_dialogCompDay.setToolTipText(null);
+            } catch (DateTimeException exc) {
+                System.out.println(exc);
+                ((JComponent)m_dialogCompDay.getComponentPanel().getComponent(1))
+                    .setBorder(BorderFactory.createLineBorder(Color.RED));
+                m_dialogCompDay.setToolTipText(exc.getMessage());
             }
         };
 
         yearModel.addChangeListener(dateListener);
         monthModel.addChangeListener(dateListener);
         dayModel.addChangeListener(dateListener);
+
+        // change listener for column filter
+        modifySelectModel.addChangeListener(e -> {
+            boolean isAppendOption =
+                modifySelectModel.getStringValue().equals(ModifyDateNodeModel.MODIFY_OPTION_APPEND);
+            boolean isRemoveOption =
+                modifySelectModel.getStringValue().equals(ModifyDateNodeModel.MODIFY_OPTION_REMOVE);
+
+            yearModel.setEnabled(!isRemoveOption);
+            monthModel.setEnabled(!isRemoveOption);
+            dayModel.setEnabled(!isRemoveOption);
+            zoneModelBool.setEnabled(isAppendOption);
+            zoneSelectModel.setEnabled(isAppendOption && zoneModelBool.getBooleanValue());
+
+            m_filterOnlyLocalDate = isAppendOption;
+
+            final DataTypeColumnFilter filter =
+                m_filterOnlyLocalDate ? ModifyDateNodeModel.LOCAL_TIME_FILTER : ModifyDateNodeModel.DATE_TIME_FILTER;
+            final DataColumnSpecFilterConfiguration filterConfiguration =
+                    ModifyDateNodeModel.createDCFilterConfiguration(filter);
+            m_dialogCompColFilter.saveConfiguration(filterConfiguration);
+            final DataColumnSpecFilterConfiguration tempConfiguration =
+                new DataColumnSpecFilterConfiguration(filterConfiguration.getConfigRootName());
+            final NodeSettings tempSettings = new NodeSettings("tempSettings");
+            tempConfiguration.saveConfiguration(tempSettings);
+            filterConfiguration.loadConfigurationInDialog(tempSettings, m_spec);
+            m_dialogCompColFilter.loadConfiguration(filterConfiguration, m_spec);
+        });
     }
 
     /**
@@ -261,7 +319,12 @@ class AddDateNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_dialogCompColFilter.saveSettingsTo(settings);
+        boolean filterOnlyLocalTime = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyDateNodeModel.MODIFY_OPTION_APPEND);
+        DataColumnSpecFilterConfiguration filterConfiguration = ModifyDateNodeModel.createDCFilterConfiguration(
+            filterOnlyLocalTime ? ModifyDateNodeModel.LOCAL_TIME_FILTER : ModifyDateNodeModel.DATE_TIME_FILTER);
+        m_dialogCompColFilter.saveConfiguration(filterConfiguration);
+        filterConfiguration.saveConfiguration(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
         m_dialogCompYear.saveSettingsTo(settings);
@@ -269,6 +332,7 @@ class AddDateNodeDialog extends NodeDialogPane {
         m_dialogCompDay.saveSettingsTo(settings);
         m_dialogCompZoneBool.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
+        m_dialogCompModifySelect.saveSettingsTo(settings);
     }
 
     /**
@@ -277,7 +341,7 @@ class AddDateNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        m_dialogCompColFilter.loadSettingsFrom(settings, specs);
+        m_spec = specs[0];
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompYear.loadSettingsFrom(settings, specs);
@@ -285,6 +349,13 @@ class AddDateNodeDialog extends NodeDialogPane {
         m_dialogCompDay.loadSettingsFrom(settings, specs);
         m_dialogCompZoneBool.loadSettingsFrom(settings, specs);
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
+        m_dialogCompModifySelect.loadSettingsFrom(settings, specs);
+        m_filterOnlyLocalDate = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
+            .equals(ModifyDateNodeModel.MODIFY_OPTION_APPEND);
+        final DataColumnSpecFilterConfiguration filterConfiguration = ModifyDateNodeModel.createDCFilterConfiguration(
+            m_filterOnlyLocalDate ? ModifyDateNodeModel.LOCAL_TIME_FILTER : ModifyDateNodeModel.DATE_TIME_FILTER);
+        filterConfiguration.loadConfigurationInDialog(settings, specs[0]);
+        m_dialogCompColFilter.loadConfiguration(filterConfiguration, specs[0]);
     }
 
 }
