@@ -135,6 +135,7 @@ public class DesktopUtil {
      * @return whether the passed action is supported on this machine
      */
     public static boolean isSupported(final Desktop.Action a) {
+        // TODO this method should be removed -- if it's used in our code (text mining?) then refactor this code and assume it is supported...
         if (Desktop.Action.BROWSE.equals(a)) {
             //why shouldn't it?
             return true;
@@ -150,12 +151,10 @@ public class DesktopUtil {
     public static void browse(final URL url) throws URISyntaxException {
         //try a normal launch
         if (!Program.launch(url.toURI().toString())) {
-            //TODO access restriction?
-            //let eclipse help
             try {
                 PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
             } catch (PartInitException e) {
-
+                // TODO handle appropriately
             }
         }
     }
