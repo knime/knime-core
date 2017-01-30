@@ -7,9 +7,7 @@
 		<intro>
 			Modifies date&amp;time columns by
 			<ul>
-				<li>appending a time to local date columns (output type is local
-					date time column),
-				</li>
+				<li>appending a time to local date columns (output type is local or zoned date time column),</li>
 				<li>changing the time in local or zoned date&amp;time columns, or
 				</li>
 				<li>removing the time from local or zoned date&amp;time columns
