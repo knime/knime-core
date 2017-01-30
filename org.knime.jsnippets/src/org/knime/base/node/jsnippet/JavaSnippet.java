@@ -318,13 +318,19 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     }
 
 
-    /**
-     * Get the jar files to be added to the class path.
-     * @return the jar files for the class path
-     * @throws IOException when a file could not be loaded
-     */
     @Override
     public File[] getClassPath() throws IOException {
+        final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
+        final ArrayList<File> jarFiles = new ArrayList<>(additionalBuildPath.size() + 1 + m_jarFiles.length);
+
+        jarFiles.addAll(Arrays.asList(getRuntimeClassPath()));
+        jarFiles.addAll(additionalBuildPath);
+
+        return jarFiles.toArray(new File[jarFiles.size()]);
+    }
+
+    @Override
+    public File[] getRuntimeClassPath() throws IOException {
         // Add lock since jSnippetJar is used across all JavaSnippets
         synchronized (JavaSnippet.class) {
             if (jSnippetJar == null || !jSnippetJar.exists()) {
@@ -332,8 +338,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             }
         }
 
-        final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
-        final ArrayList<File> jarFiles = new ArrayList<>(additionalBuildPath.size() + 1 + m_jarFiles.length);
+        final ArrayList<File> jarFiles = new ArrayList<>(1 + m_jarFiles.length);
         jarFiles.add(jSnippetJar);
         jarFiles.addAll(additionalBuildPath);
 
