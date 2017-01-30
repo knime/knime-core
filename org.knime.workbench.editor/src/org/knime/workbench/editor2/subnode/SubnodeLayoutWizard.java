@@ -86,6 +86,7 @@ public class SubnodeLayoutWizard extends Wizard {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public void addPages() {
         setWindowTitle("Layout Wrapped Metanode Wizard");
@@ -137,4 +138,5 @@ public class SubnodeLayoutWizard extends Wizard {
             return false;
         }
     }
+
 }

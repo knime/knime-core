@@ -73,6 +73,7 @@ import javax.swing.event.DocumentListener;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
@@ -136,6 +137,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private SubNodeContainer m_subNodeContainer;
     private WorkflowManager m_wfManager;
+    private DefaultLayoutCreatorImpl m_layoutCreator;
+    @SuppressWarnings("rawtypes")
     private Map<NodeIDSuffix, WizardNode> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
@@ -148,13 +151,15 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private Composite m_basicComposite;
 
     /**
-     * @param pageName
+     * Crates a new page instance with a given page name
+     * @param pageName the page name
      */
     protected SubnodeLayoutJSONEditorPage(final String pageName) {
         super(pageName);
         setDescription("Please define the layout of the view nodes.");
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
+        m_layoutCreator = new DefaultLayoutCreatorImpl();
     }
 
     /**
@@ -183,15 +188,19 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
         fillBasicComposite();
-
+        scrollPane.setMinSize(m_basicComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
         return scrollPane;
     }
 
     private void fillBasicComposite() {
 
         if (!m_basicPanelAvailable) {
+            GridData gridData = new GridData();
+            gridData.grabExcessHorizontalSpace = true;
+            gridData.horizontalAlignment = SWT.CENTER;
             Label infoLabel = new Label(m_basicComposite, SWT.CENTER);
             infoLabel.setText("A basic configuration of the layout is not possible. \nPlease use the \"Advanced\" tab.");
+            infoLabel.setLayoutData(gridData);
             return;
         }
 
@@ -204,6 +213,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
         titleLabel.setText("Node");
         titleLabel.setFont(boldFont);
+        new Composite(m_basicComposite, SWT.NONE); /* Warning placeholder */
         Label rowLabel = new Label(m_basicComposite, SWT.CENTER);
         rowLabel.setText("Row");
         rowLabel.setFont(boldFont);
@@ -214,51 +224,21 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         widthLabel.setText("Width");
         widthLabel.setFont(boldFont);
         new Composite(m_basicComposite, SWT.NONE); /* More placeholder */
-        new Composite(m_basicComposite, SWT.NONE); /* Warning placeholder */
         new Composite(m_basicComposite, SWT.NONE); /* Remove placeholder */
 
         for (final Entry<NodeIDSuffix, BasicLayoutInfo> entry : m_basicMap.entrySet()) {
-            NodeID nodeID = entry.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
-            NodeContainer nodeContainer = m_viewNodes.containsKey(entry.getKey()) ? m_wfManager.getNodeContainer(nodeID) : null;
+            NodeIDSuffix suffix = entry.getKey();
             BasicLayoutInfo layoutInfo = entry.getValue();
+            NodeID nodeID = suffix.prependParent(m_subNodeContainer.getWorkflowManager().getID());
+            NodeContainer nodeContainer = m_viewNodes.containsKey(suffix) ? m_wfManager.getNodeContainer(nodeID) : null;
 
-            Composite labelComposite = new Composite(m_basicComposite, SWT.NONE);
-            labelComposite.setLayout(new GridLayout(2, false));
-            labelComposite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            createNodeLabelComposite(m_basicComposite, nodeID, nodeContainer);
 
-            Label iconLabel = new Label(labelComposite, SWT.CENTER);
-            iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            if (nodeContainer == null) {
-                iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
-                iconLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
-            } else {
-                try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
-                    iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
-                } catch (IOException e) { /* do nothing */ }
+            final Label warningLabel = new Label(m_basicComposite, SWT.CENTER);
+            if (nodeContainer!= null && m_viewNodes.get(suffix).isHideInWizard()) {
+                warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
+                warningLabel.setToolTipText("Node is set to 'Hide in Wizard'. It might not be displayed in the layout.");
             }
-
-            Label nodeLabel = new Label(labelComposite, SWT.LEFT);
-            nodeLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            String nodeName;
-            String annotation = null;
-            if (nodeContainer == null) {
-                nodeName = "[MISSING]";
-                FontData font = nodeLabel.getFont().getFontData()[0];
-                nodeLabel.setFont(new Font(m_basicComposite.getDisplay(), new FontData(font.getName(), font.getHeight(), SWT.ITALIC)));
-                nodeLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
-            } else {
-                nodeName = nodeContainer.getName();
-                annotation = nodeContainer.getNodeAnnotation().getText();
-                if (annotation.length() > 42) {
-                    nodeLabel.setToolTipText(annotation);
-                }
-                annotation = StringUtils.abbreviateMiddle(annotation, " [...] ", 50).replaceAll("[\n|\r]", "");
-            }
-            String nodeLabelText = nodeName + "\nID: " + nodeID.getIndex();
-            if (StringUtils.isNoneBlank(annotation)) {
-                nodeLabelText += "\n" + annotation;
-            }
-            nodeLabel.setText(nodeLabelText);
 
             GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
             gridData.widthHint = 50;
@@ -293,23 +273,21 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             final Button advancedButton = new Button(m_basicComposite, SWT.PUSH | SWT.CENTER);
             advancedButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/settings.png"));
             advancedButton.setToolTipText("Additional layout settings");
-            advancedButton.addSelectionListener(new SelectionAdapter() {
+            if (nodeContainer == null) {
+                advancedButton.setEnabled(false);
+            } else {
+                advancedButton.addSelectionListener(new SelectionAdapter() {
 
-                @Override
-                public void widgetSelected(final SelectionEvent e) {
-                    ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(layoutInfo.getView(), m_basicComposite.getShell());
-                    if (settingsDialog.open() == Window.OK) {
-                        layoutInfo.setView(settingsDialog.getViewSettings());
-                        tryUpdateJsonFromBasic();
+                    @Override
+                    public void widgetSelected(final SelectionEvent e) {
+                        JSONLayoutViewContent defaultViewContent = m_layoutCreator.getDefaultViewContentForNode(suffix, m_viewNodes.get(suffix));
+                        ViewContentSettingsDialog settingsDialog = new ViewContentSettingsDialog(m_basicComposite.getShell(), layoutInfo.getView(), defaultViewContent);
+                        if (settingsDialog.open() == Window.OK) {
+                            layoutInfo.setView(settingsDialog.getViewSettings());
+                            tryUpdateJsonFromBasic();
+                        }
                     }
-                }
-            });
-
-
-            final Label warningLabel = new Label(m_basicComposite, SWT.CENTER);
-            if (nodeContainer!= null && m_viewNodes.get(entry.getKey()).isHideInWizard()) {
-                warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
-                warningLabel.setToolTipText("Node is set to 'Hide in Wizard'. It might not be displayed in the layout.");
+                });
             }
 
             final Button removeButton = new Button(m_basicComposite, SWT.PUSH | SWT.CENTER);
@@ -318,14 +296,128 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             removeButton.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
-                    // TODO Auto-generated method stub
+                    if (nodeContainer != null) {
+                        if (!MessageDialog.openConfirm(m_basicComposite.getShell(), "Confirm deletion",
+                            "Are you sure you want to delete node " + suffix + " from the layout?")) {
+                            return;
+                        }
+                    }
+                    m_basicMap.remove(suffix);
+                    tryUpdateJsonFromBasic();
                 }
             });
         }
 
-        for (final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
-            //TODO fill me
+        for (@SuppressWarnings("rawtypes") final Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+            if (m_basicMap.containsKey(entry.getKey())) {
+                continue;
+            }
+            // Node not in layout
+            NodeID nodeID = entry.getKey().prependParent(m_subNodeContainer.getWorkflowManager().getID());
+            NodeContainer nodeContainer = m_wfManager.getNodeContainer(nodeID);
+            createNodeLabelComposite(m_basicComposite, nodeID, nodeContainer);
+
+            final Label warningLabel = new Label(m_basicComposite, SWT.CENTER);
+            if (nodeContainer!= null && m_viewNodes.get(entry.getKey()).isHideInWizard()) {
+                warningLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/warning.png"));
+                warningLabel.setToolTipText("Node is set to 'Hide in Wizard'. It might not be displayed in the layout.");
+            }
+
+            final Button addButton = new Button(m_basicComposite, SWT.PUSH | SWT.CENTER);
+            addButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/add.png"));
+            addButton.setToolTipText("Add node to layout");
+            addButton.addSelectionListener(new SelectionAdapter() {
+
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    int lastRow = 0;
+                    for (BasicLayoutInfo basicLayoutInfo : m_basicMap.values()) {
+                        lastRow = Math.max(lastRow, basicLayoutInfo.getRow());
+                    }
+                    BasicLayoutInfo newInfo = new BasicLayoutInfo();
+                    newInfo.setRow(lastRow + 1);
+                    newInfo.setCol(1);
+                    newInfo.setColWidth(12);
+                    newInfo.setView(m_layoutCreator.getDefaultViewContentForNode(entry.getKey(), entry.getValue()));
+                    m_basicMap.put(entry.getKey(), newInfo);
+                    tryUpdateJsonFromBasic();
+                }
+            });
+            GridData gridData = new GridData();
+            gridData.horizontalSpan = 4;
+            Label space = new Label(m_basicComposite, SWT.NONE);
+            space.setLayoutData(gridData);
         }
+
+        GridData fillRow = new GridData();
+        fillRow.grabExcessHorizontalSpace = true;
+        fillRow.horizontalAlignment = SWT.CENTER;
+        fillRow.horizontalSpan = 7;
+
+        Button resetButton = new Button(m_basicComposite, SWT.PUSH | SWT.CENTER);
+        resetButton.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/reset.png"));
+        resetButton.setText("Reset");
+        resetButton.setToolTipText("Reset layout to default according to currently available nodes.");
+        resetButton.setLayoutData(fillRow);
+        resetButton.addSelectionListener(new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                if (!MessageDialog.openConfirm(m_basicComposite.getShell(), "Confirm reset",
+                    "Are you sure you want to reset the layout according to the currently available nodes?")) {
+                    return;
+                }
+                resetLayout();
+                if (isWindows()) {
+                    m_textArea.setText(m_jsonDocument);
+                } else {
+                    m_text.setText(m_jsonDocument);
+                }
+                updateModelFromJson();
+            }
+        });
+    }
+
+    private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
+
+        Composite labelComposite = new Composite(m_basicComposite, SWT.NONE);
+        labelComposite.setLayout(new GridLayout(2, false));
+        labelComposite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+
+        Label iconLabel = new Label(labelComposite, SWT.CENTER);
+        iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        if (nodeContainer == null) {
+            iconLabel.setImage(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout/missing.png"));
+            iconLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
+        } else {
+            try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
+                iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
+            } catch (IOException e) { /* do nothing */ }
+        }
+
+        Label nodeLabel = new Label(labelComposite, SWT.LEFT);
+        nodeLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        String nodeName;
+        String annotation = null;
+        if (nodeContainer == null) {
+            nodeName = "[MISSING]";
+            FontData font = nodeLabel.getFont().getFontData()[0];
+            nodeLabel.setFont(new Font(m_basicComposite.getDisplay(), new FontData(font.getName(), font.getHeight(), SWT.ITALIC)));
+            nodeLabel.setToolTipText("This node does not exist. \nIt is suggested to delete it from the layout.");
+        } else {
+            nodeName = nodeContainer.getName();
+            annotation = nodeContainer.getNodeAnnotation().getText();
+            if (annotation.length() > 42) {
+                nodeLabel.setToolTipText(annotation);
+            }
+            annotation = StringUtils.abbreviateMiddle(annotation, " [...] ", 50).replaceAll("[\n|\r]", "");
+        }
+        String nodeLabelText = nodeName + "\nID: " + nodeID.getIndex();
+        if (StringUtils.isNoneBlank(annotation)) {
+            nodeLabelText += "\n" + annotation;
+        }
+        nodeLabel.setText(nodeLabelText);
+        return labelComposite;
     }
 
     private Spinner createBasicPanelSpinner(final Composite parent, final int initialValue, final int min, final int max) {
@@ -472,17 +564,19 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     /**
-     * @param manager
-     * @param subnodeContainer
-     * @param viewNodes
+     * Sets all currently available view nodes on this editor page.
+     *
+     * @param manager the workflow manager
+     * @param subnodeContainer the wrapped metanode container
+     * @param viewNodes a map of all available view nodes
      */
-    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer, final Map<NodeIDSuffix, WizardNode> viewNodes) {
+    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer, @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
         JSONLayoutPage page = null;
         String layout = m_subNodeContainer.getLayoutJSONString();
-        if (layout != null && !layout.trim().isEmpty()) {
+        if (StringUtils.isNotEmpty(layout)) {
             try {
                 ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
                 page = mapper.readValue(layout, JSONLayoutPage.class);
@@ -496,26 +590,28 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 m_jsonDocument = layout;
             }
         }
-
-        if (m_jsonDocument == null || m_jsonDocument.trim().isEmpty()) {
-            page = generateInitialJson();
+        if (page == null) {
+            page = resetLayout();
         }
-        if (page != null) {
-            m_documentNodeIDs.clear();
-            m_basicMap.clear();
-            List<JSONLayoutRow> rows = page.getRows();
-            for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
-                JSONLayoutRow row = rows.get(rowIndex);
-                populateDocumentNodeIDs(row);
-                processBasicLayoutRow(row, rowIndex);
-            }
+        List<JSONLayoutRow> rows = page.getRows();
+        for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+            JSONLayoutRow row = rows.get(rowIndex);
+            populateDocumentNodeIDs(row);
+            processBasicLayoutRow(row, rowIndex);
         }
+    }
 
+    /**
+     * @param page
+     */
+    private JSONLayoutPage resetLayout() {
+        m_documentNodeIDs.clear();
+        m_basicMap.clear();
+        return generateInitialJson();
     }
 
     private JSONLayoutPage generateInitialJson() {
-        DefaultLayoutCreatorImpl creator = new DefaultLayoutCreatorImpl();
-        JSONLayoutPage page = creator.createDefaultLayoutStructure(m_viewNodes);
+        JSONLayoutPage page = m_layoutCreator.createDefaultLayoutStructure(m_viewNodes);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
         try {
             String initialJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
@@ -555,6 +651,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             page = reader.readValue(m_jsonDocument);
         } catch (Exception e) { /* do nothing, input needs to be validated beforehand */ }
         m_basicMap.clear();
+        m_basicPanelAvailable = true;
         List<JSONLayoutRow> rows = page.getRows();
         for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
             JSONLayoutRow row = rows.get(rowIndex);
@@ -564,19 +661,38 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     }
 
     /**
-     * @param row
-     * @param rowIndex
+     * Processes one layout row, creates {@link BasicLayoutInfo} for each contained node and determines if basic layout
+     * is available. Some advanced configurations (additional styles or classes, HTML content or nested layouts) can not
+     * be represented in a basic layout.
+     *
+     * @param row the row to process
+     * @param rowIndex the index of the row as it appears in the layout
      */
     private void processBasicLayoutRow(final JSONLayoutRow row, final int rowIndex) {
+        if (listNotNullOrEmpty(row.getAdditionalStyles()) || listNotNullOrEmpty(row.getAdditionalClasses())) {
+            // basic layout not possible, show only advanced tab
+            m_basicPanelAvailable = false;
+            return;
+        }
         List<JSONLayoutColumn> columns = row.getColumns();
         for (int colIndex = 0; colIndex < columns.size(); colIndex++) {
             JSONLayoutColumn column = columns.get(colIndex);
+            if (listNotNullOrEmpty(column.getAdditionalStyles()) || listNotNullOrEmpty(column.getAdditionalClasses())) {
+                // basic layout not possible, show only advanced tab
+                m_basicPanelAvailable = false;
+                return;
+            }
             List<JSONLayoutContent> content = column.getContent();
             if (content != null) {
                 for (JSONLayoutContent jsonLayoutContent : content) {
                     if (jsonLayoutContent != null) {
                         if (jsonLayoutContent instanceof JSONLayoutViewContent) {
                             JSONLayoutViewContent viewContent = (JSONLayoutViewContent)jsonLayoutContent;
+                            if (listNotNullOrEmpty(viewContent.getAdditionalStyles()) || listNotNullOrEmpty(viewContent.getAdditionalClasses())) {
+                             // basic layout not possible, show only advanced tab
+                                m_basicPanelAvailable = false;
+                                return;
+                            }
                             BasicLayoutInfo basicInfo = new BasicLayoutInfo();
                             basicInfo.setRow(rowIndex + 1);
                             basicInfo.setCol(colIndex + 1);
@@ -595,11 +711,15 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         }
     }
 
+    private boolean listNotNullOrEmpty(final List<?> list) {
+        return list != null && list.size() > 0;
+    }
+
     private void tryUpdateJsonFromBasic() {
         try {
             basicLayoutToJson();
         } catch (Exception e) {
-            //TODO show error in dialog
+            //TODO show error in dialog?, this should not happen
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -700,12 +820,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private void updateModelFromJson() {
         if (isJSONValid()) {
             updateBasicLayout();
-            for (Control control : m_basicComposite.getChildren()) {
-                control.dispose();
-            }
-            fillBasicComposite();
-            m_basicComposite.layout(true);
+        } else {
+            m_basicPanelAvailable = false;
         }
+        for (Control control : m_basicComposite.getChildren()) {
+            control.dispose();
+        }
+        fillBasicComposite();
+        m_basicComposite.layout(true);
     }
 
     /**
@@ -773,7 +895,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             String layoutString = mapper.writeValueAsString(page);
             return layoutString;
         } catch (IOException e) {
-            // TODO log error
+            LOGGER.error("Failed to retrieve JSON string from layout:" + e.getMessage(), e);
         }
 
         return "";
