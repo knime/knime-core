@@ -48,14 +48,12 @@
  */
 package org.knime.core.util;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.swt.program.Program;
@@ -73,13 +71,15 @@ public class DesktopUtil {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DesktopUtil.class);
 
     /**
-     * Opens a file using the system-default program (determined by extension)
+     * Opens a file using the system-default program (determined by extension). Logs to <b>INFO</b> if successful,
+     * otherwise to <b>WARN</b>.
      *
-     * @param file to the file
+     * @param file to be opened
+     * @return true if file was opened successfully
      * @since 3.3
      */
     public static boolean open(final File file) {
-        RunnableFuture openFileRunnable = new RunnableFuture() {
+        RunnableFuture<Boolean> openFileRunnable = new RunnableFuture<Boolean>() {
 
             private boolean m_successfull;
 
@@ -87,7 +87,7 @@ public class DesktopUtil {
             public void run() {
                 String progName = Program.findProgram(FilenameUtils.getExtension(file.toString())).getName();
                 m_successfull = Program.launch(file.toString());
-                if (Program.launch(file.toString())) {
+                if (m_successfull) {
                     LOGGER.info(file + " opened with " + progName);
                 } else {
                     LOGGER.warn("Couldn't open " + file + " with " + progName);
@@ -110,53 +110,51 @@ public class DesktopUtil {
             }
 
             @Override
-            public Boolean get() throws InterruptedException, ExecutionException {
+            public Boolean get() {
                 return m_successfull;
             }
 
             @Override
-            public Object get(final long timeout, final TimeUnit unit)
-                throws InterruptedException, ExecutionException, TimeoutException {
+            public Boolean get(final long timeout, final TimeUnit unit) {
                 return m_successfull;
             }
         };
         Display.getDefault().syncExec(openFileRunnable);
         boolean result = false;
         try {
-            result = (boolean)openFileRunnable.get();
+            result = openFileRunnable.get();
         } catch (InterruptedException | ExecutionException ex) {
-            LOGGER.info(ex.getMessage());
+            // Does not happen because the runnable was executed via syncExec.
         }
         return result;
     }
 
     /**
-     * @param a an AWT action
-     * @return whether the passed action is supported on this machine
-     */
-    public static boolean isSupported(final Desktop.Action a) {
-        // TODO this method should be removed -- if it's used in our code (text mining?) then refactor this code and assume it is supported...
-        if (Desktop.Action.BROWSE.equals(a)) {
-            //why shouldn't it?
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param url
+     * Opens a URL using the system default program for .html/.htm files. If this fails the external browser that is
+     * registered in Eclipse is used.
+     *
+     * @param url to be opened
      * @throws URISyntaxException
      * @since 3.3
      */
     public static void browse(final URL url) throws URISyntaxException {
-        //try a normal launch
-        if (!Program.launch(url.toURI().toString())) {
-            try {
-                PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
-            } catch (PartInitException e) {
-                // TODO handle appropriately
+        final String location = url.toURI().toString();
+        Display.getDefault().asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                //try a normal launch
+                if (!Program.launch(location)) {
+                    //failed -> Go over the BrowserSupport
+                    try {
+                        PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
+                    } catch (PartInitException e) {
+                        LOGGER.warn("Could not open Browser at location \"" + url.toString() + "\"");
+                        e.printStackTrace();
+                    }
+                }
             }
-        }
+        });
     }
 
 }
