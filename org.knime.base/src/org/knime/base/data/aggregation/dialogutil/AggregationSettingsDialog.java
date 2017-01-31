@@ -46,7 +46,6 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -59,7 +58,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -72,7 +70,6 @@ import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.HyperlinkEvent;
@@ -86,6 +83,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.database.aggregation.AggregationFunction;
+import org.knime.core.util.DesktopUtil;
 
 /**
  * {@link JDialog} that displays and allows the editing of the additional parameters of an
@@ -118,20 +116,12 @@ public class AggregationSettingsDialog extends JDialog {
               @Override
             public void hyperlinkUpdate(final HyperlinkEvent e) {
                   if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                      if (Desktop.isDesktopSupported()) {
-                          final URL uri = e.getURL();
-                          if (uri != null) {
-                              SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        Desktop.getDesktop().browse(uri.toURI());
-                                    } catch (IOException | URISyntaxException e1) {
-                                        e1.printStackTrace();
-                                    }
-                                }
-                            }
-                            );
+                      final URL uri = e.getURL();
+                      if (uri != null) {
+                          try {
+                              DesktopUtil.browse(uri);
+                          } catch (URISyntaxException e1) {
+                              e1.printStackTrace();
                           }
                       }
                   }
