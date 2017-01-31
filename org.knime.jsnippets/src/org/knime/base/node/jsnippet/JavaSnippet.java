@@ -340,7 +340,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
 
         final ArrayList<File> jarFiles = new ArrayList<>(1 + m_jarFiles.length);
         jarFiles.add(jSnippetJar);
-        jarFiles.addAll(additionalBuildPath);
 
         for (final String jarFile : m_jarFiles) {
             try {
@@ -1052,15 +1051,20 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
 
         try {
-            final ArrayList<ClassLoader> customTypeClassLoaders = new ArrayList<>();
+            final LinkedHashSet<ClassLoader> customTypeClassLoaders = new LinkedHashSet<>();
             customTypeClassLoaders.add(JavaSnippet.class.getClassLoader());
 
-            for(final InCol col : m_fields.getInColFields()) {
+            for (final InCol col : m_fields.getInColFields()) {
                 customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
             }
-            for(final OutCol col : m_fields.getOutColFields()) {
+            for (final OutCol col : m_fields.getOutColFields()) {
                 customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
             }
+
+            // remove core class loader:
+            //   (a) it's referenced via JavaSnippet.class classloader and
+            //   (b) it would collect buddies when used directly (see support ticket #1943)
+            customTypeClassLoaders.remove(DataCellToJavaConverterRegistry.class.getClassLoader());
 
             final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(customTypeClassLoaders.stream().toArray(size -> new ClassLoader[size]));
 
