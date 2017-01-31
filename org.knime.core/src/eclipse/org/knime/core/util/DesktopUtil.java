@@ -61,14 +61,26 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
+ * Utility method to interact with the desktop environment, for instance opening the system browser or opening a file
+ * with the OS-registiered application.
  *
- * @author ferry
+ * <p>The implementation is using Eclipse framework code and is preferred over {@link java.awt.Desktop} due to poor
+ * support of awt classes on standard Linux distros.
+ *
+ * @author Ferry Abt, KNIME.com, Konstanz, Germany
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.3
  */
-public class DesktopUtil {
+public final class DesktopUtil {
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DesktopUtil.class);
+
+    /** Utility class, no public constructor. */
+    private DesktopUtil() {
+    }
 
     /**
      * Opens a file using the system-default program (determined by extension). Logs to <b>INFO</b> if successful,
@@ -79,18 +91,22 @@ public class DesktopUtil {
      * @since 3.3
      */
     public static boolean open(final File file) {
+        CheckUtils.checkArgumentNotNull(file, "File argument must not be null");
         RunnableFuture<Boolean> openFileRunnable = new RunnableFuture<Boolean>() {
 
             private boolean m_successfull;
 
             @Override
             public void run() {
+                // TODO Ferry, can you double-check what happens when the file extension is blank or null?
+                // TODO Ferry, can you check what happens when running in batch mode (no display)
                 String progName = Program.findProgram(FilenameUtils.getExtension(file.toString())).getName();
                 m_successfull = Program.launch(file.toString());
                 if (m_successfull) {
-                    LOGGER.info(file + " opened with " + progName);
+                    LOGGER.debugWithFormat("File \"%s\" opened with %s", file.getAbsoluteFile(), progName);
                 } else {
-                    LOGGER.warn("Couldn't open " + file + " with " + progName);
+                    LOGGER.warnWithFormat("Couldn't open \"%s\" with %s (no details available)",
+                        file.getAbsolutePath(), progName);
                 }
             }
 
@@ -138,7 +154,10 @@ public class DesktopUtil {
      * @since 3.3
      */
     public static void browse(final URL url) throws URISyntaxException {
+        // TODO Ferry, can you do better argument checking (null!)
         final String location = url.toURI().toString();
+        // TODO Ferry: Can you handle headless mode (no display)
+        // TODO Ferry. Is it #getDefault or #getCurrent -- see org.eclipse.swt.program.Program.findProgram(String) above
         Display.getDefault().asyncExec(new Runnable() {
 
             @Override
@@ -149,8 +168,7 @@ public class DesktopUtil {
                     try {
                         PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
                     } catch (PartInitException e) {
-                        LOGGER.warn("Could not open Browser at location \"" + url.toString() + "\"");
-                        e.printStackTrace();
+                        LOGGER.warn("Could not open Browser at location \"" + url.toString() + "\"", e);
                     }
                 }
             }
