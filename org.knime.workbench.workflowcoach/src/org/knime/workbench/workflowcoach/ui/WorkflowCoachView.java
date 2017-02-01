@@ -59,7 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
@@ -130,10 +130,8 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
 
     private static final String NO_WORKFLOW_OPENED_MESSAGE = "No workflow opened.";
 
-    /**
-     * If <code>true</code>, nodes are sill loading.
-     */
-    private AtomicBoolean m_nodesLoading = new AtomicBoolean(false);
+    /** Whether nodes are being loaded, loaded, being updated, disposed, etc. */
+    private AtomicReference<LoadState> m_loadState = new AtomicReference<>(LoadState.LoadingNodes);
 
     /**
      * Indicates whether recommendations are available (i.e. properly configured etc.).
@@ -166,6 +164,16 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         RECOMMENDATIONS,
         /** text as link, one column, no headers, hand mouse cursor, mouse listener */
         LINK;
+    }
+
+    /** Load state of the view, added to address AP-6822 (deadlocks when disposing while loading repository). */
+    private enum LoadState {
+        /** While picking up repository content. */
+        LoadingNodes,
+        /** 'normal' operation. */
+        Initizalized,
+        /** during dispose or after dispose. */
+        Disposed
     }
 
     private MouseListener m_openPrefPageMouseListener = new MouseAdapter() {
@@ -231,22 +239,24 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
         updateInput("Waiting for node repository to be loaded ...");
-        m_nodesLoading.set(true);
+        m_loadState.set(LoadState.LoadingNodes);
         Job nodesLoader = new KNIMEJob("Workflow Coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 RepositoryManager.INSTANCE.getRoot(); // wait until the repository is fully loaded
 
-                if (monitor.isCanceled()) {
-                    m_nodesLoading.set(false);
+                if (m_loadState.get() == LoadState.Disposed) {
+                    return Status.CANCEL_STATUS;
+                } else if (monitor.isCanceled()) {
+                    m_loadState.set(LoadState.Initizalized);
                     return Status.CANCEL_STATUS;
                 } else {
                     // check for update if necessary
                     updateInput("Loading recommendations...");
                     checkForStatisticUpdates();
                 }
+                m_loadState.set(LoadState.Initizalized);
                 NodeRecommendationManager.getInstance().addUpdateListener(WorkflowCoachView.this);
-                m_nodesLoading.set(false);
                 updateFrequencyColumnHeadersAndToolTips();
                 updateInput(StructuredSelection.EMPTY);
                 return Status.OK_STATUS;
@@ -286,7 +296,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     @Override
     public void dispose() {
         //unregister selection listener, dispose objects etc.
-        NodeRecommendationManager.getInstance().removeUpdateListener(this);
+        if (m_loadState.get() != LoadState.LoadingNodes) {
+            NodeRecommendationManager.getInstance().removeUpdateListener(this);
+        }
+        m_loadState.set(LoadState.Disposed);
         this.getSite().setSelectionProvider(null);
         getViewSite().getPage().removeSelectionListener(this);
         m_viewer.getTable().dispose();
@@ -304,7 +317,8 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //if no workflow is opened and the workflow coach is configured properly, show according message
             updateInput(NO_WORKFLOW_OPENED_MESSAGE);
         }
-        if (part instanceof WorkflowCoachView || m_nodesLoading.get()) {
+        LoadState loadState = m_loadState.get();
+        if (part instanceof WorkflowCoachView || loadState.equals(LoadState.LoadingNodes)) {
             // If source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
         }
@@ -321,12 +335,17 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
                 .anyMatch(ntp -> ntp.isEnabled())) {
-                m_nodesLoading.set(true);
+
+                if (m_loadState.get() == LoadState.Disposed) {
+                    return;
+                }
+
+                m_loadState.set(LoadState.LoadingNodes);
                 updateInput("Loading recommendations ...");
 
                 //try updating the triple provider that are enabled and require an update
                 updateTripleProviders(e -> {
-                    m_nodesLoading.set(false);
+                    m_loadState.set(LoadState.Initizalized);
                     if (e.isPresent()) {
                         updateInputNoProvider();
                     } else {
@@ -771,6 +790,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     @Override
     public void updated() {
         updateFrequencyColumnHeadersAndToolTips();
-        m_nodesLoading.set(false);
+        m_loadState.set(LoadState.Initizalized);
     }
 }
