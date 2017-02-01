@@ -51,6 +51,7 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.Test;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
@@ -81,4 +82,20 @@ public class NodeIDTest {
         s = NodeIDSuffix.fromString("0");
         assertThat("Unexpected combined NodeID", s.prependParent(p).toString(), is("0"));
     }
+
+    /** Test {@link NodeID#isRoot()}. */
+    @Test
+    public void testIsRoot() {
+        assertThat("Expected root to be root", NodeID.ROOTID.isRoot(), is(true));
+        assertThat("Expected child to be not root", NodeID.ROOTID.createChild(2).isRoot(), is(false));
+
+        NodeID root = NodeID.ROOTID;
+        NodeID rootClone = NodeID.fromString(root.toString());
+        assertThat("Expected root-clone to be root", rootClone.isRoot(), is(true));
+
+        NodeID serializationClone = SerializationUtils.clone(root);
+        assertThat("Expected serialization-clone to be root", serializationClone.isRoot(), is(true));
+
+    }
+
 }

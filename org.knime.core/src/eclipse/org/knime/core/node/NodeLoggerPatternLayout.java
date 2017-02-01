@@ -138,7 +138,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
                         buf.append(nodeID.getIndex());
                         NodeID prefix = nodeID.getPrefix();
                         int counter = 1;
-                        while (prefix != null && prefix != NodeID.ROOTID && counter < m_precision) {
+                        while (prefix != null && !prefix.isRoot() && counter < m_precision) {
                             buf.insert(0, ":");
                             buf.insert(0, prefix.getIndex());
                             prefix = prefix.getPrefix();
