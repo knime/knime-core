@@ -59,6 +59,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  *
  * @author Heiko Hofer
  * @author Gabor Bakos
+ * @author Adrian Nembach, KNIME.com
  * @since 3.1
  */
 class LogRegLearnerSettings {

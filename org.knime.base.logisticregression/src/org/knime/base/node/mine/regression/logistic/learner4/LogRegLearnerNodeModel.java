@@ -48,11 +48,15 @@
 package org.knime.base.node.mine.regression.logistic.learner4;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -67,6 +71,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -74,6 +79,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
@@ -83,13 +89,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  *
  * @author Heiko Hofer
  * @author Gabor Bakos
- * @since 3.1
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.3
  */
 public final class LogRegLearnerNodeModel extends NodeModel {
     private final LogRegLearnerSettings m_settings;
 
     /** The learned regression model. */
-//    private LogisticRegressionContent m_content;
+    private LogisticRegressionContent m_content;
 
     /** Inits a new node model, it will have 1 data input, 1 model and 1 data output. */
     public LogRegLearnerNodeModel() {
@@ -129,29 +136,25 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         final BufferedDataTable data = (BufferedDataTable)inObjects[0];
         final DataTableSpec tableSpec = data.getDataTableSpec();
 
-//        final LogRegLearner learner = new LogRegLearner(new PortObjectSpec[]{tableSpec}, m_settings);
-//        m_content = learner.execute(new PortObject[]{data}, exec);
-//        String warn = learner.getWarningMessage();
-//        if (warn != null) {
-//            setWarningMessage(warn);
-//        }
-//
-//        // second argument is ignored since we provide a spec
-//        PMMLPortObject outPMMLPort =
-//            new PMMLPortObject((PMMLPortObjectSpec)learner.getOutputSpec()[0], null, tableSpec);
-//        PMMLGeneralRegressionTranslator trans =
-//            new PMMLGeneralRegressionTranslator(m_content.createGeneralRegressionContent());
-//        outPMMLPort.addModelTranslater(trans);
-//        return new PortObject[]{outPMMLPort, m_content.createTablePortObject(exec)};
-        return null;
+        final LogRegCoordinator coordinator = new LogRegCoordinator(tableSpec, m_settings);
+        m_content = coordinator.learn(data, exec);
+        String warn = coordinator.getWarningMessage();
+        if (warn != null) {
+            setWarningMessage(warn);
+        }
+        PMMLPortObject outPMMLPort =
+            new PMMLPortObject((PMMLPortObjectSpec)coordinator.getOutputSpecs()[0], null, tableSpec);
+        PMMLGeneralRegressionTranslator trans =
+            new PMMLGeneralRegressionTranslator(m_content.createGeneralRegressionContent());
+        outPMMLPort.addModelTranslater(trans);
+        return new PortObject[]{outPMMLPort, m_content.createTablePortObject(exec)};
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-//        LogRegLearner learner = new LogRegLearner(inSpecs, m_settings);
-//        return learner.getOutputSpec();
-        return null;
+        LogRegCoordinator coordinator = new LogRegCoordinator((DataTableSpec)inSpecs[0], m_settings);
+        return coordinator.getOutputSpecs();
     }
 
     /**
@@ -160,26 +163,25 @@ public final class LogRegLearnerNodeModel extends NodeModel {
      * @return if model has been executed
      */
     protected boolean isDataAvailable() {
-//        return m_content != null;
-        return false;
+        return m_content != null;
     }
 
-//    /**
-//     * Get all parameters to the currently learned model.
-//     *
-//     * @return a reference to the current values
-//     */
-//    public LogisticRegressionContent getRegressionContent() {
-////        return m_content;
-//
-//    }
+    /**
+     * Get all parameters to the currently learned model.
+     *
+     * @return a reference to the current values
+     */
+    public LogisticRegressionContent getRegressionContent() {
+        return m_content;
+
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void reset() {
-//        m_content = null;
+        m_content = null;
     }
 
     private static final String FILE_SAVE = "model.xml.gz";
@@ -203,7 +205,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
             ModelContentRO specContent = c.getModelContent(CFG_SPEC);
             DataTableSpec spec = DataTableSpec.load(specContent);
             ModelContentRO parContent = c.getModelContent(CFG_LOGREG_CONTENT);
-//            m_content = LogisticRegressionContent.load(parContent, spec);
+            m_content = LogisticRegressionContent.load(parContent, spec);
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Unable to restore state: " + ise.getMessage());
             ioe.initCause(ise);
@@ -217,13 +219,13 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File internDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-//        ModelContent content = new ModelContent(CFG_SETTINGS);
-//        ModelContentWO specContent = content.addModelContent(CFG_SPEC);
-//        m_content.getSpec().getDataTableSpec().save(specContent);
-//        ModelContentWO parContent = content.addModelContent(CFG_LOGREG_CONTENT);
-//        m_content.save(parContent);
-//        File outFile = new File(internDir, FILE_SAVE);
-//        content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFile))));
+        ModelContent content = new ModelContent(CFG_SETTINGS);
+        ModelContentWO specContent = content.addModelContent(CFG_SPEC);
+        m_content.getSpec().getDataTableSpec().save(specContent);
+        ModelContentWO parContent = content.addModelContent(CFG_LOGREG_CONTENT);
+        m_content.save(parContent);
+        File outFile = new File(internDir, FILE_SAVE);
+        content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFile))));
     }
 
     /**

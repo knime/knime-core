@@ -55,7 +55,8 @@ import org.knime.core.node.NodeView;
  * Factory class for logistic regression node.
  *
  * @author Heiko Hofer
- * @since 3.1
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.3
  */
 public final class LogRegLearnerNodeFactory4
     extends NodeFactory<LogRegLearnerNodeModel> {
