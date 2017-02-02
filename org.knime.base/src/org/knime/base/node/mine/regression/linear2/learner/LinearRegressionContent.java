@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.base.node.mine.regression.RegressionContent;
 import org.knime.core.data.DataCell;
@@ -62,13 +63,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
-
 /**
  * Utility class that stores results of linear regression models. It is used by the learner node model and the predictor
  * node model.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 public final class LinearRegressionContent extends RegressionContent {
     private static final DataTableSpec m_tableOutSpec = new DataTableSpec("Coefficients and Statistics", new String[]{
@@ -113,8 +113,8 @@ public final class LinearRegressionContent extends RegressionContent {
      */
     @Deprecated
     public LinearRegressionContent(final PMMLPortObjectSpec outSpec, final int valueCount,
-        final List<String> factorList, final List<String> covariateList, final Matrix beta,
-        final boolean includeConstant, final double offsetValue, final Matrix covMat, final double rSquared,
+        final List<String> factorList, final List<String> covariateList, final RealMatrix beta,
+        final boolean includeConstant, final double offsetValue, final RealMatrix covMat, final double rSquared,
         final double adjustedRSquared, final SummaryStatistics[] stats) {
         this(outSpec, valueCount, factorList, covariateList, beta, includeConstant, offsetValue, covMat, rSquared, adjustedRSquared, stats, null);
     }
@@ -136,8 +136,8 @@ public final class LinearRegressionContent extends RegressionContent {
      * @param warningMessage the warning message to use if there was a problem; can be {@code null}
      */
     LinearRegressionContent(final PMMLPortObjectSpec outSpec, final int valueCount,
-        final List<String> factorList, final List<String> covariateList, final Matrix beta,
-        final boolean includeConstant, final double offsetValue, final Matrix covMat, final double rSquared,
+        final List<String> factorList, final List<String> covariateList, final RealMatrix beta,
+        final boolean includeConstant, final double offsetValue, final RealMatrix covMat, final double rSquared,
         final double adjustedRSquared, final SummaryStatistics[] stats, final String warningMessage) {
         super(1, includeConstant);
         m_outSpec = outSpec;

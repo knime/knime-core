@@ -81,14 +81,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.util.ThreadPool;
 
-import Jama.Matrix;
-
 
 
 /**
  * A Logistic Regression Learner.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 final class Learner {
     /** Logger to print debug info to. */
@@ -293,9 +292,6 @@ final class Learner {
             }
         }
 
-        Matrix betaJama = new Matrix(beta.getData());
-        Matrix covMatJama = new Matrix(covMat.getData());
-
         final Map<? extends Integer, Integer> vectorIndexLengths = trainingData.getVectorLengths();
         final Map<String, Integer> vectorLengths = new LinkedHashMap<String, Integer>();
         for (DataColumnSpec spec: m_specialColumns) {
@@ -309,7 +305,7 @@ final class Learner {
             new LogisticRegressionContent(m_outSpec,
                     factorList, covariateList, vectorLengths,
                     m_targetReferenceCategory, m_sortTargetCategories, m_sortFactorsCategories,
-                    betaJama, loglike, covMatJama, iter);
+                    beta, loglike, covMat, iter);
         return content;
     }
 
@@ -341,7 +337,7 @@ final class Learner {
             exec.checkCanceled();
             exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
             x.setEntry(0, 0, 1);
-            x.setSubMatrix(row.getParameter().getArray(), 0, 1);
+            x.setSubMatrix(row.getParameter().getData(), 0, 1);
 
             for (int k = 0; k < tcC - 1; k++) {
                 RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
@@ -465,7 +461,7 @@ final class Learner {
             RegressionTrainingRow row = iter.next();
 
             x.setEntry(0, 0, 1);
-            x.setSubMatrix(row.getParameter().getArray(), 0, 1);
+            x.setSubMatrix(row.getParameter().getData(), 0, 1);
 
             double sumEBetaTx = 0;
             for (int i = 0; i < tcC - 1; i++) {

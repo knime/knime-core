@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.base.node.mine.regression.RegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
@@ -77,14 +78,13 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.util.Pair;
 
-import Jama.Matrix;
-
 /**
  * Utility class that stores results of linear regression models. It is used by the learner node model and the predictor
  * node model.
  *
  * @author Heiko Hofer
- * @since 2.10
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.3
  */
 final class PolyRegContent extends RegressionContent {
     private static final DataTableSpec m_tableOutSpec =
@@ -128,7 +128,7 @@ final class PolyRegContent extends RegressionContent {
      * @param maxExponent The maximal exponent in the model.
      */
     PolyRegContent(final PMMLPortObjectSpec outSpec, final int valueCount, final List<String> factorList,
-        final List<String> covariateList, final Matrix beta, final double offsetValue, final Matrix covMat,
+        final List<String> covariateList, final RealMatrix beta, final double offsetValue, final RealMatrix covMat,
         final double rSquared, final double adjustedRSquared, final SummaryStatistics[] stats, final int maxExponent) {
         super(maxExponent, true);
         m_outSpec = outSpec;
@@ -156,7 +156,7 @@ final class PolyRegContent extends RegressionContent {
      * @return the variables mapped to values of the given matrix
      */
     @Override
-    protected Map<Pair<String, Integer>, Double> getValues(final Matrix matrix) {
+    protected Map<Pair<String, Integer>, Double> getValues(final RealMatrix matrix) {
         Map<Pair<String, Integer>, Double> coefficients = new HashMap<Pair<String, Integer>, Double>();
         int p = m_includeConstant ? 1 : 0;
         for (int degree = 1; degree <= m_maxExponent; ++degree) {
@@ -168,13 +168,13 @@ final class PolyRegContent extends RegressionContent {
                     while (designIter.hasNext()) {
                         DataCell dvValue = designIter.next();
                         String variable = colName + "=" + dvValue;
-                        double coeff = matrix.get(0, p);
+                        double coeff = matrix.getEntry(0, p);
                         coefficients.put(Pair.create(variable, degree), coeff);
                         p++;
                     }
                 } else {
                     String variable = colName;
-                    double coeff = matrix.get(0, p);
+                    double coeff = matrix.getEntry(0, p);
                     coefficients.put(Pair.create(variable, degree), coeff);
                     p++;
                 }
@@ -210,7 +210,7 @@ final class PolyRegContent extends RegressionContent {
         if (m_includeConstant) {
             // Define the intercept
             parameterList.add(new PMMLParameter("p" + p, "Intercept"));
-            paramMatrix.add(new PMMLPCell("p" + p, m_beta.get(0, 0), 1));
+            paramMatrix.add(new PMMLPCell("p" + p, m_beta.getEntry(0, 0), 1));
             p++;
         }
         for (String colName : m_outSpec.getLearningFields()) {
@@ -224,7 +224,7 @@ final class PolyRegContent extends RegressionContent {
                     parameterList.add(new PMMLParameter(pName, "[" + colName + "=" + dvValue + "]"));
 
                     ppMatrix.add(new PMMLPPCell(dvValue.toString(), colName, pName));
-                    paramMatrix.add(new PMMLPCell(pName, m_beta.get(0, p), 1));
+                    paramMatrix.add(new PMMLPCell(pName, m_beta.getEntry(0, p), 1));
 
                     p++;
                 }
@@ -232,7 +232,7 @@ final class PolyRegContent extends RegressionContent {
                 String pName = "p" + p;
                 parameterList.add(new PMMLParameter(pName, colName));
                 ppMatrix.add(new PMMLPPCell("1", colName, pName));
-                paramMatrix.add(new PMMLPCell(pName, m_beta.get(0, p), 1));
+                paramMatrix.add(new PMMLPCell(pName, m_beta.getEntry(0, p), 1));
 
                 p++;
             }

@@ -50,6 +50,8 @@ package org.knime.base.node.mine.regression.polynomial.learner2;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression;
@@ -63,12 +65,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
 
 /**
  * A Polynomial Regression Learner.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 final class Learner extends RegressionStatisticsLearner {
     /** The maximal exponent in the model, at least {@code 1}. */
@@ -127,13 +129,13 @@ final class Learner extends RegressionStatisticsLearner {
 
         RegressionResults result = regr.regress();
 
-        Matrix beta = new Matrix(result.getParameterEstimates(), 1);
+        RealMatrix beta = MatrixUtils.createRowRealMatrix(result.getParameterEstimates());
 
         List<String> factorList = new ArrayList<String>();
         List<String> covariateList = createCovariateListAndFillFactors(data, trainingData, factorList);
 
         // The covariance matrix
-        Matrix covMat = createCovarianceMatrix(result);
+        RealMatrix covMat = createCovarianceMatrix(result);
 
         PolyRegContent content = new PolyRegContent(m_outSpec,
             (int)stats[0].getN(), factorList, covariateList, beta,
@@ -160,7 +162,7 @@ final class Learner extends RegressionStatisticsLearner {
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {
-                double[] parameter = row.getParameter().getArray()[0];
+                double[] parameter = row.getParameter().getRow(0);
                 double[] params = new double[trainingData.getRegressorCount() * m_maxExponent];
                 for (int i = 0; i < trainingData.getRegressorCount(); i++) {
                     final double v = parameter[i];

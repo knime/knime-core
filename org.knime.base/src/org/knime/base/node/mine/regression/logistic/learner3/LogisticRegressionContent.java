@@ -59,6 +59,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -85,13 +87,13 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.util.CheckUtils;
 
-import Jama.Matrix;
 
 /**
  * Utility class that stores results of logistic regression
  * models. It is used by the learner node model and the predictor node model.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 final class LogisticRegressionContent {
     private final PMMLPortObjectSpec m_outSpec;
@@ -103,10 +105,10 @@ final class LogisticRegressionContent {
 
     private final List<DataCell> m_targetCategories;
 
-    private final Matrix m_beta;
+    private final RealMatrix m_beta;
 
     private final double m_loglike;
-    private final Matrix m_covMat;
+    private final RealMatrix m_covMat;
 
     private final int m_iter;
 
@@ -138,8 +140,8 @@ final class LogisticRegressionContent {
         final DataCell targetReferenceCategory,
         final boolean sortTargetCategories,
         final boolean sortFactorsCategories,
-        final Matrix beta, final double loglike,
-        final Matrix covMat, final int iter) {
+        final RealMatrix beta, final double loglike,
+        final RealMatrix covMat, final int iter) {
         this(outSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
             sortFactorsCategories, beta, loglike, covMat, iter);
     }
@@ -166,8 +168,8 @@ final class LogisticRegressionContent {
             final DataCell targetReferenceCategory,
             final boolean sortTargetCategories,
             final boolean sortFactorsCategories,
-            final Matrix beta, final double loglike,
-            final Matrix covMat, final int iter) {
+            final RealMatrix beta, final double loglike,
+            final RealMatrix covMat, final int iter) {
         m_iter = iter;
         m_outSpec = outSpec;
         m_factorList = factorList;
@@ -207,22 +209,22 @@ final class LogisticRegressionContent {
     }
 
     /** Computes the standard error. */
-    private Matrix getStdErrorMatrix() {
+    private RealMatrix getStdErrorMatrix() {
         // the standard error estimate
-        Matrix stdErr = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix stdErr = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            stdErr.set(0, i, sqrt(abs(m_covMat.get(i, i))));
+            stdErr.setEntry(0, i, sqrt(abs(m_covMat.getEntry(i, i))));
         }
         return stdErr;
     }
 
     /** Computes the Wald's statistic. */
-    private Matrix getZScoreMatrix() {
-        Matrix stdErr = getStdErrorMatrix();
+    private RealMatrix getZScoreMatrix() {
+        RealMatrix stdErr = getStdErrorMatrix();
         // Wald's statistic
-        Matrix waldStat = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix waldStat = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            waldStat.set(0, i, m_beta.get(0, i) / stdErr.get(0, i));
+            waldStat.setEntry(0, i, m_beta.getEntry(0, i) / stdErr.getEntry(0, i));
         }
         return waldStat;
     }
@@ -232,13 +234,13 @@ final class LogisticRegressionContent {
      * by 2*Phi(-|Z|), where Phi is the standard normal cumulative
      * distribution function.
      */
-    private Matrix getPValueMatrix() {
-        Matrix zScore = getZScoreMatrix();
+    private RealMatrix getPValueMatrix() {
+        RealMatrix zScore = getZScoreMatrix();
         // p-value
-        Matrix pvalue = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix pvalue = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            double absZ = Math.abs(zScore.get(0, i));
-            pvalue.set(0, i, 2 * Gaussian.Phi(-absZ));
+            double absZ = Math.abs(zScore.getEntry(0, i));
+            pvalue.setEntry(0, i, 2 * Gaussian.Phi(-absZ));
         }
         return pvalue;
     }
@@ -325,7 +327,7 @@ final class LogisticRegressionContent {
      * @return the parameters mapped to the standard error
      */
     public Map<String, Double> getStandardErrors(final DataCell logit) {
-        Matrix stdErr = getStdErrorMatrix();
+        RealMatrix stdErr = getStdErrorMatrix();
         return getValues(logit, stdErr);
     }
 
@@ -336,7 +338,7 @@ final class LogisticRegressionContent {
      * @return the parameters mapped to the z-score
      */
     public Map<String, Double> getZScores(final DataCell logit) {
-        Matrix zScore = getZScoreMatrix();
+        RealMatrix zScore = getZScoreMatrix();
         return getValues(logit, zScore);
     }
 
@@ -347,12 +349,12 @@ final class LogisticRegressionContent {
      * @return the parameters mapped to the p-value
      */
     public Map<String, Double> getPValues(final DataCell logit) {
-        Matrix pValue = getPValueMatrix();
+        RealMatrix pValue = getPValueMatrix();
         return getValues(logit, pValue);
     }
 
     private Map<String, Double> getValues(final DataCell logit,
-            final Matrix matrix) {
+            final RealMatrix matrix) {
         assert m_targetCategories.contains(logit);
 
         Map<String, Double> coefficients = new HashMap<String, Double>();
@@ -369,7 +371,7 @@ final class LogisticRegressionContent {
                     DataCell dvValue = designIter.next();
                     String variable = colName + "=" + dvValue;
                     int k = m_targetCategories.indexOf(logit);
-                    double coeff = matrix.get(0, p + (k * pCount));
+                    double coeff = matrix.getEntry(0, p + (k * pCount));
                     coefficients.put(variable, coeff);
                     p++;
                 }
@@ -379,12 +381,12 @@ final class LogisticRegressionContent {
                 if (m_vectorLengths.containsKey(colName)) {
                     int length = m_vectorLengths.get(colName).intValue();
                     for (int i = 0; i < length; ++i) {
-                        double coeff = matrix.get(0, p + i + (k * pCount));
+                        double coeff = matrix.getEntry(0, p + i + (k * pCount));
                         coefficients.put(VectorHandling.valueAt(variable, i), coeff);
                     }
                     p+= length;
                 } else {
-                double coeff = matrix.get(0, p + (k * pCount));
+                double coeff = matrix.getEntry(0, p + (k * pCount));
                 coefficients.put(variable, coeff);
                 p++;
                 }
@@ -410,7 +412,7 @@ final class LogisticRegressionContent {
      * @return the value of the intercept's standard error
      */
     public double getInterceptStdErr(final DataCell logit) {
-        Matrix stdErr = getStdErrorMatrix();
+        RealMatrix stdErr = getStdErrorMatrix();
         return getInterceptValue(logit, stdErr);
     }
 
@@ -421,7 +423,7 @@ final class LogisticRegressionContent {
      * @return the value of the intercept's z-score
      */
     public double getInterceptZScore(final DataCell logit) {
-        Matrix zScore = getZScoreMatrix();
+        RealMatrix zScore = getZScoreMatrix();
         return getInterceptValue(logit, zScore);
     }
 
@@ -437,13 +439,13 @@ final class LogisticRegressionContent {
     }
 
     private double getInterceptValue(final DataCell logit,
-            final Matrix matrix) {
+            final RealMatrix matrix) {
         assert m_targetCategories.contains(logit);
 
         int pCount = m_beta.getColumnDimension()
         / (m_targetCategories.size() - 1);
         int k = m_targetCategories.indexOf(logit);
-        return matrix.get(0, k * pCount);
+        return matrix.getEntry(0, k * pCount);
     }
 
     /**
@@ -525,7 +527,7 @@ final class LogisticRegressionContent {
         parameterList.add(new PMMLParameter("p" + p, "Intercept"));
         for (int k = 0; k < m_targetCategories.size() - 1; k++) {
             paramMatrix.add(new PMMLPCell("p" + p,
-                    m_beta.get(0, p + (k * pCount)), 1,
+                    m_beta.getEntry(0, p + (k * pCount)), 1,
                     m_targetCategories.get(k).toString()));
         }
         p++;
@@ -547,7 +549,7 @@ final class LogisticRegressionContent {
                             pName));
                     for (int k = 0; k < m_targetCategories.size() - 1; k++) {
                         paramMatrix.add(new PMMLPCell(pName,
-                                m_beta.get(0, p + (k * pCount)), 1,
+                                m_beta.getEntry(0, p + (k * pCount)), 1,
                                 m_targetCategories.get(k).toString()));
                     }
                     p++;
@@ -563,7 +565,7 @@ final class LogisticRegressionContent {
                         ppMatrix.add(new PMMLPPCell("1", predictorName, pName));
                         for (int k = 0; k < m_targetCategories.size() - 1; k++) {
                             paramMatrix.add(new PMMLPCell(pName,
-                                m_beta.get(0, p + (k * pCount)), 1,
+                                m_beta.getEntry(0, p + (k * pCount)), 1,
                                 m_targetCategories.get(k).toString()));
                         }
                         p++;
@@ -574,7 +576,7 @@ final class LogisticRegressionContent {
                     ppMatrix.add(new PMMLPPCell("1", colName, pName));
                     for (int k = 0; k < m_targetCategories.size() - 1; k++) {
                         paramMatrix.add(new PMMLPCell(pName,
-                                m_beta.get(0, p + (k * pCount)), 1,
+                                m_beta.getEntry(0, p + (k * pCount)), 1,
                                 m_targetCategories.get(k).toString()));
                     }
                     p++;
@@ -694,7 +696,7 @@ final class LogisticRegressionContent {
         parContent.addBoolean(CFG_SORT_FACTORS_CATEGORIES, m_sortFactorsCategories);
     }
 
-    private static double[] toArray(final Matrix matrix) {
+    private static double[] toArray(final RealMatrix matrix) {
         int m = matrix.getRowDimension();
         int n = matrix.getColumnDimension();
         int length = m * n;
@@ -702,24 +704,24 @@ final class LogisticRegressionContent {
         int c = 0;
         for (int i = 0; i < m; i++) {
             for (int k = 0; k < n; k++) {
-                array[c] = matrix.get(i, k);
+                array[c] = matrix.getEntry(i, k);
                 c++;
             }
         }
         return array;
     }
 
-    private static Matrix toMatrix(final double[] array,
+    private static RealMatrix toMatrix(final double[] array,
             final int colCount) {
         int length = array.length;
         int m = length / colCount;
         int n = colCount;
         assert length == m * n;
-        Matrix matrix = new Matrix(m, n);
+        RealMatrix matrix = MatrixUtils.createRealMatrix(m, n);
         int c = 0;
         for (int i = 0; i < m; i++) {
             for (int k = 0; k < n; k++) {
-                matrix.set(i, k, array[c]);
+                matrix.setEntry(i, k, array[c]);
                 c++;
             }
         }
