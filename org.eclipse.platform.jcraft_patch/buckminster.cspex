@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
+  <actions>
+    <!-- Disable generation of source feature -->
+    <public name="source.feature.jars" actor="null"/>
+    <!-- Disable generation of source bundles -->
+    <public name="source.bundle.jars" actor="null"/>
+  </actions>
+  <alterActions>
+    <remove name="source.feature.jars"/>
+    <remove name="source.bundle.jars"/>
+  </alterActions>
+</cspecExtension>
