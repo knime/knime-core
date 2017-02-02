@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Migration of regression package from Jama to apache.commons.math3" id="923795461">
+            <message_arguments>
+                <message_argument value="3.3.1"/>
+                <message_argument value="3.3.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.3.1"/>
+                <message_argument value="3.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/mine/regression/linear/view/LinRegLineNodeView.java" type="org.knime.base.node.mine.regression.linear.view.LinRegLineNodeView">
         <filter id="338722907">
             <message_arguments>
@@ -119,6 +133,54 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeView"/>
                 <message_argument value="HierarchicalClusterNodeView(NodeModel, DendrogramPlotter)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/RegressionContent.java" type="org.knime.base.node.mine.regression.RegressionContent">
+        <filter comment="Migration from Jama to apache.commons.math3" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionContent"/>
+                <message_argument value="getValues(Matrix)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Migration from Jama to apache.commons.math3" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionContent"/>
+                <message_argument value="toArray(Matrix)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Migration from Jama to apache.commons.math3" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionContent"/>
+                <message_argument value="toMatrix(double[], int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Migration from Jama to apache.commons.math3" id="388161617">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionContent"/>
+                <message_argument value="m_beta"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Migration from Jama to apache.commons.math3" id="388161617">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionContent"/>
+                <message_argument value="m_covMat"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/RegressionStatisticsLearner.java" type="org.knime.base.node.mine.regression.RegressionStatisticsLearner">
+        <filter comment="Migration from Jama to apache.commons.math3" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionStatisticsLearner"/>
+                <message_argument value="createCovarianceMatrix(RegressionResults)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/RegressionTrainingRow.java" type="org.knime.base.node.mine.regression.RegressionTrainingRow">
+        <filter comment="Migration from Jama to apache.commons.math3" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionTrainingRow"/>
+                <message_argument value="getParameter()"/>
             </message_arguments>
         </filter>
     </resource>
