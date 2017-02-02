@@ -315,7 +315,7 @@ final class Learner {
             exec.checkCanceled();
             exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
             x.setEntry(0, 0, 1);
-            x.setSubMatrix(row.getParameter().getArray(), 0, 1);
+            x.setSubMatrix(row.getParameter().getData(), 0, 1);
 
             for (int k = 0; k < tcC - 1; k++) {
                 RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
@@ -439,7 +439,7 @@ final class Learner {
             RegressionTrainingRow row = iter.next();
 
             x.setEntry(0, 0, 1);
-            x.setSubMatrix(row.getParameter().getArray(), 0, 1);
+            x.setSubMatrix(row.getParameter().getData(), 0, 1);
 
             double sumEBetaTx = 0;
             for (int i = 0; i < tcC - 1; i++) {
