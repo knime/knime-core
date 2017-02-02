@@ -47,6 +47,7 @@ package org.knime.core.node.property.hilite;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.RowKey;
@@ -94,20 +95,39 @@ public class HiLiteHandler {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(HiLiteHandler.class);
 
+    /** Unique ID for this {@link HiLiteHandler} */
+    private final UUID m_hiliteHandlerID;
+
     /** List of registered <code>HiLiteListener</code>s to fire event to. */
     private final CopyOnWriteArrayList<HiLiteListener> m_listenerList;
 
     /** Set of non-<code>null</code> hilit items. */
     private Set<RowKey> m_hiLitKeys;
 
+    /** Not-null if this {@link HiLiteHandler} is associated with a {@link HiLiteTranslator} */
+    private HiLiteTranslator m_hiliteTranslator;
+
+    /** Not-null if this {@link HiLiteHandler} is associated with a {@link HiLiteManager} */
+    private HiLiteManager m_hiliteManager;
+
     /**
      * Creates a new default hilite handler with an empty set of registered
      * listeners and an empty set of hilit items.
      */
     public HiLiteHandler() {
+        m_hiliteHandlerID = UUID.randomUUID();
         m_listenerList = new CopyOnWriteArrayList<HiLiteListener>();
         // initialize item list
         m_hiLitKeys = new LinkedHashSet<RowKey>();
+    }
+
+    /**
+     * Returns a unique ID for this hilite handler instance
+     * @return a unique hiliteHandler ID
+     * @since 3.4
+     */
+    public UUID getHiliteHandlerID() {
+        return m_hiliteHandlerID;
     }
 
     /**
@@ -137,6 +157,42 @@ public class HiLiteHandler {
      */
     public void removeAllHiLiteListeners() {
         m_listenerList.clear();
+    }
+
+    /**
+     * Returns a {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
+     * @return A {@link HiLiteTranslator}, or null
+     * @since 3.4
+     */
+    public HiLiteTranslator getHiliteTranslator() {
+        return m_hiliteTranslator;
+    }
+
+    /**
+     * Associates or removes a {@link HiLiteTranslator} with this {@link HiLiteHandler} instance.
+     * @param hiliteTranslator the {@link HiLiteTranslator} to set, null if the current {@link HiLiteTranslator} is to be removed
+     * @since 3.4
+     */
+    public void setHiliteTranslator(final HiLiteTranslator hiliteTranslator) {
+        m_hiliteTranslator = hiliteTranslator;
+    }
+
+    /**
+     * Returns a {@link HiLiteManager}, if this {@link HiLiteManager} instance is associated with it, null otherwise.
+     * @return A {@link HiLiteManager}, or null
+     * @since 3.4
+     */
+    public HiLiteManager getHiliteManager() {
+        return m_hiliteManager;
+    }
+
+    /**
+     * Associates or removes a {@link HiLiteManager} with this {@link HiLiteManager} instance.
+     * @param hiliteManager the {@link HiLiteManager} to set, null if the current {@link HiLiteManager} is to be removed
+     * @since 3.4
+     */
+    public void setHiliteManager(final HiLiteManager hiliteManager) {
+        m_hiliteManager = hiliteManager;
     }
 
     /**

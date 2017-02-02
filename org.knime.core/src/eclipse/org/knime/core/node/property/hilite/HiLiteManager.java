@@ -167,6 +167,7 @@ public final class HiLiteManager {
      */
     public HiLiteManager() {
         m_sourceHandler = new HiLiteHandler();
+        m_sourceHandler.setHiliteManager(this);
         m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
     }
 

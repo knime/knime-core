@@ -253,6 +253,7 @@ public final class HiLiteTranslator {
                     "Source HiLiteHandler must not be null.");
         }
         m_sourceHandler = handler;
+        m_sourceHandler.setHiliteTranslator(this);
         m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = mapper;
     }
