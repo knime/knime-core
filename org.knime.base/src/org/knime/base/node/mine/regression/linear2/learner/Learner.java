@@ -50,6 +50,9 @@ package org.knime.base.node.mine.regression.linear2.learner;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealMatrixChangingVisitor;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.apache.commons.math3.stat.regression.RegressionResults;
@@ -64,12 +67,11 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
-
 /**
  * A Linear Regression Learner.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 final class Learner extends RegressionStatisticsLearner {
     /**
@@ -116,10 +118,10 @@ final class Learner extends RegressionStatisticsLearner {
         try {
             RegressionResults result = regr.regress();
 
-            Matrix beta = new Matrix(result.getParameterEstimates(), 1);
+            RealMatrix beta = MatrixUtils.createRowRealMatrix(result.getParameterEstimates());
 
             // The covariance matrix
-            Matrix covMat = createCovarianceMatrix(result);
+            RealMatrix covMat = createCovarianceMatrix(result);
 
             LinearRegressionContent content =
                 new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
@@ -128,8 +130,8 @@ final class Learner extends RegressionStatisticsLearner {
             return content;
         } catch (ModelSpecificationException e) {
             int dim = (m_includeConstant ? 1 : 0) + trainingData.getRegressorCount() + (factorList.size() > 0 ? Math.max(1, data.getDataTableSpec().getColumnSpec(factorList.get(0)).getDomain().getValues().size() - 1): 0);
-            Matrix beta = new Matrix(1, dim);
-            Matrix covMat = new Matrix(dim, dim);
+            RealMatrix beta = MatrixUtils.createRealMatrix(1, dim);
+            RealMatrix covMat = MatrixUtils.createRealMatrix(dim, dim);
             //fillWithNaNs(beta);
             fillWithNaNs(covMat);
             return new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
@@ -140,12 +142,27 @@ final class Learner extends RegressionStatisticsLearner {
     /**
      * @param matrix
      */
-    private void fillWithNaNs(final Matrix matrix) {
-        for (int i = matrix.getRowDimension(); i-- > 0;) {
-            for (int j = matrix.getColumnDimension(); j-- > 0;) {
-                matrix.set(i, j, Double.NaN);
+    private void fillWithNaNs(final RealMatrix matrix) {
+        matrix.walkInOptimizedOrder(new RealMatrixChangingVisitor() {
+
+            @Override
+            public void start(final int rows, final int columns, final int startRow, final int endRow, final int startColumn, final int endColumn) {
+                // do nothing
             }
-        }
+
+            @Override
+            public double visit(final int row, final int column, final double value) {
+                // set all entries to NaN
+                return Double.NaN;
+            }
+
+            @Override
+            public double end() {
+                // do nothing
+                return 0;
+            }
+
+        });
     }
 
     /**
@@ -159,7 +176,7 @@ final class Learner extends RegressionStatisticsLearner {
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {
-                double[] parameter = row.getParameter().getArray()[0];
+                double[] parameter = row.getParameter().getRow(0);
                 for (int i = 0; i < trainingData.getRegressorCount(); i++) {
                     stats[i].addValue(parameter[i]);
                 }
