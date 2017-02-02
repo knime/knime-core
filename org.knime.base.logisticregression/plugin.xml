@@ -3,24 +3,16 @@
 <plugin>
    <extension
          point="org.knime.workbench.repository.nodes">
+      <node
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerNodeFactory4">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
             >
       </node>-->
-   </extension>
-   <extension
-         point="org.knime.workbench.repository.categories">
-   </extension>
-   <extension
-         point="org.knime.core.NodeFactoryClassMapper">
-   </extension>
-   <extension
-         point="org.knime.core.PortType">
-   </extension>
-   <extension
-         point="org.knime.distmatrix.distanceMeasures">
    </extension>
 
 </plugin>
