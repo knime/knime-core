@@ -51,6 +51,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.MillerUpdatingRegression;
 import org.apache.commons.math3.stat.regression.RegressionResults;
@@ -64,7 +66,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
 
 /**
  * Base class for the linear and polynomial regression statistics learner methods (@link
@@ -73,6 +74,7 @@ import Jama.Matrix;
  * versions.)
  *
  * @author Gabor Bakos
+ * @author Adrian Nembach, KNIME.com
  * @since 2.10
  */
 public abstract class RegressionStatisticsLearner {
@@ -148,14 +150,15 @@ public abstract class RegressionStatisticsLearner {
      *
      * @param result A {@link RegressionResults} object.
      * @return The covariance {@link Matrix}.
+     * @since 3.3
      */
-    protected Matrix createCovarianceMatrix(final RegressionResults result) {
+    protected RealMatrix createCovarianceMatrix(final RegressionResults result) {
         // The covariance matrix
         int dim = result.getNumberOfParameters();
-        Matrix covMat = new Matrix(dim, dim);
+        RealMatrix covMat = MatrixUtils.createRealMatrix(dim, dim);
         for (int i = 0; i < dim; i++) {
             for (int k = 0; k < dim; k++) {
-                covMat.set(i, k, result.getCovarianceOfParameters(i, k));
+                covMat.setEntry(i, k, result.getCovarianceOfParameters(i, k));
             }
         }
         return covMat;

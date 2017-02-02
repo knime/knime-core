@@ -59,6 +59,8 @@ import java.util.Map;
 
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -83,13 +85,12 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.util.Pair;
 
-import Jama.Matrix;
-
 /**
  * Base class for the learned statistics of the (linear or polynomial) regression models. <br>
  *
  * @author Gabor Bakos
- * @since 2.10
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.3
  */
 public abstract class RegressionContent {
 
@@ -109,10 +110,10 @@ public abstract class RegressionContent {
      * The matrix containing the coefficients. The rows are the different degrees, while the columns correspond to the
      * selected columns.
      * */
-    protected Matrix m_beta;
+    protected RealMatrix m_beta;
 
     /** The covariance matrix. The rows are the different degrees, while the columns correspond to the selected columns. */
-    protected Matrix m_covMat;
+    protected RealMatrix m_covMat;
 
     /**
      * the <a href="http://www.xycoon.com/coefficient1.htm"> coefficient of multiple determination</a>, usually denoted
@@ -145,22 +146,22 @@ public abstract class RegressionContent {
     protected String m_warningMessage;
 
     /** Computes the standard error. */
-    private Matrix getStdErrorMatrix() {
+    private RealMatrix getStdErrorMatrix() {
         // the standard error estimate
-        Matrix stdErr = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix stdErr = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            stdErr.set(0, i, sqrt(abs(m_covMat.get(i, i))));
+            stdErr.setEntry(0, i, sqrt(abs(m_covMat.getEntry(i, i))));
         }
         return stdErr;
     }
 
     /** Computes the t-value statistic. */
-    private Matrix getTValueMatrix() {
-        Matrix stdErr = getStdErrorMatrix();
+    private RealMatrix getTValueMatrix() {
+        RealMatrix stdErr = getStdErrorMatrix();
         // Wald's statistic
-        Matrix tValueMatrix = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix tValueMatrix = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            tValueMatrix.set(0, i, m_beta.get(0, i) / stdErr.get(0, i));
+            tValueMatrix.setEntry(0, i, m_beta.getEntry(0, i) / stdErr.getEntry(0, i));
         }
         return tValueMatrix;
     }
@@ -168,19 +169,19 @@ public abstract class RegressionContent {
     /**
      * Computes the two-tailed p-values of the t-test.
      */
-    private Matrix getPValueMatrix() {
-        Matrix tValues = getTValueMatrix();
+    private RealMatrix getPValueMatrix() {
+        RealMatrix tValues = getTValueMatrix();
         // p-value
-        Matrix pValueMatrix = new Matrix(1, m_covMat.getRowDimension());
+        RealMatrix pValueMatrix = MatrixUtils.createRealMatrix(1, m_covMat.getRowDimension());
         try {
             for (int i = 0; i < m_covMat.getRowDimension(); i++) {
                 TDistribution distribution = new TDistribution(getN() - m_covMat.getRowDimension());
-                double t = Math.abs(tValues.get(0, i));
-                pValueMatrix.set(0, i, 2 * (1 - distribution.cumulativeProbability(t)));
+                double t = Math.abs(tValues.getEntry(0, i));
+                pValueMatrix.setEntry(0, i, 2 * (1 - distribution.cumulativeProbability(t)));
             }
         } catch (NotStrictlyPositiveException e) {
             for (int i = m_covMat.getRowDimension(); i-- > 0;) {
-                pValueMatrix.set(0, i, Double.NaN);
+                pValueMatrix.setEntry(0, i, Double.NaN);
             }
         }
         return pValueMatrix;
@@ -250,7 +251,7 @@ public abstract class RegressionContent {
      * @return the parameters mapped to the standard error
      */
     public Map<Pair<String, Integer>, Double> getStandardErrors() {
-        Matrix stdErr = getStdErrorMatrix();
+        RealMatrix stdErr = getStdErrorMatrix();
         return getValues(stdErr);
     }
 
@@ -260,7 +261,7 @@ public abstract class RegressionContent {
      * @return the parameters mapped to the t-value
      */
     public Map<Pair<String, Integer>, Double> getTValues() {
-        Matrix matrix = getTValueMatrix();
+        RealMatrix matrix = getTValueMatrix();
         return getValues(matrix);
     }
 
@@ -270,7 +271,7 @@ public abstract class RegressionContent {
      * @return the parameters mapped to the p-value
      */
     public Map<Pair<String, Integer>, Double> getPValues() {
-        Matrix matrix = getPValueMatrix();
+        RealMatrix matrix = getPValueMatrix();
         return getValues(matrix);
     }
 
@@ -279,8 +280,9 @@ public abstract class RegressionContent {
      *
      * @param matrix the matrix with the raw data
      * @return the variables and the exponents mapped to values of the given matrix
+     * @since 3.3
      */
-    protected Map<Pair<String, Integer>, Double> getValues(final Matrix matrix) {
+    protected Map<Pair<String, Integer>, Double> getValues(final RealMatrix matrix) {
         Map<Pair<String, Integer>, Double> coefficients = new HashMap<Pair<String, Integer>, Double>();
         int p = m_includeConstant ? 1 : 0;
         for (String colName : m_outSpec.getLearningFields()) {
@@ -294,13 +296,13 @@ public abstract class RegressionContent {
                 while (designIter.hasNext()) {
                     DataCell dvValue = designIter.next();
                     String variable = colName + "=" + dvValue;
-                    double coeff = matrix.get(0, p);
+                    double coeff = matrix.getEntry(0, p);
                     coefficients.put(Pair.create(variable, 1), coeff);
                     p++;
                 }
             } else {
                 String variable = colName;
-                double coeff = matrix.get(0, p);
+                double coeff = matrix.getEntry(0, p);
                 coefficients.put(Pair.create(variable, 1), coeff);
                 p++;
             }
@@ -314,7 +316,7 @@ public abstract class RegressionContent {
      * @return the value of the intercept
      */
     public double getIntercept() {
-        return m_beta.get(0, 0);
+        return m_beta.getEntry(0, 0);
     }
 
     /**
@@ -323,8 +325,8 @@ public abstract class RegressionContent {
      * @return the value of the intercept's standard error
      */
     public double getInterceptStdErr() {
-        Matrix stdErr = getStdErrorMatrix();
-        return stdErr.get(0, 0);
+        RealMatrix stdErr = getStdErrorMatrix();
+        return stdErr.getEntry(0, 0);
     }
 
     /**
@@ -333,8 +335,8 @@ public abstract class RegressionContent {
      * @return the value of the intercept's t-value
      */
     public double getInterceptTValue() {
-        Matrix matrix = getTValueMatrix();
-        return matrix.get(0, 0);
+        RealMatrix matrix = getTValueMatrix();
+        return matrix.getEntry(0, 0);
     }
 
     /**
@@ -343,8 +345,8 @@ public abstract class RegressionContent {
      * @return the value of the intercept's p-value
      */
     public double getInterceptPValue() {
-        Matrix matrix = getPValueMatrix();
-        return matrix.get(0, 0);
+        RealMatrix matrix = getPValueMatrix();
+        return matrix.getEntry(0, 0);
     }
 
     /**
@@ -449,7 +451,7 @@ public abstract class RegressionContent {
         if (m_includeConstant) {
             // Define the intercept
             parameterList.add(new PMMLParameter("p" + p, "Intercept"));
-            paramMatrix.add(new PMMLPCell("p" + p, m_beta.get(0, 0), 1));
+            paramMatrix.add(new PMMLPCell("p" + p, m_beta.getEntry(0, 0), 1));
             p++;
         }
         for (String colName : m_outSpec.getLearningFields()) {
@@ -466,7 +468,7 @@ public abstract class RegressionContent {
                     parameterList.add(new PMMLParameter(pName, "[" + colName + "=" + dvValue + "]"));
 
                     ppMatrix.add(new PMMLPPCell(dvValue.toString(), colName, pName));
-                    paramMatrix.add(new PMMLPCell(pName, m_beta.get(0, p), 1));
+                    paramMatrix.add(new PMMLPCell(pName, m_beta.getEntry(0, p), 1));
 
                     p++;
                 }
@@ -474,7 +476,7 @@ public abstract class RegressionContent {
                 String pName = "p" + p;
                 parameterList.add(new PMMLParameter("p" + p, colName));
                 ppMatrix.add(new PMMLPPCell("1", colName, pName));
-                paramMatrix.add(new PMMLPCell(pName, m_beta.get(0, p), 1));
+                paramMatrix.add(new PMMLPCell(pName, m_beta.getEntry(0, p), 1));
 
                 p++;
             }
@@ -545,12 +547,13 @@ public abstract class RegressionContent {
     }
 
     /**
-     * Converts a {@link Matrix} to an array.
+     * Converts a {@link RealMatrix} to an array.
      *
-     * @param matrix A {@link Matrix}.
+     * @param matrix A {@link RealMatrix}.
      * @return The array in order of {@code (0, 0)}, ... {@code (0, n)}, {@code (1, 0)}, ... {@code (m, n)}.
+     * @since 3.3
      */
-    protected static double[] toArray(final Matrix matrix) {
+    protected static double[] toArray(final RealMatrix matrix) {
         int m = matrix.getRowDimension();
         int n = matrix.getColumnDimension();
         int length = m * n;
@@ -558,7 +561,7 @@ public abstract class RegressionContent {
         int c = 0;
         for (int i = 0; i < m; i++) {
             for (int k = 0; k < n; k++) {
-                array[c] = matrix.get(i, k);
+                array[c] = matrix.getEntry(i, k);
                 c++;
             }
         }
@@ -586,23 +589,24 @@ public abstract class RegressionContent {
     }
 
     /**
-     * Converts an array to a {@link Matrix}.
+     * Converts an array to a {@link RealMatrix}.
      *
      * @param array A double array.
      * @param colCount The number to split the array second dimension ({@code n} in {@code m*n}).
-     * @return The {@link Matrix} in the order of ({@code 0}, ... {@code length / colCount - 1};
+     * @return The {@link RealMatrix} in the order of ({@code 0}, ... {@code length / colCount - 1};
      *         {@code length / colCount}, ... {@code length - 1}.
+     * @since 3.3
      */
-    protected static Matrix toMatrix(final double[] array, final int colCount) {
+    protected static RealMatrix toMatrix(final double[] array, final int colCount) {
         int length = array.length;
         int m = length / colCount;
         int n = colCount;
         assert length == m * n;
-        Matrix matrix = new Matrix(m, n);
+        RealMatrix matrix = MatrixUtils.createRealMatrix(m, n);
         int c = 0;
         for (int i = 0; i < m; i++) {
             for (int k = 0; k < n; k++) {
-                matrix.set(i, k, array[c]);
+                matrix.setEntry(i, k, array[c]);
                 c++;
             }
         }
@@ -711,8 +715,8 @@ public abstract class RegressionContent {
 
         StringBuilder buf = new StringBuilder();
         for (int i = 0; i < m_beta.getColumnDimension(); i++) {
-            if (Double.isNaN(m_beta.get(0, i))) {
-                m_beta.set(0, i, 0);
+            if (Double.isNaN(m_beta.getEntry(0, i))) {
+                m_beta.setEntry(0, i, 0);
                 //There are "size" columns
                 int size = m_outSpec.getLearningFields().size();
                 //In this context "- 1" is caused by the additional constant in the beginning of m_beta.

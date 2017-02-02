@@ -50,6 +50,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
@@ -57,14 +59,13 @@ import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
-import Jama.Matrix;
-
 
 /**
  * A decorator for a data row.
  *
  * @author Heiko Hofer
- * @since 2.9
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.3
  */
 public class RegressionTrainingRow {
     /**
@@ -99,7 +100,7 @@ public class RegressionTrainingRow {
     /** The value of the target cell. */
     private double m_target;
     /** The independent variables. */
-    private Matrix m_parameter;
+    private RealMatrix m_parameter;
     private final MissingHandling m_missingHandling;
     private Map<? extends Integer, ? extends Integer> m_vectorLengths;
 
@@ -140,7 +141,7 @@ public class RegressionTrainingRow {
         final boolean failOnMissing) {
         //Do not copy as there might be many rows, hard to modify anyway
         m_vectorLengths = vectorLengths;
-        m_parameter = new Matrix(1, parameterCount);
+        m_parameter = MatrixUtils.createRealMatrix(1, parameterCount);
         m_missingHandling = new MissingHandling(failOnMissing);
         int c = 0;
         for (int i : learningCols) {
@@ -155,15 +156,15 @@ public class RegressionTrainingRow {
                     }
                     for (int k = 1; k < domainValues.get(i).size(); k++) {
                         if (k == index) {
-                            m_parameter.set(0, c, 1.0);
+                            m_parameter.setEntry(0, c, 1.0);
                         } else {
-                            m_parameter.set(0, c, 0.0);
+                            m_parameter.setEntry(0, c, 0.0);
                         }
                         c++;
                     }
                 } else {
                     for (int k = 1; k < domainValues.get(i).size(); k++) {
-                        m_parameter.set(0, c, Double.NaN);
+                        m_parameter.setEntry(0, c, Double.NaN);
                         c++;
                     }
                 }
@@ -172,19 +173,19 @@ public class RegressionTrainingRow {
                 if (m_vectorLengths.containsKey(i)) {
                     if (!m_missingHandling.isMissing(cell)) {
                         for (int k = 0; k < m_vectorLengths.get(i); ++k) {
-                            m_parameter.set(0, c++, getValue(cell, k));
+                            m_parameter.setEntry(0, c++, getValue(cell, k));
                         }
                     } else {
                         for (int k = m_vectorLengths.get(i); k-- > 0;) {
-                            m_parameter.set(0, c++, Double.NaN);
+                            m_parameter.setEntry(0, c++, Double.NaN);
                         }
                     }
                 } else {
                     if (!m_missingHandling.isMissing(cell)) {
                         DoubleValue value = (DoubleValue)cell;
-                        m_parameter.set(0, c, value.getDoubleValue());
+                        m_parameter.setEntry(0, c, value.getDoubleValue());
                     } else {
-                        m_parameter.set(0, c, Double.NaN);
+                        m_parameter.setEntry(0, c, Double.NaN);
                     }
                     c++;
                 }
@@ -273,11 +274,12 @@ public class RegressionTrainingRow {
     }
 
     /**
-     * Returns a {@link Matrix} with values of the parameters retrieved
+     * Returns a {@link RealMatrix} with values of the parameters retrieved
      * from the learning columns.
      * @return the parameters
+     * @since 3.3
      */
-    public Matrix getParameter() {
+    public RealMatrix getParameter() {
         return m_parameter;
     }
 }
