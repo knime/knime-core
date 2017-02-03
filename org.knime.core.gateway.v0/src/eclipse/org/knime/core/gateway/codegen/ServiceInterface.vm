@@ -44,8 +44,12 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.service;
+#set( $package = "${implPackagePrefix}.${namespace}" )
+package $package;
 
+#if ($package != 'org.knime.core.gateway.v0.workflow.service')
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
+#end
 #foreach( $import in $imports)
 import $import;
 #end

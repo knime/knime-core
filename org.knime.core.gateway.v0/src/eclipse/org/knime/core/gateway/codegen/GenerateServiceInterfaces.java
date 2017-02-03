@@ -56,7 +56,7 @@ public class GenerateServiceInterfaces {
 
     public static void main(final String[] args) {
         new ServiceGenerator("src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
-            "src/generated/org/knime/core/gateway/v0/workflow/service/", "##serviceName##").generate();
+            "org.knime.core.gateway.v0", "org.knime.core.gateway.v0", "##serviceName##").generate();
     }
 
 }

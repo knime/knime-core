@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package $package;
 
 import static org.junit.Assert.assertEquals;
 
@@ -56,8 +56,12 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
-import org.knime.core.gateway.v0.workflow.entity.*;
-import org.knime.core.gateway.v0.workflow.entity.builder.*;
+import $apiPackage;
+import $apiBuilderPackage;
+import $implPackage;
+#foreach( $import in $imports)
+import $import;
+#end
 
 /**
  *
@@ -78,75 +82,75 @@ public class ${name}Test {
         ${name}Builder builder = EntityBuilderManager.builder(${name}Builder.class);
 #foreach( $field in $fields )
 		#set($count = $foreach.count - 1)
-	#if($field.getType().isList())
+#if($field.getType().isList())
 		List<$field.getType().getTypeParameter(0).toString("","")> list$count = new ArrayList<>();
 		List<Object> subList$count = (List<Object>) valueList.get($count);
 		for(int i = 0; i < subList${count}.size(); i++) {
 			list${count}.add(${field.getType().getTypeParameter(0).toString("","Test")}.createEnt((List<Object>) subList${count}.get(i)));
 		}
 		builder.set${field.getName()}(list$count);
-	#elseif($field.getType().isMap())
+#elseif($field.getType().isMap())
 		Map<$field.getType().getTypeParameter(0).toString("",""), $field.getType().getTypeParameter(1).toString("","")> map$count = new HashMap<>();
 		Map<$field.getType().getTypeParameter(0).toString("",""), Object> subMap$count = (Map<$field.getType().getTypeParameter(0).toString("",""), Object>) valueList.get($count);
 		for($field.getType().getTypeParameter(0).toString("","") key : subMap${count}.keySet()) {
 			map${count}.put(key, ${field.getType().getTypeParameter(1).toString("","Test")}.createEnt((List<Object>) subMap${count}.get(key)));
 		}
 		builder.set${field.getName()}(map${count});
-	#elseif($field.getType().isPrimitive())
+#elseif($field.getType().isPrimitive())
 		builder.set${field.getName()}((${field.getType().toString("","")}) valueList.get($count));
-	#else
+#else
 		builder.set${field.getName()}(${field.getType().toString("","Test")}.createEnt((List<Object>) valueList.get($count)));
-	#end
+#end
 #end
         return builder.build();
     }
 
     static void testEnt(final ${name} ent, final List<Object> valueList) {
 #foreach( $field in $fields )
-	#set($count = $foreach.count - 1)
-	#if($field.getType().isList())
+#set($count = $foreach.count - 1)
+#if($field.getType().isList())
 		List<Object> subValueList$count = (List<Object>) valueList.get($count);
 		List<${field.getType().getTypeParameter(0).toString("", "")}> subList$count =  ent.get$field.getName()();
 		for(int i = 0; i < subList${count}.size(); i++) {
 			${field.getType().getTypeParameter(0).toString("", "Test")}.testEnt(subList${count}.get(i), (List<Object>) subValueList${count}.get(i));
 		}
-	#elseif($field.getType().isMap())
+#elseif($field.getType().isMap())
 		Map<${field.getType().getTypeParameter(0).toString("", "")}, List<Object>> subValueMap$count = (Map<${field.getType().getTypeParameter(0).toString("", "")}, List<Object>>) valueList.get($count);
 		Map<${field.getType().getTypeParameter(0).toString("", "")}, ${field.getType().getTypeParameter(1).toString("", "")}> subMap$count =  ent.get$field.getName()();
 		for(${field.getType().getTypeParameter(0).toString("", "")} key : subMap${count}.keySet()) {
 			${field.getType().getTypeParameter(1).toString("", "Test")}.testEnt(subMap${count}.get(key), (List<Object>) subValueMap${count}.get(key));
 		}
-	#elseif($field.getType().isPrimitive())
+#elseif($field.getType().isPrimitive())
 		assertEquals(ent.get$field.getName()(), ($field.getType().toString("","")) valueList.get($count));
-	#else
+#else
 		${field.getType().toString("", "Test")}.testEnt(ent.get$field.getName()(), (List<Object>) valueList.get($count));
-	#end
+#end
 #end
     }
 
     static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- #foreach( $field in $fields )
- 	#if($field.getType().isList())
+#foreach( $field in $fields )
+#if($field.getType().isList())
  		//TODO list of primitives?
  		List<List<Object>> subList${foreach.count} = new ArrayList<>();
  		for(int i = 0; i < 5; i++) {
  			subList${foreach.count}.add(${field.getType().getTypeParameter(0).toString("","Test")}.createValueList());	
  		}
  		valueList.add(subList${foreach.count});
- 	#elseif($field.getType().isMap())
+#elseif($field.getType().isMap())
  		//TODO map of primitives?
  		Map<${field.getType().getTypeParameter(0).toString("","")}, List<Object>> subMap${foreach.count} = new HashMap<>();
  		for(int i = 0; i < 5; i++) {
  			subMap${foreach.count}.put(${field.getType().getTypeParameter(0).createRandomPrimitive()}, ${field.getType().getTypeParameter(1).toString("","Test")}.createValueList());
  		}
  		valueList.add(subMap${foreach.count});
- 	#elseif($field.getType().isPrimitive())
+#elseif($field.getType().isPrimitive())
  		valueList.add($field.getType().createRandomPrimitive());	
- 	#else
+#else
  		valueList.add(${field.getType().toString("","Test")}.createValueList());
- 	#end
- #end
+#end
+#end
         return valueList;
     }
 

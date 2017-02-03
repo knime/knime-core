@@ -44,12 +44,14 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package ${package};
 
+#if (${package} != 'org.knime.core.gateway.v0.workflow.entity.builder')
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+#end
 #foreach( $import in $imports)
 import $import;
 #end
-import org.knime.core.gateway.v0.workflow.entity.${name};
 
 /**
  * Builder for {@link ${name}}.

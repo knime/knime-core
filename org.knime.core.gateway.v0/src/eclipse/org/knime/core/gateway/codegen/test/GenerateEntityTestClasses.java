@@ -48,8 +48,8 @@ package org.knime.core.gateway.codegen.test;
  *   Nov 30, 2016 (hornm): created
  */
 
-
 import org.knime.core.gateway.codegen.EntityGenerator;
+import org.knime.core.gateway.codegen.EntityGenerator.ImplementationType;
 
 /**
  *
@@ -62,8 +62,9 @@ public class GenerateEntityTestClasses {
     }
 
     static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/test/EntityTestClass.vm",
-            "src/test/org/knime/core/gateway/v0/workflow/entity/", "##entityName##Test").generate();
+        new EntityGenerator("src/test", "src/eclipse/org/knime/core/gateway/codegen/test/EntityTestClass.vm",
+            "##entityName##Test", "org.knime.core.gateway.v0", "org.knime.core.gateway.v0.test", "",
+            ImplementationType.Api, ImplementationType.Test).generate();
     }
 
 }

@@ -62,12 +62,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  *
  * @author Martin Horn, University of Konstanz
  */
-@JsonPropertyOrder({"name", "description", "package", "methods"})
+@JsonPropertyOrder({"name", "description", "namespace", "methods"})
 public class ServiceDef extends AbstractDef {
 
     private final String m_description;
 
-    private String m_pkg;
+    private String m_namespace;
 
     private String m_name;
 
@@ -78,28 +78,28 @@ public class ServiceDef extends AbstractDef {
      */
     public ServiceDef(
         @JsonProperty("description") final String description,
-        @JsonProperty("package") final String pkg,
+        @JsonProperty("namespace") final String namespace,
         @JsonProperty("name") final String name,
         @JsonProperty("methods") final ServiceMethod... methods) {
-        m_pkg = checkPackage(pkg);
+        m_namespace = checkNamespace(namespace);
         m_name = CheckUtils.checkArgumentNotNull(name);
         m_description = description;
         m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
     }
 
-    static String checkPackage(final String pkg) {
-        CheckUtils.checkArgumentNotNull(pkg);
-        CheckUtils.checkArgument(pkg.matches("[a-z0-9]+(?:\\.[a-z0-9]+)*"),
-            "Package '%s' invalid: must be like 'abc.def.geh'", pkg);
-        return pkg;
+    static String checkNamespace(final String namespace) {
+        CheckUtils.checkArgumentNotNull(namespace);
+        CheckUtils.checkArgument(namespace.matches("[a-z0-9]+(?:\\.[a-z0-9]+)*"),
+            "Package '%s' invalid: must be like 'abc.def.geh'", namespace);
+        return namespace;
     }
 
     /**
      * @return the pkg
      */
-    @JsonProperty("package")
-    public String getPackage() {
-        return m_pkg;
+    @JsonProperty("namespace")
+    public String getNamespace() {
+        return m_namespace;
     }
 
     @JsonProperty("name")
@@ -121,8 +121,9 @@ public class ServiceDef extends AbstractDef {
     }
 
     @JsonIgnore
-    public List<String> getImports() {
-        return m_methods.stream().flatMap(ServiceMethod::getImports).sorted().distinct().collect(Collectors.toList());
+    public List<String> getImports(final String apiPackagePrefix) {
+        return m_methods.stream().flatMap(
+            m -> m.getImports(apiPackagePrefix)).sorted().distinct().collect(Collectors.toList());
     }
 
 }

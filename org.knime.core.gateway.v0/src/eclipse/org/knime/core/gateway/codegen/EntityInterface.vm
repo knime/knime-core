@@ -44,8 +44,11 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package $package;
 
+#if ($package != 'org.knime.core.gateway.v0.workflow.entity')
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+#end
 #foreach( $import in $imports)
 import $import;
 #end

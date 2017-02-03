@@ -48,6 +48,8 @@
  */
 package org.knime.core.gateway.codegen;
 
+import org.knime.core.gateway.codegen.EntityGenerator.ImplementationType;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -55,8 +57,10 @@ package org.knime.core.gateway.codegen;
 public class GenerateEntityBuilderInterfaces {
 
     public static void main(final String[] args) {
-        new EntityGenerator("src/eclipse/org/knime/core/gateway/codegen/EntityBuilderInterface.vm",
-            "src/generated/org/knime/core/gateway/v0/workflow/entity/builder/", "##entityName##Builder").generate();
+        new EntityGenerator("src/generated",
+            "src/eclipse/org/knime/core/gateway/codegen/EntityBuilderInterface.vm", "##entityName##Builder",
+            "org.knime.core.gateway.v0", "org.knime.core.gateway.v0", "builder",
+            ImplementationType.Api, ImplementationType.Builder).generate();
     }
 
 }
