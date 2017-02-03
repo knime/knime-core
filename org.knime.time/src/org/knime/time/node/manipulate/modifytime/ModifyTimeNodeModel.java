@@ -74,14 +74,12 @@ import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
+import org.knime.time.util.SettingsModelDateTime;
 
 /**
  * The node model of the node which modifies time.
@@ -113,19 +111,11 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
-    private final SettingsModelInteger m_hour = createHourModel();
-
-    private final SettingsModelInteger m_minute = createMinuteModel();
-
-    private final SettingsModelInteger m_second = createSecondModel();
-
-    private final SettingsModelInteger m_nano = createNanoModel();
-
-    private final SettingsModelBoolean m_addZone = createZoneModelBool();
-
-    private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
-
     private final SettingsModelString m_modifyAction = createModifySelectModel();
+
+    private final SettingsModelDateTime m_time = createTimeModel();
+
+    private final SettingsModelDateTime m_timeZone = createTimeZoneModel();
 
     /**
      * @param typeColumnFilter column filter
@@ -152,49 +142,22 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         return suffixModel;
     }
 
-    /** @return the integer model, used in both dialog and model. */
-    static SettingsModelIntegerBounded createHourModel() {
-        return new SettingsModelIntegerBounded("hour_int", LocalTime.now().getHour(), 0, 23);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    static SettingsModelIntegerBounded createMinuteModel() {
-        return new SettingsModelIntegerBounded("minute_int", LocalTime.now().getMinute(), 0, 59);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    static SettingsModelIntegerBounded createSecondModel() {
-        return new SettingsModelIntegerBounded("second_int", LocalTime.now().getSecond(), 0, 59);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    static SettingsModelIntegerBounded createNanoModel() {
-        return new SettingsModelIntegerBounded("nano_int", 0, 0, 999_999_999);
-    }
-
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createZoneModelBool() {
-        return new SettingsModelBoolean("zone_bool", false);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTimeZoneSelectModel(final SettingsModelBoolean zoneModelBool) {
-        final SettingsModelString zoneSelectModel =
-            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
-        zoneSelectModel.setEnabled(false);
-        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
-        return zoneSelectModel;
-    }
-
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createModifySelectModel() {
         return new SettingsModelString("modify_select", MODIFY_OPTION_APPEND);
     }
 
-    /**
-     * @param inSpec table input spec
-     * @return the CR describing the output
-     */
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createTimeModel(){
+        return new SettingsModelDateTime("time", null, LocalTime.now(), null);
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createTimeZoneModel(){
+        return new SettingsModelDateTime("time_zone", null, null, ZoneId.systemDefault());
+    }
+
+    /** {@inheritDoc} */
     @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
@@ -210,15 +173,13 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
                 dataType = LocalDateTimeCellFactory.TYPE;
             } else {
-                if (m_addZone.getBooleanValue()) {
+                if (m_timeZone.useZone()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;
                 } else {
                     dataType = LocalDateTimeCellFactory.TYPE;
                 }
             }
         }
-
-        final ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
 
         int i = 0;
         for (final String includedCol : includeList) {
@@ -229,12 +190,12 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 final SingleCellFactory cellFac =
-                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
+                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], m_timeZone.getZone());
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], zone);
+                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], m_timeZone.getZone());
                 rearranger.append(cellFac);
             }
         }
@@ -243,9 +204,9 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
-            return new AddTimeCellFactory(dataColSpec, index, zone);
+            return new AppendTimeCellFactory(dataColSpec, index, zone);
         } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
-            return new SetTimeCellFactory(dataColSpec, index);
+            return new ChangeTimeCellFactory(dataColSpec, index);
         } else {
             return new RemoveTimeCellFactory(dataColSpec, index);
         }
@@ -259,11 +220,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
-        m_hour.saveSettingsTo(settings);
-        m_minute.saveSettingsTo(settings);
-        m_second.saveSettingsTo(settings);
-        m_nano.saveSettingsTo(settings);
-        m_addZone.saveSettingsTo(settings);
+        m_time.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
         m_modifyAction.saveSettingsTo(settings);
     }
@@ -275,11 +232,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
-        m_hour.validateSettings(settings);
-        m_minute.validateSettings(settings);
-        m_second.validateSettings(settings);
-        m_nano.validateSettings(settings);
-        m_addZone.validateSettings(settings);
+        m_time.validateSettings(settings);
         m_timeZone.validateSettings(settings);
         m_modifyAction.validateSettings(settings);
     }
@@ -291,11 +244,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
-        m_hour.loadSettingsFrom(settings);
-        m_minute.loadSettingsFrom(settings);
-        m_second.loadSettingsFrom(settings);
-        m_nano.loadSettingsFrom(settings);
-        m_addZone.loadSettingsFrom(settings);
+        m_time.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_modifyAction.loadSettingsFrom(settings);
         boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND);
@@ -303,12 +252,12 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         m_colSelect.loadConfigurationInModel(settings);
     }
 
-    private final class AddTimeCellFactory extends SingleCellFactory {
+    private final class AppendTimeCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
         private final ZoneId m_zone;
 
-        AddTimeCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
+        AppendTimeCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
             m_zone = zone;
@@ -324,9 +273,8 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
                 return cell;
             }
             final LocalDateCell localDateCell = (LocalDateCell)cell;
-            final LocalTime localTime = LocalTime.of(m_hour.getIntValue(), m_minute.getIntValue(),
-                m_second.getIntValue(), m_nano.getIntValue());
-            if (m_addZone.getBooleanValue()) {
+            final LocalTime localTime = m_time.getLocalTime();
+            if (m_timeZone.useZone()) {
                 return ZonedDateTimeCellFactory
                     .create(ZonedDateTime.of(LocalDateTime.of(localDateCell.getLocalDate(), localTime), m_zone));
             } else {
@@ -335,10 +283,10 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         }
     }
 
-    private final class SetTimeCellFactory extends SingleCellFactory {
+    private final class ChangeTimeCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
-        SetTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        ChangeTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
             m_colIndex = colIndex;
         }
@@ -352,8 +300,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final LocalTime localTime = LocalTime.of(m_hour.getIntValue(), m_minute.getIntValue(),
-                m_second.getIntValue(), m_nano.getIntValue());
+            final LocalTime localTime = m_time.getLocalTime();
             if (cell instanceof LocalDateTimeCell) {
                 return LocalDateTimeCellFactory
                     .create(LocalDateTime.of(((LocalDateTimeCell)cell).getLocalDateTime().toLocalDate(), localTime));
