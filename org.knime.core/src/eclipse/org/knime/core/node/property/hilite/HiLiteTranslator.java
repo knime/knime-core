@@ -253,7 +253,7 @@ public final class HiLiteTranslator {
                     "Source HiLiteHandler must not be null.");
         }
         m_sourceHandler = handler;
-        m_sourceHandler.setHiliteTranslator(this);
+        m_sourceHandler.addHiLiteTranslator(this);
         m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = mapper;
     }
@@ -287,6 +287,7 @@ public final class HiLiteTranslator {
                     m_sourceHandler.getHiLitKeys()));
             m_targetHandlers.remove(targetHandler);
             targetHandler.removeHiLiteListener(m_targetListener);
+            targetHandler.removeHiLiteTranslator(this);
             if (m_targetHandlers.isEmpty()) {
                 m_sourceHandler.removeHiLiteListener(m_sourceListener);
             }
@@ -307,6 +308,7 @@ public final class HiLiteTranslator {
             }
             m_targetHandlers.add(targetHandler);
             targetHandler.addHiLiteListener(m_targetListener);
+            targetHandler.addHiLiteTranslator(this);
             m_targetListener.hiLite(new KeyEvent(targetHandler,
                     targetHandler.getHiLitKeys()));
         }

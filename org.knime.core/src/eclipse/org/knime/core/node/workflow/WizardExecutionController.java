@@ -68,10 +68,14 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteManager;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
@@ -84,6 +88,7 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
+import org.knime.core.util.Pair;
 
 /**
  * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
@@ -410,10 +415,17 @@ public final class WizardExecutionController extends ExecutionController {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> executedWizardNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
         LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
+        Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
         for (Map.Entry<NodeID, WizardNode> entry : executedWizardNodeMap.entrySet()) {
             if (!subWFM.getNodeContainer(entry.getKey(), NativeNodeContainer.class, true).isInactive()) {
                 NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
                 resultMap.put(idSuffix, entry.getValue());
+                for (int i = 0; i < subWFM.getNodeContainer(entry.getKey()).getNrInPorts() - 1; i++) {
+                    HiLiteHandler hiLiteHandler = ((NodeModel)entry.getValue()).getInHiLiteHandler(i);
+                    if (hiLiteHandler != null) {
+                        initialHiliteHandlerSet.add(hiLiteHandler);
+                    }
+                }
             }
         }
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
@@ -425,7 +437,62 @@ public final class WizardExecutionController extends ExecutionController {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
             }
         }
-        return new WizardPageContent(pageID, resultMap, pageLayout);
+        Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
+        Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
+        Set<HiLiteManager> knownManagers = new HashSet<HiLiteManager>();
+        for (HiLiteHandler initialHandler : initialHiliteHandlerSet) {
+            getHiLiteTranslators(initialHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
+        }
+        List<HiLiteTranslator> translatorList = knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
+        List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
+        return new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+    }
+
+    private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+        if (handler == null || !knownHiLiteHandlers.add(handler)) {
+            return;
+        }
+        Pair<HiLiteTranslator,HiLiteTranslator> translators = handler.getHiLiteTranslators();
+        if (translators != null) {
+            HiLiteTranslator first = translators.getFirst();
+            if (first != null && knownTranslators.add(first)) {
+                followHiLiteTranslator(first, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+            HiLiteTranslator second = translators.getSecond();
+            if (second != null && knownTranslators.add(second)) {
+                followHiLiteTranslator(second, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+        }
+        Pair<HiLiteManager,HiLiteManager> managers = handler.getHiLiteManagers();
+        if (managers != null) {
+            HiLiteManager first = managers.getFirst();
+            if (first != null && knownManagers.add(first)) {
+                followHiLiteManager(first, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+            HiLiteManager second = managers.getSecond();
+            if (second != null && knownManagers.add(second)) {
+                followHiLiteManager(second, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+        }
+
+    }
+
+    private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+        getHiLiteTranslators(translator.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
+        if (translator.getToHiLiteHandlers() != null) {
+            for (HiLiteHandler toHiLiteHandler : translator.getToHiLiteHandlers()) {
+                getHiLiteTranslators(toHiLiteHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+        }
+    }
+
+    private void followHiLiteManager(final HiLiteManager manager, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+        getHiLiteTranslators(manager.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
+        if (manager.getToHiLiteHandlers() != null) {
+            for (HiLiteHandler toHiLiteHandler : manager.getToHiLiteHandlers()) {
+                getHiLiteTranslators(toHiLiteHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
+            }
+        }
     }
 
     /** ...
@@ -702,8 +769,11 @@ public final class WizardExecutionController extends ExecutionController {
     public static final class WizardPageContent {
 
         private final NodeIDSuffix m_pageNodeID;
+        @SuppressWarnings("rawtypes")
         private final Map<NodeIDSuffix, WizardNode> m_pageMap;
         private final String m_layoutInfo;
+        private final List<HiLiteTranslator> m_hiLiteTranslators;
+        private final List<HiLiteManager> m_hiliteManagers;
 
         /**
          * @param pageNodeID
@@ -712,10 +782,12 @@ public final class WizardExecutionController extends ExecutionController {
          */
         @SuppressWarnings("rawtypes")
         WizardPageContent(final NodeIDSuffix pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
-            final String layoutInfo) {
+            final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators, final List<HiLiteManager> hiLiteManagers) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
             m_layoutInfo = layoutInfo;
+            m_hiLiteTranslators = hiLiteTranslators;
+            m_hiliteManagers = hiLiteManagers;
         }
 
         /**
@@ -740,6 +812,22 @@ public final class WizardExecutionController extends ExecutionController {
          */
         public String getLayoutInfo() {
             return m_layoutInfo;
+        }
+
+        /**
+         * @return the hiLiteTranslators
+         * @since 3.4
+         */
+        public List<HiLiteTranslator> getHiLiteTranslators() {
+            return m_hiLiteTranslators;
+        }
+
+        /**
+         * @return the hiliteManagers
+         * @since 3.4
+         */
+        public List<HiLiteManager> getHiliteManagers() {
+            return m_hiliteManagers;
         }
 
     }

@@ -167,7 +167,7 @@ public final class HiLiteManager {
      */
     public HiLiteManager() {
         m_sourceHandler = new HiLiteHandler();
-        m_sourceHandler.setHiliteManager(this);
+        m_sourceHandler.addHiLiteManager(this);
         m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
     }
 
@@ -182,6 +182,7 @@ public final class HiLiteManager {
         if (targetHandler != null) {
             m_targetHandlers.remove(targetHandler);
             targetHandler.removeHiLiteListener(m_targetListener);
+            targetHandler.removeHiLiteManager(this);
             if (m_targetHandlers.isEmpty()) {
                 m_sourceHandler.removeHiLiteListener(m_sourceListener);
             }
@@ -202,6 +203,7 @@ public final class HiLiteManager {
             }
             m_targetHandlers.add(targetHandler);
             targetHandler.addHiLiteListener(m_targetListener);
+            targetHandler.addHiLiteManager(this);
         }
     }
 
@@ -222,6 +224,7 @@ public final class HiLiteManager {
     public void removeAllToHiliteHandlers() {
         for (HiLiteHandler hh : m_targetHandlers) {
             hh.removeHiLiteListener(m_targetListener);
+            hh.removeHiLiteManager(this);
         }
         m_targetHandlers.clear();
         m_sourceHandler.removeHiLiteListener(m_sourceListener);

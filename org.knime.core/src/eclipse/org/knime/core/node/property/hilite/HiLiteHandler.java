@@ -53,6 +53,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.util.Pair;
 
 /**
  * <code>HiLiteHandler</code> implementation which receives hilite change
@@ -104,11 +105,11 @@ public class HiLiteHandler {
     /** Set of non-<code>null</code> hilit items. */
     private Set<RowKey> m_hiLitKeys;
 
-    /** Not-null if this {@link HiLiteHandler} is associated with a {@link HiLiteTranslator} */
-    private HiLiteTranslator m_hiliteTranslator;
+    /** Not-null if this {@link HiLiteHandler} is associated with one or more {@link HiLiteTranslator}s */
+    private Pair<HiLiteTranslator, HiLiteTranslator> m_hiliteTranslators;
 
-    /** Not-null if this {@link HiLiteHandler} is associated with a {@link HiLiteManager} */
-    private HiLiteManager m_hiliteManager;
+    /** Not-null if this {@link HiLiteHandler} is associated with one or more {@link HiLiteManager}s */
+    private Pair<HiLiteManager, HiLiteManager> m_hiliteManagers;
 
     /**
      * Creates a new default hilite handler with an empty set of registered
@@ -160,39 +161,120 @@ public class HiLiteHandler {
     }
 
     /**
-     * Returns a {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
-     * @return A {@link HiLiteTranslator}, or null
+     * Returns a {@link Pair} of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise. One value of the {@link Pair} may also be null.
+     * @return One or two {@link HiLiteTranslator}s, or null
      * @since 3.4
      */
-    public HiLiteTranslator getHiliteTranslator() {
-        return m_hiliteTranslator;
+    public Pair<HiLiteTranslator, HiLiteTranslator> getHiLiteTranslators() {
+        if (m_hiliteTranslators != null && m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() == null) {
+            return null;
+        }
+        return m_hiliteTranslators;
     }
 
     /**
-     * Associates or removes a {@link HiLiteTranslator} with this {@link HiLiteHandler} instance.
-     * @param hiliteTranslator the {@link HiLiteTranslator} to set, null if the current {@link HiLiteTranslator} is to be removed
+     * Associates a {@link HiLiteTranslator} with this {@link HiLiteHandler} instance.
+     * @param hiliteTranslator the {@link HiLiteTranslator} to add
+     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteTranslator} with this {@link HiLiteHandler} instance
      * @since 3.4
      */
-    public void setHiliteTranslator(final HiLiteTranslator hiliteTranslator) {
-        m_hiliteTranslator = hiliteTranslator;
+    public void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
+        if (hiliteTranslator != null) {
+            if (m_hiliteTranslators == null || (m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() == null)) {
+                m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(hiliteTranslator, null);
+            } else {
+                if (!hiliteTranslator.equals(m_hiliteTranslators.getFirst()) && !hiliteTranslator.equals(m_hiliteTranslators.getSecond())) {
+                    if (m_hiliteTranslators.getFirst() != null && m_hiliteTranslators.getSecond() == null) {
+                        m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(m_hiliteTranslators.getFirst(), hiliteTranslator);
+                    } else if (m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() != null) {
+                        m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(hiliteTranslator, m_hiliteTranslators.getSecond());
+                    } else {
+                        // both translators are set and do not match the incoming one, this should never happen
+                        throw new IllegalArgumentException("There can only be a maximum of two HiLiteTranslators associated with a HiLiteHandler, but trying to associate a third.");
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * Returns a {@link HiLiteManager}, if this {@link HiLiteManager} instance is associated with it, null otherwise.
-     * @return A {@link HiLiteManager}, or null
+     * Removes an associated {@link HiLiteTranslator} from this {@link HiLiteHandler} instance
+     * @param hiliteTranslator the {@link HiLiteTranslator} to remove
+     * @return true, if the given {@link HiLiteTranslator} was associated with this {@link HiLiteHandler} instance and removed, false otherwise
      * @since 3.4
      */
-    public HiLiteManager getHiliteManager() {
-        return m_hiliteManager;
+    public boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
+        if (hiliteTranslator != null) {
+            if (m_hiliteTranslators != null) {
+                if (hiliteTranslator.equals(m_hiliteTranslators.getFirst())) {
+                    m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(null, m_hiliteTranslators.getSecond());
+                    return true;
+                } else if (hiliteTranslator.equals(m_hiliteTranslators.getSecond())) {
+                    m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(m_hiliteTranslators.getFirst(), null);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
-     * Associates or removes a {@link HiLiteManager} with this {@link HiLiteManager} instance.
-     * @param hiliteManager the {@link HiLiteManager} to set, null if the current {@link HiLiteManager} is to be removed
+     * Returns a {@link Pair} of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
+     * One value of the {@link Pair} may also be null.
+     * @return One or two {@link HiLiteManager}s, or null
      * @since 3.4
      */
-    public void setHiliteManager(final HiLiteManager hiliteManager) {
-        m_hiliteManager = hiliteManager;
+    public Pair<HiLiteManager, HiLiteManager> getHiLiteManagers() {
+        if (m_hiliteManagers != null && m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() == null) {
+            return null;
+        }
+        return m_hiliteManagers;
+    }
+
+    /**
+     * Associates a {@link HiLiteManager} with this {@link HiLiteHandler} instance.
+     * @param hiliteManager the {@link HiLiteManager} to add
+     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteManager} with this {@link HiLiteHandler} instance
+     * @since 3.4
+     */
+    public void addHiLiteManager(final HiLiteManager hiliteManager) {
+        if (hiliteManager != null) {
+            if (m_hiliteManagers == null || (m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() == null)) {
+                m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(hiliteManager, null);
+            } else {
+                if (!hiliteManager.equals(m_hiliteManagers.getFirst()) && !hiliteManager.equals(m_hiliteManagers.getSecond())) {
+                    if (m_hiliteManagers.getFirst() != null && m_hiliteManagers.getSecond() == null) {
+                        m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(m_hiliteManagers.getFirst(), hiliteManager);
+                    } else if (m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() != null) {
+                        m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(hiliteManager, m_hiliteManagers.getSecond());
+                    } else {
+                        // both managers are set and do not match the incoming one, this should never happen
+                        throw new IllegalArgumentException("There can only be a maximum of two HiLiteManagers associated with a HiLiteHandler, but trying to associate a third.");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes an associated {@link HiLiteManager} from this {@link HiLiteHandler} instance
+     * @param hiliteManager the {@link HiLiteManager} to remove
+     * @return true, if the given {@link HiLiteManager} was associated with this {@link HiLiteHandler} instance and removed, false otherwise
+     * @since 3.4
+     */
+    public boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
+        if (hiliteManager != null) {
+            if (m_hiliteManagers != null) {
+                if (hiliteManager.equals(m_hiliteManagers.getFirst())) {
+                    m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(null, m_hiliteManagers.getSecond());
+                    return true;
+                } else if (hiliteManager.equals(m_hiliteTranslators.getSecond())) {
+                    m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(m_hiliteManagers.getFirst(), null);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
