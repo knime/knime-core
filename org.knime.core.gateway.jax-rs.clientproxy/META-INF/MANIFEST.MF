@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Client Proxy JAX-RS Implementation
+Bundle-SymbolicName: org.knime.core.gateway.jax-rs.clientproxy;singleton:=true
+Bundle-Version: 3.3.0.qualifier
+Fragment-Host: org.knime.core.gateway.jax-rs;bundle-version="3.3.0.qualifier"
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.apache.cxf.cxf-rt-rs-client,
+ javax.ws.rs-api;bundle-version="2.0.1",
+ javax.ws.rs.javax.ws.rs-api;bundle-version="2.0.0",
+ org.knime.core.gateway.v0,
+ org.knime.core.gateway.jax-rs;bundle-version="3.3.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
