@@ -44,13 +44,11 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.jaxrs.workflow.entity;
+package $package;
 
 #foreach( $import in $imports)
 import $import;
 #end
-
-import org.knime.core.gateway.v0.workflow.entity.${name};
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

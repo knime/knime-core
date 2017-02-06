@@ -1,0 +1,473 @@
+2017-02-06 13:37:13,649 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:37:13,650 - Initializing Velocity, Calling init()...
+2017-02-06 13:37:13,650 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:37:13,650 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:37:13,650 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:37:13,651 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:37:13,651 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:37:13,651 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:37:13,661 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:13,662 - Do unicode file recognition:  false
+2017-02-06 13:37:13,662 - FileResourceLoader : adding path '.'
+2017-02-06 13:37:13,682 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:37:13,684 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:37:13,685 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:37:13,685 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:37:13,686 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:37:13,687 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:37:13,689 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:37:13,690 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:37:13,700 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:37:13,702 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:37:13,756 - Created '20' parsers.
+2017-02-06 13:37:13,770 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:37:13,770 - Velocimacro : Default library not found.
+2017-02-06 13:37:13,770 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:37:13,770 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:37:13,770 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:37:13,771 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:37:14,167 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:14,185 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,192 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,192 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,209 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:14,210 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,210 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,218 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:14,223 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,224 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,237 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:14,238 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,238 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,239 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:37:14,243 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:37:14,244 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 77, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:30,477 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:38:30,478 - Initializing Velocity, Calling init()...
+2017-02-06 13:38:30,480 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:38:30,480 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:38:30,480 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:38:30,480 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:38:30,480 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:38:30,480 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:38:30,486 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:30,490 - Do unicode file recognition:  false
+2017-02-06 13:38:30,491 - FileResourceLoader : adding path '.'
+2017-02-06 13:38:30,502 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:38:30,504 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:38:30,505 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:38:30,507 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:38:30,508 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:38:30,508 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:38:30,509 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:38:30,511 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:38:30,512 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:38:30,513 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:38:30,568 - Created '20' parsers.
+2017-02-06 13:38:30,577 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:38:30,578 - Velocimacro : Default library not found.
+2017-02-06 13:38:30,578 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:38:30,578 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:38:30,578 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:38:30,578 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:38:30,999 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:31,014 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,017 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,018 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,023 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:31,024 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,025 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,030 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:31,031 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,031 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,038 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:31,038 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,039 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,039 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:31,044 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:31,045 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:42,531 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:38:42,532 - Initializing Velocity, Calling init()...
+2017-02-06 13:38:42,532 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:38:42,532 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:38:42,532 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:38:42,532 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:38:42,532 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:38:42,532 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:38:42,540 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:42,543 - Do unicode file recognition:  false
+2017-02-06 13:38:42,543 - FileResourceLoader : adding path '.'
+2017-02-06 13:38:42,555 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:38:42,557 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:38:42,558 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:38:42,559 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:38:42,560 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:38:42,561 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:38:42,562 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:38:42,564 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:38:42,572 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:38:42,573 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:38:42,612 - Created '20' parsers.
+2017-02-06 13:38:42,625 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:38:42,625 - Velocimacro : Default library not found.
+2017-02-06 13:38:42,625 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:38:42,626 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:38:42,626 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:38:42,626 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:38:43,005 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:43,022 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,026 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,026 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,033 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:43,034 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,034 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,042 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:43,043 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,044 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,052 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:43,053 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,054 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,055 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:38:43,060 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:38:43,061 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:09,609 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:39:09,610 - Initializing Velocity, Calling init()...
+2017-02-06 13:39:09,610 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:39:09,610 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:39:09,610 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:39:09,610 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:39:09,610 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:39:09,610 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:39:09,615 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:09,616 - Do unicode file recognition:  false
+2017-02-06 13:39:09,616 - FileResourceLoader : adding path '.'
+2017-02-06 13:39:09,629 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:39:09,631 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:39:09,632 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:39:09,633 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:39:09,634 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:39:09,634 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:39:09,635 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:39:09,642 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:39:09,645 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:39:09,646 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:39:09,692 - Created '20' parsers.
+2017-02-06 13:39:09,719 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:39:09,720 - Velocimacro : Default library not found.
+2017-02-06 13:39:09,721 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:39:09,721 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:39:09,721 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:39:09,721 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:39:10,136 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:10,159 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,162 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,163 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,168 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:10,169 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,169 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,175 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:10,176 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,177 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,185 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:10,186 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,187 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,188 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:39:10,199 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:39:10,200 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:47,772 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:40:47,773 - Initializing Velocity, Calling init()...
+2017-02-06 13:40:47,773 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:40:47,773 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:40:47,773 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:40:47,773 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:40:47,773 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:40:47,774 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:40:47,780 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:47,782 - Do unicode file recognition:  false
+2017-02-06 13:40:47,782 - FileResourceLoader : adding path '.'
+2017-02-06 13:40:47,809 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:40:47,811 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:40:47,813 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:40:47,814 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:40:47,815 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:40:47,815 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:40:47,816 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:40:47,817 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:40:47,819 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:40:47,821 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:40:47,880 - Created '20' parsers.
+2017-02-06 13:40:47,890 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:40:47,890 - Velocimacro : Default library not found.
+2017-02-06 13:40:47,890 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:40:47,890 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:40:47,890 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:40:47,890 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:40:48,357 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:48,382 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,384 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,384 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,391 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:48,392 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,392 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,411 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:48,412 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,413 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,424 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:48,434 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,438 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,439 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:40:48,457 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:40:48,458 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:29,976 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:41:29,976 - Initializing Velocity, Calling init()...
+2017-02-06 13:41:29,976 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:41:29,976 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:41:29,977 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:41:29,977 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:41:29,977 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:41:29,977 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:41:29,984 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:29,985 - Do unicode file recognition:  false
+2017-02-06 13:41:29,985 - FileResourceLoader : adding path '.'
+2017-02-06 13:41:30,010 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:41:30,013 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:41:30,015 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:41:30,016 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:41:30,017 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:41:30,018 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:41:30,024 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:41:30,026 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:41:30,027 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:41:30,029 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:41:30,072 - Created '20' parsers.
+2017-02-06 13:41:30,087 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:41:30,087 - Velocimacro : Default library not found.
+2017-02-06 13:41:30,087 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:41:30,087 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:41:30,087 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:41:30,088 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:41:30,562 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:30,579 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,582 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,583 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,591 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:30,592 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,593 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,598 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:30,600 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,601 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,608 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:30,609 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,610 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,610 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:41:30,615 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:41:30,616 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,414 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:43:28,415 - Initializing Velocity, Calling init()...
+2017-02-06 13:43:28,415 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:43:28,415 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:43:28,415 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:43:28,415 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:43:28,415 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:43:28,416 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:43:28,432 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:28,434 - Do unicode file recognition:  false
+2017-02-06 13:43:28,434 - FileResourceLoader : adding path '.'
+2017-02-06 13:43:28,460 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:43:28,462 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:43:28,465 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:43:28,465 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:43:28,466 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:43:28,466 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:43:28,468 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:43:28,472 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:43:28,481 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:43:28,482 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:43:28,517 - Created '20' parsers.
+2017-02-06 13:43:28,540 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:43:28,540 - Velocimacro : Default library not found.
+2017-02-06 13:43:28,541 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:43:28,541 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:43:28,541 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:43:28,541 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:43:28,930 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:28,946 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,949 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,950 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,962 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:28,963 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,963 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,977 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:28,979 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,979 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,988 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:28,993 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,994 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,995 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:43:28,999 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:43:29,000 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,251 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:44:12,252 - Initializing Velocity, Calling init()...
+2017-02-06 13:44:12,252 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:44:12,252 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:44:12,252 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:44:12,252 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:44:12,252 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:44:12,252 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:44:12,260 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,261 - Do unicode file recognition:  false
+2017-02-06 13:44:12,261 - FileResourceLoader : adding path '.'
+2017-02-06 13:44:12,283 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:44:12,285 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:44:12,288 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:44:12,290 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:44:12,291 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:44:12,292 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:44:12,293 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:44:12,295 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:44:12,296 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:44:12,297 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:44:12,353 - Created '20' parsers.
+2017-02-06 13:44:12,362 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:44:12,362 - Velocimacro : Default library not found.
+2017-02-06 13:44:12,363 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:44:12,363 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:44:12,363 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:44:12,363 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:44:12,857 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,868 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,870 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,870 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,878 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,879 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,879 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,885 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,886 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,887 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,893 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,894 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,895 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,895 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:12,900 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:12,900 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:49,567 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:44:49,569 - Initializing Velocity, Calling init()...
+2017-02-06 13:44:49,569 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:44:49,569 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:44:49,569 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:44:49,572 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:44:49,572 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:44:49,573 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:44:49,580 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:49,582 - Do unicode file recognition:  false
+2017-02-06 13:44:49,582 - FileResourceLoader : adding path '.'
+2017-02-06 13:44:49,604 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:44:49,606 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:44:49,608 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:44:49,609 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:44:49,610 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:44:49,610 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:44:49,612 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:44:49,613 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:44:49,614 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:44:49,614 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:44:49,652 - Created '20' parsers.
+2017-02-06 13:44:49,664 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:44:49,664 - Velocimacro : Default library not found.
+2017-02-06 13:44:49,664 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:44:49,664 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:44:49,664 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:44:49,664 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:44:50,120 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:50,132 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,136 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,137 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,153 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:50,154 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,154 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,159 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:50,160 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,161 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,167 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:50,168 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,169 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,169 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:44:50,174 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:44:50,175 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 79, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,155 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:45:37,299 - Initializing Velocity, Calling init()...
+2017-02-06 13:45:37,299 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:45:37,299 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:45:37,300 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:45:37,300 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:45:37,300 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:45:37,300 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:45:37,306 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,307 - Do unicode file recognition:  false
+2017-02-06 13:45:37,308 - FileResourceLoader : adding path '.'
+2017-02-06 13:45:37,328 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:45:37,330 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:45:37,331 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:45:37,331 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:45:37,332 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:45:37,332 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:45:37,333 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:45:37,334 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:45:37,335 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:45:37,335 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:45:37,382 - Created '20' parsers.
+2017-02-06 13:45:37,393 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:45:37,393 - Velocimacro : Default library not found.
+2017-02-06 13:45:37,393 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:45:37,393 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:45:37,393 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:45:37,393 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:45:37,871 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,889 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,892 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,893 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,907 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,907 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,908 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,913 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,914 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,914 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,919 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,919 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,920 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,921 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:45:37,925 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:45:37,926 - Null reference [template 'src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm', line 81, column 16] : $method.getResult.getType().toString() cannot be resolved.
+2017-02-06 13:46:03,126 - Log4JLogChute initialized using file 'velocity.log'
+2017-02-06 13:46:03,127 - Initializing Velocity, Calling init()...
+2017-02-06 13:46:03,127 - Starting Apache Velocity v1.7 (compiled: 2010-11-19 12:14:37)
+2017-02-06 13:46:03,127 - Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+2017-02-06 13:46:03,127 - Trying to use logger class org.apache.velocity.runtime.log.AvalonLogChute
+2017-02-06 13:46:03,127 - Target log system for org.apache.velocity.runtime.log.AvalonLogChute is not available (java.lang.NoClassDefFoundError: org/apache/log/format/Formatter).  Falling back to next log system...
+2017-02-06 13:46:03,127 - Trying to use logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:46:03,127 - Using logger class org.apache.velocity.runtime.log.Log4JLogChute
+2017-02-06 13:46:03,135 - ResourceLoader instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:46:03,136 - Do unicode file recognition:  false
+2017-02-06 13:46:03,136 - FileResourceLoader : adding path '.'
+2017-02-06 13:46:03,157 - ResourceCache: initialized (class org.apache.velocity.runtime.resource.ResourceCacheImpl) with class java.util.Collections$SynchronizedMap cache map.
+2017-02-06 13:46:03,158 - Loaded System Directive: org.apache.velocity.runtime.directive.Stop
+2017-02-06 13:46:03,160 - Loaded System Directive: org.apache.velocity.runtime.directive.Define
+2017-02-06 13:46:03,161 - Loaded System Directive: org.apache.velocity.runtime.directive.Break
+2017-02-06 13:46:03,162 - Loaded System Directive: org.apache.velocity.runtime.directive.Evaluate
+2017-02-06 13:46:03,164 - Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+2017-02-06 13:46:03,166 - Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+2017-02-06 13:46:03,167 - Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+2017-02-06 13:46:03,169 - Loaded System Directive: org.apache.velocity.runtime.directive.Include
+2017-02-06 13:46:03,170 - Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+2017-02-06 13:46:03,210 - Created '20' parsers.
+2017-02-06 13:46:03,222 - Velocimacro : "velocimacro.library" is not set.  Trying default library: VM_global_library.vm
+2017-02-06 13:46:03,223 - Velocimacro : Default library not found.
+2017-02-06 13:46:03,223 - Velocimacro : allowInline = true : VMs can be defined inline in templates
+2017-02-06 13:46:03,223 - Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+2017-02-06 13:46:03,223 - Velocimacro : allowInlineLocal = false : VMs defined inline will be global in scope if allowed.
+2017-02-06 13:46:03,223 - Velocimacro : autoload off : VM system will not automatically reload global library macros
+2017-02-06 13:46:03,786 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:46:03,837 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:46:03,849 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:46:03,857 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+2017-02-06 13:46:03,871 - ResourceManager : found src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader

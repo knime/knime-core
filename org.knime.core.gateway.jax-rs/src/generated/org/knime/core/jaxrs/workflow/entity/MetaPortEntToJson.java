@@ -46,12 +46,10 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -64,7 +62,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class MetaPortEntToJson {
+public class MetaPortEntToJson implements MetaPortEnt{
 
 	private final MetaPortEnt m_e;
 	
@@ -73,7 +71,7 @@ public class MetaPortEntToJson {
 	}
 
 	@JsonProperty("PortType")
-    public PortTypeEntToJson getPortType() {
+    public PortTypeEnt getPortType() {
             return new PortTypeEntToJson(m_e.getPortType());
         }
     

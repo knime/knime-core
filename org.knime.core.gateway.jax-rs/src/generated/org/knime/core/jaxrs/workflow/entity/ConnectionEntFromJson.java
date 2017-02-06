@@ -46,10 +46,9 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
-
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

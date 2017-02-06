@@ -46,13 +46,11 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -65,7 +63,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ConnectionEntToJson {
+public class ConnectionEntToJson implements ConnectionEnt{
 
 	private final ConnectionEnt m_e;
 	
@@ -99,7 +97,7 @@ public class ConnectionEntToJson {
         }
     
 	@JsonProperty("BendPoints")
-    public List<XYEntToJson> getBendPoints() {
+    public List<XYEnt> getBendPoints() {
         	return m_e.getBendPoints().stream().map(l -> new XYEntToJson(l)).collect(Collectors.toList());
         }
     

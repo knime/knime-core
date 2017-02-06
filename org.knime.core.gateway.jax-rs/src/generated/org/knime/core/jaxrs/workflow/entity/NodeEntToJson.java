@@ -46,19 +46,17 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
-import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -71,7 +69,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeEntToJson {
+public class NodeEntToJson implements NodeEnt{
 
 	private final NodeEnt m_e;
 	
@@ -80,27 +78,27 @@ public class NodeEntToJson {
 	}
 
 	@JsonProperty("Parent")
-    public EntityIDToJson getParent() {
+    public EntityID getParent() {
             return new EntityIDToJson(m_e.getParent());
         }
     
 	@JsonProperty("JobManager")
-    public JobManagerEntToJson getJobManager() {
+    public JobManagerEnt getJobManager() {
             return new JobManagerEntToJson(m_e.getJobManager());
         }
     
 	@JsonProperty("NodeMessage")
-    public NodeMessageEntToJson getNodeMessage() {
+    public NodeMessageEnt getNodeMessage() {
             return new NodeMessageEntToJson(m_e.getNodeMessage());
         }
     
 	@JsonProperty("InPorts")
-    public List<NodeInPortEntToJson> getInPorts() {
+    public List<NodeInPortEnt> getInPorts() {
         	return m_e.getInPorts().stream().map(l -> new NodeInPortEntToJson(l)).collect(Collectors.toList());
         }
     
 	@JsonProperty("OutPorts")
-    public List<NodeOutPortEntToJson> getOutPorts() {
+    public List<NodeOutPortEnt> getOutPorts() {
         	return m_e.getOutPorts().stream().map(l -> new NodeOutPortEntToJson(l)).collect(Collectors.toList());
         }
     
@@ -125,7 +123,7 @@ public class NodeEntToJson {
         }
     
 	@JsonProperty("Bounds")
-    public BoundsEntToJson getBounds() {
+    public BoundsEnt getBounds() {
             return new BoundsEntToJson(m_e.getBounds());
         }
     
@@ -145,7 +143,7 @@ public class NodeEntToJson {
         }
     
 	@JsonProperty("NodeAnnotation")
-    public NodeAnnotationEntToJson getNodeAnnotation() {
+    public NodeAnnotationEnt getNodeAnnotation() {
             return new NodeAnnotationEntToJson(m_e.getNodeAnnotation());
         }
     

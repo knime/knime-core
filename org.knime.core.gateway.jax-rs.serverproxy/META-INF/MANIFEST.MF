@@ -3,46 +3,24 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Server Proxy JAX-RS Implementation
 Bundle-SymbolicName: org.knime.core.gateway.jax-rs.serverproxy;singleton:=true
 Bundle-Version: 3.3.0.qualifier
-Bundle-ClassPath: .,
- lib/javax.ws.rs-api-2.0.1.jar,
- lib/aopalliance-repackaged-2.5.0-b30.jar,
- lib/hk2-api-2.5.0-b30.jar,
- lib/hk2-locator-2.5.0-b30.jar,
- lib/hk2-utils-2.5.0-b30.jar,
- lib/javassist-3.20.0-GA.jar,
- lib/javax.annotation-api-1.2.jar,
- lib/javax.inject-2.5.0-b30.jar,
- lib/javax.servlet-api-3.0.1.jar,
- lib/jaxb-api-2.2.7.jar,
- lib/jersey-client.jar,
- lib/jersey-common.jar,
- lib/jersey-container-servlet-core.jar,
- lib/jersey-container-servlet.jar,
- lib/jersey-guava-2.25.jar,
- lib/jersey-media-jaxb.jar,
- lib/jersey-server.jar,
- lib/org.osgi.core-4.2.0.jar,
- lib/osgi-resource-locator-1.0.1.jar,
- lib/persistence-api-1.0.jar,
- lib/validation-api-1.1.0.Final.jar
+Bundle-ClassPath: .
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.core.gateway.v0;bundle-version="3.3.0",
  org.eclipse.osgi,
  org.knime.core.api;bundle-version="3.3.0",
- org.knime.core;bundle-version="3.3.0",
  org.knime.core.gateway.serverproxy;bundle-version="3.3.0",
  org.knime.core.gateway.jax-rs;bundle-version="3.3.0",
- org.eclipse.jetty.server,
- org.eclipse.jetty.servlet;bundle-version="9.3.9",
- org.apache.jasper.glassfish;bundle-version="2.2.2",
- org.eclipse.jetty.http;bundle-version="9.3.9",
- org.eclipse.jetty.io;bundle-version="9.3.9",
- javax.servlet;bundle-version="3.1.0",
- org.eclipse.jetty.util;bundle-version="9.3.9",
  com.fasterxml.jackson.core.jackson-annotations;bundle-version="2.7.1",
  com.fasterxml.jackson.core.jackson-core;bundle-version="2.7.1",
- com.fasterxml.jackson.core.jackson-databind;bundle-version="2.7.1"
+ com.fasterxml.jackson.core.jackson-databind;bundle-version="2.7.1",
+ org.apache.cxf.cxf-rt-frontend-jaxrs,
+ org.eclipse.jetty.server;bundle-version="9.3.9",
+ org.eclipse.jetty.servlet,
+ javax.servlet;bundle-version="3.1.0",
+ org.eclipse.jetty.util;bundle-version="9.3.9",
+ org.apache.cxf.cxf-rt-transports-http;bundle-version="3.0.7",
+ org.apache.cxf.cxf-core;bundle-version="3.0.7",
+ javax.ws.rs-api;bundle-version="2.0.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.knime.core.jaxrs,
- org.knime.core.jaxrs.codegen,
- org.knime.core.jaxrs.providers.json
+ org.knime.core.jaxrs.codegen

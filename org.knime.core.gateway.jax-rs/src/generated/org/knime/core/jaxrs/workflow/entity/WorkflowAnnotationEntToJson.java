@@ -47,11 +47,9 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -64,7 +62,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowAnnotationEntToJson {
+public class WorkflowAnnotationEntToJson implements WorkflowAnnotationEnt{
 
 	private final WorkflowAnnotationEnt m_e;
 	
@@ -78,7 +76,7 @@ public class WorkflowAnnotationEntToJson {
         }
     
 	@JsonProperty("Bounds")
-    public BoundsEntToJson getBounds() {
+    public BoundsEnt getBounds() {
             return new BoundsEntToJson(m_e.getBounds());
         }
     

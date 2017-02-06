@@ -46,7 +46,6 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
-
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

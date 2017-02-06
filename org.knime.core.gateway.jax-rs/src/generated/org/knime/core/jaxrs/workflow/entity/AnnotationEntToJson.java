@@ -46,11 +46,9 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -63,7 +61,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class AnnotationEntToJson {
+public class AnnotationEntToJson implements AnnotationEnt{
 
 	private final AnnotationEnt m_e;
 	

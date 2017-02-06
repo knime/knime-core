@@ -46,9 +46,8 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
-
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

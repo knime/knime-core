@@ -2,10 +2,10 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.knime.core.EarlyStartup">
-      <provider
-            class="org.knime.core.jaxrs.JettyRestServerEarlyStartup">
-      </provider>
+         point="org.knime.core.gateway.server.KnimeGatewayServer">
+      <KnimeGatewayServer
+            KnimeGatewayServer="org.knime.core.jaxrs.JettyRestServer">
+      </KnimeGatewayServer>
    </extension>
 
 </plugin>

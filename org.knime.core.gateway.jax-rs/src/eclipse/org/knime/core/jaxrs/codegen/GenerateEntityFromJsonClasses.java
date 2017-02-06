@@ -49,6 +49,7 @@
 package org.knime.core.jaxrs.codegen;
 
 import org.knime.core.gateway.codegen.EntityGenerator;
+import org.knime.core.gateway.codegen.types.EntitySpec;
 
 /**
  *
@@ -56,13 +57,16 @@ import org.knime.core.gateway.codegen.EntityGenerator;
  */
 public class GenerateEntityFromJsonClasses {
 
+    public static final EntitySpec FromJson =
+            new EntitySpec("fromjson", "##name##FromJson", "org.knime.core.jaxrs", "");
+
     public static void main(final String[] args) {
         generate();
     }
 
     static void generate() {
-        new EntityGenerator("src/eclipse/org/knime/core/jaxrs/codegen/EntityFromJsonClass.vm",
-            "src/generated/org/knime/core/jaxrs/workflow/entity/", "##entityName##FromJson").generate();
+        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/jaxrs/codegen/EntityFromJsonClass.vm",
+            FromJson, EntitySpec.Api).generate();
     }
 
 }

@@ -44,16 +44,13 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.jaxrs.workflow.entity;
+package $package;
 
 #foreach( $import in $imports)
 import $import;
 #end
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.knime.core.gateway.v0.workflow.entity.${name};
-import org.knime.core.gateway.v0.workflow.entity.builder.${name}Builder;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -66,7 +63,7 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ${name}ToJson {
+public class ${name}ToJson implements ${name}{
 
 	private final ${name} m_e;
 	
@@ -76,14 +73,14 @@ public class ${name}ToJson {
 
 #foreach( $field in $fields )
 	@JsonProperty("${field.getName()}")
-    public $field.getType().toString("","ToJson") get$field.getName()() {
+    public $field.getType().toString("","") get$field.getName()() {
     #if($field.getType().isPrimitive())
     	return m_e.get${field.getName()}();
     #elseif($field.getType().isList())
     	return m_e.get${field.getName()}().stream().map(l -> new ${field.getType().getTypeParameter(0).toString("","")}ToJson(l)).collect(Collectors.toList());
     #elseif($field.getType().isMap())
     	//TODO support non-primitive map-keys
-    	$field.getType().toString("","ToJson") res = new HashMap<>();
+    	$field.getType().toString("","") res = new HashMap<>();
         m_e.get$field.getName()().entrySet().stream().forEach(e -> res.put(e.getKey(), new $field.getType().getTypeParameter(1).toString("","")ToJson(e.getValue())));
         return res;
     #else
