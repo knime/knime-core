@@ -46,23 +46,33 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 /**
- *
+ * Builder for {@link NodeInPortEnt}.
  * @author Martin Horn, University of Konstanz
  */
-public interface RepoNodeTemplateEntBuilder extends GatewayEntityBuilder<RepoNodeTemplateEnt> {
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public interface NodeInPortEntBuilder extends GatewayEntityBuilder<NodeInPortEnt> {
 
+    /**
+     * @param portIndex The index starting at 0.
+     * @return <code>this</code>
+     */
+	NodeInPortEntBuilder setPortIndex(int portIndex);
 
-	RepoNodeTemplateEntBuilder setName(String Name);
+    /**
+     * @param portType The type of the port.
+     * @return <code>this</code>
+     */
+	NodeInPortEntBuilder setPortType(PortTypeEnt portType);
 
-	RepoNodeTemplateEntBuilder setType(String Type);
-
-	RepoNodeTemplateEntBuilder setID(String ID);
-
-	RepoNodeTemplateEntBuilder setIconURL(String IconURL);
-
-	RepoNodeTemplateEntBuilder setNodeTypeID(String NodeTypeID);
+    /**
+     * @param portName The name of the port.
+     * @return <code>this</code>
+     */
+	NodeInPortEntBuilder setPortName(String portName);
 
 }

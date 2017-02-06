@@ -48,18 +48,43 @@
  */
 package org.knime.core.gateway.services;
 
+import org.knime.core.gateway.server.KnimeGatewayServer;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
 /**
- * TODO: e.g. exposed as an extension point or maybe using guice??
+ * Interface to be implemented by plugins that make use of the service factory extension point.
+ * Delivers concrete implementations for given service interfaces (see also {@link ServiceManager}).
  *
  * @author Martin Horn, University of Konstanz
  */
 public interface ServiceFactory {
 
     static final String EXT_POINT_ID = "org.knime.core.gateway.services.ServiceFactory";
+
     static final String EXT_POINT_ATTR = "ServiceFactory";
 
+    /**
+     * Normal priority, <code>0</code>.
+     */
+    public static final int NORMAL_PRIORITY = 0;
+
+    /**
+     * @return the priority with what that service will be used in case of multiple registered services in the
+     *         {@link ServiceManager}
+     */
+    default int getPriority() {
+        return NORMAL_PRIORITY;
+    }
+
+    /**
+     * Creates an instance for the demanded server interface. The returned implementation very likely represents a
+     * client that communicates with the respective server (see {@link KnimeGatewayServer}).
+     *
+     * TODO: possibly more parameters are required in order to instantiate a new service (e.g. port number)
+     *
+     * @param serviceInterface
+     * @return
+     */
     <S extends GatewayService> S createService(Class<S> serviceInterface);
 
 }

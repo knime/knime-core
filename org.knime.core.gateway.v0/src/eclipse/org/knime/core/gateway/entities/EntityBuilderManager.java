@@ -48,19 +48,27 @@
  */
 package org.knime.core.gateway.entities;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowEnt.DefaultWorkflowEntBuilder;
 import org.knime.core.util.ExtPointUtils;
 
 /**
+ * Manages entity builders (i.e. {@link GatewayEntityBuilder}s) and gives access to they implementations (that are
+ * injected via the {@link EntityBuilderFactory} extension point).
  *
  * @author Martin Horn, University of Konstanz
  */
 public class EntityBuilderManager {
+
+    private static final Logger LOGGER = Logger.getLogger(EntityBuilderManager.class);
 
     private static EntityBuilderFactory BUILDER_FACTORY;
 
@@ -72,11 +80,18 @@ public class EntityBuilderManager {
         //utility class
     }
 
+    /**
+     * Delivers implementations for entity builder interfaces (see {@link GatewayEntityBuilder}). Implementations are
+     * injected via {@link EntityBuilderFactory} extension point.
+     *
+     * @param builderInterface the builder interface the implementation is requested for
+     * @return an implementation of the requested builder interface
+     */
     public static <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
         builder(final Class<B> builderInterface) {
-        B builder = (B) BUILDERS.get(builderInterface);
-        if(builder == null) {
-            if(BUILDER_FACTORY == null) {
+        B builder = (B)BUILDERS.get(builderInterface);
+        if (builder == null) {
+            if (BUILDER_FACTORY == null) {
                 BUILDER_FACTORY = createBuilderFactory();
             }
             builder = BUILDER_FACTORY.createEntityBuilder(builderInterface);
@@ -85,11 +100,31 @@ public class EntityBuilderManager {
         return builder;
     }
 
+    /**
+     * @param builderInterface
+     * @return the default implementation for the given builder interface (e.g. {@link DefaultWorkflowEntBuilder})
+     */
+    public static <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
+        defaultBuilder(final Class<B> builderInterface) {
+        try {
+            return (B)builderInterface.getMethod("defaultBuilder").invoke(null);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+                | SecurityException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private static EntityBuilderFactory createBuilderFactory() {
-        List<EntityBuilderFactory> instances =
-            ExtPointUtils.collectExecutableExtensions(EntityBuilderFactory.EXT_POINT_ID, EntityBuilderFactory.EXT_POINT_ATTR);
-        //TODO
-        assert instances.size() == 1;
+        List<EntityBuilderFactory> instances = ExtPointUtils
+            .collectExecutableExtensions(EntityBuilderFactory.EXT_POINT_ID, EntityBuilderFactory.EXT_POINT_ATTR);
+        if (instances.size() == 0) {
+            LOGGER.warn("No entity builder factory registered. Default factory used.");
+            return new DefaultEntityBuilderFactory();
+
+        } else if (instances.size() > 1) {
+            LOGGER.warn("Multiple entity builder factories registered. The one with the highest priority used.");
+            Collections.sort(instances, (o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()));
+        }
         return instances.get(0);
     }
 

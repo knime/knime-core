@@ -48,17 +48,14 @@
  */
 package org.knime.core.gateway.codegen.types;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -168,87 +165,18 @@ public class EntityDef extends AbstractDef {
     }
 
     @JsonIgnore
-    public List<String> getImportsForDefaultClasses() {
-        return getImportsPrivate(t -> getFullyQualifiedName(
-            DEFAULT_IMPL_PACKAGE_PREFIX, "", "Default##name##", t.getNamespace(), t.getSimpleName()));
+    public List<String> getImports(final EntitySpec entitySpec) {
+        return entitySpec.getImports(this);
     }
 
     @JsonIgnore
-    public List<String> getImportsForTestClasses(final String implPackagePrefix) {
-        return getImportsPrivate(t -> getFullyQualifiedName(
-            implPackagePrefix, "test", "##name##Test", t.getNamespace(), t.getSimpleName()));
+    public String getFullyQualifiedName(final String entitySpecId) {
+        return EntitySpec.fromId(entitySpecId).getFullyQualifiedName(getNamespace(), getName());
     }
 
     @JsonIgnore
-    public List<String> getImportsForAPIClasses(final String apiPackagePrefix) {
-        return getImportsPrivate(t -> getFullyQualifiedName(
-            apiPackagePrefix, "", "##name##", t.getNamespace(), t.getSimpleName()));
-    }
-
-    @JsonIgnore
-    public List<String> getImportsForBuilderClasses(final String implPackagePrefix) {
-        return getImportsPrivate(t -> getFullyQualifiedName(
-            implPackagePrefix, "builder", "##name##Builder", t.getNamespace(), t.getSimpleName()));
-    }
-
-    @JsonIgnore
-    private List<String> getImportsPrivate(final Function<Type, String> fullyQualifiedNameRetriever) {
-        ArrayList<String> result = new ArrayList<String>();
-        return m_fields.stream().map(EntityField::getType).flatMap(Type::getRequiredTypes)
-        .filter(Type::isEntityType)
-        .map(fullyQualifiedNameRetriever)
-        .distinct().sorted()
-        .collect(Collectors.toList());
-    }
-
-    @JsonIgnore
-    static String getFullyQualifiedName(final String packagePrefix, final String packageSuffix,
-        final String namePattern, final String namespace, final String typeName) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(packagePrefix);
-        if (namespace != null) {
-            builder.append('.').append(namespace);
-        }
-        if (StringUtils.isNotEmpty(packageSuffix)) {
-            builder.append('.').append(packageSuffix);
-        }
-        builder.append('.').append(namePattern.replace("##name##", typeName));
-        return builder.toString();
-    }
-
-    @JsonIgnore
-    public String getBuilderName() {
-        return m_name.concat("Builder");
-    }
-
-    @JsonIgnore
-    public String getTestName() {
-        return m_name.concat("Test");
-    }
-
-    @JsonIgnore
-    public String getDefaultFullyQualified() {
-        return getFullyQualifiedName(DEFAULT_IMPL_PACKAGE_PREFIX, "", "Default##name##", getNamespace(), getName());
-    }
-
-    @JsonIgnore
-    public String getTestFullyQualified(final String implPackagePrefix) {
-        return getFullyQualifiedName(implPackagePrefix, "test", "##name##Test", getNamespace(), getName());
-    }
-
-    @JsonIgnore
-    public String getBuilderNameFullyQualified(final String implPackagePrefix) {
-        return getFullyQualifiedName(implPackagePrefix, "builder", "##name##Builder", getNamespace(), getName());
-    }
-
-    @JsonIgnore
-    public String getAPINameFullyQualified(final String apiPackagePrefix) {
-        return getFullyQualifiedName(apiPackagePrefix, "", "##name##", getNamespace(), getName());
-    }
-
-    @JsonIgnore
-    public String getTestNameFullyQualified(final String implPackagePrefix) {
-        return getFullyQualifiedName(implPackagePrefix, "", "##name##Test", getNamespace(), getName());
+    public String getFullyQualifiedName(final EntitySpec entitySpec) {
+        return entitySpec.getFullyQualifiedName(getNamespace(), getName());
     }
 
     @Override

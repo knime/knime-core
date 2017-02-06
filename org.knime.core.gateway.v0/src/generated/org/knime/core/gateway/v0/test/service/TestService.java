@@ -44,30 +44,43 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.v0.test.service;
 
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import java.util.List;
-import java.util.Map;
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
 
 /**
- *
+ * A simple test service.
+ * 
  * @author Martin Horn, University of Konstanz
  */
-public interface TestEntBuilder extends GatewayEntityBuilder<TestEnt> {
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public interface TestService extends GatewayService {
 
-
-	TestEntBuilder setxy(XYEnt xy);
-
-	TestEntBuilder setxylist(List<XYEnt> xylist);
-
-	TestEntBuilder setother(String other);
-
-	TestEntBuilder setprimitivelist(List<String> primitivelist);
-
-	TestEntBuilder setxymap(Map<String, XYEnt> xymap);
-
-	TestEntBuilder setprimitivemap(Map<Integer, String> primitivemap);
-
+    /**
+     * Some example documentation.
+     * @param id Some example documentation.
+     * @return BERND
+     * 
+     */ 
+	TestEnt getTest(final TestEnt id);
+	
+    /**
+     * Some example documentation.
+     * @param list Some example documentation.
+     * @return BERND
+     * 
+     */ 
+	List<TestEnt> getTestList(final List<TestEnt> list);
+	
+    /**
+     * Some example documentation.
+     * @param s Some example documentation.
+     * @param stringlist Some example documentation.
+     * @return BERND
+     * 
+     */ 
+	double getPrimitives(final String s, final List<String> stringlist);
+	
 }

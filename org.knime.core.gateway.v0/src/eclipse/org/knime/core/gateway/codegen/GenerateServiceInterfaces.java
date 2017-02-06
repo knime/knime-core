@@ -48,6 +48,9 @@
  */
 package org.knime.core.gateway.codegen;
 
+import org.knime.core.gateway.codegen.types.EntitySpec;
+import org.knime.core.gateway.codegen.types.ServiceSpec;
+
 /**
  *
  * @author Martin Horn, University of Konstanz
@@ -55,8 +58,8 @@ package org.knime.core.gateway.codegen;
 public class GenerateServiceInterfaces {
 
     public static void main(final String[] args) {
-        new ServiceGenerator("src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
-            "org.knime.core.gateway.v0", "org.knime.core.gateway.v0", "##serviceName##").generate();
+        new ServiceGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
+            ServiceSpec.Api, new ServiceSpec[0], new EntitySpec[]{EntitySpec.Api}).generate();
     }
 
 }

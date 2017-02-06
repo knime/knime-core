@@ -44,7 +44,6 @@
  * ---------------------------------------------------------------------
  *
  */
-#set( $package = "${implPackagePrefix}.${namespace}" )
 package $package;
 
 #if ($package != 'org.knime.core.gateway.v0.workflow.service')

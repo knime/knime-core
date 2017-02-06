@@ -48,18 +48,25 @@
  */
 package org.knime.core.gateway.services;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.util.ExtPointUtils;
 
 /**
+ * Manages services (i.e. {@link GatewayService}s) and gives access to service interface implementations.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class ServiceManager {
+
+    private static final Logger LOGGER = Logger.getLogger(EntityBuilderManager.class);
 
     private static ServiceFactory SERVICE_FACTORY;
 
@@ -71,11 +78,18 @@ public class ServiceManager {
         //private 'utility' class
     }
 
+    /**
+     * Delivers implementations for service interfaces (see {@link GatewayService}. Implementations are injected via
+     * {@link ServiceFactory} extension point.
+     *
+     * @param serviceInterface the service interface the implementation is requested for
+     * @return an implementation of the requested service interface
+     */
     public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
         S service = (S)SERVICES.get(serviceInterface);
         if (service == null) {
-            if(SERVICE_FACTORY == null) {
-               SERVICE_FACTORY = createServiceFactory();
+            if (SERVICE_FACTORY == null) {
+                SERVICE_FACTORY = createServiceFactory();
             }
             service = SERVICE_FACTORY.createService(serviceInterface);
             SERVICES.put(serviceInterface, service);
@@ -83,11 +97,25 @@ public class ServiceManager {
         return service;
     }
 
+    /**
+     * @return a list of all available gateway services (as determined by the api definition files) - see also
+     *         {@link ServiceMap}
+     */
+    public static List<Class<? extends GatewayService>> getAllServices() {
+        return ServiceMap.getAllServices().stream().map(s -> ServiceMap.getServiceInterface(s))
+            .collect(Collectors.toList());
+    }
+
     private static ServiceFactory createServiceFactory() {
         List<ServiceFactory> instances =
             ExtPointUtils.collectExecutableExtensions(ServiceFactory.EXT_POINT_ID, ServiceFactory.EXT_POINT_ATTR);
-        //TODO
-        assert instances.size() == 1;
+
+        if(instances.size() == 0) {
+            throw new IllegalStateException("No service factory registered!");
+        } else if(instances.size() > 1) {
+            LOGGER.warn("Multiply service factories registered! The one with the highest priority is used.");
+            Collections.sort(instances, (o1,o2) -> Integer.compare(o2.getPriority(), o1.getPriority()));
+        }
         return instances.get(0);
     }
 }

@@ -121,9 +121,9 @@ public class ServiceDef extends AbstractDef {
     }
 
     @JsonIgnore
-    public List<String> getImports(final String apiPackagePrefix) {
+    public List<String> getImports(final EntitySpec entitySpec) {
         return m_methods.stream().flatMap(
-            m -> m.getImports(apiPackagePrefix)).sorted().distinct().collect(Collectors.toList());
+            m -> m.getImports(entitySpec)).sorted().distinct().collect(Collectors.toList());
     }
 
 }

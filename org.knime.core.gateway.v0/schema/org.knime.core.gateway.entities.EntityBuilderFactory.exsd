@@ -6,7 +6,7 @@
          <meta.schema plugin="org.knime.core.gateway.v0" id="org.knime.core.gateway.entities.EntityBuilderFactory" name="EntityBuilderFactory"/>
       </appinfo>
       <documentation>
-         [Enter description of this extension point.]
+         Extension point to plugin in entity builders.
       </documentation>
    </annotation>
 

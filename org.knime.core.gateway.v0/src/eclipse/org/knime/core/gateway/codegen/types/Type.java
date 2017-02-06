@@ -170,14 +170,6 @@ public class Type {
         return m_typeParameters.get(index);
     }
 
-    public boolean isList() {
-        return m_genericType == GenericType.LIST;
-    }
-
-    public boolean isMap() {
-        return m_genericType == GenericType.MAP;
-    }
-
     public boolean isVoid() {
         return m_simpleName.equals("void");
     }
@@ -190,8 +182,32 @@ public class Type {
         }
     }
 
-    public boolean isEntityType() {
+    public boolean isEntity() {
         return !isVoid() && !isPrimitive() && !isList() && !isMap();
+    }
+
+    public boolean isPrimitiveList() {
+        return m_genericType == GenericType.LIST && isPrimitive();
+    }
+
+    public boolean isPrimitiveMap() {
+        return m_genericType == GenericType.MAP && isPrimitive();
+    }
+
+    public boolean isEntityList() {
+        return  isList() && isEntity();
+    }
+
+    public boolean isEntityMap() {
+        return isMap() && isEntity();
+    }
+
+    public boolean isList() {
+        return m_genericType == GenericType.LIST;
+    }
+
+    public boolean isMap() {
+        return m_genericType == GenericType.MAP;
     }
 
     /**
@@ -220,6 +236,22 @@ public class Type {
             default:
         }
         m_typeParameters.stream().forEach(t -> result.addAll(t.getJavaImports()));
+        return result;
+    }
+
+    /**
+     * @param entitySpec the entity specification
+     * @return imports needed for that type (including the java types, e.g. List or Map, and it's generic parameters)
+     */
+    public Collection<String> getAllImports(final EntitySpec entitySpec) {
+        Collection<String> result = new LinkedHashSet<String>();
+        if(isEntity()) {
+            result.add(entitySpec.getFullyQualifiedName(m_namespace, m_simpleName));
+        }
+        result.addAll(getJavaImports());
+        for(Type t : m_typeParameters) {
+            result.addAll(t.getAllImports(entitySpec));
+        }
         return result;
     }
 

@@ -43,26 +43,22 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.codegen;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
-import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
+import org.knime.core.gateway.codegen.types.EntitySpec;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface RepoCategoryEntBuilder extends GatewayEntityBuilder<RepoCategoryEnt> {
+public class GenerateDefaultEntityClasses {
 
-
-	RepoCategoryEntBuilder setName(String Name);
-
-	RepoCategoryEntBuilder setIconURL(String IconURL);
-
-	RepoCategoryEntBuilder setCategories(List<RepoCategoryEnt> Categories);
-
-	RepoCategoryEntBuilder setNodes(List<RepoNodeTemplateEnt> Nodes);
+    public static void main(final String[] args) {
+        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/DefaultEntityClass.vm",
+            EntitySpec.Impl, EntitySpec.Api).generate();
+    }
 
 }

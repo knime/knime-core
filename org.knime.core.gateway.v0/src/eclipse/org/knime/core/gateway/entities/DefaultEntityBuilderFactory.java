@@ -43,53 +43,37 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jan 23, 2017 (hornm): created
  */
-package org.knime.core.thrift.workflow.entity;
+package org.knime.core.gateway.entities;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import org.junit.Test;
-import org.knime.core.thrift.workflow.entity.*;
-import org.knime.core.thrift.workflow.entity.T${name}.T${name}Builder;
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 /**
+ * Default implementation of the {@link EntityBuilderFactory}. It returns the default implementation of the respective
+ * entity builder interfaces.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class T${name}Test {
+public class DefaultEntityBuilderFactory implements EntityBuilderFactory {
 
-    private static Random RAND = new Random();
-
-    @Test
-    public void test() {
-        List<Object> valueList = createValueList();
-        T${name} ent = createEnt(valueList);
-        testEnt(ent, valueList);
-    }
-
-    static T${name} createEnt(final List<Object> valueList) {
-        return new T${name}Builder()
-#foreach( $field in $fields )
-		#set($count = $foreach.count - 1)
-		.set${field.getName()}((${field.getType().toString("","")}) valueList.get($count))
-#end
-        .build();
-    }
-
-    static void testEnt(final TXYEnt ent, final List<Object> valueList) {
-        assertEquals(ent.getX(), (int) valueList.get(0));
-        assertEquals(ent.getY(), (int) valueList.get(1));
-    }
-
-    private static List<Object> createValueList() {
-        List<Object> valueList = new ArrayList<Object>();
-        valueList.add(RAND.nextInt());
-        valueList.add(RAND.nextInt());
-        return valueList;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
+        createEntityBuilder(final Class<B> builderInterface) {
+        try {
+            String name = builderInterface.getSimpleName();
+            String clazz = "org.knime.core.gateway.v0.workflow.entity.Default" + name.substring(0, name.length() - 7)
+                + "$Default" + name;
+            return (B)Class.forName(clazz).newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
+            // TODO better exception handling
+            throw new RuntimeException(ex);
+        }
     }
 
 }

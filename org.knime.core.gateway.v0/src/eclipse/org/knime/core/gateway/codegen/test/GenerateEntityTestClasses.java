@@ -49,7 +49,7 @@ package org.knime.core.gateway.codegen.test;
  */
 
 import org.knime.core.gateway.codegen.EntityGenerator;
-import org.knime.core.gateway.codegen.EntityGenerator.ImplementationType;
+import org.knime.core.gateway.codegen.types.EntitySpec;
 
 /**
  *
@@ -63,8 +63,7 @@ public class GenerateEntityTestClasses {
 
     static void generate() {
         new EntityGenerator("src/test", "src/eclipse/org/knime/core/gateway/codegen/test/EntityTestClass.vm",
-            "##entityName##Test", "org.knime.core.gateway.v0", "org.knime.core.gateway.v0.test", "",
-            ImplementationType.Api, ImplementationType.Test).generate();
+            EntitySpec.Test, EntitySpec.Api, EntitySpec.Test, EntitySpec.Builder).generate();
     }
 
 }

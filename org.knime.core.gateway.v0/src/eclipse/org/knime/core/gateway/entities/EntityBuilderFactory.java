@@ -52,15 +52,36 @@ import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
 /**
- * TODO: e.g. to be exposed as an extension point or maybe using guice??
+ * Interface to be implemented by plugins that make use of the entity builder factory extension point.
+ * Delivers concrete implementations for given entity builder interfaces (see also {@link EntityBuilderManager}).
  *
  * @author Martin Horn, University of Konstanz
  */
 public interface EntityBuilderFactory {
 
     static final String EXT_POINT_ID = "org.knime.core.gateway.entities.EntityBuilderFactory";
+
     static final String EXT_POINT_ATTR = "EntityBuilderFactory";
 
+    /**
+     * Normal priority, <code>0</code>.
+     */
+    public static final int NORMAL_PRIORITY = 0;
+
+    /**
+     * @return the priority with what that entity builder will be used in case of multiple registered entity builders in
+     *         the {@link EntityBuilderManager}
+     */
+    default int getPriority() {
+        return NORMAL_PRIORITY;
+    }
+
+    /**
+     * Creates an instance for the demanded entity builder interface.
+
+     * @param builderInterface
+     * @return an instance of the requested builder interface
+     */
     <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B createEntityBuilder(Class<B> builderInterface);
 
 }

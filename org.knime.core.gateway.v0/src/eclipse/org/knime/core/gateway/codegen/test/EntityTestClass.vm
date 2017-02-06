@@ -56,9 +56,6 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
-import $apiPackage;
-import $apiBuilderPackage;
-import $implPackage;
 #foreach( $import in $imports)
 import $import;
 #end
@@ -78,7 +75,7 @@ public class ${name}Test {
         testEnt(ent, valueList);
     }
 
-    static ${name} createEnt(final List<Object> valueList) {
+    public static ${name} createEnt(final List<Object> valueList) {
         ${name}Builder builder = EntityBuilderManager.builder(${name}Builder.class);
 #foreach( $field in $fields )
 		#set($count = $foreach.count - 1)
@@ -105,7 +102,7 @@ public class ${name}Test {
         return builder.build();
     }
 
-    static void testEnt(final ${name} ent, final List<Object> valueList) {
+    public static void testEnt(final ${name} ent, final List<Object> valueList) {
 #foreach( $field in $fields )
 #set($count = $foreach.count - 1)
 #if($field.getType().isList())
@@ -128,7 +125,7 @@ public class ${name}Test {
 #end
     }
 
-    static List<Object> createValueList() {
+    public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
 #foreach( $field in $fields )
 #if($field.getType().isList())

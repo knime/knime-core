@@ -3,5 +3,12 @@
 <plugin>
    <extension-point id="org.knime.core.gateway.services.ServiceFactory" name="ServiceFactory" schema="schema/org.knime.core.gateway.services.ServiceFactory.exsd"/>
    <extension-point id="org.knime.core.gateway.entities.EntityBuilderFactory" name="EntityBuilderFactory" schema="schema/org.knime.core.gateway.entities.EntityBuilderFactory.exsd"/>
+   <extension-point id="org.knime.core.gateway.server.KnimeGatewayServer" name="KnimeGatewayServer" schema="schema/org.knime.core.gateway.server.KnimeGatewayServer.exsd"/>
+   <extension
+         point="org.knime.core.EarlyStartup">
+      <provider
+            class="org.knime.core.gateway.GatewayServerEarlyStartup">
+      </provider>
+   </extension>
 
 </plugin>

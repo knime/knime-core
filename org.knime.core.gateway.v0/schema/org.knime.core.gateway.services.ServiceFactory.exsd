@@ -6,7 +6,7 @@
          <meta.schema plugin="org.knime.core.gateway.v0" id="org.knime.core.gateway.services.ServiceFactory" name="ServiceFactory"/>
       </appinfo>
       <documentation>
-         TODO
+         Extension point to plugin in services, most likely java-clients that communicate with a particular gateway server.
       </documentation>
    </annotation>
 

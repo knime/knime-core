@@ -166,9 +166,9 @@ public class ServiceMethod {
     }
 
     @JsonIgnore
-    public Stream<String> getImports(final String apiPackagePrefix) {
-        return Stream.concat(getResult().getType().getImports(apiPackagePrefix),
-            m_parameters.stream().map(MethodParam::getType).flatMap(t -> t.getImports(apiPackagePrefix)));
+    public Stream<String> getImports(final EntitySpec entitySpec) {
+        return Stream.concat(getResult().getType().getAllImports(entitySpec).stream(),
+            m_parameters.stream().map(MethodParam::getType).flatMap(t -> t.getAllImports(entitySpec).stream()));
     }
 
 }
