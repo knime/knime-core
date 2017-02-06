@@ -55,11 +55,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.knime.core.gateway.v0.workflow.entity.RepoCategoryEnt;
-import org.knime.core.gateway.v0.workflow.entity.RepoNodeTemplateEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.RepoCategoryEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.RepoNodeTemplateEntBuilder;
-import org.knime.core.gateway.v0.workflow.service.RepositoryService;
+import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.repository.entity.builder.RepoCategoryEntBuilder;
+import org.knime.core.gateway.v0.repository.entity.builder.RepoNodeTemplateEntBuilder;
+import org.knime.core.gateway.v0.repository.service.RepositoryService;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.workbench.repository.RepositoryManager;

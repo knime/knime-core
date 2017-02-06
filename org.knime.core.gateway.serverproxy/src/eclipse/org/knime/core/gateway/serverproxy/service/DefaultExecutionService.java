@@ -67,7 +67,7 @@ public class DefaultExecutionService implements ExecutionService {
      * {@inheritDoc}
      */
     @Override
-    public boolean canExecuteUpToHere(final EntityID workflowID, final String nodeID) {
+    public boolean getCanExecuteUpToHere(final EntityID workflowID, final String nodeID) {
         try {
             return WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject()
                 .canExecuteNode(NodeID.fromString(nodeID));
@@ -81,7 +81,7 @@ public class DefaultExecutionService implements ExecutionService {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEnt executeUpToHere(final EntityID workflowID, final String nodeID) {
+    public WorkflowEnt setExecuteUpToHere(final EntityID workflowID, final String nodeID) {
         try {
             IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject();
             wfm.executeUpToHere(NodeID.fromString(nodeID));
@@ -92,5 +92,4 @@ public class DefaultExecutionService implements ExecutionService {
             throw new RuntimeException(ex);
         }
     }
-
 }

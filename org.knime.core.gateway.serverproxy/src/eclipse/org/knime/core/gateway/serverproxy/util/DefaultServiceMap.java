@@ -44,49 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Dec 8, 2016 (hornm): created
+ *   Jan 25, 2017 (hornm): created
  */
-package org.knime.core.gateway.serverproxy.service;
+package org.knime.core.gateway.serverproxy.util;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
-
-import java.util.List;
-
-import org.knime.core.gateway.v0.workflow.entity.TestEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.TestEntBuilder;
-import org.knime.core.gateway.v0.workflow.service.TestService;
+import org.knime.core.gateway.services.ServiceMap;
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
 /**
+ * Maps api gateway services to it's default implementation.
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
-public class DefaultTestService implements TestService {
+public class DefaultServiceMap extends ServiceMap<Class<GatewayService>> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TestEnt test(final TestEnt id) {
-        System.out.println(id.getother());
-        return builder(TestEntBuilder.class).setother("test").build();
+    private static DefaultServiceMap INSTANCE = null;
+
+    public static final String DEFAULT_SERVICE_PACKAGE = "org.knime.core.gateway.serverproxy.service";
+
+    private DefaultServiceMap() {
+        // singleton instance -> private
+        super();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<TestEnt> testList(final List<TestEnt> list) {
-        // TODO Auto-generated method stub
-        return null;
+    protected Class<GatewayService> mapIntern(final String serviceName) {
+        try {
+            return (Class<GatewayService>)Class.forName(DEFAULT_SERVICE_PACKAGE + ".Default" + serviceName);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * @return the singleton instance
      */
-    @Override
-    public double primitives(final String s, final List<String> stringlist) {
-        // TODO Auto-generated method stub
-        return 0;
+    public static DefaultServiceMap getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new DefaultServiceMap();
+        }
+        return INSTANCE;
     }
 
 }
