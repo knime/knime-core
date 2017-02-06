@@ -48,7 +48,6 @@
  */
 package org.knime.core.clientproxy.workflow.project;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 import static org.knime.core.gateway.services.ServiceManager.service;
 
 import java.io.IOException;
@@ -62,6 +61,7 @@ import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
+import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
@@ -105,12 +105,14 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
      */
     @Override
     public void testClient() {
-        List<EntityID> allWorkflows = service(WorkflowService.class).getAllWorkflows();
-        allWorkflows.stream().forEach(e -> System.out.println(e.getID()));
+                List<EntityID> allWorkflows = service(WorkflowService.class).getAllWorkflows();
+        //        allWorkflows.stream().forEach(e -> System.out.println(e.getID()));
 
-        EntityID second = allWorkflows.get(1);
-        WorkflowEnt workflow = service(WorkflowService.class)
-            .getWorkflow(builder(EntityIDBuilder.class).setID(second.getID()).setType(second.getType()).build());
+
+//        EntityID id = allWorkflows.get(1);
+        EntityID id = EntityBuilderManager.builder(EntityIDBuilder.class).setID("01_Data_Loading_Example").setType("").build();
+        WorkflowService service = service(WorkflowService.class);
+        WorkflowEnt workflow = service.getWorkflow(id);
         System.out.println(workflow);
     }
 
