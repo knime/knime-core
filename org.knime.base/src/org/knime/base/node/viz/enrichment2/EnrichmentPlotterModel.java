@@ -358,6 +358,12 @@ class EnrichmentPlotterModel extends NodeModel {
             final double[] hitRateValues = new double[fractionSizes.length];
             final HashMap<DataCell, MutableInteger> clusters = new HashMap<DataCell, MutableInteger>();
 
+            // fix for AP-6994
+            // set hit rate values for fractions that are smaller than 1 row to 0
+            while ((maxK * fractionSizes[nextHitRatePoint] / 100) < 1) {
+                hitRateValues[nextHitRatePoint++] = 0;
+            }
+
             for (k = 1; k <= maxK; k++) {
                 final Helper h = curve[k - 1];
                 if (m_settings.plotMode() == PlotMode.PlotSum) {
@@ -384,7 +390,10 @@ class EnrichmentPlotterModel extends NodeModel {
                     yValues[lastK] = y;
                 }
 
-                if ((nextHitRatePoint < fractionSizes.length)
+                // fix for AP-6994
+                // there can potentially be multiple fractions that contain the same number of rows,
+                // thats why this needs to be a while
+                while ((nextHitRatePoint < fractionSizes.length)
                     && (k == (int)Math.floor(maxK * fractionSizes[nextHitRatePoint] / 100))) {
                     hitRateValues[nextHitRatePoint] = y;
                     nextHitRatePoint++;
