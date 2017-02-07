@@ -45,6 +45,7 @@
 package org.knime.core.node.property.hilite;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -53,7 +54,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.util.Pair;
 
 /**
  * <code>HiLiteHandler</code> implementation which receives hilite change
@@ -106,10 +106,10 @@ public class HiLiteHandler {
     private Set<RowKey> m_hiLitKeys;
 
     /** Not-null if this {@link HiLiteHandler} is associated with one or more {@link HiLiteTranslator}s */
-    private Pair<HiLiteTranslator, HiLiteTranslator> m_hiliteTranslators;
+    private Set<HiLiteTranslator> m_hiliteTranslators;
 
     /** Not-null if this {@link HiLiteHandler} is associated with one or more {@link HiLiteManager}s */
-    private Pair<HiLiteManager, HiLiteManager> m_hiliteManagers;
+    private Set<HiLiteManager> m_hiliteManagers;
 
     /**
      * Creates a new default hilite handler with an empty set of registered
@@ -161,12 +161,12 @@ public class HiLiteHandler {
     }
 
     /**
-     * Returns a {@link Pair} of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise. One value of the {@link Pair} may also be null.
-     * @return One or two {@link HiLiteTranslator}s, or null
+     * Returns a set of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
+     * @return A non-empty set of {@link HiLiteTranslator}s, or null
      * @since 3.4
      */
-    public Pair<HiLiteTranslator, HiLiteTranslator> getHiLiteTranslators() {
-        if (m_hiliteTranslators != null && m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() == null) {
+    public Set<HiLiteTranslator> getHiLiteTranslators() {
+        if (m_hiliteTranslators == null || m_hiliteTranslators.size() <= 0) {
             return null;
         }
         return m_hiliteTranslators;
@@ -180,20 +180,10 @@ public class HiLiteHandler {
      */
     public void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
-            if (m_hiliteTranslators == null || (m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() == null)) {
-                m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(hiliteTranslator, null);
-            } else {
-                if (!hiliteTranslator.equals(m_hiliteTranslators.getFirst()) && !hiliteTranslator.equals(m_hiliteTranslators.getSecond())) {
-                    if (m_hiliteTranslators.getFirst() != null && m_hiliteTranslators.getSecond() == null) {
-                        m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(m_hiliteTranslators.getFirst(), hiliteTranslator);
-                    } else if (m_hiliteTranslators.getFirst() == null && m_hiliteTranslators.getSecond() != null) {
-                        m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(hiliteTranslator, m_hiliteTranslators.getSecond());
-                    } else {
-                        // both translators are set and do not match the incoming one, this should never happen
-                        throw new IllegalArgumentException("There can only be a maximum of two HiLiteTranslators associated with a HiLiteHandler, but trying to associate a third.");
-                    }
-                }
+            if (m_hiliteTranslators == null) {
+                m_hiliteTranslators = new HashSet<HiLiteTranslator>();
             }
+            m_hiliteTranslators.add(hiliteTranslator);
         }
     }
 
@@ -204,28 +194,19 @@ public class HiLiteHandler {
      * @since 3.4
      */
     public boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
-        if (hiliteTranslator != null) {
-            if (m_hiliteTranslators != null) {
-                if (hiliteTranslator.equals(m_hiliteTranslators.getFirst())) {
-                    m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(null, m_hiliteTranslators.getSecond());
-                    return true;
-                } else if (hiliteTranslator.equals(m_hiliteTranslators.getSecond())) {
-                    m_hiliteTranslators = new Pair<HiLiteTranslator, HiLiteTranslator>(m_hiliteTranslators.getFirst(), null);
-                    return true;
-                }
-            }
+        if (hiliteTranslator != null && m_hiliteTranslators != null) {
+            return m_hiliteTranslators.remove(hiliteTranslator);
         }
         return false;
     }
 
     /**
-     * Returns a {@link Pair} of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
-     * One value of the {@link Pair} may also be null.
-     * @return One or two {@link HiLiteManager}s, or null
+     * Returns a set of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
+     * @return A non-empty set of {@link HiLiteManager}s, or null
      * @since 3.4
      */
-    public Pair<HiLiteManager, HiLiteManager> getHiLiteManagers() {
-        if (m_hiliteManagers != null && m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() == null) {
+    public Set<HiLiteManager> getHiLiteManagers() {
+        if (m_hiliteManagers == null || m_hiliteManagers.size() <= 0) {
             return null;
         }
         return m_hiliteManagers;
@@ -239,20 +220,10 @@ public class HiLiteHandler {
      */
     public void addHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
-            if (m_hiliteManagers == null || (m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() == null)) {
-                m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(hiliteManager, null);
-            } else {
-                if (!hiliteManager.equals(m_hiliteManagers.getFirst()) && !hiliteManager.equals(m_hiliteManagers.getSecond())) {
-                    if (m_hiliteManagers.getFirst() != null && m_hiliteManagers.getSecond() == null) {
-                        m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(m_hiliteManagers.getFirst(), hiliteManager);
-                    } else if (m_hiliteManagers.getFirst() == null && m_hiliteManagers.getSecond() != null) {
-                        m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(hiliteManager, m_hiliteManagers.getSecond());
-                    } else {
-                        // both managers are set and do not match the incoming one, this should never happen
-                        throw new IllegalArgumentException("There can only be a maximum of two HiLiteManagers associated with a HiLiteHandler, but trying to associate a third.");
-                    }
-                }
+            if (m_hiliteManagers == null) {
+                m_hiliteManagers = new HashSet<HiLiteManager>();
             }
+            m_hiliteManagers.add(hiliteManager);
         }
     }
 
@@ -263,16 +234,8 @@ public class HiLiteHandler {
      * @since 3.4
      */
     public boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
-        if (hiliteManager != null) {
-            if (m_hiliteManagers != null) {
-                if (hiliteManager.equals(m_hiliteManagers.getFirst())) {
-                    m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(null, m_hiliteManagers.getSecond());
-                    return true;
-                } else if (hiliteManager.equals(m_hiliteTranslators.getSecond())) {
-                    m_hiliteManagers = new Pair<HiLiteManager, HiLiteManager>(m_hiliteManagers.getFirst(), null);
-                    return true;
-                }
-            }
+        if (hiliteManager != null && m_hiliteManagers != null) {
+            return m_hiliteManagers.remove(hiliteManager);
         }
         return false;
     }

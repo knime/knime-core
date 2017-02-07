@@ -88,7 +88,6 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
-import org.knime.core.util.Pair;
 
 /**
  * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
@@ -452,29 +451,22 @@ public final class WizardExecutionController extends ExecutionController {
         if (handler == null || !knownHiLiteHandlers.add(handler)) {
             return;
         }
-        Pair<HiLiteTranslator,HiLiteTranslator> translators = handler.getHiLiteTranslators();
+        Set<HiLiteTranslator> translators = handler.getHiLiteTranslators();
         if (translators != null) {
-            HiLiteTranslator first = translators.getFirst();
-            if (first != null && knownTranslators.add(first)) {
-                followHiLiteTranslator(first, knownHiLiteHandlers, knownTranslators, knownManagers);
-            }
-            HiLiteTranslator second = translators.getSecond();
-            if (second != null && knownTranslators.add(second)) {
-                followHiLiteTranslator(second, knownHiLiteHandlers, knownTranslators, knownManagers);
+            for (HiLiteTranslator translator : translators) {
+                if (translator != null && knownTranslators.add(translator)) {
+                    followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers);
+                }
             }
         }
-        Pair<HiLiteManager,HiLiteManager> managers = handler.getHiLiteManagers();
+        Set<HiLiteManager> managers = handler.getHiLiteManagers();
         if (managers != null) {
-            HiLiteManager first = managers.getFirst();
-            if (first != null && knownManagers.add(first)) {
-                followHiLiteManager(first, knownHiLiteHandlers, knownTranslators, knownManagers);
-            }
-            HiLiteManager second = managers.getSecond();
-            if (second != null && knownManagers.add(second)) {
-                followHiLiteManager(second, knownHiLiteHandlers, knownTranslators, knownManagers);
+            for (HiLiteManager manager : managers) {
+                if (manager != null && knownManagers.add(manager)) {
+                    followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers);
+                }
             }
         }
-
     }
 
     private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
