@@ -44,9 +44,11 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.08.2014 (koetter): created
+ *   Dec 13, 2016 (oole): created
  */
 package org.knime.core.node.port.database.aggregation.function.column;
+
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -54,98 +56,64 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.database.StatementManipulator;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.parameter.SelectFunctionSettings;
+import org.knime.core.node.port.database.aggregation.function.parameter.SelectFunctionSettingsPanel;
 
 /**
- * Abstract class that allows the user to select a column from the input table.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * Abstract class on top of the {@link AbstractColumnDBAggregationFunction} class. Allowing to set a parameter after selecting
+ * another column. (Often used for statistics in databases such as Oracle.)
+ * @author Ole Ostergaard, KNIME.com
+ * @since 3.4
  */
-public abstract class AbstractColumnDBAggregationFunction implements DBAggregationFunction {
+public abstract class AbstractColumnFunctionSelectDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
-    private ColumnFuntionSettingsPanel m_settingsPanel;
-    private final ColumnFuntionSettings m_settings;
-    private final String m_label;
-    private final Class<? extends DataValue>[] m_classFilter;
+    private SelectFunctionSettingsPanel m_parameterSettingsPanel;
+    private final SelectFunctionSettings m_parameterSettings;
+    private List<String> m_parameters;
+    private String m_parameterLabel;
 
     /**
-     * @param label the label of the column option
-     * @param defaultColName the column name to select as default or <code>null</code> for none
-     *@param classFilter which classes are available for selection
+     * @param selectionLabel The label for the parameter selection
+     * @param defaultSelection The default selection parameter selection
+     * @param functions a {@link List} of function parameters for the Aggregation Method
+     * @param colLabel The label for the column selection
+     * @param defaultColName The default selection for the column selection
+     * @param classFilter Which classes are available for selection
      */
     @SafeVarargs
-    protected AbstractColumnDBAggregationFunction(final String label, final String defaultColName,
-        final Class<? extends DataValue>... classFilter) {
-        m_label = label;
-        m_classFilter = classFilter;
-        m_settings = new ColumnFuntionSettings(defaultColName);
+    protected AbstractColumnFunctionSelectDBAggregationFunction(final String selectionLabel, final String defaultSelection,
+        final List<String> functions, final String colLabel,final String defaultColName, final Class<? extends DataValue>... classFilter) {
+        super(colLabel, defaultColName, classFilter);
+        m_parameterLabel = selectionLabel;
+        m_parameters = functions;
+        m_parameterSettings = new SelectFunctionSettings(defaultSelection);
     }
 
-    /**
-     * {@inheritDoc}
-     * @since 3.1
-     */
+
     @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
-        final String columnName) {
-        return getLabel() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
-                + ", " + manipulator.quoteIdentifier(tableName) + "."
-                + manipulator.quoteIdentifier(getSelectedColumnName()) + getExtraFragment() + ")";
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since 3.1
-     */
-    @Override
-    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
-        return getLabel() + "((" + subQuery + "), " + manipulator.quoteIdentifier(tableName) + "."
-                + manipulator.quoteIdentifier(getSelectedColumnName()) +  getExtraFragment() + ")";
-    }
-
-    /**
-     * This method allows to add extra statements to the SQL fragment after the column has been added.
-     *
-     * @return Additional String for the SQL fragment.
-     * @since 3.4
-     */
     public String getExtraFragment() {
-        return "";
+        return ", '" + getSelectedParameter() + "'";
     }
 
     /**
-     * {@inheritDoc}
+     * @return the selected parameter
      */
-    @Override
-    public String getColumnName() {
-        return getLabel() + "_" + getSelectedColumnName();
+    protected String getSelectedParameter() {
+        return m_parameterSettings.getParameter();
     }
 
-    /**
-     * @return the selected second column name if available otherwise it returns <code>null</code>
-     */
-    protected String getSelectedColumnName() {
-        return m_settings.getColumnName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasOptionalSettings() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ColumnFuntionSettingsPanel getSettingsPanel() {
-        if (m_settingsPanel == null) {
-            m_settingsPanel = new ColumnFuntionSettingsPanel(m_settings, m_label, m_classFilter);
+        ColumnFuntionSettingsPanel settingsPanel = super.getSettingsPanel();
+        checkParameterPanel();
+        settingsPanel.add(m_parameterSettingsPanel);
+        return settingsPanel;
+    }
+
+    private void checkParameterPanel() {
+        if (m_parameterSettingsPanel == null) {
+            m_parameterSettingsPanel = new SelectFunctionSettingsPanel(m_parameterSettings, m_parameterLabel, m_parameters);
         }
-        return m_settingsPanel;
     }
 
     /**
@@ -153,7 +121,8 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      */
     @Override
     public void loadValidatedSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.loadSettingsFrom(settings);
+        super.loadValidatedSettings(settings);
+        m_parameterSettings.loadSettingsFrom(settings);
     }
 
     /**
@@ -162,7 +131,10 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
             throws NotConfigurableException {
+        super.
         getSettingsPanel().loadSettingsFrom(settings, spec);
+        checkParameterPanel();
+        m_parameterSettingsPanel.loadSettingsFrom(settings, spec);
     }
 
     /**
@@ -170,7 +142,8 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        m_settings.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
+        m_parameterSettings.saveSettingsTo(settings);
     }
 
     /**
@@ -178,24 +151,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      */
     @Override
     public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.validateSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void validate() throws InvalidSettingsException {
-        m_settings.validate();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void configure(final DataTableSpec spec) throws InvalidSettingsException {
-        if (!spec.containsName(getSelectedColumnName())) {
-            throw new InvalidSettingsException("Column '" + getSelectedColumnName() + "' not found in input table.");
-        }
+        super.validateSettings(settings);
+        m_parameterSettings.validateSettings(settings);
     }
 }
