@@ -120,6 +120,8 @@ public class HiLiteHandler {
         m_listenerList = new CopyOnWriteArrayList<HiLiteListener>();
         // initialize item list
         m_hiLitKeys = new LinkedHashSet<RowKey>();
+        m_hiliteTranslators = new HashSet<HiLiteTranslator>();
+        m_hiliteManagers = new HashSet<HiLiteManager>();
     }
 
     /**
@@ -161,14 +163,11 @@ public class HiLiteHandler {
     }
 
     /**
-     * Returns a set of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
-     * @return A non-empty set of {@link HiLiteTranslator}s, or null
+     * Returns a set of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, never null.
+     * @return A set of {@link HiLiteTranslator}s, or null
      * @since 3.4
      */
     public Set<HiLiteTranslator> getHiLiteTranslators() {
-        if (m_hiliteTranslators == null || m_hiliteTranslators.size() <= 0) {
-            return null;
-        }
         return m_hiliteTranslators;
     }
 
@@ -180,9 +179,6 @@ public class HiLiteHandler {
      */
     public void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
-            if (m_hiliteTranslators == null) {
-                m_hiliteTranslators = new HashSet<HiLiteTranslator>();
-            }
             m_hiliteTranslators.add(hiliteTranslator);
         }
     }
@@ -194,21 +190,18 @@ public class HiLiteHandler {
      * @since 3.4
      */
     public boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
-        if (hiliteTranslator != null && m_hiliteTranslators != null) {
+        if (hiliteTranslator != null) {
             return m_hiliteTranslators.remove(hiliteTranslator);
         }
         return false;
     }
 
     /**
-     * Returns a set of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, null otherwise.
-     * @return A non-empty set of {@link HiLiteManager}s, or null
+     * Returns a set of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, never null.
+     * @return A set of {@link HiLiteManager}s
      * @since 3.4
      */
     public Set<HiLiteManager> getHiLiteManagers() {
-        if (m_hiliteManagers == null || m_hiliteManagers.size() <= 0) {
-            return null;
-        }
         return m_hiliteManagers;
     }
 
@@ -220,9 +213,6 @@ public class HiLiteHandler {
      */
     public void addHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
-            if (m_hiliteManagers == null) {
-                m_hiliteManagers = new HashSet<HiLiteManager>();
-            }
             m_hiliteManagers.add(hiliteManager);
         }
     }
@@ -234,7 +224,7 @@ public class HiLiteHandler {
      * @since 3.4
      */
     public boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
-        if (hiliteManager != null && m_hiliteManagers != null) {
+        if (hiliteManager != null) {
             return m_hiliteManagers.remove(hiliteManager);
         }
         return false;

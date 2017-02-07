@@ -452,19 +452,15 @@ public final class WizardExecutionController extends ExecutionController {
             return;
         }
         Set<HiLiteTranslator> translators = handler.getHiLiteTranslators();
-        if (translators != null) {
-            for (HiLiteTranslator translator : translators) {
-                if (translator != null && knownTranslators.add(translator)) {
-                    followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers);
-                }
+        for (HiLiteTranslator translator : translators) {
+            if (translator != null && knownTranslators.add(translator)) {
+                followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers);
             }
         }
         Set<HiLiteManager> managers = handler.getHiLiteManagers();
-        if (managers != null) {
-            for (HiLiteManager manager : managers) {
-                if (manager != null && knownManagers.add(manager)) {
-                    followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers);
-                }
+        for (HiLiteManager manager : managers) {
+            if (manager != null && knownManagers.add(manager)) {
+                followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers);
             }
         }
     }
