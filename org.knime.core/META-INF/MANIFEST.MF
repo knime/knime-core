@@ -9,7 +9,8 @@ Bundle-ClassPath: knime-core.jar,
  lib/jcalendar-1.4.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: log4j,
+Export-Package: com.toedter.calendar;x-friends:="org.knime.time",
+ log4j,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.append,
