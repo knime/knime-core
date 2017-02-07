@@ -64,7 +64,7 @@ import org.knime.core.node.port.database.aggregation.function.parameter.StringPa
  * Abstract class on top of the {@link AbstractColumnFunctionSelectDBAggregationFunction} class. Allowing to set a parameter after selecting
  * another column. (Often used for statistics in databases such as Oracle.) And also allows entering a string parameter.
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public abstract class  AbstractColumnFunctionSelectOptionalParameterAggregationFunction extends AbstractColumnFunctionSelectDBAggregationFunction {
     private StringParameterSettingsPanel m_stringParameterSettingsPanel;

@@ -55,7 +55,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * Class that saves the settings of the {@link StringParameterSettings}.
  *
  * @author Ole Ostergaard
- * @since 3.3
+ * @since 3.4
  */
 public class StringParameterSettings {
 
@@ -64,7 +64,7 @@ public class StringParameterSettings {
     private final SettingsModelString m_string;
 
     /**
-     * @param The default parameter
+     * @param def The default parameter
      */
     public StringParameterSettings(final String def) {
         m_string = new SettingsModelString(STRING_PARAM, def);

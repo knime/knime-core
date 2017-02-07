@@ -108,7 +108,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      * This method allows to add extra statements to the SQL fragment after the column has been added.
      *
      * @return Additional String for the SQL fragment.
-     * @since 3.3
+     * @since 3.4
      */
     public String getExtraFragment() {
         return "";

@@ -56,7 +56,7 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
 /**
  *
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public class StatsModeDBAggregationFunction extends SimpleDBAggregationFunction {
 

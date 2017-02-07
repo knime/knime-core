@@ -62,7 +62,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
  * {@link JPanel} that allows the user to specify layout mapping settings.
  *
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public class NumberParameterSettingsPanel extends JPanel {
 

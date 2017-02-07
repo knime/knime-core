@@ -55,7 +55,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * Class that saves the settings of the {@link SelectFunctionSettingsPanel}.
  *
  * @author Ole Ostergaard
- * @since 3.3
+ * @since 3.4
  */
 public class SelectFunctionSettings {
 

@@ -66,7 +66,7 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
  * Abstract class that allows the user to enter a string parameter, a number parameter and select a function
  *
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public abstract class AbstractStringNumberSelectFunctionDBAggregationFunction implements DBAggregationFunction {
 

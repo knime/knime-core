@@ -54,7 +54,7 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactor
 /**
  *
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public final class CorrSDBAggregationFunction extends CorrKDBAggregationFunction {
 

@@ -58,7 +58,7 @@ import org.knime.core.node.port.database.aggregation.function.AbstractDistinctDB
 /**
  *
  * @author Ole Ostergaard, KNIME.com,
- * @since 3.3
+ * @since 3.4
  */
 public final class VarianceDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
     private static final String LABEL = "VARIANCE";

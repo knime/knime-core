@@ -63,7 +63,7 @@ import org.knime.core.node.port.database.aggregation.function.parameter.SelectFu
  * Abstract class on top of the {@link AbstractColumnDBAggregationFunction} class. Allowing to set a parameter after selecting
  * another column. (Often used for statistics in databases such as Oracle.)
  * @author Ole Ostergaard, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public abstract class AbstractColumnFunctionSelectDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
