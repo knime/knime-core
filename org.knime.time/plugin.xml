@@ -43,6 +43,16 @@
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory">
+      </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.stringtodurationperiod.StringToDurationPeriodNodeFactory">
+      </node>
    </extension>
 
    <extension

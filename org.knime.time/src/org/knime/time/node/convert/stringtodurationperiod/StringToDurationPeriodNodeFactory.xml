@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="default.png">
+	<name>String to Duration/Period</name>
+	<shortDescription>Converts a string to a duration or period.</shortDescription>
+	<fullDescription>
+		<intro>
+			Converts string cells to duration or period cells. The string
+			representation of these periods or durations needs to be in the
+			ISO-8601
+			representation (see
+			<a
+				href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
+			or
+			<a
+				href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
+			for details).
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be converted.
+			</option>
+		</tab>
+		<tab name="Replace/Append Selection">
+			<option name="Append selected columns">
+				The selected columns will be appended to the
+				input table. The suffix of the appended columns can be
+				provided in
+				the text field to the right.
+			</option>
+			<option name="Replace selected columns">
+				The selected columns will be replaced by the new
+				columns.
+			</option>
+		</tab>
+		<tab name="Duration/Period Selection">
+			<option name="Create Duration">
+				Duration cells will be created.
+			</option>
+			<option name="Create Duration">
+				Period cells will be created.
+			</option>
+			<option name="Fail on error">
+				If checked, the node will abort the execution and
+				fail on errors. If unchecked, missing values will be
+				generated
+				instead.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table with duration or period columns.
+		</outPort>
+	</ports>
+</knimeNode>
