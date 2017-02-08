@@ -58,7 +58,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 import javax.swing.Box;
@@ -118,11 +117,7 @@ public class AggregationSettingsDialog extends JDialog {
                   if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                       final URL uri = e.getURL();
                       if (uri != null) {
-                          try {
-                              DesktopUtil.browse(uri);
-                          } catch (URISyntaxException e1) {
-                              e1.printStackTrace();
-                          }
+                          DesktopUtil.browse(uri);
                       }
                   }
               }
