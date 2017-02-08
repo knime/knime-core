@@ -48,6 +48,11 @@
  */
 package org.knime.core.node.util.filter.nominal;
 
+import java.util.ArrayList;
+import java.util.Set;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 
 /**
@@ -65,6 +70,43 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      */
     public NominalValueFilterConfiguration(final String configRootName) {
         super(configRootName);
+    }
+
+    /**
+     * @param settings
+     * @param domain
+     *
+     */
+    public void loadConfigurationInDialog(final NodeSettingsRO settings, final Set<DataCell> domain) {
+        ArrayList<String> names = new ArrayList<String>();
+        if (domain != null) {
+            for (DataCell dc : domain) {
+                names.add(dc.toString());
+            }
+        }
+        super.loadConfigurationInDialog(settings, names.toArray(new String[0]));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] getIncludeList() {
+        return super.getIncludeList();
+    }
+
+    /**
+     * @param domain
+     * @return
+     */
+    public FilterResult applyTo(final Set<DataCell> domain) {
+        ArrayList<String> names = new ArrayList<String>();
+        if(domain!=null){
+            for(DataCell dc : domain){
+                names.add(dc.toString());
+            }
+        }
+        return super.applyTo(names.toArray(new String[names.size()]));
     }
 
 }

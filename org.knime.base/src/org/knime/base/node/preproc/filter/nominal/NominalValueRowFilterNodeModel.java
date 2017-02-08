@@ -46,6 +46,7 @@ package org.knime.base.node.preproc.filter.nominal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -63,6 +64,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
+import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration;
 
 /**
  * This is the model implementation of PossibleValueRowFilter. For a nominal
@@ -81,6 +84,9 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
     private int m_selectedColIdx;
 
     private final Set<String> m_selectedAttr = new HashSet<String>();
+
+    private final NominalValueFilterConfiguration m_config =
+        new NominalValueFilterConfiguration(NominalValueRowFilterNodeDialog.CFG_CONFIGROOTNAME);
 
     /**
      * One inport (data to be filtered) two out ports (included and excluded).
@@ -154,6 +160,9 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
                     "No nominal columns with possible values found! "
                             + "Execute predecessor or check input table.");
         }
+        m_selectedAttr.clear();
+        m_selectedAttr.addAll(Arrays.asList(m_config.applyTo(inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
+            .getValues()).getIncludes()));
         // all values excluded?
         if (m_selectedColumn != null && m_selectedAttr.size() == 0) {
             setWarningMessage("All values are excluded!"
@@ -200,26 +209,27 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString(NominalValueRowFilterNodeDialog.CFG_SELECTED_COL,
-                m_selectedColumn);
-        settings.addStringArray(
-                NominalValueRowFilterNodeDialog.CFG_SELECTED_ATTR,
-                m_selectedAttr.toArray(new String[m_selectedAttr.size()]));
+        settings.addString(NominalValueRowFilterNodeDialog.CFG_SELECTED_COL, m_selectedColumn);
+        m_config.saveConfiguration(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_selectedColumn = settings.getString(
-                        NominalValueRowFilterNodeDialog.CFG_SELECTED_COL);
-        String[] selected = settings.getStringArray(
-                NominalValueRowFilterNodeDialog.CFG_SELECTED_ATTR);
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_selectedColumn = settings.getString(NominalValueRowFilterNodeDialog.CFG_SELECTED_COL);
         m_selectedAttr.clear();
-        for (String s : selected) {
-            m_selectedAttr.add(s);
+        if (settings.containsKey(NominalValueRowFilterNodeDialog.CFG_CONFIGROOTNAME)) {
+            m_config.loadConfigurationInModel(settings);
+            m_selectedAttr.addAll(Arrays.asList(m_config.getIncludeList()));
+        } else {
+            String[] selected = settings.getStringArray(NominalValueRowFilterNodeDialog.CFG_SELECTED_ATTR);
+            for (String s : selected) {
+                m_selectedAttr.add(s);
+            }
+            m_config.loadDefaults(m_selectedAttr.toArray(new String[m_selectedAttr.size()]), null,
+                EnforceOption.EnforceInclusion);
         }
     }
 
@@ -227,15 +237,19 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_selectedColumn = settings.getString(
-                NominalValueRowFilterNodeDialog.CFG_SELECTED_COL);
-        String[] selected = settings.getStringArray(
-                NominalValueRowFilterNodeDialog.CFG_SELECTED_ATTR);
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_selectedColumn = settings.getString(NominalValueRowFilterNodeDialog.CFG_SELECTED_COL);
         m_selectedAttr.clear();
-        for (String s : selected) {
-            m_selectedAttr.add(s);
+        if (settings.containsKey(NominalValueRowFilterNodeDialog.CFG_CONFIGROOTNAME)) {
+            m_config.loadConfigurationInModel(settings);
+            m_selectedAttr.addAll(Arrays.asList(m_config.getIncludeList()));
+        } else {
+            String[] selected = settings.getStringArray(NominalValueRowFilterNodeDialog.CFG_SELECTED_ATTR);
+            for (String s : selected) {
+                m_selectedAttr.add(s);
+            }
+            m_config.loadDefaults(m_selectedAttr.toArray(new String[m_selectedAttr.size()]), null,
+                EnforceOption.EnforceInclusion);
         }
     }
 

@@ -93,16 +93,19 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     private final Map<String, Set<DataCell>> m_colAttributes;
 
     // models
-    private final DefaultComboBoxModel m_columns;
+    private final DefaultComboBoxModel<String> m_columns;
 
     // gui elements
-    private final JComboBox m_columnSelection;
+    private final JComboBox<String> m_columnSelection;
 
     /** Config key for the selected column. */
     static final String CFG_SELECTED_COL = "selected_column";
 
     /** Config key for the possible values to be included. */
     static final String CFG_SELECTED_ATTR = "selected attributes";
+
+    /** Config key for filter configuration. */
+    static final String CFG_CONFIGROOTNAME = "filter config";
 
     private NominalValueFilterPanel m_filterPanel;
 
@@ -111,9 +114,9 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
      */
     protected NominalValueRowFilterNodeDialog() {
         m_colAttributes = new LinkedHashMap<String, Set<DataCell>>();
-        m_columns = new DefaultComboBoxModel();
+        m_columns = new DefaultComboBoxModel<>();
 
-        m_columnSelection = new JComboBox(m_columns);
+        m_columnSelection = new JComboBox<>(m_columns);
         m_columnSelection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         // add listener to column selection box to change exclude list
         m_columnSelection.addItemListener(this);
@@ -152,8 +155,8 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
                 names.add(dc.toString());
             }
         }
-        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
-        config.loadDefaults(null, names.toArray(new String[0]), EnforceOption.EnforceExclusion);
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
+        config.loadDefaults(null, names.toArray(new String[0]), EnforceOption.EnforceInclusion);
         m_filterPanel.loadConfiguration(config, names.toArray(new String[0]));
     }
 
@@ -183,43 +186,40 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         m_columnSelection.removeItemListener(this);
         // fill the models
         for (DataColumnSpec colSpec : specs[0]) {
-            if (colSpec.getType().isCompatible(NominalValue.class)
-                    && colSpec.getDomain().hasValues()) {
+            if (colSpec.getType().isCompatible(NominalValue.class) && colSpec.getDomain().hasValues()) {
                 m_columns.addElement(colSpec.getName());
                 // create column - possible values mapping
-                m_colAttributes.put(colSpec.getName(), colSpec.getDomain()
-                        .getValues());
+                m_colAttributes.put(colSpec.getName(), colSpec.getDomain().getValues());
             }
         }
         // set selection
         m_columnSelection.setSelectedItem(m_selectedColumn);
         // if it is not in the list, use first element
         m_selectedColumn = (String)m_columnSelection.getSelectedItem();
-        ArrayList<String> m_included = new ArrayList<String>();
-        ArrayList<String> m_excluded = new ArrayList<String>();
-        if (m_colAttributes.get(m_selectedColumn) != null) {
-            for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
-                // if possible value was in the settings...
-                if (includedAttr.contains(dc.toString())) {
-                    // ... put it to included ...
-                    m_included.add(dc.toString());
-                } else {
-                    // ... else to excluded
-                    m_excluded.add(dc.toString());
+
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
+        Set<DataCell> domain = m_colAttributes.get(m_selectedColumn);
+        if (settings.containsKey(CFG_CONFIGROOTNAME)) {
+            config.loadConfigurationInDialog(settings, domain);
+        } else {
+            ArrayList<String> m_included = new ArrayList<String>();
+            ArrayList<String> m_excluded = new ArrayList<String>();
+            if (domain != null) {
+                for (DataCell dc : domain) {
+                    // if possible value was in the settings...
+                    if (includedAttr.contains(dc.toString())) {
+                        // ... put it to included ...
+                        m_included.add(dc.toString());
+                    } else {
+                        // ... else to excluded
+                        m_excluded.add(dc.toString());
+                    }
                 }
             }
+            config.loadDefaults(m_included.toArray(new String[m_included.size()]),
+                m_excluded.toArray(new String[m_excluded.size()]), EnforceOption.EnforceInclusion);
         }
-
-        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
-        config.loadDefaults(m_included.toArray(new String[0]), m_excluded.toArray(new String[0]),
-            EnforceOption.EnforceExclusion);
-        ArrayList<String> names = new ArrayList<>();
-        if (m_colAttributes.get(m_selectedColumn) != null) {
-            for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
-                names.add(dc.toString());
-            }
-        }
-        m_filterPanel.loadConfiguration(config, names.toArray(new String[0]));
+        m_filterPanel.loadConfiguration(config, domain);
 
 
         // enable item change listener again
@@ -235,9 +235,9 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
             throws InvalidSettingsException {
         settings.addString(CFG_SELECTED_COL, (String)m_columnSelection
                 .getSelectedItem());
-        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
         m_filterPanel.saveConfiguration(config);
-        settings.addStringArray(CFG_SELECTED_ATTR, m_filterPanel.getIncludeList().toArray(new String[0]));
+        config.saveConfiguration(settings);
     }
 
 }

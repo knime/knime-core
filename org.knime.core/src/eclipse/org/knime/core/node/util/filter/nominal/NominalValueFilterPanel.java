@@ -48,8 +48,13 @@
  */
 package org.knime.core.node.util.filter.nominal;
 
+import java.util.ArrayList;
+import java.util.Set;
+
 import javax.swing.DefaultListCellRenderer;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
@@ -97,6 +102,23 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     @Override
     protected String getNameForT(final String t) {
         return t;
+    }
+
+    /**
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contains all column names from the spec afterwards.
+     *
+     * @param config to be loaded from
+     * @param domain
+     */
+    public void loadConfiguration(final NameFilterConfiguration config, final Set<DataCell> domain) {
+        ArrayList<String> names = new ArrayList<>();
+        if (domain != null) {
+            for (DataCell dc : domain) {
+                names.add(dc.toString());
+            }
+        }
+        super.loadConfiguration(config, names.toArray(new String[names.size()]));
     }
 
 }
