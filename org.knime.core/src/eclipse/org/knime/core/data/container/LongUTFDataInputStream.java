@@ -56,7 +56,7 @@ import java.io.UTFDataFormatException;
 
 /**
  * Input Stream that's used to read from stream written by 
- * <code>LongUTFDataOuputStream</code>.
+ * <code>LongUTFDataOutputStream</code>.
  * 
  * @see LongUTFDataOutputStream
  * @author wiswedel, University of Konstanz

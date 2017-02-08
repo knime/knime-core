@@ -397,7 +397,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
     }
 
     /**
-     * Create table do display the ouput fields.
+     * Create table do display the output fields.
      * @return the table
      */
     protected OutFieldsTable createOutFieldsTable() {

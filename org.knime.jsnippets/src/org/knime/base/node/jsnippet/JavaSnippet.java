@@ -923,7 +923,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                 new DataCell[0]));
     }
 
-    /** The rearranger is the working horse for creating the ouput table. */
+    /** The rearranger is the working horse for creating the output table. */
     ColumnRearranger createRearranger(final DataTableSpec spec,
             final FlowVariableRepository flowVariableRepository,
             final int rowCount, final ExecutionContext context)
