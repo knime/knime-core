@@ -224,7 +224,8 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
             // the custom name might have changed meanwhile
             m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());
         }
-        m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(), m_snc.getCredentialsProvider());
+        m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
+            m_snc.getCredentialsProvider(), getHiLiteHandler());
         m_portView.openView(knimeWindowBounds);
     }
 
@@ -241,8 +242,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
                 NodeContext.pushContext(m_snc);
                 try {
                     if (m_portView != null) {
-                        m_portView.update(null, null,
-                                new FlowObjectStack(NodeID.ROOTID), null);
+                        m_portView.update(null, null, new FlowObjectStack(NodeID.ROOTID), null, null);
                         m_portView.setVisible(false);
                         m_portView.dispose();
                         m_portView = null;
@@ -326,7 +326,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
                 if (m_portView != null) {
                     try {
                         m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
-                                m_snc.getCredentialsProvider());
+                                m_snc.getCredentialsProvider(), getHiLiteHandler());
                     } catch (Exception e) {
                         NodeLogger.getLogger(getClass()).error("Failed to update port view.", e);
                     }

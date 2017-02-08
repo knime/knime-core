@@ -68,6 +68,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectView;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
@@ -202,7 +203,7 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
      * into this class.
      */
     @SuppressWarnings("serial")
-    public final class DatabaseOutPortPanel extends JPanel {
+    public final class DatabaseOutPortPanel extends JPanel implements PortObjectView {
         /**
          * Create new database provider.
          * @param lm using this layout manager
@@ -210,10 +211,8 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
         public DatabaseOutPortPanel(final LayoutManager lm) {
             super(lm);
         }
-        /**
-         * Set provider.
-         * @param cp {@link CredentialsProvider}
-         */
+
+        @Override
         public void setCredentialsProvider(final CredentialsProvider cp) {
             m_credentials = cp;
         }

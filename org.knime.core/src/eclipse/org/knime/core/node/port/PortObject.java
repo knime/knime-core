@@ -225,6 +225,9 @@ public interface PortObject {
      * the port object is deleted. If the port object has no view return an
      * empty array.
      *
+     * <p><b>Note</b, instances implementing {@link PortObjectView} will be
+     * treated specially by the framework. See interface definition for details.
+     *
      * @return an array of views for the port object, each displayed as a tab
      * in the out port view
      */
