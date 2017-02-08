@@ -64,7 +64,7 @@ import org.knime.core.node.util.CheckUtils;
 
 /**
  * Utility method to interact with the desktop environment, for instance opening the system browser or opening a file
- * with the OS-registiered application.
+ * with the OS-registered application.
  *
  * <p>The implementation is using Eclipse framework code and is preferred over {@link java.awt.Desktop} due to poor
  * support of awt classes on standard Linux distros.
@@ -82,11 +82,12 @@ public final class DesktopUtil {
     }
 
     /**
-     * Opens a file using the system-default program (determined by extension). Logs to <b>INFO</b> if successful,
+     * Opens a file using the system-default program (determined by extension). Logs to <b>DEBUG</b> if successful,
      * otherwise to <b>WARN</b>.
      *
      * @param file to be opened
      * @return true if file was opened successfully
+     * @throws IllegalArgumentException if argument is null
      * @since 3.3
      */
     public static boolean open(final File file) {
@@ -162,6 +163,7 @@ public final class DesktopUtil {
      *
      * @param url to be opened
      * @since 3.3
+     * @throws IllegalArgumentException if argument is null
      */
     public static void browse(final URL url) {
         CheckUtils.checkArgumentNotNull(url);
