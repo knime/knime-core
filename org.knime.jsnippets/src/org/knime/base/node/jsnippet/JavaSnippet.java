@@ -318,13 +318,19 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     }
 
 
-    /**
-     * Get the jar files to be added to the class path.
-     * @return the jar files for the class path
-     * @throws IOException when a file could not be loaded
-     */
     @Override
     public File[] getClassPath() throws IOException {
+        final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
+        final ArrayList<File> jarFiles = new ArrayList<>();
+
+        jarFiles.addAll(Arrays.asList(getRuntimeClassPath()));
+        jarFiles.addAll(additionalBuildPath);
+
+        return jarFiles.toArray(new File[jarFiles.size()]);
+    }
+
+    @Override
+    public File[] getRuntimeClassPath() throws IOException {
         // Add lock since jSnippetJar is used across all JavaSnippets
         synchronized (JavaSnippet.class) {
             if (jSnippetJar == null || !jSnippetJar.exists()) {
@@ -332,10 +338,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             }
         }
 
-        final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
-        final ArrayList<File> jarFiles = new ArrayList<>(additionalBuildPath.size() + 1 + m_jarFiles.length);
+        final ArrayList<File> jarFiles = new ArrayList<>();
         jarFiles.add(jSnippetJar);
-        jarFiles.addAll(additionalBuildPath);
 
         for (final String jarFile : m_jarFiles) {
             try {
@@ -1047,19 +1051,33 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
 
         try {
-            ClassLoader loader = compiler.createClassLoader(
-                    getCustomClassLoader());
+            final LinkedHashSet<ClassLoader> customTypeClassLoaders = new LinkedHashSet<>();
+            customTypeClassLoaders.add(JavaSnippet.class.getClassLoader());
 
+            for (final InCol col : m_fields.getInColFields()) {
+                customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
+            }
+            for (final OutCol col : m_fields.getOutColFields()) {
+                customTypeClassLoaders.addAll(getClassLoadersFor(col.getConverterFactoryId()));
+            }
+
+            // remove core class loader:
+            //   (a) it's referenced via JavaSnippet.class classloader and
+            //   (b) it would collect buddies when used directly (see support ticket #1943)
+            customTypeClassLoaders.remove(DataCellToJavaConverterRegistry.class.getClassLoader());
+
+            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(
+                customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
+
+            final ClassLoader loader = compiler.createClassLoader(customTypeLoader);
             Class<? extends AbstractJSnippet> snippetClass =
                 (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
             m_snippetCache.update(getDocument(), snippetClass, m_settings);
             return snippetClass;
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(
-                    "Could not load class file.", e);
+            throw new IllegalStateException("Could not load class file.", e);
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Could not load jar files.", e);
+            throw new IllegalStateException("Could not load jar files.", e);
         }
     }
 
@@ -1174,6 +1192,40 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
         final Collection<File> buildPath = CLASSPATH_CACHE.get(converterFactoryId);
         return buildPath;
+    }
+
+    /**
+     * Get the class loaders required for a specific converter factory
+     *
+     * @param converterFactoryId ID of the converter factory
+     * @return A list of class loaders required for given converter factory
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    private static Collection<ClassLoader> getClassLoadersFor(final String converterFactoryId) {
+        final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+            ConverterUtil.getDataCellToJavaConverterFactory(converterFactoryId);
+        if (factory.isPresent()) {
+            final ArrayList<ClassLoader> clsLoaders = new ArrayList<>(2);
+            final ClassLoader sourceCL = factory.get().getSourceType().getClassLoader();
+            if (sourceCL != null) {
+                clsLoaders.add(sourceCL);
+            }
+            final ClassLoader destCL = factory.get().getDestinationType().getClassLoader();
+            if (destCL != null) {
+                clsLoaders.add(destCL);
+            }
+            return clsLoaders;
+        } else {
+            final Optional<JavaToDataCellConverterFactory<?>> factory2 =
+                ConverterUtil.getJavaToDataCellConverterFactory(converterFactoryId);
+            if (factory2.isPresent()) {
+                final ClassLoader cl = factory2.get().getSourceType().getClassLoader();
+                if (cl != null) {
+                    return Collections.singleton(cl);
+                }
+            }
+            return Collections.emptyList();
+        }
     }
 
     /**
