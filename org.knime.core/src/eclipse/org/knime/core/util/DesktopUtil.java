@@ -49,7 +49,6 @@
 package org.knime.core.util;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RunnableFuture;
@@ -98,15 +97,27 @@ public final class DesktopUtil {
 
             @Override
             public void run() {
-                // TODO Ferry, can you double-check what happens when the file extension is blank or null?
-                // TODO Ferry, can you check what happens when running in batch mode (no display)
-                String progName = Program.findProgram(FilenameUtils.getExtension(file.toString())).getName();
+                Program program = Program.findProgram(FilenameUtils.getExtension(file.toString()));
+                //program is null if there is no application registered for the extension or there is no extension
+                String progName = program != null ? program.getName() : "";
                 m_successfull = Program.launch(file.toString());
                 if (m_successfull) {
-                    LOGGER.debugWithFormat("File \"%s\" opened with %s", file.getAbsoluteFile(), progName);
+                    if (progName.length() == 0) {
+                        //file is an executable that was started
+                        LOGGER.debugWithFormat("\"%s\" has been started", file.getAbsoluteFile());
+                    } else {
+                        LOGGER.debugWithFormat("File \"%s\" opened with %s", file.getAbsoluteFile(), progName);
+                    }
                 } else {
-                    LOGGER.warnWithFormat("Couldn't open \"%s\" with %s (no details available)",
-                        file.getAbsolutePath(), progName);
+                    if (progName.length() == 0) {
+                        //No program for the extension (or no extension at all) and not executable itself
+                        LOGGER.warnWithFormat("Couldn't open \"%s\": No program for extension and not executable itself",
+                            file.getAbsolutePath());
+                    } else {
+                        //Something went wrong, but no details available
+                        LOGGER.warnWithFormat("Couldn't open \"%s\" with %s (no details available)",
+                            file.getAbsolutePath(), progName);
+                    }
                 }
             }
 
@@ -150,20 +161,16 @@ public final class DesktopUtil {
      * registered in Eclipse is used.
      *
      * @param url to be opened
-     * @throws URISyntaxException
      * @since 3.3
      */
-    public static void browse(final URL url) throws URISyntaxException {
-        // TODO Ferry, can you do better argument checking (null!)
-        final String location = url.toURI().toString();
-        // TODO Ferry: Can you handle headless mode (no display)
-        // TODO Ferry. Is it #getDefault or #getCurrent -- see org.eclipse.swt.program.Program.findProgram(String) above
+    public static void browse(final URL url) {
+        CheckUtils.checkArgumentNotNull(url);
         Display.getDefault().asyncExec(new Runnable() {
 
             @Override
             public void run() {
                 //try a normal launch
-                if (!Program.launch(location)) {
+                if (!Program.launch(url.toString())) {
                     //failed -> Go over the BrowserSupport
                     try {
                         PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
