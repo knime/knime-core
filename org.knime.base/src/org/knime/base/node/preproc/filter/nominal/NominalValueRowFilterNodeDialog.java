@@ -45,31 +45,21 @@
 package org.knime.base.node.preproc.filter.nominal;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.TitledBorder;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -80,6 +70,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
+import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration;
+import org.knime.core.node.util.filter.nominal.NominalValueFilterPanel;
 
 /**
  * <code>NodeDialog</code> for the "PossibleValueRowFilter" Node. Adds a
@@ -102,16 +95,8 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     // models
     private final DefaultComboBoxModel m_columns;
 
-    private final DefaultListModel m_included;
-
-    private final DefaultListModel m_excluded;
-
     // gui elements
     private final JComboBox m_columnSelection;
-
-    private final JList m_includeList;
-
-    private final JList m_excludeList;
 
     /** Config key for the selected column. */
     static final String CFG_SELECTED_COL = "selected_column";
@@ -119,16 +104,14 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     /** Config key for the possible values to be included. */
     static final String CFG_SELECTED_ATTR = "selected attributes";
 
+    private NominalValueFilterPanel m_filterPanel;
+
     /**
      * New pane for configuring the PossibleValueRowFilter node.
      */
     protected NominalValueRowFilterNodeDialog() {
         m_colAttributes = new LinkedHashMap<String, Set<DataCell>>();
         m_columns = new DefaultComboBoxModel();
-        m_included = new DefaultListModel();
-        m_excluded = new DefaultListModel();
-        m_includeList = new JList(m_included);
-        m_excludeList = new JList(m_excluded);
 
         m_columnSelection = new JComboBox(m_columns);
         m_columnSelection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
@@ -148,129 +131,8 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
 
     private Box createAttributeSelectionLists() {
         Box overall = Box.createHorizontalBox();
-        overall.setBorder(new TitledBorder("Nominal value selection:"));
-        // left excluded
-        Box excluded = Box.createVerticalBox();
-        excluded.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.RED), "Excluded:"));
-        m_excludeList.setMinimumSize(new Dimension(200, 200));
-        m_excludeList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    final List<Object> exs = m_excludeList.getSelectedValuesList();
-                    for (final Object cell : exs) {
-                        m_excluded.removeElement(cell);
-                    }
-                    m_included.removeAllElements();
-                    List<Object> hash = Arrays.asList(m_excluded.toArray());
-                    for (final DataCell cell : m_colAttributes.get(m_columns.getSelectedItem())) {
-                        final String s = cell.toString();
-                        if (!hash.contains(s)) {
-                            m_included.addElement(s);
-                        }
-                    }
-                }
-            }
-        });
-        // force fixed width for list
-        m_excludeList.setFixedCellWidth(200);
-        JScrollPane exclScroller = new JScrollPane(m_excludeList);
-        exclScroller.setMinimumSize(new Dimension(200, 200));
-        excluded.add(exclScroller);
-        overall.add(excluded);
-
-        // center buttons
-        JButton add = new JButton("Add >");
-        add.setMaximumSize(new Dimension(200, 20));
-        add.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                Object[] o = m_excludeList.getSelectedValues();
-                for (int i = 0; i < o.length; i++) {
-                    m_included.addElement(o[i]);
-                    m_excluded.removeElement(o[i]);
-                }
-            }
-        });
-        JButton addAll = new JButton("Add all >>");
-        addAll.setMaximumSize(new Dimension(200, 20));
-        addAll.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                for (int i = 0; i < m_excluded.getSize(); i++) {
-                    m_included.addElement(m_excluded.getElementAt(i));
-                }
-                m_excluded.removeAllElements();
-            }
-        });
-        JButton remove = new JButton("< Remove");
-        remove.setMaximumSize(new Dimension(200, 20));
-        remove.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                Object[] o = m_includeList.getSelectedValues();
-                for (int i = 0; i < o.length; i++) {
-                    m_excluded.addElement(o[i]);
-                    m_included.removeElement(o[i]);
-                }
-            }
-        });
-        JButton removeAll = new JButton("<< Remove all");
-        removeAll.setMaximumSize(new Dimension(200, 20));
-        removeAll.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                for (int i = 0; i < m_included.getSize(); i++) {
-                    m_excluded.addElement(m_included.getElementAt(i));
-                }
-                m_included.removeAllElements();
-            }
-        });
-
-        Box buttonBox = Box.createVerticalBox();
-        buttonBox.setBorder(BorderFactory.createTitledBorder("Select:"));
-        buttonBox.setMinimumSize(new Dimension(200, 300));
-        buttonBox.add(Box.createVerticalGlue());
-        buttonBox.add(Box.createVerticalStrut(20));
-        buttonBox.add(add);
-        buttonBox.add(Box.createVerticalStrut(20));
-        buttonBox.add(addAll);
-        buttonBox.add(Box.createVerticalStrut(20));
-        buttonBox.add(remove);
-        buttonBox.add(Box.createVerticalStrut(20));
-        buttonBox.add(removeAll);
-        buttonBox.add(Box.createVerticalStrut(20));
-        buttonBox.add(Box.createVerticalGlue());
-        overall.add(buttonBox);
-
-        // right included
-        Box included = Box.createVerticalBox();
-        included.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GREEN), "Included:"));
-        m_includeList.setMinimumSize(new Dimension(200, 200));
-        m_includeList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    final List<Object> ins = m_includeList.getSelectedValuesList();
-                    for (final Object cell : ins) {
-                        m_included.removeElement(cell);
-                    }
-                    m_excluded.removeAllElements();
-                    List<Object> hash = Arrays.asList(m_included.toArray());
-                    for (final DataCell cell : m_colAttributes.get(m_columns.getSelectedItem())) {
-                        final String s = cell.toString();
-                        if (!hash.contains(s)) {
-                            m_excluded.addElement(s);
-                        }
-                    }
-                }
-            }
-        });
-        // force list to have fixed width
-        m_includeList.setFixedCellWidth(200);
-        JScrollPane inclScroller = new JScrollPane(m_includeList);
-        included.add(inclScroller);
-        overall.add(included);
+        m_filterPanel = new NominalValueFilterPanel();
+        overall.add(m_filterPanel);
         return overall;
     }
 
@@ -284,13 +146,15 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     @Override
     public void itemStateChanged(final ItemEvent item) {
         m_selectedColumn = (String)item.getItem();
-        m_included.removeAllElements();
-        m_excluded.removeAllElements();
+        ArrayList<String> names = new ArrayList<>();
         if (m_colAttributes.get(m_selectedColumn) != null) {
             for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
-                m_excluded.addElement(dc.toString());
+                names.add(dc.toString());
             }
         }
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
+        config.loadDefaults(null, names.toArray(new String[0]), EnforceOption.EnforceExclusion);
+        m_filterPanel.loadConfiguration(config, names.toArray(new String[0]));
     }
 
     /**
@@ -315,8 +179,6 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         // clear old values
         m_colAttributes.clear();
         m_columns.removeAllElements();
-        m_included.removeAllElements();
-        m_excluded.removeAllElements();
         // disable item state change listener while adding values
         m_columnSelection.removeItemListener(this);
         // fill the models
@@ -333,21 +195,33 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         m_columnSelection.setSelectedItem(m_selectedColumn);
         // if it is not in the list, use first element
         m_selectedColumn = (String)m_columnSelection.getSelectedItem();
+        ArrayList<String> m_included = new ArrayList<String>();
+        ArrayList<String> m_excluded = new ArrayList<String>();
         if (m_colAttributes.get(m_selectedColumn) != null) {
             for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
                 // if possible value was in the settings...
                 if (includedAttr.contains(dc.toString())) {
                     // ... put it to included ...
-                    m_included.addElement(dc.toString());
+                    m_included.add(dc.toString());
                 } else {
                     // ... else to excluded
-                    m_excluded.addElement(dc.toString());
+                    m_excluded.add(dc.toString());
                 }
             }
         }
-        // do layout
-        m_includeList.revalidate();
-        m_excludeList.revalidate();
+
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
+        config.loadDefaults(m_included.toArray(new String[0]), m_excluded.toArray(new String[0]),
+            EnforceOption.EnforceExclusion);
+        ArrayList<String> names = new ArrayList<>();
+        if (m_colAttributes.get(m_selectedColumn) != null) {
+            for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
+                names.add(dc.toString());
+            }
+        }
+        m_filterPanel.loadConfiguration(config, names.toArray(new String[0]));
+
+
         // enable item change listener again
         m_columnSelection.addItemListener(this);
     }
@@ -361,11 +235,9 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
             throws InvalidSettingsException {
         settings.addString(CFG_SELECTED_COL, (String)m_columnSelection
                 .getSelectedItem());
-        String[] selected = new String[m_included.getSize()];
-        for (int i = 0; i < selected.length; i++) {
-            selected[i] = (String)m_included.getElementAt(i);
-        }
-        settings.addStringArray(CFG_SELECTED_ATTR, selected);
+        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration("configRootName");
+        m_filterPanel.saveConfiguration(config);
+        settings.addStringArray(CFG_SELECTED_ATTR, m_filterPanel.getIncludeList().toArray(new String[0]));
     }
 
 }

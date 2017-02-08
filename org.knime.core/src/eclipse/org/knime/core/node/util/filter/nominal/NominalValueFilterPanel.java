@@ -48,24 +48,39 @@
  */
 package org.knime.core.node.util.filter.nominal;
 
-import javax.swing.ListCellRenderer;
+import javax.swing.DefaultListCellRenderer;
 
 import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
+ * @since 3.3
  */
 @SuppressWarnings("serial")
 public class NominalValueFilterPanel extends NameFilterPanel<String> {
 
     /**
+     * @since 3.3
+     */
+    public NominalValueFilterPanel() {
+        super(false, null);
+    }
+
+    /**
+     * @param showSelectionListsOnly
+     * @since 3.3
+     */
+    public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
+        super(showSelectionListsOnly, null);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    protected ListCellRenderer getListCellRenderer() {
-        // TODO Auto-generated method stub
-        return null;
+    protected DefaultListCellRenderer getListCellRenderer() {
+        return new DefaultListCellRenderer();
     }
 
     /**
@@ -73,8 +88,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      */
     @Override
     protected String getTforName(final String name) {
-        // TODO Auto-generated method stub
-        return null;
+        return name;
     }
 
     /**
@@ -82,8 +96,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      */
     @Override
     protected String getNameForT(final String t) {
-        // TODO Auto-generated method stub
-        return null;
+        return t;
     }
 
 }

@@ -53,15 +53,18 @@ import org.knime.core.node.util.filter.NameFilterConfiguration;
 /**
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
+ * @since 3.3
  */
 public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
     /**
-     * @param configRootName
+     * Creates a new nominal value filter configuration with the given settings name.
+     *
+     * @param configRootName the config name to used to store the settings
+     * @throws IllegalArgumentException If config name is null or empty
      */
     public NominalValueFilterConfiguration(final String configRootName) {
         super(configRootName);
-        // TODO Auto-generated constructor stub
     }
 
 }
