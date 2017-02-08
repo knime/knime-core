@@ -96,7 +96,7 @@ public class UngroupNodeModel extends NodeModel {
     /**
      * Node returns a new hilite handler instance.
      */
-    private HiLiteTranslator m_trans = null;
+    private HiLiteTranslator m_trans;
 
     private final HiLiteHandler m_hilite = new HiLiteHandler();
 
@@ -210,6 +210,7 @@ public class UngroupNodeModel extends NodeModel {
         if (m_trans != null) {
             m_trans.setMapper(null);
         }
+        m_hilite.fireClearHiLiteEvent();
     }
 
     /**
@@ -217,12 +218,13 @@ public class UngroupNodeModel extends NodeModel {
      */
     @Override
     protected void setInHiLiteHandler(final int inIndex, final HiLiteHandler hiLiteHdl) {
-        if (m_trans == null) {
-            m_trans = new HiLiteTranslator(hiLiteHdl);
-            m_trans.addToHiLiteHandler(m_hilite);
-        } else if (m_trans.getFromHiLiteHandler() != hiLiteHdl) {
+        if (m_trans != null && m_trans.getFromHiLiteHandler() != hiLiteHdl) {
             m_trans.removeAllToHiliteHandlers();
             m_trans.setMapper(null);
+            m_trans = null;
+        }
+        if (hiLiteHdl != null) {
+            m_trans = new HiLiteTranslator(hiLiteHdl);
             m_trans.addToHiLiteHandler(m_hilite);
         }
     }
