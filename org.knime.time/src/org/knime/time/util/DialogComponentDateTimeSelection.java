@@ -52,23 +52,35 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DateEditor;
 import javax.swing.JTextField;
 import javax.swing.SpinnerDateModel;
+import javax.swing.plaf.basic.BasicSpinnerUI;
+import javax.swing.text.DateFormatter;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
@@ -104,6 +116,10 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
 
     private final DisplayOption m_displayOption;
 
+    private JSpinner.DateEditor editor;
+
+    private boolean isEditorInitialized;
+
     /**
      * Constructor puts for the date, time and time zone a checkbox and chooser into the panel according to display
      * option.
@@ -111,14 +127,12 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
      * @param model the model that stores the values for this component
      * @param label label for the border of the dialog, if <code>null</code> no border is created
      * @param displayOption an option of {@link DisplayOption}, defines which components are put into the panel
-     * @param useMillis defines if milliseconds shall be adjustable in the time spinner
      */
-    @SuppressWarnings("serial")
     public DialogComponentDateTimeSelection(final SettingsModelDateTime model, final String label,
-        final DisplayOption displayOption, final boolean useMillis) {
+        final DisplayOption displayOption) {
         super(model);
+        isEditorInitialized = false;
         m_displayOption = displayOption;
-        setUseMillis(useMillis);
 
         final JPanel panel = new JPanel(new GridBagLayout());
         if (label != null) {
@@ -137,12 +151,10 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         final String dateLabel = "Date:";
         m_dateCheckbox = new JCheckBox(dateLabel, true);
         final Date value = Date.from(model.getZonedDateTime().toInstant());
-        m_dateChooser = new JDateChooser("yyyy-MM-dd", "####-##-##", '_') {
-            {
-                // fixes bug AP-5865
-                popup.setFocusable(false);
-            }
-        };
+        m_dateChooser = new JDateChooser("yyyy-MM-dd", "####-##-##", '_');
+        // fixes bug AP-5865
+        setPopupProperty(m_dateChooser);
+
         if (value != null) {
             m_dateChooser.setDate(value);
         }
@@ -174,8 +186,11 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         final String timeLabel = "Time:";
         m_timeCheckbox = new JCheckBox(timeLabel, true);
         m_timeSpinner = new JSpinner(new SpinnerDateModel());
-        final JComponent editor = isUseMillis() ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
+        m_timeSpinner.setUI(new TimeSpinnerUI());
+        editor = isUseMillis() ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
             : new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITHOUT_MS);
+        editor.getTextField().setColumns(6);
+
         m_timeSpinner.setEditor(editor);
         if (value != null) {
             m_timeSpinner.setValue(value);
@@ -256,6 +271,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
                 DateTimeFormatter.ofPattern(isUseMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS);
             model.setLocalTime(LocalTime.parse(
                 ((DateEditor)m_timeSpinner.getEditor()).getFormat().format(m_timeSpinner.getValue()), formatter));
+
         });
         m_zoneCheckbox.addActionListener(e -> {
             m_zoneComboBox.setEnabled(m_zoneCheckbox.isSelected() && model.isEnabled());
@@ -265,21 +281,69 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
         });
         model.addChangeListener(e -> {
+            if (!isEditorInitialized) {
+                ((DateFormatter)editor.getTextField().getFormatter()).setFormat(new SimpleDateFormat(
+                    model.useMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
+                setUseMillis(model.useMillis());
+                isEditorInitialized = true;
+            }
             updateComponent();
+        });
+        editor.getTextField().addFocusListener(new FocusAdapter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void focusLost(final FocusEvent e) {
+                updateSpinnerFormat();
+            }
+
         });
     }
 
+    private void setPopupProperty(final JDateChooser dateChooser){
+        try {
+            // Java will fetch a static field that is public, if you
+            // declare it to be non-static or give it the wrong scope, it
+            // automatically retrieves the static field from a super
+            // class/interface (from which super interface it gets it,
+            // depends pretty much on the order after the "extends ..."
+            // statement) If this field has the wrong type, a coding
+            // problem is reported.
+            final Field typeField = JDateChooser.class.getDeclaredField("popup");
+            typeField.setAccessible(true);
+            ((JPopupMenu)typeField.get(dateChooser)).setFocusable(false);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     /**
-     * Constructor puts for the date, time and time zone a checkbox and chooser into the panel according to display
-     * option.
+     * Allows the user to determine by himself whether milliseconds shall be used or not. Checks if the text in the text
+     * field of the time spinner contains milliseconds or not and updates the format of the spinner editor accordingly.
      *
-     * @param model the model that stores the values for this component
-     * @param label label for the border of the dialog, if <code>null</code> no border is created
-     * @param displayOption an option of {@link DisplayOption}, defines which components are put into the panel
      */
-    public DialogComponentDateTimeSelection(final SettingsModelDateTime model, final String label,
-        final DisplayOption displayOption) {
-        this(model, label, displayOption, false);
+    private void updateSpinnerFormat() {
+        final JFormattedTextField field = (JFormattedTextField)editor.getComponent(0);
+        try {
+            DateTimeFormatter.ofPattern(TIME_FORMAT_WITH_MS).parse(field.getText());
+            if (!m_useMillis) {
+                setUseMillis(true);
+                ((DateFormatter)editor.getTextField().getFormatter())
+                    .setFormat(new SimpleDateFormat(TIME_FORMAT_WITH_MS, Locale.getDefault()));
+                updateModel();
+            }
+        } catch (final DateTimeParseException iae) {
+            try {
+                DateTimeFormatter.ofPattern(TIME_FORMAT_WITHOUT_MS).parse(field.getText());
+                if (m_useMillis) {
+                    setUseMillis(false);
+                    ((DateFormatter)editor.getTextField().getFormatter())
+                        .setFormat(new SimpleDateFormat(TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
+                    updateModel();
+                }
+            } catch (final DateTimeParseException iae2) {
+            }
+        }
     }
 
     /**
@@ -328,8 +392,8 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         model.setLocalDate(m_dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         final DateTimeFormatter formatter =
             DateTimeFormatter.ofPattern(isUseMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS);
-        model.setLocalTime(LocalTime
-            .parse(((DateEditor)m_timeSpinner.getEditor()).getFormat().format(m_timeSpinner.getValue()), formatter));
+        model
+            .setLocalTime(LocalTime.parse(((DateEditor)m_timeSpinner.getEditor()).getTextField().getText(), formatter));
         model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
 
         model.setUseDate(m_dateCheckbox.isSelected());
@@ -386,11 +450,6 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
      */
     public void setUseMillis(final boolean useMillis) {
         m_useMillis = useMillis;
-        if (m_timeSpinner != null) {
-            final JComponent editor = m_useMillis ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
-                : new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITHOUT_MS);
-            m_timeSpinner.setEditor(editor);
-        }
     }
 
     /**
@@ -507,4 +566,33 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
 
     }
 
+    /**
+     * Solves the problem that the text field of a spinner does not lose the focus when the buttons are pressed.
+     *
+     */
+    private class TimeSpinnerUI extends BasicSpinnerUI {
+        @Override
+        protected Component createNextButton() {
+            final JButton btnUp = (JButton)super.createNextButton();
+            btnUp.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent ae) {
+                    updateSpinnerFormat();
+                }
+            });
+            return btnUp;
+        }
+
+        @Override
+        protected Component createPreviousButton() {
+            final JButton btnDown = (JButton)super.createPreviousButton();
+            btnDown.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent ae) {
+                    updateSpinnerFormat();
+                }
+            });
+            return btnDown;
+        }
+    }
 }

@@ -109,7 +109,7 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
         final SettingsModelDateTime timeModel = ModifyTimeNodeModel.createTimeModel();
-        m_dialogCompTime = new DialogComponentDateTimeSelection(timeModel, null, DisplayOption.SHOW_TIME_ONLY, true);
+        m_dialogCompTime = new DialogComponentDateTimeSelection(timeModel, null, DisplayOption.SHOW_TIME_ONLY);
 
         final SettingsModelDateTime timeZoneModel = ModifyTimeNodeModel.createTimeZoneModel();
         m_dialogCompTimeZone =

@@ -95,6 +95,8 @@ public class SettingsModelDateTime extends SettingsModel {
 
     private boolean m_useZone;
 
+    private boolean m_useMillis;
+
     /**
      * @param configName the identifier the value is stored with in the {@link org.knime.core.node.NodeSettings} object
      * @param defaultDate the initial value, if <code>null</code> the current date is used
@@ -117,7 +119,7 @@ public class SettingsModelDateTime extends SettingsModel {
         if (defaultTime != null) {
             m_time = defaultTime;
         } else {
-            m_time = LocalTime.now();
+            m_time = LocalTime.now().withNano(0);
         }
         if (defaultZoneId != null) {
             m_zone = defaultZoneId;
@@ -146,7 +148,7 @@ public class SettingsModelDateTime extends SettingsModel {
             m_zone = defaultDateTime.getZone();
         } else {
             m_date = LocalDate.now();
-            m_time = LocalTime.now();
+            m_time = LocalTime.now().withNano(0);
             m_zone = ZoneId.systemDefault();
         }
 
@@ -300,7 +302,7 @@ public class SettingsModelDateTime extends SettingsModel {
         } catch (InvalidSettingsException ise) {
             // load current date and time
             setLocalDate(LocalDate.now());
-            setLocalTime(LocalTime.now());
+            setLocalTime(LocalTime.now().withNano(0));
             setZone(ZoneId.systemDefault());
         }
     }
@@ -314,6 +316,7 @@ public class SettingsModelDateTime extends SettingsModel {
         final long date = internals.getLong(KEY_DATE, LocalDate.now().getLong(ChronoField.EPOCH_DAY));
         final long time = internals.getLong(KEY_TIME, LocalTime.now().getLong(ChronoField.NANO_OF_DAY));
         final String zone = internals.getString(KEY_ZONE, ZoneId.systemDefault().getId());
+        m_useMillis = LocalTime.ofNanoOfDay(time).getNano() > 0;
         setLocalDate(LocalDate.ofEpochDay(date));
         setLocalTime(LocalTime.ofNanoOfDay(time));
         setZone(ZoneId.of(zone));
@@ -432,4 +435,10 @@ public class SettingsModelDateTime extends SettingsModel {
         }
     }
 
+    /**
+     * @return the useMillis
+     */
+    public boolean useMillis() {
+        return m_useMillis;
+    }
 }

@@ -149,7 +149,7 @@ class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** @return the date time model, used in both dialog and model. */
     static SettingsModelDateTime createTimeModel(){
-        return new SettingsModelDateTime("time", null, LocalTime.now(), null);
+        return new SettingsModelDateTime("time", null, LocalTime.now().withNano(0), null);
     }
 
     /** @return the date time model, used in both dialog and model. */
