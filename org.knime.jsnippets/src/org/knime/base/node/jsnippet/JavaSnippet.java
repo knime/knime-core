@@ -321,7 +321,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     @Override
     public File[] getClassPath() throws IOException {
         final List<File> additionalBuildPath = Arrays.asList(getAdditionalBuildPaths());
-        final ArrayList<File> jarFiles = new ArrayList<>(additionalBuildPath.size() + 1 + m_jarFiles.length);
+        final ArrayList<File> jarFiles = new ArrayList<>();
 
         jarFiles.addAll(Arrays.asList(getRuntimeClassPath()));
         jarFiles.addAll(additionalBuildPath);
@@ -338,7 +338,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             }
         }
 
-        final ArrayList<File> jarFiles = new ArrayList<>(1 + m_jarFiles.length);
+        final ArrayList<File> jarFiles = new ArrayList<>();
         jarFiles.add(jSnippetJar);
 
         for (final String jarFile : m_jarFiles) {
@@ -1066,7 +1066,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             //   (b) it would collect buddies when used directly (see support ticket #1943)
             customTypeClassLoaders.remove(DataCellToJavaConverterRegistry.class.getClassLoader());
 
-            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(customTypeClassLoaders.stream().toArray(size -> new ClassLoader[size]));
+            final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(
+                customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
 
             final ClassLoader loader = compiler.createClassLoader(customTypeLoader);
             Class<? extends AbstractJSnippet> snippetClass =
@@ -1074,11 +1075,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             m_snippetCache.update(getDocument(), snippetClass, m_settings);
             return snippetClass;
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(
-                    "Could not load class file.", e);
+            throw new IllegalStateException("Could not load class file.", e);
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Could not load jar files.", e);
+            throw new IllegalStateException("Could not load jar files.", e);
         }
     }
 
@@ -1202,7 +1201,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
      * @return A list of class loaders required for given converter factory
      * @noreference This method is not intended to be referenced by clients.
      */
-    public static Collection<ClassLoader> getClassLoadersFor(final String converterFactoryId) {
+    private static Collection<ClassLoader> getClassLoadersFor(final String converterFactoryId) {
         final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
             ConverterUtil.getDataCellToJavaConverterFactory(converterFactoryId);
         if (factory.isPresent()) {
