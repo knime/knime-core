@@ -46,11 +46,14 @@ package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.DisplayMode;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -66,13 +69,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.database.DatabasePortObject.DatabaseOutPortPanel;
+import org.knime.core.node.port.PortObjectView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -85,13 +90,9 @@ public class OutPortView extends JFrame {
     /** Keeps track if view has been opened before. */
     private boolean m_wasOpened = false;
 
-    /** Initial frame width. */
-    static final int INIT_WIDTH = 500;
-
-    /** Initial frame height. */
-    static final int INIT_HEIGHT = 400;
-
     private final JTabbedPane m_tabbedPane;
+    private final Map<String, ViewDetails> m_tabNameToViewDetailMap;
+
 
     private final LoadingPanel m_loadingPanel = new LoadingPanel();
 
@@ -120,7 +121,12 @@ public class OutPortView extends JFrame {
             super.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         super.setBackground(NodeView.COLOR_BACKGROUND);
-        super.setSize(INIT_WIDTH, INIT_HEIGHT);
+
+        // initialize default window width / height
+        DisplayMode displayMode = getGraphicsConfiguration().getDevice().getDisplayMode();
+        int width = Math.min(Math.max(2 * displayMode.getWidth() / 3, 600), 1600);
+        int height = Math.min(Math.max(2 * displayMode.getHeight() / 3, 400), 900);
+        super.setSize(width, height);
         setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
         JMenuBar menuBar = new JMenuBar();
@@ -128,16 +134,13 @@ public class OutPortView extends JFrame {
         menu.setMnemonic('F');
         JMenuItem item = new JMenuItem("Close");
         item.setMnemonic('C');
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent event) {
-                setVisible(false);
-            }
-        });
+        item.addActionListener(e -> setVisible(false));
         menu.add(item);
         menuBar.add(menu);
         setJMenuBar(menuBar);
         m_tabbedPane = new JTabbedPane();
+        m_tabbedPane.addChangeListener(e -> onTabChanged());
+        m_tabNameToViewDetailMap = new LinkedHashMap<>();
         getContentPane().add(m_loadingPanel);
     }
 
@@ -185,12 +188,15 @@ public class OutPortView extends JFrame {
 
         private final NodeContext m_nodeContext;
 
+        private final HiLiteHandler m_hiliteHandler;
+
         private UpdateObject(final PortObject po, final PortObjectSpec spec, final FlowObjectStack stack,
-            final CredentialsProvider prov) {
+            final CredentialsProvider prov, final HiLiteHandler hiliteHandler) {
             m_portObject = po;
             m_portObjectSpec = spec;
             m_flowObjectStack = stack;
             m_credentialsProvider = prov;
+            m_hiliteHandler = hiliteHandler;
             m_nodeContext = NodeContext.getContext();
         }
     }
@@ -204,10 +210,11 @@ public class OutPortView extends JFrame {
      * @param portObjectSpec data table spec or model content spec or other spec
      * @param stack The {@link FlowObjectStack} of the node.
      * @param credentials the CredenialsProvider used in out-port view
+     * @param hiliteHandler the hilite handler active at the port
      */
     void update(final PortObject portObject, final PortObjectSpec portObjectSpec, final FlowObjectStack stack,
-        final CredentialsProvider credentials) {
-        UpdateObject updateObject = new UpdateObject(portObject, portObjectSpec, stack, credentials);
+        final CredentialsProvider credentials, final HiLiteHandler hiliteHandler) {
+        UpdateObject updateObject = new UpdateObject(portObject, portObjectSpec, stack, credentials, hiliteHandler);
 
         // set update object, run update thread only if there was no previous
         // update object (otherwise an update is currently ongoing)
@@ -248,23 +255,26 @@ public class OutPortView extends JFrame {
 
             private void runWithContext() {
                 // add all port object tabs
-                final Map<String, JComponent> views = new LinkedHashMap<String, JComponent>();
+                m_tabNameToViewDetailMap.clear();
                 PortObject portObject = updateObject.m_portObject;
                 PortObjectSpec portObjectSpec = updateObject.m_portObjectSpec;
                 FlowObjectStack stack = updateObject.m_flowObjectStack;
                 CredentialsProvider credentials = updateObject.m_credentialsProvider;
+                HiLiteHandler hiliteHandler = updateObject.m_hiliteHandler;
                 if (portObject != null) {
                     JComponent[] poViews = portObject.getViews();
                     if (poViews != null) {
                         for (JComponent comp : poViews) {
-                            // fix 2379: CredentialsProvider needed in
+                            // fix (bugzilla) 2379: CredentialsProvider needed in
                             // DatabasePortObject to create db connection
                             // while accessing data for preview
-                            if (comp instanceof DatabaseOutPortPanel) {
-                                DatabaseOutPortPanel dbcomp = (DatabaseOutPortPanel)comp;
-                                dbcomp.setCredentialsProvider(credentials);
+                            // fix (jira) AP-6017: hilite support in output table view
+                            if (comp instanceof PortObjectView) {
+                                PortObjectView poView = (PortObjectView)comp;
+                                poView.setCredentialsProvider(credentials);
+                                poView.setHiliteHandler(hiliteHandler);
                             }
-                            views.put(comp.getName(), comp);
+                            m_tabNameToViewDetailMap.put(comp.getName(), ViewDetails.of(comp));
                         }
                     }
                 } else {
@@ -277,31 +287,55 @@ public class OutPortView extends JFrame {
                     boexle.add(Box.createHorizontalGlue());
                     noDataPanel.add(boexle, BorderLayout.CENTER);
                     noDataPanel.setName("No Table");
-                    views.put("No Table", noDataPanel);
+                    m_tabNameToViewDetailMap.put("No Table", ViewDetails.of(noDataPanel));
                 }
                 JComponent[] posViews = portObjectSpec == null ? new JComponent[0] : portObjectSpec.getViews();
                 if (posViews != null) {
                     for (JComponent comp : posViews) {
-                        views.put(comp.getName(), comp);
+                        m_tabNameToViewDetailMap.put(comp.getName(), ViewDetails.of(comp));
                     }
                 }
 
                 FlowObjectStackView stackView = new FlowObjectStackView();
                 stackView.update(stack);
-                views.put("Flow Variables", stackView);
+                m_tabNameToViewDetailMap.put("Flow Variables", ViewDetails.of(stackView));
 
                 m_tabbedPane.removeAll();
-                for (Map.Entry<String, JComponent> entry : views.entrySet()) {
-                    m_tabbedPane.addTab(entry.getKey(), entry.getValue());
+                for (Map.Entry<String, ViewDetails> entry : m_tabNameToViewDetailMap.entrySet()) {
+                    ViewDetails viewDetails = entry.getValue();
+                    m_tabbedPane.addTab(entry.getKey(), viewDetails.getView());
                 }
                 remove(m_loadingPanel);
                 add(m_tabbedPane);
+                onTabChanged();
                 invalidate();
                 validate();
                 repaint();
             }
         });
 
+    }
+
+    /** Called when a different tab is selected ... updates the menu. */
+    private void onTabChanged() {
+        assert SwingUtilities.isEventDispatchThread() : "Not in EDT";
+        final JMenuBar menuBar = getJMenuBar();
+        for (int i = menuBar.getMenuCount(); --i >= 0; ) {
+            JMenu m = menuBar.getMenu(i);
+            if (m != null && !"File".equals(m.getText())) {
+                menuBar.remove(m);
+            }
+        }
+        Component selectedTab = m_tabbedPane.getSelectedComponent();
+        String selectedTabName = selectedTab != null ? selectedTab.getName() : null;
+        if (m_tabbedPane.isVisible() && selectedTabName != null) {
+            ViewDetails viewDetails = m_tabNameToViewDetailMap.get(selectedTabName);
+            assert viewDetails != null : "No view details for tab \"" + selectedTabName + "\"";
+            viewDetails.getMenus().ifPresent(m -> {
+                Arrays.stream(m).forEach(menuBar::add);
+            });
+        }
+        menuBar.repaint();
     }
 
     /** {@inheritDoc} */
@@ -326,6 +360,36 @@ public class OutPortView extends JFrame {
             centerBox.add(new JLabel("Loading port content..."));
             centerBox.add(Box.createHorizontalGlue());
             add(centerBox);
+        }
+
+    }
+
+    private static final class ViewDetails {
+
+        private final JComponent m_view;
+        private final Optional<JMenu[]> m_menusOptional;
+
+        /**
+         * @param view
+         * @param menus
+         */
+        ViewDetails(final JComponent view, final JMenu[] menus) {
+            m_view = Objects.requireNonNull(view);
+            m_menusOptional = Optional.ofNullable(menus);
+        }
+
+        /** @return the menus */
+        Optional<JMenu[]> getMenus() {
+            return m_menusOptional;
+        }
+
+        /** @return the view */
+        JComponent getView() {
+            return m_view;
+        }
+
+        static ViewDetails of(final JComponent c) {
+            return new ViewDetails(c, c instanceof BufferedDataTableView ? ((BufferedDataTableView)c).getMenus() : null);
         }
 
     }

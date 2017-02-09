@@ -223,7 +223,7 @@ public final class Joiner {
                             + "Only the one in the top input table will show "
                             + "up in the output table. Please change the "
                             + "Duplicate Column Handling if both columns "
-                            + "should show up in the ouput table.");
+                            + "should show up in the output table.");
                 }
             }
 
@@ -1172,7 +1172,7 @@ public final class Joiner {
                     + "Only the one in the top input table will show "
                     + "up in the output table. Please change the "
                     + "Duplicate Column Handling if both columns "
-                    + "should show up in the ouput table.";
+                    + "should show up in the output table.";
                 }
             }
 

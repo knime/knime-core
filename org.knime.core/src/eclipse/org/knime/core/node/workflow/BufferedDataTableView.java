@@ -47,18 +47,21 @@ package org.knime.core.node.workflow;
 import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortObjectView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableView;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class BufferedDataTableView extends JComponent {
+public class BufferedDataTableView extends JComponent implements PortObjectView {
 
     private final TableView m_dataView;
 
@@ -88,11 +91,28 @@ public class BufferedDataTableView extends JComponent {
         updateDataTable();
     }
 
+    JMenu[] getMenus() {
+        return new JMenu[] {
+            m_dataView.createHiLiteMenu(),
+            m_dataView.createNavigationMenu(),
+            m_dataView.createViewMenu()
+        };
+    }
+
     private void updateDataTable() {
         synchronized (m_updateLock) {
             m_dataView.setDataTable(m_table);
             add(m_dataView);
             revalidate();
+        }
+    }
+
+    /** {@inheritDoc}
+     * @since 3.3 */
+    @Override
+    public void setHiliteHandler(final HiLiteHandler handler) {
+        synchronized (m_updateLock) {
+            m_dataView.setHiLiteHandler(handler);
         }
     }
 

@@ -144,7 +144,7 @@ public abstract class GUIDeadlockDetector {
             } else if (!m_deadlockDetected.getAndSet(true)) {
                 String stacktrace = createStacktrace();
                 m_logger.warn("Potential deadlock in " + getThreadName()
-                    + " detected. Full thread dump will follow as debug ouput.");
+                    + " detected. Full thread dump will follow as debug output.");
                 m_logger.debug(stacktrace);
             }
         }

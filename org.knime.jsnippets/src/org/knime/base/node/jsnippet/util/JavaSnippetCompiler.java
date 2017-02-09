@@ -143,7 +143,7 @@ public class JavaSnippetCompiler {
      */
     public ClassLoader createClassLoader(final ClassLoader parent)
         throws IOException {
-        File[] classpaths = m_snippet.getClassPath();
+        File[] classpaths = m_snippet.getRuntimeClassPath();
         URL[] urls = new URL[classpaths.length + 1];
         if (classpaths.length > 0) {
             for (int i = 0; i < classpaths.length; i++) {
