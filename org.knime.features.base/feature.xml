@@ -817,6 +817,13 @@ propagated with or for interoperation with KNIME.
          unpack="false"/>
 
    <plugin
+         id="org.knime.time"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="org.knime.workbench.ui.layout"
          download-size="0"
          install-size="0"
