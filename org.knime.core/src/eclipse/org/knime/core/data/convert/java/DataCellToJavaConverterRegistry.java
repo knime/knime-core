@@ -416,7 +416,7 @@ public final class DataCellToJavaConverterRegistry {
      *         output type of elementFactory.
      * @param <DE> Destination element type
      * @param <D> Destination array type
-     * @since 3.3
+     * @since 3.4
      */
     public <DE, D> DataCellToJavaConverterFactory<CollectionDataValue, D>
         getCollectionConverterFactory(final DataCellToJavaConverterFactory<? extends DataValue, DE> elementFactory) {

@@ -107,8 +107,11 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
         }
     }
 
-    /** {@inheritDoc}
-     * @since 3.3 */
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.4
+     */
     @Override
     public void setHiliteHandler(final HiLiteHandler handler) {
         synchronized (m_updateLock) {
