@@ -143,6 +143,8 @@ public class CreateFilenameNodeModel extends NodeModel {
            throw new InvalidSettingsException("Please provide a file name");
        }
 
+       verifyAndPushOutputVar();
+
        return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
    }
 
@@ -151,6 +153,12 @@ public class CreateFilenameNodeModel extends NodeModel {
     */
    @Override
    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+       // verification and output flowvar generation have already been executed in configure
+       // do nothing here
+       return new PortObject[]{FlowVariablePortObject.INSTANCE};
+   }
+
+   private void verifyAndPushOutputVar() throws InvalidSettingsException{
        String outputFlowVar;
        if (!m_outputModel.getStringValue().isEmpty()) {
            outputFlowVar = m_outputModel.getStringValue();
@@ -163,7 +171,7 @@ public class CreateFilenameNodeModel extends NodeModel {
        String name = m_nameModel.getStringValue();
 
        if (!verifyBaseDir(baseDir)) {
-           throw new Exception("Invalid base directory name!");
+           throw new InvalidSettingsException("Invalid base directory name!");
        }
 
        if (name.isEmpty()) {
@@ -172,7 +180,7 @@ public class CreateFilenameNodeModel extends NodeModel {
 
        int invalidCharIdx = findInvalidChar(name);
        if (invalidCharIdx != -1) {
-           throw new Exception(
+           throw new InvalidSettingsException(
                "Invalid file name: " + name.charAt(invalidCharIdx) + " at position " + invalidCharIdx + ".");
        }
 
@@ -182,7 +190,7 @@ public class CreateFilenameNodeModel extends NodeModel {
        }
 
        if (!checkDotsAndSpaces(name)) {
-           throw new Exception("Invalid file name: Filename cannot contain only dot(s) or space(s).");
+           throw new InvalidSettingsException("Invalid file name: Filename cannot contain only dot(s) or space(s).");
        }
 
        if (!checkLeadingWhitespaces(name)) {
@@ -192,18 +200,18 @@ public class CreateFilenameNodeModel extends NodeModel {
 
        ext = verifyExtension(ext);
        if (ext == "-1") {
-           throw new Exception("Invalid file extension: Only alphanumeric characters are allowed.");
+           throw new InvalidSettingsException("Invalid file extension: Only alphanumeric characters are allowed.");
        }
 
        try {
            new File(name).getCanonicalPath();
        } catch (IOException | NullPointerException e) {
-           throw new Exception("Invalid file name!");
+           throw new InvalidSettingsException("Invalid file name!");
        }
 
        String output = handleSlash(baseDir, name, ext);
        if (output == "-1") {
-           throw new Exception("Invalid file name!");
+           throw new InvalidSettingsException("Invalid file name!");
        }
 
        int i = 0;
@@ -215,8 +223,6 @@ public class CreateFilenameNodeModel extends NodeModel {
            i++;
        }
        pushFlowVariableString(outputFlowVar, output);
-
-       return new PortObject[]{FlowVariablePortObject.INSTANCE};
    }
 
    /**
