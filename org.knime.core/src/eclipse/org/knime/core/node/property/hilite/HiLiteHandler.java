@@ -45,7 +45,6 @@
 package org.knime.core.node.property.hilite;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -117,11 +116,11 @@ public class HiLiteHandler {
      */
     public HiLiteHandler() {
         m_hiliteHandlerID = UUID.randomUUID();
-        m_listenerList = new CopyOnWriteArrayList<HiLiteListener>();
+        m_listenerList = new CopyOnWriteArrayList<>();
         // initialize item list
-        m_hiLitKeys = new LinkedHashSet<RowKey>();
-        m_hiliteTranslators = new HashSet<HiLiteTranslator>();
-        m_hiliteManagers = new HashSet<HiLiteManager>();
+        m_hiLitKeys = new LinkedHashSet<>();
+        m_hiliteTranslators = new LinkedHashSet<>();
+        m_hiliteManagers = new LinkedHashSet<>();
     }
 
     /**
@@ -166,6 +165,7 @@ public class HiLiteHandler {
      * Returns a set of {@link HiLiteTranslator}, if this {@link HiLiteHandler} instance is associated with it, never null.
      * @return A set of {@link HiLiteTranslator}s, or null
      * @since 3.4
+     * @noreference This method is not intended to be referenced by clients.
      */
     public Set<HiLiteTranslator> getHiLiteTranslators() {
         return m_hiliteTranslators;
@@ -173,11 +173,12 @@ public class HiLiteHandler {
 
     /**
      * Associates a {@link HiLiteTranslator} with this {@link HiLiteHandler} instance.
+     *
      * @param hiliteTranslator the {@link HiLiteTranslator} to add
-     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteTranslator} with this {@link HiLiteHandler} instance
-     * @since 3.4
+     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteTranslator} with this
+     *             {@link HiLiteHandler} instance
      */
-    public void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
+    final void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
             m_hiliteTranslators.add(hiliteTranslator);
         }
@@ -185,11 +186,12 @@ public class HiLiteHandler {
 
     /**
      * Removes an associated {@link HiLiteTranslator} from this {@link HiLiteHandler} instance
+     *
      * @param hiliteTranslator the {@link HiLiteTranslator} to remove
-     * @return true, if the given {@link HiLiteTranslator} was associated with this {@link HiLiteHandler} instance and removed, false otherwise
-     * @since 3.4
+     * @return true, if the given {@link HiLiteTranslator} was associated with this {@link HiLiteHandler} instance and
+     *         removed, false otherwise
      */
-    public boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
+    final boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
             return m_hiliteTranslators.remove(hiliteTranslator);
         }
@@ -200,18 +202,20 @@ public class HiLiteHandler {
      * Returns a set of {@link HiLiteManager}, if this {@link HiLiteHandler} instance is associated with it, never null.
      * @return A set of {@link HiLiteManager}s
      * @since 3.4
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public Set<HiLiteManager> getHiLiteManagers() {
+    public final Set<HiLiteManager> getHiLiteManagers() {
         return m_hiliteManagers;
     }
 
     /**
      * Associates a {@link HiLiteManager} with this {@link HiLiteHandler} instance.
+     *
      * @param hiliteManager the {@link HiLiteManager} to add
-     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteManager} with this {@link HiLiteHandler} instance
-     * @since 3.4
+     * @throws IllegalArgumentException when trying to associate more than two {@link HiLiteManager} with this
+     *             {@link HiLiteHandler} instance
      */
-    public void addHiLiteManager(final HiLiteManager hiliteManager) {
+    final void addHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
             m_hiliteManagers.add(hiliteManager);
         }
@@ -219,11 +223,12 @@ public class HiLiteHandler {
 
     /**
      * Removes an associated {@link HiLiteManager} from this {@link HiLiteHandler} instance
+     *
      * @param hiliteManager the {@link HiLiteManager} to remove
-     * @return true, if the given {@link HiLiteManager} was associated with this {@link HiLiteHandler} instance and removed, false otherwise
-     * @since 3.4
+     * @return true, if the given {@link HiLiteManager} was associated with this {@link HiLiteHandler} instance and
+     *         removed, false otherwise
      */
-    public boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
+    final boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
             return m_hiliteManagers.remove(hiliteManager);
         }

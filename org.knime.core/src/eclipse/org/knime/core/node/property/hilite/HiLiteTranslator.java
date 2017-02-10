@@ -65,6 +65,9 @@ import org.knime.core.data.RowKey;
  * are called when something changes either on the source or target side, and
  * then invoke the corresponding handlers on the other side to hilite, unhilite,
  * and clear mapped keys.
+ * <p>
+ * <strong>Note:</strong> If you create an instance of a {@link HiLiteTranslator} make sure to {@linkplain #dispose()}
+ * it when done, e.g. during reset, setting new input hilite handler or during disposal of the NodeModel.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
