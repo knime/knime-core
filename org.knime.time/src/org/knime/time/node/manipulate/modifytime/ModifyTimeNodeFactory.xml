@@ -5,17 +5,22 @@
 	<shortDescription>Modifies time information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
-		Modifies date&amp;time columns by
+			Modifies date&amp;time columns by
 			<ul>
-				<li>appending a time to local date columns (output type is local date time column),</li>
+				<li>appending a time to local date columns (output type is local
+					date time column),
+				</li>
 				<li>changing the time in local or zoned date&amp;time columns, or
 				</li>
-				<li>removing the time from local or zoned date&amp;time columns (output type is local date).
+				<li>removing the time from local or zoned date&amp;time columns
+					(output type is local date).
 				</li>
 			</ul>
-            This node is not used to add ("plus") or subtract ("minus") time. Use the <i>Date&amp;Time Shift</i>
-            node for that.
-        </intro>
+			This node is not used to add ("plus") or subtract ("minus") time. Use
+			the
+			<i>Date&amp;Time Shift</i>
+			node for that.
+		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
 				Only the included columns will be modified.
@@ -35,11 +40,13 @@
 		</tab>
 		<tab name="Time Selection">
 			<option name="Append Time">Appends a time to local date columns.
-				Optionally a time zone can be appended too.
+				Optionally a
+				time zone can be appended too.
 			</option>
 			<option name="Change Time">
 				Changes the time of local or zoned date&amp;time
-				columns. The time zone
+				columns. The time
+				zone
 				will
 				not be changed. The
 				<i>Modify Time Zone</i>
@@ -49,17 +56,16 @@
 				date&amp;time columns. Time zones will be removed
 				too.
 			</option>
-			<option name="Hour">A fixed hour between 0 and 23.</option>
-			<option name="Minute">A fixed minute between 0 and 59</option>
-			<option name="Second">A fixed second between 0 and 59</option>
-			<option name="Nano">A fixed nanosecond between 0 and 999,999,999
-			</option>
-			<option name="Add time zone">If checked, a fixed time zone will be added.
+			<option name="Time">
+				A time value in form of HH:mm:ss.SSS. For example
+				<i>12:10:30.123</i>
+				means
+				<i>12 hours, 10 minutes, 30 seconds, 123 milliseconds</i>
+				.
 			</option>
 			<option name="Time Zone">
-				If
-				<i>Add time zone</i>
-				is checked, the user can choose the time zone here.
+				If checked, the user can choose a time zone to
+				append also. 
 			</option>
 		</tab>
 	</fullDescription>

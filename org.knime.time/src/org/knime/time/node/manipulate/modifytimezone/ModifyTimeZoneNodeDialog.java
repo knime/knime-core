@@ -51,9 +51,6 @@ package org.knime.time.node.manipulate.modifytimezone;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -67,11 +64,13 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
+import org.knime.time.util.DialogComponentDateTimeSelection;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
+import org.knime.time.util.SettingsModelDateTime;
 
 /**
  * The node dialog of the node which modifies a time zone.
@@ -86,7 +85,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
 
     private final DialogComponentString m_dialogCompSuffix;
 
-    private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
+    private final DialogComponentDateTimeSelection m_dialogCompTimeZone;
 
     private final DialogComponentButtonGroup m_dialogCompModifySelect;
 
@@ -113,13 +112,15 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
             new DialogComponentButtonGroup(modifySelectModel, true, null, ModifyTimeZoneNodeModel.MODIFY_OPTION_SET,
                 ModifyTimeZoneNodeModel.MODIFY_OPTION_SHIFT, ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
 
-        final SettingsModelString zoneSelectModel = ModifyTimeZoneNodeModel.createTimeZoneSelectModel();
-        final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
-        final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
-        Arrays.sort(availableZoneIdsArray);
-        m_dialogCompTimeZoneSelec =
-            new DialogComponentStringSelection(zoneSelectModel, "Time zone: ", availableZoneIdsArray);
+//        final SettingsModelString zoneSelectModel = ModifyTimeZoneNodeModel.createTimeZoneSelectModel();
+//        final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
+//        final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
+//        Arrays.sort(availableZoneIdsArray);
+//        m_dialogCompTimeZoneSelec =
+//            new DialogComponentStringSelection(zoneSelectModel, "Time zone: ", availableZoneIdsArray);
 
+        final SettingsModelDateTime zoneModel = ModifyTimeZoneNodeModel.createTimeZoneModel();
+        m_dialogCompTimeZone = new DialogComponentDateTimeSelection(zoneModel, null, DisplayOption.SHOW_TIMEZONE_ONLY);
         /*
          * create panel with gbc
          */
@@ -175,7 +176,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
         gbcZS.gridx++;
         gbcZS.insets = new Insets(0, 30, 0, 0);
         gbcZS.weightx = 1;
-        panelZoneSelec.add(m_dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
+        panelZoneSelec.add(m_dialogCompTimeZone.getComponentPanel(), gbcZS);
         panel.add(panelZoneSelec, gbc);
 
         /*
@@ -188,7 +189,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
             boolean isRemoveTz =
                 modifySelectModel.getStringValue().equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_REMOVE);
 
-            zoneSelectModel.setEnabled(!isRemoveTz);
+            zoneModel.setEnabled(!isRemoveTz);
             m_includeLocalDateTime = isSetTz;
 
             final DataTypeColumnFilter filter = m_includeLocalDateTime ? ModifyTimeZoneNodeModel.ZONED_AND_LOCAL_FILTER
@@ -219,7 +220,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
         filterConfiguration.saveConfiguration(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
-        m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
+        m_dialogCompTimeZone.saveSettingsTo(settings);
         m_dialogCompModifySelect.saveSettingsTo(settings);
     }
 
@@ -232,7 +233,7 @@ class ModifyTimeZoneNodeDialog extends NodeDialogPane {
         m_spec = specs[0];
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
-        m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
+        m_dialogCompTimeZone.loadSettingsFrom(settings, specs);
         m_dialogCompModifySelect.loadSettingsFrom(settings, specs);
         m_includeLocalDateTime = ((SettingsModelString)m_dialogCompModifySelect.getModel()).getStringValue()
             .equals(ModifyTimeZoneNodeModel.MODIFY_OPTION_SET);
