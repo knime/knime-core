@@ -328,7 +328,7 @@ public final class JavaToDataCellConverterRegistry {
      *         the output type of elementFactory
      * @param <SE> Destination element type
      * @param <D> Destination array type
-     * @since 3.3
+     * @since 3.4
      */
     public <SE, D> JavaToDataCellConverterFactory<D>
         getArrayConverterFactory(final JavaToDataCellConverterFactory<SE> elementFactory) {

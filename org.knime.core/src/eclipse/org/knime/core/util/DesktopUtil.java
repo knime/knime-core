@@ -71,7 +71,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Ferry Abt, KNIME.com, Konstanz, Germany
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 public final class DesktopUtil {
 

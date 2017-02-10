@@ -59,7 +59,7 @@ import org.knime.core.node.port.database.aggregation.function.AbstractDistinctDB
  * This class adds support for the <tt>STDEVP</tt> aggregation function.
  *
  * @author Ole Ostergaard, KNIME.com, Konstanz, Germany
- * @since 3.3
+ * @since 3.4
  */
 public final class StdDevPDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
     private static final String LABEL = "STDEVP";

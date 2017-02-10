@@ -59,7 +59,7 @@ import org.knime.core.node.port.database.aggregation.function.AbstractDistinctDB
  * This class adds support for the <tt>VAR</tt> aggregation function.
  *
  * @author Ole Ostergaard, KNIME.com, Konstanz, Germany
- * @since 3.3
+ * @since 3.4
  */
 public final class VarDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
     private static final String LABEL = "VAR";
