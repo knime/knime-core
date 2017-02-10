@@ -116,9 +116,9 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
 
     private final DisplayOption m_displayOption;
 
-    private JSpinner.DateEditor editor;
+    private JSpinner.DateEditor m_editor;
 
-    private boolean isEditorInitialized;
+    private boolean m_isEditorInitialized;
 
     /**
      * Constructor puts for the date, time and time zone a checkbox and chooser into the panel according to display
@@ -131,7 +131,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
     public DialogComponentDateTimeSelection(final SettingsModelDateTime model, final String label,
         final DisplayOption displayOption) {
         super(model);
-        isEditorInitialized = false;
+        m_isEditorInitialized = false;
         m_displayOption = displayOption;
 
         final JPanel panel = new JPanel(new GridBagLayout());
@@ -187,11 +187,11 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         m_timeCheckbox = new JCheckBox(timeLabel, true);
         m_timeSpinner = new JSpinner(new SpinnerDateModel());
         m_timeSpinner.setUI(new TimeSpinnerUI());
-        editor = isUseMillis() ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
+        m_editor = isUseMillis() ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
             : new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITHOUT_MS);
-        editor.getTextField().setColumns(6);
+        m_editor.getTextField().setColumns(6);
 
-        m_timeSpinner.setEditor(editor);
+        m_timeSpinner.setEditor(m_editor);
         if (value != null) {
             m_timeSpinner.setValue(value);
         }
@@ -281,15 +281,15 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
         });
         model.addChangeListener(e -> {
-            if (!isEditorInitialized) {
-                ((DateFormatter)editor.getTextField().getFormatter()).setFormat(new SimpleDateFormat(
+            if (!m_isEditorInitialized) {
+                ((DateFormatter)m_editor.getTextField().getFormatter()).setFormat(new SimpleDateFormat(
                     model.useMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
                 setUseMillis(model.useMillis());
-                isEditorInitialized = true;
+                m_isEditorInitialized = true;
             }
             updateComponent();
         });
-        editor.getTextField().addFocusListener(new FocusAdapter() {
+        m_editor.getTextField().addFocusListener(new FocusAdapter() {
             /**
              * {@inheritDoc}
              */
@@ -323,12 +323,12 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
      *
      */
     private void updateSpinnerFormat() {
-        final JFormattedTextField field = (JFormattedTextField)editor.getComponent(0);
+        final JFormattedTextField field = (JFormattedTextField)m_editor.getComponent(0);
         try {
             DateTimeFormatter.ofPattern(TIME_FORMAT_WITH_MS).parse(field.getText());
             if (!m_useMillis) {
                 setUseMillis(true);
-                ((DateFormatter)editor.getTextField().getFormatter())
+                ((DateFormatter)m_editor.getTextField().getFormatter())
                     .setFormat(new SimpleDateFormat(TIME_FORMAT_WITH_MS, Locale.getDefault()));
                 updateModel();
             }
@@ -337,7 +337,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
                 DateTimeFormatter.ofPattern(TIME_FORMAT_WITHOUT_MS).parse(field.getText());
                 if (m_useMillis) {
                     setUseMillis(false);
-                    ((DateFormatter)editor.getTextField().getFormatter())
+                    ((DateFormatter)m_editor.getTextField().getFormatter())
                         .setFormat(new SimpleDateFormat(TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
                     updateModel();
                 }
