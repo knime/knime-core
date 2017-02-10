@@ -48,6 +48,8 @@
  */
 package org.knime.core.gateway.serverproxy.util;
 
+import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.codegen.types.ServiceSpec;
 import org.knime.core.gateway.services.ServiceMap;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
@@ -60,7 +62,8 @@ public class DefaultServiceMap extends ServiceMap<Class<GatewayService>> {
 
     private static DefaultServiceMap INSTANCE = null;
 
-    public static final String DEFAULT_SERVICE_PACKAGE = "org.knime.core.gateway.serverproxy.service";
+    public final static ServiceSpec DefaultServiceSpec =
+        new ServiceSpec("default", "Default##name##", "org.knime.core.gateway.serverproxy", "");
 
     private DefaultServiceMap() {
         // singleton instance -> private
@@ -73,7 +76,10 @@ public class DefaultServiceMap extends ServiceMap<Class<GatewayService>> {
     @Override
     protected Class<GatewayService> mapIntern(final String serviceName) {
         try {
-            return (Class<GatewayService>)Class.forName(DEFAULT_SERVICE_PACKAGE + ".Default" + serviceName);
+            ServiceDef sd = ServiceMap.getServiceDef(serviceName);
+            String fullyQualifiedName =
+                DefaultServiceSpec.getFullyQualifiedName(sd.getNamespace(), sd.getName());
+            return (Class<GatewayService>)Class.forName(fullyQualifiedName);
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }

@@ -48,6 +48,8 @@
  */
 package org.knime.core.jaxrs;
 
+import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.codegen.types.ServiceSpec;
 import org.knime.core.gateway.services.ServiceMap;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
@@ -60,7 +62,8 @@ public class RSWrapperServiceMap extends ServiceMap<Class<GatewayService>> {
 
     private static RSWrapperServiceMap INSTANCE = null;
 
-    public static final String RS_SERVICE_WRAPPER_PACKAGE = "org.knime.core.jaxrs.workflow.service";
+    public static final ServiceSpec RestWrapperServiceSpec =
+            new ServiceSpec("restwrapper", "RSWrapper##name##", "org.knime.core.jaxrs", "");
 
     private RSWrapperServiceMap() {
         // singleton instance -> private
@@ -73,7 +76,10 @@ public class RSWrapperServiceMap extends ServiceMap<Class<GatewayService>> {
     @Override
     protected Class<GatewayService> mapIntern(final String serviceName) {
         try {
-            return (Class<GatewayService>)Class.forName(RS_SERVICE_WRAPPER_PACKAGE + ".RSWrapper" + serviceName);
+            ServiceDef sd = ServiceMap.getServiceDef(serviceName);
+            String fullyQualifiedName =
+               RestWrapperServiceSpec.getFullyQualifiedName(sd.getNamespace(), sd.getName());
+            return (Class<GatewayService>)Class.forName(fullyQualifiedName);
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }

@@ -55,8 +55,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.gateway.codegen.ServiceGenerator;
+import org.knime.core.gateway.codegen.SourceFileGenerator;
 import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.codegen.types.ServiceSpec;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
 /**
@@ -71,11 +72,13 @@ public abstract class ServiceMap<T> {
 
     private static Map<String, Class<? extends GatewayService>> INTERFACE_MAP = null;
 
+    private static Map<String, ServiceDef> SERVICE_DEF_MAP = null;
+
     private Map<String, T> m_serviceMap;
 
     {
         try {
-            SERVICE_DEFS = ServiceGenerator.readAll(ServiceDef.class);
+            SERVICE_DEFS = SourceFileGenerator.readAll(ServiceDef.class);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -87,11 +90,13 @@ public abstract class ServiceMap<T> {
     protected ServiceMap() {
         m_serviceMap = new HashMap<>();
         SERVICE_DEFS.forEach(sd -> {
-            m_serviceMap.put(sd.getName(), mapIntern(sd.getName()));
+            m_serviceMap.put(sd.getName(),
+                mapIntern(ServiceSpec.Api.getFullyQualifiedName(sd.getNamespace(), sd.getName())));
         });
     }
 
     /**
+     * @param namespace
      * @param serviceName the service name without the name space
      * @return the mapped object
      */
@@ -106,16 +111,16 @@ public abstract class ServiceMap<T> {
     }
 
     /**
-     * @param serviceName
-     * @return the object (e.g. a service implementation) mapped to service given by its name
+     * @param serviceName the fully qualified service name, see {@link ServiceSpec.Api}
+     * @return the object (e.g. a service implementation) mapped to service given by its namespace and name
      */
     public T get(final String serviceName) {
         return m_serviceMap.get(serviceName);
     }
 
     /**
-     * Helper method to determine the service name (unique identifier) for a service class/interface that
-     * implements/extends a gateway service interface.
+     * Helper method to determine the service name (unique identifier - actually it's fully qualified name) for a
+     * service class/interface that implements/extends a gateway service interface.
      *
      * @param serviceClass
      * @return the service name, <code>null</code> if class is not derived from a service interface
@@ -125,7 +130,7 @@ public abstract class ServiceMap<T> {
         //- it should have only one super-interface (as defined within this plug-in)
         Class<?>[] interfaces = serviceClass.getInterfaces();
         if (interfaces.length == 1 && GatewayService.class.equals(interfaces[0])) {
-            return serviceClass.getSimpleName();
+            return serviceClass.getCanonicalName();
         } else if (interfaces.length > 0) {
             //recursively searches through the class and interface hierarchy
             for (Class<?> i : interfaces) {
@@ -157,13 +162,25 @@ public abstract class ServiceMap<T> {
         return INTERFACE_MAP.get(serviceName);
     }
 
+    /**
+     * @param serviceName full service name, i.e. the full name of the api service interface
+     * @return the respective service definition
+     */
+    public static synchronized ServiceDef getServiceDef(final String serviceName) {
+        fillServiceInterfaceMap();
+        return SERVICE_DEF_MAP.get(serviceName);
+    }
+
     private static void fillServiceInterfaceMap() {
         if (INTERFACE_MAP == null) {
             INTERFACE_MAP = new HashMap<>();
+            SERVICE_DEF_MAP = new HashMap<>();
             SERVICE_DEFS.forEach(sd -> {
                 try {
-                    INTERFACE_MAP.put(sd.getName(), (Class<? extends GatewayService>)Class
-                        .forName("org.knime.core.gateway.v0.workflow.service." + sd.getName()));
+                    String fullInterfaceName = ServiceSpec.Api.getFullyQualifiedName(sd.getNamespace(), sd.getName());
+                    INTERFACE_MAP.put(fullInterfaceName,
+                        (Class<? extends GatewayService>)Class.forName(fullInterfaceName));
+                    SERVICE_DEF_MAP.put(fullInterfaceName, sd);
                 } catch (ClassNotFoundException ex) {
                     throw new RuntimeException(ex);
                 }

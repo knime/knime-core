@@ -48,6 +48,8 @@
  */
 package org.knime.core.jaxrs;
 
+import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.codegen.types.ServiceSpec;
 import org.knime.core.gateway.services.ServiceMap;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
@@ -59,6 +61,8 @@ import org.knime.core.gateway.v0.workflow.service.GatewayService;
 public class RSServiceMap extends ServiceMap<Class<GatewayService>> {
 
     private static RSServiceMap INSTANCE = null;
+
+    public static final ServiceSpec RestServiceSpec = new ServiceSpec("rest", "RS##name##", "org.knime.core.jaxrs", "");
 
     /**
      * Package of the service interfaces with the JAX-RS annotations.
@@ -76,7 +80,9 @@ public class RSServiceMap extends ServiceMap<Class<GatewayService>> {
     @Override
     protected Class<GatewayService> mapIntern(final String serviceName) {
         try {
-            return (Class<GatewayService>)Class.forName(RS_SERVICE_PACKAGE + ".RS" + serviceName);
+            ServiceDef sd = ServiceMap.getServiceDef(serviceName);
+            String fullyQualitifiedName = RestServiceSpec.getFullyQualifiedName(sd.getNamespace(), sd.getName());
+            return (Class<GatewayService>)Class.forName(fullyQualitifiedName);
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }
