@@ -68,281 +68,291 @@ import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButton;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
-*
-* @author Andisa Dewi, KNIME.com, Berlin, Germany
-*/
+ *
+ * @author Andisa Dewi, KNIME.com, Berlin, Germany
+ */
 public class CreateFilenameNodeDialog extends DefaultNodeSettingsPane {
 
-   static SettingsModelString getPathModel() {
-       return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_BASE_DIR, CreateFilenameNodeModel.DEFAULT_PATH);
-   }
+    static SettingsModelString getPathModel() {
+        return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_BASE_DIR, CreateFilenameNodeModel.DEFAULT_PATH);
+    }
 
-   static SettingsModelString getFilenameModel() {
-       return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_FILENAME, "");
-   }
+    static SettingsModelString getFilenameModel() {
+        return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_FILENAME, "");
+    }
 
-   static SettingsModelString getFileExtModel() {
-       return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_FILE_EXT,
-           CreateFilenameNodeModel.DEFAULT_FILE_EXT);
-   }
+    static SettingsModelString getFileExtModel() {
+        return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_FILE_EXT,
+            CreateFilenameNodeModel.DEFAULT_FILE_EXT);
+    }
 
-   static SettingsModelString getAreaModel() {
-       return new SettingsModelString("previewArea", "");
-   }
+    static SettingsModelString getAreaModel() {
+        return new SettingsModelString("previewArea", "");
+    }
 
-   static SettingsModelString getOutputModel() {
-       return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_OUTPUT_VAR,
-           CreateFilenameNodeModel.DEFAULT_OUTPUT_NAME);
-   }
+    static SettingsModelString getOutputModel() {
+        return new SettingsModelString(CreateFilenameConfigKeys.CFGKEY_OUTPUT_VAR,
+            CreateFilenameNodeModel.DEFAULT_OUTPUT_NAME);
+    }
 
-   private final SettingsModelString m_pathModel = getPathModel();
+    static SettingsModelBoolean getOverwriteOption() {
+        return new SettingsModelBoolean(CreateFilenameConfigKeys.CFGKEY_OVERWRITE,
+            CreateFilenameNodeModel.DEFAULT_OVERWRITE);
+    }
 
-   private final SettingsModelString m_nameModel = getFilenameModel();
+    private final SettingsModelString m_pathModel = getPathModel();
 
-   private final SettingsModelString m_extModel = getFileExtModel();
+    private final SettingsModelString m_nameModel = getFilenameModel();
 
-   private final SettingsModelString m_areaModel = getAreaModel();
+    private final SettingsModelString m_extModel = getFileExtModel();
 
-   private final DialogComponentStringSelection m_extSelection;
+    private final SettingsModelString m_areaModel = getAreaModel();
 
-   private WarningLabel m_warningLabel;
+    private final DialogComponentStringSelection m_extSelection;
 
-   private String m_baseDir;
+    private WarningLabel m_warningLabel;
 
-   private String m_name;
+    private String m_baseDir;
 
-   private String m_ext;
+    private String m_name;
 
-   private FlowVariableModel m_flowVarName;
+    private String m_ext;
 
-   private FlowVariableModel m_flowVarBaseDir;
+    private FlowVariableModel m_flowVarName;
 
-   private FlowVariableModel m_flowVarExt;
+    private FlowVariableModel m_flowVarBaseDir;
 
-   /**
-    * Creates s dialog for the FilenameCreator node. There are a file chooser to input the base directory and string
-    * components to input the file name, file extension and the output variable name. A preview box is available to
-    * show a preview of the output by clicking the preview button.
-    */
-   public CreateFilenameNodeDialog() {
-       m_flowVarBaseDir = createFlowVariableModel(getPathModel());
-       m_flowVarBaseDir.addChangeListener(new FlowVarListener());
-       addDialogComponent(new DialogComponentFileChooser(m_pathModel, CreateFilenameNodeDialog.class.toString(),
-           JFileChooser.OPEN_DIALOG, true, m_flowVarBaseDir));
+    private FlowVariableModel m_flowVarExt;
 
-       createNewGroup("Filename settings");
-       setHorizontalPlacement(true);
-       m_flowVarName = createFlowVariableModel(getFilenameModel());
-       m_flowVarName.addChangeListener(new FlowVarListener());
-       addDialogComponent(new DialogComponentString(m_nameModel, "Base file name", false, 20, m_flowVarName));
+    /**
+     * Creates s dialog for the FilenameCreator node. There are a file chooser to input the base directory and string
+     * components to input the file name, file extension and the output variable name. A preview box is available to
+     * show a preview of the output by clicking the preview button.
+     */
+    public CreateFilenameNodeDialog() {
+        m_flowVarBaseDir = createFlowVariableModel(getPathModel());
+        m_flowVarBaseDir.addChangeListener(new FlowVarListener());
+        addDialogComponent(new DialogComponentFileChooser(m_pathModel, CreateFilenameNodeDialog.class.toString(),
+            JFileChooser.OPEN_DIALOG, true, m_flowVarBaseDir));
 
-       m_flowVarExt = createFlowVariableModel(getFileExtModel());
-       m_flowVarExt.addChangeListener(new FlowVarListener());
-       m_extSelection = new DialogComponentStringSelection(m_extModel, "File extension",
-           CreateFilenameNodeModel.FILE_EXTS, true, m_flowVarExt);
-       addDialogComponent(m_extSelection);
+        createNewGroup("Filename settings");
+        setHorizontalPlacement(true);
+        m_flowVarName = createFlowVariableModel(getFilenameModel());
+        m_flowVarName.addChangeListener(new FlowVarListener());
+        addDialogComponent(new DialogComponentString(m_nameModel, "Base file name", false, 20, m_flowVarName));
 
-       setHorizontalPlacement(false);
-       addDialogComponent(new DialogComponentString(getOutputModel(), "Output flow variable name", false, 20));
+        m_flowVarExt = createFlowVariableModel(getFileExtModel());
+        m_flowVarExt.addChangeListener(new FlowVarListener());
+        m_extSelection = new DialogComponentStringSelection(m_extModel, "File extension",
+            CreateFilenameNodeModel.FILE_EXTS, true, m_flowVarExt);
+        addDialogComponent(m_extSelection);
 
-       closeCurrentGroup();
+        setHorizontalPlacement(false);
+        DialogComponentBoolean overwriteOption =
+                new DialogComponentBoolean(getOverwriteOption(), "Overwrite existing variable");
+            overwriteOption.setToolTipText("If checked and the name of the output variable already exists, it will be overwritten");
+            addDialogComponent(overwriteOption);
 
-       createNewGroup("Output Preview");
-       DialogComponentButton previewButton = new DialogComponentButton("Filename Preview");
-       previewButton.addActionListener(new PreviewListener());
-       addDialogComponent(previewButton);
+        addDialogComponent(new DialogComponentString(getOutputModel(), "Output flow variable name", false, 20));
+        closeCurrentGroup();
 
-       setHorizontalPlacement(false);
+        createNewGroup("Output Preview");
+        DialogComponentButton previewButton = new DialogComponentButton("Filename Preview");
+        previewButton.addActionListener(new PreviewListener());
+        addDialogComponent(previewButton);
 
-       addDialogComponent(new PreviewTextArea(m_areaModel, ""));
+        setHorizontalPlacement(false);
 
-       m_warningLabel = new WarningLabel("");
-       addDialogComponent(m_warningLabel);
+        addDialogComponent(new PreviewTextArea(m_areaModel, ""));
 
-       closeCurrentGroup();
-   }
+        m_warningLabel = new WarningLabel("");
+        addDialogComponent(m_warningLabel);
 
-   /**
-    *
-    * {@inheritDoc}
-    */
-   @Override
-   public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
-       throws NotConfigurableException {
-       super.loadAdditionalSettingsFrom(settings, specs);
-       m_extSelection.replaceListItems(CreateFilenameNodeModel.createPredefinedExtensions(),
-           m_extModel.getStringValue());
-   }
+        closeCurrentGroup();
+    }
 
-   private void update() {
-       if (m_flowVarName.isVariableReplacementEnabled()) {
-           m_name = getFlowVarFromStack(m_flowVarName.getInputVariableName());
-       } else {
-           m_name = m_nameModel.getStringValue();
-       }
-       if (m_flowVarBaseDir.isVariableReplacementEnabled()) {
-           m_baseDir = getFlowVarFromStack(m_flowVarBaseDir.getInputVariableName());
-       } else {
-           m_baseDir = m_pathModel.getStringValue();
-       }
-       if (m_flowVarExt.isVariableReplacementEnabled()) {
-           m_ext = getFlowVarFromStack(m_flowVarExt.getInputVariableName());
-       } else {
-           m_ext = m_extModel.getStringValue();
-       }
-   }
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        m_extSelection.replaceListItems(CreateFilenameNodeModel.createPredefinedExtensions(),
+            m_extModel.getStringValue());
+    }
 
-   private String getFlowVarFromStack(final String str) {
-       return getAvailableFlowVariables().get(str).getStringValue();
-   }
+    private void update() {
+        if (m_flowVarName.isVariableReplacementEnabled()) {
+            m_name = getFlowVarFromStack(m_flowVarName.getInputVariableName());
+        } else {
+            m_name = m_nameModel.getStringValue();
+        }
+        if (m_flowVarBaseDir.isVariableReplacementEnabled()) {
+            m_baseDir = getFlowVarFromStack(m_flowVarBaseDir.getInputVariableName());
+        } else {
+            m_baseDir = m_pathModel.getStringValue();
+        }
+        if (m_flowVarExt.isVariableReplacementEnabled()) {
+            m_ext = getFlowVarFromStack(m_flowVarExt.getInputVariableName());
+        } else {
+            m_ext = m_extModel.getStringValue();
+        }
+    }
 
-   private class FlowVarListener implements ChangeListener {
+    private String getFlowVarFromStack(final String str) {
+        return getAvailableFlowVariables().get(str).getStringValue();
+    }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public void stateChanged(final ChangeEvent e) {
-           update();
-       }
-   }
+    private class FlowVarListener implements ChangeListener {
 
-   private class PreviewListener implements ActionListener {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void stateChanged(final ChangeEvent e) {
+            update();
+        }
+    }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public void actionPerformed(final ActionEvent arg0) {
-           update();
+    private class PreviewListener implements ActionListener {
 
-           if (!CreateFilenameNodeModel.verifyBaseDir(m_baseDir)) {
-               m_warningLabel.setText("Error: Invalid base directory name.");
-               m_areaModel.setStringValue("");
-               return;
-           }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void actionPerformed(final ActionEvent arg0) {
+            update();
 
-           if (m_name.isEmpty()) {
-               m_warningLabel.setText("Error: Filename cannot be empty.");
-               m_areaModel.setStringValue("");
-               return;
-           }
+            if (!CreateFilenameNodeModel.verifyBaseDir(m_baseDir)) {
+                m_warningLabel.setText("Error: Invalid base directory name.");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-           int invalidCharIdx = CreateFilenameNodeModel.findInvalidChar(m_name);
-           if (invalidCharIdx != -1) {
-               m_warningLabel.setText("Error: Filename contains invalid characters ( /, \\, ?, *, :, <, >, \", |).");
-               m_areaModel.setStringValue("");
-               return;
-           }
+            if (m_name.isEmpty()) {
+                m_warningLabel.setText("Error: Filename cannot be empty.");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-           if (CreateFilenameNodeModel.IS_WINDOWS && CreateFilenameNodeModel.checkForbiddenWindowsName(m_name)) {
-               m_warningLabel
-                   .setText("Error: Filename might contain names that are forbidden in Windows platform.");
-               m_areaModel.setStringValue("");
-               return;
-           }
+            int invalidCharIdx = CreateFilenameNodeModel.findInvalidChar(m_name);
+            if (invalidCharIdx != -1) {
+                m_warningLabel.setText("Error: Filename contains invalid characters ( /, \\, ?, *, :, <, >, \", |).");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-           if (!CreateFilenameNodeModel.checkDotsAndSpaces(m_name)) {
-               m_warningLabel.setText("Error: Filename cannot contain only dot(s) or space(s).");
-               m_areaModel.setStringValue("");
-               return;
-           }
+            if (CreateFilenameNodeModel.IS_WINDOWS && CreateFilenameNodeModel.checkForbiddenWindowsName(m_name)) {
+                m_warningLabel.setText("Error: Filename might contain names that are forbidden in Windows platform.");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-           if (!CreateFilenameNodeModel.checkLeadingWhitespaces(m_name)) {
-               m_name = m_name.replaceAll("^\\s+", "");
-               m_warningLabel.setText("Warning: Filename contains leading whitespace(s). It will be removed.");
-               m_areaModel.setStringValue("");
-           }
+            if (!CreateFilenameNodeModel.checkDotsAndSpaces(m_name)) {
+                m_warningLabel.setText("Error: Filename cannot contain only dot(s) or space(s).");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-           m_ext = CreateFilenameNodeModel.verifyExtension(m_ext);
-           if (m_ext == "-1") {
-               m_warningLabel.setText("Error: Only alphanumeric characters are allowed for extensions.");
-               m_areaModel.setStringValue("");
-               return;
-           }
+            if (!CreateFilenameNodeModel.checkLeadingWhitespaces(m_name)) {
+                m_name = m_name.replaceAll("^\\s+", "");
+                m_warningLabel.setText("Warning: Filename contains leading whitespace(s). It will be removed.");
+                m_areaModel.setStringValue("");
+            }
 
-           String output = CreateFilenameNodeModel.handleSlash(m_baseDir, m_name, m_ext);
-           if (output == "-1") {
-               m_warningLabel.setText("Error: Invalid file name!");
-               m_areaModel.setStringValue("");
-               return;
-           }
-           m_areaModel.setStringValue(output);
-           m_warningLabel.setText("");
-       }
-   }
+            m_ext = CreateFilenameNodeModel.verifyExtension(m_ext);
+            if (m_ext == "-1") {
+                m_warningLabel.setText("Error: Only alphanumeric characters are allowed for extensions.");
+                m_areaModel.setStringValue("");
+                return;
+            }
 
-   private class WarningLabel extends DialogComponentButton {
+            String output = CreateFilenameNodeModel.handleSlash(m_baseDir, m_name, m_ext);
+            if (output == "-1") {
+                m_warningLabel.setText("Error: Invalid file name!");
+                m_areaModel.setStringValue("");
+                return;
+            }
+            m_areaModel.setStringValue(output);
+            m_warningLabel.setText("");
+        }
+    }
 
-       private JButton m_button;
+    private class WarningLabel extends DialogComponentButton {
 
-       /**
-        * @param label the label name
-        */
-       public WarningLabel(final String label) {
-           super(label);
+        private JButton m_button;
 
-           getComponentPanel().setLayout(new FlowLayout());
-           Component[] comps = getComponentPanel().getComponents();
-           for (Component comp : comps) {
-               if (comp instanceof JButton) {
-                   m_button = (JButton)comp;
-                   getComponentPanel().remove(comp);
-                   break;
-               }
-           }
-           formatButton();
-           getComponentPanel().add(m_button);
-       }
+        /**
+         * @param label the label name
+         */
+        public WarningLabel(final String label) {
+            super(label);
 
-       private void formatButton() {
-           m_button.setFocusPainted(false);
-           m_button.setMargin(new Insets(0, 0, 0, 0));
-           m_button.setContentAreaFilled(false);
-           m_button.setBorderPainted(true);
-           m_button.setOpaque(false);
-           m_button.setForeground(Color.RED);
-           m_button.setPreferredSize((new Dimension(500, 15)));
-       }
-   }
+            getComponentPanel().setLayout(new FlowLayout());
+            Component[] comps = getComponentPanel().getComponents();
+            for (Component comp : comps) {
+                if (comp instanceof JButton) {
+                    m_button = (JButton)comp;
+                    getComponentPanel().remove(comp);
+                    break;
+                }
+            }
+            formatButton();
+            getComponentPanel().add(m_button);
+        }
 
-   private class PreviewTextArea extends DialogComponentMultiLineString {
+        private void formatButton() {
+            m_button.setFocusPainted(false);
+            m_button.setMargin(new Insets(0, 0, 0, 0));
+            m_button.setContentAreaFilled(false);
+            m_button.setBorderPainted(true);
+            m_button.setOpaque(false);
+            m_button.setForeground(Color.RED);
+            m_button.setPreferredSize((new Dimension(500, 15)));
+        }
+    }
 
-       private JTextArea m_area;
+    private class PreviewTextArea extends DialogComponentMultiLineString {
 
-       /**
-        * @param stringModel the setting model of the string
-        * @param label the label name
-        */
-       public PreviewTextArea(final SettingsModelString stringModel, final String label) {
-           super(stringModel, label);
-           getComponentPanel().setLayout(new FlowLayout());
-           Component[] comps = getComponentPanel().getComponents();
-           for (Component comp : comps) {
-               if (comp instanceof JScrollPane) {
-                   JScrollPane scrollPane = (JScrollPane)comp;
-                   for (Component elem : scrollPane.getViewport().getComponents()) {
-                       if (elem instanceof JTextArea) {
-                           m_area = (JTextArea)elem;
-                           getComponentPanel().remove(comp);
-                           break;
-                       }
-                   }
-               }
-           }
-           m_area.setEditable(false);
-           m_area.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-           m_area.setOpaque(false);
-           m_area.setLineWrap(true);
-           getComponentPanel().add(m_area);
-       }
-   }
+        private JTextArea m_area;
+
+        /**
+         * @param stringModel the setting model of the string
+         * @param label the label name
+         */
+        public PreviewTextArea(final SettingsModelString stringModel, final String label) {
+            super(stringModel, label);
+            getComponentPanel().setLayout(new FlowLayout());
+            Component[] comps = getComponentPanel().getComponents();
+            for (Component comp : comps) {
+                if (comp instanceof JScrollPane) {
+                    JScrollPane scrollPane = (JScrollPane)comp;
+                    for (Component elem : scrollPane.getViewport().getComponents()) {
+                        if (elem instanceof JTextArea) {
+                            m_area = (JTextArea)elem;
+                            getComponentPanel().remove(comp);
+                            break;
+                        }
+                    }
+                }
+            }
+            m_area.setEditable(false);
+            m_area.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+            m_area.setOpaque(false);
+            m_area.setLineWrap(true);
+            getComponentPanel().add(m_area);
+        }
+    }
 }
