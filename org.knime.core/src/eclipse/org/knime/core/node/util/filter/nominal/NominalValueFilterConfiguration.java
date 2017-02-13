@@ -56,6 +56,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 
 /**
+ * Configuration for a nominal value filter that can include and exclude names and takes care on additional/missing names
+ * using the enforce inclusion/exclusion option. It also supports filtering based on name patterns.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.3
@@ -111,12 +113,14 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
     /**
      * Create and return a new name filter that contains a list of include and exclude names based on the
      * current configuration and domain provided as an argument.
+     * @see NameFilterConfiguration#applyTo(String[])
      *
      * @param domain the domain to apply the current configuration on
      * @return a new name filter
      */
     public FilterResult applyTo(final Set<DataCell> domain) {
         ArrayList<String> names = new ArrayList<String>();
+        //get array of domain values
         if (domain != null) {
             for (DataCell dc : domain) {
                 names.add(dc.toString());

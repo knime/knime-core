@@ -161,19 +161,19 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
                             + "Execute predecessor or check input table.");
         }
         m_selectedAttr.clear();
-        m_selectedAttr.addAll(Arrays.asList(m_config.applyTo(inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
-            .getValues()).getIncludes()));
-        // all values excluded?
-        if (m_selectedColumn != null && m_selectedAttr.size() == 0) {
-            setWarningMessage("All values are excluded!"
-                    + " Input data will be mirrored at out-port 1 (excluded)");
-        }
         if (m_selectedColumn != null && m_selectedColumn.length() > 0) {
             m_selectedColIdx = inSpecs[0].findColumnIndex(m_selectedColumn);
             // selected attribute not found in possible values
             if (m_selectedColIdx < 0) {
                 throw new InvalidSettingsException("Column " + m_selectedColumn
                         + " not found in in spec!");
+            }
+            m_selectedAttr.addAll(Arrays.asList(m_config.applyTo(inSpecs[0].getColumnSpec(m_selectedColIdx).getDomain()
+                .getValues()).getIncludes()));
+            // all values excluded?
+            if (m_selectedColumn != null && m_selectedAttr.size() == 0) {
+                setWarningMessage("All values are excluded!"
+                        + " Input data will be mirrored at out-port 1 (excluded)");
             }
             // all values included?
             boolean validAttrVal = false;

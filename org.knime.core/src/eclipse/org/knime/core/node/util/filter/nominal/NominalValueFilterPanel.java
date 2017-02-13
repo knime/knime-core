@@ -59,6 +59,7 @@ import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
  * A dialog component to filter nominal values.
+ * Mainly for visualization, configuration is done in {@link NominalValueFilterConfiguration}.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.3
@@ -67,6 +68,8 @@ import org.knime.core.node.util.filter.NameFilterPanel;
 public class NominalValueFilterPanel extends NameFilterPanel<String> {
 
     /**
+     * Creates a basic panel that allows the filtering of nominal values.
+     *
      * @since 3.3
      */
     public NominalValueFilterPanel() {
@@ -74,7 +77,9 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     }
 
     /**
-     * @param showSelectionListsOnly
+     * Creates a basic panel that allows the filtering of nominal values.
+     *
+     * @param showSelectionListsOnly {@code true} hides the <i>Enforce in-/exclusion</i> buttons
      * @since 3.3
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
@@ -108,12 +113,14 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     /**
      * Updates this filter panel by removing all current selections from the include and exclude list. The exclude list
      * will contains all values from the given domain afterwards.
+     * @see NameFilterPanel#loadConfiguration(NameFilterConfiguration, String[])
      *
      * @param config to be loaded from
      * @param domain
      */
     public void loadConfiguration(final NameFilterConfiguration config, final Set<DataCell> domain) {
         ArrayList<String> names = new ArrayList<>();
+        //get array of domain values
         if (domain != null) {
             for (DataCell dc : domain) {
                 names.add(dc.toString());
