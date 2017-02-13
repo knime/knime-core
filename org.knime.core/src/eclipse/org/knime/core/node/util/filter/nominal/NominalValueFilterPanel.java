@@ -83,7 +83,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * @since 3.3
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, null, "Value(s)");
+        super(showSelectionListsOnly, null, "Value(s)", true);
     }
 
     /**

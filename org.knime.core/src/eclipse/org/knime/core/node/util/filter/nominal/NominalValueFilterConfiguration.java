@@ -130,4 +130,12 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
         return super.applyTo(names.toArray(new String[names.size()]));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isIncludeMissing() {
+        return super.isIncludeMissing();
+    }
+
 }

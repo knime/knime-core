@@ -130,7 +130,11 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
      */
     private boolean matches(final DataRow row) {
         DataCell dc = row.getCell(m_selectedColIdx);
-        return m_selectedAttr.contains(dc.toString());
+        if(dc.isMissing()){
+            return m_config.isIncludeMissing();
+        } else {
+            return m_selectedAttr.contains(dc.toString());
+        }
     }
 
     /**

@@ -48,13 +48,13 @@ package org.knime.core.node.util.filter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
@@ -100,11 +100,15 @@ final class PatternFilterConfigurationImpl implements Cloneable {
 
     private static final String CFG_CASESENSITIVE = "caseSensitive";
 
+    private static final String CFG_INCLUDEMISSING = "includeMissing";
+
     private String m_pattern = "";
 
     private PatternFilterType m_type = PatternFilterType.Wildcard;
 
     private boolean m_caseSensitive = true;
+
+    private boolean m_includeMissing = false;
 
     /** Loads the configuration from the given settings object. Fails if not valid.
      * @param settings Settings object containing the configuration.
@@ -118,6 +122,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         String typeS = settings.getString(CFG_TYPE);
         m_type = PatternFilterType.parseType(typeS);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE);
+        m_includeMissing = settings.getBoolean(CFG_INCLUDEMISSING, false);
         try {
             compilePattern(m_pattern, m_type, m_caseSensitive);
         } catch (PatternSyntaxException e) {
@@ -136,6 +141,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         String typeS = settings.getString(CFG_TYPE, null);
         m_type = PatternFilterType.parseType(typeS, PatternFilterType.Wildcard);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE, true);
+        m_includeMissing = settings.getBoolean(CFG_INCLUDEMISSING, true);
     }
 
     /** Save the current configuration inside the given settings object.
@@ -145,6 +151,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         settings.addString(CFG_PATTERN, m_pattern);
         settings.addString(CFG_TYPE, m_type.name());
         settings.addBoolean(CFG_CASESENSITIVE, m_caseSensitive);
+        settings.addBoolean(CFG_INCLUDEMISSING, m_includeMissing);
     }
 
     /**
@@ -164,7 +171,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
                 excls.add(name);
             }
         }
-        return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
+        return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>(), m_includeMissing);
     }
 
     /**
@@ -233,6 +240,20 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         m_caseSensitive = caseSensitive;
     }
 
+    /**
+     * @return the caseSensitive
+     */
+    boolean isIncludeMissing() {
+        return m_includeMissing;
+    }
+
+    /**
+     * @param caseSensitive the caseSensitive to set
+     */
+    void setIncludeMissing(final boolean includeMissing) {
+        m_includeMissing = includeMissing;
+    }
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
@@ -240,6 +261,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         final int prime = 31;
         int result = 1;
         result = prime * result + (m_caseSensitive ? 1231 : 1237);
+        result = prime * result + Boolean.valueOf(m_includeMissing).hashCode();
         result = prime * result + ((m_pattern == null) ? 0 : m_pattern.hashCode());
         result = prime * result + ((m_type == null) ? 0 : m_type.hashCode());
         return result;
@@ -258,10 +280,13 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         if (o.m_caseSensitive != m_caseSensitive) {
             return false;
         }
-        if (!ConvenienceMethods.areEqual(o.m_pattern, m_pattern)) {
+        if (o.m_includeMissing != m_includeMissing) {
             return false;
         }
-        if (!ConvenienceMethods.areEqual(o.m_type, m_type)) {
+        if (!Objects.equals(o.m_pattern, m_pattern)) {
+            return false;
+        }
+        if (!Objects.equals(o.m_type, m_type)) {
             return false;
         }
         return true;
