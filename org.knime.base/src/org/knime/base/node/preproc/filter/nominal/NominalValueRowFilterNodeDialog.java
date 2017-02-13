@@ -142,17 +142,19 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
      */
     @Override
     public void itemStateChanged(final ItemEvent item) {
-        m_selectedColumn = (String)item.getItem();
-        ArrayList<String> names = new ArrayList<>();
-        if (m_colAttributes.get(m_selectedColumn) != null) {
-            for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
-                names.add(dc.toString());
+        if (item.getStateChange() == ItemEvent.SELECTED) {
+            m_selectedColumn = (String)item.getItem();
+            ArrayList<String> names = new ArrayList<>();
+            if (m_colAttributes.get(m_selectedColumn) != null) {
+                for (DataCell dc : m_colAttributes.get(m_selectedColumn)) {
+                    names.add(dc.toString());
+                }
             }
+            String[] namesArray = names.toArray(new String[names.size()]);
+            NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
+            config.loadDefaults(null, namesArray, EnforceOption.EnforceInclusion);
+            m_filterPanel.loadConfiguration(config, namesArray);
         }
-        String[] namesArray = names.toArray(new String[names.size()]);
-        NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
-        config.loadDefaults(null, namesArray, EnforceOption.EnforceInclusion);
-        m_filterPanel.loadConfiguration(config, namesArray);
     }
 
     /**
@@ -182,9 +184,15 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
             }
         }
         // set selection
-        m_columnSelection.setSelectedItem(m_selectedColumn);
-        // if it is not in the list, use first element
-        m_selectedColumn = (String)m_columnSelection.getSelectedItem();
+        if (m_selectedColumn != null) {
+            m_columnSelection.setSelectedItem(m_selectedColumn);
+            // enable item change listener again
+            m_columnSelection.addItemListener(this);
+        } else {
+            m_columnSelection.addItemListener(this);
+            m_columnSelection.setSelectedIndex(-1);
+            m_columnSelection.setSelectedItem(m_columnSelection.getItemAt(0));
+        }
 
         NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
         Set<DataCell> domain = m_colAttributes.get(m_selectedColumn);
@@ -218,8 +226,6 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         m_filterPanel.loadConfiguration(config, domain);
 
 
-        // enable item change listener again
-        m_columnSelection.addItemListener(this);
     }
 
     /**

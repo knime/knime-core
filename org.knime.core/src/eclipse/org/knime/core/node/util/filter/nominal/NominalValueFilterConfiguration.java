@@ -72,6 +72,7 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      */
     public NominalValueFilterConfiguration(final String configRootName) {
         super(configRootName);
+        setEnforceOption(EnforceOption.EnforceInclusion);
     }
 
     /**

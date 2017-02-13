@@ -173,7 +173,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             // all values excluded?
             if (m_selectedColumn != null && m_selectedAttr.size() == 0) {
                 setWarningMessage("All values are excluded!"
-                        + " Input data will be mirrored at out-port 1 (excluded)");
+                        + " Output table will be empty.");
             }
             // all values included?
             boolean validAttrVal = false;
