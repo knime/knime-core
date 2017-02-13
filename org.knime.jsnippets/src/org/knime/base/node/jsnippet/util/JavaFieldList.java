@@ -117,10 +117,11 @@ public class JavaFieldList<T extends JavaField> extends ArrayList<T> {
             try {
                 settings.loadSettingsForDialog(
                         config.getConfig(Integer.toString(i)));
+                add(settings);
             } catch (InvalidSettingsException e) {
-                throw new IllegalStateException(e);
+                // should never happen.
+                throw new IllegalStateException("Integer key for config.getConfig() should always be valid, but was not.");
             }
-            add(settings);
         }
     }
 

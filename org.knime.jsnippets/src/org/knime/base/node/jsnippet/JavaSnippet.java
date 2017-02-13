@@ -1124,22 +1124,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         super.finalize();
     }
 
-    // --- Custom ClassLoader related methods and fields --- //
-
-    private static ClassLoader m_customClassLoader;
-
-    /**
-     * @return a custom {@link ClassLoader} which knows classes of <code>org.knime.jsnippets</code> <b>and</b>
-     *         <code>org.knime.core.data.convert</code> and buddies
-     */
-    public static synchronized ClassLoader getCustomClassLoader() {
-        if (m_customClassLoader == null) {
-            m_customClassLoader = new MultiParentClassLoader(JavaSnippet.class.getClassLoader(),
-                DataCellToJavaConverterRegistry.class.getClassLoader());
-        }
-        return m_customClassLoader;
-    }
-
     // --- Classpath caching related methods and fields --- //
     private static final Map<String, Set<File>> CLASSPATH_CACHE = new LinkedHashMap<>();
     private static final Map<Class<?>, Set<File>> CLASSPATH_FOR_CLASS_CACHE = new LinkedHashMap<>();
@@ -1271,7 +1255,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
             LOGGER.error("Classpath for \"" + javaType.getName() + "\" could not be assembled.", e);
             return null; // indicate that this type should not be provided in java snippet
-        } catch (IOException e) { // thrown by close
+        } catch (IOException e) { // thrown by URLClassLoader.close()
             LOGGER.error("Unable to close classloader used for testing of custom type classpath.", e);
         }
 
