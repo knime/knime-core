@@ -7,6 +7,12 @@
                 <message_argument value="3.3.0"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.3.1"/>
+                <message_argument value="3.3.1"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
         <filter comment="removed as part of AP-6761" id="338755678">
