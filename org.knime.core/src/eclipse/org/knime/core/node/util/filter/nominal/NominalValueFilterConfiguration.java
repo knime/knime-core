@@ -73,8 +73,11 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
     }
 
     /**
-     * @param settings
-     * @param domain
+     *
+     * Load config in dialog, init defaults if necessary.
+     *
+     * @param settings to load from.
+     * @param domain of the column to be filtered.
      *
      */
     public void loadConfigurationInDialog(final NodeSettingsRO settings, final Set<DataCell> domain) {
@@ -84,7 +87,7 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
                 names.add(dc.toString());
             }
         }
-        super.loadConfigurationInDialog(settings, names.toArray(new String[0]));
+        super.loadConfigurationInDialog(settings, names.toArray(new String[names.size()]));
     }
 
     /**
@@ -95,14 +98,27 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
         return super.getIncludeList();
     }
 
+
+
     /**
-     * @param domain
-     * @return
+     * {@inheritDoc}
+     */
+    @Override
+    public String[] getExcludeList() {
+        return super.getExcludeList();
+    }
+
+    /**
+     * Create and return a new name filter that contains a list of include and exclude names based on the
+     * current configuration and domain provided as an argument.
+     *
+     * @param domain the domain to apply the current configuration on
+     * @return a new name filter
      */
     public FilterResult applyTo(final Set<DataCell> domain) {
         ArrayList<String> names = new ArrayList<String>();
-        if(domain!=null){
-            for(DataCell dc : domain){
+        if (domain != null) {
+            for (DataCell dc : domain) {
                 names.add(dc.toString());
             }
         }

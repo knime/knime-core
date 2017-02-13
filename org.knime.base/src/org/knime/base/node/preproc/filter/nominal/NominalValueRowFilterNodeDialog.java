@@ -88,8 +88,6 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
 
     private String m_selectedColumn;
 
-    private String[] m_selectedAttributes;
-
     private final Map<String, Set<DataCell>> m_colAttributes;
 
     // models
@@ -128,15 +126,11 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         columnSelectionPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         columnSelectionPanel.add(m_columnSelection, BorderLayout.CENTER);
         panel.add(columnSelectionPanel, BorderLayout.NORTH);
-        panel.add(createAttributeSelectionLists(), BorderLayout.CENTER);
-        addTab("Selection", new JScrollPane(panel));
-    }
-
-    private Box createAttributeSelectionLists() {
-        Box overall = Box.createHorizontalBox();
+        Box attributeSelectionBox = Box.createHorizontalBox();
         m_filterPanel = new NominalValueFilterPanel();
-        overall.add(m_filterPanel);
-        return overall;
+        attributeSelectionBox.add(m_filterPanel);
+        panel.add(attributeSelectionBox, BorderLayout.CENTER);
+        addTab("Selection", new JScrollPane(panel));
     }
 
     /**
@@ -155,9 +149,10 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
                 names.add(dc.toString());
             }
         }
+        String[] namesArray = names.toArray(new String[names.size()]);
         NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
-        config.loadDefaults(null, names.toArray(new String[0]), EnforceOption.EnforceInclusion);
-        m_filterPanel.loadConfiguration(config, names.toArray(new String[0]));
+        config.loadDefaults(null, namesArray, EnforceOption.EnforceInclusion);
+        m_filterPanel.loadConfiguration(config, namesArray);
     }
 
     /**
@@ -173,12 +168,6 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         }
         // get selected column
         m_selectedColumn = settings.getString(CFG_SELECTED_COL, "");
-        // get included possible values
-        m_selectedAttributes = settings.getStringArray(CFG_SELECTED_ATTR, "");
-        Set<String> includedAttr = new HashSet<String>();
-        for (String s : m_selectedAttributes) {
-            includedAttr.add(s);
-        }
         // clear old values
         m_colAttributes.clear();
         m_columns.removeAllElements();
@@ -202,6 +191,13 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         if (settings.containsKey(CFG_CONFIGROOTNAME)) {
             config.loadConfigurationInDialog(settings, domain);
         } else {
+            // backwards compatibility
+            String[] selectedAttributes = settings.getStringArray(CFG_SELECTED_ATTR, "");
+            Set<String> includedAttr = new HashSet<String>();
+            for (String s : selectedAttributes) {
+                includedAttr.add(s);
+            }
+
             ArrayList<String> m_included = new ArrayList<String>();
             ArrayList<String> m_excluded = new ArrayList<String>();
             if (domain != null) {
@@ -233,8 +229,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        settings.addString(CFG_SELECTED_COL, (String)m_columnSelection
-                .getSelectedItem());
+        settings.addString(CFG_SELECTED_COL, (String)m_columnSelection.getSelectedItem());
         NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);

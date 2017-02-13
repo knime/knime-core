@@ -237,8 +237,26 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
      *            exclude) and which are not shown.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
+        this(showSelectionListsOnly, filter, null);
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
+     * can be <code>null</code>, in which case it is simply not used at all.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
+     *            exclude) and which are not shown.
+     * @param searchLabel text to show next to the search fields
+     * @since 3.3
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
+        final String searchLabel) {
         super(new GridLayout(1, 1));
         m_filter = filter;
         m_patternPanel = new PatternFilterPanelImpl<T>(this, filter);
@@ -329,7 +347,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_searchFieldIncl.addActionListener(actionListenerIncl);
         m_searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
-        inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
+        inclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
         inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
@@ -384,7 +402,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_searchButtonExcl.addActionListener(actionListenerExcl);
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
         exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
+        exclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
         exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Select all search hits");

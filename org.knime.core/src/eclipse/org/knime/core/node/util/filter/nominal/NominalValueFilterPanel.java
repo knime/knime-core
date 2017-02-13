@@ -58,6 +58,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
+ * A dialog component to filter nominal values.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.3
@@ -69,7 +70,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * @since 3.3
      */
     public NominalValueFilterPanel() {
-        super(false, null);
+        this(false);
     }
 
     /**
@@ -77,7 +78,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * @since 3.3
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, null);
+        super(showSelectionListsOnly, null, "Value(s)");
     }
 
     /**
@@ -105,8 +106,8 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     }
 
     /**
-     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
-     * will contains all column names from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The exclude list
+     * will contains all values from the given domain afterwards.
      *
      * @param config to be loaded from
      * @param domain
