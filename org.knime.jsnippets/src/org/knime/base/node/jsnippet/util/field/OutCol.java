@@ -102,6 +102,8 @@ public class OutCol extends JavaColumnField {
         m_replaceExisting = config.getBoolean(REPLACE_EXISTING);
 
         if (m_converterFactoryId == null) {
+            loadJavaType();
+
             // backwards compatibility with pre-converters javasnippet
             // Find a converter which can convert given types
             final Optional<JavaToDataCellConverterFactory<?>> factory =
@@ -125,6 +127,8 @@ public class OutCol extends JavaColumnField {
         m_replaceExisting = config.getBoolean(REPLACE_EXISTING, false);
 
         if (m_converterFactoryId == null) {
+            loadJavaTypeForDialog();
+
             // need some additional magic to provide backwards compatibility with settings
             // that do not contain a converter factory id
             final DataType destType = getDataType();

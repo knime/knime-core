@@ -306,21 +306,30 @@ public class JavaSnippetSettings {
      * @param settings To load from.
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_scriptImports = settings.getString(SCRIPT_IMPORTS, "");
+        m_scriptFields = settings.getString(SCRIPT_FIELDS, "");
+        m_scriptBody = settings.getString(SCRIPT_BODY, null);
+        m_jarFiles = settings.getStringArray(JAR_FILES, new String[0]);
+
+        // Even if the settings fail to load, we still complete loading
+        // for dialog, otherwise the user may not see his code and think
+        // its lost.
         try {
-            m_scriptImports = settings.getString(SCRIPT_IMPORTS, "");
-            m_scriptFields = settings.getString(SCRIPT_FIELDS, "");
-            m_scriptBody = settings.getString(SCRIPT_BODY, null);
-            m_jarFiles = settings.getStringArray(JAR_FILES, new String[0]);
             m_outCols.loadSettingsForDialog(settings.getConfig(OUT_COLS));
+        } catch (InvalidSettingsException e) {}
+        try {
             m_outVars.loadSettingsForDialog(settings.getConfig(OUT_VARS));
+        } catch (InvalidSettingsException e) {}
+        try {
             m_inCols.loadSettingsForDialog(settings.getConfig(IN_COLS));
+        } catch (InvalidSettingsException e) {}
+        try {
             m_inVars.loadSettingsForDialog(settings.getConfig(IN_VARS));
-            m_version = settings.getString(VERSION, JavaSnippet.VERSION_1_X);
-            m_templateUUID = settings.getString(TEMPLATE_UUID, null);
-            // added in 2.8 (only java edit variable)
-            m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, false);
-        } catch (InvalidSettingsException e) {
-            throw new IllegalStateException(e);
-        }
+        } catch (InvalidSettingsException e) {}
+
+        m_version = settings.getString(VERSION, JavaSnippet.VERSION_1_X);
+        m_templateUUID = settings.getString(TEMPLATE_UUID, null);
+        // added in 2.8 (only java edit variable)
+        m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, false);
     }
 }

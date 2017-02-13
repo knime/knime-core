@@ -76,6 +76,8 @@ public class InCol extends JavaColumnField {
         super.loadSettings(config);
 
         if (m_converterFactoryId == null) {
+            loadJavaType();
+
             // backwards compatibility with pre-converters javasnippet
             // Find a converter which can convert given types
             final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
@@ -99,6 +101,8 @@ public class InCol extends JavaColumnField {
         super.loadSettingsForDialog(config);
 
         if (m_converterFactoryId == null) {
+            loadJavaTypeForDialog();
+
             // need some additional magic to provide backwards compatibility with settings
             // that do not contain a converter factory id
             final Class<?> destType = getJavaType();

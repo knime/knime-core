@@ -48,7 +48,6 @@
 package org.knime.base.node.jsnippet.util.field;
 
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
-import org.knime.base.node.jsnippet.JavaSnippet;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -107,9 +106,19 @@ public abstract class JavaField {
     protected String m_javaName;
 
     /**
+     * The name of the java type
+     */
+    protected String m_javaTypeName;
+
+    /**
      * The type of the java field
      */
     protected Class<?> m_javaType;
+
+    /**
+     * The name of bundle the java type originated from. Can be "".
+     */
+    protected String m_bundleName;
 
     /**
      * Name of the flow variable or column
@@ -177,11 +186,15 @@ public abstract class JavaField {
      * @return the javaType
      */
     public Class<?> getJavaType() {
+        if (m_javaType == null) {
+            // backup, in case loading settings failed.
+            m_javaType = String.class;
+        }
         return m_javaType;
     }
 
     /**
-     * Saves current parameters to settings object.
+     * Saves KNIME name (variable or column name), java field name and java type name.
      *
      * @param config To save to.
      */
@@ -203,7 +216,8 @@ public abstract class JavaField {
     }
 
     /**
-     * Loads parameters in NodeModel.
+     * Loads KNIME name (variable or column name), java field name, java type name and the name of the bundle it
+     * originated from.
      *
      * @param config To load from.
      * @throws InvalidSettingsException If incomplete or wrong.
@@ -211,37 +225,64 @@ public abstract class JavaField {
     public void loadSettings(final Config config) throws InvalidSettingsException {
         m_knimeName = config.getString(KNIME_NAME);
         m_javaName = config.getString(JAVA_NAME);
+        m_javaTypeName = config.getString(JAVA_TYPE, "");
+        m_bundleName = config.getString(JAVA_TYPE_PROVIDER, "");
 
-        final String javaTypeName = config.getString(JAVA_TYPE, "");
-        try {
-            m_javaType = Class.forName(javaTypeName, true, JavaSnippet.getCustomClassLoader());
-        } catch (ClassNotFoundException e) {
-            final String bundleName = config.getString(JAVA_TYPE_PROVIDER, "");
-            final StringBuilder errorString = new StringBuilder("Java type \"").append(javaTypeName).append("\" was not found.");
-
-            if (!bundleName.isEmpty()) {
-                errorString.append("(Was provided by \"").append(bundleName).append("\")");
-            }
+        if (m_javaTypeName.isEmpty()) {
             // While the converterFactoryId may still be valid, the java type is always stored
             // for redundancy. If it is missing, something must be wrong with the settings.
-            throw new InvalidSettingsException(errorString.toString(), e);
+            throw new InvalidSettingsException("Java type setting was empty in a java field configuration.");
         }
     }
 
     /**
-     * Loads parameters in Dialog.
+     * Load m_javaType from m_javaTypeName.
+     *
+     * @return The loaded class (m_javaType)
+     * @throws InvalidSettingsException
+     */
+    protected Class<?> loadJavaType() throws InvalidSettingsException {
+        try {
+            m_javaType = Class.forName(m_javaTypeName);
+        } catch (ClassNotFoundException e) {
+            final StringBuilder errorString =
+                new StringBuilder("Java type \"").append(m_javaTypeName).append("\" was not found.");
+
+            if (!m_bundleName.isEmpty()) {
+                errorString.append("(Was provided by \"").append(m_bundleName).append("\")");
+            }
+            throw new InvalidSettingsException(errorString.toString(), e);
+        }
+
+        return m_javaType;
+    }
+
+    /**
+     * Loads KNIME name (variable or column name), java field name, java type name and the name of the bundle it
+     * originated from.
      *
      * @param config To load from.
      */
     public void loadSettingsForDialog(final Config config) {
         m_knimeName = config.getString(KNIME_NAME, null);
         m_javaName = config.getString(JAVA_NAME, null);
+        m_javaTypeName = config.getString(JAVA_TYPE, "");
+        m_bundleName = config.getString(JAVA_TYPE_PROVIDER, "");
+    }
 
+    /**
+     * Load m_javaType from m_javaTypeName, setting it to <code>null</code> if it cannot be found.
+     *
+     * @return The loaded class (m_javaType), can be <code>null</code>
+     */
+    protected Class<?> loadJavaTypeForDialog() {
         try {
-            m_javaType = Class.forName(config.getString(JAVA_TYPE, ""), true, JavaSnippet.getCustomClassLoader());
+            m_javaType = Class.forName(m_javaTypeName);
         } catch (ClassNotFoundException e) {
             m_javaType = null;
         }
+
+        return m_javaType;
     }
 
     @Override

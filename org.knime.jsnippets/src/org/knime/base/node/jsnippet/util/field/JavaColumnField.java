@@ -49,6 +49,7 @@
 package org.knime.base.node.jsnippet.util.field;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -76,6 +77,10 @@ public abstract class JavaColumnField extends JavaField {
      * @return the knimeType
      */
     public DataType getDataType() {
+        if (m_knimeType == null) {
+            // backup in case settings load failed.
+            m_knimeType = StringCell.TYPE;
+        }
         return m_knimeType;
     }
 
