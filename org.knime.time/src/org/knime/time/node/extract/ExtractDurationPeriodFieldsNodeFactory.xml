@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="extractduration.png">
+	<name>Extract Duration/Period Fields</name>
+	<shortDescription>Extracts period or duration fields from period or
+		duration cells.</shortDescription>
+	<fullDescription>
+		<intro>
+			Extracts the selected fields from a duration or period column
+			and appends the
+			values as integer or long columns. Valid fields are
+			hour, minute, second and
+			nanosecond for a duration and year, month and
+			day for a period. There are two modes: either breaks down the
+			duration into its individuals by selecting several fields, or get the
+			whole duration/period in a single number by selecting only a single field.
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				A Duration or Period column can be chosen.
+			</option>
+		</tab>
+		<tab name="Field Selection">
+			<option name="Single Value">
+				A field can be selected to which the actual
+				period or duration gets
+				converted. The extracted field is truncated,
+				e.g. from a duration holding 2 hours, 30 minutes and
+				15 seconds the
+				node extracts either 2 hours, 150 minutes or 9015 seconds. The
+				extracted field will be appended as a new column.
+			</option>
+			<option name="Several Values">
+				Several fields can be selected to extract. The
+				duration or period gets broken down in its individual parts, e.g.
+				from a duration holding 2 hours, 30 minutes and
+				15 seconds the node
+				extracts (depending on the selection) 2 hours, 30
+				minutes and 15
+				seconds.
+				The
+				extracted fields will be appended as new columns.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Input table">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Output table">
+			Output table containing the extracted
+			fields as appended columns.
+		</outPort>
+	</ports>
+</knimeNode>
