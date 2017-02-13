@@ -181,7 +181,6 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
          */
         final JPanel panelTime = new JPanel(new GridBagLayout());
         final GridBagConstraints gbcTime = new GridBagConstraints();
-        //add hour
         gbcTime.fill = GridBagConstraints.VERTICAL;
         gbcTime.gridx = 0;
         gbcTime.gridy = 0;
@@ -210,7 +209,6 @@ class ModifyTimeNodeDialog extends NodeDialogPane {
 
             timeModel.setEnabled(!isRemoveOption);
             timeZoneModel.setEnabled(isAppendOption);
-            m_dialogCompTime.setUseMillis(isAppendOption);
 
             m_filterOnlyLocalDate = isAppendOption;
 

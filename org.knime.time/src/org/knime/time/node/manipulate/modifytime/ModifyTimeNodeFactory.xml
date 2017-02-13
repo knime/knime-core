@@ -55,7 +55,7 @@
 				too.
 			</option>
 			<option name="Time">
-				A time value in form of HH:mm:ss.SSS. For example
+				A time value in form of HH:mm:ss or HH:mm:ss.SSS. For example
 				<i>12:10:30.123</i>
 				means
 				<i>12 hours, 10 minutes, 30 seconds, 123 milliseconds</i>

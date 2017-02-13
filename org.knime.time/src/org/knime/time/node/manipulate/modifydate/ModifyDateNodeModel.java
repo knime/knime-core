@@ -50,7 +50,6 @@ package org.knime.time.node.manipulate.modifydate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -76,13 +75,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
+import org.knime.time.util.SettingsModelDateTime;
 
 /**
  * The node dialog of the node which modifies date.
@@ -97,7 +96,6 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
     @SuppressWarnings("unchecked")
     static final DataTypeColumnFilter DATE_TIME_FILTER =
         new DataTypeColumnFilter(ZonedDateTimeValue.class, LocalDateTimeValue.class);
-
 
     static final String OPTION_APPEND = "Append selected columns";
 
@@ -115,18 +113,11 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
-    private final SettingsModelInteger m_year = createYearModel();
-
-    private final SettingsModelString m_month = createMonthModel();
-
-    private final SettingsModelInteger m_day = createDayModel();
-
-    private final SettingsModelBoolean m_addZone = createZoneModelBool();
-
-    private final SettingsModelString m_timeZone = createTimeZoneSelectModel(m_addZone);
-
     private final SettingsModelString m_modifyAction = createModifySelectModel();
 
+    private final SettingsModelDateTime m_date = createDateModel();
+
+    private final SettingsModelDateTime m_timeZone = createTimeZoneModel();
 
     /**
      * @param typeColumnFilter column filter
@@ -151,6 +142,16 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
         return suffixModel;
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createDateModel() {
+        return new SettingsModelDateTime("date", LocalDate.now(), null, null);
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createTimeZoneModel() {
+        return new SettingsModelDateTime("time_zone", null, null, ZoneId.systemDefault());
     }
 
     /** @return the integer model, used in both dialog and model. */
@@ -206,7 +207,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
                 dataType = LocalDateTimeCellFactory.TYPE;
             } else {
-                if (m_addZone.getBooleanValue()) {
+                if (m_timeZone.useZone()) {
                     dataType = ZonedDateTimeCellFactory.TYPE;
                 } else {
                     dataType = LocalDateTimeCellFactory.TYPE;
@@ -214,8 +215,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             }
         }
 
-        final Month month = Month.valueOf(m_month.getStringValue().toUpperCase());
-        final ZoneId zone = ZoneId.of(m_timeZone.getStringValue());
+        final ZoneId zone = m_timeZone.getZone();
 
         int i = 0;
         for (final String includedCol : includeList) {
@@ -226,23 +226,23 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 final SingleCellFactory cellFac =
-                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], month, zone);
+                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], month, zone);
+                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], zone);
                 rearranger.append(cellFac);
             }
         }
         return rearranger;
     }
 
-    private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final Month month, final ZoneId zone) {
+    private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
-            return new AppendDateCellFactory(dataColSpec, index, month, zone);
+            return new AppendDateCellFactory(dataColSpec, index, zone);
         } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
-            return new ChangeDateCellFactory(dataColSpec, index, month);
+            return new ChangeDateCellFactory(dataColSpec, index);
         } else {
             return new RemoveDateCellFactory(dataColSpec, index);
         }
@@ -256,10 +256,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
         m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
-        m_year.saveSettingsTo(settings);
-        m_month.saveSettingsTo(settings);
-        m_day.saveSettingsTo(settings);
-        m_addZone.saveSettingsTo(settings);
+        m_date.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
         m_modifyAction.saveSettingsTo(settings);
     }
@@ -271,10 +268,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
-        m_year.validateSettings(settings);
-        m_month.validateSettings(settings);
-        m_day.validateSettings(settings);
-        m_addZone.validateSettings(settings);
+        m_date.validateSettings(settings);
         m_timeZone.validateSettings(settings);
         m_modifyAction.validateSettings(settings);
     }
@@ -286,10 +280,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
-        m_year.loadSettingsFrom(settings);
-        m_month.loadSettingsFrom(settings);
-        m_day.loadSettingsFrom(settings);
-        m_addZone.loadSettingsFrom(settings);
+        m_date.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_modifyAction.loadSettingsFrom(settings);
         boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND);
@@ -297,18 +288,14 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
         m_colSelect.loadConfigurationInModel(settings);
     }
 
-
     private final class AppendDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
         private final ZoneId m_zone;
 
-        private final Month m_monthValue;
-
-        AppendDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month, final ZoneId zone) {
+        AppendDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
-            m_monthValue = month;
             m_zone = zone;
         }
 
@@ -322,8 +309,8 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
                 return cell;
             }
             final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
-            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_monthValue, m_day.getIntValue());
-            if (m_addZone.getBooleanValue()) {
+            final LocalDate localDate = m_date.getLocalDate();
+            if (m_timeZone.useZone()) {
                 return ZonedDateTimeCellFactory
                     .create(ZonedDateTime.of(LocalDateTime.of(localDate, localTimeCell.getLocalTime()), m_zone));
             } else {
@@ -335,12 +322,9 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
     private final class ChangeDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
-        private final Month m_monthValue;
-
-        ChangeDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final Month month) {
+        ChangeDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
             m_colIndex = colIndex;
-            m_monthValue = month;
         }
 
         /**
@@ -352,7 +336,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final LocalDate localDate = LocalDate.of(m_year.getIntValue(), m_monthValue, m_day.getIntValue());
+            final LocalDate localDate = m_date.getLocalDate();
             if (cell instanceof LocalDateTimeCell) {
                 return LocalDateTimeCellFactory
                     .create(LocalDateTime.of(localDate, ((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime()));
