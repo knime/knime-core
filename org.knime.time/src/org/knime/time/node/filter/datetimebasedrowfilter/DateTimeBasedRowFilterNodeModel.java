@@ -57,11 +57,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -91,8 +86,8 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
-import org.knime.core.node.util.StringHistory;
 import org.knime.time.Granularity;
+import org.knime.time.util.SettingsModelDateTime;
 
 /**
  * The node model of the node which filters rows based on a time window on one of the new date&time columns.
@@ -111,19 +106,15 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     private final SettingsModelString m_colSelect = createColSelectModel();
 
-    private final SettingsModelString m_format = createFormatModel();
-
-    private final SettingsModelString m_locale = createLocaleModel();
-
     private final SettingsModelBoolean m_startBool = createStartBooleanModel();
 
     private final SettingsModelBoolean m_endBool = createEndBooleanModel();
 
-    private final SettingsModelString m_dateTimeStart = createDateTimeStartModel();
+    private final SettingsModelDateTime m_startDateTime = createStartDateTimeModel();
 
     private final SettingsModelString m_endSelection = createEndSelectionModel();
 
-    private final SettingsModelString m_dateTimeEnd = createDateTimeEndModel();
+    private final SettingsModelDateTime m_endDateTime = createEndDateTimeModel();
 
     private final SettingsModelString m_periodValueModel = createPeriodValueModel();
 
@@ -139,19 +130,11 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_endAlwaysNow = createEndAlwaysNowModel();
 
+    private boolean m_startAfterEnd;
+
     /** @return the column select model, used in both dialog and model. */
     static SettingsModelString createColSelectModel() {
         return new SettingsModelString("col_select", null);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createFormatModel() {
-        return new SettingsModelString("date_format", null);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createLocaleModel() {
-        return new SettingsModelString("locale", Locale.getDefault().toString());
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -164,19 +147,19 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         return new SettingsModelBoolean("end_boolean", true);
     }
 
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createDateTimeStartModel() {
-        return new SettingsModelString("date_time_start", null);
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createStartDateTimeModel() {
+        return new SettingsModelDateTime("start_date_time", ZonedDateTime.now().withNano(0));
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createEndDateTimeModel() {
+        return new SettingsModelDateTime("end_date_time", ZonedDateTime.now().withNano(0));
     }
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createEndSelectionModel() {
         return new SettingsModelString("end_selection", null);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createDateTimeEndModel() {
-        return new SettingsModelString("date_time_end", null);
     }
 
     /**
@@ -221,32 +204,6 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @return a set of all predefined formats plus the formats added by the user
-     */
-    static Collection<String> createPredefinedFormats() {
-        // unique values
-        Set<String> formats = new LinkedHashSet<String>();
-        formats.add("yyyy-MM-dd;HH:mm:ss.S");
-        formats.add("dd.MM.yyyy;HH:mm:ss.S");
-        formats.add("yyyy-MM-dd HH:mm:ss.S");
-        formats.add("dd.MM.yyyy HH:mm:ss.S");
-        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        formats.add("yyyy-MM-dd;HH:mm:ssVV");
-        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV");
-        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'");
-        formats.add("yyyy-MM-dd");
-        formats.add("yyyy/dd/MM");
-        formats.add("dd.MM.yyyy");
-        formats.add("HH:mm:ss");
-        // check also the StringHistory....
-        final String[] userFormats = StringHistory.getInstance(FORMAT_HISTORY_KEY).getHistory();
-        for (String userFormat : userFormats) {
-            formats.add(userFormat);
-        }
-        return formats;
-    }
-
-    /**
      */
     protected DateTimeBasedRowFilterNodeModel() {
         super(1, 1);
@@ -257,9 +214,10 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_format.getStringValue() == null) {
+        if (inSpecs[0].findColumnIndex(m_colSelect.getStringValue()) < 0){
             throw new InvalidSettingsException("No configuration available!");
         }
+        m_startAfterEnd = false;
         return inSpecs;
     }
 
@@ -274,68 +232,47 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
         // read input
         final int colIdx = dataTable.getDataTableSpec().findColumnIndex(m_colSelect.getStringValue());
-        final DateTimeFormatter formatter =
-            DateTimeFormatter.ofPattern(m_format.getStringValue(), new Locale(m_locale.getStringValue()));
-        final String start;
-        if (m_startBool.getBooleanValue()) {
-            if (!m_startAlwaysNow.getBooleanValue()) {
-                start = m_dateTimeStart.getStringValue();
-            } else {
-                start = formatter.format(ZonedDateTime.now());
-            }
-        } else {
-            start = null;
-        }
-
-        final String end;
-        if (m_endBool.getBooleanValue()) {
-            if (!m_endAlwaysNow.getBooleanValue()) {
-                end = m_dateTimeEnd.getStringValue();
-            } else {
-                end = formatter.format(ZonedDateTime.now());
-            }
-        } else {
-            end = null;
-        }
+        final ZonedDateTime executionStartTime = m_startAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
+        final ZonedDateTime executionEndTime = m_endAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
 
         // filter rows
         for (final DataRow row : dataTable) {
             exec.checkCanceled();
-            if (filterRow(row.getCell(colIdx), start, end, formatter)) {
+            if (filterRow(row.getCell(colIdx), executionStartTime, executionEndTime)) {
                 container.addRowToTable(row);
             }
         }
         container.close();
+        if (m_startAfterEnd) {
+            setWarningMessage("Start date is after end date! Node created an empty data table.");
+        }
         return new BufferedDataTable[]{container.getTable()};
     }
 
-    private boolean filterRow(final DataCell cell, final String start, final String end,
-        final DateTimeFormatter formatter) {
+    private boolean filterRow(final DataCell cell, final ZonedDateTime executionStartTime,
+        final ZonedDateTime executionEndTime) {
         if (cell.isMissing()) {
             return false;
         }
         // local date
         if (cell instanceof LocalDateCell) {
             final LocalDate localDate = ((LocalDateCell)cell).getLocalDate();
-            if (start == null) {
-                final LocalDate endDate = LocalDate.parse(end, formatter);
+            LocalDate endDate =
+                    executionEndTime == null ? m_endDateTime.getLocalDate() : executionEndTime.toLocalDate();
+            if (!m_startBool.getBooleanValue()) {
                 if ((localDate.equals(endDate) && m_endInclusive.getBooleanValue()) || localDate.isBefore(endDate)) {
                     return true;
                 }
                 return false;
             }
-            if (end == null) {
-                final LocalDate startDate = LocalDate.parse(start, formatter);
+            final LocalDate startDate =
+                executionStartTime == null ? m_startDateTime.getLocalDate() : executionStartTime.toLocalDate();
+            if (!m_endBool.getBooleanValue()) {
                 if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue())
                     || localDate.isAfter(startDate)) {
                     return true;
                 }
                 return false;
-            }
-            final LocalDate startDate = LocalDate.parse(start, formatter);
-            LocalDate endDate = null;
-            if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endDate = LocalDate.parse(end, formatter);
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
                 try {
@@ -353,15 +290,14 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
                     throw new IllegalStateException("Period could not be parsed.");
                 }
             }
-            if (endDate == null) {
-                throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
-            }
             if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue())
                 || (localDate.equals(endDate) && m_endInclusive.getBooleanValue())
-                || (localDate.isAfter(startDate) && localDate.isBefore(endDate))
-                || (localDate.isBefore(startDate) && localDate.isAfter(endDate))) {
+                || (localDate.isAfter(startDate) && localDate.isBefore(endDate)) || (localDate.isBefore(startDate)
+                    && localDate.isAfter(endDate) && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
                 return true;
-
+            }
+            if (startDate.isAfter(endDate) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+                m_startAfterEnd = true;
             }
             return false;
         }
@@ -369,25 +305,26 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         // local time
         if (cell instanceof LocalTimeCell) {
             final LocalTime localTime = ((LocalTimeCell)cell).getLocalTime();
-            if (start == null) {
-                final LocalTime endTime = LocalTime.parse(end, formatter);
+            if (!m_startBool.getBooleanValue()) {
+                final LocalTime endTime =
+                    executionEndTime == null ? m_endDateTime.getLocalTime() : executionEndTime.toLocalTime();
                 if ((localTime.equals(endTime) && m_endInclusive.getBooleanValue()) || localTime.isBefore(endTime)) {
                     return true;
                 }
                 return false;
             }
-            if (end == null) {
-                final LocalTime startTime = LocalTime.parse(start, formatter);
+            final LocalTime startTime =
+                executionStartTime == null ? m_startDateTime.getLocalTime() : executionStartTime.toLocalTime();
+            if (!m_endBool.getBooleanValue()) {
                 if ((localTime.equals(startTime) && m_startInclusive.getBooleanValue())
                     || localTime.isAfter(startTime)) {
                     return true;
                 }
                 return false;
             }
-            final LocalTime startTime = LocalTime.parse(start, formatter);
             LocalTime endTime = null;
             if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endTime = LocalTime.parse(end, formatter);
+                endTime = executionEndTime == null ? m_endDateTime.getLocalTime() : executionEndTime.toLocalTime();
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
                 try {
@@ -410,10 +347,12 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             }
             if ((localTime.equals(startTime) && m_startInclusive.getBooleanValue())
                 || (localTime.equals(endTime) && m_endInclusive.getBooleanValue())
-                || (localTime.isAfter(startTime) && localTime.isBefore(endTime))
-                || (localTime.isBefore(startTime) && localTime.isAfter(endTime))) {
+                || (localTime.isAfter(startTime) && localTime.isBefore(endTime)) || (localTime.isBefore(startTime)
+                    && localTime.isAfter(endTime) && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
                 return true;
-
+            }
+            if (startTime.isAfter(endTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+                m_startAfterEnd = true;
             }
             return false;
         }
@@ -421,26 +360,28 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         // local date time
         if (cell instanceof LocalDateTimeCell) {
             final LocalDateTime localDateTime = ((LocalDateTimeCell)cell).getLocalDateTime();
-            if (start == null) {
-                final LocalDateTime endDateTime = LocalDateTime.parse(end, formatter);
+            if (!m_startBool.getBooleanValue()) {
+                final LocalDateTime endDateTime =
+                    executionEndTime == null ? m_endDateTime.getLocalDateTime() : executionEndTime.toLocalDateTime();
                 if ((localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                     || localDateTime.isBefore(endDateTime)) {
                     return true;
                 }
                 return false;
             }
-            if (end == null) {
-                final LocalDateTime startDateTime = LocalDateTime.parse(start, formatter);
+            final LocalDateTime startDateTime =
+                executionStartTime == null ? m_startDateTime.getLocalDateTime() : executionStartTime.toLocalDateTime();
+            if (!m_endBool.getBooleanValue()) {
                 if ((localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                     || localDateTime.isAfter(startDateTime)) {
                     return true;
                 }
                 return false;
             }
-            final LocalDateTime startDateTime = LocalDateTime.parse(start, formatter);
             LocalDateTime endDateTime = null;
             if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endDateTime = LocalDateTime.parse(end, formatter);
+                endDateTime =
+                    executionEndTime == null ? m_endDateTime.getLocalDateTime() : executionEndTime.toLocalDateTime();
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
                 try {
@@ -474,9 +415,12 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             if ((localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                 || (localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                 || (localDateTime.isAfter(startDateTime) && localDateTime.isBefore(endDateTime))
-                || (localDateTime.isBefore(startDateTime) && localDateTime.isAfter(endDateTime))) {
+                || (localDateTime.isBefore(startDateTime) && localDateTime.isAfter(endDateTime)
+                    && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
                 return true;
-
+            }
+            if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+                m_startAfterEnd = true;
             }
             return false;
         }
@@ -484,26 +428,27 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         // zoned date time
         if (cell instanceof ZonedDateTimeCell) {
             final ZonedDateTime zonedDateTime = ((ZonedDateTimeCell)cell).getZonedDateTime();
-            if (start == null) {
-                final ZonedDateTime endDateTime = ZonedDateTime.parse(end, formatter);
+            if (!m_startBool.getBooleanValue()) {
+                final ZonedDateTime endDateTime =
+                    executionEndTime == null ? m_endDateTime.getZonedDateTime() : executionEndTime;
                 if ((zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                     || zonedDateTime.isBefore(endDateTime)) {
                     return true;
                 }
                 return false;
             }
-            if (end == null) {
-                final ZonedDateTime startDateTime = ZonedDateTime.parse(start, formatter);
+            final ZonedDateTime startDateTime =
+                executionStartTime == null ? m_startDateTime.getZonedDateTime() : executionStartTime;
+            if (!m_endBool.getBooleanValue()) {
                 if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                     || zonedDateTime.isAfter(startDateTime)) {
                     return true;
                 }
                 return false;
             }
-            final ZonedDateTime startDateTime = ZonedDateTime.parse(start, formatter);
             ZonedDateTime endDateTime = null;
             if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endDateTime = ZonedDateTime.parse(end, formatter);
+                endDateTime = executionEndTime == null ? m_endDateTime.getZonedDateTime() : executionEndTime;
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
                 try {
@@ -537,9 +482,12 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                 || (zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                 || (zonedDateTime.isAfter(startDateTime) && zonedDateTime.isBefore(endDateTime))
-                || (zonedDateTime.isBefore(startDateTime) && zonedDateTime.isAfter(endDateTime))) {
+                || (zonedDateTime.isBefore(startDateTime) && zonedDateTime.isAfter(endDateTime)
+                    && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
                 return true;
-
+            }
+            if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+                m_startAfterEnd = true;
             }
             return false;
         }
@@ -572,35 +520,14 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
                 // read input
                 final int colIdx = in.getDataTableSpec().findColumnIndex(m_colSelect.getStringValue());
-                final DateTimeFormatter formatter =
-                    DateTimeFormatter.ofPattern(m_format.getStringValue(), new Locale(m_locale.getStringValue()));
-                final String start;
-                if (m_startBool.getBooleanValue()) {
-                    if (!m_startAlwaysNow.getBooleanValue()) {
-                        start = m_dateTimeStart.getStringValue();
-                    } else {
-                        start = formatter.format(ZonedDateTime.now());
-                    }
-                } else {
-                    start = null;
-                }
-
-                final String end;
-                if (m_endBool.getBooleanValue()) {
-                    if (!m_endAlwaysNow.getBooleanValue()) {
-                        end = m_dateTimeEnd.getStringValue();
-                    } else {
-                        end = formatter.format(ZonedDateTime.now());
-                    }
-                } else {
-                    end = null;
-                }
-
+                final ZonedDateTime executionStartTime =
+                    m_startAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
+                final ZonedDateTime executionEndTime = m_endAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
                 // filter rows
                 DataRow row;
                 while ((row = in.poll()) != null) {
                     exec.checkCanceled();
-                    if (filterRow(row.getCell(colIdx), start, end, formatter)) {
+                    if (filterRow(row.getCell(colIdx), executionStartTime, executionEndTime)) {
                         out.push(row);
                     }
                 }
@@ -634,12 +561,10 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
-        m_format.saveSettingsTo(settings);
-        m_locale.saveSettingsTo(settings);
         m_startBool.saveSettingsTo(settings);
         m_endBool.saveSettingsTo(settings);
-        m_dateTimeStart.saveSettingsTo(settings);
-        m_dateTimeEnd.saveSettingsTo(settings);
+        m_startDateTime.saveSettingsTo(settings);
+        m_endDateTime.saveSettingsTo(settings);
         m_startAlwaysNow.saveSettingsTo(settings);
         m_endAlwaysNow.saveSettingsTo(settings);
         m_startInclusive.saveSettingsTo(settings);
@@ -656,12 +581,10 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
-        m_format.validateSettings(settings);
-        m_locale.validateSettings(settings);
         m_startBool.validateSettings(settings);
         m_endBool.validateSettings(settings);
-        m_dateTimeStart.validateSettings(settings);
-        m_dateTimeEnd.validateSettings(settings);
+        m_startDateTime.validateSettings(settings);
+        m_endDateTime.validateSettings(settings);
         m_startAlwaysNow.validateSettings(settings);
         m_endAlwaysNow.validateSettings(settings);
         m_startInclusive.validateSettings(settings);
@@ -678,12 +601,10 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
-        m_format.loadSettingsFrom(settings);
-        m_locale.loadSettingsFrom(settings);
         m_startBool.loadSettingsFrom(settings);
         m_endBool.loadSettingsFrom(settings);
-        m_dateTimeStart.loadSettingsFrom(settings);
-        m_dateTimeEnd.loadSettingsFrom(settings);
+        m_startDateTime.loadSettingsFrom(settings);
+        m_endDateTime.loadSettingsFrom(settings);
         m_startAlwaysNow.loadSettingsFrom(settings);
         m_endAlwaysNow.loadSettingsFrom(settings);
         m_startInclusive.loadSettingsFrom(settings);
@@ -692,11 +613,6 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         m_periodValueModel.loadSettingsFrom(settings);
         m_numericalValueModel.loadSettingsFrom(settings);
         m_granularityModel.loadSettingsFrom(settings);
-        final String dateformat = m_format.getStringValue();
-        // if it is not a predefined one -> store it
-        if (!createPredefinedFormats().contains(dateformat)) {
-            StringHistory.getInstance(FORMAT_HISTORY_KEY).add(dateformat);
-        }
     }
 
     /**
@@ -704,7 +620,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // nothing to do
+        m_startAfterEnd = false;
     }
 
 }
