@@ -59,6 +59,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.mine.regression.RegressionTrainingRow.MissingHandling;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
@@ -78,7 +80,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
 
 /**
  * A Predictor for a logistic regression model.
@@ -104,7 +105,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     // matrix
     // Number of Rows: dim(x)
     // Number of Cols: numTargetCategories
-    private Matrix m_beta = null;
+    private RealMatrix m_beta = null;
     private boolean m_includeProbs;
     /** maps the indices of the values from m_targetCategories to the domain values of the target column. */
     private Map<Integer, Integer> m_targetCategoryIndex;
@@ -250,7 +251,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         Arrays.fill(cells, new IntCell(0));
 
         // column vector
-        final Matrix x = new Matrix(1, m_parameters.size());
+        final RealMatrix x = MatrixUtils.createRealMatrix(1, m_parameters.size());
         for (int i = 0; i < m_parameters.size(); i++) {
             String parameter = m_parameters.get(i);
             String predictor = null;
@@ -265,7 +266,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                 }
             }
             if (rowIsEmpty) {
-                x.set(0, i, 1);
+                x.setEntry(0, i, 1);
             } else {
                 if (m_factors.contains(predictor)) {
                     List<DataCell> values = m_values.get(predictor);
@@ -282,7 +283,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                     See the commit message for an example and more details.
                     */
                     if (index > 0) {
-                        x.set(0, i + index - 1, 1);
+                        x.setEntry(0, i + index - 1, 1);
                         i += values.size() - 2;
                     }
                 } else if (m_baseLabelToColName.containsKey(parameter) && m_vectorLengths.containsKey(m_baseLabelToColName.get(parameter))) {
@@ -294,7 +295,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                         value = m_ppMatrix.getValue(parameter, predictor, null);
                         double exponent = Integer.valueOf(value);
                         double radix = RegressionTrainingRow.getValue(cell, j, missingHandling);
-                        x.set(0, i, Math.pow(radix, exponent));
+                        x.setEntry(0, i, Math.pow(radix, exponent));
                     }
                 } else {
                     DataCell cell =
@@ -302,21 +303,21 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
 
                     double radix = ((DoubleValue)cell).getDoubleValue();
                     double exponent = Integer.valueOf(value);
-                    x.set(0, i, Math.pow(radix, exponent));
+                    x.setEntry(0, i, Math.pow(radix, exponent));
                 }
             }
         }
 
 
         // column vector
-        Matrix r = x.times(m_beta);
+        RealMatrix r = x.multiply(m_beta);
 
         // determine the column with highest probability
         int maxIndex = 0;
-        double maxValue = r.get(0, 0);
+        double maxValue = r.getEntry(0, 0);
         for (int i = 1; i < r.getColumnDimension(); i++) {
-            if (r.get(0, i) > maxValue) {
-                maxValue = r.get(0, i);
+            if (r.getEntry(0, i) > maxValue) {
+                maxValue = r.getEntry(0, i);
                 maxIndex = i;
             }
         }
@@ -328,14 +329,14 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                 // test if calculation would overflow
                 boolean overflow = false;
                 for (int k = 0; k < r.getColumnDimension(); k++) {
-                    if ((r.get(0, k) - r.get(0, i)) > 700) {
+                    if ((r.getEntry(0, k) - r.getEntry(0, i)) > 700) {
                         overflow = true;
                     }
                 }
                 if (!overflow) {
                     double sum = 0;
                     for (int k = 0; k < r.getColumnDimension(); k++) {
-                        sum += Math.exp(r.get(0, k) - r.get(0, i));
+                        sum += Math.exp(r.getEntry(0, k) - r.getEntry(0, i));
                     }
                     cells[m_targetCategoryIndex.get(i)] = new DoubleCell(1.0 / sum);
                 } else {
@@ -373,13 +374,13 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         return cells;
     }
 
-    private Matrix getBetaMatrix() {
+    private RealMatrix getBetaMatrix() {
         ParamMatrix paramMatrix = new ParamMatrix(m_content.getParamMatrix());
-        Matrix beta = new Matrix(m_parameters.size(), m_targetCategories.size());
+        RealMatrix beta = MatrixUtils.createRealMatrix(m_parameters.size(), m_targetCategories.size());
         for (int k = 0; k < m_targetCategories.size() - 1; k++) {
             for (int i = 0; i < m_parameters.size(); i++) {
                 double value = paramMatrix.getBeta(m_parameters.get(i), m_targetCategories.get(k).toString());
-                beta.set(i, k, value);
+                beta.setEntry(i, k, value);
             }
         }
         return beta;

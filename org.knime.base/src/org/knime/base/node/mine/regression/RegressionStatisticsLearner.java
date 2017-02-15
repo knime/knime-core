@@ -149,7 +149,7 @@ public abstract class RegressionStatisticsLearner {
      * Creates the covariance matrix from the {@link RegressionResults}.
      *
      * @param result A {@link RegressionResults} object.
-     * @return The covariance {@link Matrix}.
+     * @return The covariance {@link RealMatrix}.
      * @since 3.3
      */
     protected RealMatrix createCovarianceMatrix(final RegressionResults result) {
