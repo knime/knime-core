@@ -562,13 +562,19 @@ public class OutFieldsTable extends ConfigTablePanel {
         if (!factory.isPresent()) {
             // try to find another converter for the source and dest types. The one with for the stored id
             // seems to be missing.
-            factory = ConverterUtil.getConverterFactory(outCol.getJavaType(), outCol.getDataType());
+            if (outCol.getJavaType() != null) {
+                factory = ConverterUtil.getConverterFactory(outCol.getJavaType(), outCol.getDataType());
+            }
         }
 
         if (factory.isPresent()) {
             m_model.setValueAt(factory.get(), r, Column.JAVA_TYPE);
         } else {
-            m_model.setValueAt(outCol.getJavaType(), r, Column.JAVA_TYPE);
+            if (outCol.getJavaType() != null) {
+                m_model.setValueAt(outCol.getJavaType(), r, Column.JAVA_TYPE);
+            } else {
+                m_model.setValueAt(outCol.getJavaTypeName(), r, Column.JAVA_TYPE);
+            }
         }
 
         return true;
