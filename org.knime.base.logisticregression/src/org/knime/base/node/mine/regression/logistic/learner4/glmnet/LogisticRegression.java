@@ -48,9 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.MathUtils;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
 
 /**
  * Calculates a (binary) logistic regression model using elastic net regularized coordinate descent.
@@ -59,14 +57,14 @@ import org.knime.base.node.mine.regression.RegressionTrainingData;
  */
 public class LogisticRegression extends AbstractLogisticRegression {
 
-    public double[] fit(final RegressionTrainingData data, final double alpha, final double lambda) {
-        final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[(int)data.getRowCount()], 0);
+    public double[] fit(final ClassificationTrainingData data, final double alpha, final double lambda) {
+        final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[data.getRowCount()], 0);
         final UpdateStrategy updateStrategy = new NaiveUpdateStrategy(data, weights);
         final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy, alpha);
         final ApproximationPreparator approxPreparator = new ApproxPreparator();
-        double[] beta = new double[data.getRegressorCount() + 1];
+        double[] beta = new double[data.getFeatureCount() + 1];
         // TODO find out how to correctly determine intercept
-        final double[] workingResponses = new double[(int)data.getRowCount()];
+        final double[] workingResponses = new double[data.getRowCount()];
 
         for (double ll = calculateSumLogLikelihood(data, beta), llOld = 0.0; MathUtils.equals(ll, llOld);
                 llOld = ll, ll = calculateSumLogLikelihood(data, beta)) {
@@ -82,7 +80,7 @@ public class LogisticRegression extends AbstractLogisticRegression {
          * {@inheritDoc}
          */
         @Override
-        double prepareProbability(final RealMatrix x) {
+        double prepareProbability(final TrainingRow x) {
             return 1.0 / (1 + Math.exp(-(m_response)));
         }
 

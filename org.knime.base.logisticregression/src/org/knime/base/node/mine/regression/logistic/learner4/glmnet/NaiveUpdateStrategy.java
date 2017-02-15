@@ -50,10 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.Iterator;
 
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.MathUtils;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.RegressionTrainingRow;
 
 /**
  * Naive update strategy that stores the residual for all rows and updates them if a beta changes.
@@ -63,20 +60,20 @@ import org.knime.base.node.mine.regression.RegressionTrainingRow;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class NaiveUpdateStrategy implements UpdateStrategy {
+class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
 
-    private RegressionTrainingData m_data;
+    private TrainingData<T> m_data;
     private WeightingStrategy m_weights;
     private double[] m_residuals;
 
-    public NaiveUpdateStrategy(final RegressionTrainingData data, final WeightingStrategy weights) {
+    public NaiveUpdateStrategy(final TrainingData<T> data, final WeightingStrategy weights) {
         m_data = data;
         m_weights = weights;
         if (m_data.getRowCount() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("The current implementation does not support tables of this size.");
         }
         // If the number of rows is bigger than Integer.MAX_Value I believe we will have other problems
-        m_residuals = new double[(int)m_data.getRowCount()];
+        m_residuals = new double[m_data.getRowCount()];
     }
 
     /**
@@ -87,10 +84,10 @@ class NaiveUpdateStrategy implements UpdateStrategy {
         double residualSum = 0;
         double betaSum = 0;
         double weightSum = 0;
-        final Iterator<RegressionTrainingRow> iterator = m_data.iterator();
+        final Iterator<T> iterator = m_data.iterator();
         for (int rn = 0; iterator.hasNext(); rn++) {
-            double[] row = iterator.next().getParameterApache().getRow(0);
-            double x = row[feature];
+            TrainingRow row = iterator.next();
+            double x = row.getFeature(feature);
             double wx = m_weights.getWeightFor(rn) * x;
             residualSum += wx * m_residuals[rn];
             betaSum += wx * x * betaOld;
@@ -108,43 +105,26 @@ class NaiveUpdateStrategy implements UpdateStrategy {
 
     private void updateResiduals(final int feature, final double betaDiff) {
         int i = 0;
-        Iterator<RegressionTrainingRow> iterator = m_data.iterator();
+        Iterator<T> iterator = m_data.iterator();
         for (; iterator.hasNext(); i++) {
-            RealMatrix row = iterator.next().getParameterApache();
-            double x = row.getEntry(0, feature);
+            TrainingRow row = iterator.next();
+            double x = row.getFeature(feature);
             m_residuals[i] -= x * betaDiff;
         }
         assert i == m_residuals.length : "Number of rows returned by iterator (" + i +") does not match number of residuals ("
                 + m_residuals.length + ")";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialize(final double[] beta) {
-        Iterator<RegressionTrainingRow> iterator = m_data.iterator();
-        int i = 0;
-        for (; iterator.hasNext(); i++) {
-            RegressionTrainingRow row = iterator.next();
-            RealMatrix x = row.getParameterApache();
-            double y = row.getTarget();
-            m_residuals[i] = calculateResidual(x, y, beta);
-        }
-        assert i == m_residuals.length : "Number of rows returned by iterator (" + i +") does not match number of residuals ("
-                + m_residuals.length + ")";
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void initialize(final double[] beta, final double[] targets) {
-        Iterator<RegressionTrainingRow> iterator = m_data.iterator();
+        Iterator<T> iterator = m_data.iterator();
         int i = 0;
         for (; iterator.hasNext(); i++) {
-            RegressionTrainingRow row = iterator.next();
-            RealMatrix x = row.getParameterApache();
+            TrainingRow x = iterator.next();
             double y = targets[i];
             m_residuals[i] = calculateResidual(x, y, beta);
         }
@@ -153,10 +133,10 @@ class NaiveUpdateStrategy implements UpdateStrategy {
 
     }
 
-    private double calculateResidual(final RealMatrix x, final double y, final double[] beta) {
+    private double calculateResidual(final TrainingRow x, final double y, final double[] beta) {
         double prediction = beta[0];
         for (int i = 1; i < beta.length; i++) {
-            prediction += x.getEntry(0, i - 1) * beta[i];
+            prediction += x.getFeature(i - 1) * beta[i];
         }
         return y - prediction;
     }

@@ -49,8 +49,6 @@
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import org.apache.commons.math3.util.MathUtils;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.RegressionTrainingRow;
 
 /**
  * Solves the elastic net problem:
@@ -67,9 +65,9 @@ class ElasticNetCoordinateDescent {
 
     final private double m_alpha;
     final private UpdateStrategy m_updateStrategy;
-    final private RegressionTrainingData m_data;
+    final private TrainingData<?> m_data;
 
-    public ElasticNetCoordinateDescent(final RegressionTrainingData data, final UpdateStrategy updateStrategy, final double alpha) {
+    public ElasticNetCoordinateDescent(final TrainingData<?> data, final UpdateStrategy updateStrategy, final double alpha) {
         m_alpha = alpha;
         m_updateStrategy = updateStrategy;
         m_data = data;
@@ -86,28 +84,26 @@ class ElasticNetCoordinateDescent {
                     + targets.length + ") does not match the number of rows ("
                     + m_data.getRowCount() + ").");
         }
-        double[] beta = new double[m_data.getRegressorCount() + 1];
+        double[] beta = new double[m_data.getFeatureCount() + 1];
         beta[0] = calculateIntercept(targets);
         return fitModel(lambda, beta);
     }
 
-    /**
-     * Fits a regression model on the provided data.
-     *
-     * @param lambda Weight of regularization in objective function
-     * @return a 1 x (p+1) matrix of the fitted coefficients
-     */
-    public double[] fit(final double lambda) {
-        final double[] beta = new double[m_data.getRegressorCount() + 1];
-
-        beta[0] = calculateIntercept();
-
-        return fitModel(lambda, beta);
-    }
+//    /**
+//     * Fits a regression model on the provided data.
+//     *
+//     * @param lambda Weight of regularization in objective function
+//     * @return a 1 x (p+1) matrix of the fitted coefficients
+//     */
+//    public double[] fit(final double lambda) {
+//        final double[] beta = new double[m_data.getRegressorCount() + 1];
+//
+//        beta[0] = calculateIntercept();
+//
+//        return fitModel(lambda, beta);
+//    }
 
     private double[] fitModel(final double lambda, final double[] beta) {
-        m_updateStrategy.initialize(beta);
-
         for (boolean betaChanged = false; betaChanged;) {
             for (int i = 1; i < beta.length; i++) {
                 // beta[0] is the intercept term
@@ -122,13 +118,13 @@ class ElasticNetCoordinateDescent {
         return beta;
     }
 
-    private double calculateIntercept() {
-        double sumY = 0.0;
-        for (RegressionTrainingRow row : m_data) {
-            sumY += row.getTarget();
-        }
-        return sumY / m_data.getRowCount();
-    }
+//    private double calculateIntercept() {
+//        double sumY = 0.0;
+//        for (TrainingRow row : m_data) {
+//            sumY += row.getTarget();
+//        }
+//        return sumY / m_data.getRowCount();
+//    }
 
     private double calculateIntercept(final double[] targets) {
         double sumY = 0.0;

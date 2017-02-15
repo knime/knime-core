@@ -48,10 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.MathUtils;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.RegressionTrainingRow;
 
 /**
  * Performs regularized multinomial regression using coordinate descent in combination with iteratively reweighted least squares.
@@ -90,7 +87,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
         m_alpha = alpha;
     }
 
-    public double[][] fit(final RegressionTrainingData data) {
+    public double[][] fit(final ClassificationTrainingData data) {
 
         final int numClasses = extractNumberOfClassesFromData(data);
         if (numClasses < 3) {
@@ -103,7 +100,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
             throw new IllegalArgumentException("Tables of that size are currently not supported.");
         }
         int numRows = (int)rowCount;
-        int numFeatures = data.getRegressorCount();
+        int numFeatures = data.getFeatureCount();
         final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[numRows], 1);
         final NaiveUpdateStrategy updateStrategy = new NaiveUpdateStrategy(data, weights);
         final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy, m_alpha);
@@ -146,17 +143,16 @@ public class MultinomialRegression extends AbstractLogisticRegression {
      * @param beta
      * @return the unnormalized log-likelihood
      */
-    private double calculateAllClassLossSum(final RegressionTrainingData data, final double[][] beta) {
+    private double calculateAllClassLossSum(final ClassificationTrainingData data, final double[][] beta) {
 
         double loss = 0.0;
         int nc = beta.length;
 
-        for (RegressionTrainingRow row : data) {
+        for (ClassificationTrainingRow x : data) {
             double instanceLoss = 0.0;
             double normalizer = 0.0;
             for (int c = 0; c < nc; c++) {
-                int y = (int)row.getTarget();
-                RealMatrix x = row.getParameterApache();
+                int y = x.getCategory();
                 double z = calculateResponse(x, beta[c]);
                 if (y == c) {
                     instanceLoss += z;
@@ -190,7 +186,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
          * {@inheritDoc}
          */
         @Override
-        double prepareProbability(final RealMatrix x) {
+        double prepareProbability(final TrainingRow x) {
             double denom = 0.0;
             for (int i = 0; i < m_beta.length; i++) {
                 denom += Math.exp(calculateResponse(x, m_beta[i]));

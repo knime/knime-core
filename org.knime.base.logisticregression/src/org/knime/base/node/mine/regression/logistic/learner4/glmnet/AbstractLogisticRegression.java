@@ -50,9 +50,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.Iterator;
 
-import org.apache.commons.math3.linear.RealMatrix;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.RegressionTrainingRow;
 
 /**
  * Contains methods that are used by both, logistic and multinomial regression.
@@ -61,15 +58,14 @@ import org.knime.base.node.mine.regression.RegressionTrainingRow;
  */
 abstract class AbstractLogisticRegression {
 
-    static int extractNumberOfClassesFromData(final RegressionTrainingData data) {
-        Integer targetIdx = data.getTargetIndex();
-        return data.getDomainValues().get(targetIdx).size();
+    static int extractNumberOfClassesFromData(final ClassificationTrainingData data) {
+        return data.getCategoryCount();
     }
 
-    static double calculateResponse(final RealMatrix x, final double[] beta) {
+    static double calculateResponse(final TrainingRow x, final double[] beta) {
         double response = beta[0];
         for (int i = 1; i < beta.length; i++) {
-            response += x.getEntry(0, i - 1) * beta[i];
+            response += x.getFeature(i - 1) * beta[i];
         }
         return response;
     }
@@ -78,14 +74,13 @@ abstract class AbstractLogisticRegression {
         return 1.0 / (1 + Math.exp(-response));
     }
 
-    static double calculateSumLogLikelihood(final RegressionTrainingData data, final double[] beta) {
+    static double calculateSumLogLikelihood(final ClassificationTrainingData data, final double[] beta) {
         double sumLogLikelihood = 0;
-        for (RegressionTrainingRow row : data) {
-            RealMatrix x = row.getParameterApache();
-            double y = row.getTarget() == 0 ? 1 : 0;
+        for (ClassificationTrainingRow x : data) {
+            double y = x.getCategory() == 0 ? 1 : 0;
             double z = beta[0];
             for (int i = 1; i < beta.length; i++) {
-                z += x.getEntry(0, i - 1) * beta[i];
+                z += x.getFeature(i - 1) * beta[i];
             }
             sumLogLikelihood += y * z - Math.log(1 + Math.exp(z));
         }
@@ -93,10 +88,10 @@ abstract class AbstractLogisticRegression {
     }
 
     void updateApproximation(final MutableWeightingStrategy weights, final double[] workingResponses,
-        final RegressionTrainingData data, final double[] beta, final int currentClass, final ApproximationPreparator approxPreparator) {
-        Iterator<RegressionTrainingRow> iter = data.iterator();
+        final ClassificationTrainingData data, final double[] beta, final int currentClass, final ApproximationPreparator approxPreparator) {
+        Iterator<ClassificationTrainingRow> iter = data.iterator();
         for (int rn = 0; iter.hasNext(); rn++) {
-            RegressionTrainingRow row = iter.next();
+            ClassificationTrainingRow row = iter.next();
             approxPreparator.prepare(row, beta, currentClass);
             double p = approxPreparator.getProbability();
             double y = approxPreparator.getTargetIndication();
@@ -116,7 +111,7 @@ abstract class AbstractLogisticRegression {
     }
 
     protected interface ApproximationPreparator {
-        void prepare(RegressionTrainingRow row, double[] beta, int currentClass);
+        void prepare(ClassificationTrainingRow row, double[] beta, int currentClass);
 
         double getResponse();
 
@@ -137,14 +132,13 @@ abstract class AbstractLogisticRegression {
         }
 
         @Override
-        public void prepare(final RegressionTrainingRow row, final double[] beta, final int currentClass) {
-            final RealMatrix x = row.getParameterApache();
-            m_targetIndication = row.getTarget() == currentClass ? 1.0 : 0.0;
+        public void prepare(final ClassificationTrainingRow x, final double[] beta, final int currentClass) {
+            m_targetIndication = x.getCategory() == currentClass ? 1.0 : 0.0;
             m_response = calculateResponse(x, beta);
             m_probability = prepareProbability(x);
         }
 
-        abstract double prepareProbability(final RealMatrix x);
+        abstract double prepareProbability(final TrainingRow x);
 
         /**
          * {@inheritDoc}

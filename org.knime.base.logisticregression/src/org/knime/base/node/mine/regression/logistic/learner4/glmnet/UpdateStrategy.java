@@ -57,14 +57,6 @@ interface UpdateStrategy {
 
     /**
      * Initialize the update strategy (e.g. the residuals) with the model represented by beta.
-     * This version of the initialize method uses the targets provided by the data.
-     *
-     * @param beta array of coefficients NOTE: beta[0] is the intercept term
-     */
-    void initialize(final double[] beta);
-
-    /**
-     * Initialize the update strategy (e.g. the residuals) with the model represented by beta.
      * This version of the initialize method uses the targets provided in <b>targets</b>.
      *
      * @param beta array of model coefficients NOTE: beta[0] is the intercept term
