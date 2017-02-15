@@ -688,6 +688,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         final Set<String> fieldImports = new LinkedHashSet<>();
         for (JavaField field : fields) {
             Class<?> fieldType = field.getJavaType();
+            if (fieldType == null) {
+                continue;
+            }
+
             // Handle arrays of arrays of arrays of... AP-7012
             while (fieldType.isArray()) {
                 fieldType = fieldType.getComponentType();
@@ -762,6 +766,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
 
         // check input fields
         for (InCol field : m_fields.getInColFields()) {
+            if (field.getJavaType() == null) {
+                errors.add("Java type could not be loaded. Providing plugin may be missing.");
+            }
             int index = spec.findColumnIndex(field.getKnimeName());
             if (index >= 0) {
                 DataColumnSpec colSpec = spec.getColumnSpec(index);
@@ -781,7 +788,13 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                 errors.add("The column \"" + field.getKnimeName()
                         + "\" is not found in the input table.");
             }
+
+            if (!field.getConverterFactory().isPresent()) {
+                errors.add("Missing converter for column \"" + field.getKnimeName()
+                    + "\" to java field \"" + field.getJavaName() + "\" (converter id: \"" + field.getConverterFactoryId() + "\")");
+            }
         }
+
         // check input variables
         for (InVar field : m_fields.getInVarFields()) {
             FlowVariable var = flowVariableRepository.getFlowVariable(
@@ -800,6 +813,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
 
         // check output fields
         for (OutCol field : m_fields.getOutColFields()) {
+            if (field.getJavaType() == null) {
+                errors.add("Java type could not be loaded. Providing plugin may be missing.");
+            }
+
             int index = spec.findColumnIndex(field.getKnimeName());
             if (field.getReplaceExisting() && index < 0) {
                 errors.add("The output column \""
@@ -812,6 +829,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                         + field.getKnimeName()
                         + "\" is marked to be new, "
                         + "but an input with this name does exist.");
+            }
+            if (!field.getConverterFactory().isPresent()) {
+                errors.add("Missing converter for java field \"" + field.getJavaName()
+                    + "\" to column \"" + field.getKnimeName() + "\" (converter id: \"" + field.getConverterFactoryId() + "\")");
             }
         }
 

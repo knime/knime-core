@@ -272,14 +272,20 @@ public class InFieldsTable extends ConfigTablePanel {
             if (!factory.isPresent()) {
                 // try to find another converter for the source and dest types. The one with for the stored id
                 // seems to be missing.
-                factory = ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+                if (field.getJavaType() != null) {
+                    factory = ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+                }
             }
 
             if (factory.isPresent()) {
                 m_model.setValueAt(factory.get(), r, Column.JAVA_TYPE);
             } else {
-                // ?
-                m_model.setValueAt(field.getJavaType(), r, Column.JAVA_TYPE);
+                final Class<?> type = field.getJavaType();
+                if (type != null) {
+                    m_model.setValueAt(type, r, Column.JAVA_TYPE);
+                } else {
+                    m_model.setValueAt(field.getJavaTypeName(), r, Column.JAVA_TYPE);
+                }
             }
         }
         int offset = m_model.getRowCount();

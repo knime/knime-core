@@ -69,6 +69,8 @@ public class OutCol extends JavaColumnField {
 
     private boolean m_replaceExisting;
 
+    private Optional<JavaToDataCellConverterFactory<?>> m_factory;
+
     /**
      * Create an instance.
      */
@@ -102,6 +104,8 @@ public class OutCol extends JavaColumnField {
         m_replaceExisting = config.getBoolean(REPLACE_EXISTING);
 
         if (m_converterFactoryId == null) {
+            // Throws InvalidSettingsException if type cannot be loaded, hence we can assume its presence
+            // later on
             loadJavaType();
 
             // backwards compatibility with pre-converters javasnippet
@@ -113,9 +117,10 @@ public class OutCol extends JavaColumnField {
                     "Cannot convert from " + getJavaType().getName() + " to " + getDataType().getName());
             }
             m_converterFactoryId = factory.get().getIdentifier();
+            m_factory = factory;
         } else {
-            final Optional<?> factory = ConverterUtil.getJavaToDataCellConverterFactory(m_converterFactoryId);
-            if (!factory.isPresent()) {
+            m_factory = ConverterUtil.getJavaToDataCellConverterFactory(m_converterFactoryId);
+            if (!m_factory.isPresent()) {
                 throw new InvalidSettingsException("Could not find ConverterFactory with ID \"" + m_converterFactoryId + "\"");
             }
         }
@@ -134,9 +139,9 @@ public class OutCol extends JavaColumnField {
             final DataType destType = getDataType();
             final Class<?> sourceType = getJavaType();
 
-            final Optional<?> factory = ConverterUtil.getConverterFactory(sourceType, destType);
-            if (factory.isPresent()) {
-                m_converterFactoryId = ((JavaToDataCellConverterFactory<?>)factory.get()).getIdentifier();
+            m_factory = ConverterUtil.getConverterFactory(sourceType, destType);
+            if (m_factory.isPresent()) {
+                m_converterFactoryId = m_factory.get().getIdentifier();
             } else {
                 // TODO: will this produce a warning dialog...?
                 throw new IllegalStateException("Was not able to find a ConverterFactory from " + sourceType.getName()
@@ -159,5 +164,15 @@ public class OutCol extends JavaColumnField {
         m_javaType = factory.getSourceType();
         m_knimeType = factory.getDestinationType();
         m_converterFactoryId = factory.getIdentifier();
+        m_factory = Optional.of(factory);
+    }
+
+    /**
+     * Get the converter factory associated with this input column field.
+     *
+     * @return An optional converter factory, present if converter factory id setting is valid, empty if not found.
+     */
+    public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory() {
+        return m_factory;
     }
 }

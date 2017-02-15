@@ -223,7 +223,6 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
             throws InvalidSettingsException {
         JavaSnippetSettings s = new JavaSnippetSettings();
         s.loadSettings(settings);
-        // TODO: Check settings
     }
 
     /**

@@ -183,14 +183,21 @@ public abstract class JavaField {
     /**
      * The type of the java field
      *
-     * @return the javaType
+     * @return the javaType, may be <code>null</code>
      */
     public Class<?> getJavaType() {
         if (m_javaType == null) {
-            // backup, in case loading settings failed.
-            m_javaType = String.class;
         }
         return m_javaType;
+    }
+
+    /**
+     * Name of the java type in case loading failed.
+     *
+     * @return Name of the java type
+     */
+    public String getJavaTypeName() {
+        return m_javaTypeName;
     }
 
     /**
