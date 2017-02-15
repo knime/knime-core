@@ -1072,7 +1072,12 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                         : digsCollector.getDiagnostics()) {
                     boolean isSnippet = this.isSnippetSource(d.getSource());
                     if (isSnippet && d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
-                        msg.append("Error: ");
+                        long line = d.getLineNumber();
+                        if (line != Diagnostic.NOPOS) {
+                            msg.append("Error in line " + line + ": ");
+                        } else {
+                            msg.append("Error: ");
+                        }
                         msg.append(d.getMessage(Locale.US));
                         msg.append('\n');
                     }
