@@ -70,7 +70,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class LineReaderNodeModel extends NodeModel {
-    private final LineReaderConfig m_config = new LineReaderConfig();
+    private LineReaderConfig m_config;
 
     /** No input, one output. */
     public LineReaderNodeModel() {
@@ -139,8 +139,9 @@ final class LineReaderNodeModel extends NodeModel {
     }
 
     private DataTableSpec createOutputSpec() throws InvalidSettingsException {
-        URL url = m_config.getURL();
-        String warning = CheckUtils.checkSourceFile(url == null ? null : url.toString());
+        CheckUtils.checkArgumentNotNull(m_config, "No configuration available");
+        final URL url = m_config.getURL();
+        String warning = CheckUtils.checkSourceFile(url.toString());
         if (warning != null) {
             setWarningMessage(warning);
         }
@@ -169,7 +170,9 @@ final class LineReaderNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_config.saveConfiguration(settings);
+        if (m_config != null) {
+            m_config.saveConfiguration(settings);
+        }
     }
 
     /** {@inheritDoc} */
@@ -183,7 +186,9 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_config.loadConfigurationInModel(settings);
+        LineReaderConfig c = new LineReaderConfig();
+        c.loadConfigurationInModel(settings);
+        m_config = c;
     }
 
     /** {@inheritDoc} */
