@@ -346,4 +346,17 @@ public final class HiLiteTranslator {
         return m_sourceHandler;
     }
 
+    /**
+     * Unregisters this {@link HiLiteTranslator} from all involved {@link HiLiteHandler}s, removes all target {@link HiLiteHandler}s and unsets the mapper.
+     * This needs to be called before deletion, if this instance was created with providing a custom {@link HiLiteHandler} as the source.
+     * @since 3.4
+     */
+    public void dispose() {
+        if (m_sourceHandler != null) {
+            m_sourceHandler.removeHiLiteTranslator(this);
+        }
+        removeAllToHiliteHandlers();
+        setMapper(null);
+    }
+
 }

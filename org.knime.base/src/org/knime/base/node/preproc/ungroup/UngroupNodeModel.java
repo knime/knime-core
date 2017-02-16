@@ -219,8 +219,7 @@ public class UngroupNodeModel extends NodeModel {
     @Override
     protected void setInHiLiteHandler(final int inIndex, final HiLiteHandler hiLiteHdl) {
         if (m_trans != null && m_trans.getFromHiLiteHandler() != hiLiteHdl) {
-            m_trans.removeAllToHiliteHandlers();
-            m_trans.setMapper(null);
+            m_trans.dispose();
             m_trans = null;
         }
         if (hiLiteHdl != null) {
