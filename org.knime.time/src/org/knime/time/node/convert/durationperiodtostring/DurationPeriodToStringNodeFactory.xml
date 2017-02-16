@@ -6,7 +6,8 @@
 	<fullDescription>
 		<intro>
 			Converts duration or period cells to string cells. The string
-			representation of these periods or durations use the ISO-8601
+			representation of these periods or durations can be either the
+			ISO-8601, a short (using letters) or a long (using words)
 			representation.
 		</intro>
 		<tab name="Column Selection">
@@ -24,6 +25,20 @@
 			<option name="Replace selected columns">
 				The selected columns will be replaced by the new
 				columns.
+			</option>
+		</tab>
+		<tab name="Format Selection">
+			<option name="ISO-8601 representation">
+				The durations or periods will be formatted using the ISO-8601
+				representation, e.g. 'P2Y3M5D'.
+			</option>
+			<option name="Long representation">
+				The durations or periods will be formatted using words to represent,
+				e.g. '2 years 3 months 5 days'.
+			</option>
+			<option name="Short representation">
+				The durations or periods will be formatted using letters to represent,
+				e.g. '2y 3M 5d' (<b>Period:</b> y: years, M: months, d: days; <b>Duration:</b> H: hours, m: minutes, s: seconds).
 			</option>
 		</tab>
 	</fullDescription>

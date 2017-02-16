@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -44,44 +43,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2016 (simon): created
+ *   14.09.2009 (Fabian Dill): created
  */
-package org.knime.time.node.convert;
+package org.knime.core.data.time.duration;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import java.time.Duration;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
+import org.knime.time.util.DurationPeriodFormatUtils;
 
 /**
- * An enumeration that contains all different Date&Time types.
+ * Renders a {@link DurationValue}.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public enum DateTimeTypes {
-        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
-        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
-        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
+@SuppressWarnings("serial")
+public final class DurationShortValueRenderer extends DefaultDataValueRenderer {
 
-    private final String m_name;
+    private static final DurationShortValueRenderer INSTANCE = new DurationShortValueRenderer();
 
-    private final DataType m_dataType;
+    private static final String DESCRIPTION_DURATION = "Short Duration";
 
-    private DateTimeTypes(final String name, final DataType dataType) {
-        m_name = name;
-        m_dataType = dataType;
+    private DurationShortValueRenderer() {
     }
 
     /**
-     * {@inheritDoc}
+     * @return "Duration" {@inheritDoc}
      */
     @Override
-    public String toString() {
-        return m_name;
+    public String getDescription() {
+        return DESCRIPTION_DURATION;
     }
 
-    public DataType getDataType() {
-        return m_dataType;
+    @Override
+    protected void setValue(final Object value) {
+        if (value instanceof DurationValue) {
+            final Duration duration = ((DurationValue)value).getDuration();
+            super.setValue(DurationPeriodFormatUtils.formatDurationShort(duration));
+        } else {
+            super.setValue(value);
+        }
     }
+
+    /** Renderer factory registered through extension point. */
+    public static final class DurationShortRendererFactory extends AbstractDataValueRendererFactory {
+
+        @Override
+        public String getDescription() {
+            return DESCRIPTION_DURATION;
+        }
+
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return INSTANCE;
+        }
+    }
+
 }

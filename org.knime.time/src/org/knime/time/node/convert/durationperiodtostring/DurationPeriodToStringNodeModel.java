@@ -48,6 +48,8 @@
  */
 package org.knime.time.node.convert.durationperiodtostring;
 
+import java.time.Duration;
+import java.time.Period;
 import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
@@ -70,6 +72,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
+import org.knime.time.util.DurationPeriodFormatUtils;
 
 /**
  * The node model of the node which converts period or duration cells to string cells.
@@ -82,11 +85,19 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
+    static final String FORMAT_ISO = "ISO-8601 representation";
+
+    static final String FORMAT_SHORT = "Short representation";
+
+    static final String FORMAT_LONG = "Long representation";
+
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
     private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
+
+    private final SettingsModelString m_format = createFormatModel();
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
@@ -109,6 +120,11 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
         return suffixModel;
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createFormatModel() {
+        return new SettingsModelString("format", FORMAT_ISO);
     }
 
     /**
@@ -147,6 +163,7 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
         m_colSelect.saveSettingsTo(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
+        m_format.saveSettingsTo(settings);
     }
 
     /**
@@ -157,6 +174,7 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
         m_colSelect.validateSettings(settings);
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
+        m_format.validateSettings(settings);
     }
 
     /**
@@ -167,6 +185,7 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
         m_colSelect.loadSettingsFrom(settings);
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
+        m_format.loadSettingsFrom(settings);
     }
 
     private final class DurationPeriodToStringCellFactory extends SingleCellFactory {
@@ -191,11 +210,32 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
             if (cell.isMissing()) {
                 return cell;
             }
-            if (cell instanceof DurationCell){
-                return StringCellFactory.create(((DurationCell)cell).toString());
+            final String format = m_format.getStringValue();
+            if (cell instanceof DurationCell) {
+                final Duration duration = ((DurationCell)cell).getDuration();
+                if (format.equals(FORMAT_ISO)) {
+                    return StringCellFactory.create(duration.toString());
+                }
+                if (format.equals(FORMAT_LONG)) {
+                    return StringCellFactory.create(DurationPeriodFormatUtils.formatDurationLong(duration));
+                }
+                if (format.equals(FORMAT_SHORT)) {
+                    return StringCellFactory.create(DurationPeriodFormatUtils.formatDurationShort(duration));
+                }
+                throw new IllegalStateException("Unexpected format: " + format);
             }
-            if (cell instanceof PeriodCell){
-                return StringCellFactory.create(((PeriodCell)cell).toString());
+            if (cell instanceof PeriodCell) {
+                final Period period = ((PeriodCell)cell).getPeriod();
+                if (format.equals(FORMAT_ISO)) {
+                    return StringCellFactory.create(period.toString());
+                }
+                if (format.equals(FORMAT_LONG)) {
+                    return StringCellFactory.create(DurationPeriodFormatUtils.formatPeriodLong(period));
+                }
+                if (format.equals(FORMAT_SHORT)) {
+                    return StringCellFactory.create(DurationPeriodFormatUtils.formatPeriodShort(period));
+                }
+                throw new IllegalStateException("Unexpected format: " + format);
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }

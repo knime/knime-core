@@ -64,6 +64,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -71,7 +72,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DurationPeriodToStringNodeDialog extends NodeDialogPane{
+public class DurationPeriodToStringNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
@@ -79,18 +80,26 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane{
 
     private final DialogComponentString m_dialogCompSuffix;
 
+    private final DialogComponentStringSelection m_dialogCompFormatSelection;
+
     /**
      *
      */
     public DurationPeriodToStringNodeDialog() {
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(DurationPeriodToStringNodeModel.createColSelectModel(), 0);
+        m_dialogCompColFilter =
+            new DialogComponentColumnFilter2(DurationPeriodToStringNodeModel.createColSelectModel(), 0);
 
-        final SettingsModelString replaceOrAppendModel = DurationPeriodToStringNodeModel.createReplaceAppendStringBool();
+        final SettingsModelString replaceOrAppendModel =
+            DurationPeriodToStringNodeModel.createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend = new DialogComponentButtonGroup(replaceOrAppendModel, true, null,
             DurationPeriodToStringNodeModel.OPTION_APPEND, DurationPeriodToStringNodeModel.OPTION_REPLACE);
 
         final SettingsModelString suffixModel = DurationPeriodToStringNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
+
+        m_dialogCompFormatSelection = new DialogComponentStringSelection(DurationPeriodToStringNodeModel.createFormatModel(), "Format:" ,
+            DurationPeriodToStringNodeModel.FORMAT_ISO, DurationPeriodToStringNodeModel.FORMAT_LONG,
+            DurationPeriodToStringNodeModel.FORMAT_SHORT);
 
         /*
          * create panel with gbc
@@ -115,6 +124,7 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane{
         gbc.gridy++;
         gbc.weighty = 0;
         final JPanel panelReplace = new JPanel(new GridBagLayout());
+        panel.add(panelReplace, gbc);
         panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
         final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
         // add check box
@@ -130,13 +140,29 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane{
         gbcReplaceAppend.insets = new Insets(2, 10, 0, 0);
         panelReplace.add(m_dialogCompSuffix.getComponentPanel(), gbcReplaceAppend);
 
-        panel.add(panelReplace, gbc);
+        /*
+         * add format selection
+         */
+        gbc.gridy++;
+        final JPanel panelFormat= new JPanel(new GridBagLayout());
+        panel.add(panelFormat, gbc);
+        panelFormat.setBorder(BorderFactory.createTitledBorder("Format Selection"));
+        final GridBagConstraints gbcFormat = new GridBagConstraints();
+        gbcFormat.fill = GridBagConstraints.VERTICAL;
+        gbcFormat.gridx = 0;
+        gbcFormat.gridy = 0;
+        gbcFormat.weightx = 1;
+        gbcFormat.anchor = GridBagConstraints.WEST;
+        gbcFormat.insets = new Insets(0, 0, 5, 0);
+        panelFormat.add(m_dialogCompFormatSelection.getComponentPanel(), gbcFormat);
+
 
         /*
          * add tab
          */
         addTab("Options", panel);
     }
+
     /**
      * {@inheritDoc}
      */
@@ -145,16 +171,19 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane{
         m_dialogCompColFilter.saveSettingsTo(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
+        m_dialogCompFormatSelection.saveSettingsTo(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
+        m_dialogCompFormatSelection.loadSettingsFrom(settings, specs);
     }
 
 }

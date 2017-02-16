@@ -6,7 +6,8 @@
 	<fullDescription>
 		<intro>
 			Converts string cells to duration or period cells. The string
-			representation of these periods or durations needs to be in the
+			representation of these periods or durations needs to be in either
+			the
 			ISO-8601
 			representation (see
 			<a
@@ -14,7 +15,14 @@
 			or
 			<a
 				href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
-			for details).
+			for details, e.g. 'P2Y3M1D'), the short letter representation (e.g.
+			'2y 3M 1d';
+			<b>Period:</b>
+			y: years, M: months, d: days;
+			<b>Duration:</b>
+			H: hours, m: minutes, s: seconds)
+			or the long word representation
+			(e.g. '2 years 3 months 1 day').
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -34,11 +42,18 @@
 			</option>
 		</tab>
 		<tab name="Duration/Period Selection">
-			<option name="Create Duration">
-				Duration cells will be created.
+			<option name="Automatically detect type">
+				It will be automatically detected, if a duration
+				or period shall be
+				parsed. The type will be determined by the first
+				cell in each column
+				which can be successfully parsed.
 			</option>
 			<option name="Create Duration">
-				Period cells will be created.
+				All included columns will be converted to Duration columns.
+			</option>
+			<option name="Create Period">
+				All included columns will be converted to Period columns.
 			</option>
 			<option name="Fail on error">
 				If checked, the node will abort the execution and
@@ -53,7 +68,8 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table with duration or period columns.
+			Output table with duration or period
+			columns.
 		</outPort>
 	</ports>
 </knimeNode>

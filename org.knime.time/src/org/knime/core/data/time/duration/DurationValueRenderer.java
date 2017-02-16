@@ -64,7 +64,7 @@ public final class DurationValueRenderer extends DefaultDataValueRenderer {
 
     private static final DurationValueRenderer INSTANCE = new DurationValueRenderer();
 
-    private static final String DESCRIPTION_DURATION = "Duration";
+    private static final String DESCRIPTION_DURATION = "Default Duration";
 
     private DurationValueRenderer() {
     }
