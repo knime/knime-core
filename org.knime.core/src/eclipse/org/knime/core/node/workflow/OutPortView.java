@@ -124,8 +124,8 @@ public class OutPortView extends JFrame {
 
         // initialize default window width / height
         DisplayMode displayMode = getGraphicsConfiguration().getDevice().getDisplayMode();
-        int width = Math.min(Math.max(2 * displayMode.getWidth() / 3, 600), 1600);
-        int height = Math.min(Math.max(2 * displayMode.getHeight() / 3, 400), 900);
+        int width = Math.min(Math.max(2 * displayMode.getWidth() / 3, 600), 1280);
+        int height = Math.min(Math.max(2 * displayMode.getHeight() / 3, 400), 720);
         super.setSize(width, height);
         setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
