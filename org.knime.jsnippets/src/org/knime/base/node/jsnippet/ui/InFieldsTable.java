@@ -64,6 +64,7 @@ import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableColumnModel;
 
 import org.knime.base.node.jsnippet.type.ConverterUtil;
 import org.knime.base.node.jsnippet.type.TypeProvider;
@@ -301,13 +302,16 @@ public class InFieldsTable extends ConfigTablePanel {
         }
 
         JTable table = getTable();
-        table.getColumnModel().getColumn(m_model.getIndex(Column.COLUMN)).setCellRenderer(new InputTableCellRenderer());
-        table.getColumnModel().getColumn(m_model.getIndex(Column.COLUMN)).setCellEditor(createInputCellEditor());
-        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_FIELD))
+        final TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(m_model.getIndex(Column.COLUMN)).setCellRenderer(new InputTableCellRenderer());
+        columnModel.getColumn(m_model.getIndex(Column.COLUMN)).setCellEditor(createInputCellEditor());
+
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_FIELD))
             .setCellRenderer(FieldsTableUtil.createJavaFieldTableCellRenderer());
-        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_TYPE))
+
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_TYPE))
             .setCellRenderer(FieldsTableUtil.createJavaTypeTableCellRenderer());
-        table.getColumnModel().getColumn(m_model.getIndex(Column.JAVA_TYPE))
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_TYPE))
             .setCellEditor(FieldsTableUtil.createJavaTypeTableCellEditor());
     }
 

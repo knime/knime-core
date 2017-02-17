@@ -53,9 +53,7 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.lang.reflect.Array;
-import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -68,16 +66,12 @@ import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.plaf.UIResource;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 
 import org.knime.base.node.jsnippet.JavaSnippet;
 import org.knime.base.node.jsnippet.type.ConverterUtil;
@@ -452,87 +446,57 @@ public class OutFieldsTable extends ConfigTablePanel {
         m_flowVars = flowVars;
 
         m_model.clear();
-        for (int r = 0; r < fields.getOutColFields().size(); r++) {
-            OutCol field = fields.getOutColFields().get(r);
-            addRow(field);
-        }
-        for (int r = 0; r < fields.getOutVarFields().size(); r++) {
-            OutVar field = fields.getOutVarFields().get(r);
-            addRow(field);
+        fields.getOutColFields().forEach(field -> addRow(field));
+        fields.getOutVarFields().forEach(field -> addRow(field));
+
+        /*
+         * There is no simple way of disabling a boolean cell renderer if the cell is not editable.
+         *
+         * Hence, here we wrap the hidden Default BooleanRenderer and disable if not editable.
+         */
+        final TableCellRenderer boolRenderer = new TableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(final JTable table, final Object value,
+                final boolean isSelected, final boolean hasFocus, final int row, final int column) {
+                final Component c = table.getDefaultRenderer(Boolean.class).getTableCellRendererComponent(table, value,
+                    isSelected, hasFocus, row, column);
+                c.setEnabled(table.isCellEditable(row, column));
+                return c;
+            }
+        };
+
+        final TableColumnModel columnModel = getTable().getColumnModel();
+        columnModel.getColumn(m_model.getIndex(Column.REPLACE_EXISTING))
+            .setCellEditor(new DefaultCellEditor(new JCheckBox()));
+        columnModel.getColumn(m_model.getIndex(Column.REPLACE_EXISTING)).setCellRenderer(boolRenderer);
+
+        if (!m_flowVarsOnly) {
+            // Field type column does not exist for flowVarsOnly
+            columnModel.getColumn(m_model.getIndex(Column.FIELD_TYPE)).setCellEditor(createFieldTypeCellEditor());
         }
 
-        JTable table = getTable();
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.REPLACE_EXISTING)).setCellRenderer(
-                new BooleanRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.REPLACE_EXISTING)).setCellEditor(
-                new DefaultCellEditor(new JCheckBox()));
+        columnModel.getColumn(m_model.getIndex(Column.COLUMN)).setCellRenderer(new InputTableCellRenderer());
+        columnModel.getColumn(m_model.getIndex(Column.COLUMN))
+            .setCellEditor(new InputTableCellEditor(this, m_spec, m_flowVars));
+
+        columnModel.getColumn(m_model.getIndex(Column.DATA_TYPE)).setCellRenderer(new DataTypeTableCellRenderer());
+        columnModel.getColumn(m_model.getIndex(Column.DATA_TYPE))
+            .setCellEditor(new DataTypeTableCellEditor(this, m_spec, m_flowVars));
+
         if (!m_flowVarsOnly) {
-            table.getColumnModel().getColumn(
-                    m_model.getIndex(Column.FIELD_TYPE)).setCellEditor(
-                    createFieldTypeCellEditor());
+            // Field type column does not exist for flowVarsOnly
+            columnModel.getColumn(m_model.getIndex(Column.IS_COLLECTION))
+                .setCellEditor(new DefaultCellEditor(new JCheckBox()));
+            columnModel.getColumn(m_model.getIndex(Column.IS_COLLECTION)).setCellRenderer(boolRenderer);
         }
 
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.COLUMN)).setCellRenderer(
-                new InputTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.COLUMN)).setCellEditor(
-                new InputTableCellEditor(this, m_spec, m_flowVars));
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.DATA_TYPE)).setCellRenderer(
-                new DataTypeTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.DATA_TYPE)).setCellEditor(
-                new DataTypeTableCellEditor(this, m_spec, m_flowVars));
-        if (!m_flowVarsOnly) {
-            table.getColumnModel().getColumn(
-                    m_model.getIndex(Column.IS_COLLECTION)).setCellRenderer(
-                    new BooleanRenderer() {
-                        /**
-                         * {@inheritDoc}
-                         */
-                        @Override
-                        public Component getTableCellRendererComponent(
-                                final JTable fooTable, final Object value,
-                                final boolean isSelected,
-                                final boolean hasFocus, final int row,
-                                final int column) {
-                            Component comp =
-                                super.getTableCellRendererComponent(
-                                    fooTable, value, isSelected, hasFocus,
-                                    row, column);
-                            FieldType fieldType = getFieldType(row);
-                            comp.setEnabled(fieldType.equals(FieldType.Column));
-                            return comp;
-                        }
-                    });
-            table.getColumnModel().getColumn(
-                    m_model.getIndex(Column.IS_COLLECTION)).setCellEditor(
-                    new DefaultCellEditor(new JCheckBox()) {
-                        /**
-                         * {@inheritDoc}
-                         */
-                        @Override
-                        public boolean isCellEditable(
-                                final EventObject anEvent) {
-                            int row = getTable().rowAtPoint(
-                                    ((MouseEvent)anEvent).getPoint());
-                            FieldType fieldType = getFieldType(row);
-                            return fieldType.equals(FieldType.Column);
-                        }
-                    });
-        }
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_TYPE)).setCellRenderer(
-                FieldsTableUtil.createJavaTypeTableCellRenderer());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_TYPE)).setCellEditor(
-                FieldsTableUtil.createJavaTypeTableCellEditor());
-        table.getColumnModel().getColumn(
-                m_model.getIndex(Column.JAVA_FIELD)).setCellRenderer(
-                FieldsTableUtil.createJavaFieldTableCellRenderer());
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_TYPE))
+            .setCellRenderer(FieldsTableUtil.createJavaTypeTableCellRenderer());
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_TYPE))
+            .setCellEditor(FieldsTableUtil.createJavaTypeTableCellEditor());
+
+        columnModel.getColumn(m_model.getIndex(Column.JAVA_FIELD))
+            .setCellRenderer(FieldsTableUtil.createJavaFieldTableCellRenderer());
     }
 
     /**
@@ -720,54 +684,6 @@ public class OutFieldsTable extends ConfigTablePanel {
         }
         return outVars;
     }
-
-
-    /**
-     * Renders a boolean as a checkbox.
-     *
-     * @author Heiko Hofer
-     */
-    static class BooleanRenderer extends JCheckBox implements TableCellRenderer, UIResource {
-        private static final Border NO_FOCUS_BORDER =
-            new EmptyBorder(1, 1, 1, 1);
-
-        /**
-         * Create a new instance.
-         */
-        public BooleanRenderer() {
-            super();
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setBorderPainted(true);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getTableCellRendererComponent(
-                final JTable table, final Object value,
-                final boolean isSelected, final boolean hasFocus,
-                final int row, final int column) {
-            if (isSelected) {
-                setForeground(table.getSelectionForeground());
-                super.setBackground(table.getSelectionBackground());
-            } else {
-                setForeground(table.getForeground());
-                setBackground(table.getBackground());
-            }
-            setSelected((value != null && ((Boolean)value).booleanValue()));
-
-            if (hasFocus) {
-                setBorder(UIManager.getBorder(
-                        "Table.focusCellHighlightBorder"));
-            } else {
-                setBorder(NO_FOCUS_BORDER);
-            }
-
-            return this;
-        }
-    }
-
 
     /** Renders the table cells defining the input column or flow variables. */
     private static class InputListCellRenderer
