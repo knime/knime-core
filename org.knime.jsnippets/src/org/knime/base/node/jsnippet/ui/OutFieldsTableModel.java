@@ -492,4 +492,15 @@ public class OutFieldsTableModel extends FieldsTableModel {
             }
         }
     }
+
+    @Override
+    public boolean isCellEditable(final int rowIndex, final int columnIndex) {
+        if (getColumnForIndex(columnIndex) == Column.IS_COLLECTION) {
+            // Only column fields can be collections.
+            final boolean editable = !m_flowVarsOnly && (FieldType)getValueAt(rowIndex, Column.FIELD_TYPE) == FieldType.Column;
+            return editable;
+        }
+        return super.isCellEditable(rowIndex, columnIndex);
+    }
+
 }
