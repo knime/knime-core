@@ -688,9 +688,12 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         final Set<String> fieldImports = new LinkedHashSet<>();
         for (JavaField field : fields) {
             Class<?> fieldType = field.getJavaType();
-            if (fieldType.isArray()) {
-                fieldType = ClassUtil.ensureObjectType(fieldType.getComponentType());
+            // Handle arrays of arrays of arrays of... AP-7012
+            while (fieldType.isArray()) {
+                fieldType = fieldType.getComponentType();
             }
+            fieldType = ClassUtil.ensureObjectType(fieldType);
+
             // java.lang.* is imported by default, we do not need to import that again.
             if (!fieldType.getName().startsWith("java.lang")) {
                 fieldImports.add(fieldType.getName());
