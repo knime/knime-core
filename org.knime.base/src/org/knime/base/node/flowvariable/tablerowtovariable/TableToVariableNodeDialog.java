@@ -99,7 +99,7 @@ public class TableToVariableNodeDialog extends DefaultNodeSettingsPane {
     /** @return the SM for failing on Missing Values in Cells.
      */
     static final SettingsModelString getOnMissing() {
-        return new SettingsModelString("CFG_FAILONMISS", MissingValuePolicy.FAIL.getName());
+        return new SettingsModelString("CFG_FAILONMISS", MissingValuePolicy.DEFAULT.getName());
     }
 
     /** @param policyModel The policy model.
@@ -117,7 +117,7 @@ public class TableToVariableNodeDialog extends DefaultNodeSettingsPane {
      * @return the SM for the new String value.
      */
     static final SettingsModelString getReplaceString(final SettingsModelString policyModel) {
-        SettingsModelString model = new SettingsModelString("CFG_String", "");
+        SettingsModelString model = new SettingsModelString("CFG_String", "missing");
         ChangeListener listener = new PolicyChangeListener(policyModel, model);
         policyModel.addChangeListener(listener);
         listener.stateChanged(null);
