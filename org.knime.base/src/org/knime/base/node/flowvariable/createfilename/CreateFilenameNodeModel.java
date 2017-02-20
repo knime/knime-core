@@ -77,6 +77,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  *
@@ -223,14 +224,8 @@ public class CreateFilenameNodeModel extends NodeModel {
         }
 
         if(!m_overwriteModel.getBooleanValue()){
-            int i = 0;
             Set<String> flowVars = getAvailableFlowVariables().keySet();
-            while (flowVars.contains(outputFlowVar)) {
-                LOGGER.info("Flow variable " + outputFlowVar + " already exists. Using " + outputFlowVar + i
-                    + " as output variable.");
-                outputFlowVar += i;
-                i++;
-            }
+            outputFlowVar = new UniqueNameGenerator(flowVars).newName(outputFlowVar);
         }
 
         pushFlowVariableString(outputFlowVar, output);
@@ -277,11 +272,8 @@ public class CreateFilenameNodeModel extends NodeModel {
         m_pathModel.validateSettings(settings);
         m_areaModel.validateSettings(settings);
         m_outputModel.validateSettings(settings);
-        try {
-            m_overwriteModel.validateSettings(settings);
-        } catch (Exception e) {
-         // do nothing, just to make sure it's backwards compatible
-        }
+        // added in 3.3.2; so do not call:
+        // m_overwriteModel.validateSettings(settings);
     }
 
     /**
@@ -296,8 +288,9 @@ public class CreateFilenameNodeModel extends NodeModel {
         m_outputModel.loadSettingsFrom(settings);
         try {
             m_overwriteModel.loadSettingsFrom(settings);
-        } catch (Exception e) {
-            // do nothing, just to make sure it's backwards compatible
+        } catch (InvalidSettingsException e) {
+            // do nothing, just to make sure it's backwards compatible (added in 3.2)
+            m_overwriteModel.setBooleanValue(DEFAULT_OVERWRITE);
         }
         String extName = m_extModel.getStringValue();
         if (!FILE_EXTS.contains(extName)) {
