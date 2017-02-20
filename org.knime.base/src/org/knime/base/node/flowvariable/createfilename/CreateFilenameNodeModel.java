@@ -68,6 +68,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -76,375 +77,394 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
-*
-* @author Andisa Dewi, KNIME.com, Berlin, Germany
-*/
+ *
+ * @author Andisa Dewi, KNIME.com, Berlin, Germany
+ */
 public class CreateFilenameNodeModel extends NodeModel {
 
-   /**
-    * The default path to the base directory.
-    */
-   public static final String DEFAULT_PATH = System.getProperty("user.home");
+    /**
+     * The default path to the base directory.
+     */
+    public static final String DEFAULT_PATH = System.getProperty("user.home");
 
-   /**
-    * The default value for the output.
-    */
-   public static final String DEFAULT_OUTPUT_NAME = "filePath";
+    /**
+     * The default value for the output.
+     */
+    public static final String DEFAULT_OUTPUT_NAME = "filePath";
 
-   /**
-    * The default value for the file extension.
-    */
-   public static final String DEFAULT_FILE_EXT = ".txt";
+    /**
+     * The default value for the file extension.
+     */
+    public static final String DEFAULT_FILE_EXT = ".txt";
 
-   /**
-    * Predefined file extensions.
-    */
-   public static final Collection<String> FILE_EXTS = createPredefinedExtensions();
+    /**
+     * The default value for the overwrite flag.
+     */
+    public static final boolean DEFAULT_OVERWRITE = false;
 
-   /**
-    * Key for the string history to re-use user-entered file extension.
-    */
-   public static final String EXT_HISTORY_KEY = "createFileNameHistoryKey";
+    /**
+     * Predefined file extensions.
+     */
+    public static final Collection<String> FILE_EXTS = createPredefinedExtensions();
 
-   /**
-    * Boolean to check whether the system is windows.
-    */
-   public static final boolean IS_WINDOWS = SystemUtils.IS_OS_WINDOWS;
+    /**
+     * Key for the string history to re-use user-entered file extension.
+     */
+    public static final String EXT_HISTORY_KEY = "createFileNameHistoryKey";
 
-   private static final NodeLogger LOGGER = NodeLogger.getLogger(CreateFilenameNodeModel.class);
+    /**
+     * Boolean to check whether the system is windows.
+     */
+    public static final boolean IS_WINDOWS = SystemUtils.IS_OS_WINDOWS;
 
-   private SettingsModelString m_pathModel = CreateFilenameNodeDialog.getPathModel();
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CreateFilenameNodeModel.class);
 
-   private SettingsModelString m_nameModel = CreateFilenameNodeDialog.getFilenameModel();
+    private SettingsModelString m_pathModel = CreateFilenameNodeDialog.getPathModel();
 
-   private SettingsModelString m_extModel = CreateFilenameNodeDialog.getFileExtModel();
+    private SettingsModelString m_nameModel = CreateFilenameNodeDialog.getFilenameModel();
 
-   private SettingsModelString m_areaModel = CreateFilenameNodeDialog.getAreaModel();
+    private SettingsModelString m_extModel = CreateFilenameNodeDialog.getFileExtModel();
 
-   private SettingsModelString m_outputModel = CreateFilenameNodeDialog.getOutputModel();
+    private SettingsModelString m_areaModel = CreateFilenameNodeDialog.getAreaModel();
 
-   /**
-    * Creates a new instance of the FilenameCreator model.
-    */
-   public CreateFilenameNodeModel() {
-       super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{FlowVariablePortObject.TYPE});
-   }
+    private SettingsModelString m_outputModel = CreateFilenameNodeDialog.getOutputModel();
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-       getDir(m_pathModel.getStringValue());
+    private SettingsModelBoolean m_overwriteModel = CreateFilenameNodeDialog.getOverwriteOption();
 
-       if (m_nameModel.getStringValue().isEmpty()) {
-           throw new InvalidSettingsException("Please provide a file name");
-       }
+    /**
+     * Creates a new instance of the FilenameCreator model.
+     */
+    public CreateFilenameNodeModel() {
+        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{FlowVariablePortObject.TYPE});
+    }
 
-       return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
-   }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        getDir(m_pathModel.getStringValue());
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-       String outputFlowVar;
-       if (!m_outputModel.getStringValue().isEmpty()) {
-           outputFlowVar = m_outputModel.getStringValue();
-       } else {
-           outputFlowVar = DEFAULT_OUTPUT_NAME;
-       }
+        if (m_nameModel.getStringValue().isEmpty()) {
+            throw new InvalidSettingsException("Please provide a file name");
+        }
 
-       String baseDir = m_pathModel.getStringValue();
-       String ext = m_extModel.getStringValue();
-       String name = m_nameModel.getStringValue();
+        verifyAndPushOutputVar();
 
-       if (!verifyBaseDir(baseDir)) {
-           throw new Exception("Invalid base directory name!");
-       }
+        return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
+    }
 
-       if (name.isEmpty()) {
-           throw new InvalidSettingsException("Invalid file name: Filename cannot be empty.");
-       }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        // verification and output flowvar generation have already been executed in configure
+        // do nothing here
+        return new PortObject[]{FlowVariablePortObject.INSTANCE};
+    }
 
-       int invalidCharIdx = findInvalidChar(name);
-       if (invalidCharIdx != -1) {
-           throw new Exception(
-               "Invalid file name: " + name.charAt(invalidCharIdx) + " at position " + invalidCharIdx + ".");
-       }
+    private void verifyAndPushOutputVar() throws InvalidSettingsException {
+        String outputFlowVar;
+        if (!m_outputModel.getStringValue().isEmpty()) {
+            outputFlowVar = m_outputModel.getStringValue();
+        } else {
+            outputFlowVar = DEFAULT_OUTPUT_NAME;
+        }
 
-       if (IS_WINDOWS && checkForbiddenWindowsName(name)) {
-           throw new InvalidSettingsException(
-               "Invalid file name: Filename might contain names that are forbidden in Windows platform.");
-       }
+        String baseDir = m_pathModel.getStringValue();
+        String ext = m_extModel.getStringValue();
+        String name = m_nameModel.getStringValue();
 
-       if (!checkDotsAndSpaces(name)) {
-           throw new Exception("Invalid file name: Filename cannot contain only dot(s) or space(s).");
-       }
+        if (!verifyBaseDir(baseDir)) {
+            throw new InvalidSettingsException("Invalid base directory name!");
+        }
 
-       if (!checkLeadingWhitespaces(name)) {
-           name = name.replaceAll("^\\s+", "");
-           LOGGER.warn("Filename contains leading whitespace(s). It will be removed.");
-       }
+        if (name.isEmpty()) {
+            throw new InvalidSettingsException("Invalid file name: Filename cannot be empty.");
+        }
 
-       ext = verifyExtension(ext);
-       if (ext == "-1") {
-           throw new Exception("Invalid file extension: Only alphanumeric characters are allowed.");
-       }
+        int invalidCharIdx = findInvalidChar(name);
+        if (invalidCharIdx != -1) {
+            throw new InvalidSettingsException(
+                "Invalid file name: " + name.charAt(invalidCharIdx) + " at position " + invalidCharIdx + ".");
+        }
 
-       try {
-           new File(name).getCanonicalPath();
-       } catch (IOException | NullPointerException e) {
-           throw new Exception("Invalid file name!");
-       }
+        if (IS_WINDOWS && checkForbiddenWindowsName(name)) {
+            throw new InvalidSettingsException(
+                "Invalid file name: Filename might contain names that are forbidden in Windows platform.");
+        }
 
-       String output = handleSlash(baseDir, name, ext);
-       if (output == "-1") {
-           throw new Exception("Invalid file name!");
-       }
+        if (!checkDotsAndSpaces(name)) {
+            throw new InvalidSettingsException("Invalid file name: Filename cannot contain only dot(s) or space(s).");
+        }
 
-       int i = 0;
-       Set<String> flowVars = getAvailableFlowVariables().keySet();
-       while (flowVars.contains(outputFlowVar)) {
-           LOGGER.info("Flow variable " + outputFlowVar + " already exists. Using " + outputFlowVar + i
-               + " as output variable.");
-           outputFlowVar += i;
-           i++;
-       }
-       pushFlowVariableString(outputFlowVar, output);
+        if (!checkLeadingWhitespaces(name)) {
+            name = name.replaceAll("^\\s+", "");
+            LOGGER.warn("Filename contains leading whitespace(s). It will be removed.");
+        }
 
-       return new PortObject[]{FlowVariablePortObject.INSTANCE};
-   }
+        ext = verifyExtension(ext);
+        if (ext == "-1") {
+            throw new InvalidSettingsException("Invalid file extension: Only alphanumeric characters are allowed.");
+        }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-       throws IOException, CanceledExecutionException {
+        try {
+            new File(name).getCanonicalPath();
+        } catch (IOException | NullPointerException e) {
+            throw new InvalidSettingsException("Invalid file name!");
+        }
 
-   }
+        String output = handleSlash(baseDir, name, ext);
+        if (output == "-1") {
+            throw new InvalidSettingsException("Invalid file name!");
+        }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-       throws IOException, CanceledExecutionException {
+        if(!m_overwriteModel.getBooleanValue()){
+            Set<String> flowVars = getAvailableFlowVariables().keySet();
+            outputFlowVar = new UniqueNameGenerator(flowVars).newName(outputFlowVar);
+        }
 
-   }
+        pushFlowVariableString(outputFlowVar, output);
+    }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void saveSettingsTo(final NodeSettingsWO settings) {
-       m_extModel.saveSettingsTo(settings);
-       m_nameModel.saveSettingsTo(settings);
-       m_pathModel.saveSettingsTo(settings);
-       m_areaModel.saveSettingsTo(settings);
-       m_outputModel.saveSettingsTo(settings);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
 
-   }
+    }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-       m_extModel.validateSettings(settings);
-       m_nameModel.validateSettings(settings);
-       m_pathModel.validateSettings(settings);
-       m_areaModel.validateSettings(settings);
-       m_outputModel.validateSettings(settings);
-   }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-       m_extModel.loadSettingsFrom(settings);
-       m_nameModel.loadSettingsFrom(settings);
-       m_pathModel.loadSettingsFrom(settings);
-       m_areaModel.loadSettingsFrom(settings);
-       m_outputModel.loadSettingsFrom(settings);
-       String extName = m_extModel.getStringValue();
-       if (!FILE_EXTS.contains(extName)) {
-           StringHistory.getInstance(EXT_HISTORY_KEY).add(extName);
-       }
-   }
+    }
 
-   /**
-    * {@inheritDoc}
-    */
-   @Override
-   protected void reset() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_extModel.saveSettingsTo(settings);
+        m_nameModel.saveSettingsTo(settings);
+        m_pathModel.saveSettingsTo(settings);
+        m_areaModel.saveSettingsTo(settings);
+        m_outputModel.saveSettingsTo(settings);
+        m_overwriteModel.saveSettingsTo(settings);
+    }
 
-   }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_extModel.validateSettings(settings);
+        m_nameModel.validateSettings(settings);
+        m_pathModel.validateSettings(settings);
+        m_areaModel.validateSettings(settings);
+        m_outputModel.validateSettings(settings);
+        // added in 3.3.2; so do not call:
+        // m_overwriteModel.validateSettings(settings);
+    }
 
-   private static File getDir(final String file) throws InvalidSettingsException {
-       File f = null;
-       try {
-           // first try if file string is an URL (files in drop dir come as URLs)
-           final URL url = new URL(file);
-           f = FileUtil.getFileFromURL(url);
-       } catch (MalformedURLException e) {
-           // if no URL try string as path to file
-           f = new File(file);
-       }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_extModel.loadSettingsFrom(settings);
+        m_nameModel.loadSettingsFrom(settings);
+        m_pathModel.loadSettingsFrom(settings);
+        m_areaModel.loadSettingsFrom(settings);
+        m_outputModel.loadSettingsFrom(settings);
+        try {
+            m_overwriteModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            // do nothing, just to make sure it's backwards compatible (added in 3.2)
+            m_overwriteModel.setBooleanValue(DEFAULT_OVERWRITE);
+        }
+        String extName = m_extModel.getStringValue();
+        if (!FILE_EXTS.contains(extName)) {
+            StringHistory.getInstance(EXT_HISTORY_KEY).add(extName);
+        }
+    }
 
-       if (!f.isDirectory() || !f.exists() || !f.canRead()) {
-           throw new InvalidSettingsException("Selected dir: " + file + " cannot be accessed!");
-       }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
 
-       return f;
-   }
+    }
 
-   /**
-    * @return string collection of the file extensions. Beside the predefined ones, user-entered extensions will also
-    *         be loaded.
-    */
-   protected static Collection<String> createPredefinedExtensions() {
-       Set<String> formats = new LinkedHashSet<String>();
-       formats.add(".txt");
-       formats.add(".csv");
-       formats.add(".table");
-       formats.add(".pmml");
-       formats.add(".xml");
-       formats.add(".arff");
-       formats.add(".xls");
-       formats.add(".xlsx");
-       formats.add(".zip");
-       formats.add(".png");
-       String[] userFormats = StringHistory.getInstance(EXT_HISTORY_KEY).getHistory();
-       for (String userFormat : userFormats) {
-           formats.add(userFormat);
-       }
-       return formats;
-   }
+    private static File getDir(final String file) throws InvalidSettingsException {
+        File f = null;
+        try {
+            // first try if file string is an URL (files in drop dir come as URLs)
+            final URL url = new URL(file);
+            f = FileUtil.getFileFromURL(url);
+        } catch (MalformedURLException e) {
+            // if no URL try string as path to file
+            f = new File(file);
+        }
 
-   /**
-    * @param ext the string extension to be verified
-    * @return the verified extension (dot will be added if didn't exist beforehand), or -1 if it contains any invalid
-    *         chars.
-    */
-   protected static String verifyExtension(String ext) {
-       if (ext.isEmpty()) {
-           return ext;
-       }
-       if (ext.indexOf(".") == -1) {
-           ext = "." + ext;
-       }
-       if (!Pattern.matches("^\\.[a-zA-Z0-9]+", ext)) {
-           return "-1";
-       }
-       return ext;
-   }
+        if (!f.isDirectory() || !f.exists() || !f.canRead()) {
+            throw new InvalidSettingsException("Selected dir: " + file + " cannot be accessed!");
+        }
 
-   /**
-    * @param name the file name string
-    * @return the index of the first invalid char found. If nothing is found, -1 will be returned.
-    */
-   protected static int findInvalidChar(final String name) {
-       Pattern pattern = Pattern.compile("[/:?<>*\"|\\\\]");
-       Matcher matcher = pattern.matcher(name);
-       if (matcher.find()) {
-           return matcher.start();
-       }
-       return -1;
-   }
+        return f;
+    }
 
-   private static Pattern FORBIDDEN_WINDOWS_NAMES =
-       Pattern.compile("^(?:(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\\.[^.]*)?|[ \\.])$");
+    /**
+     * @return string collection of the file extensions. Beside the predefined ones, user-entered extensions will also
+     *         be loaded.
+     */
+    protected static Collection<String> createPredefinedExtensions() {
+        Set<String> formats = new LinkedHashSet<String>();
+        formats.add(".txt");
+        formats.add(".csv");
+        formats.add(".table");
+        formats.add(".pmml");
+        formats.add(".xml");
+        formats.add(".arff");
+        formats.add(".xls");
+        formats.add(".xlsx");
+        formats.add(".zip");
+        formats.add(".png");
+        String[] userFormats = StringHistory.getInstance(EXT_HISTORY_KEY).getHistory();
+        for (String userFormat : userFormats) {
+            formats.add(userFormat);
+        }
+        return formats;
+    }
 
-   /**
-    * @param name the file name string
-    * @return boolean value, true if the input matches any forbidden windows name, false otherwise.
-    */
-   protected static boolean checkForbiddenWindowsName(final String name) {
-       if (IS_WINDOWS) {
-           Matcher matcher = FORBIDDEN_WINDOWS_NAMES.matcher(name);
-           if (matcher.find()) {
-               return true;
-           }
-       }
-       return false;
-   }
+    /**
+     * @param ext the string extension to be verified
+     * @return the verified extension (dot will be added if didn't exist beforehand), or -1 if it contains any invalid
+     *         chars.
+     */
+    protected static String verifyExtension(String ext) {
+        if (ext.isEmpty()) {
+            return ext;
+        }
+        if (ext.indexOf(".") == -1) {
+            ext = "." + ext;
+        }
+        if (!Pattern.matches("^\\.[a-zA-Z0-9]+", ext)) {
+            return "-1";
+        }
+        return ext;
+    }
 
-   /**
-    * @param name the file name string
-    * @return boolean value, true if the input contains only dot(s) or white space(s), false otherwise.
-    */
-   protected static boolean checkDotsAndSpaces(final String name) {
-       if (Pattern.matches("[.\\s]+", name)) {
-           return false;
-       }
-       return true;
-   }
+    /**
+     * @param name the file name string
+     * @return the index of the first invalid char found. If nothing is found, -1 will be returned.
+     */
+    protected static int findInvalidChar(final String name) {
+        Pattern pattern = Pattern.compile("[/:?<>*\"|\\\\]");
+        Matcher matcher = pattern.matcher(name);
+        if (matcher.find()) {
+            return matcher.start();
+        }
+        return -1;
+    }
 
-   /**
-    * @param name the file name string
-    * @return boolean value, true if file name contains leading white spaces, false otherwise.
-    */
-   protected static boolean checkLeadingWhitespaces(final String name) {
-       if (Pattern.matches("^\\s+.*", name)) {
-           return false;
-       }
-       return true;
-   }
+    private static Pattern FORBIDDEN_WINDOWS_NAMES =
+        Pattern.compile("^(?:(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\\.[^.]*)?|[ \\.])$");
 
-   /**
-    * @param dir the directory path
-    * @return boolean value, true if the path exists or can be resolved, false otherwise.
-    */
-   protected static boolean verifyBaseDir(final String dir) {
-       try {
-           getDir(dir);
-       } catch (Exception e) {
-           return false;
-       }
-       return true;
-   }
+    /**
+     * @param name the file name string
+     * @return boolean value, true if the input matches any forbidden windows name, false otherwise.
+     */
+    protected static boolean checkForbiddenWindowsName(final String name) {
+        if (IS_WINDOWS) {
+            Matcher matcher = FORBIDDEN_WINDOWS_NAMES.matcher(name);
+            if (matcher.find()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-   /**
-    * This method handles the slash between the base dir path and the file name.
-    *
-    * @param baseDir the directory path
-    * @param name the file name
-    * @param ext the file extension
-    * @return the concatenated string of all three input, or -1 if exception occurred.
-    */
-   protected static String handleSlash(String baseDir, final String name, final String ext) {
-       String output = "";
-       try {
-           if (baseDir.endsWith("?")) {
-               baseDir = Pattern.compile("[?]+$").matcher(baseDir).replaceAll("");
-           }
-           if (!(baseDir.endsWith("/") || baseDir.endsWith("\\"))) {
-               if (!baseDir.toLowerCase().startsWith("knime") && IS_WINDOWS) {
-                   output = baseDir + "\\" + name + ext;
-               } else {
-                   output = baseDir + "/" + name + ext;
-               }
-           } else {
-               Matcher slash = Pattern.compile("[/]+$").matcher(baseDir);
-               if (slash.find()) {
-                   baseDir = slash.replaceAll("") + "/";
-               }
-               slash = Pattern.compile("[\\\\]+$").matcher(baseDir);
-               if (slash.find()) {
-                   baseDir = slash.replaceAll("") + "\\";
-               }
-               output = baseDir + name + ext;
-           }
-       } catch (InvalidPathException e) {
-           return "-1";
-       }
-       return output;
-   }
+    /**
+     * @param name the file name string
+     * @return boolean value, true if the input contains only dot(s) or white space(s), false otherwise.
+     */
+    protected static boolean checkDotsAndSpaces(final String name) {
+        if (Pattern.matches("[.\\s]+", name)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param name the file name string
+     * @return boolean value, true if file name contains leading white spaces, false otherwise.
+     */
+    protected static boolean checkLeadingWhitespaces(final String name) {
+        if (Pattern.matches("^\\s+.*", name)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param dir the directory path
+     * @return boolean value, true if the path exists or can be resolved, false otherwise.
+     */
+    protected static boolean verifyBaseDir(final String dir) {
+        try {
+            getDir(dir);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * This method handles the slash between the base dir path and the file name.
+     *
+     * @param baseDir the directory path
+     * @param name the file name
+     * @param ext the file extension
+     * @return the concatenated string of all three input, or -1 if exception occurred.
+     */
+    protected static String handleSlash(String baseDir, final String name, final String ext) {
+        String output = "";
+        try {
+            if (baseDir.endsWith("?")) {
+                baseDir = Pattern.compile("[?]+$").matcher(baseDir).replaceAll("");
+            }
+            if (!(baseDir.endsWith("/") || baseDir.endsWith("\\"))) {
+                if (!baseDir.toLowerCase().startsWith("knime") && IS_WINDOWS) {
+                    output = baseDir + "\\" + name + ext;
+                } else {
+                    output = baseDir + "/" + name + ext;
+                }
+            } else {
+                Matcher slash = Pattern.compile("[/]+$").matcher(baseDir);
+                if (slash.find()) {
+                    baseDir = slash.replaceAll("") + "/";
+                }
+                slash = Pattern.compile("[\\\\]+$").matcher(baseDir);
+                if (slash.find()) {
+                    baseDir = slash.replaceAll("") + "\\";
+                }
+                output = baseDir + name + ext;
+            }
+        } catch (InvalidPathException e) {
+            return "-1";
+        }
+        return output;
+    }
 
 }

@@ -76,4 +76,9 @@ public class CreateFilenameConfigKeys {
     */
    public static final String CFGKEY_OUTPUT_VAR = "OutputFlowVarName";
 
+   /**
+    * The configuration key of flag whether to overwrite existing variable.
+    */
+   public static final String CFGKEY_OVERWRITE = "OverwriteFlag";
+
 }
