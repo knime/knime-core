@@ -42,16 +42,164 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20 Feb 2017 (albrecht): created
  */
 package org.knime.core.wizard;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.node.property.hilite.HiLiteManager;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.web.WebResourceLocator;
+import org.knime.core.node.web.WebResourceLocator.WebResourceType;
+import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.WizardExecutionController;
+import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
+import org.knime.js.core.JSONViewContent;
+import org.knime.js.core.JSONWebNode;
+import org.knime.js.core.JSONWebNodePage;
+import org.knime.js.core.JSONWebNodePageConfiguration;
+import org.knime.js.core.layout.bs.JSONLayoutColumn;
+import org.knime.js.core.layout.bs.JSONLayoutContent;
+import org.knime.js.core.layout.bs.JSONLayoutPage;
+import org.knime.js.core.layout.bs.JSONLayoutRow;
+import org.knime.js.core.layout.bs.JSONLayoutViewContent;
+import org.knime.js.core.selections.json.JSONSelectionTranslator;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+
 /**
- * 
- * @author albrecht
+ *
+ * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
+ * @since 3.4
  */
 public class WizardPageManager {
+
+    private final WizardExecutionController m_wec;
+
+    /**
+     *
+     */
+    public WizardPageManager(final WizardExecutionController wizardExecutionController) {
+        m_wec = wizardExecutionController;
+    }
+
+    /**
+     * Creates a JSON string containing a wizard page from a given node id
+     * @param containerNodeID the node id to create the wizard page string for
+     * @return a JSON string containing the wizard page
+     * @throws IOException if the layout of the wizard page can not be generated
+     * @throws JsonProcessingException on serialization
+     */
+    public String createWizardPage(final NodeID containerNodeID) throws IOException, JsonProcessingException {
+        WizardPageContent page = m_wec.getWizardPage(containerNodeID);
+        // process layout
+        JSONLayoutPage layout = new JSONLayoutPage();
+        try {
+            String lString = page.getLayoutInfo();
+            if (lString != null && !lString.isEmpty()) {
+                layout = getJSONLayoutFromSubnode(page.getPageNodeID(), page.getLayoutInfo());
+            }
+        } catch (IOException e) {
+            throw new IOException("Layout for page could not be generated: " + e.getMessage(), e);
+        }
+
+        // process selection translators
+        List<JSONSelectionTranslator> selectionTranslators = new ArrayList<JSONSelectionTranslator>();
+        if (page.getHiLiteTranslators() != null) {
+            for (HiLiteTranslator hiLiteTranslator : page.getHiLiteTranslators()) {
+                if (hiLiteTranslator != null) {
+                    selectionTranslators.add(new JSONSelectionTranslator(hiLiteTranslator));
+                }
+            }
+        }
+        if (page.getHiliteManagers() != null) {
+            for (HiLiteManager hiLiteManager : page.getHiliteManagers()) {
+                if (hiLiteManager != null) {
+                    selectionTranslators.add(new JSONSelectionTranslator(hiLiteManager));
+                }
+            }
+        }
+        if (selectionTranslators.size() < 1) {
+            selectionTranslators = null;
+        }
+        JSONWebNodePageConfiguration pageConfig = new JSONWebNodePageConfiguration(layout, null, selectionTranslators);
+
+        Map<String, JSONWebNode> nodes = new HashMap<String, JSONWebNode>();
+        for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
+            WizardNode<?, ?> node = e.getValue();
+            WebTemplate template =
+                WizardExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
+            List<String> jsList = new ArrayList<String>();
+            List<String> cssList = new ArrayList<String>();
+            for (WebResourceLocator locator : template.getWebResources()) {
+                if (locator.getType() == WebResourceType.JAVASCRIPT) {
+                    jsList.add(locator.getRelativePathTarget());
+                } else if (locator.getType() == WebResourceType.CSS) {
+                    cssList.add(locator.getRelativePathTarget());
+                }
+            }
+            JSONWebNode jsonNode = new JSONWebNode();
+            jsonNode.setJavascriptLibraries(jsList);
+            jsonNode.setStylesheets(cssList);
+            jsonNode.setNamespace(template.getNamespace());
+            jsonNode.setInitMethodName(template.getInitMethodName());
+            jsonNode.setValidateMethodName(template.getValidateMethodName());
+            jsonNode.setSetValidationErrorMethodName(template.getSetValidationErrorMethodName());
+            jsonNode.setGetViewValueMethodName(template.getPullViewContentMethodName());
+            jsonNode.setViewRepresentation((JSONViewContent)node.getViewRepresentation());
+            jsonNode.setViewValue((JSONViewContent)node.getViewValue());
+            nodes.put(e.getKey().toString(), jsonNode);
+        }
+        JSONWebNodePage jsonPage = new JSONWebNodePage(pageConfig, nodes);
+        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
+        return mapper.writeValueAsString(jsonPage);
+    }
+
+    private JSONLayoutPage getJSONLayoutFromSubnode(final NodeIDSuffix pageID, final String layoutInfo) throws IOException {
+        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
+        ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
+        JSONLayoutPage page = reader.readValue(layoutInfo);
+        if (page != null && page.getRows() != null) {
+            for (JSONLayoutRow row : page.getRows()) {
+                setNodeIDInContent(row, pageID);
+            }
+        }
+        return page;
+    }
+
+    private void setNodeIDInContent(final JSONLayoutContent content, final NodeIDSuffix pageID) {
+        if (content instanceof JSONLayoutRow) {
+            for (JSONLayoutColumn col : ((JSONLayoutRow)content).getColumns()) {
+                for (JSONLayoutContent subContent : col.getContent()) {
+                    setNodeIDInContent(subContent, pageID);
+                }
+            }
+        } else if (content instanceof JSONLayoutViewContent) {
+            JSONLayoutViewContent view = (JSONLayoutViewContent)content;
+            String nodeIDString = view.getNodeID();
+            if (pageID != null) {
+                NodeIDSuffix layoutNodeID = pageID.createChild(Integer.parseInt(view.getNodeID()));
+                nodeIDString = layoutNodeID.toString();
+            }
+            view.setNodeID(nodeIDString);
+        }
+    }
+
+    public String applyViewValues(final String viewValues, final NodeID containerNodeId) {
+        //TODO: fill me
+        return null;
+    }
 
 }

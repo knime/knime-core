@@ -388,26 +388,36 @@ public final class WizardExecutionController extends ExecutionController {
         return m_waitingSubnodes.contains(source);
     }
 
-    /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
-     * @return The current wizard page. */
-    public WizardPageContent getCurrentWizardPage() {
+    /**
+     * Gets the wizard page for a given node id. Throws exception if no wizard page available.
+     * @param subnodeID the node id for the subnode to retrieve the wizard page for
+     * @return The wizard page for the given node id
+     * @since 3.4
+     */
+    public WizardPageContent getWizardPage(final NodeID subnodeID) {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);
             try {
-                return getCurrentWizardPageInternal();
+                return getWizardPageInternal(subnodeID);
             } finally {
                 NodeContext.removeLastContext();
             }
         }
     }
 
+    /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
+     * @return The current wizard page. */
+    public WizardPageContent getCurrentWizardPage() {
+        return getWizardPage(null);
+    }
+
     @SuppressWarnings("rawtypes")
-    private WizardPageContent getCurrentWizardPageInternal() {
+    private WizardPageContent getWizardPageInternal(final NodeID subnodeID) {
         final WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page - all executed");
-        NodeID currentSubnodeID = m_waitingSubnodes.get(0);
+        NodeID currentSubnodeID = subnodeID == null ? m_waitingSubnodes.get(0) : subnodeID;
 //        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
 //        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
         SubNodeContainer subNC = manager.getNodeContainer(currentSubnodeID, SubNodeContainer.class, true);
@@ -560,28 +570,38 @@ public final class WizardExecutionController extends ExecutionController {
         manager.executeAll();
     }
 
-    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap) {
+    /**
+     * @param viewContentMap
+     * @param subnodeID
+     * @return
+     * @since 3.4
+     */
+    public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap, final NodeID subnodeID) {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
-                return loadValuesIntoCurrentPageInternal(viewContentMap);
+                return loadValuesIntoPageInternal(viewContentMap, subnodeID);
             } finally {
                 NodeContext.removeLastContext();
             }
         }
     }
 
+    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap) {
+        return loadValuesIntoPage(viewContentMap, null);
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked" })
-    private Map<String, ValidationError> loadValuesIntoCurrentPageInternal(final Map<String, String> viewContentMap) {
+    private Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap, final NodeID subnodeID) {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", viewContentMap.size());
 //        int subnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
 //        NodeID currentID = toNodeID(subnodeIDSuffix);
-        NodeID currentID = m_waitingSubnodes.get(0);
+        NodeID currentID = subnodeID == null ? m_waitingSubnodes.get(0) : subnodeID;
         SubNodeContainer subNodeNC = manager.getNodeContainer(currentID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
