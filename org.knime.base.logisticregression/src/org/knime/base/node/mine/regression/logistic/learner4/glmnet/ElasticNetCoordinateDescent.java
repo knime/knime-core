@@ -48,7 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
-import org.apache.commons.math3.util.MathUtils;
+import java.util.BitSet;
 
 /**
  * Solves the elastic net problem:
@@ -61,33 +61,36 @@ import org.apache.commons.math3.util.MathUtils;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class ElasticNetCoordinateDescent {
+final class ElasticNetCoordinateDescent {
 
     final private double m_alpha;
     final private UpdateStrategy m_updateStrategy;
     final private TrainingData<?> m_data;
 
-    public ElasticNetCoordinateDescent(final TrainingData<?> data, final UpdateStrategy updateStrategy, final double alpha) {
+    ElasticNetCoordinateDescent(final TrainingData<?> data, final UpdateStrategy updateStrategy, final double alpha) {
         m_alpha = alpha;
         m_updateStrategy = updateStrategy;
         m_data = data;
     }
 
-    public double[] fit(final double[] beta, final double lambda, final double[] targets) {
+    /**
+     * Fits a linear regression models to the data for the provided targets.
+     * The coefficients are stored in <b>beta</b>.
+     * The returned integer is the number of iterations to convergence.
+     * @param beta coefficient array
+     * @param lambda weight of regularization in objective function
+     * @param targets target values.
+     * @return number of iterations until convergence
+     */
+    int fit(final double[] beta, final double lambda, final double[] targets) {
+        assert m_data.getFeatureCount() + 1 == beta.length: "beta array does not match feature count.";
+        assert m_data.getRowCount() == targets.length : "target array does not match row count.";
+        beta[0] = calculateIntercept(targets);
         m_updateStrategy.initialize(beta, targets);
-        return fitModel(lambda, beta);
+        ActiveSet activeSet = new MutableActiveSet(beta.length - 1);
+        return fitModel(lambda, beta, activeSet);
     }
 
-    public double[] fit(final double lambda, final double[] targets) {
-        if (targets.length != m_data.getRowCount()) {
-            throw new IllegalArgumentException("The number of targets ("
-                    + targets.length + ") does not match the number of rows ("
-                    + m_data.getRowCount() + ").");
-        }
-        double[] beta = new double[m_data.getFeatureCount() + 1];
-        beta[0] = calculateIntercept(targets);
-        return fitModel(lambda, beta);
-    }
 
 //    /**
 //     * Fits a regression model on the provided data.
@@ -103,19 +106,33 @@ class ElasticNetCoordinateDescent {
 //        return fitModel(lambda, beta);
 //    }
 
-    private double[] fitModel(final double lambda, final double[] beta) {
-        for (boolean betaChanged = false; betaChanged;) {
-            for (int i = 1; i < beta.length; i++) {
-                // beta[0] is the intercept term
-                double betaOld = beta[i];
-                beta[i] = m_updateStrategy.update(betaOld, i - 1, m_alpha, lambda);
-                if (!MathUtils.equals(betaOld, beta[i])) {
+    /**
+     * Fits the linear model and stores the coefficients in <b>beta</b>.
+     * @param lambda weight of penalty in objective function
+     * @param beta array in which the coefficients are stored
+     * @param activeSet active set implementation to use for calculations
+     * @return the number of iterations of the outer loop
+     */
+    private int fitModel(final double lambda, final double[] beta, final ActiveSet activeSet) {
+        int iter = 0;
+        for (boolean betaChanged = true; betaChanged; iter++) {
+            betaChanged = false;
+            activeSet.newCycle();
+            while (activeSet.hasNextActive()) {
+                int i = activeSet.nextActive();
+                double betaOld = beta[i + 1];
+                beta[i + 1] = m_updateStrategy.update(betaOld, i, m_alpha, lambda);
+                if (ElasticNetUtils.withinEpsilon(beta[i + 1], 0.0)) {
+                    activeSet.removeActive(i);
+                }
+                if (!ElasticNetUtils.withinEpsilon(betaOld, beta[i + 1])) {
                     betaChanged = true;
                 }
             }
         }
+//        System.out.println("Single step iterations: " + iter);
 
-        return beta;
+        return iter;
     }
 
 //    private double calculateIntercept() {
@@ -134,5 +151,144 @@ class ElasticNetCoordinateDescent {
         return sumY / targets.length;
     }
 
+    private interface ActiveSet {
+        /**
+         * @return true if there is another active feature in this cycle
+         */
+        boolean hasNextActive();
+        /**
+         * @return the index of the next active feature
+         */
+        int nextActive();
+        /**
+         * @param feature the index of the feature that should be active
+         */
+        void addActive(final int feature);
+
+        /**
+         * @param feature the index of the feature that should no longer be active
+         */
+        void removeActive(final int feature);
+
+        /**
+         * Start a new cycle i.e. go back to the beginning of the list of active features
+         */
+        void newCycle();
+    }
+
+    /**
+     * An ActiveSet implementation that allows to add and remove features from the active set.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
+    private class MutableActiveSet implements ActiveSet {
+
+        private final BitSet m_active;
+        private int m_curr = 0;
+
+        public MutableActiveSet(final int numFeatures) {
+            m_active = new BitSet(numFeatures);
+            m_active.set(0, numFeatures);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNextActive() {
+            return m_curr >= 0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int nextActive() {
+            int next = m_curr;
+            m_curr = m_active.nextSetBit(m_curr + 1);
+            return next;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void addActive(final int feature) {
+            m_active.set(feature, true);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void newCycle() {
+            m_curr = m_active.nextSetBit(0);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void removeActive(final int feature) {
+            m_active.set(feature, false);
+        }
+
+    }
+
+    /**
+     * This implementation of ActiveSet always considers all features to be active.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
+    private class AllActiveSet implements ActiveSet {
+
+        final int m_numFeatures;
+        int m_curr = 0;
+
+        public AllActiveSet(final int numFeatures) {
+            m_numFeatures = numFeatures;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNextActive() {
+            return m_curr < m_numFeatures;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int nextActive() {
+            return m_curr++;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void addActive(final int feature) {
+            // do nothing all features are always active
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void newCycle() {
+            m_curr = 0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void removeActive(final int feature) {
+            // do nothing all features are always active
+        }
+
+    }
 
 }

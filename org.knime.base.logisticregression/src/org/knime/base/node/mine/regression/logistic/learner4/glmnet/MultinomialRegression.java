@@ -48,8 +48,6 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
-import org.apache.commons.math3.util.MathUtils;
-
 /**
  * Performs regularized multinomial regression using coordinate descent in combination with iteratively reweighted least squares.
  *
@@ -61,7 +59,7 @@ import org.apache.commons.math3.util.MathUtils;
  */
 public class MultinomialRegression extends AbstractLogisticRegression {
 
-    enum ProblemFormulation {
+    public enum ProblemFormulation {
         /**
          * Holds the beta vector for the last category fixed at the zero vector.
          * Used in most multinomial regressions that are not regularized.
@@ -78,7 +76,8 @@ public class MultinomialRegression extends AbstractLogisticRegression {
     private final PathStrategy m_pathStrategy;
     private final double m_alpha;
 
-    MultinomialRegression(final ProblemFormulation problemFormulation, final PathStrategy pathStrategy, final double alpha) {
+
+    public MultinomialRegression(final ProblemFormulation problemFormulation, final PathStrategy pathStrategy, final double alpha) {
         m_pf = problemFormulation;
         m_pathStrategy = pathStrategy;
         if (alpha < 0.0 || alpha > 1.0) {
@@ -102,7 +101,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
         int numRows = (int)rowCount;
         int numFeatures = data.getFeatureCount();
         final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[numRows], 1);
-        final NaiveUpdateStrategy updateStrategy = new NaiveUpdateStrategy(data, weights);
+        final NaiveUpdateStrategy<ClassificationTrainingRow> updateStrategy = new NaiveUpdateStrategy<>(data, weights);
         final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy, m_alpha);
         double[] workingResponses = new double[numRows];
 
@@ -116,19 +115,42 @@ public class MultinomialRegression extends AbstractLogisticRegression {
             final double lambda = m_pathStrategy.getNextLambda();
 
             // TODO implement mini framework to handle convergence checking
-            double loss = calculateAllClassLossSum(data, beta);
-            double oldLoss = 0.0;
-            while(!MathUtils.equals(loss, oldLoss)) {
-                for (int c = 0; c < numClasses; c++) {
+//            double loss = calculateAllClassLossSum(data, beta);
+//            System.out.println("Loss before start: " + loss);
+//            double oldLoss = 0.0;
+            int iter = 0;
+            double[] betaOld = new double[numFeatures + 1];
+            for (boolean betaChanged = true; betaChanged; iter++) {
+                betaChanged = false;
+                for (int c = 0; c < classesConsidered; c++) {
+                    copyBeta(beta[c], betaOld);
                     updateApproximation(weights, workingResponses, data, beta[c], c, approxPrep);
-                    beta[c] = coordDescent.fit(beta[c], lambda, workingResponses);
+                    coordDescent.fit(beta[c], lambda, workingResponses);
+                    betaChanged = checkBetaChanged(betaOld, beta[c]);
                 }
-                oldLoss = loss;
-                loss = calculateAllClassLossSum(data, beta);
+//                oldLoss = loss;
+//                loss = calculateAllClassLossSum(data, beta);
+//                System.out.println("Loss: " + loss);
             }
+            System.out.println("lambda: " + lambda + " Iterations: " + iter);
         }
 
         return beta;
+    }
+
+    private static void copyBeta(final double[] beta, final double[] betaTarget) {
+        for (int i = 0; i < beta.length; i++) {
+            betaTarget[i] = beta[i];
+        }
+    }
+
+    private static boolean checkBetaChanged(final double[] oldBeta, final double[] newBeta) {
+        for (int i = 0; i < oldBeta.length; i++) {
+            if (!ElasticNetUtils.withinEpsilon(oldBeta[i], newBeta[i], 1e-3)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -166,12 +188,15 @@ public class MultinomialRegression extends AbstractLogisticRegression {
             if (m_pf == ProblemFormulation.Conventional) {
                 normalizer += 1;
             }
+            assert normalizer != 0.0;
             instanceLoss -= Math.log(normalizer);
             loss += instanceLoss;
         }
 
         return loss;
     }
+
+
 
     private static class ApproxPreparator extends AbstractApproximationPreparator {
         final private double[][] m_beta;
@@ -189,13 +214,13 @@ public class MultinomialRegression extends AbstractLogisticRegression {
         double prepareProbability(final TrainingRow x) {
             double denom = 0.0;
             for (int i = 0; i < m_beta.length; i++) {
-                denom += Math.exp(calculateResponse(x, m_beta[i]));
+                denom += Math.exp(ElasticNetUtils.sanitizeExponent(calculateResponse(x, m_beta[i])));
             }
             // in the conventional problem formulation
             // the beta vector of the last category is set to zero
             // therefore its contribution to the denominator is 1
             denom += m_denominatorModifier;
-            return m_response / denom;
+            return Math.exp(ElasticNetUtils.sanitizeExponent(m_response)) / denom;
         }
     }
 

@@ -59,7 +59,7 @@ public class LogisticRegression extends AbstractLogisticRegression {
 
     public double[] fit(final ClassificationTrainingData data, final double alpha, final double lambda) {
         final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[data.getRowCount()], 0);
-        final UpdateStrategy updateStrategy = new NaiveUpdateStrategy(data, weights);
+        final UpdateStrategy updateStrategy = new NaiveUpdateStrategy<>(data, weights);
         final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy, alpha);
         final ApproximationPreparator approxPreparator = new ApproxPreparator();
         double[] beta = new double[data.getFeatureCount() + 1];
@@ -69,7 +69,7 @@ public class LogisticRegression extends AbstractLogisticRegression {
         for (double ll = calculateSumLogLikelihood(data, beta), llOld = 0.0; MathUtils.equals(ll, llOld);
                 llOld = ll, ll = calculateSumLogLikelihood(data, beta)) {
             updateApproximation(weights, workingResponses, data, beta, 0, approxPreparator); // here we always look at the first class
-            beta = coordDescent.fit(beta, lambda, workingResponses);
+            coordDescent.fit(beta, lambda, workingResponses);
         }
         return beta;
     }
