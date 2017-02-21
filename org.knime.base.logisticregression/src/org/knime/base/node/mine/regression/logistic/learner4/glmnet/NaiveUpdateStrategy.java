@@ -50,8 +50,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.Iterator;
 
-import org.apache.commons.math3.util.MathUtils;
-
 /**
  * Naive update strategy that stores the residual for all rows and updates them if a beta changes.
  *
@@ -65,6 +63,7 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
     private TrainingData<T> m_data;
     private WeightingStrategy m_weights;
     private double[] m_residuals;
+    private double[] m_featureCache;
 
     public NaiveUpdateStrategy(final TrainingData<T> data, final WeightingStrategy weights) {
         m_data = data;
@@ -74,6 +73,7 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
         }
         // If the number of rows is bigger than Integer.MAX_Value I believe we will have other problems
         m_residuals = new double[m_data.getRowCount()];
+        m_featureCache = new double[m_residuals.length];
     }
 
     /**
@@ -88,31 +88,29 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
         for (int rn = 0; iterator.hasNext(); rn++) {
             TrainingRow row = iterator.next();
             double x = row.getFeature(feature);
+            m_featureCache[rn] = x;
             double wx = m_weights.getWeightFor(rn) * x;
             residualSum += wx * m_residuals[rn];
-            betaSum += wx * x * betaOld;
             weightSum += wx * x;
         }
+        betaSum = betaOld * weightSum;
 
         double loss = residualSum + betaSum;
         double betaNew = ElasticNetUtils.softThresholding(loss, lambda * alpha) / (weightSum + lambda * (1 - alpha));
-
-        if (!MathUtils.equals(betaOld, betaNew)) {
+//        System.out.println("lambda: " + lambda + " betaNew: " + betaNew);
+        if (!ElasticNetUtils.withinEpsilon(betaOld, betaNew)) {
+            // beta changed therefore we have to update the residuals
+//            System.out.println("Change in beta: " + (betaNew - betaOld));
             updateResiduals(feature, betaNew - betaOld);
         }
         return betaNew;
     }
 
     private void updateResiduals(final int feature, final double betaDiff) {
-        int i = 0;
-        Iterator<T> iterator = m_data.iterator();
-        for (; iterator.hasNext(); i++) {
-            TrainingRow row = iterator.next();
-            double x = row.getFeature(feature);
+        for (int i = 0; i < m_residuals.length; i++) {
+            double x = m_featureCache[i];
             m_residuals[i] -= x * betaDiff;
         }
-        assert i == m_residuals.length : "Number of rows returned by iterator (" + i +") does not match number of residuals ("
-                + m_residuals.length + ")";
     }
 
 
