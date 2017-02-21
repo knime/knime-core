@@ -54,7 +54,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface PathStrategy {
+public interface PathStrategy {
 
     /**
      * Returns true if the last lambda has been evaluated and the path is fully traversed.

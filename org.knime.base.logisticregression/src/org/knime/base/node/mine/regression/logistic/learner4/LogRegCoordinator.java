@@ -132,9 +132,11 @@ class LogRegCoordinator {
      */
     LogisticRegressionContent learn(final BufferedDataTable trainingData, final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
 
-        LogRegLearner learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
-            Collections.emptyList(), m_settings.getTargetReferenceCategory(),
-            m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
+//        LogRegLearner learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
+//        Collections.emptyList(), m_settings.getTargetReferenceCategory(),
+//            m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
+        LogRegLearner learner = new GlmNetLogRegLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(), Collections.emptyList(),
+            m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
         double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
         exec.setMessage("Analyzing categorical data");
         BufferedDataTable dataTable =

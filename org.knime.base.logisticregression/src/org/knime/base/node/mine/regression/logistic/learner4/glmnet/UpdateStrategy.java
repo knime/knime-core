@@ -49,7 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 /**
- * Strategy to use for the updates of the coefficient in the {@link ElasticNetCoordinateDescent}.
+ * Strategy to use for the updates of the coefficient in the ElasticNetCoordinateDescent.
  *
  * @author Adrian Nembach, KNIME.com
  */

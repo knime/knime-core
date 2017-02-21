@@ -54,12 +54,12 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class SingleLambdaPathStrategy implements PathStrategy {
+public final class SingleLambdaPathStrategy implements PathStrategy {
 
     private final double m_lambda;
     private boolean m_fired = false;
 
-    SingleLambdaPathStrategy(final double lambda) {
+    public SingleLambdaPathStrategy(final double lambda) {
         if (lambda < 0.0 || lambda > 1.0) {
             throw new IllegalArgumentException("lambda must be in the range [0,1] but was " + lambda + ".");
         }
