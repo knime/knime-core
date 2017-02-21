@@ -55,17 +55,22 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
  */
 final class ElasticNetUtils {
 
-    static double epsilon = 10e-5;
+    static double EPSILON = 1e-5;
+    static double MAX_EXP = 250.0;
 
     // Utility class containing only static methods
     private ElasticNetUtils() {}
 
+    static double sanitizeExponent(final double exponent) {
+        return exponent > MAX_EXP ? MAX_EXP : exponent;
+    }
+
     static double softThresholding(final double z, final double g) {
         final double absZ = abs(z);
-        if (g < absZ) {
-            return z > 0 ? z - g : z + g;
+        if (g >= absZ) {
+            return 0.0;
         } else {
-            return 0;
+            return z > 0.0 ? z - g : z + g;
         }
     }
 
@@ -73,5 +78,26 @@ final class ElasticNetUtils {
         return x < 0 ? -x : x;
     }
 
+    /**
+     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
+     *
+     * @param x first value
+     * @param y second value
+     * @return true if |x-y| < epsilon
+     */
+    static boolean withinEpsilon(final double x, final double y, final double epsilon) {
+        return abs(x - y) < epsilon;
+    }
 
+
+    /**
+     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
+     *
+     * @param x first value
+     * @param y second value
+     * @return true if |x-y| < epsilon
+     */
+    static boolean withinEpsilon(final double x, final double y) {
+        return withinEpsilon(x, y, EPSILON);
+    }
 }
