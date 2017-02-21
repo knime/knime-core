@@ -54,8 +54,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.ExternalNodeData.ExternalNodeDataBuilder;
 import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
@@ -64,6 +68,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
+import org.knime.core.node.workflow.WorkflowLock;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
@@ -84,26 +90,61 @@ import com.fasterxml.jackson.databind.ObjectReader;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public class WizardPageManager {
+public final class WizardPageManager {
 
-    private final WizardExecutionController m_wec;
+    private final WorkflowManager m_wfm;
 
     /**
-     *
+     * Returns a {@link WizardPageManager} instance for the given {@link WorkflowManager}
+     * @param workflowManager the {@link WorkflowManager} to get the {@link WizardPageManager} instance for
+     * @return a {@link WizardPageManager} of the given {@link WorkflowManager}
      */
-    public WizardPageManager(final WizardExecutionController wizardExecutionController) {
-        m_wec = wizardExecutionController;
+    public static WizardPageManager of(final WorkflowManager workflowManager) {
+        // return new instance, could also be used to invoke a caching/pooling service
+        return new WizardPageManager(workflowManager);
+    }
+
+    /**
+     * Creates a new WizardPageManager instance.
+     *
+     * @param workflowManager a {@link WorkflowManager} corresponding to the current workflow
+     */
+    private WizardPageManager(final WorkflowManager workflowManager) {
+        m_wfm = workflowManager;
+    }
+
+    /**
+     * Returns the underlying {@link WorkflowManager} instance
+     * @return The underlying {@link WorkflowManager} instance
+     */
+    public WorkflowManager getWorkflowManager() {
+        return m_wfm;
+    }
+
+    /**
+     * Returns the underlying {@link WizardExecutionController} instance.
+     *<br><br>
+     * WARNING: this method will most likely be removed, once functionality is completely encapsulated.
+     *
+     * @return
+     * the underlying {@link WizardExecutionController} instance.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public WizardExecutionController getWizardExecutionController() {
+        return m_wfm.getWizardExecutionController();
     }
 
     /**
      * Creates a JSON string containing a wizard page from a given node id
-     * @param containerNodeID the node id to create the wizard page string for
+     *
+     * @param containerNodeID the node id to create the wizard page string for, null if the current subnode in wizard execution is supposed to be created
      * @return a JSON string containing the wizard page
      * @throws IOException if the layout of the wizard page can not be generated
-     * @throws JsonProcessingException on serialization
+     * @throws JsonProcessingException on serialization errors
      */
     public String createWizardPage(final NodeID containerNodeID) throws IOException, JsonProcessingException {
-        WizardPageContent page = m_wec.getWizardPage(containerNodeID);
+        WizardExecutionController wec = m_wfm.getWizardExecutionController();
+        WizardPageContent page = wec.getWizardPage(containerNodeID);
         // process layout
         JSONLayoutPage layout = new JSONLayoutPage();
         try {
@@ -197,9 +238,63 @@ public class WizardPageManager {
         }
     }
 
-    public String applyViewValues(final String viewValues, final NodeID containerNodeId) {
-        //TODO: fill me
-        return null;
+    /**
+     * Applies a given map of workflow parameters to the current workflow
+     *
+     * @param parameterMap a map with parameter name as key and parameter string value as value
+     * @throws InvalidSettingsException If a parameter name is not valid or a not uniquely defined in the workflow or if the parameter value does not validate.
+     */
+    public void applyWorkflowParameters(final Map<String, String> parameterMap) throws InvalidSettingsException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            if (parameterMap.size() > 0) {
+                Map<String, ExternalNodeData> inputData = new HashMap<String, ExternalNodeData>(parameterMap.size());
+                for (String key : parameterMap.keySet()) {
+                    ExternalNodeDataBuilder dataBuilder = ExternalNodeData.builder(key);
+                    dataBuilder.stringValue(parameterMap.get(key));
+                    inputData.put(key, dataBuilder.build());
+                }
+                try {
+                    //FIXME: This call should happen on the WizardExecutionController, once there is no potential version issues
+                    m_wfm.setInputNodes(inputData);
+                } catch (Exception ex) {
+                    String errorPrefix = "Could not set workflow parameters: ";
+                    String errorMessage = ex.getMessage();
+                    if (!errorMessage.startsWith(errorPrefix)) {
+                        errorMessage = errorPrefix + ex.getMessage();
+                    }
+                    throw new InvalidSettingsException(errorMessage, ex);
+                }
+            }
+        }
+    }
+
+    /**
+     * Applies a given map of view values to a given subnode.
+     *
+     * @param valueMap a map with {@link NodeIDSuffix} string as key and parsed view value as value
+     * @param containerNodeId the node ID to apply the values to
+     * @return A JSON-serialized string containing the validation result, null if validation succeeded.
+     * @throws IOException on JSON serialization errors
+     */
+    public String applyViewValues(final Map<String, String> valueMap, final NodeID containerNodeId) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            ObjectMapper mapper = new ObjectMapper();
+
+            for (String key : valueMap.keySet()) {
+                String content = mapper.writeValueAsString(valueMap.get(key));
+                valueMap.put(key, content);
+            }
+            Map<String, ValidationError> validationResults = null;
+            if (!valueMap.isEmpty()) {
+                WizardExecutionController wec = m_wfm.getWizardExecutionController();
+                validationResults = wec.loadValuesIntoPage(valueMap, containerNodeId);
+            }
+            String jsonString = null;
+            if (validationResults != null && !validationResults.isEmpty()) {
+                jsonString = mapper.writeValueAsString(validationResults);
+            }
+            return jsonString;
+        }
     }
 
 }
