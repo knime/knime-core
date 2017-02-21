@@ -87,6 +87,39 @@ abstract class AbstractLogisticRegression {
         return sumLogLikelihood;
     }
 
+    static double maxWorkingResponseDotProduct(final ClassificationTrainingData data) {
+        final int nfet = data.getFeatureCount();
+        final int ncat = data.getCategoryCount();
+        final double[][] dotProducts = new double[ncat][nfet];
+        final double k = ncat;
+        // working response if row has not current class
+        final double zNoMatch = k / (k - 1);
+        // working response if row has current class
+        final double zMatch = (k * k) / (k - 1) - zNoMatch;
+        // initially when beta is all zero, all classes have the same probability for all rows
+        final double classProb = 1.0 / k;
+        final double rowWeight = classProb * (1 - classProb);
+        for (ClassificationTrainingRow row : data) {
+            for (int c = 0; c < ncat; c++) {
+                double y = row.getCategory() == c ? zMatch : zNoMatch;
+                for (int j = 0; j < nfet; j++) {
+                    dotProducts[c][j] +=  row.getFeature(j) * y;
+                }
+            }
+        }
+
+        double max = 0.0;
+        for (int i = 0; i < dotProducts.length; i++) {
+            for (int j = 0; j < dotProducts[i].length; j++) {
+                double abs = ElasticNetUtils.abs(dotProducts[i][j]);
+                if (abs > max) {
+                    max = abs;
+                }
+            }
+        }
+        return rowWeight * max;
+    }
+
     void updateApproximation(final MutableWeightingStrategy weights, final double[] workingResponses,
         final ClassificationTrainingData data, final double[] beta, final int currentClass, final ApproximationPreparator approxPreparator) {
         Iterator<ClassificationTrainingRow> iter = data.iterator();
@@ -96,16 +129,17 @@ abstract class AbstractLogisticRegression {
             double p = approxPreparator.getProbability();
             double y = approxPreparator.getTargetIndication();
             double weight;
-            if (ElasticNetUtils.abs(1.0 - p) < ElasticNetUtils.epsilon) {
+            if (ElasticNetUtils.abs(1.0 - p) < ElasticNetUtils.EPSILON) {
                 p = 1.0;
-                weight = ElasticNetUtils.epsilon;
-            } else if (ElasticNetUtils.abs(p) < ElasticNetUtils.epsilon) {
+                weight = ElasticNetUtils.EPSILON;
+            } else if (ElasticNetUtils.abs(p) < ElasticNetUtils.EPSILON) {
                 p = 0.0;
-                weight = ElasticNetUtils.epsilon;
+                weight = ElasticNetUtils.EPSILON;
             } else {
                 weight = p * (1.0 - p);
             }
-            workingResponses[rn] = approxPreparator.getResponse() + (y - p) / weight;
+            double wr = approxPreparator.getResponse() + (y - p) / weight;
+            workingResponses[rn] = wr;
             weights.setWeightFor(rn, weight);
         }
     }
