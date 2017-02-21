@@ -100,7 +100,7 @@ public final class WizardPageManager {
      * @return a {@link WizardPageManager} of the given {@link WorkflowManager}
      */
     public static WizardPageManager of(final WorkflowManager workflowManager) {
-        // return new instance, could also be used to invoke a caching/pooling service
+        // return new instance, could also be used to invoke a caching/pooling service in the future
         return new WizardPageManager(workflowManager);
     }
 
@@ -132,6 +132,15 @@ public final class WizardPageManager {
      */
     public WizardExecutionController getWizardExecutionController() {
         return m_wfm.getWizardExecutionController();
+    }
+
+    /**
+     * Checks different criteria to determine if a combined page view is available for a given metanode.
+     * @param containerNodeID the {@link NodeID} of the metanode to check
+     * @return true, if a view on the metanode is available, false otherwise
+     */
+    public boolean hasWizardPage(final NodeID containerNodeID) {
+        return m_wfm.getWizardExecutionController().isSubnodeViewAvailable(containerNodeID);
     }
 
     /**

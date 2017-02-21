@@ -356,30 +356,42 @@ public final class WizardExecutionController extends ExecutionController {
             // we will add it again).
             return;
         }
+        if (isSubnodeViewAvailable(source)) {
+            // add to the list so we can later avoid queuing of successors!
+            m_waitingSubnodes.add(source);
+        }
+    }
+
+    /**
+     * Checks different criteria to determine if a combined page view is available for a given subnode.
+     * @param subnodeId the {@link NodeID} of the subnode to check
+     * @return true, if a view on the subnode is available, false otherwise
+     * @since 3.4
+     */
+    public boolean isSubnodeViewAvailable(final NodeID subnodeId) {
         // potentially null when queried from contained metanode
-        NodeContainer sourceNC = m_manager.getWorkflow().getNode(source);
+        NodeContainer sourceNC = m_manager.getWorkflow().getNode(subnodeId);
         // only consider nodes that are...SubNodes and...
         if (!(sourceNC instanceof SubNodeContainer)) {
-            return;
+            return false;
         }
         SubNodeContainer subnodeSource = (SubNodeContainer)sourceNC;
         // ...active.
         if (subnodeSource.isInactive()) {
-            return;
+            return false;
         }
         // Now check if the active SubNode contains active QuickForm nodes:
         WorkflowManager subNodeWFM = subnodeSource.getWorkflowManager();
+        @SuppressWarnings("rawtypes")
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         boolean allInactive = true;
         for (NodeID id : wizardNodeSet.keySet()) {
             if (!subNodeWFM.getNodeContainer(id, NativeNodeContainer.class, true).isInactive()) {
                 allInactive = false;
+                break;
             }
         }
-        if (!allInactive) {
-            // add to the list so we can later avoid queuing of successors!
-            m_waitingSubnodes.add(source);
-        }
+        return !allInactive;
     }
 
     /** {@inheritDoc} */
