@@ -244,7 +244,7 @@ public class GlmNetLogRegLearner implements LogRegLearner {
          */
         @Override
         public double getFeature(final int idx) {
-            return m_data[idx];
+            return idx == 0.0 ? 1.0 : m_data[idx - 1];
         }
 
         /**

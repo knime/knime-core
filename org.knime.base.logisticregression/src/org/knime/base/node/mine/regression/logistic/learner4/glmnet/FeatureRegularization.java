@@ -44,68 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.02.2017 (Adrian Nembach): created
+ *   21.02.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 /**
- * Utility class that provides static methods needed by the elastic net.
+ * Provides the regularization terms for all features (including the intercept term).
+ * The regularization term is multiplied on the current lambda and allows to control the
+ * regularization on a per feature basis. Usually the interception term is not regularized.
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class ElasticNetUtils {
-
-    static double EPSILON = 1e-5;
-    static double MAX_EXP = 250.0;
-
-    // Utility class containing only static methods
-    private ElasticNetUtils() {}
-
-    static double sanitizeExponent(final double exponent) {
-        return exponent > MAX_EXP ? MAX_EXP : exponent;
-    }
-
-    static double softThresholding(final double z, final double g) {
-        final double absZ = abs(z);
-        if (g >= absZ) {
-            return 0.0;
-        } else {
-            return z > 0.0 ? z - g : z + g;
-        }
-    }
-
-    static double abs(final double x) {
-        return x < 0 ? -x : x;
-    }
+interface FeatureRegularization {
 
     /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
+     * Returns the regularization term for the feature with index <b>feature</b>.
+     * Note that the feature at index 0 is expected to be the intercept.
+     * @param feature index of the feature for which the regularization term is required
+     * @return regularization term for the specified feature
      */
-    static boolean withinEpsilon(final double x, final double y, final double epsilon) {
-        return abs(x - y) < epsilon;
-    }
-
-
-    /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
-     */
-    static boolean withinEpsilon(final double x, final double y) {
-        return withinEpsilon(x, y, EPSILON);
-    }
-
-    static double calculateResponse(final TrainingRow x, final double[] beta) {
-        double response = 0.0;
-        for (int i = 0; i < beta.length; i++) {
-            response += x.getFeature(i) * beta[i];
-        }
-        return response;
-    }
+    public double getLambda(int feature);
 }

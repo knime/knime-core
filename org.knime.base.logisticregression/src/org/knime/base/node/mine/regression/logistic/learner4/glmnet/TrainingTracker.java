@@ -44,68 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.02.2017 (Adrian Nembach): created
+ *   16.02.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 /**
- * Utility class that provides static methods needed by the elastic net.
+ * Keeps track of training related information.
+ * An example would be the number of iterations until convergence and loss values.
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class ElasticNetUtils {
+interface TrainingTracker {
 
-    static double EPSILON = 1e-5;
-    static double MAX_EXP = 250.0;
-
-    // Utility class containing only static methods
-    private ElasticNetUtils() {}
-
-    static double sanitizeExponent(final double exponent) {
-        return exponent > MAX_EXP ? MAX_EXP : exponent;
-    }
-
-    static double softThresholding(final double z, final double g) {
-        final double absZ = abs(z);
-        if (g >= absZ) {
-            return 0.0;
-        } else {
-            return z > 0.0 ? z - g : z + g;
-        }
-    }
-
-    static double abs(final double x) {
-        return x < 0 ? -x : x;
-    }
-
-    /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
-     */
-    static boolean withinEpsilon(final double x, final double y, final double epsilon) {
-        return abs(x - y) < epsilon;
-    }
-
-
-    /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
-     */
-    static boolean withinEpsilon(final double x, final double y) {
-        return withinEpsilon(x, y, EPSILON);
-    }
-
-    static double calculateResponse(final TrainingRow x, final double[] beta) {
-        double response = 0.0;
-        for (int i = 0; i < beta.length; i++) {
-            response += x.getFeature(i) * beta[i];
-        }
-        return response;
-    }
 }

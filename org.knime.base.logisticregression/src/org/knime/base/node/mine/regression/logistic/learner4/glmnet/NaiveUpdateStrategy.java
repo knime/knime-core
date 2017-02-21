@@ -132,10 +132,7 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
     }
 
     private double calculateResidual(final TrainingRow x, final double y, final double[] beta) {
-        double prediction = beta[0];
-        for (int i = 1; i < beta.length; i++) {
-            prediction += x.getFeature(i - 1) * beta[i];
-        }
+        double prediction = ElasticNetUtils.calculateResponse(x, beta);
         return y - prediction;
     }
 

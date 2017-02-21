@@ -44,68 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.02.2017 (Adrian Nembach): created
+ *   21.02.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 /**
- * Utility class that provides static methods needed by the elastic net.
+ * All features are regularized except for the intercept term.
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class ElasticNetUtils {
+final class DefaultFeatureRegularization implements FeatureRegularization {
 
-    static double EPSILON = 1e-5;
-    static double MAX_EXP = 250.0;
+    private final int m_numFeatures;
 
-    // Utility class containing only static methods
-    private ElasticNetUtils() {}
-
-    static double sanitizeExponent(final double exponent) {
-        return exponent > MAX_EXP ? MAX_EXP : exponent;
-    }
-
-    static double softThresholding(final double z, final double g) {
-        final double absZ = abs(z);
-        if (g >= absZ) {
-            return 0.0;
-        } else {
-            return z > 0.0 ? z - g : z + g;
-        }
-    }
-
-    static double abs(final double x) {
-        return x < 0 ? -x : x;
+    public DefaultFeatureRegularization(final int numFeatures) {
+        m_numFeatures = numFeatures;
     }
 
     /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
+     * {@inheritDoc}
      */
-    static boolean withinEpsilon(final double x, final double y, final double epsilon) {
-        return abs(x - y) < epsilon;
+    @Override
+    public double getLambda(final int feature) {
+        return feature == 0 ? 0.0 : 1.0;
     }
 
-
-    /**
-     * Returns true if <b>x</b> is within epsilon of <b>y</b>.
-     *
-     * @param x first value
-     * @param y second value
-     * @return true if |x-y| < epsilon
-     */
-    static boolean withinEpsilon(final double x, final double y) {
-        return withinEpsilon(x, y, EPSILON);
-    }
-
-    static double calculateResponse(final TrainingRow x, final double[] beta) {
-        double response = 0.0;
-        for (int i = 0; i < beta.length; i++) {
-            response += x.getFeature(i) * beta[i];
-        }
-        return response;
-    }
 }

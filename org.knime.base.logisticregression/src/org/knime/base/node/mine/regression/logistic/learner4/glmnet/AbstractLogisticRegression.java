@@ -62,13 +62,6 @@ abstract class AbstractLogisticRegression {
         return data.getCategoryCount();
     }
 
-    static double calculateResponse(final TrainingRow x, final double[] beta) {
-        double response = beta[0];
-        for (int i = 1; i < beta.length; i++) {
-            response += x.getFeature(i - 1) * beta[i];
-        }
-        return response;
-    }
 
     static double calculateProbability(final double response) {
         return 1.0 / (1 + Math.exp(-response));
@@ -168,7 +161,7 @@ abstract class AbstractLogisticRegression {
         @Override
         public void prepare(final ClassificationTrainingRow x, final double[] beta, final int currentClass) {
             m_targetIndication = x.getCategory() == currentClass ? 1.0 : 0.0;
-            m_response = calculateResponse(x, beta);
+            m_response = ElasticNetUtils.calculateResponse(x, beta);
             m_probability = prepareProbability(x);
         }
 

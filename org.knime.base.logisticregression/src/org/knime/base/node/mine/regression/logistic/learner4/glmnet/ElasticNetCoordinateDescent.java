@@ -65,12 +65,15 @@ final class ElasticNetCoordinateDescent {
 
     final private double m_alpha;
     final private UpdateStrategy m_updateStrategy;
+    final private FeatureRegularization m_featureRegularization;
     final private TrainingData<?> m_data;
 
-    ElasticNetCoordinateDescent(final TrainingData<?> data, final UpdateStrategy updateStrategy, final double alpha) {
+    ElasticNetCoordinateDescent(final TrainingData<?> data, final UpdateStrategy updateStrategy,
+        final FeatureRegularization featureRegularization, final double alpha) {
         m_alpha = alpha;
         m_updateStrategy = updateStrategy;
         m_data = data;
+        m_featureRegularization = featureRegularization;
     }
 
     /**
@@ -85,9 +88,9 @@ final class ElasticNetCoordinateDescent {
     int fit(final double[] beta, final double lambda, final double[] targets) {
         assert m_data.getFeatureCount() + 1 == beta.length: "beta array does not match feature count.";
         assert m_data.getRowCount() == targets.length : "target array does not match row count.";
-        beta[0] = calculateIntercept(targets);
+//        beta[0] = calculateIntercept(targets);
         m_updateStrategy.initialize(beta, targets);
-        ActiveSet activeSet = new MutableActiveSet(beta.length - 1);
+        ActiveSet activeSet = new MutableActiveSet(beta.length);
         return fitModel(lambda, beta, activeSet);
     }
 
@@ -120,12 +123,12 @@ final class ElasticNetCoordinateDescent {
             activeSet.newCycle();
             while (activeSet.hasNextActive()) {
                 int i = activeSet.nextActive();
-                double betaOld = beta[i + 1];
-                beta[i + 1] = m_updateStrategy.update(betaOld, i, m_alpha, lambda);
-                if (ElasticNetUtils.withinEpsilon(beta[i + 1], 0.0)) {
+                double betaOld = beta[i];
+                beta[i] = m_updateStrategy.update(betaOld, i, m_alpha, lambda * m_featureRegularization.getLambda(i));
+                if (ElasticNetUtils.withinEpsilon(beta[i], 0.0)) {
                     activeSet.removeActive(i);
                 }
-                if (!ElasticNetUtils.withinEpsilon(betaOld, beta[i + 1])) {
+                if (!ElasticNetUtils.withinEpsilon(betaOld, beta[i])) {
                     betaChanged = true;
                 }
             }

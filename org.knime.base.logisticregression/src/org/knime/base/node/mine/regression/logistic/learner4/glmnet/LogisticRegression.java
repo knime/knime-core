@@ -60,7 +60,9 @@ public class LogisticRegression extends AbstractLogisticRegression {
     public double[] fit(final ClassificationTrainingData data, final double alpha, final double lambda) {
         final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[data.getRowCount()], 0);
         final UpdateStrategy updateStrategy = new NaiveUpdateStrategy<>(data, weights);
-        final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy, alpha);
+        final FeatureRegularization featureRegularization = new DefaultFeatureRegularization(data.getFeatureCount());
+        final ElasticNetCoordinateDescent coordDescent = new ElasticNetCoordinateDescent(data, updateStrategy,
+            featureRegularization, alpha);
         final ApproximationPreparator approxPreparator = new ApproxPreparator();
         double[] beta = new double[data.getFeatureCount() + 1];
         // TODO find out how to correctly determine intercept

@@ -57,8 +57,9 @@ public interface TrainingRow {
 
     /**
      * Returns the feature at index <b>idx</b>.
+     * Note that the index 0 is reserved for the intercept term.
      *
-     * @param idx
+     * @param idx index of the feature to retrieve
      * @return the feature at index <b>idx</b>
      */
     public double getFeature(final int idx);
