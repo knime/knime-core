@@ -103,10 +103,7 @@ import org.knime.time.util.DurationPeriodFormatUtils;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class StringToDurationPeriodNodeModel extends NodeModel {
-
-    /**
-     */
-    protected StringToDurationPeriodNodeModel() {
+    StringToDurationPeriodNodeModel() {
         super(1, 1);
     }
 
@@ -331,7 +328,6 @@ public class StringToDurationPeriodNodeModel extends NodeModel {
     }
 
     private final class StringToDurationPeriodCellFactory extends SingleCellFactory {
-
         private final int m_colIndex;
 
         /**
@@ -396,9 +392,6 @@ public class StringToDurationPeriodNodeModel extends NodeModel {
         return ((SimpleStreamableOperatorInternals)internals).getConfig().getBoolean("needsIteration", false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
         final PortOutput[] output) throws Exception {
@@ -408,10 +401,6 @@ public class StringToDurationPeriodNodeModel extends NodeModel {
     @Override
     public MergeOperator createMergeOperator() {
         return new MergeOperator() {
-
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public StreamableOperatorInternals mergeIntermediate(final StreamableOperatorInternals[] operators) {
                 final SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
@@ -493,8 +482,7 @@ public class StringToDurationPeriodNodeModel extends NodeModel {
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 
         return new StreamableOperator() {
-
-            SimpleStreamableOperatorInternals m_internals = new SimpleStreamableOperatorInternals();
+            private SimpleStreamableOperatorInternals m_internals = new SimpleStreamableOperatorInternals();
 
             /**
              * {@inheritDoc}
@@ -631,5 +619,4 @@ public class StringToDurationPeriodNodeModel extends NodeModel {
         throws IOException, CanceledExecutionException {
         // nothing to do
     }
-
 }

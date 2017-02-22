@@ -58,7 +58,6 @@ import org.knime.core.node.NodeView;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class StringToDurationPeriodNodeFactory extends NodeFactory<StringToDurationPeriodNodeModel>{
-
     /**
      * {@inheritDoc}
      */
@@ -99,5 +98,4 @@ public class StringToDurationPeriodNodeFactory extends NodeFactory<StringToDurat
     protected NodeDialogPane createNodeDialogPane() {
         return new StringToDurationPeriodNodeDialog();
     }
-
 }
