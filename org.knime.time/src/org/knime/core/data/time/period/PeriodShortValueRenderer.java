@@ -62,7 +62,6 @@ import org.knime.time.util.DurationPeriodFormatUtils;
  */
 @SuppressWarnings("serial")
 public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
-
     private static final PeriodShortValueRenderer INSTANCE = new PeriodShortValueRenderer();
 
     private static final String DESCRIPTION_PERIOD = "Short Period";
@@ -70,9 +69,6 @@ public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
     private PeriodShortValueRenderer() {
     }
 
-    /**
-     * @return "Period" {@inheritDoc}
-     */
     @Override
     public String getDescription() {
         return DESCRIPTION_PERIOD;
@@ -90,7 +86,6 @@ public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
 
     /** Renderer factory registered through extension point. */
     public static final class PeriodShortRendererFactory extends AbstractDataValueRendererFactory {
-
         @Override
         public String getDescription() {
             return DESCRIPTION_PERIOD;
@@ -101,5 +96,4 @@ public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
             return INSTANCE;
         }
     }
-
 }

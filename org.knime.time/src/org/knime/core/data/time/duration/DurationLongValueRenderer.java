@@ -62,7 +62,6 @@ import org.knime.time.util.DurationPeriodFormatUtils;
  */
 @SuppressWarnings("serial")
 public final class DurationLongValueRenderer extends DefaultDataValueRenderer {
-
     private static final DurationLongValueRenderer INSTANCE = new DurationLongValueRenderer();
 
     private static final String DESCRIPTION_DURATION = "Long Duration";
@@ -70,9 +69,6 @@ public final class DurationLongValueRenderer extends DefaultDataValueRenderer {
     private DurationLongValueRenderer() {
     }
 
-    /**
-     * @return "Duration" {@inheritDoc}
-     */
     @Override
     public String getDescription() {
         return DESCRIPTION_DURATION;
@@ -90,7 +86,6 @@ public final class DurationLongValueRenderer extends DefaultDataValueRenderer {
 
     /** Renderer factory registered through extension point. */
     public static final class DurationLongRendererFactory extends AbstractDataValueRendererFactory {
-
         @Override
         public String getDescription() {
             return DESCRIPTION_DURATION;
@@ -101,5 +96,4 @@ public final class DurationLongValueRenderer extends DefaultDataValueRenderer {
             return INSTANCE;
         }
     }
-
 }
