@@ -73,7 +73,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class DurationPeriodToStringNodeDialog extends NodeDialogPane {
-
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
@@ -83,7 +82,7 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane {
     private final DialogComponentStringSelection m_dialogCompFormatSelection;
 
     /**
-     *
+     * Creates a new dialog.
      */
     public DurationPeriodToStringNodeDialog() {
         m_dialogCompColFilter =
@@ -185,5 +184,4 @@ public class DurationPeriodToStringNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompFormatSelection.loadSettingsFrom(settings, specs);
     }
-
 }

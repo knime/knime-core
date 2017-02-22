@@ -189,13 +189,8 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
     }
 
     private final class DurationPeriodToStringCellFactory extends SingleCellFactory {
-
         private final int m_colIndex;
 
-        /**
-         * @param newColSpec
-         * @param colIndex
-         */
         public DurationPeriodToStringCellFactory(final DataColumnSpec newColSpec, final int colIndex) {
             super(newColSpec);
             m_colIndex = colIndex;
@@ -239,7 +234,5 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());
         }
-
     }
-
 }
