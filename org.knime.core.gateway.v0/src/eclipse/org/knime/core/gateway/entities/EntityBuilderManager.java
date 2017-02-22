@@ -50,9 +50,7 @@ package org.knime.core.gateway.entities;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
@@ -72,10 +70,6 @@ public class EntityBuilderManager {
 
     private static EntityBuilderFactory BUILDER_FACTORY;
 
-    /* BUILDER SINGLETON INSTANCES */
-    private static Map<Class<? extends GatewayEntityBuilder>, GatewayEntityBuilder> BUILDERS =
-        new HashMap<Class<? extends GatewayEntityBuilder>, GatewayEntityBuilder>();
-
     private EntityBuilderManager() {
         //utility class
     }
@@ -85,19 +79,14 @@ public class EntityBuilderManager {
      * injected via {@link EntityBuilderFactory} extension point.
      *
      * @param builderInterface the builder interface the implementation is requested for
-     * @return an implementation of the requested builder interface
+     * @return an implementation of the requested builder interface (it returns a new instance with every method call)
      */
     public static <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
         builder(final Class<B> builderInterface) {
-        B builder = (B)BUILDERS.get(builderInterface);
-        if (builder == null) {
-            if (BUILDER_FACTORY == null) {
-                BUILDER_FACTORY = createBuilderFactory();
-            }
-            builder = BUILDER_FACTORY.createEntityBuilder(builderInterface);
-            BUILDERS.put(builderInterface, builder);
+        if (BUILDER_FACTORY == null) {
+            BUILDER_FACTORY = createBuilderFactory();
         }
-        return builder;
+        return BUILDER_FACTORY.createEntityBuilder(builderInterface);
     }
 
     /**

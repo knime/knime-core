@@ -43,22 +43,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.test.entity;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import java.util.List;
+import java.util.Map;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.jaxrs.workflow.entity.XYEntToJson;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
+import java.util.HashMap;
+
 
 /**
+ * Wrapper class for the {@link TestEnt} interface with Json-annotated getter-methods.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public class TestEntToJson implements TestEnt{
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
-    }
+	private final TestEnt m_e;
+	
+	public TestEntToJson(final TestEnt e) {
+		m_e = e;
+	}
+
+	@JsonProperty("XY")
+    public XYEnt getXY() {
+            return new XYEntToJson(m_e.getXY());
+        }
+    
+	@JsonProperty("XYList")
+    public List<XYEnt> getXYList() {
+        	return m_e.getXYList().stream().map(l -> new XYEntToJson(l)).collect(Collectors.toList());
+        }
+    
+	@JsonProperty("Other")
+    public String getOther() {
+        	return m_e.getOther();
+        }
+    
+	@JsonProperty("PrimitiveList")
+    public List<String> getPrimitiveList() {
+        	return m_e.getPrimitiveList();
+        }
+    
+	@JsonProperty("XYMap")
+    public Map<String, XYEnt> getXYMap() {
+        	//TODO support non-primitive map-keys
+    	Map<String, XYEnt> res = new HashMap<>();
+        m_e.getXYMap().entrySet().stream().forEach(e -> res.put(e.getKey(), new XYEntToJson(e.getValue())));
+        return res;
+        }
+    
+	@JsonProperty("PrimitiveMap")
+    public Map<Integer, String> getPrimitiveMap() {
+        	return m_e.getPrimitiveMap();
+        }
+    
+
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
 
 }

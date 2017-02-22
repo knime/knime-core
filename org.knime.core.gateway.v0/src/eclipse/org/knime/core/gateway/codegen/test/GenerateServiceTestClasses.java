@@ -49,8 +49,8 @@ package org.knime.core.gateway.codegen.test;
  */
 
 import org.knime.core.gateway.codegen.ServiceGenerator;
-import org.knime.core.gateway.codegen.types.EntitySpec;
-import org.knime.core.gateway.codegen.types.ServiceSpec;
+import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ServiceSpecs;
 
 /**
  *
@@ -64,7 +64,9 @@ public class GenerateServiceTestClasses {
 
     static void generate() {
         new ServiceGenerator("src/test", "src/eclipse/org/knime/core/gateway/codegen/test/ServiceTestClass.vm",
-            ServiceSpec.Test, new ServiceSpec[]{ServiceSpec.Api}, new EntitySpec[]{EntitySpec.Api, EntitySpec.Test}).generate();
+            ServiceSpecs.Test)
+            .setServiceImport(ServiceSpecs.Api)
+            .setEntityFieldsImports(EntitySpecs.Api, EntitySpecs.Test).generate();
     }
 
 }

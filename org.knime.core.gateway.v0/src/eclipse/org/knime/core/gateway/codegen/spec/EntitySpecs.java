@@ -44,21 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Feb 3, 2017 (hornm): created
  */
-package org.knime.core.gateway.codegen;
-
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+package org.knime.core.gateway.codegen.spec;
 
 /**
+ * Definition of an entity specification, e.g. entity builders, entities for testing, default entity implementation.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public final class EntitySpecs {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+    private EntitySpecs() {
+        //utility class
+    }
+
+    /**
+     * Specification of the entity api interface.
+     */
+    public static final ObjectSpec Api = new ObjectSpec("api", "##name##", "org.knime.core.gateway.v0", "");
+
+    /**
+     * Specification of the entity api builder interface.
+     */
+    public static final ObjectSpec Builder = new ObjectSpec("builder", "##name##Builder", "org.knime.core.gateway.v0", "builder");
+
+    /**
+     * Specification of the default implementation of the entity api interface.
+     */
+    public static final ObjectSpec Impl = new ObjectSpec("impl", "Default##name##", "org.knime.core.gateway.v0", "impl");
+
+    /**
+     * Specification of the juni-tests for the entity api interface.
+     */
+    public static final ObjectSpec Test = new ObjectSpec("test", "##name##Test", "org.knime.core.gateway.v0.test", "test");
+
+    /**
+     * List of all available 'core' specifications.
+     */
+    public static final ObjectSpec[] DefaultSpecs = new ObjectSpec[]{Api, Builder, Impl, Test};
+
+    /**
+     * Gets the entity spec for the given entity spec id
+     *
+     * @param ObjectSpecId
+     * @return the entity spec for the given id or an {@link IllegalArgumentException}
+     */
+    public static ObjectSpec fromId(final String ObjectSpecId) {
+        for(ObjectSpec es : DefaultSpecs) {
+            if(ObjectSpecId.toLowerCase().equals(es.getId())) {
+                return es;
+            }
+        }
+        throw new IllegalArgumentException("No entity specification for id " + ObjectSpecId);
     }
 
 }

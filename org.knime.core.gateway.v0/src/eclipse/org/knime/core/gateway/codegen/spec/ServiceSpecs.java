@@ -44,21 +44,52 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Feb 6, 2017 (hornm): created
  */
-package org.knime.core.gateway.codegen;
-
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+package org.knime.core.gateway.codegen.spec;
 
 /**
+ * Definition of service specifications, e.g. services for testing, default implementations etc.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public final class ServiceSpecs {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+    private ServiceSpecs() {
+        //utility class
+    }
+
+    /**
+     * Specification of the service api interface.
+     */
+    public static final ObjectSpec Api = new ObjectSpec("api", "##name##", "org.knime.core.gateway.v0", "");
+
+    /**
+     * Specification of the service test class.
+     */
+    public static final ObjectSpec Test = new ObjectSpec("test", "##name##Test", "org.knime.core.gateway.v0", "test");
+
+    /**
+     * List of all available 'core' specifications.
+     */
+    public static final ObjectSpec[] DefaultSpecs = new ObjectSpec[]{
+        Api,
+        Test
+    };
+
+    /**
+     * Gets the service spec for the given entity spec id
+     *
+     * @param ObjectSpecId
+     * @return the service spec for the given id or an {@link IllegalArgumentException}
+     */
+    public static ObjectSpec fromId(final String ObjectSpecId) {
+        for(ObjectSpec ss : DefaultSpecs) {
+            if(ObjectSpecId.toLowerCase().equals(ss.getId())) {
+                return ss;
+            }
+        }
+        throw new IllegalArgumentException("No service specification for id " + ObjectSpecId);
     }
 
 }

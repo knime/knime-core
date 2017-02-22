@@ -49,8 +49,6 @@
 package org.knime.core.gateway.codegen.types;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,18 +66,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * @author Martin Horn, University of Konstanz
  */
 @JsonPropertyOrder({"name", "description", "namespace", "parent", "fields"})
-public class EntityDef extends AbstractDef {
-
-    /**
-     *
-     */
-    private static final String DEFAULT_IMPL_PACKAGE_PREFIX = "org.knime.core.gateway.serverproxy.service";
-
-    private final String m_namespace;
-
-    private final String m_name;
-
-    private final String m_description;
+public class EntityDef extends ObjectDef {
 
     private final List<EntityField> m_fields;
 
@@ -101,9 +88,7 @@ public class EntityDef extends AbstractDef {
         @JsonProperty("description") final String description,
         @JsonProperty("parent") final String parentEntityName,
         @JsonProperty("fields") final EntityField[] entityFields) {
-        m_namespace = ServiceDef.checkNamespace(namespace);
-        m_name = name;
-        m_description = description;
+        super(namespace, name, description);
         m_fields = Arrays.asList(entityFields);
         m_parentEntityName = parentEntityName;
     }
@@ -114,27 +99,6 @@ public class EntityDef extends AbstractDef {
             m_parentEntity = CheckUtils.checkArgumentNotNull(entityDef.get(m_parentEntityName),
                 "No parent entity \"%s\" for child \"%s\"", m_parentEntityName, getName());
         }
-    }
-
-    /**
-     * @return the description
-     */
-    @JsonProperty("description")
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * @return the namespace
-     */
-    @JsonProperty("namespace")
-    public String getNamespace() {
-        return m_namespace;
-    }
-
-    @JsonProperty("name")
-    public String getName() {
-        return m_name;
     }
 
     @JsonProperty("parent")
@@ -148,41 +112,13 @@ public class EntityDef extends AbstractDef {
     }
 
     @JsonIgnore
-    public String getNameWithNamespace() {
-        return m_namespace + "." + m_name;
-    }
-
-    @JsonIgnore
     public Optional<String> getParentOptional() {
         return Optional.ofNullable(m_parentEntityName);
     }
 
-    @JsonIgnore
-    public Collection<String> getJavaImports() {
-        LinkedHashSet<String> result = new LinkedHashSet<>();
-        m_fields.stream().map(EntityField::getType).forEach(t -> result.addAll(t.getJavaImports()));
-        return result;
-    }
-
-    @JsonIgnore
-    public List<String> getImports(final EntitySpec entitySpec) {
-        return entitySpec.getImports(this);
-    }
-
-    @JsonIgnore
-    public String getFullyQualifiedName(final String entitySpecId) {
-        return EntitySpec.fromId(entitySpecId).getFullyQualifiedName(getNamespace(), getName());
-    }
-
-    @JsonIgnore
-    public String getFullyQualifiedName(final EntitySpec entitySpec) {
-        return entitySpec.getFullyQualifiedName(getNamespace(), getName());
-    }
-
     @Override
     public String toString() {
-        return m_name + ":\n  " +
+        return getName() + ":\n  " +
                 m_fields.stream().map(e -> e.getTypeAsString() + " " + e.getName()).collect(Collectors.joining("\n  "));
     }
-
 }

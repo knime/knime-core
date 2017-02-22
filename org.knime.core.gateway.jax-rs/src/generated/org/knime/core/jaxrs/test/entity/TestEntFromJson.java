@@ -43,22 +43,87 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.test.entity;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import java.util.List;
+import java.util.Map;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.jaxrs.workflow.entity.XYEntFromJson;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
+ * Implementation of the {@link TestEnt} interface that can be deserialized from a json object (json-annotated constructor).
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public class TestEntFromJson implements TestEnt{
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+	private XYEntFromJson m_XY;
+	private List<XYEntFromJson> m_XYList;
+	private String m_Other;
+	private List<String> m_PrimitiveList;
+	private Map<String, XYEntFromJson> m_XYMap;
+	private Map<Integer, String> m_PrimitiveMap;
+
+	@JsonCreator
+	private TestEntFromJson(
+	@JsonProperty("XY") XYEntFromJson XY,	@JsonProperty("XYList") List<XYEntFromJson> XYList,	@JsonProperty("Other") String Other,	@JsonProperty("PrimitiveList") List<String> PrimitiveList,	@JsonProperty("XYMap") Map<String, XYEntFromJson> XYMap,	@JsonProperty("PrimitiveMap") Map<Integer, String> PrimitiveMap	) {
+		m_XY = XY;
+		m_XYList = XYList;
+		m_Other = Other;
+		m_PrimitiveList = PrimitiveList;
+		m_XYMap = XYMap;
+		m_PrimitiveMap = PrimitiveMap;
+	}
+
+
+	@Override
+    public XYEnt getXY() {
+            return (XYEnt) m_XY;
+            
     }
+    
+	@Override
+    public List<XYEnt> getXYList() {
+        	return m_XYList.stream().map(l -> (XYEnt) l ).collect(Collectors.toList());
+            
+    }
+    
+	@Override
+    public String getOther() {
+        	return m_Other;
+            
+    }
+    
+	@Override
+    public List<String> getPrimitiveList() {
+        	return m_PrimitiveList;
+            
+    }
+    
+	@Override
+    public Map<String, XYEnt> getXYMap() {
+        	//TODO support non-primitive keys
+    	Map<String, XYEnt> res = new HashMap<>();
+        m_XYMap.entrySet().stream().forEach(e -> res.put(e.getKey(), (XYEnt) e.getValue()));
+        return res;
+            
+    }
+    
+	@Override
+    public Map<Integer, String> getPrimitiveMap() {
+        	return m_PrimitiveMap;
+            
+    }
+    
 
 }

@@ -50,7 +50,6 @@ package org.knime.core.gateway.codegen.types;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.util.CheckUtils;
@@ -164,11 +163,4 @@ public class ServiceMethod {
     public List<MethodParam> getParameters() {
         return m_parameters;
     }
-
-    @JsonIgnore
-    public Stream<String> getImports(final EntitySpec entitySpec) {
-        return Stream.concat(getResult().getType().getAllImports(entitySpec).stream(),
-            m_parameters.stream().map(MethodParam::getType).flatMap(t -> t.getAllImports(entitySpec).stream()));
-    }
-
 }

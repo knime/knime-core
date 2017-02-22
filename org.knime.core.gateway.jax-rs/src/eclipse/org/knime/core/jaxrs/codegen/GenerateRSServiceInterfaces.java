@@ -49,9 +49,8 @@
 package org.knime.core.jaxrs.codegen;
 
 import org.knime.core.gateway.codegen.ServiceGenerator;
-import org.knime.core.gateway.codegen.types.EntitySpec;
-import org.knime.core.gateway.codegen.types.ServiceSpec;
-import org.knime.core.jaxrs.RSServiceMap;
+import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ServiceSpecs;
 
 /**
  *
@@ -65,8 +64,11 @@ public class GenerateRSServiceInterfaces {
 
     static void generate() {
         new ServiceGenerator("src/generated", "src/eclipse/org/knime/core/jaxrs/codegen/RSServiceInterface.vm",
-            RSServiceMap.RestServiceSpec, new ServiceSpec[]{ServiceSpec.Api}, new EntitySpec[]{EntitySpec.Api,
-                GenerateEntityFromJsonClasses.FromJson, GenerateEntityToJsonClasses.ToJson}).generate();
+            org.knime.core.jaxrs.codegen.spec.ServiceSpecs.RestServiceSpec)
+        .setServiceImport(ServiceSpecs.Api)
+        .setEntityFieldsImports(EntitySpecs.Api, org.knime.core.jaxrs.codegen.spec.EntitySpecs.FromJson,
+                org.knime.core.jaxrs.codegen.spec.EntitySpecs.ToJson)
+        .generate();
     }
 
 }

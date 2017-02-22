@@ -48,7 +48,7 @@
  */
 package org.knime.core.gateway.codegen;
 
-import org.knime.core.gateway.codegen.types.EntitySpec;
+import org.knime.core.gateway.codegen.spec.EntitySpecs;
 
 /**
  *
@@ -58,7 +58,9 @@ public class GenerateEntityBuilderInterfaces {
 
     public static void main(final String[] args) {
         new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityBuilderInterface.vm",
-            EntitySpec.Builder, EntitySpec.Api).generate();
+            EntitySpecs.Builder)
+        .setEntityFieldsImports(EntitySpecs.Api)
+        .generate();
     }
 
 }

@@ -43,22 +43,50 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.test.service;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import java.util.List;
+import org.knime.core.jaxrs.test.service.RSWrapperTestService;
+import org.knime.core.gateway.v0.test.service.TestService;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 /**
+ * RESTful service implementation of the {@link RSTestService}-rest calls (i.e. rest resources) that delegates the calls
+ * to the wrapped service.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public class RSWrapperTestService implements RSTestService {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+    private TestService m_service;
+    
+    public RSWrapperTestService(TestService service) {
+    	m_service = service;
+    }
+
+				
+	@Override
+ 	public TestEnt getTest(
+		final TestEnt id)   {
+		return m_service.getTest(id);
+    }
+				
+	@Override
+ 	public List<TestEnt> getTestList(
+		final List<TestEnt> list)   {
+		return m_service.getTestList(list);
+    }
+				
+	@Override
+ 	public double getPrimitives(
+		final String s,
+		final List<String> stringlist)   {
+		return m_service.getPrimitives(s, stringlist);
     }
 
 }

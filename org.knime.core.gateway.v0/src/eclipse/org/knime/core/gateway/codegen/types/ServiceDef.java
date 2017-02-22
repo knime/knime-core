@@ -50,11 +50,9 @@ package org.knime.core.gateway.codegen.types;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.knime.core.node.util.CheckUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -63,13 +61,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * @author Martin Horn, University of Konstanz
  */
 @JsonPropertyOrder({"name", "description", "namespace", "methods"})
-public class ServiceDef extends AbstractDef {
-
-    private final String m_description;
-
-    private String m_namespace;
-
-    private String m_name;
+public class ServiceDef extends ObjectDef {
 
     private List<ServiceMethod> m_methods;
 
@@ -81,49 +73,12 @@ public class ServiceDef extends AbstractDef {
         @JsonProperty("namespace") final String namespace,
         @JsonProperty("name") final String name,
         @JsonProperty("methods") final ServiceMethod... methods) {
-        m_namespace = checkNamespace(namespace);
-        m_name = CheckUtils.checkArgumentNotNull(name);
-        m_description = description;
+        super(namespace, name, description);
         m_methods = Arrays.asList(CheckUtils.checkArgumentNotNull(methods));
-    }
-
-    static String checkNamespace(final String namespace) {
-        CheckUtils.checkArgumentNotNull(namespace);
-        CheckUtils.checkArgument(namespace.matches("[a-z0-9]+(?:\\.[a-z0-9]+)*"),
-            "Package '%s' invalid: must be like 'abc.def.geh'", namespace);
-        return namespace;
-    }
-
-    /**
-     * @return the pkg
-     */
-    @JsonProperty("namespace")
-    public String getNamespace() {
-        return m_namespace;
-    }
-
-    @JsonProperty("name")
-    public String getName() {
-        return m_name;
-    }
-
-    /**
-     * @return the description
-     */
-    @JsonProperty("description")
-    public String getDescription() {
-        return m_description;
     }
 
     @JsonProperty("methods")
     public List<ServiceMethod> getMethods() {
         return m_methods;
     }
-
-    @JsonIgnore
-    public List<String> getImports(final EntitySpec entitySpec) {
-        return m_methods.stream().flatMap(
-            m -> m.getImports(entitySpec)).sorted().distinct().collect(Collectors.toList());
-    }
-
 }

@@ -48,8 +48,8 @@
  */
 package org.knime.core.gateway.codegen;
 
-import org.knime.core.gateway.codegen.types.EntitySpec;
-import org.knime.core.gateway.codegen.types.ServiceSpec;
+import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ServiceSpecs;
 
 /**
  *
@@ -59,7 +59,9 @@ public class GenerateServiceInterfaces {
 
     public static void main(final String[] args) {
         new ServiceGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/ServiceInterface.vm",
-            ServiceSpec.Api, new ServiceSpec[0], new EntitySpec[]{EntitySpec.Api}).generate();
+            ServiceSpecs.Api)
+        .setEntityFieldsImports(EntitySpecs.Api)
+        .generate();
     }
 
 }

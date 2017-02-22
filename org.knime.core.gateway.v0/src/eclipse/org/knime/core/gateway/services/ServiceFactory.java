@@ -83,7 +83,7 @@ public interface ServiceFactory {
      * TODO: possibly more parameters are required in order to instantiate a new service (e.g. port number)
      *
      * @param serviceInterface
-     * @return
+     * @return a new instance of the service interface
      */
     <S extends GatewayService> S createService(Class<S> serviceInterface);
 

@@ -44,21 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Feb 21, 2017 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.codegen.spec;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ObjectSpec;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public class ServiceSpecs {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+    private ServiceSpecs() {
+        //utility class
     }
+
+    public static final ObjectSpec RestServiceSpec = new ObjectSpec("rest", "RS##name##", "org.knime.core.jaxrs", "");
 
 }

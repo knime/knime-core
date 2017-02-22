@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,9 +69,11 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.knime.core.gateway.codegen.spec.ObjectSpec;
 import org.knime.core.gateway.codegen.types.EntityDef;
 import org.knime.core.gateway.codegen.types.EntityField;
-import org.knime.core.gateway.codegen.types.EntitySpec;
+import org.knime.core.gateway.codegen.types.ObjectDef;
+import org.knime.core.gateway.codegen.types.Type;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -83,23 +86,45 @@ public final class EntityGenerator extends SourceFileGenerator {
 
     private final String m_templateFile;
 
-    private EntitySpec m_entitySpec;
+    private ObjectSpec m_entitySpec;
 
-    private EntitySpec[] m_dependendEntitySpecs;
+    private ObjectSpec[] m_importSpecs = new ObjectSpec[0];
+
+    private ObjectSpec[] m_importsSpecs = new ObjectSpec[0];
+
 
     /**
      * @param outputFolder TODO
      * @param templateFile the template file
      * @param entitySpec TODO
-     * @param dependendEntitySpecs TODO
      *
      */
-    public EntityGenerator(final String outputFolder, final String templateFile, final EntitySpec entitySpec,
-        final EntitySpec... dependendEntitySpecs) {
+    public EntityGenerator(final String outputFolder, final String templateFile, final ObjectSpec entitySpec) {
         m_outputFolder = outputFolder;
         m_templateFile = templateFile;
         m_entitySpec = entitySpec;
-        m_dependendEntitySpecs = dependendEntitySpecs;
+    }
+
+    /**
+     * Sets the single imports for each given entity spec for 'this' entity definition.
+     *
+     * @param entitySpecs
+     * @return this
+     */
+    public EntityGenerator setEntityImport(final ObjectSpec... entitySpecs) {
+        m_importSpecs = entitySpecs;
+        return this;
+    }
+
+    /**
+     * Sets the imports specification to be generated for all entity fields.
+     *
+     * @param entitySpecs
+     * @return this
+     */
+    public EntityGenerator setEntityFieldsImports(final ObjectSpec... entitySpecs) {
+        m_importsSpecs = entitySpecs;
+        return this;
     }
 
     @Override
@@ -108,7 +133,7 @@ public final class EntityGenerator extends SourceFileGenerator {
             Velocity.init();
             VelocityContext context = new VelocityContext();
 
-            List<EntityDef> entityDefs = SourceFileGenerator.readAll(EntityDef.class);
+            List<EntityDef> entityDefs = ObjectDef.readAll(EntityDef.class);
             Map<String, EntityDef> entityDefMap = new HashMap<>();
             for (EntityDef d : entityDefs) {
                 entityDefMap.put(d.getNameWithNamespace(), d);
@@ -133,7 +158,7 @@ public final class EntityGenerator extends SourceFileGenerator {
 
                 List<EntityField> fields = new ArrayList<>(entityDef.getFields());
                 Set<String> imports = new HashSet<>();
-                imports.addAll(entityDef.getJavaImports());
+                imports.addAll(getJavaImports(entityDef));
                 List<String> superClasses = new ArrayList<String>();
                 entityDef.resolveParent(entityDefMap);
 
@@ -143,11 +168,11 @@ public final class EntityGenerator extends SourceFileGenerator {
                     CheckUtils.checkArgumentNotNull(superEntity, "No parent \"%s\" for child entity \"%s\"", parent,
                         entityDef.getName());
                     fields.addAll(superEntity.getFields());
-                    addImports(imports, superEntity);
+                    addImports(imports, superEntity, false);
                     superClasses.add(superEntity.getName());
                 });
 
-                addImports(imports, entityDef);
+                addImports(imports, entityDef, true);
 
                 imports.removeIf(s -> s.matches(Pattern.quote(fullPackageString) + "\\.[^\\.]+"));
 
@@ -189,19 +214,36 @@ public final class EntityGenerator extends SourceFileGenerator {
     }
 
     /**
-     * Helper that adds all entity imports (according to the given entity specs and dependend entity specs).
+     * Helper that adds all entity imports (according to the given entity specs and dependent entity specs).
      *
      * @param imports
      * @param entityDef
      */
-    private void addImports(final Collection<String> imports, final EntityDef entityDef) {
-        imports.addAll(entityDef.getJavaImports());
-        imports.addAll(m_entitySpec.getImports(entityDef));
+    private void addImports(final Collection<String> imports, final EntityDef entityDef, final boolean includeImportSpecs) {
+        imports.addAll(getJavaImports(entityDef));
+        imports.addAll(getImportsForFields(entityDef, m_entitySpec));
         imports.add(m_entitySpec.getFullyQualifiedName(entityDef.getNamespace(), entityDef.getName()));
-        for (EntitySpec t : m_dependendEntitySpecs) {
-            imports.addAll(t.getImports(entityDef));
+        for (ObjectSpec t : m_importsSpecs) {
+            imports.addAll(getImportsForFields(entityDef, t));
             imports.add(t.getFullyQualifiedName(entityDef.getNamespace(), entityDef.getName()));
         }
+        if (includeImportSpecs) {
+            for (ObjectSpec t : m_importSpecs) {
+                imports.add(t.getFullyQualifiedName(entityDef.getNamespace(), entityDef.getName()));
+            }
+        }
+    }
+
+    private List<String> getImportsForFields(final EntityDef entityDef, final ObjectSpec entitySpec) {
+        return entityDef.getFields().stream().map(EntityField::getType).flatMap(Type::getRequiredTypes)
+            .filter(Type::isEntity).map(t -> entitySpec.getFullyQualifiedName(t.getNamespace(), t.getSimpleName()))
+            .distinct().sorted().collect(Collectors.toList());
+    }
+
+    private Collection<String> getJavaImports(final EntityDef entityDef) {
+        LinkedHashSet<String> result = new LinkedHashSet<>();
+        entityDef.getFields().stream().map(EntityField::getType).forEach(t -> result.addAll(t.getJavaImports()));
+        return result;
     }
 
     //    public static List<EntityDef> getEntityDefs() {

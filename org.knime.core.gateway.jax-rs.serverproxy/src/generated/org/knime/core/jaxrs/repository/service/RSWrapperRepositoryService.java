@@ -48,7 +48,7 @@ package org.knime.core.jaxrs.repository.service;
 
 import java.util.List;
 import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
-import org.knime.core.jaxrs.repository.service.RSRepositoryService;
+import org.knime.core.jaxrs.repository.service.RSWrapperRepositoryService;
 import org.knime.core.gateway.v0.repository.service.RepositoryService;
 
 import java.util.List;

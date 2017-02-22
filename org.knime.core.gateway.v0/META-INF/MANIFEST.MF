@@ -22,6 +22,7 @@ Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.knime.core.gateway.codegen,
+ org.knime.core.gateway.codegen.spec,
  org.knime.core.gateway.codegen.types,
  org.knime.core.gateway.entities,
  org.knime.core.gateway.server,
@@ -29,6 +30,8 @@ Export-Package: org.knime.core.gateway.codegen,
  org.knime.core.gateway.v0.repository.entity,
  org.knime.core.gateway.v0.repository.entity.builder,
  org.knime.core.gateway.v0.repository.service,
+ org.knime.core.gateway.v0.test.entity,
+ org.knime.core.gateway.v0.test.service,
  org.knime.core.gateway.v0.workflow.entity,
  org.knime.core.gateway.v0.workflow.entity.builder,
  org.knime.core.gateway.v0.workflow.entity.impl,

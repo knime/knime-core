@@ -17,4 +17,8 @@ Require-Bundle: org.eclipse.osgi,
  org.junit
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.knime.core.jaxrs,
- org.knime.core.jaxrs.providers.json
+ org.knime.core.jaxrs.codegen,
+ org.knime.core.jaxrs.providers.json,
+ org.knime.core.jaxrs.repository.service,
+ org.knime.core.jaxrs.test.service,
+ org.knime.core.jaxrs.workflow.service

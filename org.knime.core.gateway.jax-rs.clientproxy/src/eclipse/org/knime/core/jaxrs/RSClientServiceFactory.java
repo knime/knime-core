@@ -52,8 +52,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
+import org.knime.core.gateway.codegen.spec.ServiceSpecs;
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
+import org.knime.core.jaxrs.providers.json.EntityCollectionJSONSerializer;
+import org.knime.core.jaxrs.providers.json.EntityJSONDeserializer;
+import org.knime.core.jaxrs.providers.json.EntityJSONSerializer;
+import org.knime.core.jaxrs.providers.json.MapJSONDeserializer;
 
 /**
  * Provides service implementations that communicate with the respective RESTful service interface (see also the
@@ -70,9 +76,19 @@ public class RSClientServiceFactory implements ServiceFactory {
      */
     @Override
     public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
-        Class<?> rsServiceInterface = RSServiceMap.getInstance().get(serviceInterface);
-        List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),
-            new EntityCollectionJSONSerializer(), new EntityCollectionJSONDeserializer(), new MapJSONDeserializer());
-        return (S)JAXRSClientFactory.create("http://localhost:3000/", rsServiceInterface, providers);
+        try {
+            String name = ServiceSpecs.Api.extractNameFromClass(serviceInterface);
+            String namespace = ServiceSpecs.Api.extractNamespaceFromClass(serviceInterface);
+            String fullyQualitifiedName =
+                org.knime.core.jaxrs.codegen.spec.ServiceSpecs.RestServiceSpec.getFullyQualifiedName(namespace, name);
+
+            Class<?> rsServiceInterface = Class.forName(fullyQualitifiedName);
+            List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),
+                new EntityCollectionJSONSerializer(), new EntityCollectionJSONDeserializer(),
+                new MapJSONDeserializer());
+            return (S)JAXRSClientFactory.create("http://localhost:3000/", rsServiceInterface, providers);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

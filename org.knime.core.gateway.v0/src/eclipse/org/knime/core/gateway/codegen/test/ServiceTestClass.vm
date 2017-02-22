@@ -88,14 +88,22 @@ public class ${name}Test {
     @Test
     public void test_$method.getName()() {
     
-    	//create parameter values (if there are any)
 #foreach($param in $method.getParameters())
-#if(!${param.getType().isPrimitive()})
-		//TODO for lists?
-		$param.getType().toString() $param.getName() = ${param.getType().toString()}Test.createEnt(${param.getType().toString()}Test.createValueList());
-#else
-		//TODO random generate values for primitive parameters
-		$param.getType().toString() $param.getName();
+#if($foreach.count == 1)
+		//create parameter values
+#end
+#set($type = $param.getType())
+#if(${type.isEntity()})
+		$type.toString() $param.getName() = ${param.getType().toString()}Test.createEnt(${param.getType().toString()}Test.createValueList());
+#elseif($type.isEntityList())
+		${type.toString()} $param.getName() = new ArrayList<>();
+#foreach($i in [1..5])
+		${param.getName()}.add(${param.getType().toString()}Test.createEnt(${param.getType().toString()}Test.createValueList()));
+#end
+#elseif($type.isPrimitiveList())
+		//primitive list - TODO
+#elseif($type.isPrimitive())
+		$type.toString() $param.getName() = $type.createRandomPrimitive();
 #end
 #end ##param-loop
     
@@ -118,7 +126,7 @@ public class ${name}Test {
         Mockito.when(m_serviceMock.$method.getName()(#foreach($param in $method.getParameters())Matchers.anyVararg()#if($foreach.hasNext), #end#end)).thenReturn(list);
 
 		//compare results
-        $rettype.toString() methodRes = service(${name}.class).${method.getName()}();
+        $rettype.toString() methodRes = service(${name}.class).${method.getName()}(#foreach($param in $method.getParameters())#if($foreach.hasNext), #end#end);
         for (int i = 0; i < methodRes.size(); i++) {
             ${rettype.getTypeParameter(0).toString()}Test.testEnt(methodRes.get(i), valueLists.get(i));
         }

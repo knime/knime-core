@@ -49,10 +49,9 @@
 package org.knime.core.jaxrs.codegen;
 
 import org.knime.core.gateway.codegen.ServiceGenerator;
-import org.knime.core.gateway.codegen.types.EntitySpec;
-import org.knime.core.gateway.codegen.types.ServiceSpec;
-import org.knime.core.jaxrs.RSServiceMap;
-import org.knime.core.jaxrs.RSWrapperServiceMap;
+import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ServiceSpecs;
+import org.knime.core.jaxrs.JettyRestServer;
 
 /**
  *
@@ -66,7 +65,9 @@ public class GenerateRSWrapperServiceClasses {
 
     static void generate() {
         new ServiceGenerator("src/generated", "src/eclipse/org/knime/core/jaxrs/codegen/RSWrapperServiceClass.vm",
-            RSWrapperServiceMap.RestWrapperServiceSpec, new ServiceSpec[]{ServiceSpec.Api, RSServiceMap.RestServiceSpec}, new EntitySpec[]{EntitySpec.Api}).generate();
+            JettyRestServer.RestWrapperServiceSpec)
+        .setServiceImport(ServiceSpecs.Api, JettyRestServer.RestWrapperServiceSpec)
+        .setEntityFieldsImports(EntitySpecs.Api).generate();
     }
 
 }

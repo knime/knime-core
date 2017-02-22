@@ -61,6 +61,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.gateway.codegen.spec.ObjectSpec;
 
 /**
  *
@@ -178,7 +179,7 @@ public class Type {
         if(m_typeParameters.size() == 0) {
             return isNamePrimitive();
         } else {
-            return m_typeParameters.stream().allMatch(t -> t.isPrimitive());
+            return false;
         }
     }
 
@@ -187,19 +188,20 @@ public class Type {
     }
 
     public boolean isPrimitiveList() {
-        return m_genericType == GenericType.LIST && isPrimitive();
+        return m_genericType == GenericType.LIST && getTypeParameter(0).isPrimitive();
     }
 
     public boolean isPrimitiveMap() {
-        return m_genericType == GenericType.MAP && isPrimitive();
+        return m_genericType == GenericType.MAP && getTypeParameter(1).isPrimitive();
     }
 
     public boolean isEntityList() {
-        return  isList() && isEntity();
+        return  isList() && getTypeParameter(0).isEntity();
     }
 
     public boolean isEntityMap() {
-        return isMap() && isEntity();
+        //TODO what if the key is an entity?
+        return isMap() && getTypeParameter(1).isEntity();
     }
 
     public boolean isList() {
@@ -243,7 +245,7 @@ public class Type {
      * @param entitySpec the entity specification
      * @return imports needed for that type (including the java types, e.g. List or Map, and it's generic parameters)
      */
-    public Collection<String> getAllImports(final EntitySpec entitySpec) {
+    public Collection<String> getAllImports(final ObjectSpec entitySpec) {
         Collection<String> result = new LinkedHashSet<String>();
         if(isEntity()) {
             result.add(entitySpec.getFullyQualifiedName(m_namespace, m_simpleName));
@@ -259,28 +261,26 @@ public class Type {
         return Stream.concat(Stream.of(this), m_typeParameters.stream());
     }
 
-    public Object createRandomPrimitive() {
-        if(isPrimitive()) {
-            if(isList()) {
-                //TODO
-                return null;
-            } else if( isMap()) {
-                //TODO
-                return null;
-            } else {
-                if(m_simpleName.equals("boolean")) {
-                    return m_rand.nextBoolean();
-                } else if(m_simpleName.equals("int")) {
-                    return m_rand.nextInt();
-                } else if(m_simpleName.equals("float")) {
-                    return m_rand.nextFloat();
-                } else if(m_simpleName.equals("double")) {
-                    return m_rand.nextDouble();
-                } else if(m_simpleName.equals("String")) {
-                    return "\"" + RandomStringUtils.randomAlphanumeric(5) + "\"";
-                }
-                return null;
+    /**
+     * Creates random values in case of primitive types.
+     * Otherwise <code>null</code> is returned
+     *
+     * @return primitive type values or null if type is an entity
+     */
+    public String createRandomPrimitive() {
+        if (isPrimitive()) {
+            if (m_simpleName.toLowerCase().equals("boolean")) {
+                return String.valueOf(m_rand.nextBoolean());
+            } else if (m_simpleName.equals("int") || m_simpleName.equals("Integer")) {
+                return String.valueOf(m_rand.nextInt());
+            } else if (m_simpleName.toLowerCase().equals("float")) {
+                return String.valueOf(m_rand.nextFloat());
+            } else if (m_simpleName.toLowerCase().equals("double")) {
+                return String.valueOf(m_rand.nextDouble());
+            } else if (m_simpleName.equals("String")) {
+                return "\"" + RandomStringUtils.randomAlphanumeric(5) + "\"";
             }
+            return null;
         } else {
             return null;
         }

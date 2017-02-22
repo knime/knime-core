@@ -43,22 +43,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Nov 30, 2016 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.test.service;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import java.util.List;
+import org.knime.core.gateway.v0.test.service.TestService;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.jaxrs.test.entity.TestEntToJson;
+import org.knime.core.jaxrs.test.entity.TestEntFromJson;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import org.knime.core.jaxrs.IOClasses;
+
+import java.util.List;
+
 
 /**
+ * JAX-RS annotated interface for {@link TestService}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+@Path("/TestService")
+public interface RSTestService extends TestService {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
-    }
+
+	@Override
+    @POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/getTest")
+    public TestEnt getTest(
+		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final TestEnt id);
+
+	@Override
+    @POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/getTestList")
+    public List<TestEnt> getTestList(
+		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final List<TestEnt> list);
+
+	@Override
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/getPrimitives")
+    public double getPrimitives(
+		@QueryParam("s") final String s,		@QueryParam("stringlist") final List<String> stringlist);
 
 }

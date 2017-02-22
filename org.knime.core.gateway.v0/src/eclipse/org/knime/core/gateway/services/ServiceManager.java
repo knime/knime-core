@@ -52,7 +52,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.knime.core.gateway.entities.EntityBuilderManager;
@@ -82,8 +81,10 @@ public class ServiceManager {
      * Delivers implementations for service interfaces (see {@link GatewayService}. Implementations are injected via
      * {@link ServiceFactory} extension point.
      *
+     * TODO add shortcuts for services (e.g. ServiceManager.workflowService())
+     *
      * @param serviceInterface the service interface the implementation is requested for
-     * @return an implementation of the requested service interface
+     * @return an implementation of the requested service interface (it returns the same instance with every method call)
      */
     public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
         S service = (S)SERVICES.get(serviceInterface);
@@ -97,14 +98,14 @@ public class ServiceManager {
         return service;
     }
 
-    /**
-     * @return a list of all available gateway services (as determined by the api definition files) - see also
-     *         {@link ServiceMap}
-     */
-    public static List<Class<? extends GatewayService>> getAllServices() {
-        return ServiceMap.getAllServices().stream().map(s -> ServiceMap.getServiceInterface(s))
-            .collect(Collectors.toList());
-    }
+//    /**
+//     * @return a list of all available gateway services (as determined by the api definition files) - see also
+//     *         {@link ServiceMap}
+//     */
+//    public static List<Class<? extends GatewayService>> getAllServices() {
+//        return ObjectDefMap.getAllServices().stream().map(s -> ObjectDefMap.getServiceInterface(s))
+//            .collect(Collectors.toList());
+//    }
 
     private static ServiceFactory createServiceFactory() {
         List<ServiceFactory> instances =
@@ -113,7 +114,7 @@ public class ServiceManager {
         if(instances.size() == 0) {
             throw new IllegalStateException("No service factory registered!");
         } else if(instances.size() > 1) {
-            LOGGER.warn("Multiply service factories registered! The one with the highest priority is used.");
+            LOGGER.warn("Multiple service factories registered! The one with the highest priority is used.");
             Collections.sort(instances, (o1,o2) -> Integer.compare(o2.getPriority(), o1.getPriority()));
         }
         return instances.get(0);

@@ -48,67 +48,11 @@
  */
 package org.knime.core.gateway.codegen;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Stream;
-
-import org.knime.core.gateway.codegen.types.AbstractDef;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
 public abstract class SourceFileGenerator {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .setSerializationInclusion(Include.NON_NULL).registerModule(new Jdk8Module());
-
     public abstract void generate();
-
-    /**
-     * TODO
-     *
-     */
-    public static <T extends AbstractDef> List<T> readAll(final Class<T> cl) throws IOException {
-        Path apiPath = Paths.get("../org.knime.core.gateway.v0/api");
-        PathMatcher jsonMatcher = FileSystems.getDefault().getPathMatcher("glob:**/*.json");
-        ArrayList<T> result = new ArrayList<>();
-        try (Stream<Path> allFilesStream = Files.walk(apiPath)) {
-            Iterator<Path> pathIterator = allFilesStream.filter(jsonMatcher::matches).iterator();
-            while (pathIterator.hasNext()) {
-                Path jsonFileFPath = pathIterator.next();
-                AbstractDef struct;
-                try {
-                    struct = readFromJSON(jsonFileFPath);
-                } catch (JsonProcessingException e) {
-                    System.err.println("Error in " + jsonFileFPath);
-                    throw e;
-                }
-                if (cl.isInstance(struct)) {
-                    result.add(cl.cast(struct));
-                }
-            }
-        }
-        return result;
-    }
-
-    private static AbstractDef readFromJSON(final Path jsonFilePath) throws IOException {
-        try (BufferedReader reader = Files.newBufferedReader(jsonFilePath)) {
-            return OBJECT_MAPPER.readValue(reader, AbstractDef.class);
-        }
-    }
-
 }

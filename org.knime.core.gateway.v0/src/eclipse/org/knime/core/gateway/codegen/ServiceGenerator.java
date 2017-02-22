@@ -55,6 +55,8 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
@@ -62,9 +64,11 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.knime.core.gateway.codegen.types.EntitySpec;
+import org.knime.core.gateway.codegen.spec.ObjectSpec;
+import org.knime.core.gateway.codegen.types.MethodParam;
+import org.knime.core.gateway.codegen.types.ObjectDef;
 import org.knime.core.gateway.codegen.types.ServiceDef;
-import org.knime.core.gateway.codegen.types.ServiceSpec;
+import org.knime.core.gateway.codegen.types.ServiceMethod;
 
 /**
  *
@@ -76,11 +80,11 @@ public class ServiceGenerator extends SourceFileGenerator {
 
     private final String m_templateFile;
 
-    private ServiceSpec m_serviceSpec;
+    private ObjectSpec m_serviceSpec;
 
-    private EntitySpec[] m_dependendEntitySpecs;
+    private ObjectSpec[] m_dependentEntitySpecs = new ObjectSpec[0];
 
-    private ServiceSpec[] m_dependendServiceSpecs;
+    private ObjectSpec[] m_dependentServiceSpecs = new ObjectSpec[0];
 
     /**
      * @param outputFolder
@@ -89,13 +93,34 @@ public class ServiceGenerator extends SourceFileGenerator {
      * @param depeServiceSpecs
      *
      */
-    public ServiceGenerator(final String outputFolder, final String templateFile, final ServiceSpec serviceSpec,
-        final ServiceSpec[] dependendServiceSpecs, final EntitySpec[] dependendEntitySpecs) {
+    public ServiceGenerator(final String outputFolder, final String templateFile, final ObjectSpec serviceSpec) {
         m_outputFolder = outputFolder;
         m_templateFile = templateFile;
         m_serviceSpec = serviceSpec;
-        m_dependendServiceSpecs = dependendServiceSpecs;
-        m_dependendEntitySpecs = dependendEntitySpecs;
+    }
+
+
+    /**
+     * Additional specs for 'this' service to be imported (each spec is one additional import).
+     *
+     * @param serviceSpecs
+     * @return this
+     */
+    public ServiceGenerator setServiceImport(final ObjectSpec... serviceSpecs) {
+        m_dependentServiceSpecs = serviceSpecs;
+        return this;
+    }
+
+
+    /**
+     * Sets the imports specification to be generated for all entity fields.
+     *
+     * @param entitySpecs
+     * @return this
+     */
+    public ServiceGenerator setEntityFieldsImports(final ObjectSpec... entitySpecs) {
+        m_dependentEntitySpecs = entitySpecs;
+        return this;
     }
 
     @Override
@@ -104,7 +129,7 @@ public class ServiceGenerator extends SourceFileGenerator {
         try {
             Velocity.init();
             VelocityContext context = new VelocityContext();
-            List<ServiceDef> serviceDefs = readAll(ServiceDef.class);
+            List<ServiceDef> serviceDefs = ObjectDef.readAll(ServiceDef.class);
 
             for (ServiceDef serviceDef : serviceDefs) {
                 context.put("classDescription", serviceDef.getDescription());
@@ -112,11 +137,11 @@ public class ServiceGenerator extends SourceFileGenerator {
                 context.put("name", serviceDef.getName());
                 context.put("methods", serviceDef.getMethods());
                 Set<String> imports = new HashSet<String>();
-                for(ServiceSpec s : m_dependendServiceSpecs) {
+                for(ObjectSpec s : m_dependentServiceSpecs) {
                     imports.add(s.getFullyQualifiedName(serviceDef.getNamespace(), serviceDef.getName()));
                 }
-                for (EntitySpec t : m_dependendEntitySpecs) {
-                    imports.addAll(serviceDef.getImports(t));
+                for (ObjectSpec t : m_dependentEntitySpecs) {
+                    imports.addAll(getImports(serviceDef, t));
                 }
                 context.put("imports", imports);
 
@@ -161,6 +186,17 @@ public class ServiceGenerator extends SourceFileGenerator {
             e.printStackTrace();
         }
 
+    }
+
+    private List<String> getImports(final ServiceDef serviceDef, final ObjectSpec entitySpec) {
+        List<ServiceMethod> methods = serviceDef.getMethods();
+        return methods.stream().flatMap(m -> getImports(m, entitySpec)).sorted().distinct()
+            .collect(Collectors.toList());
+    }
+
+    private Stream<String> getImports(final ServiceMethod serviceMethod, final ObjectSpec entitySpec) {
+        return Stream.concat(serviceMethod.getResult().getType().getAllImports(entitySpec).stream(), serviceMethod
+            .getParameters().stream().map(MethodParam::getType).flatMap(t -> t.getAllImports(entitySpec).stream()));
     }
 
     //    public static List<ServiceDef> getServiceDefs() {

@@ -44,21 +44,25 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 30, 2016 (hornm): created
+ *   Feb 21, 2017 (hornm): created
  */
-package org.knime.core.gateway.codegen;
+package org.knime.core.jaxrs.codegen.spec;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.codegen.spec.ObjectSpec;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class GenerateEntityInterfaces {
+public class EntitySpecs {
 
-    public static void main(final String[] args) {
-        new EntityGenerator("src/generated", "src/eclipse/org/knime/core/gateway/codegen/EntityInterface.vm",
-            EntitySpecs.Api).generate();
+    private EntitySpecs() {
+        //utility class
     }
+
+    public static final ObjectSpec FromJson =
+            new ObjectSpec("fromjson", "##name##FromJson", "org.knime.core.jaxrs", "");
+
+    public static final ObjectSpec ToJson = new ObjectSpec("tojson", "##name##ToJson", "org.knime.core.jaxrs", "");
 
 }
