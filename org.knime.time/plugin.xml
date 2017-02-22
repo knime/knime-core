@@ -43,6 +43,16 @@
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory">
+      </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.stringtodurationperiod.StringToDurationPeriodNodeFactory">
+      </node>
    </extension>
 
    <extension
@@ -105,12 +115,28 @@
                rendererFactoryClass="org.knime.core.data.time.duration.DurationValueRenderer$DefaultRendererFactory"
                suggestAsDefault="true">
          </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.time.duration.DurationLongValueRenderer$DurationLongRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.time.duration.DurationShortValueRenderer$DurationShortRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
       </dataValue>
       <dataValue
             valueClass="org.knime.core.data.time.period.PeriodValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.time.period.PeriodValueRenderer$DefaultRendererFactory"
                suggestAsDefault="true">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.time.period.PeriodShortValueRenderer$PeriodShortRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.time.period.PeriodLongValueRenderer$PeriodLongRendererFactory"
+               suggestAsDefault="false">
          </renderer>
       </dataValue>
    </extension>

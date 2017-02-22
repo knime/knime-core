@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -44,44 +43,57 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2016 (simon): created
+ *   14.09.2009 (Fabian Dill): created
  */
-package org.knime.time.node.convert;
+package org.knime.core.data.time.period;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import java.time.Period;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
+import org.knime.time.util.DurationPeriodFormatUtils;
 
 /**
- * An enumeration that contains all different Date&Time types.
+ * Renders a {@link PeriodValue}.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public enum DateTimeTypes {
-        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
-        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
-        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
+@SuppressWarnings("serial")
+public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
+    private static final PeriodShortValueRenderer INSTANCE = new PeriodShortValueRenderer();
 
-    private final String m_name;
+    private static final String DESCRIPTION_PERIOD = "Short Period";
 
-    private final DataType m_dataType;
-
-    private DateTimeTypes(final String name, final DataType dataType) {
-        m_name = name;
-        m_dataType = dataType;
+    private PeriodShortValueRenderer() {
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String toString() {
-        return m_name;
+    public String getDescription() {
+        return DESCRIPTION_PERIOD;
     }
 
-    public DataType getDataType() {
-        return m_dataType;
+    @Override
+    protected void setValue(final Object value) {
+        if (value instanceof PeriodValue) {
+            Period period = ((PeriodValue)value).getPeriod();
+            super.setValue(DurationPeriodFormatUtils.formatPeriodShort(period));
+        } else {
+            super.setValue(value);
+        }
+    }
+
+    /** Renderer factory registered through extension point. */
+    public static final class PeriodShortRendererFactory extends AbstractDataValueRendererFactory {
+        @Override
+        public String getDescription() {
+            return DESCRIPTION_PERIOD;
+        }
+
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return INSTANCE;
+        }
     }
 }
