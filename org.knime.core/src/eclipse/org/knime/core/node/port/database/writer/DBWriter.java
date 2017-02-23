@@ -74,7 +74,9 @@ public interface DBWriter {
      * @param batchSize number of rows written in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
+     * @deprecated use {@link #writeData(String, RowInput, long, boolean, ExecutionMonitor, Map, CredentialsProvider, int, boolean, boolean)}
      */
+    @Deprecated
     default String writeData(final String schema, final String table, final RowInput data, final long rowCount,
         final ExecutionMonitor exec, final CredentialsProvider cp, final int batchSize) throws Exception {
         final String schemaTable = schema == null ? table : schema + "." + table;
@@ -94,11 +96,35 @@ public interface DBWriter {
      * @param insertNullForMissingCols <code>true</code> if <code>null</code> should be inserted for missing columns
      * @return error string or null, if non
      * @throws Exception if connection could not be established
-     * @deprecated use {@link #writeData(String, String, RowInput, long, ExecutionMonitor, CredentialsProvider, int)} instead
+     * @deprecated use {@link #writeData(String, RowInput, long, boolean, ExecutionMonitor, Map, CredentialsProvider, int, boolean, boolean)}
      */
     @Deprecated
+    default String writeData(final String table, final RowInput input, final long rowCount, final boolean appendData,
+        final ExecutionMonitor exec, final Map<String, String> sqlTypes, final CredentialsProvider cp,
+        final int batchSize, final boolean insertNullForMissingCols) throws Exception {
+        return writeData(table, input, rowCount, appendData, exec, sqlTypes, cp, batchSize, insertNullForMissingCols,
+            false); //legacy behavior was not failing
+    }
+
+    /** Create connection to write into database.
+     * @param schema table schema name. Could be <code>null</code>.
+     * @param table name of table to write
+     * @param input the data table as as row input
+     * @param rowCount number of row of the table to write, -1 if unknown
+     * @param appendData if checked the data is appended to an existing table
+     * @param exec Used the cancel writing.
+     * @param sqlTypes A mapping from column name to SQL-type.
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @param batchSize number of rows written in one batch
+     * @param insertNullForMissingCols <code>true</code> if <code>null</code> should be inserted for missing columns
+     * @param failOnError <code>true</code> if the node should fail with invalid input data otherwise it will
+     * return a warning if an error occurs
+     * @return error string or null, if non
+     * @throws Exception if connection could not be established
+     */
     String writeData(String table, RowInput input, final long rowCount, boolean appendData, ExecutionMonitor exec,
-        Map<String, String> sqlTypes, CredentialsProvider cp, int batchSize, boolean insertNullForMissingCols) throws Exception;
+        Map<String, String> sqlTypes, CredentialsProvider cp, int batchSize, boolean insertNullForMissingCols,
+        boolean failOnError) throws Exception;
 
     /** Update rows in the given database table.
      * @param schema optional db schema

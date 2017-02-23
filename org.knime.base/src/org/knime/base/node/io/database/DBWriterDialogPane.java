@@ -87,6 +87,8 @@ final class DBWriterDialogPane extends NodeDialogPane {
 
     private final JCheckBox m_insertNullForMissing = new JCheckBox("Insert null for missing columns");
 
+    private final JCheckBox m_failOnError = new JCheckBox("Fail if an error occurs");
+
     private final DBSQLTypesPanel m_typePanel;
 
     private final JTextField m_batchSize;
@@ -125,7 +127,14 @@ final class DBWriterDialogPane extends NodeDialogPane {
         });
         m_append.setToolTipText("Data columns from input and database table must match!");
         p.add(m_insertNullForMissing);
+
         p.setBorder(BorderFactory.createTitledBorder(" Append Data "));
+        tableAndConnectionPanel.add(p, c);
+
+        c.gridy++;
+        p = new JPanel(new GridLayout());
+        p.add(m_failOnError);
+        p.setBorder(BorderFactory.createTitledBorder(" Error Handling "));
         tableAndConnectionPanel.add(p, c);
 
         super.addTab("Settings", tableAndConnectionPanel);
@@ -162,6 +171,9 @@ final class DBWriterDialogPane extends NodeDialogPane {
             settings.getBoolean(DBWriterNodeModel.KEY_INSERT_NULL_FOR_MISSING_COLS, false));
         m_insertNullForMissing.setEnabled(m_append.isSelected());
 
+        //introduced in KNIME 3.3.1 default behavior was not failing e.g. false
+        m_failOnError.setSelected(settings.getBoolean(DBWriterNodeModel.KEY_FAIL_ON_ERROR, false));
+
         // load SQL Types for each column
         try {
             NodeSettingsRO typeSett = settings.getNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);
@@ -193,6 +205,8 @@ final class DBWriterDialogPane extends NodeDialogPane {
         settings.addString(DBWriterNodeModel.KEY_TABLE_NAME, m_table.getText().trim());
         settings.addBoolean(DBWriterNodeModel.KEY_APPEND_DATA, m_append.isSelected());
         settings.addBoolean(DBWriterNodeModel.KEY_INSERT_NULL_FOR_MISSING_COLS, m_insertNullForMissing.isSelected());
+        //introduced in KNIME 3.3.1 legacy behavior is not failing e.g. false
+        settings.addBoolean(DBWriterNodeModel.KEY_FAIL_ON_ERROR, m_failOnError.isSelected());
 
         // save SQL Types for each column
         NodeSettingsWO typeSett = settings.addNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);

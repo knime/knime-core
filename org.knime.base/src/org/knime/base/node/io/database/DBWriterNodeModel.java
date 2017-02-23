@@ -107,12 +107,16 @@ final class DBWriterNodeModel extends NodeModel {
     static final String KEY_APPEND_DATA = "append_data";
     private boolean m_append = true;
 
+    //introduced in KNIME 3.3.1 legacy behavior is not failing e.g. false
+    /** Config key to fail if the input data is invalid. */
+    static final String KEY_FAIL_ON_ERROR = "fail_on_error";
+    private boolean m_failOnError = true;
+
     /** Config key for the insert null for missing columns. */
     static final String KEY_INSERT_NULL_FOR_MISSING_COLS = "insert_null_for_missing_cols";
     private boolean m_insertNullForMissingCols = false;
 
-    private final Map<String, String> m_types =
-        new LinkedHashMap<String, String>();
+    private final Map<String, String> m_types = new LinkedHashMap<>();
 
     /** Default SQL-type for Strings. */
     static final String SQL_TYPE_STRING = "varchar(255)";
@@ -154,6 +158,7 @@ final class DBWriterNodeModel extends NodeModel {
         settings.addString(KEY_TABLE_NAME, m_tableName);
         settings.addBoolean(KEY_APPEND_DATA, m_append);
         settings.addBoolean(KEY_INSERT_NULL_FOR_MISSING_COLS, m_insertNullForMissingCols);
+        settings.addBoolean(KEY_FAIL_ON_ERROR, m_failOnError);
         // save SQL Types mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
         for (Map.Entry<String, String> e : m_types.entrySet()) {
@@ -217,6 +222,9 @@ final class DBWriterNodeModel extends NodeModel {
         }
         //introduced in KNIME 2.11 default behavior before was inserting null
         m_insertNullForMissingCols = settings.getBoolean(KEY_INSERT_NULL_FOR_MISSING_COLS, true);
+
+        //introduced in KNIME 3.3.1 legacy behavior is not failing e.g. false
+        m_failOnError = settings.getBoolean(KEY_FAIL_ON_ERROR, false);
     }
 
     /**
@@ -240,7 +248,7 @@ final class DBWriterNodeModel extends NodeModel {
         DataTableRowInput rowInput = new DataTableRowInput(inputTable);
         // write entire data
         final String error = writer.writeData(m_tableName, rowInput, inputTable.size(),
-            m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols);
+            m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols, m_failOnError);
         // set error message generated during writing rows
         if (error != null) {
             super.setWarningMessage(error);
@@ -383,7 +391,7 @@ final class DBWriterNodeModel extends NodeModel {
 
 
         // copy map to ensure only columns which are with the data
-        Map<String, String> map = new LinkedHashMap<String, String>();
+        Map<String, String> map = new LinkedHashMap<>();
         // check that each column has a assigned type
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             final String name = tableSpec.getColumnSpec(i).getName();
