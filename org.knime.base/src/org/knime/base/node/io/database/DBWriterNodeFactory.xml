@@ -74,6 +74,11 @@
         Check this option to force KNIME to insert null into all database columns that are not present in the KNIME 
         input table. This option is only available if the append data option is selected.
       </option>
+      <option name="Fail on error">
+        If this option is checked the node will fail with an exception if an error occurs while writing the data e.g. 
+        a unique key constraint violation. If not checked the node displays a warning with information about the failing 
+        rows and will write as many rows as possible. 
+      </option>
     </tab>
     <tab name="SQL Types">
 	  <option name="Types">
