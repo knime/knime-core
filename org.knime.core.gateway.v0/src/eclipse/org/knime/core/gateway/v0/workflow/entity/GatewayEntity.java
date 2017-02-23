@@ -48,8 +48,15 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+import org.knime.core.gateway.v0.workflow.service.GatewayService;
+
 /**
- * TODO
+ * Represents an object (i.e. a message) to be passed between remote endpoints, usually as parameter or return type of
+ * service methods (see {@link GatewayService}).
+ *
+ * Entities therefor need be able to be serialized in a way and are either composed of other entities or primitives.
+ * Entites should be immutable and be created with the respective builder (see {@link GatewayEntityBuilder}).
  *
  * @author Martin Horn, University of Konstanz
  */

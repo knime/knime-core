@@ -68,6 +68,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class TestEntTest {
 
     private static Random RAND = new Random();
@@ -147,30 +148,30 @@ public class TestEntTest {
 		subList2.add(XYEntTest.createValueList());
  		valueList.add(subList2);
 
- 		valueList.add("gtJkR");	
+ 		valueList.add("NSVoe");	
 
  		List<Object> subList4 = new ArrayList<>();
-		subList4.add("XJwSg");
-		subList4.add("E9EpK");
-		subList4.add("LomSd");
-		subList4.add("FJUr2");
-		subList4.add("hvMNZ");
+		subList4.add("B5Sxx");
+		subList4.add("2Sp7j");
+		subList4.add("tHlxB");
+		subList4.add("UrfvD");
+		subList4.add("2SYMV");
  		valueList.add(subList4);
 
  		Map<String, List<Object>> subMap5 = new HashMap<>();
- 		subMap5.put("679vu", XYEntTest.createValueList());
- 		subMap5.put("ia7Je", XYEntTest.createValueList());
- 		subMap5.put("C6zTP", XYEntTest.createValueList());
- 		subMap5.put("Rk3ls", XYEntTest.createValueList());
- 		subMap5.put("MZ4vH", XYEntTest.createValueList());
+ 		subMap5.put("0Azoo", XYEntTest.createValueList());
+ 		subMap5.put("syMOX", XYEntTest.createValueList());
+ 		subMap5.put("zEzoz", XYEntTest.createValueList());
+ 		subMap5.put("r9PxP", XYEntTest.createValueList());
+ 		subMap5.put("fYbfd", XYEntTest.createValueList());
  		valueList.add(subMap5);
 
 		Map<Integer, Object> subMap6 = new HashMap<>();
-		subMap6.put(-2012428734, "BlgtE");
-		subMap6.put(-2008954433, "SrUk1");
-		subMap6.put(-190720476, "Url7Y");
-		subMap6.put(-1119926908, "2CR5k");
-		subMap6.put(-1078136943, "X0BZU");
+		subMap6.put(-1487493007, "3OvJo");
+		subMap6.put(-198818348, "IMbZA");
+		subMap6.put(-447342319, "UFnFa");
+		subMap6.put(728138989, "n1TB4");
+		subMap6.put(439684151, "LL6RV");
  		valueList.add(subMap6);
 
         return valueList;

@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class EntityIDTest {
 
     private static Random RAND = new Random();
@@ -88,9 +89,9 @@ public class EntityIDTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("G4Vap");	
+ 		valueList.add("bkgsH");	
 
- 		valueList.add("qzANm");	
+ 		valueList.add("TteVU");	
 
         return valueList;
     }

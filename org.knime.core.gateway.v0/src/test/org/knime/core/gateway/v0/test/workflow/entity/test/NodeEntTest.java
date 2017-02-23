@@ -78,6 +78,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class NodeEntTest {
 
     private static Random RAND = new Random();
@@ -167,21 +168,21 @@ public class NodeEntTest {
 		subList5.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList5);
 
- 		valueList.add("v6psQ");	
+ 		valueList.add("fBoea");	
 
- 		valueList.add("dXoPa");	
+ 		valueList.add("EU7GC");	
 
- 		valueList.add("ylvRb");	
+ 		valueList.add("yscQw");	
 
- 		valueList.add("Fv2S1");	
+ 		valueList.add("lnanG");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(true);	
-
- 		valueList.add("wtqnf");	
-
  		valueList.add(false);	
+
+ 		valueList.add("9LzJZ");	
+
+ 		valueList.add(true);	
 
  		valueList.add(NodeAnnotationEntTest.createValueList());
 

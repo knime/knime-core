@@ -66,6 +66,7 @@ import org.knime.core.gateway.v0.repository.entity.builder.RepoNodeTemplateEntBu
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class RepoCategoryEntTest {
 
     private static Random RAND = new Random();
@@ -113,9 +114,9 @@ public class RepoCategoryEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("mQn9P");	
+ 		valueList.add("k0C2W");	
 
- 		valueList.add("XSomh");	
+ 		valueList.add("KcUWW");	
 
  		List<List<Object>> subList3 = new ArrayList<>();
 		subList3.add(RepoCategoryEntTest.createValueList());

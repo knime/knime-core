@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class XYEntTest {
 
     private static Random RAND = new Random();
@@ -88,9 +89,9 @@ public class XYEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(1970648844);	
+ 		valueList.add(-2058346103);	
 
- 		valueList.add(-1601973944);	
+ 		valueList.add(-117557872);	
 
         return valueList;
     }

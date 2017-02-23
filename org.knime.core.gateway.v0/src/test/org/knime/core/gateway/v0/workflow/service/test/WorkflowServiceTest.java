@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.service.test;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import org.knime.core.gateway.v0.test.workflow.entity.test.EntityIDTest;
@@ -75,6 +76,7 @@ import org.mockito.Mockito;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class WorkflowServiceTest {
 
     WorkflowService m_serviceMock;
@@ -89,50 +91,61 @@ public class WorkflowServiceTest {
 
     @Test
     public void test_getWorkflow() {
-    
 		//create parameter values
 		EntityID id = EntityIDTest.createEnt(EntityIDTest.createValueList());
-     
-		//create return value
+ 
+		//create return value   
 		List<Object> values = WorkflowEntTest.createValueList();
         WorkflowEnt res = WorkflowEntTest.createEnt(values);
-        
-        //mock method
-        Mockito.when(m_serviceMock.getWorkflow(Matchers.anyVararg())).thenReturn(res);
-        
-        //compare results
-        WorkflowEnt res2 = service(WorkflowService.class).getWorkflow(id);
-        WorkflowEntTest.testEnt(res2, values);
+
+		//mock return value
+		Mockito.when(m_serviceMock.getWorkflow(Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		WorkflowEnt methodRes = service(WorkflowService.class).getWorkflow(id);
+
+		//compare results
+        WorkflowEntTest.testEnt(methodRes, values);
     }
 
     @Test
     public void test_updateWorkflow() {
-    
 		//create parameter values
 		WorkflowEnt wf = WorkflowEntTest.createEnt(WorkflowEntTest.createValueList());
-     
+ 
 		//returns void - just call the method
 		service(WorkflowService.class).updateWorkflow(wf);
     }
 
     @Test
     public void test_getAllWorkflows() {
-    
-     
-		//create return value
-        List<EntityID> list = new ArrayList<>(5);
+ 
+		//create return value   
+		List<EntityID> res = new ArrayList<>(5);
         List<List<Object>> valueLists = new ArrayList<List<Object>>(5);
-        for (int i = 0; i < 5; i++) {
-            List<Object> valList = EntityIDTest.createValueList();
-            valueLists.add(valList);
-            list.add(EntityIDTest.createEnt(valList));
-        }
-        
-        //mock method
-        Mockito.when(m_serviceMock.getAllWorkflows()).thenReturn(list);
+        List<Object> valList1 = EntityIDTest.createValueList();
+        valueLists.add(valList1);
+        res.add(EntityIDTest.createEnt(valList1));
+        List<Object> valList2 = EntityIDTest.createValueList();
+        valueLists.add(valList2);
+        res.add(EntityIDTest.createEnt(valList2));
+        List<Object> valList3 = EntityIDTest.createValueList();
+        valueLists.add(valList3);
+        res.add(EntityIDTest.createEnt(valList3));
+        List<Object> valList4 = EntityIDTest.createValueList();
+        valueLists.add(valList4);
+        res.add(EntityIDTest.createEnt(valList4));
+        List<Object> valList5 = EntityIDTest.createValueList();
+        valueLists.add(valList5);
+        res.add(EntityIDTest.createEnt(valList5));
+
+		//mock return value
+		Mockito.when(m_serviceMock.getAllWorkflows()).thenReturn(res);
+
+		//call method
+		List<EntityID> methodRes = service(WorkflowService.class).getAllWorkflows();
 
 		//compare results
-        List<EntityID> methodRes = service(WorkflowService.class).getAllWorkflows();
         for (int i = 0; i < methodRes.size(); i++) {
             EntityIDTest.testEnt(methodRes.get(i), valueLists.get(i));
         }

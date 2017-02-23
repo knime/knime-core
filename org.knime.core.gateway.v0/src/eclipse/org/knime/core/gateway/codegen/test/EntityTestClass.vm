@@ -64,6 +64,7 @@ import $import;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class ${name}Test {
 
     private static Random RAND = new Random();

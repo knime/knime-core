@@ -64,6 +64,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.knime.core.gateway.codegen.spec.ObjectSpec;
 
 /**
+ * Represents a return or parameter type of methods (e.g. within service or entity classes).
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -71,16 +72,14 @@ public class Type {
 
     private Random m_rand = new Random();
 
-
     public static enum GenericType {
-        NONE,
-        LIST,
-        MAP;
+            NONE, LIST, MAP;
     }
 
     public static final Type VOID = new Type("void");
 
     private final String m_namespace;
+
     private final String m_simpleName;
 
     private GenericType m_genericType;
@@ -167,65 +166,97 @@ public class Type {
         return m_simpleName;
     }
 
+    /**
+     * @param index
+     * @return type of the type parameter in case of lists (index 0) or maps (index 0 and 1)
+     */
     public Type getTypeParameter(final int index) {
         return m_typeParameters.get(index);
     }
 
+    /**
+     * @return <code>true</code> if type is void
+     */
     public boolean isVoid() {
         return m_simpleName.equals("void");
     }
 
+    /**
+     * @return <code>true</code> if type is a primitive (i.e. string, integer, double etc.)
+     */
     public boolean isPrimitive() {
-        if(m_typeParameters.size() == 0) {
+        if (m_typeParameters.size() == 0) {
             return isNamePrimitive();
         } else {
             return false;
         }
     }
 
+    /**
+     * @return <code>true</code> if type represents an entity (i.e. a complex type and not a primitive); will return
+     *         <code>false</code> if type represents a list or map
+     */
     public boolean isEntity() {
         return !isVoid() && !isPrimitive() && !isList() && !isMap();
     }
 
+    /**
+     * @return <code>true</code> if the type represents a list of primitives
+     */
     public boolean isPrimitiveList() {
         return m_genericType == GenericType.LIST && getTypeParameter(0).isPrimitive();
     }
 
+    /**
+     * @return <code>true</code> if the type represents a map of primitives
+     */
     public boolean isPrimitiveMap() {
         return m_genericType == GenericType.MAP && getTypeParameter(1).isPrimitive();
     }
 
+    /**
+     * @return <code>true</code> if the type represents a list of entities (i.e. complex types)
+     */
     public boolean isEntityList() {
-        return  isList() && getTypeParameter(0).isEntity();
+        return isList() && getTypeParameter(0).isEntity();
     }
 
+    /**
+     * @return <code>true</code> if the type represents a map of entities (the map keys can still be primitive - TODO -
+     *         make it more consistent)
+     */
     public boolean isEntityMap() {
         //TODO what if the key is an entity?
         return isMap() && getTypeParameter(1).isEntity();
     }
 
+    /**
+     * @return <code>true</code> if the type represents a list
+     */
     public boolean isList() {
         return m_genericType == GenericType.LIST;
     }
 
+    /**
+     * @return <code>true</code> if the type represents a map
+     */
     public boolean isMap() {
         return m_genericType == GenericType.MAP;
     }
 
     /**
-     * @return
+     * Helper to tell from the simple name whether this type represents a primitive
      */
     private boolean isNamePrimitive() {
-        return m_simpleName.equals("String") ||
-                m_simpleName.equals("int") || m_simpleName.equals("Integer") ||
-                m_simpleName.toLowerCase().equals("byte") ||
-                m_simpleName.toLowerCase().equals("short") ||
-                m_simpleName.toLowerCase().equals("long") ||
-                m_simpleName.toLowerCase().equals("float") ||
-                m_simpleName.toLowerCase().equals("double") ||
-                m_simpleName.toLowerCase().equals("boolean");
+        return m_simpleName.equals("String") || m_simpleName.equals("int") || m_simpleName.equals("Integer")
+            || m_simpleName.toLowerCase().equals("byte") || m_simpleName.toLowerCase().equals("short")
+            || m_simpleName.toLowerCase().equals("long") || m_simpleName.toLowerCase().equals("float")
+            || m_simpleName.toLowerCase().equals("double") || m_simpleName.toLowerCase().equals("boolean");
     }
 
+    /**
+     * @return required standard java imports for the represented type (essentielly java.util.List or java.util.Map)
+     */
     public Collection<String> getJavaImports() {
         Set<String> result = new LinkedHashSet<>();
         switch (m_genericType) {
@@ -247,25 +278,27 @@ public class Type {
      */
     public Collection<String> getAllImports(final ObjectSpec entitySpec) {
         Collection<String> result = new LinkedHashSet<String>();
-        if(isEntity()) {
+        if (isEntity()) {
             result.add(entitySpec.getFullyQualifiedName(m_namespace, m_simpleName));
         }
         result.addAll(getJavaImports());
-        for(Type t : m_typeParameters) {
+        for (Type t : m_typeParameters) {
             result.addAll(t.getAllImports(entitySpec));
         }
         return result;
     }
 
+    /**
+     * @return stream all required types, including the type parameters (in case of lists or maps)
+     */
     public Stream<Type> getRequiredTypes() {
         return Stream.concat(Stream.of(this), m_typeParameters.stream());
     }
 
     /**
-     * Creates random values in case of primitive types.
-     * Otherwise <code>null</code> is returned
+     * Creates random values in case of primitive types. Otherwise <code>NOT A PRIMITIVE</code> is returned
      *
-     * @return primitive type values or null if type is an entity
+     * @return primitive type values or <code>NOT A PRIMITIVE</code> if type is an entity
      */
     public String createRandomPrimitive() {
         if (isPrimitive()) {
@@ -280,15 +313,15 @@ public class Type {
             } else if (m_simpleName.equals("String")) {
                 return "\"" + RandomStringUtils.randomAlphanumeric(5) + "\"";
             }
-            return null;
+            return "NOT A PRIMITIVE";
         } else {
-            return null;
+            return "NOT A PRIMITIVE";
         }
     }
 
-
     /**
      * Parses the type from a string, e.g. Map<Integer, String>
+     *
      * @param s
      * @return the newly created type
      */
@@ -318,6 +351,5 @@ public class Type {
         System.out.println(Type.parse("Map<Test, Test2>").toString("T", ""));
         System.out.println(Type.parse("Map<Blub, Integer>").toString("", "ToThrift"));
     }
-
 
 }

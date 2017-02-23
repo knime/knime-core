@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.service.test;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 import org.knime.core.gateway.v0.test.workflow.entity.test.EntityIDTest;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
@@ -72,6 +73,7 @@ import org.mockito.Mockito;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class NodeContainerServiceTest {
 
     NodeContainerService m_serviceMock;
@@ -86,12 +88,21 @@ public class NodeContainerServiceTest {
 
     @Test
     public void test_getNodeSettingsJSON() {
-    
 		//create parameter values
 		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "Su7Oj";
-     
-		//TODO compare primitive return values
+		String nodeID = "jSRYS";
+ 
+		//create return value   
+		String res = "56hsl";        
+
+		//mock return value
+		Mockito.when(m_serviceMock.getNodeSettingsJSON(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		String methodRes = service(NodeContainerService.class).getNodeSettingsJSON(workflowID, nodeID);
+
+		//compare results
+		assertEquals(res, methodRes);
     }
 
  

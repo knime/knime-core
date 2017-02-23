@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class JobManagerEntTest {
 
     private static Random RAND = new Random();
@@ -88,9 +89,9 @@ public class JobManagerEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("zV3ga");	
+ 		valueList.add("9nRsC");	
 
- 		valueList.add("xXH5M");	
+ 		valueList.add("XJ0lm");	
 
         return valueList;
     }

@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class BoundsEntTest {
 
     private static Random RAND = new Random();
@@ -92,13 +93,13 @@ public class BoundsEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(709075173);	
+ 		valueList.add(-1067530439);	
 
- 		valueList.add(471159488);	
+ 		valueList.add(-1235311194);	
 
- 		valueList.add(1709466600);	
+ 		valueList.add(-1053275678);	
 
- 		valueList.add(1441240287);	
+ 		valueList.add(2020638977);	
 
         return valueList;
     }

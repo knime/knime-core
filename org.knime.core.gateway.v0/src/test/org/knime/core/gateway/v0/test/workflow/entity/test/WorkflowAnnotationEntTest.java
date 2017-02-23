@@ -65,6 +65,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBu
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class WorkflowAnnotationEntTest {
 
     private static Random RAND = new Random();
@@ -100,19 +101,19 @@ public class WorkflowAnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("AAsmN");	
+ 		valueList.add("B21b6");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(794213176);	
+ 		valueList.add(-218785965);	
 
- 		valueList.add(-626092970);	
+ 		valueList.add(1788140145);	
 
- 		valueList.add(2044047642);	
+ 		valueList.add(-1233684721);	
 
- 		valueList.add(572996659);	
+ 		valueList.add(-2060662910);	
 
- 		valueList.add("uH2dG");	
+ 		valueList.add("Cecj3");	
 
         return valueList;
     }

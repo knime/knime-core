@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class AnnotationEntTest {
 
     private static Random RAND = new Random();
@@ -106,27 +107,27 @@ public class AnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("WDKgL");	
+ 		valueList.add("qzGb7");	
 
- 		valueList.add(-1817132890);	
+ 		valueList.add(-400093375);	
 
- 		valueList.add(832273815);	
+ 		valueList.add(-599796974);	
 
- 		valueList.add(-26110905);	
+ 		valueList.add(491672215);	
 
- 		valueList.add(1720348244);	
+ 		valueList.add(-52383851);	
 
- 		valueList.add(-1239551742);	
+ 		valueList.add(-176687500);	
 
- 		valueList.add("owvjK");	
+ 		valueList.add("0KJR1");	
 
- 		valueList.add(-1619523583);	
+ 		valueList.add(1345444132);	
 
- 		valueList.add(1567835947);	
+ 		valueList.add(-455206844);	
 
- 		valueList.add(524036493);	
+ 		valueList.add(565974794);	
 
- 		valueList.add(1643340379);	
+ 		valueList.add(-1448178012);	
 
         return valueList;
     }

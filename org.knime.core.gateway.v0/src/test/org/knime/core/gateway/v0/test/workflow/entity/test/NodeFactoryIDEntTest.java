@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class NodeFactoryIDEntTest {
 
     private static Random RAND = new Random();
@@ -88,9 +89,9 @@ public class NodeFactoryIDEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("Tk91t");	
+ 		valueList.add("vioU2");	
 
- 		valueList.add("j9E8F");	
+ 		valueList.add("8jQEV");	
 
         return valueList;
     }

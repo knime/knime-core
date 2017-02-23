@@ -71,6 +71,8 @@ import org.knime.core.gateway.codegen.types.ServiceDef;
 import org.knime.core.gateway.codegen.types.ServiceMethod;
 
 /**
+ * Generates java source files (classes or interfaces) from a velocity template and service definitions (that are read in
+ * from the respective json-files).
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -87,10 +89,9 @@ public class ServiceGenerator extends SourceFileGenerator {
     private ObjectSpec[] m_dependentServiceSpecs = new ObjectSpec[0];
 
     /**
-     * @param outputFolder
-     * @param templateFile the template file
-     * @param serviceSpec
-     * @param depeServiceSpecs
+     * @param outputFolder the folder the files are written to
+     * @param templateFile the velocity template file
+     * @param serviceSpec an object specification (i.e. the actual package name, class name pattern, etc.)
      *
      */
     public ServiceGenerator(final String outputFolder, final String templateFile, final ObjectSpec serviceSpec) {

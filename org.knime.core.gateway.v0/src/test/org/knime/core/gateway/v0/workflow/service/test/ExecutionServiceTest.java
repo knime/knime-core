@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.service.test;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 import org.knime.core.gateway.v0.test.workflow.entity.test.EntityIDTest;
 import org.knime.core.gateway.v0.workflow.entity.EntityID;
@@ -74,6 +75,7 @@ import org.mockito.Mockito;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class ExecutionServiceTest {
 
     ExecutionService m_serviceMock;
@@ -88,31 +90,41 @@ public class ExecutionServiceTest {
 
     @Test
     public void test_getCanExecuteUpToHere() {
-    
 		//create parameter values
 		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "BRNhb";
-     
-		//TODO compare primitive return values
+		String nodeID = "F7olt";
+ 
+		//create return value   
+		boolean res = true;        
+
+		//mock return value
+		Mockito.when(m_serviceMock.getCanExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		boolean methodRes = service(ExecutionService.class).getCanExecuteUpToHere(workflowID, nodeID);
+
+		//compare results
+		assertEquals(res, methodRes);
     }
 
     @Test
     public void test_setExecuteUpToHere() {
-    
 		//create parameter values
 		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "3PBh8";
-     
-		//create return value
+		String nodeID = "hZLxT";
+ 
+		//create return value   
 		List<Object> values = WorkflowEntTest.createValueList();
         WorkflowEnt res = WorkflowEntTest.createEnt(values);
-        
-        //mock method
-        Mockito.when(m_serviceMock.setExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
-        
-        //compare results
-        WorkflowEnt res2 = service(ExecutionService.class).setExecuteUpToHere(workflowID, nodeID);
-        WorkflowEntTest.testEnt(res2, values);
+
+		//mock return value
+		Mockito.when(m_serviceMock.setExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		WorkflowEnt methodRes = service(ExecutionService.class).setExecuteUpToHere(workflowID, nodeID);
+
+		//compare results
+        WorkflowEntTest.testEnt(methodRes, values);
     }
 
  

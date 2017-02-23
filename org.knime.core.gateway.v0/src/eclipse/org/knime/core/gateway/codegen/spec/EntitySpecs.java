@@ -83,20 +83,4 @@ public final class EntitySpecs {
      * List of all available 'core' specifications.
      */
     public static final ObjectSpec[] DefaultSpecs = new ObjectSpec[]{Api, Builder, Impl, Test};
-
-    /**
-     * Gets the entity spec for the given entity spec id
-     *
-     * @param ObjectSpecId
-     * @return the entity spec for the given id or an {@link IllegalArgumentException}
-     */
-    public static ObjectSpec fromId(final String ObjectSpecId) {
-        for(ObjectSpec es : DefaultSpecs) {
-            if(ObjectSpecId.toLowerCase().equals(es.getId())) {
-                return es;
-            }
-        }
-        throw new IllegalArgumentException("No entity specification for id " + ObjectSpecId);
-    }
-
 }

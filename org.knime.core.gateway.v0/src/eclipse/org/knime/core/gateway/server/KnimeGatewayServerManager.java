@@ -66,6 +66,12 @@ public class KnimeGatewayServerManager {
         //utility class
     }
 
+    /**
+     * Starts all registered server.
+     *
+     * @param port
+     * @throws Exception
+     */
     public static void startAll(final int port) throws Exception {
         collectServers();
         for (KnimeGatewayServer s : SERVERS) {
@@ -73,6 +79,11 @@ public class KnimeGatewayServerManager {
         }
     }
 
+    /**
+     * Stops all registered server.
+     *
+     * @throws Exception
+     */
     public static void stopAll() throws Exception {
         if (SERVERS == null) {
             throw new IllegalStateException("No servers have been initialized and started.");
@@ -82,6 +93,14 @@ public class KnimeGatewayServerManager {
         }
     }
 
+    /**
+     * Starts all registered server for testing. The passed services (that are very likely mocked services) are going to
+     * be wrapped and used.
+     *
+     * @param port
+     * @param services
+     * @throws Exception
+     */
     public static void startAllForTesting(final int port, final GatewayService... services) throws Exception {
         collectServers();
         for (KnimeGatewayServer s : SERVERS) {

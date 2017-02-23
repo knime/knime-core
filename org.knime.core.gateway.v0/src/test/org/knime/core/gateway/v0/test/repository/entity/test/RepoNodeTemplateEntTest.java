@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.repository.entity.builder.RepoNodeTemplateEntBu
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class RepoNodeTemplateEntTest {
 
     private static Random RAND = new Random();
@@ -94,15 +95,15 @@ public class RepoNodeTemplateEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("lh7sM");	
+ 		valueList.add("itdkk");	
 
- 		valueList.add("4fdxs");	
+ 		valueList.add("D4QFG");	
 
- 		valueList.add("AbJwM");	
+ 		valueList.add("ifC13");	
 
- 		valueList.add("sPCvT");	
+ 		valueList.add("h17rT");	
 
- 		valueList.add("0YZQX");	
+ 		valueList.add("GEeao");	
 
         return valueList;
     }

@@ -85,6 +85,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class WorkflowEntTest {
 
     private static Random RAND = new Random();
@@ -197,11 +198,11 @@ public class WorkflowEntTest {
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
  		Map<String, List<Object>> subMap1 = new HashMap<>();
- 		subMap1.put("7P1iz", NodeEntTest.createValueList());
- 		subMap1.put("eseLO", NodeEntTest.createValueList());
- 		subMap1.put("OmZmp", NodeEntTest.createValueList());
- 		subMap1.put("2VAVw", NodeEntTest.createValueList());
- 		subMap1.put("I2gKX", NodeEntTest.createValueList());
+ 		subMap1.put("k8Qfh", NodeEntTest.createValueList());
+ 		subMap1.put("aw5NC", NodeEntTest.createValueList());
+ 		subMap1.put("cEpbD", NodeEntTest.createValueList());
+ 		subMap1.put("lNH8Y", NodeEntTest.createValueList());
+ 		subMap1.put("cDkOC", NodeEntTest.createValueList());
  		valueList.add(subMap1);
 
  		List<List<Object>> subList2 = new ArrayList<>();
@@ -250,21 +251,21 @@ public class WorkflowEntTest {
 		subList9.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList9);
 
- 		valueList.add("tfbW0");	
+ 		valueList.add("Sz5kk");	
 
- 		valueList.add("8IEZt");	
+ 		valueList.add("ripvc");	
 
- 		valueList.add("4niLj");	
+ 		valueList.add("0Qtd3");	
 
- 		valueList.add("SLKvv");	
+ 		valueList.add("66nop");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
  		valueList.add(false);	
 
- 		valueList.add("jPKja");	
+ 		valueList.add("b73Te");	
 
- 		valueList.add(false);	
+ 		valueList.add(true);	
 
  		valueList.add(NodeAnnotationEntTest.createValueList());
 

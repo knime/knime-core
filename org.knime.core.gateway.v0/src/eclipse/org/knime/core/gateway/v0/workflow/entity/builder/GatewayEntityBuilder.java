@@ -51,6 +51,7 @@ package org.knime.core.gateway.v0.workflow.entity.builder;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 
 /**
+ * Since entities are immutable, a respective builder is required to created instances.
  *
  * @author Martin Horn, University of Konstanz
  */

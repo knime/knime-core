@@ -63,6 +63,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class NodeMessageEntTest {
 
     private static Random RAND = new Random();
@@ -88,9 +89,9 @@ public class NodeMessageEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("cDL3C");	
+ 		valueList.add("txDQm");	
 
- 		valueList.add("2hHrb");	
+ 		valueList.add("jkm8r");	
 
         return valueList;
     }

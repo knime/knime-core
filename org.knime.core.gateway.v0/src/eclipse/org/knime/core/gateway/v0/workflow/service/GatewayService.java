@@ -48,9 +48,12 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
+import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
+
 /**
- * TODO
- *
+ * Marks gateway services, i.e. usually singleton classes with methods that define the communication between remote
+ * points. The service methods either take entities (see {@link GatewayEntity}) or primitives as parameters (or return
+ * type).
  *
  * @author Martin Horn, University of Konstanz
  */

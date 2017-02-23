@@ -65,6 +65,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class MetaPortEntTest {
 
     private static Random RAND = new Random();
@@ -98,13 +99,13 @@ public class MetaPortEntTest {
         List<Object> valueList = new ArrayList<Object>();
  		valueList.add(PortTypeEntTest.createValueList());
 
- 		valueList.add(false);	
+ 		valueList.add(true);	
 
- 		valueList.add("LMbF2");	
+ 		valueList.add("iaDGC");	
 
- 		valueList.add(218952810);	
+ 		valueList.add(-2119282580);	
 
- 		valueList.add(-1118448646);	
+ 		valueList.add(643946345);	
 
         return valueList;
     }

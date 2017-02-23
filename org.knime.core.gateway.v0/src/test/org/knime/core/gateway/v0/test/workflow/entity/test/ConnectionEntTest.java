@@ -66,6 +66,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class ConnectionEntTest {
 
     private static Random RAND = new Random();
@@ -110,13 +111,13 @@ public class ConnectionEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("3HfRF");	
+ 		valueList.add("TSNyL");	
 
- 		valueList.add(-476074620);	
+ 		valueList.add(-473982780);	
 
- 		valueList.add("PGPUm");	
+ 		valueList.add("3VslU");	
 
- 		valueList.add(1149821369);	
+ 		valueList.add(-768175616);	
 
  		valueList.add(false);	
 
@@ -128,7 +129,7 @@ public class ConnectionEntTest {
 		subList6.add(XYEntTest.createValueList());
  		valueList.add(subList6);
 
- 		valueList.add("e18la");	
+ 		valueList.add("ADvOF");	
 
         return valueList;
     }

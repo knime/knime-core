@@ -48,6 +48,7 @@ package $package;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 
 #foreach( $import in $imports)
 import $import;
@@ -72,6 +73,7 @@ import org.mockito.Mockito;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class ${name}Test {
 
     ${name} m_serviceMock;
@@ -87,7 +89,7 @@ public class ${name}Test {
 #foreach($method in $methods)
     @Test
     public void test_$method.getName()() {
-    
+##CREATE PARAMETER VALUES    
 #foreach($param in $method.getParameters())
 #if($foreach.count == 1)
 		//create parameter values
@@ -98,51 +100,61 @@ public class ${name}Test {
 #elseif($type.isEntityList())
 		${type.toString()} $param.getName() = new ArrayList<>();
 #foreach($i in [1..5])
-		${param.getName()}.add(${param.getType().toString()}Test.createEnt(${param.getType().toString()}Test.createValueList()));
+		${param.getName()}.add(${param.getType().getTypeParameter(0).toString()}Test.createEnt(${param.getType().getTypeParameter(0).toString()}Test.createValueList()));
 #end
 #elseif($type.isPrimitiveList())
-		//primitive list - TODO
+		${type.toString()} $param.getName() = new ArrayList<>();
+#foreach($i in [1..5])
+		${param.getName()}.add(${type.getTypeParameter(0).createRandomPrimitive()});
+#end
 #elseif($type.isPrimitive())
 		$type.toString() $param.getName() = $type.createRandomPrimitive();
 #end
 #end ##param-loop
-    
+
 #set($rettype = $method.getResult().getType())
+##RETURNS VOID
 #if($rettype.isVoid())
 		//returns void - just call the method
 		service(${name}.class).$method.getName()(#foreach($param in $method.getParameters())$param.getName()#if($foreach.hasNext), #end#end);
-#elseif(!$rettype.isPrimitive())
-		//create return value
-#if($rettype.isList())
-        $rettype.toString() list = new ArrayList<>(5);
+#else
+##HANDLE RETURN VALUES
+##CREATE RETURN VALUES 
+		//create return value   
+#if($rettype.isEntityList())
+		${rettype.toString()} res = new ArrayList<>(5);
         List<List<Object>> valueLists = new ArrayList<List<Object>>(5);
-        for (int i = 0; i < 5; i++) {
-            List<Object> valList = ${rettype.getTypeParameter(0).toString()}Test.createValueList();
-            valueLists.add(valList);
-            list.add(${rettype.getTypeParameter(0).toString()}Test.createEnt(valList));
-        }
-        
-        //mock method
-        Mockito.when(m_serviceMock.$method.getName()(#foreach($param in $method.getParameters())Matchers.anyVararg()#if($foreach.hasNext), #end#end)).thenReturn(list);
+#foreach($i in [1..5])
+        List<Object> valList$i = ${rettype.getTypeParameter(0).toString()}Test.createValueList();
+        valueLists.add(valList$i);
+        res.add(${rettype.getTypeParameter(0).toString()}Test.createEnt(valList$i));
+#end
+#elseif($rettype.isPrimitive())
+		${rettype.toString()} res = ${rettype.createRandomPrimitive()};        
+#elseif($rettype.isEntity())
+		List<Object> values = ${rettype.toString("", "Test")}.createValueList();
+        ${rettype.toString()} res = ${rettype.toString("", "Test")}.createEnt(values);
+#end
 
+##MOCK RETURN VALUE
+		//mock return value
+		Mockito.when(m_serviceMock.$method.getName()(#foreach($param in $method.getParameters())Matchers.anyVararg()#if($foreach.hasNext), #end#end)).thenReturn(res);
+
+##CALL
+		//call method
+		${rettype.toString()} methodRes = service(${name}.class).$method.getName()(#foreach($param in $method.getParameters())$param.getName()#if($foreach.hasNext), #end#end);
+
+##COMPARE
 		//compare results
-        $rettype.toString() methodRes = service(${name}.class).${method.getName()}(#foreach($param in $method.getParameters())#if($foreach.hasNext), #end#end);
+#if($rettype.isEntityList())
         for (int i = 0; i < methodRes.size(); i++) {
             ${rettype.getTypeParameter(0).toString()}Test.testEnt(methodRes.get(i), valueLists.get(i));
         }
-#else
-		List<Object> values = ${rettype.toString("", "Test")}.createValueList();
-        ${rettype.toString()} res = ${rettype.toString("", "Test")}.createEnt(values);
-        
-        //mock method
-        Mockito.when(m_serviceMock.$method.getName()(#foreach($param in $method.getParameters())Matchers.anyVararg()#if($foreach.hasNext), #end#end)).thenReturn(res);
-        
-        //compare results
-        ${rettype.toString()} res2 = service(${name}.class).$method.getName()(#foreach($param in $method.getParameters())$param.getName()#if($foreach.hasNext), #end#end);
-        ${rettype.toString()}Test.testEnt(res2, values);
+#elseif($rettype.isEntity())
+        ${rettype.toString()}Test.testEnt(methodRes, values);
+#elseif($rettype.isPrimitive())
+		assertEquals(res, methodRes);
 #end
-#else
-		//TODO compare primitive return values
 #end
     }
 

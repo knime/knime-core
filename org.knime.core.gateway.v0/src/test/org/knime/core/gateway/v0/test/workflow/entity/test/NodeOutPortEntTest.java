@@ -67,6 +67,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class NodeOutPortEntTest {
 
     private static Random RAND = new Random();
@@ -94,11 +95,11 @@ public class NodeOutPortEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(-1241904909);	
+ 		valueList.add(301495654);	
 
  		valueList.add(PortTypeEntTest.createValueList());
 
- 		valueList.add("b1oYj");	
+ 		valueList.add("sOMF9");	
 
         return valueList;
     }

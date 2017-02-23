@@ -76,20 +76,4 @@ public final class ServiceSpecs {
         Api,
         Test
     };
-
-    /**
-     * Gets the service spec for the given entity spec id
-     *
-     * @param ObjectSpecId
-     * @return the service spec for the given id or an {@link IllegalArgumentException}
-     */
-    public static ObjectSpec fromId(final String ObjectSpecId) {
-        for(ObjectSpec ss : DefaultSpecs) {
-            if(ObjectSpecId.toLowerCase().equals(ss.getId())) {
-                return ss;
-            }
-        }
-        throw new IllegalArgumentException("No service specification for id " + ObjectSpecId);
-    }
-
 }

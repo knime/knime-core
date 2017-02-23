@@ -62,6 +62,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
+ * Represents a service method, i.e. its name, the return type, parameters, description etc.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -99,7 +100,11 @@ public class ServiceMethod {
     private final List<MethodParam> m_parameters;
 
     /**
-     * @param operation TODO
+     * @param name
+     * @param operation
+     * @param description
+     * @param returnType
+     * @param parameters
      *
      */
     public ServiceMethod(

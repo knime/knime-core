@@ -91,7 +91,7 @@ public class JettyRestServer implements KnimeGatewayServer {
                 Class<GatewayService> rsWrapperServiceClass =
                     (Class<GatewayService>)RestWrapperServiceSpec.getClassForFullyQualifiedName(namespace, name);
                 Class<?> serviceInterface = ServiceSpecs.Api.getClassForFullyQualifiedName(namespace, name);
-                return rsWrapperServiceClass.getConstructor(s.getClass()).newInstance(s);
+                return rsWrapperServiceClass.getConstructor(serviceInterface).newInstance(s);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException
                     | ClassNotFoundException ex) {

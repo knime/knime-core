@@ -77,6 +77,8 @@ import org.knime.core.gateway.codegen.types.Type;
 import org.knime.core.node.util.CheckUtils;
 
 /**
+ * Generates java source files (classes or interfaces) from a velocity template and entity definitions (that are read in
+ * from the respective json-files).
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -92,11 +94,10 @@ public final class EntityGenerator extends SourceFileGenerator {
 
     private ObjectSpec[] m_importsSpecs = new ObjectSpec[0];
 
-
     /**
-     * @param outputFolder TODO
-     * @param templateFile the template file
-     * @param entitySpec TODO
+     * @param outputFolder the folder the java source files to be written to
+     * @param templateFile the velocity template file
+     * @param entitySpec an object specification (i.e. the actual package name, class name pattern, etc.)
      *
      */
     public EntityGenerator(final String outputFolder, final String templateFile, final ObjectSpec entitySpec) {
@@ -219,7 +220,8 @@ public final class EntityGenerator extends SourceFileGenerator {
      * @param imports
      * @param entityDef
      */
-    private void addImports(final Collection<String> imports, final EntityDef entityDef, final boolean includeImportSpecs) {
+    private void addImports(final Collection<String> imports, final EntityDef entityDef,
+        final boolean includeImportSpecs) {
         imports.addAll(getJavaImports(entityDef));
         imports.addAll(getImportsForFields(entityDef, m_entitySpec));
         imports.add(m_entitySpec.getFullyQualifiedName(entityDef.getNamespace(), entityDef.getName()));

@@ -44,16 +44,16 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.repository.service.test;
+package org.knime.core.gateway.v0.test.service.test;
 
 import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
-import org.knime.core.gateway.v0.test.repository.entity.test.RepoCategoryEntTest;
 import java.util.List;
-import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
-import org.knime.core.gateway.v0.repository.service.RepositoryService;
+import org.knime.core.gateway.v0.test.service.TestService;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.gateway.v0.test.test.entity.test.TestEntTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,65 +75,97 @@ import org.mockito.Mockito;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public class RepositoryServiceTest {
+public class TestServiceTest {
 
-    RepositoryService m_serviceMock;
+    TestService m_serviceMock;
 
     @Before
     public void setup() throws Exception {
-        m_serviceMock = mock(RepositoryService.class);
+        m_serviceMock = mock(TestService.class);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
     }
 
     @Test
-    public void test_getNodeRepository() {
+    public void test_getTest() {
+		//create parameter values
+		TestEnt id = TestEntTest.createEnt(TestEntTest.createValueList());
  
 		//create return value   
-		List<RepoCategoryEnt> res = new ArrayList<>(5);
-        List<List<Object>> valueLists = new ArrayList<List<Object>>(5);
-        List<Object> valList1 = RepoCategoryEntTest.createValueList();
-        valueLists.add(valList1);
-        res.add(RepoCategoryEntTest.createEnt(valList1));
-        List<Object> valList2 = RepoCategoryEntTest.createValueList();
-        valueLists.add(valList2);
-        res.add(RepoCategoryEntTest.createEnt(valList2));
-        List<Object> valList3 = RepoCategoryEntTest.createValueList();
-        valueLists.add(valList3);
-        res.add(RepoCategoryEntTest.createEnt(valList3));
-        List<Object> valList4 = RepoCategoryEntTest.createValueList();
-        valueLists.add(valList4);
-        res.add(RepoCategoryEntTest.createEnt(valList4));
-        List<Object> valList5 = RepoCategoryEntTest.createValueList();
-        valueLists.add(valList5);
-        res.add(RepoCategoryEntTest.createEnt(valList5));
+		List<Object> values = TestEntTest.createValueList();
+        TestEnt res = TestEntTest.createEnt(values);
 
 		//mock return value
-		Mockito.when(m_serviceMock.getNodeRepository()).thenReturn(res);
+		Mockito.when(m_serviceMock.getTest(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		List<RepoCategoryEnt> methodRes = service(RepositoryService.class).getNodeRepository();
+		TestEnt methodRes = service(TestService.class).getTest(id);
+
+		//compare results
+        TestEntTest.testEnt(methodRes, values);
+    }
+
+    @Test
+    public void test_getTestList() {
+		//create parameter values
+		List<TestEnt> list = new ArrayList<>();
+		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
+		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
+		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
+		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
+		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
+ 
+		//create return value   
+		List<TestEnt> res = new ArrayList<>(5);
+        List<List<Object>> valueLists = new ArrayList<List<Object>>(5);
+        List<Object> valList1 = TestEntTest.createValueList();
+        valueLists.add(valList1);
+        res.add(TestEntTest.createEnt(valList1));
+        List<Object> valList2 = TestEntTest.createValueList();
+        valueLists.add(valList2);
+        res.add(TestEntTest.createEnt(valList2));
+        List<Object> valList3 = TestEntTest.createValueList();
+        valueLists.add(valList3);
+        res.add(TestEntTest.createEnt(valList3));
+        List<Object> valList4 = TestEntTest.createValueList();
+        valueLists.add(valList4);
+        res.add(TestEntTest.createEnt(valList4));
+        List<Object> valList5 = TestEntTest.createValueList();
+        valueLists.add(valList5);
+        res.add(TestEntTest.createEnt(valList5));
+
+		//mock return value
+		Mockito.when(m_serviceMock.getTestList(Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		List<TestEnt> methodRes = service(TestService.class).getTestList(list);
 
 		//compare results
         for (int i = 0; i < methodRes.size(); i++) {
-            RepoCategoryEntTest.testEnt(methodRes.get(i), valueLists.get(i));
+            TestEntTest.testEnt(methodRes.get(i), valueLists.get(i));
         }
     }
 
     @Test
-    public void test_getNodeDescription() {
+    public void test_getPrimitives() {
 		//create parameter values
-		String nodeTypeID = "uIeKo";
+		String s = "EgOGH";
+		List<String> stringlist = new ArrayList<>();
+		stringlist.add("fDlno");
+		stringlist.add("npbCn");
+		stringlist.add("8GulR");
+		stringlist.add("kAZ6A");
+		stringlist.add("lMo9q");
  
 		//create return value   
-		String res = "MHidt";        
+		double res = 0.4272465819903001;        
 
 		//mock return value
-		Mockito.when(m_serviceMock.getNodeDescription(Matchers.anyVararg())).thenReturn(res);
+		Mockito.when(m_serviceMock.getPrimitives(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		String methodRes = service(RepositoryService.class).getNodeDescription(nodeTypeID);
+		double methodRes = service(TestService.class).getPrimitives(s, stringlist);
 
 		//compare results
 		assertEquals(res, methodRes);

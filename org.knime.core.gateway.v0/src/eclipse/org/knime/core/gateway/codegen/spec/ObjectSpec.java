@@ -152,10 +152,14 @@ public class ObjectSpec {
      */
     public String extractNameFromClass(final Class<?> clazz) {
         String n = clazz.getCanonicalName();
+        //get rid of all inner classes, proxy classes etc.
+        if (n.indexOf("$") > 0) {
+            n = n.substring(0, n.indexOf("$"));
+        }
         n = n.substring(n.lastIndexOf(".") + 1);
-        String[] split = getPattern().split(NAME_PLACEHOLDER);
-        assert split.length == 2;
-        return n.substring(split[0].length(), n.length() - split[1].length());
+        int patternOffset = getPattern().indexOf(NAME_PLACEHOLDER);
+        return n.substring(patternOffset,
+            n.length() - (getPattern().length() - patternOffset - NAME_PLACEHOLDER.length()));
     }
 
     /**
@@ -166,7 +170,14 @@ public class ObjectSpec {
      */
     public String extractNamespaceFromClass(final Class<?> clazz) {
         String n = clazz.getCanonicalName();
-        n = n.substring(getPackagePrefix().length() + 1);
-        return n.substring(0, n.lastIndexOf(".") - getPackageSuffix().length() - 1);
+        if (getPackagePrefix().length() > 0) {
+            n = n.substring(getPackagePrefix().length() + 1);
+        }
+        if (getPackageSuffix().length() > 0) {
+            n = n.substring(0, n.lastIndexOf(".") - getPackageSuffix().length() - 1);
+        } else {
+            n = n.substring(0, n.lastIndexOf("."));
+        }
+        return n;
     }
 }
