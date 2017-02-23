@@ -54,6 +54,7 @@ import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -296,7 +297,8 @@ public final class DatabaseDriverLoader {
                                     ". Driver info: " + d.getInfo());
                                 final DatabaseWrappedDriver duplicate;
                                 if (external) {
-                                    LOGGER.debug("Adding driver to user map: " + driverName);
+                                    LOGGER.debug("Adding driver to user map: " + driverName
+                                        + ". Files: " + Arrays.toString(classURLs));
                                     duplicate = USER_DEFINED_DRIVER_MAP.put(driverName, d);
                                 } else {
                                     LOGGER.debug("Adding driver to buildin map: " + driverName);
