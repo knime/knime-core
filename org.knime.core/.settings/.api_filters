@@ -8,6 +8,33 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/AbstractNodeView.java" type="org.knime.core.node.AbstractNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.AbstractNodeView"/>
+                <message_argument value="AbstractNodeView(T)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.AbstractNodeView"/>
+                <message_argument value="getNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.AbstractNodeView"/>
+                <message_argument value="T"/>
+                <message_argument value="org.knime.core.node.AbstractNodeView$ViewableModel"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.AbstractNodeView"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
         <filter comment="removed as part of AP-6761" id="338755678">
             <message_arguments>
@@ -39,6 +66,49 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveView.java" type="org.knime.core.node.interactive.InteractiveView">
+        <filter id="438399040">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="T"/>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="AbstractWizardNodeView(T)"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="T"/>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+            </message_arguments>
+        </filter>
+        <filter id="438399040">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="T"/>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="T"/>
             </message_arguments>
         </filter>
     </resource>

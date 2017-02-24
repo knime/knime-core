@@ -841,7 +841,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public boolean hasInteractiveView() {
-        return false;
+        // always returns true, even if there is no applicable view nodes inside
+        return true;
     }
 
     /**
@@ -849,7 +850,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public String getInteractiveViewName() {
-        return null;
+        //TODO: custom view name?
+        return getCustomName();
     }
 
     /**
@@ -861,30 +863,44 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return null;
     }
 
-    /** A {@link InteractiveWebViewsResult} for a subnode is the set of all wizard views in it (no recursion).
+    /** A {@link InteractiveWebViewsResult} for a subnode containing the set of all wizard views in it (no recursion).
      * {@inheritDoc} */
     @Override
     public InteractiveWebViewsResult getInteractiveWebViews() {
+        return getInteractiveWebViews(false);
+    }
+
+    /**
+     * A {@link InteractiveWebViewsResult} for a subnode containing either a single page view on all appropriate wizard views or a set of all individual wizard views (no recursion).
+     *
+     * @param combinedView
+     * @return
+     *  */
+    public InteractiveWebViewsResult getInteractiveWebViews(final boolean combinedView) {
         try (WorkflowLock lock = m_wfm.lock()) {
-            // collect all the nodes first, then do make names unique (in case there are 2+ scatterplot)
-            NativeNodeContainer[] nodesWithViews = m_wfm.getWorkflow().getNodeValues().stream()
-                    .filter(n -> n instanceof NativeNodeContainer)
-                    .filter(n -> n.getInteractiveWebViews().size() > 0)
-                    .map(n -> (NativeNodeContainer)n)
-                    .toArray(NativeNodeContainer[]::new);
-
-            // count how often certain names are in use
-            Map<String, Long> uniqueNameBag = Arrays.stream(nodesWithViews)
-                .map(n -> n.getInteractiveViewName())
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
             Builder builder = InteractiveWebViewsResult.newBuilder();
-            for (NativeNodeContainer n : nodesWithViews) {
-                String name = n.getInteractiveViewName();
-                if (uniqueNameBag.get(name) >= 2L) {
-                    name = name.concat(" (ID " + n.getID().getIndex() + ")");
+            if (combinedView) {
+
+            } else {
+                // collect all the nodes first, then do make names unique (in case there are 2+ scatterplot)
+                NativeNodeContainer[] nodesWithViews = m_wfm.getWorkflow().getNodeValues().stream()
+                        .filter(n -> n instanceof NativeNodeContainer)
+                        .filter(n -> n.getInteractiveWebViews().size() > 0)
+                        .map(n -> (NativeNodeContainer)n)
+                        .toArray(NativeNodeContainer[]::new);
+
+                // count how often certain names are in use
+                Map<String, Long> uniqueNameBag = Arrays.stream(nodesWithViews)
+                        .map(n -> n.getInteractiveViewName())
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+                for (NativeNodeContainer n : nodesWithViews) {
+                    String name = n.getInteractiveViewName();
+                    if (uniqueNameBag.get(name) >= 2L) {
+                        name = name.concat(" (ID " + n.getID().getIndex() + ")");
+                    }
+                    builder.add(n, name);
                 }
-                builder.add(n, name);
             }
             return builder.build();
         }

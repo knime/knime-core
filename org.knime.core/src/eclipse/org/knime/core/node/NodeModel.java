@@ -59,6 +59,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -129,7 +130,7 @@ import org.knime.core.node.workflow.ScopeStartNode;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class NodeModel {
+public abstract class NodeModel implements ViewableModel {
 
 
     /* This code will go into the class header once we introduce

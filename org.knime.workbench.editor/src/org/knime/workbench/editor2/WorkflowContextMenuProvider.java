@@ -345,6 +345,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // in the 'else' block? Yes:
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
+                    //TODO for subnodes move to submenu
                     InteractiveWebViewsResult interactiveWebViewsResult = container.getInteractiveWebViews();
                     for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
                         action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
@@ -380,6 +381,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
                 // SUBNODE
                 if (container instanceof SubNodeContainer) {
+
+                    InteractiveWebViewsResult combinedView = ((SubNodeContainer)container).getInteractiveWebViews(true);
+                    action = new OpenInteractiveWebViewAction(container, combinedView.get(0));
+                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
 
                     subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
 

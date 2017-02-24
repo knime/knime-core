@@ -92,13 +92,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         ViewUtils.setLookAndFeel();
     }
 
-    private static final class UpdateObject {
-        private final Component m_component;
-        private UpdateObject(final Component component) {
-            m_component = component;
-        }
-    }
-
     /** Default background color. */
     public static final Color COLOR_BACKGROUND = Color.LIGHT_GRAY;
 
@@ -260,6 +253,15 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      */
     protected Container getExportComponent() {
         return m_frame.getContentPane();
+    }
+
+    /**
+     * Get reference to underlying <code>NodeModel</code>, never null.
+     * @return NodeModel reference.
+     * @since 3.4
+     */
+    protected T getNodeModel() {
+        return super.getViewableModel();
     }
 
     /**

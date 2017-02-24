@@ -73,6 +73,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
@@ -96,7 +97,7 @@ import org.knime.workbench.editor2.ElementRadioSelectionDialog.RadioItem;
  * @param <VAL>
  * @since 2.9
  */
-public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
+public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>,
         REP extends WebViewContent, VAL extends WebViewContent>
         extends AbstractWizardNodeView<T, REP, VAL> {
 
@@ -312,7 +313,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                     @Override
                     public void completed(final ProgressEvent event) {
                         if (m_viewSet) {
-                            T model = getNodeModel();
+                            WizardNode<REP, VAL> model = getModel();
                             WizardViewCreator<REP, VAL> creator = getViewCreator();
                             String initCall =
                                 creator.createInitJSViewMethodCall(model.getViewRepresentation(), model.getViewValue());
@@ -413,7 +414,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                 creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
             String jsonString = (String)m_browser.evaluate(evalCode);
             try {
-                VAL viewValue = getNodeModel().createEmptyViewValue();
+                VAL viewValue = getModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
                 triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
                 return true;
@@ -445,9 +446,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             return false;
         }
         try {
-            VAL viewValue = getNodeModel().createEmptyViewValue();
+            VAL viewValue = getModel().createEmptyViewValue();
             viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-            VAL currentViewValue = getNodeModel().getViewValue();
+            VAL currentViewValue = getModel().getViewValue();
             if (currentViewValue != null) {
                 return !currentViewValue.equals(viewValue);
             }

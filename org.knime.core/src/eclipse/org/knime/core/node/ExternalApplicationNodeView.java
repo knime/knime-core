@@ -85,6 +85,15 @@ public abstract class ExternalApplicationNodeView<T extends NodeModel>
     }
 
     /**
+     * Get reference to underlying <code>NodeModel</code>, never null.
+     * @return NodeModel reference.
+     * @since 3.4
+     */
+    protected T getNodeModel() {
+        return super.getViewableModel();
+    }
+
+    /**
      * {@inheritDoc}
      * @since 2.12
      */

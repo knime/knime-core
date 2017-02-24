@@ -58,7 +58,9 @@ import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.SingleInteractiveWebViewResult;
+import org.knime.core.wizard.WizardPageManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WizardNodeView;
@@ -92,7 +94,12 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @Override
     public boolean isEnabled() {
-        return m_nodeContainer.getNodeContainerState().isExecuted();
+        boolean enabled = m_nodeContainer.getNodeContainerState().isExecuted();
+        if (m_nodeContainer instanceof SubNodeContainer) {
+            WizardPageManager wpm = WizardPageManager.of(m_nodeContainer.getParent());
+            enabled &= wpm.hasWizardPage(m_nodeContainer.getID());
+        }
+        return enabled;
     }
 
     @Override
@@ -139,7 +146,7 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
-        //TODO uncomment for 3.1, make view interchangeable
+        //TODO uncomment to make view interchangeable
         //TODO get preference key
         /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
         try {

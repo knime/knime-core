@@ -58,6 +58,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.AbstractNodeView;
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.InteractiveView;
@@ -75,9 +76,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VAL> the {@link WebViewContent} implementation used as view value
  * @since 2.11
  */
-public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
-    REP extends WebViewContent, VAL extends WebViewContent> extends AbstractNodeView<T>
-    implements InteractiveView<T, REP, VAL> {
+public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
+    extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
@@ -85,6 +85,7 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
 
     /**
      * @param nodeModel
+     * @since 3.4
      */
     protected AbstractWizardNodeView(final T nodeModel) {
         super(nodeModel);
@@ -110,10 +111,18 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     }
 
     /**
+     * @return
+     * @since 3.4
+     */
+    protected final WizardNode<REP, VAL> getModel() {
+        return super.getViewableModel();
+    }
+
+    /**
      * @return The current html file object.
      */
     protected File getViewSource() {
-        String viewPath = getNodeModel().getViewHTMLPath();
+        String viewPath = getModel().getViewHTMLPath();
         if (viewPath != null && !viewPath.isEmpty()) {
             return new File(viewPath);
         }
@@ -132,7 +141,7 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
      * @return The node views creator instance.
      */
     protected WizardViewCreator<REP, VAL> getViewCreator() {
-        return getNodeModel().getViewCreator();
+        return getModel().getViewCreator();
     }
 
     /**
@@ -198,7 +207,7 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
         /**
          * @return the viewClass
          */
-        public Class<AbstractWizardNodeView<? extends NodeModel, ? extends WebViewContent, ? extends WebViewContent>>
+        public Class<AbstractWizardNodeView<? extends ViewableModel, ? extends WebViewContent, ? extends WebViewContent>>
             getViewClass() {
             return m_viewClass;
         }

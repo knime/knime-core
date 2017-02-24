@@ -46,6 +46,7 @@ package org.knime.core.node;
 
 import java.awt.Rectangle;
 
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.workflow.NodeContext;
 
 
@@ -63,7 +64,7 @@ import org.knime.core.node.workflow.NodeContext;
  * @param <T> the implementation of the {@link NodeModel} this node view
  *          is based on
  */
-public abstract class AbstractNodeView<T extends NodeModel> {
+public abstract class AbstractNodeView<T extends ViewableModel> {
 
     /**
      * The node logger for this class; do not make static to make sure the right
@@ -75,8 +76,8 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * subclass allows view titles). */
     private String m_viewName;
 
-    /** Holds the underlying <code>NodeModel</code> of type T, never null. */
-    private final T m_nodeModel;
+    /** Holds the underlying <code>ViewableModel</code> of type T, never null. */
+    private final T m_viewableModel;
 
     /**
      * The node context for this view.
@@ -87,16 +88,16 @@ public abstract class AbstractNodeView<T extends NodeModel> {
 
     /** Creates new view. This constructor keeps the node model reference and
      * instantiates the logger.
-     * @param nodeModel The underlying node model.
+     * @param viewableModel The underlying viewable model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
-     * @since 2.8
+     * @since 3.4
      */
-    protected AbstractNodeView(final T nodeModel) {
-        if (nodeModel == null) {
+    protected AbstractNodeView(final T viewableModel) {
+        if (viewableModel == null) {
             throw new IllegalArgumentException("Node model must not be null");
         }
         m_logger = NodeLogger.getLogger(this.getClass());
-        m_nodeModel = nodeModel;
+        m_viewableModel = viewableModel;
 
         m_nodeContext = NodeContext.getContext();
         m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node view "
@@ -104,11 +105,12 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     }
 
     /**
-     * Get reference to underlying <code>NodeModel</code>, never null.
-     * @return NodeModel reference.
+     * Get reference to underlying <code>ViewableModel</code>, never null.
+     * @return ViewableModel reference.
+     * @since 3.4
      */
-    protected T getNodeModel() {
-        return m_nodeModel;
+    protected final T getViewableModel() {
+        return m_viewableModel;
     }
 
     /** Get reference to logger, never null. The logger is customized with an
@@ -171,7 +173,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * @param title The view title.
      * @see #closeView() */
     final void openView(final String title, final Rectangle knimeWindowBounds) {
-        m_nodeModel.registerView(this);
+        if (m_viewableModel instanceof NodeModel) {
+            ((NodeModel)m_viewableModel).registerView(this);
+        }
         m_viewName = title;
         callOpenView(title, knimeWindowBounds);
     }
@@ -202,7 +206,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * {@link #openView(String, Rectangle)}. (Core) Sub-classes may widen the scope of this
      * method. */
     void closeView() {
-        m_nodeModel.unregisterView(this);
+        if (m_viewableModel instanceof NodeModel) {
+            ((NodeModel)m_viewableModel).unregisterView(this);
+        }
         callCloseView();
     }
 
@@ -216,6 +222,16 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     /** @return the viewName as set in the {@link #openView(String, Rectangle)} method. */
     String getViewName() {
         return m_viewName;
+    }
+
+    /**
+     * Interface for viewable model content.
+     *
+     * @author Bernd Wiswedel, Christian Albrecht, KNME.com AG, Zurich, Switzerland
+     * @since 3.4
+     */
+    public static interface ViewableModel {
+        /* empty for now */
     }
 
 }

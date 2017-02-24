@@ -46,7 +46,7 @@
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -60,7 +60,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VAL>
  * @since 2.8
  */
-public interface InteractiveView<T extends NodeModel & InteractiveNode<REP, VAL>, REP extends ViewContent, VAL extends ViewContent> {
+public interface InteractiveView<T extends ViewableModel, REP extends ViewContent, VAL extends ViewContent> {
 
     /**
      * Set access to workflowmanager and node so the view can trigger re-execution. Note
