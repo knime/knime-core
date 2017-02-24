@@ -50,6 +50,7 @@ package org.knime.time;
 
 import java.time.Duration;
 import java.time.Period;
+import java.time.temporal.TemporalAmount;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.time.duration.DurationCellFactory;
@@ -61,11 +62,16 @@ import org.knime.core.data.time.period.PeriodCellFactory;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public enum Granularity {
-        YEAR("Year", PeriodCellFactory.TYPE), MONTH("Month", PeriodCellFactory.TYPE),
-        WEEK("Week", PeriodCellFactory.TYPE), DAY("Day", PeriodCellFactory.TYPE),
-        HOUR("Hour", DurationCellFactory.TYPE), MINUTE("Minute", DurationCellFactory.TYPE),
-        SECOND("Second", DurationCellFactory.TYPE), MILLISECOND("Millisecond", DurationCellFactory.TYPE),
-        NANOSECOND("Nanosecond", DurationCellFactory.TYPE);
+
+    YEAR("Year", PeriodCellFactory.TYPE),
+    MONTH("Month", PeriodCellFactory.TYPE),
+    WEEK("Week", PeriodCellFactory.TYPE),
+    DAY("Day", PeriodCellFactory.TYPE),
+    HOUR("Hour", DurationCellFactory.TYPE),
+    MINUTE("Minute", DurationCellFactory.TYPE),
+    SECOND("Second", DurationCellFactory.TYPE),
+    MILLISECOND("Millisecond", DurationCellFactory.TYPE),
+    NANOSECOND("Nanosecond", DurationCellFactory.TYPE);
 
     private final String m_name;
 
@@ -85,7 +91,7 @@ public enum Granularity {
     }
 
     /**
-     * @return true, if granularity belongs to a date, and false, if it belongs to a time
+     * @return true if granularity belongs to a date, and false if it belongs to a time
      */
     public boolean isPartOfDate() {
         return m_dataType.equals(PeriodCellFactory.TYPE);
@@ -124,7 +130,7 @@ public enum Granularity {
      * @param value input parameter for {@link Period} or {@link Duration}
      * @return {@link Period} or {@link Duration}
      */
-    public Object getPeriodOrDuration(final int value) {
+    public TemporalAmount getPeriodOrDuration(final int value) {
         final String name = name();
         if (name.equals(YEAR.name())) {
             return Period.ofYears(value);
