@@ -124,10 +124,10 @@ public class RepositoryServiceTest {
     @Test
     public void test_getNodeDescription() {
 		//create parameter values
-		String nodeTypeID = "uIeKo";
+		String nodeTypeID = "NPAKa";
  
 		//create return value   
-		String res = "MHidt";        
+		String res = "tLs89";        
 
 		//mock return value
 		Mockito.when(m_serviceMock.getNodeDescription(Matchers.anyVararg())).thenReturn(res);

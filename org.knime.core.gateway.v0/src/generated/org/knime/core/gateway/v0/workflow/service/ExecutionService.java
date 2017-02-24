@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 /**
@@ -64,7 +63,7 @@ public interface ExecutionService extends GatewayService {
      * @return BERND
      * 
      */ 
-	boolean getCanExecuteUpToHere(final EntityID workflowID, final String nodeID);
+	boolean getCanExecuteUpToHere(final String workflowID, final String nodeID);
 	
     /**
      * Trigger an execution of a single node or a chain of nodes (endpoint reference).
@@ -73,6 +72,6 @@ public interface ExecutionService extends GatewayService {
      * @return BERND
      * 
      */ 
-	WorkflowEnt setExecuteUpToHere(final EntityID workflowID, final String nodeID);
+	WorkflowEnt setExecuteUpToHere(final String workflowID, final String nodeID);
 	
 }

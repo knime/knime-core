@@ -88,7 +88,7 @@ public class TestServiceTest {
     }
 
     @Test
-    public void test_getTest() {
+    public void test_updateTest() {
 		//create parameter values
 		TestEnt id = TestEntTest.createEnt(TestEntTest.createValueList());
  
@@ -97,17 +97,17 @@ public class TestServiceTest {
         TestEnt res = TestEntTest.createEnt(values);
 
 		//mock return value
-		Mockito.when(m_serviceMock.getTest(Matchers.anyVararg())).thenReturn(res);
+		Mockito.when(m_serviceMock.updateTest(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		TestEnt methodRes = service(TestService.class).getTest(id);
+		TestEnt methodRes = service(TestService.class).updateTest(id);
 
 		//compare results
         TestEntTest.testEnt(methodRes, values);
     }
 
     @Test
-    public void test_getTestList() {
+    public void test_updateTestList() {
 		//create parameter values
 		List<TestEnt> list = new ArrayList<>();
 		list.add(TestEntTest.createEnt(TestEntTest.createValueList()));
@@ -136,10 +136,10 @@ public class TestServiceTest {
         res.add(TestEntTest.createEnt(valList5));
 
 		//mock return value
-		Mockito.when(m_serviceMock.getTestList(Matchers.anyVararg())).thenReturn(res);
+		Mockito.when(m_serviceMock.updateTestList(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		List<TestEnt> methodRes = service(TestService.class).getTestList(list);
+		List<TestEnt> methodRes = service(TestService.class).updateTestList(list);
 
 		//compare results
         for (int i = 0; i < methodRes.size(); i++) {
@@ -148,24 +148,24 @@ public class TestServiceTest {
     }
 
     @Test
-    public void test_getPrimitives() {
+    public void test_updatePrimitives() {
 		//create parameter values
-		String s = "EgOGH";
+		String s = "FM08Z";
 		List<String> stringlist = new ArrayList<>();
-		stringlist.add("fDlno");
-		stringlist.add("npbCn");
-		stringlist.add("8GulR");
-		stringlist.add("kAZ6A");
-		stringlist.add("lMo9q");
+		stringlist.add("KbJpP");
+		stringlist.add("sgd52");
+		stringlist.add("FzX85");
+		stringlist.add("sIhSb");
+		stringlist.add("R4u9g");
  
 		//create return value   
-		double res = 0.4272465819903001;        
+		double res = 0.936759910989434;        
 
 		//mock return value
-		Mockito.when(m_serviceMock.getPrimitives(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
+		Mockito.when(m_serviceMock.updatePrimitives(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		double methodRes = service(TestService.class).getPrimitives(s, stringlist);
+		double methodRes = service(TestService.class).updatePrimitives(s, stringlist);
 
 		//compare results
 		assertEquals(res, methodRes);

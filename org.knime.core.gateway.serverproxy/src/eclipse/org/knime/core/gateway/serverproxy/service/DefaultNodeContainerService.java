@@ -52,7 +52,6 @@ import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.JSONConfig;
@@ -67,10 +66,10 @@ public class DefaultNodeContainerService implements NodeContainerService {
 
     /** {@inheritDoc} */
     @Override
-    public String getNodeSettingsJSON(final EntityID workflowID, final String nodeID) {
-        WorkflowProject workflowProject = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID());
+    public String getNodeSettingsJSON(final String workflowID, final String nodeID) {
+        WorkflowProject workflowProject = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID);
         if (workflowProject == null) {
-            throw new RuntimeException("Workflow not known: " + workflowID.getID());
+            throw new RuntimeException("Workflow not known: " + workflowID);
         }
         IWorkflowManager manager = workflowProject.getProject().orElseThrow(
             () -> new RuntimeException("Workflow not open: " + workflowID));

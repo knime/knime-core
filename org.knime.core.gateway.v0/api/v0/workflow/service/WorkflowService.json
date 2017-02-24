@@ -16,7 +16,7 @@
                 {
                     "description" : "The identifier as per #getAllWorkflows",
                     "name" : "id",
-                    "type" : "workflow.entity.EntityID"
+                    "type" : "String"
                 }
             ]
         },
@@ -41,7 +41,7 @@
             "description" : "Get a list of IDs for all known workflows",
             "result" : {
                 "description" : "BERND",
-                "type" : "List<workflow.entity.EntityID>"
+                "type" : "List<String>"
             },
             "params" : [ ]
         }

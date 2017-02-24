@@ -72,18 +72,23 @@ import java.util.List;
 public interface RS${name} extends ${name} {
 
 #foreach( $method in $methods )
+##check whether all parameters are primitives
 #set( $primitiveParams = true )
 #foreach( $param in $method.getParameters() )
-#if(!$param.isPrimitive())
+#if(!$param.getType().isPrimitive())
 #set($primitiveParams = false)
 #break
 #end
 #end
 
 	@Override
-#if($primitiveParams)
+#if(!$primitiveParams && $method.getOperation().getNameLowerCase() == "get")
+##exception, not allowed
+	PROBLEM: 'get' operation not allowed here - all parameters must be primitives
+#end
+#if($primitiveParams && $method.getOperation().getNameLowerCase() == "get")
 	@GET
-#else
+#elseif($method.getOperation().getNameLowerCase() == "update")
     @POST
 #end
 #set($rettype = $method.getResult().getType())
@@ -96,12 +101,14 @@ public interface RS${name} extends ${name} {
 #else
 #set($type=${rettype.toString()})
 #end
+#if($type.isEntity())
 	@IOClasses(in=${type}FromJson.class, out=${type}ToJson.class)
+#end
 #end
 #if(!$primitiveParams)
     @Consumes(MediaType.APPLICATION_JSON)
 #end
-    @Path("/$method.getName()")
+    @Path("/$method.getNameWithoutOperation().toLowerCase()")
     public $rettype.toString("","") $method.getName()(
 #foreach($param in $method.getParameters())
 #if(${param.getType().isPrimitive()})
@@ -112,7 +119,7 @@ public interface RS${name} extends ${name} {
 #else
 #set($type=${param.getType().toString("","")})
 #end
-		@IOClasses(in=${type}FromJson.class, out=${type}ToJson.class) final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
+		#if($type.isEntity())@IOClasses(in=${type}FromJson.class, out=${type}ToJson.class)#end final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
 #end
 #end
 );

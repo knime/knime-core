@@ -47,7 +47,6 @@
 package org.knime.core.jaxrs.workflow.service;
 
 import org.knime.core.jaxrs.workflow.service.RSWrapperExecutionService;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 
@@ -72,14 +71,14 @@ public class RSWrapperExecutionService implements RSExecutionService {
 				
 	@Override
  	public boolean getCanExecuteUpToHere(
-		final EntityID workflowID,
+		final String workflowID,
 		final String nodeID)   {
 		return m_service.getCanExecuteUpToHere(workflowID, nodeID);
     }
 				
 	@Override
  	public WorkflowEnt setExecuteUpToHere(
-		final EntityID workflowID,
+		final String workflowID,
 		final String nodeID)   {
 		return m_service.setExecuteUpToHere(workflowID, nodeID);
     }

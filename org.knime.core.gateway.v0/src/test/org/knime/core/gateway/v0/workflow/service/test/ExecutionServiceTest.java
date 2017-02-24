@@ -50,8 +50,6 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
-import org.knime.core.gateway.v0.test.workflow.entity.test.EntityIDTest;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.test.workflow.entity.test.WorkflowEntTest;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
@@ -91,11 +89,11 @@ public class ExecutionServiceTest {
     @Test
     public void test_getCanExecuteUpToHere() {
 		//create parameter values
-		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "F7olt";
+		String workflowID = "dExaH";
+		String nodeID = "RS595";
  
 		//create return value   
-		boolean res = true;        
+		boolean res = false;        
 
 		//mock return value
 		Mockito.when(m_serviceMock.getCanExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
@@ -110,8 +108,8 @@ public class ExecutionServiceTest {
     @Test
     public void test_setExecuteUpToHere() {
 		//create parameter values
-		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "hZLxT";
+		String workflowID = "ecTsf";
+		String nodeID = "jdP3i";
  
 		//create return value   
 		List<Object> values = WorkflowEntTest.createValueList();

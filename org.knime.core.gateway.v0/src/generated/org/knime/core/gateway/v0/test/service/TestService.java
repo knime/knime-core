@@ -64,7 +64,7 @@ public interface TestService extends GatewayService {
      * @return BERND
      * 
      */ 
-	TestEnt getTest(final TestEnt id);
+	TestEnt updateTest(final TestEnt id);
 	
     /**
      * Some example documentation.
@@ -72,7 +72,7 @@ public interface TestService extends GatewayService {
      * @return BERND
      * 
      */ 
-	List<TestEnt> getTestList(final List<TestEnt> list);
+	List<TestEnt> updateTestList(final List<TestEnt> list);
 	
     /**
      * Some example documentation.
@@ -81,6 +81,6 @@ public interface TestService extends GatewayService {
      * @return BERND
      * 
      */ 
-	double getPrimitives(final String s, final List<String> stringlist);
+	double updatePrimitives(final String s, final List<String> stringlist);
 	
 }

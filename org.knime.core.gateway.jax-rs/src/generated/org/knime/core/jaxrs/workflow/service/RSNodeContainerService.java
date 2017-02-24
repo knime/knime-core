@@ -46,9 +46,6 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
-import org.knime.core.jaxrs.workflow.entity.EntityIDToJson;
-import org.knime.core.jaxrs.workflow.entity.EntityIDFromJson;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 
 import javax.ws.rs.Consumes;
@@ -74,11 +71,10 @@ public interface RSNodeContainerService extends NodeContainerService {
 
 
 	@Override
-    @POST
+	@GET
     @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getNodeSettingsJSON")
+    @Path("/nodesettingsjson")
     public String getNodeSettingsJSON(
-		@IOClasses(in=EntityIDFromJson.class, out=EntityIDToJson.class) final EntityID workflowID,		@QueryParam("nodeID") final String nodeID);
+		@QueryParam("workflowID") final String workflowID,		@QueryParam("nodeID") final String nodeID);
 
 }

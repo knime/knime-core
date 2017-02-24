@@ -48,16 +48,13 @@
  */
 package org.knime.core.gateway.serverproxy.service;
 
-import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
 import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWorkflowEnt;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 
 /**
@@ -79,12 +76,12 @@ public class DefaultWorkflowService implements WorkflowService {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEnt getWorkflow(final EntityID id) {
+    public WorkflowEnt getWorkflow(final String id) {
         //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
         //might be a bit confusing here: uses the (to be newly introduced) mechanism to generally open workflow projects (no matter they are local or remote workflows)
         //here, however, it should probably always be a local workflow that is served to clients (since this class use supposed to be used by other server implementations, e.g. thrift)
         try {
-            return buildWorkflowEnt(WorkflowProjectManager.getWorkflowProjectsMap().get(id.getID()).openProject());
+            return buildWorkflowEnt(WorkflowProjectManager.getWorkflowProjectsMap().get(id).openProject());
         } catch (Exception ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);
@@ -95,9 +92,9 @@ public class DefaultWorkflowService implements WorkflowService {
      * {@inheritDoc}
      */
     @Override
-    public List<EntityID> getAllWorkflows() {
+    public List<String> getAllWorkflows() {
         return WorkflowProjectManager.getWorkflowProjectsMap().values().stream().map((wp) -> {
-            return builder(EntityIDBuilder.class).setID(wp.getName()).setType("WorkflowEnt").build();
+            return wp.getName();
         }).collect(Collectors.toList());
 //        return Arrays.asList(builder(EntityIDBuilder.class).setID("huhutest").setType("WorkflowEnt").build());
     }

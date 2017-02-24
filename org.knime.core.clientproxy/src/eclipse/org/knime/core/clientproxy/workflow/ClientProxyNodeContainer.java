@@ -140,7 +140,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
         EntityID parent = m_node.getParent();
         assert parent.getType().equals("WorkflowEnt");
         //download 'workflow' from 'server'
-        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent);
+        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent.getID());
         //return same instance if the instance for this ID has already been created
         return WrapperMapUtil.getOrCreate(parent.getID(), we -> new ClientProxyWorkflowManager(workflow));
     }
@@ -385,7 +385,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     @Override
     public boolean canExecuteUpToHere() {
         //TODO
-        return service(ExecutionService.class).canExecuteUpToHere(null, null);
+        return service(ExecutionService.class).getCanExecuteUpToHere(null, null);
     }
 
     /**

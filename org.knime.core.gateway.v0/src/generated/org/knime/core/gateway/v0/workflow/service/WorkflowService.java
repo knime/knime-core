@@ -47,7 +47,6 @@
 package org.knime.core.gateway.v0.workflow.service;
 
 import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 /**
@@ -64,7 +63,7 @@ public interface WorkflowService extends GatewayService {
      * @return BERND
      * 
      */ 
-	WorkflowEnt getWorkflow(final EntityID id);
+	WorkflowEnt getWorkflow(final String id);
 	
     /**
      * Trigger an update of the given workflow (@Martin, what's that mean?)
@@ -78,6 +77,6 @@ public interface WorkflowService extends GatewayService {
      * @return BERND
      * 
      */ 
-	List<EntityID> getAllWorkflows();
+	List<String> getAllWorkflows();
 	
 }

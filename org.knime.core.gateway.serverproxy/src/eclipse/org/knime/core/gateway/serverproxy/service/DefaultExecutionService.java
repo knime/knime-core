@@ -52,7 +52,6 @@ import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWor
 
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 import org.knime.core.node.workflow.NodeID;
@@ -67,9 +66,9 @@ public class DefaultExecutionService implements ExecutionService {
      * {@inheritDoc}
      */
     @Override
-    public boolean getCanExecuteUpToHere(final EntityID workflowID, final String nodeID) {
+    public boolean getCanExecuteUpToHere(final String workflowID, final String nodeID) {
         try {
-            return WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject()
+            return WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID).openProject()
                 .canExecuteNode(NodeID.fromString(nodeID));
         } catch (Exception ex) {
             // TODO better exception handling
@@ -81,9 +80,9 @@ public class DefaultExecutionService implements ExecutionService {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEnt setExecuteUpToHere(final EntityID workflowID, final String nodeID) {
+    public WorkflowEnt setExecuteUpToHere(final String workflowID, final String nodeID) {
         try {
-            IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID.getID()).openProject();
+            IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID).openProject();
             wfm.executeUpToHere(NodeID.fromString(nodeID));
             //TODO only update the downstream nodes, or better: the ones that changed its status
             return buildWorkflowEnt(wfm);

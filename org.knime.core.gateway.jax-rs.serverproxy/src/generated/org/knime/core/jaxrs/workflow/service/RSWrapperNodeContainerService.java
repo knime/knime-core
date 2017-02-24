@@ -47,7 +47,6 @@
 package org.knime.core.jaxrs.workflow.service;
 
 import org.knime.core.jaxrs.workflow.service.RSWrapperNodeContainerService;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 
 import java.util.List;
@@ -71,7 +70,7 @@ public class RSWrapperNodeContainerService implements RSNodeContainerService {
 				
 	@Override
  	public String getNodeSettingsJSON(
-		final EntityID workflowID,
+		final String workflowID,
 		final String nodeID)   {
 		return m_service.getNodeSettingsJSON(workflowID, nodeID);
     }

@@ -71,22 +71,22 @@ public class RSWrapperTestService implements RSTestService {
 
 				
 	@Override
- 	public TestEnt getTest(
+ 	public TestEnt updateTest(
 		final TestEnt id)   {
-		return m_service.getTest(id);
+		return m_service.updateTest(id);
     }
 				
 	@Override
- 	public List<TestEnt> getTestList(
+ 	public List<TestEnt> updateTestList(
 		final List<TestEnt> list)   {
-		return m_service.getTestList(list);
+		return m_service.updateTestList(list);
     }
 				
 	@Override
- 	public double getPrimitives(
+ 	public double updatePrimitives(
 		final String s,
 		final List<String> stringlist)   {
-		return m_service.getPrimitives(s, stringlist);
+		return m_service.updatePrimitives(s, stringlist);
     }
 
 }

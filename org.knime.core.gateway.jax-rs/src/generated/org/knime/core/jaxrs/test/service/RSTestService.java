@@ -77,27 +77,25 @@ public interface RSTestService extends TestService {
 	@Override
     @POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getTest")
-    public TestEnt getTest(
-		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final TestEnt id);
+    @Path("/test")
+    public TestEnt updateTest(
+		 final TestEnt id);
 
 	@Override
     @POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getTestList")
-    public List<TestEnt> getTestList(
-		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final List<TestEnt> list);
+    @Path("/testlist")
+    public List<TestEnt> updateTestList(
+		 final List<TestEnt> list);
 
 	@Override
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getPrimitives")
-    public double getPrimitives(
-		@QueryParam("s") final String s,		@QueryParam("stringlist") final List<String> stringlist);
+    @Path("/primitives")
+    public double updatePrimitives(
+		@QueryParam("s") final String s,		 final List<String> stringlist);
 
 }

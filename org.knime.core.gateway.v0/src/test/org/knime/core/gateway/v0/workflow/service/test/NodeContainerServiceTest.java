@@ -50,8 +50,6 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
-import org.knime.core.gateway.v0.test.workflow.entity.test.EntityIDTest;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 
 import java.util.ArrayList;
@@ -89,11 +87,11 @@ public class NodeContainerServiceTest {
     @Test
     public void test_getNodeSettingsJSON() {
 		//create parameter values
-		EntityID workflowID = EntityIDTest.createEnt(EntityIDTest.createValueList());
-		String nodeID = "jSRYS";
+		String workflowID = "BaFqh";
+		String nodeID = "y8bey";
  
 		//create return value   
-		String res = "56hsl";        
+		String res = "LYtIu";        
 
 		//mock return value
 		Mockito.when(m_serviceMock.getNodeSettingsJSON(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);

@@ -134,11 +134,18 @@ public class ServiceMethod {
         m_parameters = Arrays.asList(parameters);
     }
 
+    /**
+     * @return the method name
+     */
     @JsonProperty("name")
-    public String getNameNoOperation() {
+    public String getNameWithoutOperation() {
         return m_name;
     }
 
+    /**
+     * @return the method name compose of the operation name (all lower case) followed by the identifier (also referred
+     *         to as 'name' - a bit confusing -> TODO)
+     */
     @JsonIgnore
     public String getName() {
         return m_operation.getNameLowerCase() + m_name;
@@ -159,11 +166,17 @@ public class ServiceMethod {
         return m_description;
     }
 
+    /**
+     * @return the return value of the service method
+     */
     @JsonProperty("result")
     public MethodReturn getResult() {
         return m_result;
     }
 
+    /**
+     * @return all service method parameters
+     */
     @JsonProperty("params")
     public List<MethodParam> getParameters() {
         return m_parameters;

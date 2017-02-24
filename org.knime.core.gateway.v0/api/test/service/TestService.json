@@ -6,7 +6,7 @@
     "methods" : [
         {
             "name" : "Test",
-            "operation" : "get",
+            "operation" : "update",
             "description" : "Some example documentation.",
             "result" : {
                 "description" : "BERND",
@@ -22,7 +22,7 @@
         },
         {
             "name" : "TestList",
-            "operation" : "get",
+            "operation" : "update",
             "description" : "Some example documentation.",
             "result" : {
                 "description" : "BERND",
@@ -38,7 +38,7 @@
         },
         {
             "name" : "Primitives",
-            "operation" : "get",
+            "operation" : "update",
             "description" : "Some example documentation.",
             "result" : {
                 "description" : "BERND",

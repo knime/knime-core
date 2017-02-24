@@ -129,6 +129,11 @@ public class ${name}Test {
         valueLists.add(valList$i);
         res.add(${rettype.getTypeParameter(0).toString()}Test.createEnt(valList$i));
 #end
+#elseif($rettype.isPrimitiveList())
+		${rettype.toString()} res = new ArrayList<>(5);
+#foreach($i in [1..5])
+        res.add(${rettype.getTypeParameter(0).createRandomPrimitive()});
+#end
 #elseif($rettype.isPrimitive())
 		${rettype.toString()} res = ${rettype.createRandomPrimitive()};        
 #elseif($rettype.isEntity())
@@ -149,6 +154,10 @@ public class ${name}Test {
 #if($rettype.isEntityList())
         for (int i = 0; i < methodRes.size(); i++) {
             ${rettype.getTypeParameter(0).toString()}Test.testEnt(methodRes.get(i), valueLists.get(i));
+        }
+#elseif($rettype.isPrimitiveList())
+		for (int i = 0; i < methodRes.size(); i++) {
+			assertEquals(res.get(i), methodRes.get(i));
         }
 #elseif($rettype.isEntity())
         ${rettype.toString()}Test.testEnt(methodRes, values);

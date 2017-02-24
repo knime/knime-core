@@ -48,11 +48,8 @@ package org.knime.core.jaxrs.workflow.service;
 
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntToJson;
 import java.util.List;
-import org.knime.core.jaxrs.workflow.entity.EntityIDToJson;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntFromJson;
-import org.knime.core.jaxrs.workflow.entity.EntityIDFromJson;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 import javax.ws.rs.Consumes;
@@ -78,27 +75,24 @@ public interface RSWorkflowService extends WorkflowService {
 
 
 	@Override
-    @POST
+	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getWorkflow")
+    @Path("/workflow")
     public WorkflowEnt getWorkflow(
-		@IOClasses(in=EntityIDFromJson.class, out=EntityIDToJson.class) final EntityID id);
+		@QueryParam("id") final String id);
 
 	@Override
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/updateWorkflow")
+    @Path("/workflow")
     public void updateWorkflow(
-		@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class) final WorkflowEnt wf);
+		 final WorkflowEnt wf);
 
 	@Override
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=EntityIDFromJson.class, out=EntityIDToJson.class)
-    @Path("/getAllWorkflows")
-    public List<EntityID> getAllWorkflows(
+    @Path("/allworkflows")
+    public List<String> getAllWorkflows(
 );
 
 }

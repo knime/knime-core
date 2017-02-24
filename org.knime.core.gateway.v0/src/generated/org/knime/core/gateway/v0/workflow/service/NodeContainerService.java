@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 
 /**
  * Defines service methods to query details on an individual node or metanode.
@@ -63,6 +62,6 @@ public interface NodeContainerService extends GatewayService {
      * @return BERND
      * 
      */ 
-	String getNodeSettingsJSON(final EntityID workflowID, final String nodeID);
+	String getNodeSettingsJSON(final String workflowID, final String nodeID);
 	
 }

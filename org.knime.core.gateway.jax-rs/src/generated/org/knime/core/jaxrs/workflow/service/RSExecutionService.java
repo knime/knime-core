@@ -47,10 +47,7 @@
 package org.knime.core.jaxrs.workflow.service;
 
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntToJson;
-import org.knime.core.jaxrs.workflow.entity.EntityIDToJson;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntFromJson;
-import org.knime.core.jaxrs.workflow.entity.EntityIDFromJson;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 
@@ -77,20 +74,16 @@ public interface RSExecutionService extends ExecutionService {
 
 
 	@Override
-    @POST
+	@GET
     @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getCanExecuteUpToHere")
+    @Path("/canexecuteuptohere")
     public boolean getCanExecuteUpToHere(
-		@IOClasses(in=EntityIDFromJson.class, out=EntityIDToJson.class) final EntityID workflowID,		@QueryParam("nodeID") final String nodeID);
+		@QueryParam("workflowID") final String workflowID,		@QueryParam("nodeID") final String nodeID);
 
 	@Override
-    @POST
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/setExecuteUpToHere")
+    @Path("/executeuptohere")
     public WorkflowEnt setExecuteUpToHere(
-		@IOClasses(in=EntityIDFromJson.class, out=EntityIDToJson.class) final EntityID workflowID,		@QueryParam("nodeID") final String nodeID);
+		@QueryParam("workflowID") final String workflowID,		@QueryParam("nodeID") final String nodeID);
 
 }

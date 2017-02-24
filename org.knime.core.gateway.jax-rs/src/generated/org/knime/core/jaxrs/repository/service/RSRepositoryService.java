@@ -77,16 +77,14 @@ public interface RSRepositoryService extends RepositoryService {
 	@Override
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=RepoCategoryEntFromJson.class, out=RepoCategoryEntToJson.class)
-    @Path("/getNodeRepository")
+    @Path("/noderepository")
     public List<RepoCategoryEnt> getNodeRepository(
 );
 
 	@Override
-    @POST
+	@GET
     @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/getNodeDescription")
+    @Path("/nodedescription")
     public String getNodeDescription(
 		@QueryParam("nodeTypeID") final String nodeTypeID);
 

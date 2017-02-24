@@ -16,7 +16,7 @@
                 {
                     "description" : "The id of the workflow the node is in.",
                     "name" : "workflowID",
-                    "type" : "workflow.entity.EntityID"
+                    "type" : "String"
                 },
                 {
                     "description" : "The id of the node itself.",
