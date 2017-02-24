@@ -164,10 +164,10 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
             if (isDurationColumn) {
                 for (final SettingsModelBoolean model : m_durModels) {
                     if (model.getBooleanValue()) {
-                        if (model.equals(m_nanoModel)) {
-                            colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), IntCell.TYPE));
-                        } else {
+                        if (model.equals(m_hourModel)) {
                             colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
+                        } else {
+                            colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), IntCell.TYPE));
                         }
                     }
                 }
@@ -183,8 +183,24 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
         }
         final DataColumnSpec[] colSpecsArray = new DataColumnSpec[colSpecs.size()];
         colSpecs.toArray(colSpecsArray);
-        final CellFactory cellFac = new ExtractDurationPeriodFieldsCellFactory(
-            spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
+        final CellFactory cellFac;
+        if (isDurationColumn) {
+            if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
+                cellFac = new ExtractDurationSingleFieldCellFactory(
+                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
+            } else {
+                cellFac = new ExtractDurationSeveralFieldsCellFactory(
+                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
+            }
+        } else {
+            if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
+                cellFac = new ExtractPeriodSingleFieldCellFactory(
+                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
+            } else {
+                cellFac = new ExtractPeriodSeveralFieldsCellFactory(
+                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
+            }
+        }
         rearranger.append(cellFac);
         return rearranger;
     }
@@ -243,11 +259,14 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
         m_dayModel.loadSettingsFrom(settings);
     }
 
-    private final class ExtractDurationPeriodFieldsCellFactory extends AbstractCellFactory {
+    /**
+     * {@link AbstractCellFactory} for single mode and duration.
+     */
+    private final class ExtractDurationSingleFieldCellFactory extends AbstractCellFactory {
 
         private final int m_colIdx;
 
-        public ExtractDurationPeriodFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+        public ExtractDurationSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
             super(colSpecs);
             m_colIdx = colIdx;
         }
@@ -263,112 +282,167 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
                 Arrays.fill(newCells, cell);
                 return newCells;
             }
-            /*
-             * if duration column
-             */
-            if (cell.getType().equals(DurationCellFactory.TYPE)) {
-                final Duration duration = ((DurationCell)cell).getDuration();
-                if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
-                    if (m_durationFieldSelectModel.getStringValue().equals(Granularity.HOUR.toString())) {
-                        newCells[0] = LongCellFactory.create(duration.toHours());
-                        return newCells;
-                    }
-                    if (m_durationFieldSelectModel.getStringValue().equals(Granularity.MINUTE.toString())) {
-                        newCells[0] = LongCellFactory.create(duration.toMinutes());
-                        return newCells;
-                    }
-                    if (m_durationFieldSelectModel.getStringValue().equals(Granularity.SECOND.toString())) {
-                        // Because java.time.Duration stores only positive nanoseconds, one second needs to be
-                        // subtracted, if the duration is negative and nanoseconds != 0
-                        final long seconds = duration.getSeconds();
-                        newCells[0] =
-                            LongCellFactory.create((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds);
-                        return newCells;
-                    }
-                    if (m_durationFieldSelectModel.getStringValue().equals(Granularity.NANOSECOND.toString())) {
-                        try {
-                            newCells[0] = LongCellFactory.create(duration.toNanos());
-                        } catch (ArithmeticException e) {
-                            newCells[0] = new MissingCell(e.getMessage());
-                            setWarningMessage(
-                                "The duration in row '" + row.getKey() + "' was too big to convert to nanoseconds!");
-                        }
-                        return newCells;
-                    }
-                    throw new IllegalStateException("Unexpected field: " + m_durationFieldSelectModel.getStringValue());
-                } else {
-                    int i = 0;
-                    for (final SettingsModelBoolean model : m_durModels) {
-                        if (model.getBooleanValue()) {
-                            if (Granularity.HOUR.toString().equals(model.getConfigName())) {
-                                newCells[i] = LongCellFactory.create(duration.getSeconds() / 3600);
-                            } else {
-                                if (Granularity.MINUTE.toString().equals(model.getConfigName())) {
-                                    newCells[i] = LongCellFactory.create((duration.toMinutes()) % (60));
-                                } else {
-                                    if (Granularity.SECOND.toString().equals(model.getConfigName())) {
-                                        // Because java.time.Duration stores only positive nanoseconds, one second needs to be
-                                        // subtracted, if the duration is negative and nanoseconds != 0
-                                        final long seconds = duration.getSeconds() % 60;
-                                        newCells[i] = LongCellFactory
-                                            .create((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds);
-                                    } else {
-                                        if (Granularity.NANOSECOND.toString().equals(model.getConfigName())) {
-                                            final int nano = duration.getNano();
-                                            newCells[i] = IntCellFactory.create((duration.getSeconds() < 0 && nano > 0)
-                                                ? (nano - 1_000_000_000) : nano);
-                                        } else {
-                                            throw new IllegalStateException(
-                                                "Unexpected field: " + model.getConfigName());
-                                        }
-                                    }
-                                }
-                            }
-                            i++;
-                        }
-                    }
-                    return newCells;
-                }
+
+            final Duration duration = ((DurationCell)cell).getDuration();
+            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.HOUR.toString())) {
+                newCells[0] = LongCellFactory.create(duration.toHours());
+                return newCells;
             }
-            /*
-             * if period column
-             */
-            else {
-                final Period period = ((PeriodCell)cell).getPeriod();
-                if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
-                    if (m_periodFieldSelectModel.getStringValue().equals(Granularity.YEAR.toString())) {
-                        newCells[0] = LongCellFactory.create(period.toTotalMonths() / 12);
-                        return newCells;
-                    }
-                    if (m_periodFieldSelectModel.getStringValue().equals(Granularity.MONTH.toString())) {
-                        newCells[0] = LongCellFactory.create(period.toTotalMonths());
-                        return newCells;
-                    }
-                    throw new IllegalStateException("Unexpected field: " + m_periodFieldSelectModel.getStringValue());
-                } else {
-                    int i = 0;
-                    for (final SettingsModelBoolean model : m_perModels) {
-                        if (model.getBooleanValue()) {
-                            if (Granularity.YEAR.toString().equals(model.getConfigName())) {
-                                newCells[i] = LongCellFactory.create(period.getYears());
-                            } else {
-                                if (Granularity.MONTH.toString().equals(model.getConfigName())) {
-                                    newCells[i] = LongCellFactory.create(period.getMonths());
-                                } else {
-                                    if (Granularity.DAY.toString().equals(model.getConfigName())) {
-                                        newCells[i] = LongCellFactory.create(period.getDays());
-                                    } else {
-                                        throw new IllegalStateException("Unexpected field: " + model.getConfigName());
-                                    }
-                                }
-                            }
-                            i++;
-                        }
-                    }
-                    return newCells;
-                }
+            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.MINUTE.toString())) {
+                newCells[0] = LongCellFactory.create(duration.toMinutes());
+                return newCells;
             }
+            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.SECOND.toString())) {
+                // Because java.time.Duration stores only positive nanoseconds, one second needs to be
+                // added, if the duration is negative and nanoseconds != 0
+                final long seconds = duration.getSeconds();
+                newCells[0] = LongCellFactory.create((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds);
+                return newCells;
+            }
+            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.NANOSECOND.toString())) {
+                try {
+                    newCells[0] = LongCellFactory.create(duration.toNanos());
+                } catch (ArithmeticException e) {
+                    newCells[0] = new MissingCell(e.getMessage());
+                    setWarningMessage(
+                        "The duration in row '" + row.getKey() + "' was too big to convert to nanoseconds!");
+                }
+                return newCells;
+            }
+            throw new IllegalStateException("Unexpected field: " + m_durationFieldSelectModel.getStringValue());
+        }
+    }
+
+    /**
+     * {@link AbstractCellFactory} for several mode and duration.
+     */
+    private final class ExtractDurationSeveralFieldsCellFactory extends AbstractCellFactory {
+
+        private final int m_colIdx;
+
+        public ExtractDurationSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+            super(colSpecs);
+            m_colIdx = colIdx;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell[] getCells(final DataRow row) {
+            final DataCell[] newCells = new DataCell[getColumnSpecs().length];
+            final DataCell cell = row.getCell(m_colIdx);
+            if (cell.isMissing()) {
+                Arrays.fill(newCells, cell);
+                return newCells;
+            }
+
+            final Duration duration = ((DurationCell)cell).getDuration();
+            int i = 0;
+            for (final SettingsModelBoolean model : m_durModels) {
+                if (model.getBooleanValue()) {
+                    if (Granularity.HOUR.toString().equals(model.getConfigName())) {
+                        newCells[i] = LongCellFactory.create(duration.getSeconds() / 3600);
+                    } else if (Granularity.MINUTE.toString().equals(model.getConfigName())) {
+                        newCells[i] = IntCellFactory.create((int)(duration.toMinutes()) % (60));
+                    } else if (Granularity.SECOND.toString().equals(model.getConfigName())) {
+                        // Because java.time.Duration stores only positive nanoseconds, one second needs to be
+                        // added, if the duration is negative and nanoseconds != 0
+                        final long seconds = duration.getSeconds() % 60;
+                        newCells[i] = IntCellFactory
+                            .create((int)((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds));
+                    } else if (Granularity.NANOSECOND.toString().equals(model.getConfigName())) {
+                        final int nano = duration.getNano();
+                        newCells[i] = IntCellFactory
+                            .create((duration.getSeconds() < 0 && nano > 0) ? (nano - 1_000_000_000) : nano);
+                    } else {
+                        throw new IllegalStateException("Unexpected field: " + model.getConfigName());
+                    }
+                    i++;
+                }
+            }
+            return newCells;
+        }
+    }
+
+    /**
+     * {@link AbstractCellFactory} for single mode and period.
+     */
+    private final class ExtractPeriodSingleFieldCellFactory extends AbstractCellFactory {
+
+        private final int m_colIdx;
+
+        public ExtractPeriodSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+            super(colSpecs);
+            m_colIdx = colIdx;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell[] getCells(final DataRow row) {
+            final DataCell[] newCells = new DataCell[getColumnSpecs().length];
+            final DataCell cell = row.getCell(m_colIdx);
+            if (cell.isMissing()) {
+                Arrays.fill(newCells, cell);
+                return newCells;
+            }
+
+            final Period period = ((PeriodCell)cell).getPeriod();
+            if (m_periodFieldSelectModel.getStringValue().equals(Granularity.YEAR.toString())) {
+                newCells[0] = LongCellFactory.create(period.toTotalMonths() / 12);
+                return newCells;
+            }
+            if (m_periodFieldSelectModel.getStringValue().equals(Granularity.MONTH.toString())) {
+                newCells[0] = LongCellFactory.create(period.toTotalMonths());
+                return newCells;
+            }
+            throw new IllegalStateException("Unexpected field: " + m_periodFieldSelectModel.getStringValue());
+        }
+    }
+
+    /**
+     * {@link AbstractCellFactory} for several mode and period.
+     */
+    private final class ExtractPeriodSeveralFieldsCellFactory extends AbstractCellFactory {
+
+        private final int m_colIdx;
+
+        public ExtractPeriodSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+            super(colSpecs);
+            m_colIdx = colIdx;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell[] getCells(final DataRow row) {
+            final DataCell[] newCells = new DataCell[getColumnSpecs().length];
+            final DataCell cell = row.getCell(m_colIdx);
+            if (cell.isMissing()) {
+                Arrays.fill(newCells, cell);
+                return newCells;
+            }
+
+            final Period period = ((PeriodCell)cell).getPeriod();
+            int i = 0;
+            for (final SettingsModelBoolean model : m_perModels) {
+                if (model.getBooleanValue()) {
+                    if (Granularity.YEAR.toString().equals(model.getConfigName())) {
+                        newCells[i] = LongCellFactory.create(period.getYears());
+                    } else if (Granularity.MONTH.toString().equals(model.getConfigName())) {
+                        newCells[i] = LongCellFactory.create(period.getMonths());
+                    } else if (Granularity.DAY.toString().equals(model.getConfigName())) {
+                        newCells[i] = LongCellFactory.create(period.getDays());
+                    } else {
+                        throw new IllegalStateException("Unexpected field: " + model.getConfigName());
+                    }
+                    i++;
+                }
+            }
+            return newCells;
+        }
     }
 }
