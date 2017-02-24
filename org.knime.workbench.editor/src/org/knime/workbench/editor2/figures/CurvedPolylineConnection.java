@@ -135,6 +135,16 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
 
             //for debugging to check whether the lines correctly approximate the curve
             //g.drawPolyline(m_approxCurve);
+
+            //for debugging the 'containsPoint'-check
+            //int tolerance = (int)Math.max(getLineWidthFloat() / 2.0f, TOLERANCE);
+            //Rectangle tmp = Rectangle.SINGLETON.setBounds(getBounds());
+            //tmp.expand(0, tolerance);
+            //tmp.shrink(15, 0);
+            //if (tmp.height - 44 > 20) {
+            //  tmp.shrink(0, 22);
+            //}
+            //g.drawRectangle(tmp);
         } else {
             super.outlineShape(g);
         }
@@ -152,6 +162,13 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
             LINEBOUNDS.expand(0, tolerance);
             //shrink the horizontal bounds a bit - otherwise it'll be difficult to draw a connection from a already connected node (since the connection line will get selected first)
             LINEBOUNDS.shrink(15, 0);
+
+            //shrink the 'bounding box'-height a bit
+            //(such that selection of an output port is not impeded when the successor node is 'before' - in x direction - its predecessor)
+            //but make sure that the 'bounding box'-height is not smaller than a certain amount
+            if(LINEBOUNDS.height - 44 > 20) {
+                LINEBOUNDS.shrink(0, 22);
+            }
             if (!LINEBOUNDS.contains(x, y)) {
                 return false;
             }
