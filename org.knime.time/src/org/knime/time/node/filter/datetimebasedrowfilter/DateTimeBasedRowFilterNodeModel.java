@@ -94,6 +94,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
+// TODO Simon: Not public and final
 public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     static final String FORMAT_HISTORY_KEY = "time_based_row_filter_formats";
@@ -130,6 +131,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_endAlwaysNow = createEndAlwaysNowModel();
 
+    // TODO Simon remove member variable - nodes are stateless except for configuration settings (pass on as variable)
     private boolean m_startAfterEnd;
 
     /** @return the column select model, used in both dialog and model. */
@@ -165,6 +167,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     /**
      * @return the string model, used in both dialog and model.
      */
+    // TODO Simon: Not public (also below!)
     public static SettingsModelString createPeriodValueModel() {
         return new SettingsModelString("period_value", "");
     }
@@ -283,13 +286,18 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
                 try {
+                    // TODO Simon this should be (TemporalAmount is a interface implemented by both Duration and Period)
+//                    final TemporalAmount amount = Granularity.fromString(m_granularityModel.getStringValue())
+//                            .getPeriodOrDuration(m_numericalValueModel.getIntValue());
+//                    endDate = startDate.plus(amount);
                     final Period period = (Period)Granularity.fromString(m_granularityModel.getStringValue())
                         .getPeriodOrDuration(m_numericalValueModel.getIntValue());
                     endDate = startDate.plus(period);
-                } catch (Exception e) {
+                } catch (Exception e) { // TODO Simon search for all "catch (Excepion)" and fix them
                     throw new IllegalStateException("Period could not be parsed.");
                 }
             }
+            // TODO Simon Can this be simplified - if statment has way too many branches
             if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue())
                 || (localDate.equals(endDate) && m_endInclusive.getBooleanValue())
                 || (localDate.isAfter(startDate) && localDate.isBefore(endDate)) || (localDate.isBefore(startDate)
@@ -338,6 +346,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
                     final Duration duration = (Duration)Granularity.fromString(m_granularityModel.getStringValue())
                         .getPeriodOrDuration(m_numericalValueModel.getIntValue());
                     endTime = startTime.plus(duration);
+                    // TODO Simon must not throw exception (anywhere in the class)
                 } catch (Exception e) {
                     throw new IllegalStateException("Duration could not be parsed.");
                 }
@@ -395,6 +404,8 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
                 }
             }
             if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
+                // TODO Simon this should be one statement only after changing to TemporalUnit
+                // TODO Simon Check ALL occurrences of #getPeriodOrDuration and fix them!
                 try {
                     final Duration duration = (Duration)Granularity.fromString(m_granularityModel.getStringValue())
                         .getPeriodOrDuration(m_numericalValueModel.getIntValue());
@@ -412,6 +423,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             if (endDateTime == null) {
                 throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
             }
+            // TODO Simon Is this the same logic as above and copied? Shame! (line 357++)
             if ((localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                 || (localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                 || (localDateTime.isAfter(startDateTime) && localDateTime.isBefore(endDateTime))
@@ -479,6 +491,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             if (endDateTime == null) {
                 throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
             }
+            // TODO Simon ha, shame on you!
             if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
                 || (zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
                 || (zonedDateTime.isAfter(startDateTime) && zonedDateTime.isBefore(endDateTime))
