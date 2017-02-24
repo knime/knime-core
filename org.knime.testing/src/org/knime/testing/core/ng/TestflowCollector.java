@@ -117,12 +117,7 @@ public class TestflowCollector {
         if ((testPathPattern == null) || testPathPattern.isEmpty()) {
             m_pathPattern = ".*";
         } else {
-            if (File.separatorChar == '\\') {
-                // fix path separators under Windows
-                m_pathPattern = testPathPattern.replace("/", "\\\\");
-            } else {
-                m_pathPattern = testPathPattern;
-            }
+            m_pathPattern = testPathPattern;
         }
 
         m_testRootDirs.addAll(testRootDirs);
@@ -167,7 +162,8 @@ public class TestflowCollector {
             return;
         } else if (workflowFile.exists()) {
             String workflowName = currentDir.getName();
-            String workflowPath = currentDir.getAbsolutePath().substring(rootDir.getAbsolutePath().length());
+            String workflowPath =
+                currentDir.getAbsolutePath().substring(rootDir.getAbsolutePath().length()).replace('\\', '/');
             if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
                 WorkflowTestSuite testCase =
                     new WorkflowTestSuite(WorkflowTestSuite.getWorkflowName(currentDir, rootDir), currentDir,
@@ -199,7 +195,8 @@ public class TestflowCollector {
             Arrays.sort(zipList);
             for (int i = 0; i < zipList.length; i++) {
                 String workflowName = zipList[i].getName();
-                String workflowPath = zipList[i].getAbsolutePath().substring(rootDir.getAbsolutePath().length());
+                String workflowPath =
+                    zipList[i].getAbsolutePath().substring(rootDir.getAbsolutePath().length()).replace('\\', '/');
 
                 if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
                     File tempDir = FileUtil.createTempDir("UnzippedTestflows");
