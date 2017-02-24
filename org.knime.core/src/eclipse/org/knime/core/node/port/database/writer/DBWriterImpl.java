@@ -49,7 +49,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -327,16 +326,6 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             DatabaseConnectionSettings.setAutoCommit(conn, false);
-            Savepoint savepoint = null;
-            if (failOnError) {
-                try {
-                    savepoint = conn.setSavepoint();
-                    LOGGER.debug("Savepoint set with auto commit=" + autoCommit);
-                } catch (Throwable ex) {
-                    LOGGER.info("Failed to set savepoint prior writing of data with auto commit=" + autoCommit
-                        + " Set savepoint error: " + ex.getMessage(), ex);
-                }
-            }
             try {
                 final TimeZone timezone = conSettings.getTimeZone();
                 DataRow row; //get the first row
@@ -396,21 +385,14 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                                     + t.getMessage();
                             }
 
-                            //introduced in KNIME 3.3.1
+                            //introduced in KNIME 3.3.2
                             if (failOnError) {
                                 try {
-                                    if (savepoint != null) {
-                                        //rollback to last savepoint
-                                        conn.rollback(savepoint);
-                                        LOGGER.debug("Rollback to savepoint with auto commit=" + autoCommit);
-                                    } else {
-                                        //rollback all changes
-                                        conn.rollback();
-                                        LOGGER.debug("Rollback complete transaction with auto commit=" + autoCommit);
-                                    }
+                                    //rollback all changes
+                                    conn.rollback();
+                                    LOGGER.debug("Rollback complete transaction with auto commit=" + autoCommit);
                                 } catch (Throwable ex) {
                                     LOGGER.info("Failed rollback after db exception with auto commit=" + autoCommit
-                                        + " and savepoint set=" + savepoint != null
                                         + ". Rollback error: " + ex.getMessage(), ex);
                                 }
                                 throw new Exception(errorMsg, t);
