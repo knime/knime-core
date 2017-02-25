@@ -841,8 +841,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public boolean hasInteractiveView() {
-        // always returns true, even if there is no applicable view nodes inside
-        return true;
+        return false;
     }
 
     /**
