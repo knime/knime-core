@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
 import org.knime.core.data.DataCell;
@@ -66,12 +68,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-import Jama.Matrix;
 
 /**
  * A Predictor for a linear regression model.
  *
  * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
  */
 final class LinReg2Predictor extends RegressionPredictorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LinReg2Predictor.class);
@@ -91,7 +93,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
     // beta column vector
     // length of beta rows
     // one column
-    private Matrix m_beta = null;
+    private RealMatrix m_beta = null;
 
     /**
      * This constructor should be used when executing the node. Use it when
@@ -145,7 +147,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
         DataCell[] cells = new DataCell[1];
 
         // column vector
-        Matrix x = new Matrix(1, m_parameters.size());
+        RealMatrix x = MatrixUtils.createRealMatrix(1, m_parameters.size());
         for (int i = 0; i < m_parameters.size(); i++) {
             String parameter = m_parameters.get(i);
             String predictor = null;
@@ -162,7 +164,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
                 }
             }
             if (rowIsEmpty) {
-                x.set(0, i, 1);
+                x.setEntry(0, i, 1);
             } else {
                 if (m_factors.contains(predictor)) {
                     List<DataCell> values = m_values.get(predictor);
@@ -178,7 +180,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
                     See the commit message for an example and more details.
                     */
                     if (index > 0) {
-                        x.set(0, i + index - 1, 1);
+                        x.setEntry(0, i + index - 1, 1);
                         i += values.size() - 2;
                     }
                 } else {
@@ -186,16 +188,16 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
                         row.getCell(m_parameterI.get(parameter));
                     double radix = ((DoubleValue)cell).getDoubleValue();
                     double exponent = Integer.valueOf(value);
-                    x.set(0, i, Math.pow(radix, exponent));
+                    x.setEntry(0, i, Math.pow(radix, exponent));
                 }
             }
         }
 
 
         // column vector
-        Matrix r = x.times(m_beta);
+        RealMatrix r = x.multiply(m_beta);
 
-        double estimate = r.get(0, 0);
+        double estimate = r.getEntry(0, 0);
         if (m_content.getOffsetValue() != null) {
             estimate = estimate + m_content.getOffsetValue();
         }
@@ -221,12 +223,12 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
         return new DataCell[] {DataType.getMissingCell()};
     }
 
-    private Matrix getBetaMatrix() {
+    private RealMatrix getBetaMatrix() {
         ParamMatrix paramMatrix = new ParamMatrix(m_content.getParamMatrix());
-        Matrix beta = new Matrix(m_parameters.size(), 1);
+        RealMatrix beta = MatrixUtils.createRealMatrix(m_parameters.size(), 1);
         for (int i = 0; i < m_parameters.size(); i++) {
             double value = paramMatrix.getBeta(m_parameters.get(i), null);
-            beta.set(i, 0, value);
+            beta.setEntry(i, 0, value);
         }
         return beta;
     }
