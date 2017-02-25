@@ -65,7 +65,7 @@ import org.knime.core.data.vector.bytevector.ByteVectorValue;
  *
  * @author Heiko Hofer
  * @author Adrian Nembach, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public class RegressionTrainingRow {
     /**
@@ -277,7 +277,7 @@ public class RegressionTrainingRow {
      * Returns a {@link RealMatrix} with values of the parameters retrieved
      * from the learning columns.
      * @return the parameters
-     * @since 3.3
+     * @since 3.4
      */
     public RealMatrix getParameter() {
         return m_parameter;

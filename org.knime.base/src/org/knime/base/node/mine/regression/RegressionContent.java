@@ -90,7 +90,7 @@ import org.knime.core.util.Pair;
  *
  * @author Gabor Bakos
  * @author Adrian Nembach, KNIME.com
- * @since 3.3
+ * @since 3.4
  */
 public abstract class RegressionContent {
 
@@ -280,7 +280,7 @@ public abstract class RegressionContent {
      *
      * @param matrix the matrix with the raw data
      * @return the variables and the exponents mapped to values of the given matrix
-     * @since 3.3
+     * @since 3.4
      */
     protected Map<Pair<String, Integer>, Double> getValues(final RealMatrix matrix) {
         Map<Pair<String, Integer>, Double> coefficients = new HashMap<Pair<String, Integer>, Double>();
@@ -551,7 +551,7 @@ public abstract class RegressionContent {
      *
      * @param matrix A {@link RealMatrix}.
      * @return The array in order of {@code (0, 0)}, ... {@code (0, n)}, {@code (1, 0)}, ... {@code (m, n)}.
-     * @since 3.3
+     * @since 3.4
      */
     protected static double[] toArray(final RealMatrix matrix) {
         int m = matrix.getRowDimension();
@@ -595,7 +595,7 @@ public abstract class RegressionContent {
      * @param colCount The number to split the array second dimension ({@code n} in {@code m*n}).
      * @return The {@link RealMatrix} in the order of ({@code 0}, ... {@code length / colCount - 1};
      *         {@code length / colCount}, ... {@code length - 1}.
-     * @since 3.3
+     * @since 3.4
      */
     protected static RealMatrix toMatrix(final double[] array, final int colCount) {
         int length = array.length;
