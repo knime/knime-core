@@ -31,7 +31,7 @@
       <node
             category-path="/preview/datetime"
             deprecated="false"
-            factory-class="org.knime.time.node.manipulate.adddate.AddDateNodeFactory">
+            factory-class="org.knime.time.node.manipulate.modifydate.ModifyDateNodeFactory">
       </node>
       <node
             category-path="/preview/datetime"

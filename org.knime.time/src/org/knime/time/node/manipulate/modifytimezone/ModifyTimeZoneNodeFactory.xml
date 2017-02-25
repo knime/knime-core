@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="default.png">
+<knimeNode type="Manipulator" icon="modify_time_zone.png">
 	<name>Modify Time Zone</name>
 	<shortDescription>Modifies a time zone.</shortDescription>
 	<fullDescription>

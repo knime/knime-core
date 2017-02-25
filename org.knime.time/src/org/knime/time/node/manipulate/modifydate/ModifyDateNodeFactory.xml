@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="modify_time.png">
-	<name>Modify Time</name>
-	<shortDescription>Modifies time information of a date&amp;time cell.</shortDescription>
+<knimeNode type="Manipulator" icon="modify_date.png">
+	<name>Modify Date</name>
+	<shortDescription>Modifies date information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
 			Modifies date&amp;time columns by
 			<ul>
-				<li>appending a time to local date columns (output type is local or zoned date time column),</li>
-				<li>changing the time in local or zoned date&amp;time columns, or
+				<li>appending a date to local time columns (output type is local or
+					zoned date time column),
 				</li>
-				<li>removing the time from local or zoned date&amp;time columns
-					(output type is local date).
+				<li>changing the date in local or zoned date&amp;time columns, or
+				</li>
+				<li>removing the date from local or zoned date&amp;time columns
+					(output type is local time).
 				</li>
 			</ul>
-			This node is not used to add ("plus") or subtract ("minus") time. Use
+			This node is not used to add ("plus") or subtract ("minus") date. Use
 			the
 			<i>Date&amp;Time Shift</i>
 			node for that.
@@ -36,13 +38,13 @@
 				columns.
 			</option>
 		</tab>
-		<tab name="Time Selection">
-			<option name="Append Time">Appends a time to local date columns.
+		<tab name="Date Selection">
+			<option name="Append Date">Appends a date to local time columns.
 				Optionally a
 				time zone can be appended too.
 			</option>
-			<option name="Change Time">
-				Changes the time of local or zoned date&amp;time
+			<option name="Change Date">
+				Changes the date of local or zoned date&amp;time
 				columns. The time
 				zone
 				will
@@ -50,20 +52,16 @@
 				<i>Modify Time Zone</i>
 				node can be used to change it.
 			</option>
-			<option name="Remove Time">Removes the time from local or zoned
+			<option name="Remove Date">Removes the date from local or zoned
 				date&amp;time columns. Time zones will be removed
 				too.
 			</option>
-			<option name="Time">
-				A time value in form of HH:mm:ss or HH:mm:ss.SSS. For example
-				<i>12:10:30.123</i>
-				means
-				<i>12 hours, 10 minutes, 30 seconds, 123 milliseconds</i>
-				.
+			<option name="Date">
+				A date value in form of yyyy-MM-dd.
 			</option>
 			<option name="Time Zone">
-				If checked, the user can choose a time zone to
-				append also. 
+				If checked, the user can choose the time zone to
+				append also.
 			</option>
 		</tab>
 	</fullDescription>
@@ -72,7 +70,7 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table with modified time.
+			Output table with modified date.
 		</outPort>
 	</ports>
 </knimeNode>

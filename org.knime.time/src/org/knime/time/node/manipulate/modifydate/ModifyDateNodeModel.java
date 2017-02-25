@@ -46,10 +46,10 @@
  * History
  *   Oct 28, 2016 (simon): created
  */
-package org.knime.time.node.manipulate.modifytime;
+package org.knime.time.node.manipulate.modifydate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -62,18 +62,20 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.time.localdate.LocalDateCell;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdate.LocalDateValue;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
@@ -82,14 +84,14 @@ import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.util.SettingsModelDateTime;
 
 /**
- * The node model of the node which modifies time.
+ * The node dialog of the node which modifies date.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
+class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
 
     @SuppressWarnings("unchecked")
-    static final DataTypeColumnFilter LOCAL_DATE_FILTER = new DataTypeColumnFilter(LocalDateValue.class);
+    static final DataTypeColumnFilter LOCAL_TIME_FILTER = new DataTypeColumnFilter(LocalTimeValue.class);
 
     @SuppressWarnings("unchecked")
     static final DataTypeColumnFilter DATE_TIME_FILTER =
@@ -99,13 +101,13 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    static final String MODIFY_OPTION_APPEND = "Append time";
+    static final String MODIFY_OPTION_APPEND = "Append date";
 
-    static final String MODIFY_OPTION_CHANGE = "Change time";
+    static final String MODIFY_OPTION_CHANGE = "Change date";
 
-    static final String MODIFY_OPTION_REMOVE = "Remove time";
+    static final String MODIFY_OPTION_REMOVE = "Remove date";
 
-    private DataColumnSpecFilterConfiguration m_colSelect = createDCFilterConfiguration(LOCAL_DATE_FILTER);
+    private DataColumnSpecFilterConfiguration m_colSelect = createDCFilterConfiguration(LOCAL_TIME_FILTER);
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
@@ -113,7 +115,7 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_modifyAction = createModifySelectModel();
 
-    private final SettingsModelDateTime m_time = createTimeModel();
+    private final SettingsModelDateTime m_date = createDateModel();
 
     private final SettingsModelDateTime m_timeZone = createTimeZoneModel();
 
@@ -126,7 +128,7 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     }
 
     /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createReplaceAppendStringBool() {
+    public static SettingsModelString createReplaceAppendStringBool() {
         return new SettingsModelString("replace_or_append", OPTION_REPLACE);
     }
 
@@ -134,12 +136,51 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
      * @param replaceOrAppendModel model for the replace/append button group
      * @return the string model, used in both dialog and model.
      */
-    static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
-        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(modified time)");
+    public static SettingsModelString createSuffixModel(final SettingsModelString replaceOrAppendModel) {
+        final SettingsModelString suffixModel = new SettingsModelString("suffix", "(modified date)");
         replaceOrAppendModel.addChangeListener(
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
         return suffixModel;
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createDateModel() {
+        return new SettingsModelDateTime("date", LocalDate.now(), null, null);
+    }
+
+    /** @return the date time model, used in both dialog and model. */
+    static SettingsModelDateTime createTimeZoneModel() {
+        return new SettingsModelDateTime("time_zone", null, null, ZoneId.systemDefault());
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createYearModel() {
+        return new SettingsModelIntegerBounded("year", LocalDate.now().getYear(), 0, Integer.MAX_VALUE);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createMonthModel() {
+        return new SettingsModelString("month", LocalDate.now().getMonth().toString());
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelIntegerBounded createDayModel() {
+        return new SettingsModelIntegerBounded("day", LocalDate.now().getDayOfMonth(), 0, 31);
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    static SettingsModelBoolean createZoneModelBool() {
+        return new SettingsModelBoolean("zone_bool", false);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    static SettingsModelString createTimeZoneSelectModel(final SettingsModelBoolean zoneModelBool) {
+        final SettingsModelString zoneSelectModel =
+            new SettingsModelString("time_zone_select", ZoneId.systemDefault().getId());
+        zoneSelectModel.setEnabled(false);
+        zoneModelBool.addChangeListener(e -> zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue()));
+        return zoneSelectModel;
     }
 
     /** @return the string select model, used in both dialog and model. */
@@ -147,17 +188,10 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         return new SettingsModelString("modify_select", MODIFY_OPTION_APPEND);
     }
 
-    /** @return the date time model, used in both dialog and model. */
-    static SettingsModelDateTime createTimeModel(){
-        return new SettingsModelDateTime("time", null, LocalTime.now().withNano(0), null);
-    }
-
-    /** @return the date time model, used in both dialog and model. */
-    static SettingsModelDateTime createTimeZoneModel(){
-        return new SettingsModelDateTime("time_zone", null, null, ZoneId.systemDefault());
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * @param inSpec table input spec
+     * @return the CR describing the output
+     */
     @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
@@ -168,7 +202,7 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         // determine the data type of output
         DataType dataType;
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_REMOVE)) {
-            dataType = LocalDateCellFactory.TYPE;
+            dataType = LocalTimeCellFactory.TYPE;
         } else {
             if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
                 dataType = LocalDateTimeCellFactory.TYPE;
@@ -181,6 +215,8 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             }
         }
 
+        final ZoneId zone = m_timeZone.getZone();
+
         int i = 0;
         for (final String includedCol : includeList) {
             if (inSpec.getColumnSpec(includedCol).getType().equals(ZonedDateTimeCellFactory.TYPE)
@@ -190,12 +226,12 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includedCol, dataType);
                 final SingleCellFactory cellFac =
-                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], m_timeZone.getZone());
+                    createCellFactory(dataColumnSpecCreator.createSpec(), includeIndices[i++], zone);
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec =
                     new UniqueNameGenerator(inSpec).newColumn(includedCol + m_suffix.getStringValue(), dataType);
-                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], m_timeZone.getZone());
+                final SingleCellFactory cellFac = createCellFactory(dataColSpec, includeIndices[i++], zone);
                 rearranger.append(cellFac);
             }
         }
@@ -204,11 +240,11 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private SingleCellFactory createCellFactory(final DataColumnSpec dataColSpec, final int index, final ZoneId zone) {
         if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND)) {
-            return new AppendTimeCellFactory(dataColSpec, index, zone);
+            return new AppendDateCellFactory(dataColSpec, index, zone);
         } else if (m_modifyAction.getStringValue().equals(MODIFY_OPTION_CHANGE)) {
-            return new ChangeTimeCellFactory(dataColSpec, index);
+            return new ChangeDateCellFactory(dataColSpec, index);
         } else {
-            return new RemoveTimeCellFactory(dataColSpec, index);
+            return new RemoveDateCellFactory(dataColSpec, index);
         }
     }
 
@@ -220,7 +256,7 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
         m_colSelect.saveConfiguration(settings);
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
-        m_time.saveSettingsTo(settings);
+        m_date.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
         m_modifyAction.saveSettingsTo(settings);
     }
@@ -232,7 +268,7 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
-        m_time.validateSettings(settings);
+        m_date.validateSettings(settings);
         m_timeZone.validateSettings(settings);
         m_modifyAction.validateSettings(settings);
     }
@@ -244,20 +280,20 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
-        m_time.loadSettingsFrom(settings);
+        m_date.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_modifyAction.loadSettingsFrom(settings);
         boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_APPEND);
-        m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? LOCAL_DATE_FILTER : DATE_TIME_FILTER);
+        m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? LOCAL_TIME_FILTER : DATE_TIME_FILTER);
         m_colSelect.loadConfigurationInModel(settings);
     }
 
-    private final class AppendTimeCellFactory extends SingleCellFactory {
+    private final class AppendDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
         private final ZoneId m_zone;
 
-        AppendTimeCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
+        AppendDateCellFactory(final DataColumnSpec inSpec, final int colIndex, final ZoneId zone) {
             super(inSpec);
             m_colIndex = colIndex;
             m_zone = zone;
@@ -272,21 +308,21 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final LocalDateCell localDateCell = (LocalDateCell)cell;
-            final LocalTime localTime = m_time.getLocalTime();
+            final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
+            final LocalDate localDate = m_date.getLocalDate();
             if (m_timeZone.useZone()) {
                 return ZonedDateTimeCellFactory
-                    .create(ZonedDateTime.of(LocalDateTime.of(localDateCell.getLocalDate(), localTime), m_zone));
+                    .create(ZonedDateTime.of(LocalDateTime.of(localDate, localTimeCell.getLocalTime()), m_zone));
             } else {
-                return LocalDateTimeCellFactory.create(LocalDateTime.of(localDateCell.getLocalDate(), localTime));
+                return LocalDateTimeCellFactory.create(LocalDateTime.of(localDate, localTimeCell.getLocalTime()));
             }
         }
     }
 
-    private final class ChangeTimeCellFactory extends SingleCellFactory {
+    private final class ChangeDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
-        ChangeTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        ChangeDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
             m_colIndex = colIndex;
         }
@@ -300,21 +336,21 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final LocalTime localTime = m_time.getLocalTime();
+            final LocalDate localDate = m_date.getLocalDate();
             if (cell instanceof LocalDateTimeCell) {
                 return LocalDateTimeCellFactory
-                    .create(LocalDateTime.of(((LocalDateTimeCell)cell).getLocalDateTime().toLocalDate(), localTime));
+                    .create(LocalDateTime.of(localDate, ((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime()));
             }
             return ZonedDateTimeCellFactory
-                .create(ZonedDateTime.of(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDate(), localTime,
+                .create(ZonedDateTime.of(localDate, ((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime(),
                     ((ZonedDateTimeCell)cell).getZonedDateTime().getZone()));
         }
     }
 
-    private final class RemoveTimeCellFactory extends SingleCellFactory {
+    private final class RemoveDateCellFactory extends SingleCellFactory {
         private final int m_colIndex;
 
-        RemoveTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+        RemoveDateCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
             m_colIndex = colIndex;
         }
@@ -329,9 +365,9 @@ final class ModifyTimeNodeModel extends SimpleStreamableFunctionNodeModel {
                 return cell;
             }
             if (cell instanceof LocalDateTimeCell) {
-                return LocalDateCellFactory.create(((LocalDateTimeCell)cell).getLocalDateTime().toLocalDate());
+                return LocalTimeCellFactory.create(((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime());
             }
-            return LocalDateCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDate());
+            return LocalTimeCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime());
         }
     }
 }

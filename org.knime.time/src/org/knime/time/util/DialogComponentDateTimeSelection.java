@@ -284,7 +284,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             if (!m_isEditorInitialized) {
                 ((DateFormatter)m_editor.getTextField().getFormatter()).setFormat(new SimpleDateFormat(
                     model.useMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
-                setUseMillis(model.useMillis());
+                m_useMillis = (model.useMillis());
                 m_isEditorInitialized = true;
             }
             updateComponent();
@@ -327,7 +327,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         try {
             DateTimeFormatter.ofPattern(TIME_FORMAT_WITH_MS).parse(field.getText());
             if (!m_useMillis) {
-                setUseMillis(true);
+                m_useMillis = true;
                 ((DateFormatter)m_editor.getTextField().getFormatter())
                     .setFormat(new SimpleDateFormat(TIME_FORMAT_WITH_MS, Locale.getDefault()));
                 updateModel();
@@ -336,7 +336,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             try {
                 DateTimeFormatter.ofPattern(TIME_FORMAT_WITHOUT_MS).parse(field.getText());
                 if (m_useMillis) {
-                    setUseMillis(false);
+                    m_useMillis = false;
                     ((DateFormatter)m_editor.getTextField().getFormatter())
                         .setFormat(new SimpleDateFormat(TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
                     updateModel();
@@ -443,13 +443,6 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
      */
     public boolean isUseMillis() {
         return m_useMillis;
-    }
-
-    /**
-     * @param useMillis the useMillis to set
-     */
-    public void setUseMillis(final boolean useMillis) {
-        m_useMillis = useMillis;
     }
 
     /**
