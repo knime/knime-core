@@ -56,15 +56,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
-import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration.NominalValueFilterResult;
 
 /**
  * Configuration to the PatternFilterPanel.
  *
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
- * @since 2.9
+ * @since 3.3
  */
-final class PatternFilterConfigurationImpl implements Cloneable {
+public class PatternFilterConfiguration implements Cloneable {
 
     /** The identifier for this filter type. */
     public static final String TYPE = "name_pattern";
@@ -101,21 +100,17 @@ final class PatternFilterConfigurationImpl implements Cloneable {
 
     private static final String CFG_CASESENSITIVE = "caseSensitive";
 
-    private static final String CFG_INCLUDEMISSING = "includeMissing";
-
     private String m_pattern = "";
 
     private PatternFilterType m_type = PatternFilterType.Wildcard;
 
     private boolean m_caseSensitive = true;
 
-    private boolean m_includeMissing = false;
-
     /** Loads the configuration from the given settings object. Fails if not valid.
      * @param settings Settings object containing the configuration.
      * @throws InvalidSettingsException If settings are invalid
      */
-    void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_pattern = settings.getString(CFG_PATTERN);
         if (m_pattern == null) {
             throw new InvalidSettingsException("Pattern must not be null");
@@ -123,7 +118,6 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         String typeS = settings.getString(CFG_TYPE);
         m_type = PatternFilterType.parseType(typeS);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE);
-        m_includeMissing = settings.getBoolean(CFG_INCLUDEMISSING, false);
         try {
             compilePattern(m_pattern, m_type, m_caseSensitive);
         } catch (PatternSyntaxException e) {
@@ -134,7 +128,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
     /** Loads the configuration from the given settings object. Sets defaults if invalid.
      * @param settings Settings object containing the configuration.
      */
-    void loadConfigurationInDialog(final NodeSettingsRO settings) {
+    protected void loadConfigurationInDialog(final NodeSettingsRO settings) {
         m_pattern = settings.getString(CFG_PATTERN, null);
         if (m_pattern == null) { // can also be deliberately null from the settings
             m_pattern = "";
@@ -142,17 +136,15 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         String typeS = settings.getString(CFG_TYPE, null);
         m_type = PatternFilterType.parseType(typeS, PatternFilterType.Wildcard);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE, true);
-        m_includeMissing = settings.getBoolean(CFG_INCLUDEMISSING, true);
     }
 
     /** Save the current configuration inside the given settings object.
      * @param settings Settings object the current configuration will be put into.
      */
-    void saveConfiguration(final NodeSettingsWO settings) {
+    protected void saveConfiguration(final NodeSettingsWO settings) {
         settings.addString(CFG_PATTERN, m_pattern);
         settings.addString(CFG_TYPE, m_type.name());
         settings.addBoolean(CFG_CASESENSITIVE, m_caseSensitive);
-        settings.addBoolean(CFG_INCLUDEMISSING, m_includeMissing);
     }
 
     /**
@@ -172,8 +164,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
                 excls.add(name);
             }
         }
-        return new NominalValueFilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>(),
-            m_includeMissing);
+        return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
     }
 
     /**
@@ -242,20 +233,6 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         m_caseSensitive = caseSensitive;
     }
 
-    /**
-     * @return whether Missing Values will be included
-     */
-    boolean isIncludeMissing() {
-        return m_includeMissing;
-    }
-
-    /**
-     * @param caseSensitive the caseSensitive to set
-     */
-    void setIncludeMissing(final boolean includeMissing) {
-        m_includeMissing = includeMissing;
-    }
-
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
@@ -263,7 +240,6 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         final int prime = 31;
         int result = 1;
         result = prime * result + (m_caseSensitive ? 1231 : 1237);
-        result = prime * result + Boolean.valueOf(m_includeMissing).hashCode();
         result = prime * result + ((m_pattern == null) ? 0 : m_pattern.hashCode());
         result = prime * result + ((m_type == null) ? 0 : m_type.hashCode());
         return result;
@@ -275,14 +251,11 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof PatternFilterConfigurationImpl)) {
+        if (!(obj instanceof PatternFilterConfiguration)) {
             return false;
         }
-        PatternFilterConfigurationImpl o = (PatternFilterConfigurationImpl)obj;
+        PatternFilterConfiguration o = (PatternFilterConfiguration)obj;
         if (o.m_caseSensitive != m_caseSensitive) {
-            return false;
-        }
-        if (o.m_includeMissing != m_includeMissing) {
             return false;
         }
         if (!Objects.equals(o.m_pattern, m_pattern)) {
@@ -302,9 +275,9 @@ final class PatternFilterConfigurationImpl implements Cloneable {
 
     /** {@inheritDoc} */
     @Override
-    protected PatternFilterConfigurationImpl clone() {
+    protected PatternFilterConfiguration clone() {
         try {
-            return (PatternFilterConfigurationImpl)super.clone();
+            return (PatternFilterConfiguration)super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Object not clonable although it implements java.lang.Clonable", e);
         }

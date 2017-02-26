@@ -194,7 +194,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private JPanel m_nameFilterPanel;
 
-    private PatternFilterPanelImpl<T> m_patternPanel;
+    private PatternFilterPanel<T> m_patternPanel;
 
     private JRadioButton m_nameButton;
 
@@ -260,14 +260,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         final String searchLabel) {
         super(new GridLayout(1, 1));
         m_filter = filter;
-        m_patternPanel = new PatternFilterPanelImpl<T>(this, filter);
+        m_patternPanel = getPatternFilterPanel(filter);
         m_patternPanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 fireFilteringChangedEvent();
             }
         });
-        m_patternButton = createButtonToFilterPanel(PatternFilterConfigurationImpl.TYPE, "Wildcard/Regex Selection");
+        m_patternButton = createButtonToFilterPanel(PatternFilterConfiguration.TYPE, "Wildcard/Regex Selection");
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
@@ -475,6 +475,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
         center.add(includePanel);
         m_nameFilterPanel = center;
         initPanel();
+    }
+
+    /**
+     * @param filter
+     * @return the PatternFilterPanel to be used.
+     * @since 3.3
+     */
+    protected PatternFilterPanel<T> getPatternFilterPanel(final InputFilter<T> filter) {
+        return new PatternFilterPanel<T>(this, filter);
     }
 
     /**
@@ -1233,7 +1242,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_filterPanel.removeAll();
         if (NameFilterConfiguration.TYPE.equals(m_currentType)) {
             m_filterPanel.add(m_nameFilterPanel);
-        } else if (PatternFilterConfigurationImpl.TYPE.equals(m_currentType)) {
+        } else if (PatternFilterConfiguration.TYPE.equals(m_currentType)) {
             m_filterPanel.add(m_patternPanel);
         } else {
             m_filterPanel.add(getFilterPanel(m_currentType));

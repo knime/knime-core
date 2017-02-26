@@ -55,19 +55,19 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.JToggleButton;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
- * A dialog component to filter nominal values.
- * Mainly for visualization, configuration is done in {@link NominalValueFilterConfiguration}.
+ * A dialog component to filter nominal values. Mainly for visualization, configuration is done in
+ * {@link NominalValueFilterConfiguration}.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.3
  */
 @SuppressWarnings("serial")
 public class NominalValueFilterPanel extends NameFilterPanel<String> {
-
 
     private JToggleButton m_includeMissing;
 
@@ -91,7 +91,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     }
 
     @Override
-    protected JToggleButton getAdditionalButton(){
+    protected JToggleButton getAdditionalButton() {
         m_includeMissing = new JToggleButton("Incl. Missing");
         m_includeMissing.setToolTipText("Include Missing Values");
         return m_includeMissing;
@@ -124,6 +124,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     /**
      * Updates this filter panel by removing all current selections from the include and exclude list. The exclude list
      * will contains all values from the given domain afterwards.
+     *
      * @see NameFilterPanel#loadConfiguration(NameFilterConfiguration, String[])
      *
      * @param config to be loaded from
@@ -161,6 +162,14 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
         m_includeMissing.setEnabled(enabled);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NominalValuePatternFilterPanel getPatternFilterPanel(final InputFilter<String> filter) {
+        return new NominalValuePatternFilterPanel(this, filter);
     }
 
 }
