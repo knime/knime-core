@@ -208,8 +208,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private String[] m_availableNames = new String[0];
 
-    private JToggleButton m_includeMissing;
-
     /**
      * Creates a panel allowing the user to select elements.
      */
@@ -241,7 +239,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      *            exclude) and which are not shown.
      */
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
-        this(showSelectionListsOnly, filter, null, false);
+        this(showSelectionListsOnly, filter, null);
     }
 
     /**
@@ -255,12 +253,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
      *            exclude) and which are not shown.
      * @param searchLabel text to show next to the search fields
-     * @param showMissingButton adds a button to toggle the inclusion of missing values
      * @since 3.3
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
-        final String searchLabel, final boolean showMissingButton) {
+        final String searchLabel) {
         super(new GridLayout(1, 1));
         m_filter = filter;
         m_patternPanel = new PatternFilterPanelImpl<T>(this, filter);
@@ -320,14 +317,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 onRemAll();
             }
         });
-        if (showMissingButton) {
+        JToggleButton additionalButton = getAdditionalButton();
+        if(additionalButton != null){
             buttonPan.add(Box.createVerticalStrut(25));
-
-            m_includeMissing = new JToggleButton("Incl. Missing");
-            m_includeMissing.setToolTipText("Include Missing Values");
-            m_includeMissing.setMaximumSize(new Dimension(125, 25));
-            buttonPan.add(m_includeMissing);
-            m_includeMissing.addActionListener(new ActionListener() {
+            additionalButton.setMaximumSize(new Dimension(125, 25));
+            buttonPan.add(additionalButton);
+            additionalButton.addActionListener(new ActionListener() {
 
                 @Override
                 public void actionPerformed(final ActionEvent e) {
@@ -482,6 +477,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         initPanel();
     }
 
+    /**
+     * @return an additional button to be added to the center panel. To be overwritten by subclasses
+     * @since 3.3
+     */
+    protected JToggleButton getAdditionalButton(){
+        return null;
+    }
+
     /** @return a list cell renderer from items to be rendered in the filer */
     @SuppressWarnings("rawtypes")
     protected abstract ListCellRenderer getListCellRenderer();
@@ -601,9 +604,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
             m_currentType = NameFilterConfiguration.TYPE;
             m_nameButton.setSelected(true);
         }
-        if(m_includeMissing != null){
-            m_includeMissing.setSelected(config.isIncludeMissing());
-        }
         updateFilterPanel();
         repaint();
     }
@@ -672,7 +672,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
             config.setEnforceOption(EnforceOption.EnforceInclusion);
         }
 
-        config.setIncludeMissing(m_includeMissing != null && m_includeMissing.isSelected());
 
         // save include list
         final Set<T> incls = getIncludeList();

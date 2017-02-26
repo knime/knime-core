@@ -92,9 +92,6 @@ public class NameFilterConfiguration implements Cloneable {
     /** Settings key for the enforce selection option. */
     private static final String KEY_ENFORCE_OPTION = "enforce_option";
 
-    /** Settings key for the enforce selection option. */
-    private static final String KEY_INCLUDE_MISSING = "include_missing";
-
     /** Settings key for type of filter. */
     private static final String KEY_FILTER_TYPE = "filter-type";
 
@@ -124,8 +121,6 @@ public class NameFilterConfiguration implements Cloneable {
      * Pattern filter is on by default.
      */
     private final boolean m_patternFilterEnabled;
-
-    private boolean m_includeMissing = false;
 
     /** Enforce inclusion/exclusion options. */
     public enum EnforceOption {
@@ -176,8 +171,6 @@ public class NameFilterConfiguration implements Cloneable {
 
         private String[] m_removedFromExcludes;
 
-        private boolean m_includeMissing;
-
         /**
          * @param incls list of included elements
          * @param excls list of excluded elements
@@ -187,7 +180,10 @@ public class NameFilterConfiguration implements Cloneable {
          */
         public FilterResult(final List<String> incls, final List<String> excls, final List<String> removedFromIncludes,
             final List<String> removedFromExcludes) {
-            this(incls, excls, removedFromIncludes, removedFromExcludes, false);
+            m_incls = incls.toArray(new String[incls.size()]);
+            m_excls = excls.toArray(new String[excls.size()]);
+            m_removedFromIncludes = removedFromIncludes.toArray(new String[removedFromIncludes.size()]);
+            m_removedFromExcludes = removedFromExcludes.toArray(new String[removedFromExcludes.size()]);
         }
 
         /**
@@ -195,16 +191,14 @@ public class NameFilterConfiguration implements Cloneable {
          * @param excls list of excluded elements
          * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
          * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
-         * @param includeMissing whether missing values should be included
          * @since 3.3
          */
-        public FilterResult(final List<String> incls, final List<String> excls, final List<String> removedFromIncludes,
-            final List<String> removedFromExcludes, final boolean includeMissing) {
-            m_incls = incls.toArray(new String[incls.size()]);
-            m_excls = excls.toArray(new String[excls.size()]);
-            m_removedFromIncludes = removedFromIncludes.toArray(new String[removedFromIncludes.size()]);
-            m_removedFromExcludes = removedFromExcludes.toArray(new String[removedFromExcludes.size()]);
-            m_includeMissing = includeMissing;
+        protected FilterResult(final String[] incls, final String[] excls, final String[] removedFromIncludes,
+            final String[] removedFromExcludes) {
+            m_incls = incls;
+            m_excls = excls;
+            m_removedFromIncludes = removedFromIncludes;
+            m_removedFromExcludes = removedFromExcludes;
         }
 
         /** A list of names that were specifically included in the dialog but which are no longer available in the list
@@ -237,14 +231,6 @@ public class NameFilterConfiguration implements Cloneable {
          */
         public String[] getExcludes() {
             return m_excls;
-        }
-
-        /**
-         * @return whether missing values are included
-         * @since 3.3
-         */
-        public boolean isIncludeMissing(){
-            return m_includeMissing;
         }
     }
 
@@ -297,7 +283,6 @@ public class NameFilterConfiguration implements Cloneable {
         m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
         m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES);
         m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES);
-        m_includeMissing = subSettings.getBoolean(KEY_INCLUDE_MISSING, false);
         try {
             NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
             m_patternConfig.loadConfigurationInModel(configSettings);
@@ -341,7 +326,6 @@ public class NameFilterConfiguration implements Cloneable {
                 m_removedFromExcludeList) : m_excludeList;
         subSettings.addStringArray(KEY_EXCLUDED_NAMES, excludes);
         subSettings.addString(KEY_ENFORCE_OPTION, m_enforceOption.name());
-        subSettings.addBoolean(KEY_INCLUDE_MISSING, m_includeMissing);
         NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfigurationImpl.TYPE);
         m_patternConfig.saveConfiguration(configSettings);
         saveConfigurationChild(subSettings);
@@ -386,9 +370,6 @@ public class NameFilterConfiguration implements Cloneable {
         if (m_enforceOption != other.m_enforceOption) {
             return false;
         }
-        if (m_includeMissing != other.m_includeMissing) {
-            return false;
-        }
         if (!Arrays.equals(m_excludeList, other.m_excludeList)) {
             return false;
         }
@@ -419,7 +400,6 @@ public class NameFilterConfiguration implements Cloneable {
         int result = 1;
         result = prime * result + ((m_configRootName == null) ? 0 : m_configRootName.hashCode());
         result = prime * result + ((m_enforceOption == null) ? 0 : m_enforceOption.hashCode());
-        result = prime * result + Boolean.valueOf(m_includeMissing).hashCode();
         result = prime * result + m_type.hashCode();
         result = prime * result + Arrays.hashCode(m_excludeList);
         result = prime * result + Arrays.hashCode(m_includeList);
@@ -475,7 +455,6 @@ public class NameFilterConfiguration implements Cloneable {
             m_excludeList = copy;
             setEnforceOption(EnforceOption.EnforceInclusion);
         }
-        m_includeMissing = false;
     }
 
     /** Sets the include and exclude list and force the filter type to be "standard".
@@ -500,7 +479,6 @@ public class NameFilterConfiguration implements Cloneable {
         m_includeList = includesCopy;
         m_excludeList = excludesCopy;
         m_enforceOption = enforceOption;
-        m_includeMissing = false;
         m_type = TYPE;
     }
 
@@ -532,7 +510,6 @@ public class NameFilterConfiguration implements Cloneable {
         } catch (InvalidSettingsException ise) {
             m_enforceOption = EnforceOption.EnforceExclusion;
         }
-        m_includeMissing = subSettings.getBoolean(KEY_INCLUDE_MISSING, false);
         NodeSettingsRO patternMatchSettings;
         try {
             patternMatchSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
@@ -612,7 +589,7 @@ public class NameFilterConfiguration implements Cloneable {
             final List<String> orphanedIncludes = new ArrayList<String>(inclsHash);
             final List<String> orphanedExcludes = new ArrayList<String>(exclsHash);
 
-            return new FilterResult(incls, excls, orphanedIncludes, orphanedExcludes, m_includeMissing);
+            return new FilterResult(incls, excls, orphanedIncludes, orphanedExcludes);
         } else if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
             return m_patternConfig.applyTo(names);
         } else {
@@ -724,7 +701,6 @@ public class NameFilterConfiguration implements Cloneable {
             clone.m_excludeList = Arrays.copyOf(m_excludeList, m_excludeList.length);
             clone.m_includeList = Arrays.copyOf(m_includeList, m_includeList.length);
             clone.m_patternConfig = m_patternConfig.clone();
-            clone.m_includeMissing = m_includeMissing;
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new IllegalStateException("Object not clonable although it implements java.lang.Clonable", e);
@@ -774,28 +750,6 @@ public class NameFilterConfiguration implements Cloneable {
      */
     final PatternFilterConfigurationImpl getPatternConfig() {
         return m_patternConfig;
-    }
-
-    /**
-     * @param includeMissing whether missing values should be included
-     * @since 3.3
-     */
-    protected final void setIncludeMissing(final boolean includeMissing) {
-        m_includeMissing = includeMissing;
-    }
-
-    /**
-     * @return true if missing values are included
-     * @since 3.3
-     */
-    protected boolean isIncludeMissing(){
-        if (TYPE.equals(m_type)) {
-            return m_includeMissing;
-        } else if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
-            return m_patternConfig.isIncludeMissing();
-        } else {
-            throw new IllegalStateException("Unsupported filter type: " + m_type);
-        }
     }
 
 }

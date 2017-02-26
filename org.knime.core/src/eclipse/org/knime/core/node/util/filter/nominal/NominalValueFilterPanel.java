@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JToggleButton;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
@@ -66,6 +67,9 @@ import org.knime.core.node.util.filter.NameFilterPanel;
  */
 @SuppressWarnings("serial")
 public class NominalValueFilterPanel extends NameFilterPanel<String> {
+
+
+    private JToggleButton m_includeMissing;
 
     /**
      * Creates a basic panel that allows the filtering of nominal values.
@@ -83,7 +87,14 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * @since 3.3
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
-        super(showSelectionListsOnly, null, "Value(s)", true);
+        super(showSelectionListsOnly, null, "Value(s)");
+    }
+
+    @Override
+    protected JToggleButton getAdditionalButton(){
+        m_includeMissing = new JToggleButton("Incl. Missing");
+        m_includeMissing.setToolTipText("Include Missing Values");
+        return m_includeMissing;
     }
 
     /**
@@ -127,6 +138,29 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
             }
         }
         super.loadConfiguration(config, names.toArray(new String[names.size()]));
+        if (m_includeMissing != null && config instanceof NominalValueFilterConfiguration) {
+            m_includeMissing.setSelected(((NominalValueFilterConfiguration)config).isIncludeMissing());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveConfiguration(final NameFilterConfiguration config) {
+        if (config instanceof NominalValueFilterConfiguration) {
+            ((NominalValueFilterConfiguration)config).setIncludeMissing(m_includeMissing.isSelected());
+        }
+        super.saveConfiguration(config);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        m_includeMissing.setEnabled(enabled);
     }
 
 }

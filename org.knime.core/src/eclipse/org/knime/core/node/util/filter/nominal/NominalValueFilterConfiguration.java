@@ -49,10 +49,13 @@
 package org.knime.core.node.util.filter.nominal;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 
 /**
@@ -63,6 +66,65 @@ import org.knime.core.node.util.filter.NameFilterConfiguration;
  * @since 3.3
  */
 public class NominalValueFilterConfiguration extends NameFilterConfiguration {
+
+    /**
+     *
+     * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
+     */
+    public static class NominalValueFilterResult extends FilterResult {
+
+        private boolean m_includeMissing;
+
+        /**
+         * @param filter a FilterResult that should be extended by the missing value option
+         * @param includeMissing whether missing values should be included
+         */
+        public NominalValueFilterResult(final FilterResult filter, final boolean includeMissing) {
+            super(filter.getIncludes(), filter.getExcludes(), filter.getRemovedFromIncludes(),
+                filter.getRemovedFromExcludes());
+            m_includeMissing = includeMissing;
+        }
+
+        /**
+         * @param incls list of included elements
+         * @param excls list of excluded elements
+         * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
+         * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
+         * @param includeMissing whether missing values should be included
+         */
+        public NominalValueFilterResult(final String[] incls, final String[] excls, final String[] removedFromIncludes,
+            final String[] removedFromExcludes, final boolean includeMissing) {
+            super(incls, excls, removedFromIncludes, removedFromExcludes);
+            m_includeMissing = includeMissing;
+        }
+
+        /**
+         * @param incls list of included elements
+         * @param excls list of excluded elements
+         * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
+         * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
+         * @param includeMissing whether missing values should be included
+         */
+        public NominalValueFilterResult(final List<String> incls, final List<String> excls, final List<String> removedFromIncludes,
+            final List<String> removedFromExcludes, final boolean includeMissing) {
+            super(incls, excls, removedFromIncludes, removedFromExcludes);
+            m_includeMissing = includeMissing;
+        }
+
+        /**
+         * @return whether missing values are included
+         * @since 3.3
+         */
+        public boolean isIncludeMissing() {
+            return m_includeMissing;
+        }
+
+    }
+
+    /** Settings key for the enforce selection option. */
+    private static final String KEY_INCLUDE_MISSING = "include_missing";
+
+    private boolean m_includeMissing = false;
 
     /**
      * Creates a new nominal value filter configuration with the given settings name.
@@ -97,11 +159,45 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      * {@inheritDoc}
      */
     @Override
+    protected void loadConfigurationInModelChild(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_includeMissing = settings.getBoolean(KEY_INCLUDE_MISSING, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveConfigurationChild(final NodeSettingsWO settings) {
+        settings.addBoolean(KEY_INCLUDE_MISSING, m_includeMissing);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+        NominalValueFilterConfiguration other = (NominalValueFilterConfiguration)obj;
+        return m_includeMissing == other.m_includeMissing;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + Boolean.valueOf(m_includeMissing).hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String[] getIncludeList() {
         return super.getIncludeList();
     }
-
-
 
     /**
      * {@inheritDoc}
@@ -119,7 +215,7 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      * @param domain the domain to apply the current configuration on
      * @return a new name filter
      */
-    public FilterResult applyTo(final Set<DataCell> domain) {
+    public NominalValueFilterResult applyTo(final Set<DataCell> domain) {
         ArrayList<String> names = new ArrayList<String>();
         //get array of domain values
         if (domain != null) {
@@ -127,15 +223,64 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
                 names.add(dc.toString());
             }
         }
-        return super.applyTo(names.toArray(new String[names.size()]));
+        return new NominalValueFilterResult(super.applyTo(names.toArray(new String[names.size()])), m_includeMissing);
+    }
+
+    /**
+     * @return true if missing values are included
+     * @since 3.3
+     */
+    public boolean isIncludeMissing(){
+        if (TYPE.equals(getType())) {
+            return m_includeMissing;
+            //TODO ask PatternFilterConfiguration if it is selected
+//        } else if (PatternFilterConfigurationImpl.TYPE.equals(getType())) {
+//            return getPatternConfig().isIncludeMissing();
+        } else {
+            throw new IllegalStateException("Unsupported filter type: " + getType());
+        }
+    }
+
+    /**
+     * @param includeMissing whether missing values should be included
+     * @since 3.3
+     */
+    protected final void setIncludeMissing(final boolean includeMissing) {
+        m_includeMissing = includeMissing;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isIncludeMissing() {
-        return super.isIncludeMissing();
+    protected void loadDefaults(final String[] names, final boolean includeByDefault) {
+        super.loadDefaults(names, includeByDefault);
+        m_includeMissing = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadDefaults(final String[] includes, final String[] excludes, final EnforceOption enforceOption) {
+        super.loadDefaults(includes, excludes, enforceOption);
+        m_includeMissing = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadConfigurationInDialogChild(final NodeSettingsRO settings, final String[] names) {
+        m_includeMissing = settings.getBoolean(KEY_INCLUDE_MISSING, false);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NameFilterConfiguration clone() {
+        NominalValueFilterConfiguration clone = (NominalValueFilterConfiguration)super.clone();
+        clone.m_includeMissing = m_includeMissing;
+        return clone;
     }
 
 }

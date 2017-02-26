@@ -127,8 +127,20 @@ final class PatternFilterPanelImpl<T> extends JPanel {
      * @param parentFilter The filter that is parent to this pattern filter
      * @param filter The filter that filters out Ts that are not available for selection
      */
-    @SuppressWarnings("unchecked")
     PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
+        this(parentFilter, filter, false);
+    }
+
+        /**
+         * Create the pattern filter panel.
+         *
+         * @param parentFilter The filter that is parent to this pattern filter
+         * @param filter The filter that filters out Ts that are not available for selection
+         * @param nominal Whether this pattern filter is for nominal values (which shows an additional option "Include
+         * missing values"
+         */
+        @SuppressWarnings("unchecked")
+        PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter, final boolean nominal) {
         setLayout(new BorderLayout());
         m_parentFilter = parentFilter;
         m_filter = filter;
@@ -166,11 +178,13 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         panel.add(m_caseSensitive, gbc);
         m_caseSensitive.setSelected(true);
         m_caseSensitiveValue = m_caseSensitive.isSelected();
-        m_includeMissing = new JCheckBox("Include Missing Values");
-        gbc.gridy++;
-        panel.add(m_includeMissing, gbc);
-        m_includeMissing.setSelected(false);
-        m_includeMissingValue = m_includeMissing.isSelected();
+        if(nominal){
+            m_includeMissing = new JCheckBox("Include Missing Values");
+            gbc.gridy++;
+            panel.add(m_includeMissing, gbc);
+            m_includeMissing.setSelected(false);
+            m_includeMissingValue = m_includeMissing.isSelected();
+        }
         m_pattern.addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(final CaretEvent e) {
@@ -218,15 +232,17 @@ final class PatternFilterPanelImpl<T> extends JPanel {
                 }
             }
         });
-        m_includeMissing.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (m_includeMissingValue != m_includeMissing.isSelected()) {
-                    m_includeMissingValue = m_includeMissing.isSelected();
-                    fireFilteringChangedEvent();
+        if(nominal) {
+            m_includeMissing.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_includeMissingValue != m_includeMissing.isSelected()) {
+                        m_includeMissingValue = m_includeMissing.isSelected();
+                        fireFilteringChangedEvent();
+                    }
                 }
-            }
-        });
+            });
+        }
         // Add preview twin list
         m_preview =
             new FilterIncludeExcludePreview<T>(MATCH_LABEL, NON_MATCH_LABEL, m_parentFilter.getListCellRenderer());
@@ -256,7 +272,9 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         m_regex.setEnabled(enabled);
         m_wildcard.setEnabled(enabled);
         m_caseSensitive.setEnabled(enabled);
-        m_includeMissing.setEnabled(enabled);
+        if(m_includeMissing != null) {
+            m_includeMissing.setEnabled(enabled);
+        }
         update();
     }
 
@@ -271,7 +289,9 @@ final class PatternFilterPanelImpl<T> extends JPanel {
             m_wildcard.doClick();
         }
         m_caseSensitive.setSelected(config.isCaseSensitive());
-        m_includeMissing.setSelected(config.isIncludeMissing());
+        if(m_includeMissing != null) {
+            m_includeMissing.setSelected(config.isIncludeMissing());
+        }
         update();
     }
 
@@ -284,7 +304,9 @@ final class PatternFilterPanelImpl<T> extends JPanel {
             config.setType(PatternFilterType.Wildcard);
         }
         config.setCaseSensitive(m_caseSensitive.isSelected());
-        config.setIncludeMissing(m_includeMissing.isSelected());
+        if(m_includeMissing != null) {
+            config.setIncludeMissing(m_includeMissing.isSelected());
+        }
     }
 
     /**

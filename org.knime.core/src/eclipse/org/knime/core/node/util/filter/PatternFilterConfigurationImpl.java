@@ -56,6 +56,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration.NominalValueFilterResult;
 
 /**
  * Configuration to the PatternFilterPanel.
@@ -171,7 +172,8 @@ final class PatternFilterConfigurationImpl implements Cloneable {
                 excls.add(name);
             }
         }
-        return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>(), m_includeMissing);
+        return new NominalValueFilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>(),
+            m_includeMissing);
     }
 
     /**
@@ -241,7 +243,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
     }
 
     /**
-     * @return the caseSensitive
+     * @return whether Missing Values will be included
      */
     boolean isIncludeMissing() {
         return m_includeMissing;
