@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
+import org.knime.core.node.util.filter.PatternFilterConfiguration;
 
 /**
  * Configuration for a nominal value filter that can include and exclude names and takes care on additional/missing names
@@ -233,9 +234,8 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
     public boolean isIncludeMissing(){
         if (TYPE.equals(getType())) {
             return m_includeMissing;
-            //TODO ask PatternFilterConfiguration if it is selected
-//        } else if (PatternFilterConfigurationImpl.TYPE.equals(getType())) {
-//            return getPatternConfig().isIncludeMissing();
+        } else if (PatternFilterConfiguration.TYPE.equals(getType())) {
+            return ((NominalValuePatternFilterConfiguration)getPatternConfig()).isIncludeMissing();
         } else {
             throw new IllegalStateException("Unsupported filter type: " + getType());
         }
@@ -281,6 +281,15 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
         NominalValueFilterConfiguration clone = (NominalValueFilterConfiguration)super.clone();
         clone.m_includeMissing = m_includeMissing;
         return clone;
+    }
+
+    /**
+     * @return the pattern config
+     * @since 3.3
+     */
+    @Override
+    protected NominalValuePatternFilterConfiguration createPatternConfig() {
+        return new NominalValuePatternFilterConfiguration();
     }
 
 }

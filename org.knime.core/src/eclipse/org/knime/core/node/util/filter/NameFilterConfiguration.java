@@ -115,7 +115,7 @@ public class NameFilterConfiguration implements Cloneable {
     /** A (final) patter filter, which is used when filtering is done based on name pattern (regex or wildcard).
      * It's not final as it's assigned in {@link #clone()}.
      */
-    private PatternFilterConfiguration m_patternConfig = new PatternFilterConfiguration();
+    private PatternFilterConfiguration m_patternConfig;
 
     /**
      * Pattern filter is on by default.
@@ -261,6 +261,7 @@ public class NameFilterConfiguration implements Cloneable {
         }
         m_configRootName = configRootName;
         m_patternFilterEnabled = (filterEnableMask & FILTER_BY_NAMEPATTERN) != 0;
+        m_patternConfig = createPatternConfig();
     }
 
     /**
@@ -747,9 +748,18 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return the patternConfig
+     * @since 3.3
      */
-    final PatternFilterConfiguration getPatternConfig() {
+    protected final PatternFilterConfiguration getPatternConfig() {
         return m_patternConfig;
+    }
+
+    /**
+     * @return the pattern config
+     * @since 3.3
+     */
+    protected PatternFilterConfiguration createPatternConfig() {
+        return new PatternFilterConfiguration();
     }
 
 }
