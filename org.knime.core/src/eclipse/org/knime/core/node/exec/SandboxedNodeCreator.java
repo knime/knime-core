@@ -227,6 +227,8 @@ public final class SandboxedNodeCreator {
         } else {
             ctxFactory = new WorkflowContext.Factory(FileUtil.createTempDir("sandbox-" + m_nc.getNameWithID()));
         }
+        // We have to use the same location for the temporary files
+        ctxFactory.setTempLocation(origContext.getTempLocation());
         origContext.getMountpointURI().ifPresent(u -> ctxFactory.setMountpointURI(u));
 
         WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
