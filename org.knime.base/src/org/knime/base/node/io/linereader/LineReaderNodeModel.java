@@ -139,7 +139,7 @@ final class LineReaderNodeModel extends NodeModel {
     }
 
     private DataTableSpec createOutputSpec() throws InvalidSettingsException {
-        CheckUtils.checkArgumentNotNull(m_config, "No configuration available");
+        CheckUtils.checkSettingNotNull(m_config, "No source location provided! Please enter a valid location.");
         final URL url = m_config.getURL();
         String warning = CheckUtils.checkSourceFile(url.toString());
         if (warning != null) {
