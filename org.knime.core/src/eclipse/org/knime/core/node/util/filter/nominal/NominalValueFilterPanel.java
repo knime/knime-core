@@ -49,12 +49,15 @@
 package org.knime.core.node.util.filter.nominal;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JToggleButton;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.NominalValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
@@ -67,7 +70,9 @@ import org.knime.core.node.util.filter.NameFilterPanel;
  * @since 3.3
  */
 @SuppressWarnings("serial")
-public class NominalValueFilterPanel extends NameFilterPanel<String> {
+public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
+
+    private Set<DataCell> m_domain;
 
     private JToggleButton m_includeMissing;
 
@@ -109,16 +114,23 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * {@inheritDoc}
      */
     @Override
-    protected String getTforName(final String name) {
-        return name;
+    protected NominalValue getTforName(final String name) {
+        if (m_domain != null) {
+            for (DataCell dc : m_domain) {
+                if (dc.toString().equals(name)) {
+                    return (NominalValue)dc;
+                }
+            }
+        }
+        return new StringCell(name);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String getNameForT(final String t) {
-        return t;
+    protected String getNameForT(final NominalValue t) {
+        return t.toString();
     }
 
     /**
@@ -132,9 +144,11 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      */
     public void loadConfiguration(final NameFilterConfiguration config, final Set<DataCell> domain) {
         ArrayList<String> names = new ArrayList<>();
+        m_domain = new HashSet<>();
         //get array of domain values
         if (domain != null) {
-            for (DataCell dc : domain) {
+            m_domain.addAll(domain);
+            for (DataCell dc : m_domain) {
                 names.add(dc.toString());
             }
         }
@@ -168,7 +182,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<String> {
      * {@inheritDoc}
      */
     @Override
-    protected NominalValuePatternFilterPanel getPatternFilterPanel(final InputFilter<String> filter) {
+    protected NominalValuePatternFilterPanel getPatternFilterPanel(final InputFilter<NominalValue> filter) {
         return new NominalValuePatternFilterPanel(this, filter);
     }
 

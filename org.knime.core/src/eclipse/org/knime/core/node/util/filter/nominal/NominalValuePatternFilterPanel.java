@@ -50,6 +50,7 @@ package org.knime.core.node.util.filter.nominal;
 
 import javax.swing.JCheckBox;
 
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterPanel;
 import org.knime.core.node.util.filter.PatternFilterConfiguration;
@@ -61,7 +62,7 @@ import org.knime.core.node.util.filter.PatternFilterPanel;
  * @since 3.3
  */
 @SuppressWarnings("serial")
-public class NominalValuePatternFilterPanel extends PatternFilterPanel<String> {
+public class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalValue> {
 
     private JCheckBox m_includeMissing;
 
@@ -71,7 +72,7 @@ public class NominalValuePatternFilterPanel extends PatternFilterPanel<String> {
      * @param parentFilter The filter that is parent to this pattern filter
      * @param filter The filter that filters out Ts that are not available for selection
      */
-    NominalValuePatternFilterPanel(final NameFilterPanel<String> parentFilter, final InputFilter<String> filter) {
+    NominalValuePatternFilterPanel(final NameFilterPanel<NominalValue> parentFilter, final InputFilter<NominalValue> filter) {
         super(parentFilter, filter);
     }
 

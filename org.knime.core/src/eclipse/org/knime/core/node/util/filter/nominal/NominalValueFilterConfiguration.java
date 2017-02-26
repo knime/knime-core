@@ -74,7 +74,7 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      */
     public static class NominalValueFilterResult extends FilterResult {
 
-        private boolean m_includeMissing;
+        private final boolean m_includeMissing;
 
         /**
          * @param filter a FilterResult that should be extended by the missing value option
