@@ -219,47 +219,48 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
             ArrayList<String> warningFields = new ArrayList<String>();
             PMML pmml = pmmldoc.getPMML();
 
-            // Now check the transformations
-            for (DerivedField df : pmml.getTransformationDictionary().getDerivedFieldList()) {
-                FieldRef fr = df.getFieldRef();
-                if (fr != null && isExcluded(fr.getField(), res)) {
-                    warningFields.add(fr.getField());
-                }
-                Aggregate a = df.getAggregate();
-                if (a != null && isExcluded(a.getField(), res)) {
-                    warningFields.add(a.getField());
-                }
-                Apply ap = df.getApply();
-                if (ap != null) {
-                    for (FieldRef fieldRef : ap.getFieldRefList()) {
-                        if (isExcluded(fieldRef.getField(), res)) {
-                            warningFields.add(fieldRef.getField());
-                            break;
+            // Now check the transformations if they exist
+            if (pmml.getTransformationDictionary() != null) {
+                for (DerivedField df : pmml.getTransformationDictionary().getDerivedFieldList()) {
+                    FieldRef fr = df.getFieldRef();
+                    if (fr != null && isExcluded(fr.getField(), res)) {
+                        warningFields.add(fr.getField());
+                    }
+                    Aggregate a = df.getAggregate();
+                    if (a != null && isExcluded(a.getField(), res)) {
+                        warningFields.add(a.getField());
+                    }
+                    Apply ap = df.getApply();
+                    if (ap != null) {
+                        for (FieldRef fieldRef : ap.getFieldRefList()) {
+                            if (isExcluded(fieldRef.getField(), res)) {
+                                warningFields.add(fieldRef.getField());
+                                break;
+                            }
                         }
                     }
-                }
-                Discretize d = df.getDiscretize();
-                if (d != null && isExcluded(d.getField(), res)) {
-                    warningFields.add(d.getField());
-                }
-                MapValues mv = df.getMapValues();
-                if (mv != null) {
-                    for (FieldColumnPair fcp : mv.getFieldColumnPairList()) {
-                        if (isExcluded(fcp.getField(), res)) {
-                            warningFields.add(fcp.getField());
+                    Discretize d = df.getDiscretize();
+                    if (d != null && isExcluded(d.getField(), res)) {
+                        warningFields.add(d.getField());
+                    }
+                    MapValues mv = df.getMapValues();
+                    if (mv != null) {
+                        for (FieldColumnPair fcp : mv.getFieldColumnPairList()) {
+                            if (isExcluded(fcp.getField(), res)) {
+                                warningFields.add(fcp.getField());
+                            }
                         }
                     }
-                }
-                NormContinuous nc = df.getNormContinuous();
-                if (nc != null && isExcluded(nc.getField(), res)) {
-                    warningFields.add(nc.getField());
-                }
-                NormDiscrete nd = df.getNormDiscrete();
-                if (nd != null && isExcluded(nd.getField(), res)) {
-                    warningFields.add(nd.getField());
+                    NormContinuous nc = df.getNormContinuous();
+                    if (nc != null && isExcluded(nc.getField(), res)) {
+                        warningFields.add(nc.getField());
+                    }
+                    NormDiscrete nd = df.getNormDiscrete();
+                    if (nd != null && isExcluded(nd.getField(), res)) {
+                        warningFields.add(nd.getField());
+                    }
                 }
             }
-
             DataDictionary dict = pmml.getDataDictionary();
             List<DataField> fields = dict.getDataFieldList();
             // Apply filter to spec
