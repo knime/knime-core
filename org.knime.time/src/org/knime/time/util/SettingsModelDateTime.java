@@ -63,7 +63,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- *  The {@link SettingsModel} for the default date&time dialog component ({@link DialogComponentDateTimeSelection}.
+ * The {@link SettingsModel} for the default date&time dialog component ({@link DialogComponentDateTimeSelection}.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
@@ -237,6 +237,7 @@ public class SettingsModelDateTime extends SettingsModel {
             sameValue = (m_time == null);
         } else {
             sameValue = localTime.equals(m_time);
+            setUseMillis(localTime.getNano() > 0);
         }
         m_time = localTime;
 
@@ -316,7 +317,6 @@ public class SettingsModelDateTime extends SettingsModel {
         final long date = internals.getLong(KEY_DATE, LocalDate.now().getLong(ChronoField.EPOCH_DAY));
         final long time = internals.getLong(KEY_TIME, LocalTime.now().getLong(ChronoField.NANO_OF_DAY));
         final String zone = internals.getString(KEY_ZONE, ZoneId.systemDefault().getId());
-        m_useMillis = LocalTime.ofNanoOfDay(time).getNano() > 0;
         setLocalDate(LocalDate.ofEpochDay(date));
         setLocalTime(LocalTime.ofNanoOfDay(time));
         setZone(ZoneId.of(zone));
@@ -440,5 +440,15 @@ public class SettingsModelDateTime extends SettingsModel {
      */
     public boolean useMillis() {
         return m_useMillis;
+    }
+
+    /**
+     * @param useMillis set millis used
+     */
+    public void setUseMillis(final boolean useMillis) {
+        if (useMillis != m_useMillis) {
+            m_useMillis = useMillis;
+            notifyChangeListeners();
+        }
     }
 }

@@ -53,6 +53,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodurationperiod.StringToDurationPeriodNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.filter.datetimebasedrowfilter.DateTimeBasedRowFilterNodeFactory">
+      </node>
    </extension>
 
    <extension

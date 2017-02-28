@@ -104,21 +104,25 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
 
     private final JCheckBox m_dateCheckbox;
 
+    private final JLabel m_dateLabel;
+
     private final JDateChooser m_dateChooser;
 
     private final JCheckBox m_timeCheckbox;
 
+    private final JLabel m_timeLabel;
+
     private final JSpinner m_timeSpinner;
 
     private final JCheckBox m_zoneCheckbox;
+
+    private final JLabel m_zoneLabel;
 
     private final JComboBox<String> m_zoneComboBox;
 
     private final DisplayOption m_displayOption;
 
     private JSpinner.DateEditor m_editor;
-
-    private boolean m_isEditorInitialized;
 
     /**
      * Constructor puts for the date, time and time zone a checkbox and chooser into the panel according to display
@@ -131,7 +135,6 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
     public DialogComponentDateTimeSelection(final SettingsModelDateTime model, final String label,
         final DisplayOption displayOption) {
         super(model);
-        m_isEditorInitialized = false;
         m_displayOption = displayOption;
 
         final JPanel panel = new JPanel(new GridBagLayout());
@@ -150,6 +153,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
          */
         final String dateLabel = "Date:";
         m_dateCheckbox = new JCheckBox(dateLabel, true);
+        m_dateLabel = new JLabel(dateLabel);
         final Date value = Date.from(model.getZonedDateTime().toInstant());
         m_dateChooser = new JDateChooser("yyyy-MM-dd", "####-##-##", '_');
         // fixes bug AP-5865
@@ -168,7 +172,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             if (m_displayOption.isShowDateOptional()) {
                 panel.add(m_dateCheckbox, gbc);
             } else {
-                panel.add(new JLabel(dateLabel), gbc);
+                panel.add(m_dateLabel, gbc);
             }
             gbc.gridx++;
             gbc.ipadx = 20;
@@ -185,6 +189,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
          */
         final String timeLabel = "Time:";
         m_timeCheckbox = new JCheckBox(timeLabel, true);
+        m_timeLabel = new JLabel(timeLabel);
         m_timeSpinner = new JSpinner(new SpinnerDateModel());
         m_timeSpinner.setUI(new TimeSpinnerUI());
         m_editor = isUseMillis() ? new JSpinner.DateEditor(m_timeSpinner, TIME_FORMAT_WITH_MS)
@@ -206,7 +211,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             if (m_displayOption.isShowTimeOptional()) {
                 panel.add(m_timeCheckbox, gbc);
             } else {
-                panel.add(new JLabel(timeLabel), gbc);
+                panel.add(m_timeLabel, gbc);
             }
             gbc.gridx++;
             gbc.ipadx = 20;
@@ -222,6 +227,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
          */
         final String zoneLabel = "Time Zone:";
         m_zoneCheckbox = new JCheckBox(zoneLabel, true);
+        m_zoneLabel = new JLabel(zoneLabel);
         m_zoneComboBox = new JComboBox<String>();
         for (final String id : new TreeSet<String>(ZoneId.getAvailableZoneIds())) {
             m_zoneComboBox.addItem(id);
@@ -238,7 +244,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             if (m_displayOption.isShowZoneOptional()) {
                 zonePanel.add(m_zoneCheckbox);
             } else {
-                zonePanel.add(new JLabel(zoneLabel));
+                zonePanel.add(m_zoneLabel);
             }
             zonePanel.add(m_zoneComboBox);
             gbc.gridwidth = 4;
@@ -281,12 +287,6 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
         });
         model.addChangeListener(e -> {
-            if (!m_isEditorInitialized) {
-                ((DateFormatter)m_editor.getTextField().getFormatter()).setFormat(new SimpleDateFormat(
-                    model.useMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
-                m_useMillis = (model.useMillis());
-                m_isEditorInitialized = true;
-            }
             updateComponent();
         });
         m_editor.getTextField().addFocusListener(new FocusAdapter() {
@@ -301,7 +301,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         });
     }
 
-    private void setPopupProperty(final JDateChooser dateChooser){
+    private void setPopupProperty(final JDateChooser dateChooser) {
         try {
             // Java will fetch a static field that is public, if you
             // declare it to be non-static or give it the wrong scope, it
@@ -317,6 +317,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * Allows the user to determine by himself whether milliseconds shall be used or not. Checks if the text in the text
      * field of the time spinner contains milliseconds or not and updates the format of the spinner editor accordingly.
@@ -327,7 +328,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         try {
             DateTimeFormatter.ofPattern(TIME_FORMAT_WITH_MS).parse(field.getText());
             if (!m_useMillis) {
-                m_useMillis = true;
+                setUseMillis(true);
                 ((DateFormatter)m_editor.getTextField().getFormatter())
                     .setFormat(new SimpleDateFormat(TIME_FORMAT_WITH_MS, Locale.getDefault()));
                 updateModel();
@@ -336,7 +337,7 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
             try {
                 DateTimeFormatter.ofPattern(TIME_FORMAT_WITHOUT_MS).parse(field.getText());
                 if (m_useMillis) {
-                    m_useMillis = false;
+                    setUseMillis(false);
                     ((DateFormatter)m_editor.getTextField().getFormatter())
                         .setFormat(new SimpleDateFormat(TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
                     updateModel();
@@ -375,6 +376,9 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         final SettingsModelDateTime model = (SettingsModelDateTime)getModel();
         m_dateChooser.setDate(Date.from(model.getLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         m_dateCheckbox.setSelected(model.useDate());
+        m_useMillis = model.useMillis();
+        ((DateFormatter)m_editor.getTextField().getFormatter()).setFormat(
+            new SimpleDateFormat(m_useMillis ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
         m_timeSpinner.setValue(Date
             .from(model.getLocalTime().atDate(LocalDate.of(1970, 1, 1)).atZone(ZoneId.systemDefault()).toInstant()));
         m_timeCheckbox.setSelected(model.useTime());
@@ -392,13 +396,15 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
         model.setLocalDate(m_dateChooser.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         final DateTimeFormatter formatter =
             DateTimeFormatter.ofPattern(isUseMillis() ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS);
+        model.setUseMillis(m_useMillis);
         model
             .setLocalTime(LocalTime.parse(((DateEditor)m_timeSpinner.getEditor()).getTextField().getText(), formatter));
         model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
 
-        model.setUseDate(m_dateCheckbox.isSelected());
-        model.setUseTime(m_timeCheckbox.isSelected());
-        model.setUseZone(m_zoneCheckbox.isSelected());
+        model.setUseDate(m_dateCheckbox.isSelected() && m_dateChooser.isEnabled());
+        model.setUseTime(m_timeCheckbox.isSelected() && m_timeSpinner.isEnabled());
+        model.setUseZone(m_zoneCheckbox.isSelected() && m_zoneComboBox.isEnabled());
+
     }
 
     /**
@@ -423,10 +429,13 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_dateCheckbox.setEnabled(enabled);
+        m_dateLabel.setEnabled(enabled);
         m_dateChooser.setEnabled(m_dateCheckbox.isSelected() && enabled);
         m_timeCheckbox.setEnabled(enabled);
+        m_timeLabel.setEnabled(enabled);
         m_timeSpinner.setEnabled(m_timeCheckbox.isSelected() && enabled);
         m_zoneCheckbox.setEnabled(enabled);
+        m_zoneLabel.setEnabled(enabled);
         m_zoneComboBox.setEnabled(m_zoneCheckbox.isSelected() && enabled);
     }
 
@@ -443,6 +452,13 @@ public class DialogComponentDateTimeSelection extends DialogComponent {
      */
     public boolean isUseMillis() {
         return m_useMillis;
+    }
+
+    /**
+     * @param useMillis the useMillis to set
+     */
+    public void setUseMillis(final boolean useMillis) {
+        m_useMillis = useMillis;
     }
 
     /**

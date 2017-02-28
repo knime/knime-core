@@ -88,6 +88,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
+import org.knime.time.Granularity;
 
 /**
  * The node model of the node which shifts date&time columns.
@@ -406,21 +407,7 @@ public class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
-                if (granularity.equals(Granularity.YEAR.toString())) {
-                    period = Period.ofYears(numericalValue);
-                }
-                if (granularity.equals(Granularity.MONTH.toString())) {
-                    period = Period.ofMonths(numericalValue);
-                }
-                if (granularity.equals(Granularity.WEEK.toString())) {
-                    period = Period.ofWeeks(numericalValue);
-                }
-                if (granularity.equals(Granularity.DAY.toString())) {
-                    period = Period.ofDays(numericalValue);
-                }
-                if (period == null) {
-                    throw new IllegalStateException("Unexpected granularity: " + granularity);
-                }
+                period = (Period)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
             }
 
             if (cell instanceof LocalDateCell) {
@@ -492,24 +479,7 @@ public class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
-                if (granularity.equals(Granularity.HOUR.toString())) {
-                    duration = Duration.ofHours(numericalValue);
-                }
-                if (granularity.equals(Granularity.MINUTE.toString())) {
-                    duration = Duration.ofMinutes(numericalValue);
-                }
-                if (granularity.equals(Granularity.SECOND.toString())) {
-                    duration = Duration.ofSeconds(numericalValue);
-                }
-                if (granularity.equals(Granularity.MILLISECOND.toString())) {
-                    duration = Duration.ofMillis(numericalValue);
-                }
-                if (granularity.equals(Granularity.NANOSECOND.toString())) {
-                    duration = Duration.ofNanos(numericalValue);
-                }
-                if (duration == null) {
-                    throw new IllegalStateException("Unexpected granularity: " + granularity);
-                }
+                duration = (Duration)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
             }
 
             if (cell instanceof LocalTimeCell) {
