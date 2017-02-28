@@ -176,6 +176,9 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
      */
     @Override
     public boolean equals(final Object obj) {
+        if (!(obj instanceof NominalValueFilterConfiguration)) {
+            return false;
+        }
         if (!super.equals(obj)) {
             return false;
         }

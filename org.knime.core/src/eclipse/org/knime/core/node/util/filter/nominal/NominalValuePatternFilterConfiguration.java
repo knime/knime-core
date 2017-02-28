@@ -59,7 +59,7 @@ import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration.N
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.4
  */
-public class NominalValuePatternFilterConfiguration extends PatternFilterConfiguration {
+class NominalValuePatternFilterConfiguration extends PatternFilterConfiguration {
 
     private static final String CFG_INCLUDEMISSING = "includeMissing";
 
@@ -123,6 +123,9 @@ public class NominalValuePatternFilterConfiguration extends PatternFilterConfigu
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
+        if (!(obj instanceof NominalValuePatternFilterConfiguration)) {
+            return false;
+        }
         if (!super.equals(obj)) {
             return false;
         }

@@ -61,7 +61,8 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * Configuration to the PatternFilterPanel.
  *
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
+ * @noreference This class is not intended to be referenced by clients outside KNIME core.
  */
 public class PatternFilterConfiguration implements Cloneable {
 
@@ -105,6 +106,12 @@ public class PatternFilterConfiguration implements Cloneable {
     private PatternFilterType m_type = PatternFilterType.Wildcard;
 
     private boolean m_caseSensitive = true;
+
+    /**
+     * Protected constructor.
+     */
+    protected PatternFilterConfiguration() {
+    }
 
     /** Loads the configuration from the given settings object. Fails if not valid.
      * @param settings Settings object containing the configuration.

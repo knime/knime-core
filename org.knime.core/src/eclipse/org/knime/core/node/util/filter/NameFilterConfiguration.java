@@ -749,14 +749,16 @@ public class NameFilterConfiguration implements Cloneable {
     /**
      * @return the patternConfig
      * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside KNIME core.
      */
     protected final PatternFilterConfiguration getPatternConfig() {
         return m_patternConfig;
     }
 
     /**
-     * @return the pattern config
+     * @return a new pattern config
      * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside KNIME core.
      */
     protected PatternFilterConfiguration createPatternConfig() {
         return new PatternFilterConfiguration();

@@ -253,7 +253,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
      *            exclude) and which are not shown.
      * @param searchLabel text to show next to the search fields
-     * @since 3.3
+     * @since 3.4
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
@@ -318,17 +318,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
         });
         JToggleButton additionalButton = getAdditionalButton();
-        if(additionalButton != null){
+        if (additionalButton != null){
             buttonPan.add(Box.createVerticalStrut(25));
             additionalButton.setMaximumSize(new Dimension(125, 25));
             buttonPan.add(additionalButton);
-            additionalButton.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    fireFilteringChangedEvent();
-                }
-            });
+            additionalButton.addActionListener(e -> fireFilteringChangedEvent());
         }
         buttonPan.add(Box.createVerticalStrut(20));
         buttonPan.add(Box.createGlue());
@@ -480,7 +474,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
     /**
      * @param filter
      * @return the PatternFilterPanel to be used.
-     * @since 3.3
+     * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside the KNIME core.
      */
     protected PatternFilterPanel<T> getPatternFilterPanel(final InputFilter<T> filter) {
         return new PatternFilterPanel<T>(this, filter);
@@ -488,7 +483,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * @return an additional button to be added to the center panel. To be overwritten by subclasses
-     * @since 3.3
+     * @since 3.4
+     * @nooverride This method is not intended to be re-implemented or extended by clients outside KNIME core.
      */
     protected JToggleButton getAdditionalButton(){
         return null;
@@ -680,7 +676,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
         } else {
             config.setEnforceOption(EnforceOption.EnforceInclusion);
         }
-
 
         // save include list
         final Set<T> incls = getIncludeList();

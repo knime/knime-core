@@ -62,7 +62,7 @@ import org.knime.core.node.util.filter.PatternFilterPanel;
  * @since 3.4
  */
 @SuppressWarnings("serial")
-public class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalValue> {
+final class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalValue> {
 
     private JCheckBox m_includeMissing;
 
