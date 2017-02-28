@@ -64,7 +64,7 @@ import org.knime.core.node.util.filter.PatternFilterConfiguration;
  * using the enforce inclusion/exclusion option. It also supports filtering based on name patterns.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
@@ -114,7 +114,6 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
         /**
          * @return whether missing values are included
-         * @since 3.3
          */
         public boolean isIncludeMissing() {
             return m_includeMissing;
@@ -229,7 +228,6 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
     /**
      * @return true if missing values are included
-     * @since 3.3
      */
     public boolean isIncludeMissing(){
         if (TYPE.equals(getType())) {
@@ -243,7 +241,6 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
     /**
      * @param includeMissing whether missing values should be included
-     * @since 3.3
      */
     protected final void setIncludeMissing(final boolean includeMissing) {
         m_includeMissing = includeMissing;
@@ -285,7 +282,6 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
 
     /**
      * @return the pattern config
-     * @since 3.3
      */
     @Override
     protected NominalValuePatternFilterConfiguration createPatternConfig() {

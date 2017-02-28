@@ -59,7 +59,7 @@ import org.knime.core.node.util.filter.PatternFilterPanel;
 /**
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 @SuppressWarnings("serial")
 public class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalValue> {

@@ -57,7 +57,7 @@ import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration.N
 /**
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 public class NominalValuePatternFilterConfiguration extends PatternFilterConfiguration {
 

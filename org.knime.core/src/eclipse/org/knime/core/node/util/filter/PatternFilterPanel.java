@@ -76,7 +76,7 @@ import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterT
  *
  * @param <T> The type of object that this filter is filtering
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 @SuppressWarnings("serial")
 public class PatternFilterPanel<T> extends JPanel {

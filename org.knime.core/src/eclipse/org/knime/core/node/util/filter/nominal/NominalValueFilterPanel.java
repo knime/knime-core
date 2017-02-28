@@ -67,7 +67,7 @@ import org.knime.core.node.util.filter.NameFilterPanel;
  * {@link NominalValueFilterConfiguration}.
  *
  * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
- * @since 3.3
+ * @since 3.4
  */
 @SuppressWarnings("serial")
 public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
@@ -78,8 +78,6 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
 
     /**
      * Creates a basic panel that allows the filtering of nominal values.
-     *
-     * @since 3.3
      */
     public NominalValueFilterPanel() {
         this(false);
@@ -89,7 +87,6 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
      * Creates a basic panel that allows the filtering of nominal values.
      *
      * @param showSelectionListsOnly {@code true} hides the <i>Enforce in-/exclusion</i> buttons
-     * @since 3.3
      */
     public NominalValueFilterPanel(final boolean showSelectionListsOnly) {
         super(showSelectionListsOnly, null, "Value(s)");

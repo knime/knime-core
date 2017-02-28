@@ -191,7 +191,7 @@ public class NameFilterConfiguration implements Cloneable {
          * @param excls list of excluded elements
          * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
          * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
-         * @since 3.3
+         * @since 3.4
          */
         protected FilterResult(final String[] incls, final String[] excls, final String[] removedFromIncludes,
             final String[] removedFromExcludes) {
@@ -748,7 +748,7 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return the patternConfig
-     * @since 3.3
+     * @since 3.4
      */
     protected final PatternFilterConfiguration getPatternConfig() {
         return m_patternConfig;
@@ -756,7 +756,7 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return the pattern config
-     * @since 3.3
+     * @since 3.4
      */
     protected PatternFilterConfiguration createPatternConfig() {
         return new PatternFilterConfiguration();
