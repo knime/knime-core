@@ -50,6 +50,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -62,21 +63,21 @@ public final class InteractiveViewDelegate<V extends ViewContent> {
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
-    private NodeModel m_nodeModel;
 
     public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
         m_wfm = wfm;
         m_nodeID = id;
         NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
         assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
-        if (!(nc instanceof NativeNodeContainer)) {
+        if (!(nc instanceof NativeNodeContainer) && !(nc instanceof SubNodeContainer)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
-        NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
-        if (!(nm instanceof InteractiveNode)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+        if (nc instanceof NativeNodeContainer) {
+            NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
+            if (!(nm instanceof InteractiveNode)) {
+                throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+            }
         }
-        m_nodeModel = nm;
     }
 
     public boolean canReExecute() {

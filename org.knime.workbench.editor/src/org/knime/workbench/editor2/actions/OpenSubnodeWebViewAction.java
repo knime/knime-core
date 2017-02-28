@@ -56,11 +56,13 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.wizard.WizardPageManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.editor2.subnode.SubnodeViewableModel;
 
 /**
  * Action to open a combined interactive web view of a subnode,
@@ -101,27 +103,29 @@ public final class OpenSubnodeWebViewAction extends Action {
 
     @Override
     public String getToolTipText() {
-        return "Opens interactive node view: " + m_nodeContainer.getCustomName();
+        return "Opens interactive node view: " + getSubnodeViewName();
     }
 
     @Override
     public String getText() {
-        return "Interactive View: " + m_nodeContainer.getCustomName();
+        return "Interactive View: " + getSubnodeViewName();
     }
 
     @Override
     public void run() {
-        LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
+        LOGGER.debug("Open Interactive Web Node View " + getSubnodeViewName());
         try {
+            @SuppressWarnings("rawtypes")
             AbstractWizardNodeView view = null;
             NodeContext.pushContext(m_nodeContainer);
             try {
-
+                SubnodeViewableModel model = new SubnodeViewableModel(m_nodeContainer, getSubnodeViewName());
+                view = OpenInteractiveWebViewAction.getConfiguredWizardNodeView(model);
             } finally {
                 NodeContext.removeLastContext();
             }
             view.setWorkflowManagerAndNodeID(m_nodeContainer.getParent(), m_nodeContainer.getID());
-            final String title = m_nodeContainer.getCustomName();
+            final String title = m_nodeContainer.getName();
             Node.invokeOpenView(view, title, OpenViewAction.getAppBoundsAsAWTRec());
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
@@ -136,6 +140,20 @@ public final class OpenSubnodeWebViewAction extends Action {
     @Override
     public String getId() {
         return "knime.open.subnode.web.view.action";
+    }
+
+    private String getSubnodeViewName() {
+        //TODO: decide if this is the correct name for the view
+        return m_nodeContainer.getName();
+    }
+
+    static boolean hasContainerView(final NodeContainer cont) {
+        boolean hasView = false;
+        if (cont instanceof SubNodeContainer) {
+            WizardPageManager wpm = WizardPageManager.of(cont.getParent());
+            hasView = wpm.hasWizardPage(cont.getID());
+        }
+        return hasView;
     }
 
 }

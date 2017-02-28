@@ -144,14 +144,13 @@ public final class WizardPageManager {
     }
 
     /**
-     * Creates a JSON string containing a wizard page from a given node id
+     * Creates a wizard page object from a given node id
      *
-     * @param containerNodeID the node id to create the wizard page string for, null if the current subnode in wizard execution is supposed to be created
-     * @return a JSON string containing the wizard page
+     * @param containerNodeID the node id to create the wizard page for, null if the current subnode in wizard execution is supposed to be created
+     * @return a {@link JSONWebNodePage} object which can be used for serialization
      * @throws IOException if the layout of the wizard page can not be generated
-     * @throws JsonProcessingException on serialization errors
      */
-    public String createWizardPage(final NodeID containerNodeID) throws IOException, JsonProcessingException {
+    public JSONWebNodePage createWizardPage(final NodeID containerNodeID) throws IOException {
         WizardExecutionController wec = m_wfm.getWizardExecutionController();
         WizardPageContent page = wec.getWizardPage(containerNodeID);
         // process layout
@@ -212,7 +211,19 @@ public final class WizardPageManager {
             jsonNode.setViewValue((JSONViewContent)node.getViewValue());
             nodes.put(e.getKey().toString(), jsonNode);
         }
-        JSONWebNodePage jsonPage = new JSONWebNodePage(pageConfig, nodes);
+        return new JSONWebNodePage(pageConfig, nodes);
+    }
+
+    /**
+     * Creates a JSON string containing a wizard page from a given node id
+     *
+     * @param containerNodeID the node id to create the wizard page string for, null if the current subnode in wizard execution is supposed to be created
+     * @return a JSON string containing the wizard page
+     * @throws IOException if the layout of the wizard page can not be generated
+     * @throws JsonProcessingException on serialization errors
+     */
+    public String createWizardPageString(final NodeID containerNodeID) throws IOException, JsonProcessingException {
+        JSONWebNodePage jsonPage = createWizardPage(containerNodeID);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
         return mapper.writeValueAsString(jsonPage);
     }

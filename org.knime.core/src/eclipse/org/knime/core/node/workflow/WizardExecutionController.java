@@ -428,8 +428,11 @@ public final class WizardExecutionController extends ExecutionController {
     private WizardPageContent getWizardPageInternal(final NodeID subnodeID) {
         final WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
-        CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page - all executed");
-        NodeID currentSubnodeID = subnodeID == null ? m_waitingSubnodes.get(0) : subnodeID;
+        NodeID currentSubnodeID = subnodeID;
+        if (currentSubnodeID == null) {
+            CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page - all executed");
+            currentSubnodeID = m_waitingSubnodes.get(0);
+        }
 //        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
 //        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
         SubNodeContainer subNC = manager.getNodeContainer(currentSubnodeID, SubNodeContainer.class, true);

@@ -69,6 +69,11 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.wizard.WizardPageManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
@@ -88,16 +93,39 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     private JSONWebNodePage m_page;
     private SubnodeViewValue m_value;
 
+    private final WorkflowManager m_wfm;
     private final String m_viewName;
     private String m_viewPath;
     private final JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> m_viewCreator;
 
     /**
+     * Creates a new instance of this viewable model
+     * @param nodeContainer the subnode container
+     * @param viewName the name of the view
+     * @throws IOException on view model creation error
      *
      */
-    public SubnodeViewableModel(final String viewName) {
+    public SubnodeViewableModel(final SubNodeContainer nodeContainer, final String viewName) throws IOException {
+        m_wfm = nodeContainer.getParent();
         m_viewName = viewName;
         m_viewCreator = new SubnodeWizardViewCreator();
+        final WizardPageManager wpm = WizardPageManager.of(m_wfm);
+        m_page = wpm.createWizardPage(nodeContainer.getID());
+        nodeContainer.addNodeStateChangeListener(new NodeStateChangeListener() {
+
+            @Override
+            public void stateChanged(final NodeStateEvent state) {
+                if (nodeContainer.getNodeContainerState().isExecuted()) {
+                    try {
+                        m_page = wpm.createWizardPage(nodeContainer.getID());
+                    } catch (IOException e) {
+                        reset();
+                    }
+                } else {
+                    reset();
+                }
+            }
+        });
     }
 
     /**
@@ -105,7 +133,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
      */
     @Override
     public ValidationError validateViewValue(final SubnodeViewValue viewContent) {
-        // TODO Auto-generated method stub
+        //TODO this needs refactoring in WizardExecutionController
         return null;
     }
 
@@ -114,7 +142,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
      */
     @Override
     public void loadViewValue(final SubnodeViewValue viewContent, final boolean useAsDefault) {
-        // TODO Auto-generated method stub
+        // TODO this also needs refactoring in WizardExecutionController
 
     }
 
@@ -192,6 +220,20 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         return m_viewPath;
     }
 
+    private void reset() {
+        m_page = createEmptyViewRepresentation();
+        m_value = createEmptyViewValue();
+        if (m_viewPath != null) {
+            try {
+                File viewFile = new File(m_viewPath);
+                if (viewFile.exists()) {
+                    viewFile.delete();
+                }
+            } catch (Exception e) { /* do nothing */ }
+        }
+        m_viewPath = null;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -211,7 +253,24 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         return false;
     }
 
+    //TODO decide if this belongs here. Could also be sth. like PageViewValue in org.knime.js.core
     static class SubnodeViewValue extends JSONViewContent {
+
+        private Map<String, String> m_viewValues;
+
+        /**
+         * @return the viewValues
+         */
+        public Map<String, String> getViewValues() {
+            return m_viewValues;
+        }
+
+        /**
+         * @param viewValues the viewValues to set
+         */
+        public void setViewValues(final Map<String, String> viewValues) {
+            m_viewValues = viewValues;
+        }
 
         /**
          * {@inheritDoc}
@@ -241,6 +300,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             }
             SubnodeViewValue other = (SubnodeViewValue)obj;
             return new EqualsBuilder()
+                    .append(m_viewValues, other.m_viewValues)
                     .isEquals();
         }
 
@@ -250,6 +310,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         @Override
         public int hashCode() {
             return new HashCodeBuilder()
+                    .append(m_viewValues)
                     .toHashCode();
         }
 
@@ -265,12 +326,13 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         private WebTemplate createSubnodeWebTemplate() {
             List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
             String pluginName = "org.knime.js.core";
-            String requireJS = "js-lib/requireJS/require.js";
-            String jQuery = isDebug() ? "js-lib/jQuery/jquery-1.11.3.js" : "js-lib/jQuery/jquery-1.11.3.min.js";
-            String bsJS = isDebug() ? "js-lib/bootstrap/3_3_6/debug/js/bootstrap.js" : "js-lib/bootstrap/3_3_6/min/js/bootstrap.min.js";
-            String bsCSS = isDebug() ? "js-lib/bootstrap/3_3_6/debug/css/bootstrap.css" : "js-lib/bootstrap/3_3_6/min/css/bootstrap.min.css";
-            String iframeResizer = isDebug() ? "js-lib/iframeResizer/3.5.1/debug/iframeResizer.js" : "js-lib/iframeResizer/3.5.1/min/iframeResizer.js";
-            String pageBuilder = isDebug() ? "org/knime/debug/knime_pagebuilder.js" : "org/knime/core/knime_pagebuilder.js";
+            boolean isDebug = isDebug();
+            String requireJS = isDebug ? "org/knime/debug/require.js" : "org/knime/core/require.js";
+            String jQuery = isDebug ? "js-lib/jQuery/jquery-1.11.3.js" : "js-lib/jQuery/jquery-1.11.3.min.js";
+            String bsJS = isDebug ? "js-lib/bootstrap/3_3_6/debug/js/bootstrap.js" : "js-lib/bootstrap/3_3_6/min/js/bootstrap.min.js";
+            String bsCSS = isDebug ? "js-lib/bootstrap/3_3_6/debug/css/bootstrap.css" : "js-lib/bootstrap/3_3_6/min/css/bootstrap.min.css";
+            String iframeResizer = isDebug ? "org/knime/debug/iframeResizer/iframeResizer.js" : "org/knime/core/iframeResizer/iframeResizer.js";
+            String pageBuilder = isDebug ? "org/knime/debug/knime_pagebuilder.js" : "org/knime/core/knime_pagebuilder.js";
 
             locators.add(new WebResourceLocator(pluginName, requireJS, WebResourceType.JAVASCRIPT));
             locators.add(new WebResourceLocator(pluginName, jQuery, WebResourceType.JAVASCRIPT));
@@ -278,7 +340,6 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             locators.add(new WebResourceLocator(pluginName, bsCSS, WebResourceType.CSS));
             locators.add(new WebResourceLocator(pluginName, iframeResizer, WebResourceType.JAVASCRIPT));
             locators.add(new WebResourceLocator(pluginName, pageBuilder, WebResourceType.JAVASCRIPT));
-            //TODO: register and populate other locators (callInitFrame?)
             String namespace = "KnimePageLoader";
             return new DefaultWebTemplate(locators.toArray(new WebResourceLocator[0]), namespace, "init", "validate",
                 "getPageValues", "setValidationError");
@@ -289,8 +350,15 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
          */
         @Override
         public String createInitJSViewMethodCall(final JSONWebNodePage viewRepresentation, final SubnodeViewValue viewValue) {
-            // TODO Auto-generated method stub
-            return super.createInitJSViewMethodCall(viewRepresentation, viewValue);
+            String jsonViewRepresentation = getViewRepresentationJSONString(viewRepresentation);
+            StringBuilder builder = new StringBuilder();
+            String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
+            String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
+            builder.append(repParseCall);
+            String initMethod = getWebTemplate().getInitMethodName();
+            String initCall = getNamespacePrefix() + initMethod + "(parsedRepresentation, null, null, " + isDebug() + ");";
+            builder.append(initCall);
+            return builder.toString();
         }
     }
 

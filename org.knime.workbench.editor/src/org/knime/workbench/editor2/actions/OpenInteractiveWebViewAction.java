@@ -50,6 +50,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -58,6 +59,7 @@ import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.SingleInteractiveWebViewResult;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -75,6 +77,7 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     private final SingleInteractiveWebViewResult m_webViewForNode;
     private final NodeContainer m_nodeContainer;
+    private final boolean m_singleTitle;
 
 
     /**
@@ -88,6 +91,7 @@ public final class OpenInteractiveWebViewAction extends Action {
         final SingleInteractiveWebViewResult webViewForNode) {
         m_nodeContainer = CheckUtils.checkArgumentNotNull(nodeContainer);
         m_webViewForNode = CheckUtils.checkArgumentNotNull(webViewForNode);
+        m_singleTitle = nodeContainer instanceof SubNodeContainer;
     }
 
     @Override
@@ -107,15 +111,15 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @Override
     public String getText() {
-        return "Interactive View: " + m_webViewForNode.getViewName();
+        return (m_singleTitle ? "Single" : "Interactive") + " View: " + m_webViewForNode.getViewName();
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + m_nodeContainer.getName());
         NativeNodeContainer nativeNC = m_webViewForNode.getNativeNodeContainer();
         try {
+            @SuppressWarnings("rawtypes")
             AbstractWizardNodeView view = null;
             NodeContext.pushContext(nativeNC);
             try {
@@ -138,7 +142,7 @@ public final class OpenInteractiveWebViewAction extends Action {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    static AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
+    static AbstractWizardNodeView getConfiguredWizardNodeView(final ViewableModel model) {
         //TODO uncomment to make view interchangeable
         //TODO get preference key
         /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
@@ -161,7 +165,7 @@ public final class OpenInteractiveWebViewAction extends Action {
                 "JS view set in preferences (" + viewID + ") can't be loaded. Switching to default. - "
                     + e.getMessage(), e);
         }*/
-        return new WizardNodeView(nodeModel);
+        return new WizardNodeView(model);
     }
 
     @Override
