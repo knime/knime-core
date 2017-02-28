@@ -187,17 +187,17 @@ public class BoxplotCalculator {
                     if (counter == catTable.size() - 1) {
                         max = val;
                     }
-                    if (counter == q1Idx) {
+                    if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
                         q1 = val;
                     }
-                    if (counter == q3Idx) {
+                    if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
                         q3 = val;
                     }
-                    if (counter == medianIdx && !dMedian) {
+                    if (counter == medianIdx && dMedian) {
                         median = val;
                     } else if (counter == medianIdx) {
                         median = val;
-                    } else if (counter == medianIdx + 1) {
+                    } else if (counter == medianIdx + 1 && dMedian) {
                         median = (median + val) / 2;
                     }
                     counter++;
@@ -319,17 +319,17 @@ public class BoxplotCalculator {
                 if (counter == catTable.size() - 1) {
                     max = val;
                 }
-                if (counter == q1Idx) {
+                if (counter == q1Idx || (counter == 0 && st.size() <= 3)) {
                     q1 = val;
                 }
-                if (counter == q3Idx) {
+                if (counter == q3Idx || (counter == st.size() - 1 && st.size() <= 3)) {
                     q3 = val;
                 }
-                if (counter == medianIdx && !dMedian) {
+                if (counter == medianIdx && dMedian) {
                     median = val;
                 } else if (counter == medianIdx) {
                     median = val;
-                } else if (counter == medianIdx + 1) {
+                } else if (counter == medianIdx + 1 && dMedian) {
                     median = (median + val) / 2;
                 }
                 counter++;
