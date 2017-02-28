@@ -16,4 +16,30 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/writer/DBWriter.java" type="org.knime.core.node.port.database.writer.DBWriter">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.writer.DBWriter"/>
+                <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/writer/DBWriterImpl.java" type="org.knime.core.node.port.database.writer.DBWriterImpl">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.writer.DBWriterImpl"/>
+                <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
