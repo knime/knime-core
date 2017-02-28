@@ -57,14 +57,21 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdate.LocalDateCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -94,8 +101,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-// TODO Simon: Not public and final
-public class DateTimeBasedRowFilterNodeModel extends NodeModel {
+final class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     static final String FORMAT_HISTORY_KEY = "time_based_row_filter_formats";
 
@@ -104,6 +110,9 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     static final String END_OPTION_PERIOD_DURATION = "Period/Duration";
 
     static final String END_OPTION_NUMERICAL = "Numerical";
+
+    static final String WARNING_MESSAGE_START_AFTER_END =
+        "Start date is after end date! Node created an empty data table.";
 
     private final SettingsModelString m_colSelect = createColSelectModel();
 
@@ -130,9 +139,6 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
     private final SettingsModelBoolean m_startAlwaysNow = createStartAlwaysNowModel();
 
     private final SettingsModelBoolean m_endAlwaysNow = createEndAlwaysNowModel();
-
-    // TODO Simon remove member variable - nodes are stateless except for configuration settings (pass on as variable)
-    private boolean m_startAfterEnd;
 
     /** @return the column select model, used in both dialog and model. */
     static SettingsModelString createColSelectModel() {
@@ -164,25 +170,18 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         return new SettingsModelString("end_selection", null);
     }
 
-    /**
-     * @return the string model, used in both dialog and model.
-     */
-    // TODO Simon: Not public (also below!)
-    public static SettingsModelString createPeriodValueModel() {
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createPeriodValueModel() {
         return new SettingsModelString("period_value", "");
     }
 
-    /**
-     * @return the string model, used in both dialog and model.
-     */
-    public static SettingsModelInteger createNumericalValueModel() {
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelInteger createNumericalValueModel() {
         return new SettingsModelInteger("numerical_value", 1);
     }
 
-    /**
-     * @return the string model, used in both dialog and model.
-     */
-    public static SettingsModelString createNumericalGranularityModel() {
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createNumericalGranularityModel() {
         return new SettingsModelString("numerical_granularity", "");
     }
 
@@ -217,10 +216,9 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        if (inSpecs[0].findColumnIndex(m_colSelect.getStringValue()) < 0){
+        if (inSpecs[0].findColumnIndex(m_colSelect.getStringValue()) < 0) {
             throw new InvalidSettingsException("No configuration available!");
         }
-        m_startAfterEnd = false;
         return inSpecs;
     }
 
@@ -239,272 +237,291 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
         final ZonedDateTime executionEndTime = m_endAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
 
         // filter rows
+        final DataType colDataType = dataTable.getSpec().getColumnSpec(colIdx).getType();
         for (final DataRow row : dataTable) {
             exec.checkCanceled();
-            if (filterRow(row.getCell(colIdx), executionStartTime, executionEndTime)) {
-                container.addRowToTable(row);
+            final DataCell cell = row.getCell(colIdx);
+            if (!cell.isMissing()) {
+                if (colDataType.equals(LocalDateCellFactory.TYPE)
+                    && filterRowLocalDate(((LocalDateCell)cell).getLocalDate(), executionStartTime, executionEndTime)) {
+                    container.addRowToTable(row);
+                } else if (colDataType.equals(LocalTimeCellFactory.TYPE)
+                    && filterRowLocalTime(((LocalTimeCell)cell).getLocalTime(), executionStartTime, executionEndTime)) {
+                    container.addRowToTable(row);
+                } else if (colDataType.equals(LocalDateTimeCellFactory.TYPE) && filterRowLocalDateTime(
+                    ((LocalDateTimeCell)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
+                    container.addRowToTable(row);
+                } else if (colDataType.equals(ZonedDateTimeCellFactory.TYPE) && filterRowZonedDateTime(
+                    ((ZonedDateTimeCell)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
+                    container.addRowToTable(row);
+                }
             }
         }
         container.close();
-        if (m_startAfterEnd) {
-            setWarningMessage("Start date is after end date! Node created an empty data table.");
-        }
         return new BufferedDataTable[]{container.getTable()};
     }
 
-    private boolean filterRow(final DataCell cell, final ZonedDateTime executionStartTime,
-        final ZonedDateTime executionEndTime) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        // local date
-        if (cell instanceof LocalDateCell) {
-            final LocalDate localDate = ((LocalDateCell)cell).getLocalDate();
-            LocalDate endDate =
-                    executionEndTime == null ? m_endDateTime.getLocalDate() : executionEndTime.toLocalDate();
-            if (!m_startBool.getBooleanValue()) {
-                if ((localDate.equals(endDate) && m_endInclusive.getBooleanValue()) || localDate.isBefore(endDate)) {
-                    return true;
-                }
-                return false;
-            }
-            final LocalDate startDate =
-                executionStartTime == null ? m_startDateTime.getLocalDate() : executionStartTime.toLocalDate();
-            if (!m_endBool.getBooleanValue()) {
-                if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue())
-                    || localDate.isAfter(startDate)) {
-                    return true;
-                }
-                return false;
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
-                try {
-                    endDate = startDate.plus(Period.parse(m_periodValueModel.getStringValue()));
-                } catch (DateTimeException e) {
-                    throw new IllegalStateException("Period could not be parsed.");
-                }
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
-                try {
-                    // TODO Simon this should be (TemporalAmount is a interface implemented by both Duration and Period)
-//                    final TemporalAmount amount = Granularity.fromString(m_granularityModel.getStringValue())
-//                            .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-//                    endDate = startDate.plus(amount);
-                    final Period period = (Period)Granularity.fromString(m_granularityModel.getStringValue())
-                        .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                    endDate = startDate.plus(period);
-                } catch (Exception e) { // TODO Simon search for all "catch (Excepion)" and fix them
-                    throw new IllegalStateException("Period could not be parsed.");
-                }
-            }
-            // TODO Simon Can this be simplified - if statment has way too many branches
-            if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue())
-                || (localDate.equals(endDate) && m_endInclusive.getBooleanValue())
-                || (localDate.isAfter(startDate) && localDate.isBefore(endDate)) || (localDate.isBefore(startDate)
-                    && localDate.isAfter(endDate) && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
+    /**
+     * Helper method used in both execution modes streaming and non-streaming for LocalDate
+     *
+     * @param localDate value of the cell
+     * @param executionStartTime execution zoned date time if execution time shall be used, null otherwise
+     * @param executionEndTime execution zoned date time if execution time shall be used, null otherwise
+     * @return true if row shall be in the output, otherwise false
+     */
+    private boolean filterRowLocalDate(final LocalDate localDate, final ZonedDateTime executionStartTime,
+        final ZonedDateTime executionEndTime) throws ArithmeticException, DateTimeException {
+        LocalDate endDate = executionEndTime == null ? m_endDateTime.getLocalDate() : executionEndTime.toLocalDate();
+        // if only an end date is given, look if given date is before
+        if (!m_startBool.getBooleanValue()) {
+            if ((localDate.equals(endDate) && m_endInclusive.getBooleanValue()) || localDate.isBefore(endDate)) {
                 return true;
-            }
-            if (startDate.isAfter(endDate) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                m_startAfterEnd = true;
             }
             return false;
         }
 
-        // local time
-        if (cell instanceof LocalTimeCell) {
-            final LocalTime localTime = ((LocalTimeCell)cell).getLocalTime();
-            if (!m_startBool.getBooleanValue()) {
-                final LocalTime endTime =
-                    executionEndTime == null ? m_endDateTime.getLocalTime() : executionEndTime.toLocalTime();
-                if ((localTime.equals(endTime) && m_endInclusive.getBooleanValue()) || localTime.isBefore(endTime)) {
-                    return true;
-                }
-                return false;
-            }
-            final LocalTime startTime =
-                executionStartTime == null ? m_startDateTime.getLocalTime() : executionStartTime.toLocalTime();
-            if (!m_endBool.getBooleanValue()) {
-                if ((localTime.equals(startTime) && m_startInclusive.getBooleanValue())
-                    || localTime.isAfter(startTime)) {
-                    return true;
-                }
-                return false;
-            }
-            LocalTime endTime = null;
-            if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endTime = executionEndTime == null ? m_endDateTime.getLocalTime() : executionEndTime.toLocalTime();
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
-                try {
-                    endTime = startTime.plus(Duration.parse(m_periodValueModel.getStringValue()));
-                } catch (DateTimeException e) {
-                    throw new IllegalStateException("Duration could not be parsed.");
-                }
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
-                try {
-                    final Duration duration = (Duration)Granularity.fromString(m_granularityModel.getStringValue())
-                        .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                    endTime = startTime.plus(duration);
-                    // TODO Simon must not throw exception (anywhere in the class)
-                } catch (Exception e) {
-                    throw new IllegalStateException("Duration could not be parsed.");
-                }
-            }
-            if (endTime == null) {
-                throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
-            }
-            if ((localTime.equals(startTime) && m_startInclusive.getBooleanValue())
-                || (localTime.equals(endTime) && m_endInclusive.getBooleanValue())
-                || (localTime.isAfter(startTime) && localTime.isBefore(endTime)) || (localTime.isBefore(startTime)
-                    && localTime.isAfter(endTime) && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
+        final LocalDate startDate =
+            executionStartTime == null ? m_startDateTime.getLocalDate() : executionStartTime.toLocalDate();
+        // if only a start date is given, look if given date is afterwards
+        if (!m_endBool.getBooleanValue()) {
+            if ((localDate.equals(startDate) && m_startInclusive.getBooleanValue()) || localDate.isAfter(startDate)) {
                 return true;
-            }
-            if (startTime.isAfter(endTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                m_startAfterEnd = true;
             }
             return false;
         }
 
-        // local date time
-        if (cell instanceof LocalDateTimeCell) {
-            final LocalDateTime localDateTime = ((LocalDateTimeCell)cell).getLocalDateTime();
-            if (!m_startBool.getBooleanValue()) {
-                final LocalDateTime endDateTime =
-                    executionEndTime == null ? m_endDateTime.getLocalDateTime() : executionEndTime.toLocalDateTime();
-                if ((localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
-                    || localDateTime.isBefore(endDateTime)) {
-                    return true;
-                }
-                return false;
+        // end date is calculated, if end date is given by a period or a granularity
+        endDate = (LocalDate)calculateEndDateTime(startDate, endDate);
+
+        // return true if date equals start and start is inclusive
+        if (localDate.equals(startDate) && m_startInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if date equals end and end is inclusive
+        if (localDate.equals(endDate) && m_endInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if date is after start and before end
+        if (localDate.isAfter(startDate) && localDate.isBefore(endDate)) {
+            return true;
+        }
+        // return true if date is before start and after end, but only if ending point is defined by a period or granularity
+        if (localDate.isBefore(startDate) && localDate.isAfter(endDate)
+            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            return true;
+        }
+
+        // this can be true, if the start or end date is defined by execution time
+        if (startDate.isAfter(endDate) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+            && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
+            setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
+        }
+        return false;
+    }
+
+    /**
+     * Helper method used in both execution modes streaming and non-streaming for LocalTime
+     *
+     * @param localTime value of the cell
+     * @param executionStartTime execution zoned date time if execution time shall be used, null otherwise
+     * @param executionEndTime execution zoned date time if execution time shall be used, null otherwise
+     * @return true if row shall be in the output, otherwise false
+     */
+    private boolean filterRowLocalTime(final LocalTime localTime, final ZonedDateTime executionStartTime,
+        final ZonedDateTime executionEndTime) throws ArithmeticException, DateTimeException {
+        LocalTime endTime = executionEndTime == null ? m_endDateTime.getLocalTime() : executionEndTime.toLocalTime();
+        // if only an end time is given, look if given time is before
+        if (!m_startBool.getBooleanValue()) {
+            if ((localTime.equals(endTime) && m_endInclusive.getBooleanValue()) || localTime.isBefore(endTime)) {
+                return true;
             }
-            final LocalDateTime startDateTime =
-                executionStartTime == null ? m_startDateTime.getLocalDateTime() : executionStartTime.toLocalDateTime();
-            if (!m_endBool.getBooleanValue()) {
-                if ((localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
-                    || localDateTime.isAfter(startDateTime)) {
-                    return true;
-                }
-                return false;
+            return false;
+        }
+
+        final LocalTime startTime =
+            executionStartTime == null ? m_startDateTime.getLocalTime() : executionStartTime.toLocalTime();
+        // if only a start time is given, look if given time is afterwards
+        if (!m_endBool.getBooleanValue()) {
+            if ((localTime.equals(startTime) && m_startInclusive.getBooleanValue()) || localTime.isAfter(startTime)) {
+                return true;
             }
-            LocalDateTime endDateTime = null;
-            if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endDateTime =
-                    executionEndTime == null ? m_endDateTime.getLocalDateTime() : executionEndTime.toLocalDateTime();
+            return false;
+        }
+
+        // end time is calculated, if end time is given by a duration or a granularity
+        endTime = (LocalTime)calculateEndDateTime(startTime, endTime);
+
+        // return true if time equals start and start is inclusive
+        if (localTime.equals(startTime) && m_startInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time equals end and end is inclusive
+        if (localTime.equals(endTime) && m_endInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time is after start and before end
+        if (localTime.isAfter(startTime) && localTime.isBefore(endTime)) {
+            return true;
+        }
+        // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
+        if (localTime.isBefore(startTime) && localTime.isAfter(endTime)
+            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            return true;
+        }
+
+        // this can be true, if the start or end date is defined by execution time
+        if (startTime.isAfter(endTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+            && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
+            setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
+        }
+        return false;
+    }
+
+    /**
+     * Helper method used in both execution modes streaming and non-streaming for LocalDateTime
+     *
+     * @param localDateTime value of the cell
+     * @param executionStartTime execution zoned date time if execution time shall be used, null otherwise
+     * @param executionEndTime execution zoned date time if execution time shall be used, null otherwise
+     * @return true if row shall be in the output, otherwise false
+     */
+    private boolean filterRowLocalDateTime(final LocalDateTime localDateTime, final ZonedDateTime executionStartTime,
+        final ZonedDateTime executionEndTime) throws ArithmeticException, DateTimeException {
+        LocalDateTime endDateTime =
+            executionEndTime == null ? m_endDateTime.getLocalDateTime() : executionEndTime.toLocalDateTime();
+        // if only an end time is given, look if given time is before
+        if (!m_startBool.getBooleanValue()) {
+            if ((localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
+                || localDateTime.isBefore(endDateTime)) {
+                return true;
             }
-            if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
-                try {
-                    endDateTime = startDateTime.plus(Period.parse(m_periodValueModel.getStringValue()));
-                } catch (DateTimeException e) {
-                    try {
-                        endDateTime = startDateTime.plus(Duration.parse(m_periodValueModel.getStringValue()));
-                    } catch (DateTimeException e2) {
-                        throw new IllegalStateException("Duration or Period could not be parsed.");
-                    }
-                }
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
-                // TODO Simon this should be one statement only after changing to TemporalUnit
-                // TODO Simon Check ALL occurrences of #getPeriodOrDuration and fix them!
-                try {
-                    final Duration duration = (Duration)Granularity.fromString(m_granularityModel.getStringValue())
-                        .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                    endDateTime = startDateTime.plus(duration);
-                } catch (Exception e) {
-                    try {
-                        final Period period = (Period)Granularity.fromString(m_granularityModel.getStringValue())
-                            .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                        endDateTime = startDateTime.plus(period);
-                    } catch (Exception e2) {
-                        throw new IllegalStateException("Duration or Period could not be parsed.");
-                    }
-                }
-            }
-            if (endDateTime == null) {
-                throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
-            }
-            // TODO Simon Is this the same logic as above and copied? Shame! (line 357++)
+            return false;
+        }
+
+        final LocalDateTime startDateTime =
+            executionStartTime == null ? m_startDateTime.getLocalDateTime() : executionStartTime.toLocalDateTime();
+        // if only a start time is given, look if given time is afterwards
+        if (!m_endBool.getBooleanValue()) {
             if ((localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
-                || (localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
-                || (localDateTime.isAfter(startDateTime) && localDateTime.isBefore(endDateTime))
-                || (localDateTime.isBefore(startDateTime) && localDateTime.isAfter(endDateTime)
-                    && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
+                || localDateTime.isAfter(startDateTime)) {
                 return true;
-            }
-            if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                m_startAfterEnd = true;
             }
             return false;
         }
 
-        // zoned date time
-        if (cell instanceof ZonedDateTimeCell) {
-            final ZonedDateTime zonedDateTime = ((ZonedDateTimeCell)cell).getZonedDateTime();
-            if (!m_startBool.getBooleanValue()) {
-                final ZonedDateTime endDateTime =
-                    executionEndTime == null ? m_endDateTime.getZonedDateTime() : executionEndTime;
-                if ((zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
-                    || zonedDateTime.isBefore(endDateTime)) {
-                    return true;
-                }
-                return false;
-            }
-            final ZonedDateTime startDateTime =
-                executionStartTime == null ? m_startDateTime.getZonedDateTime() : executionStartTime;
-            if (!m_endBool.getBooleanValue()) {
-                if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
-                    || zonedDateTime.isAfter(startDateTime)) {
-                    return true;
-                }
-                return false;
-            }
-            ZonedDateTime endDateTime = null;
-            if (m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                endDateTime = executionEndTime == null ? m_endDateTime.getZonedDateTime() : executionEndTime;
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
-                try {
-                    endDateTime = startDateTime.plus(Period.parse(m_periodValueModel.getStringValue()));
-                } catch (DateTimeException e) {
-                    try {
-                        endDateTime = startDateTime.plus(Duration.parse(m_periodValueModel.getStringValue()));
-                    } catch (DateTimeException e2) {
-                        throw new IllegalStateException("Duration or Period could not be parsed.");
-                    }
-                }
-            }
-            if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
-                try {
-                    final Duration duration = (Duration)Granularity.fromString(m_granularityModel.getStringValue())
-                        .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                    endDateTime = startDateTime.plus(duration);
-                } catch (Exception e) {
-                    try {
-                        final Period period = (Period)Granularity.fromString(m_granularityModel.getStringValue())
-                            .getPeriodOrDuration(m_numericalValueModel.getIntValue());
-                        endDateTime = startDateTime.plus(period);
-                    } catch (Exception e2) {
-                        throw new IllegalStateException("Duration or Period could not be parsed.");
-                    }
-                }
-            }
-            if (endDateTime == null) {
-                throw new IllegalStateException("Option: " + m_endSelection.getStringValue() + " is not defined.");
-            }
-            // TODO Simon ha, shame on you!
-            if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
-                || (zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
-                || (zonedDateTime.isAfter(startDateTime) && zonedDateTime.isBefore(endDateTime))
-                || (zonedDateTime.isBefore(startDateTime) && zonedDateTime.isAfter(endDateTime)
-                    && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME))) {
+        // end time is calculated, if end time is given by a duration or a granularity
+        endDateTime = (LocalDateTime)calculateEndDateTime(startDateTime, endDateTime);
+
+        // return true if time equals start and start is inclusive
+        if (localDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time equals end and end is inclusive
+        if (localDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time is after start and before end
+        if (localDateTime.isAfter(startDateTime) && localDateTime.isBefore(endDateTime)) {
+            return true;
+        }
+        // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
+        if (localDateTime.isBefore(startDateTime) && localDateTime.isAfter(endDateTime)
+            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            return true;
+        }
+
+        // this can be true, if the start or end date is defined by execution time
+        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+            && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
+            setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
+        }
+        return false;
+    }
+
+    /**
+     * Helper method used in both execution modes streaming and non-streaming for ZonedDateTime
+     *
+     * @param zonedDateTime value of the cell
+     * @param executionStartTime execution zoned date time if execution time shall be used, null otherwise
+     * @param executionEndTime execution zoned date time if execution time shall be used, null otherwise
+     * @return true if row shall be in the output, otherwise false
+     */
+    private boolean filterRowZonedDateTime(final ZonedDateTime zonedDateTime, final ZonedDateTime executionStartTime,
+        final ZonedDateTime executionEndTime) throws ArithmeticException, DateTimeException {
+        ZonedDateTime endDateTime = executionEndTime == null ? m_endDateTime.getZonedDateTime() : executionEndTime;
+        // if only an end time is given, look if given time is before
+        if (!m_startBool.getBooleanValue()) {
+            if ((zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue())
+                || zonedDateTime.isBefore(endDateTime)) {
                 return true;
-            }
-            if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
-                m_startAfterEnd = true;
             }
             return false;
         }
-        throw new IllegalStateException("Unexpected data type: " + cell.getClass());
+
+        final ZonedDateTime startDateTime =
+            executionStartTime == null ? m_startDateTime.getZonedDateTime() : executionStartTime;
+        // if only a start time is given, look if given time is afterwards
+        if (!m_endBool.getBooleanValue()) {
+            if ((zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue())
+                || zonedDateTime.isAfter(startDateTime)) {
+                return true;
+            }
+            return false;
+        }
+
+        // end time is calculated, if end time is given by a duration or a granularity
+        endDateTime = (ZonedDateTime)calculateEndDateTime(startDateTime, endDateTime);
+
+        // return true if time equals start and start is inclusive
+        if (zonedDateTime.equals(startDateTime) && m_startInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time equals end and end is inclusive
+        if (zonedDateTime.equals(endDateTime) && m_endInclusive.getBooleanValue()) {
+            return true;
+        }
+        // return true if time is after start and before end
+        if (zonedDateTime.isAfter(startDateTime) && zonedDateTime.isBefore(endDateTime)) {
+            return true;
+        }
+        // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
+        if (zonedDateTime.isBefore(startDateTime) && zonedDateTime.isAfter(endDateTime)
+            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            return true;
+        }
+
+        // this can be true, if the start or end date is defined by execution time
+        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+            && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
+            setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
+        }
+        return false;
+    }
+
+    /**
+     * Calculates the ending point if period/duration or granularity is selected. Otherwise output will be the same as
+     * input (endDateTime).
+     *
+     * @param startDateTime starting point
+     * @param endDateTime current ending point
+     * @return
+     */
+    private Temporal calculateEndDateTime(final Temporal startDateTime, final Temporal endDateTime)
+        throws ArithmeticException, DateTimeException {
+        Temporal end = endDateTime;
+        if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
+            try {
+                end = startDateTime.plus(Period.parse(m_periodValueModel.getStringValue()));
+            } catch (DateTimeException e1) {
+                end = startDateTime.plus(Duration.parse(m_periodValueModel.getStringValue()));
+            }
+        }
+        if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
+            final TemporalAmount amount = Granularity.fromString(m_granularityModel.getStringValue())
+                .getPeriodOrDuration(m_numericalValueModel.getIntValue());
+            end = startDateTime.plus(amount);
+        }
+        return end;
     }
 
     /** {@inheritDoc} */
@@ -528,20 +545,35 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
-                RowInput in = (RowInput)inputs[0];
-                RowOutput out = (RowOutput)outputs[0];
+                final RowInput in = (RowInput)inputs[0];
+                final RowOutput out = (RowOutput)outputs[0];
 
                 // read input
                 final int colIdx = in.getDataTableSpec().findColumnIndex(m_colSelect.getStringValue());
                 final ZonedDateTime executionStartTime =
                     m_startAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
                 final ZonedDateTime executionEndTime = m_endAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
+
                 // filter rows
+                final DataType colDataType = in.getDataTableSpec().getColumnSpec(colIdx).getType();
                 DataRow row;
                 while ((row = in.poll()) != null) {
                     exec.checkCanceled();
-                    if (filterRow(row.getCell(colIdx), executionStartTime, executionEndTime)) {
-                        out.push(row);
+                    final DataCell cell = row.getCell(colIdx);
+                    if (!cell.isMissing()) {
+                        if (colDataType.equals(LocalDateCellFactory.TYPE) && filterRowLocalDate(
+                            ((LocalDateCell)cell).getLocalDate(), executionStartTime, executionEndTime)) {
+                            out.push(row);
+                        } else if (colDataType.equals(LocalTimeCellFactory.TYPE) && filterRowLocalTime(
+                            ((LocalTimeCell)cell).getLocalTime(), executionStartTime, executionEndTime)) {
+                            out.push(row);
+                        } else if (colDataType.equals(LocalDateTimeCellFactory.TYPE) && filterRowLocalDateTime(
+                            ((LocalDateTimeCell)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
+                            out.push(row);
+                        } else if (colDataType.equals(ZonedDateTimeCellFactory.TYPE) && filterRowZonedDateTime(
+                            ((ZonedDateTimeCell)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
+                            out.push(row);
+                        }
                     }
                 }
                 in.close();
@@ -633,7 +665,7 @@ public class DateTimeBasedRowFilterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_startAfterEnd = false;
+        // nothing to do
     }
 
 }

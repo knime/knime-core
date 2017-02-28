@@ -58,6 +58,7 @@ import java.time.Duration;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAmount;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -512,7 +513,7 @@ public class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
      */
     private void checkGranularity() {
         String warning = "";
-        final Object periodOrDuration =
+        final TemporalAmount periodOrDuration =
             Granularity.fromString(((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue())
                 .getPeriodOrDuration(1);
         if (periodOrDuration instanceof Period
