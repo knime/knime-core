@@ -69,17 +69,17 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.node.util.filter.PatternFilterConfigurationImpl.PatternFilterType;
+import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterType;
 
 /**
  * Filters based on the given regular expression or wildcard pattern.
  *
  * @param <T> The type of object that this filter is filtering
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
- * @since 2.9
+ * @since 3.4
  */
 @SuppressWarnings("serial")
-final class PatternFilterPanelImpl<T> extends JPanel {
+public class PatternFilterPanel<T> extends JPanel {
 
     /** Border title for exclude list. */
     private static final String NON_MATCH_LABEL = "Mismatch (Exclude)";
@@ -109,6 +109,8 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     private boolean m_caseSensitiveValue;
 
+    private boolean m_additionalCheckBoxValue;
+
     private NameFilterPanel<T> m_parentFilter;
 
     private String[] m_names = new String[0];
@@ -123,8 +125,7 @@ final class PatternFilterPanelImpl<T> extends JPanel {
      * @param parentFilter The filter that is parent to this pattern filter
      * @param filter The filter that filters out Ts that are not available for selection
      */
-    @SuppressWarnings("unchecked")
-    PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
+    protected PatternFilterPanel(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
         setLayout(new BorderLayout());
         m_parentFilter = parentFilter;
         m_filter = filter;
@@ -162,6 +163,13 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         panel.add(m_caseSensitive, gbc);
         m_caseSensitive.setSelected(true);
         m_caseSensitiveValue = m_caseSensitive.isSelected();
+        JCheckBox additionalCheck = getAdditionalCheckbox();
+        if (additionalCheck != null) {
+            gbc.gridy++;
+            panel.add(additionalCheck, gbc);
+            additionalCheck.setSelected(false);
+            m_additionalCheckBoxValue = additionalCheck.isSelected();
+        }
         m_pattern.addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(final CaretEvent e) {
@@ -209,6 +217,17 @@ final class PatternFilterPanelImpl<T> extends JPanel {
                 }
             }
         });
+        if (additionalCheck != null) {
+            additionalCheck.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_additionalCheckBoxValue != additionalCheck.isSelected()) {
+                        m_additionalCheckBoxValue = additionalCheck.isSelected();
+                        fireFilteringChangedEvent();
+                    }
+                }
+            });
+        }
         // Add preview twin list
         m_preview =
             new FilterIncludeExcludePreview<T>(MATCH_LABEL, NON_MATCH_LABEL, m_parentFilter.getListCellRenderer());
@@ -229,6 +248,13 @@ final class PatternFilterPanelImpl<T> extends JPanel {
     }
 
     /**
+     * @return an additional Checkbox, e.g. for missing values
+     */
+    protected JCheckBox getAdditionalCheckbox() {
+        return null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -243,7 +269,7 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     /** @param config to load from
      * @param names the available names that will be shown in the selection preview */
-    void loadConfiguration(final PatternFilterConfigurationImpl config, final String[] names) {
+    protected void loadConfiguration(final PatternFilterConfiguration config, final String[] names) {
         m_names = names;
         m_pattern.setText(config.getPattern());
         if (config.getType().equals(PatternFilterType.Regex)) {
@@ -256,7 +282,7 @@ final class PatternFilterPanelImpl<T> extends JPanel {
     }
 
     /** @param config to save to */
-    void saveConfiguration(final PatternFilterConfigurationImpl config) {
+    protected void saveConfiguration(final PatternFilterConfiguration config) {
         config.setPattern(m_pattern.getText());
         if (m_regex.isSelected()) {
             config.setType(PatternFilterType.Regex);
@@ -317,7 +343,7 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         boolean patternInvalid = false;
         try {
             // Create regex, this will throw an exception if the current pattern is invalid
-            Pattern regex = PatternFilterConfigurationImpl.compilePattern(m_patternValue, m_typeValue,
+            Pattern regex = PatternFilterConfiguration.compilePattern(m_patternValue, m_typeValue,
                 m_caseSensitiveValue);
             // Fill lists
             for (String name : m_names) {

@@ -81,6 +81,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -193,7 +194,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private JPanel m_nameFilterPanel;
 
-    private PatternFilterPanelImpl<T> m_patternPanel;
+    private PatternFilterPanel<T> m_patternPanel;
 
     private JRadioButton m_nameButton;
 
@@ -237,18 +238,36 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
      *            exclude) and which are not shown.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
+        this(showSelectionListsOnly, filter, null);
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
+     * can be <code>null</code>, in which case it is simply not used at all.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
+     *            exclude) and which are not shown.
+     * @param searchLabel text to show next to the search fields
+     * @since 3.4
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
+        final String searchLabel) {
         super(new GridLayout(1, 1));
         m_filter = filter;
-        m_patternPanel = new PatternFilterPanelImpl<T>(this, filter);
+        m_patternPanel = getPatternFilterPanel(filter);
         m_patternPanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 fireFilteringChangedEvent();
             }
         });
-        m_patternButton = createButtonToFilterPanel(PatternFilterConfigurationImpl.TYPE, "Wildcard/Regex Selection");
+        m_patternButton = createButtonToFilterPanel(PatternFilterConfiguration.TYPE, "Wildcard/Regex Selection");
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
@@ -298,6 +317,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 onRemAll();
             }
         });
+        JToggleButton additionalButton = getAdditionalButton();
+        if (additionalButton != null){
+            buttonPan.add(Box.createVerticalStrut(25));
+            additionalButton.setMaximumSize(new Dimension(125, 25));
+            buttonPan.add(additionalButton);
+            additionalButton.addActionListener(e -> fireFilteringChangedEvent());
+        }
         buttonPan.add(Box.createVerticalStrut(20));
         buttonPan.add(Box.createGlue());
 
@@ -329,7 +355,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_searchFieldIncl.addActionListener(actionListenerIncl);
         m_searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
-        inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
+        inclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
         inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
@@ -384,7 +410,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_searchButtonExcl.addActionListener(actionListenerExcl);
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
         exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
+        exclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
         exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Select all search hits");
@@ -443,6 +469,25 @@ public abstract class NameFilterPanel<T> extends JPanel {
         center.add(includePanel);
         m_nameFilterPanel = center;
         initPanel();
+    }
+
+    /**
+     * @param filter
+     * @return the PatternFilterPanel to be used.
+     * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside the KNIME core.
+     */
+    protected PatternFilterPanel<T> getPatternFilterPanel(final InputFilter<T> filter) {
+        return new PatternFilterPanel<T>(this, filter);
+    }
+
+    /**
+     * @return an additional button to be added to the center panel. To be overwritten by subclasses
+     * @since 3.4
+     * @nooverride This method is not intended to be re-implemented or extended by clients outside KNIME core.
+     */
+    protected JToggleButton getAdditionalButton(){
+        return null;
     }
 
     /** @return a list cell renderer from items to be rendered in the filer */
@@ -1192,7 +1237,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_filterPanel.removeAll();
         if (NameFilterConfiguration.TYPE.equals(m_currentType)) {
             m_filterPanel.add(m_nameFilterPanel);
-        } else if (PatternFilterConfigurationImpl.TYPE.equals(m_currentType)) {
+        } else if (PatternFilterConfiguration.TYPE.equals(m_currentType)) {
             m_filterPanel.add(m_patternPanel);
         } else {
             m_filterPanel.add(getFilterPanel(m_currentType));

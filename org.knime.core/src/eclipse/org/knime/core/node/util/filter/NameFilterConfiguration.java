@@ -115,7 +115,7 @@ public class NameFilterConfiguration implements Cloneable {
     /** A (final) patter filter, which is used when filtering is done based on name pattern (regex or wildcard).
      * It's not final as it's assigned in {@link #clone()}.
      */
-    private PatternFilterConfigurationImpl m_patternConfig = new PatternFilterConfigurationImpl();
+    private PatternFilterConfiguration m_patternConfig;
 
     /**
      * Pattern filter is on by default.
@@ -186,6 +186,21 @@ public class NameFilterConfiguration implements Cloneable {
             m_removedFromExcludes = removedFromExcludes.toArray(new String[removedFromExcludes.size()]);
         }
 
+        /**
+         * @param incls list of included elements
+         * @param excls list of excluded elements
+         * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
+         * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
+         * @since 3.4
+         */
+        protected FilterResult(final String[] incls, final String[] excls, final String[] removedFromIncludes,
+            final String[] removedFromExcludes) {
+            m_incls = incls;
+            m_excls = excls;
+            m_removedFromIncludes = removedFromIncludes;
+            m_removedFromExcludes = removedFromExcludes;
+        }
+
         /** A list of names that were specifically included in the dialog but which are no longer available in the list
          * of actual values. Only used in warning messages.  Note, this list is empty if a name pattern filter is used.
          * @return A non-null but possibly empty array.
@@ -246,6 +261,7 @@ public class NameFilterConfiguration implements Cloneable {
         }
         m_configRootName = configRootName;
         m_patternFilterEnabled = (filterEnableMask & FILTER_BY_NAMEPATTERN) != 0;
+        m_patternConfig = createPatternConfig();
     }
 
     /**
@@ -269,10 +285,10 @@ public class NameFilterConfiguration implements Cloneable {
         m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES);
         m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES);
         try {
-            NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
+            NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfiguration.TYPE);
             m_patternConfig.loadConfigurationInModel(configSettings);
         } catch (InvalidSettingsException e) {
-            if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
+            if (PatternFilterConfiguration.TYPE.equals(m_type)) {
                 throw e;
             }
             // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
@@ -311,7 +327,7 @@ public class NameFilterConfiguration implements Cloneable {
                 m_removedFromExcludeList) : m_excludeList;
         subSettings.addStringArray(KEY_EXCLUDED_NAMES, excludes);
         subSettings.addString(KEY_ENFORCE_OPTION, m_enforceOption.name());
-        NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfigurationImpl.TYPE);
+        NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfiguration.TYPE);
         m_patternConfig.saveConfiguration(configSettings);
         saveConfigurationChild(subSettings);
     }
@@ -397,7 +413,7 @@ public class NameFilterConfiguration implements Cloneable {
      */
     @Override
     public String toString() {
-        if (m_type.equals(PatternFilterConfigurationImpl.TYPE)) {
+        if (m_type.equals(PatternFilterConfiguration.TYPE)) {
             return m_patternConfig.toString();
         } else {
             StringBuilder includes = new StringBuilder();
@@ -497,7 +513,7 @@ public class NameFilterConfiguration implements Cloneable {
         }
         NodeSettingsRO patternMatchSettings;
         try {
-            patternMatchSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
+            patternMatchSettings = subSettings.getNodeSettings(PatternFilterConfiguration.TYPE);
         } catch (InvalidSettingsException ise) {
             patternMatchSettings = new NodeSettings("empty");
         }
@@ -575,7 +591,7 @@ public class NameFilterConfiguration implements Cloneable {
             final List<String> orphanedExcludes = new ArrayList<String>(exclsHash);
 
             return new FilterResult(incls, excls, orphanedIncludes, orphanedExcludes);
-        } else if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
+        } else if (PatternFilterConfiguration.TYPE.equals(m_type)) {
             return m_patternConfig.applyTo(names);
         } else {
             throw new IllegalStateException("Unsupported filter type: " + m_type);
@@ -694,7 +710,7 @@ public class NameFilterConfiguration implements Cloneable {
 
     /** The type identifier of the actual filter implementation. This can be the default include/exclude list, a
      * name pattern filter or something defined by the subclass. Default is {@linkplain #TYPE} ({@value #TYPE}) but
-     * can also be {@link PatternFilterConfigurationImpl#TYPE} or something else (subclasses can add more type filters).
+     * can also be {@link PatternFilterConfiguration#TYPE} or something else (subclasses can add more type filters).
      * @return the type, not null.
      * @since 2.9
      */
@@ -703,7 +719,7 @@ public class NameFilterConfiguration implements Cloneable {
     }
 
     /** Called by the load routines to check whether the argument type string is valid. This implementation
-     * accepts {@link #TYPE} and {@link PatternFilterConfigurationImpl#TYPE} (if pattern filter is enabled).
+     * accepts {@link #TYPE} and {@link PatternFilterConfiguration#TYPE} (if pattern filter is enabled).
      * Subclasses override it to accept additional identifiers.
      * @param type The type identifier
      * @return if valid (if not valid a fallback is used)
@@ -713,7 +729,7 @@ public class NameFilterConfiguration implements Cloneable {
         if (TYPE.equals(type)) {
             return true;
         }
-        if (isPatternFilterEnabled() && PatternFilterConfigurationImpl.TYPE.equals(type)) {
+        if (isPatternFilterEnabled() && PatternFilterConfiguration.TYPE.equals(type)) {
             return true;
         }
         return false;
@@ -732,9 +748,20 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return the patternConfig
+     * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside KNIME core.
      */
-    final PatternFilterConfigurationImpl getPatternConfig() {
+    protected final PatternFilterConfiguration getPatternConfig() {
         return m_patternConfig;
+    }
+
+    /**
+     * @return a new pattern config
+     * @since 3.4
+     * @noreference This method is not intended to be referenced by clients outside KNIME core.
+     */
+    protected PatternFilterConfiguration createPatternConfig() {
+        return new PatternFilterConfiguration();
     }
 
 }

@@ -48,22 +48,23 @@ package org.knime.core.node.util.filter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  * Configuration to the PatternFilterPanel.
  *
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
- * @since 2.9
+ * @since 3.4
+ * @noreference This class is not intended to be referenced by clients outside KNIME core.
  */
-final class PatternFilterConfigurationImpl implements Cloneable {
+public class PatternFilterConfiguration implements Cloneable {
 
     /** The identifier for this filter type. */
     public static final String TYPE = "name_pattern";
@@ -106,11 +107,17 @@ final class PatternFilterConfigurationImpl implements Cloneable {
 
     private boolean m_caseSensitive = true;
 
+    /**
+     * Protected constructor.
+     */
+    protected PatternFilterConfiguration() {
+    }
+
     /** Loads the configuration from the given settings object. Fails if not valid.
      * @param settings Settings object containing the configuration.
      * @throws InvalidSettingsException If settings are invalid
      */
-    void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_pattern = settings.getString(CFG_PATTERN);
         if (m_pattern == null) {
             throw new InvalidSettingsException("Pattern must not be null");
@@ -128,7 +135,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
     /** Loads the configuration from the given settings object. Sets defaults if invalid.
      * @param settings Settings object containing the configuration.
      */
-    void loadConfigurationInDialog(final NodeSettingsRO settings) {
+    protected void loadConfigurationInDialog(final NodeSettingsRO settings) {
         m_pattern = settings.getString(CFG_PATTERN, null);
         if (m_pattern == null) { // can also be deliberately null from the settings
             m_pattern = "";
@@ -141,7 +148,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
     /** Save the current configuration inside the given settings object.
      * @param settings Settings object the current configuration will be put into.
      */
-    void saveConfiguration(final NodeSettingsWO settings) {
+    protected void saveConfiguration(final NodeSettingsWO settings) {
         settings.addString(CFG_PATTERN, m_pattern);
         settings.addString(CFG_TYPE, m_type.name());
         settings.addBoolean(CFG_CASESENSITIVE, m_caseSensitive);
@@ -251,17 +258,17 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof PatternFilterConfigurationImpl)) {
+        if (!(obj instanceof PatternFilterConfiguration)) {
             return false;
         }
-        PatternFilterConfigurationImpl o = (PatternFilterConfigurationImpl)obj;
+        PatternFilterConfiguration o = (PatternFilterConfiguration)obj;
         if (o.m_caseSensitive != m_caseSensitive) {
             return false;
         }
-        if (!ConvenienceMethods.areEqual(o.m_pattern, m_pattern)) {
+        if (!Objects.equals(o.m_pattern, m_pattern)) {
             return false;
         }
-        if (!ConvenienceMethods.areEqual(o.m_type, m_type)) {
+        if (!Objects.equals(o.m_type, m_type)) {
             return false;
         }
         return true;
@@ -275,9 +282,9 @@ final class PatternFilterConfigurationImpl implements Cloneable {
 
     /** {@inheritDoc} */
     @Override
-    protected PatternFilterConfigurationImpl clone() {
+    protected PatternFilterConfiguration clone() {
         try {
-            return (PatternFilterConfigurationImpl)super.clone();
+            return (PatternFilterConfiguration)super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Object not clonable although it implements java.lang.Clonable", e);
         }
