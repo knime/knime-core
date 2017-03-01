@@ -64,6 +64,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration;
 
@@ -88,27 +97,44 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
     private final NominalValueFilterConfiguration m_config =
         new NominalValueFilterConfiguration(NominalValueRowFilterNodeDialog.CFG_CONFIGROOTNAME);
 
+    private final boolean m_splitter;
+
     /**
-     * One inport (data to be filtered) two out ports (included and excluded).
+     * One inport (data to be filtered) one out port (included).
      */
     protected NominalValueRowFilterNodeModel() {
-        super(1, 1);
+        this(false);
+    }
+
+    /**
+     * One inport (data to be filtered) one or two out ports (included and excluded).
+     * @param splitter whether this model represents a splitter (two out-ports
+     * @since 3.4
+     */
+    protected NominalValueRowFilterNodeModel(final boolean splitter) {
+        super(1, splitter ? 2 : 1);
+        m_splitter = splitter;
     }
 
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("null")
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         // include data container
         DataContainer positive =
                 exec.createDataContainer(inData[0].getDataTableSpec());
+        DataContainer negative =
+                m_splitter ? exec.createDataContainer(inData[0].getDataTableSpec()) : null;
         long currentRow = 0;
         for (DataRow row : inData[0]) {
             // if row matches to included...
             if (matches(row)) {
                 positive.addRowToTable(row);
+            } else if(m_splitter){
+                negative.addRowToTable(row);
             }
             exec.setProgress(currentRow / (double) inData[0].size(),
                     "filtering row # " + currentRow);
@@ -119,7 +145,16 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
         BufferedDataTable positiveTable =
                 exec.createBufferedDataTable(positive.getTable(), exec);
         if (positiveTable.size() <= 0) {
-            setWarningMessage("No rows matched!");
+            setWarningMessage("No rows matched! Input mirrored at out-port 1 (excluded)");
+        }
+        if(m_splitter) {
+            negative.close();
+            BufferedDataTable negativeTable =
+                    exec.createBufferedDataTable(negative.getTable(), exec);
+            if (negativeTable.size() <= 0) {
+                setWarningMessage("All rows matched! Input mirrored at out-port 0 (included)");
+            }
+            return new BufferedDataTable[]{positiveTable, negativeTable};
         }
         return new BufferedDataTable[]{positiveTable};
     }
@@ -134,6 +169,64 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             return m_config.isIncludeMissing();
         } else {
             return m_selectedAttr.contains(dc.toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @SuppressWarnings("null")
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                RowInput in = (RowInput) inputs[0];
+                RowOutput match = (RowOutput) outputs[0];
+                RowOutput miss = m_splitter ? (RowOutput) outputs[1] : null;
+                try {
+                    long rowIdx = -1;
+                    DataRow row;
+                    while ((row = in.poll()) != null) {
+                        rowIdx++;
+                        exec.setProgress("Adding row " + rowIdx + ".");
+                        exec.checkCanceled();
+
+                        if (matches(row)) {
+                            match.push(row);
+                        } else if(m_splitter){
+                            miss.push(row);
+                        }
+                    }
+                } finally {
+                    match.close();
+                    if(m_splitter) {
+                        miss.close();
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        if (!m_splitter) {
+            return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+        } else {
+            return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.DISTRIBUTED};
         }
     }
 
@@ -176,7 +269,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
                 .getValues()).getIncludes()));
             // all values excluded?
             if (m_selectedColumn != null && m_selectedAttr.size() == 0 && !m_config.isIncludeMissing()) {
-                setWarningMessage("All values are excluded! Output table will be empty.");
+                setWarningMessage("All values are excluded! Input will be mirrored at out-port 1 (excluded)");
             }
             // all values included?
             boolean validAttrVal = false;
@@ -204,7 +297,11 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
             // return original spec,
             // only the rows are affected
         }
-        return new DataTableSpec[]{inSpecs[0]};
+        if(!m_splitter){
+            return new DataTableSpec[]{inSpecs[0]};
+        } else {
+            return new DataTableSpec[]{inSpecs[0],inSpecs[0]};
+        }
     }
 
     /**

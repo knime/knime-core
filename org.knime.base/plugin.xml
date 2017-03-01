@@ -1245,6 +1245,11 @@
             >
       </node>
       <node
+            category-path="manipulation/row/row-filter"
+            factory-class="org.knime.base.node.preproc.filter.nominal.NominalValueRowSplitterNodeFactory"
+            >
+      </node>
+      <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             >
