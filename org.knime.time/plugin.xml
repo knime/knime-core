@@ -118,7 +118,7 @@
             valueClass="org.knime.core.data.time.duration.DurationValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.time.duration.DurationValueRenderer$DefaultRendererFactory"
-               suggestAsDefault="true">
+               suggestAsDefault="false">
          </renderer>
          <renderer
                rendererFactoryClass="org.knime.core.data.time.duration.DurationLongValueRenderer$DurationLongRendererFactory"
@@ -126,18 +126,18 @@
          </renderer>
          <renderer
                rendererFactoryClass="org.knime.core.data.time.duration.DurationShortValueRenderer$DurationShortRendererFactory"
-               suggestAsDefault="false">
+               suggestAsDefault="true">
          </renderer>
       </dataValue>
       <dataValue
             valueClass="org.knime.core.data.time.period.PeriodValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.time.period.PeriodValueRenderer$DefaultRendererFactory"
-               suggestAsDefault="true">
+               suggestAsDefault="false">
          </renderer>
          <renderer
                rendererFactoryClass="org.knime.core.data.time.period.PeriodShortValueRenderer$PeriodShortRendererFactory"
-               suggestAsDefault="false">
+               suggestAsDefault="true">
          </renderer>
          <renderer
                rendererFactoryClass="org.knime.core.data.time.period.PeriodLongValueRenderer$PeriodLongRendererFactory"
