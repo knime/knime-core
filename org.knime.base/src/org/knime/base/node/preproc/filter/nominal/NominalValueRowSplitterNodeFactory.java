@@ -46,23 +46,22 @@ package org.knime.base.node.preproc.filter.nominal;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the "PossibleValueRowFilter" Node.
  *
  *
- * @author KNIME GmbH
+ * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
  * @since 3.4
  */
-public class NominalValueRowSplitterNodeFactory extends NodeFactory {
+public class NominalValueRowSplitterNodeFactory extends NodeFactory<NominalValueRowFilterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public NominalValueRowFilterNodeModel createNodeModel() {
         return new NominalValueRowFilterNodeModel(true);
     }
 
@@ -78,8 +77,8 @@ public class NominalValueRowSplitterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<NominalValueRowFilterNodeModel> createNodeView(final int viewIndex,
+            final NominalValueRowFilterNodeModel nodeModel) {
         throw new IllegalArgumentException("No view available!");
     }
 
