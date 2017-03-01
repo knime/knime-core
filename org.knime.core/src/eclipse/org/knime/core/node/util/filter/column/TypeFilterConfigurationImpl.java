@@ -129,6 +129,14 @@ final class TypeFilterConfigurationImpl implements Cloneable {
         }
     }
 
+    void loadDefaults(final List<Class<? extends DataValue>> valueClasses) {
+        for (Class<? extends DataValue> valueClass : valueClasses) {
+            if (!m_selections.containsKey(valueClass.getName())) {
+              m_selections.put(valueClass.getName(), false);
+          }
+        }
+    }
+
     /**
      * Applies this configuration to the column.
      *

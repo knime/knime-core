@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -279,6 +280,7 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
     public void loadDefaults(final DataTableSpec spec, final boolean includeByDefault) {
         String[] names = toFilteredStringArray(spec);
         super.loadDefaults(names, includeByDefault);
+        loadDefaultTypeFilter(spec);
     }
 
     /** Applies default values and resets the current configuration (if any).
@@ -309,6 +311,28 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
         setIncludeList(ins.toArray(new String[ins.size()]));
         setExcludeList(excs.toArray(new String[excs.size()]));
         setEnforceOption(filterDefinesIncludeList ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion);
+
+        loadDefaultTypeFilter(spec);
+    }
+
+    /**
+     * Loads defaults in {@link TypeFilterConfigurationImpl}.
+     */
+    private void loadDefaultTypeFilter(final DataTableSpec spec) {
+        final List<Class<? extends DataValue>> filteredSpec = new ArrayList<>();
+        InputFilter<DataColumnSpec> filter = getFilter();
+        if (filter instanceof DataTypeColumnFilter){
+            for (final String include : getIncludeList()) {
+                filteredSpec.add(spec.getColumnSpec(include).getType().getPreferredValueClass());
+            }
+            for (final String exclude : getExcludeList()) {
+                filteredSpec.add(spec.getColumnSpec(exclude).getType().getPreferredValueClass());
+            }
+            for (final Class<? extends DataValue> value : ((DataTypeColumnFilter)filter).getFilterClasses()) {
+                filteredSpec.add(value);
+            }
+            m_typeConfig.loadDefaults(filteredSpec);
+        }
     }
 
     /**
