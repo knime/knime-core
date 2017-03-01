@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DateTimeShiftNodeFactory extends NodeFactory<DateTimeShiftNodeModel>{
+public final class DateTimeShiftNodeFactory extends NodeFactory<DateTimeShiftNodeModel>{
 
     /**
      * {@inheritDoc}

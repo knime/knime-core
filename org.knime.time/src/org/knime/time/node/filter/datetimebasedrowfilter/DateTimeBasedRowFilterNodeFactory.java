@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DateTimeBasedRowFilterNodeFactory extends NodeFactory<DateTimeBasedRowFilterNodeModel>{
+public final class DateTimeBasedRowFilterNodeFactory extends NodeFactory<DateTimeBasedRowFilterNodeModel>{
 
     /**
      * {@inheritDoc}

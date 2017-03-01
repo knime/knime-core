@@ -100,7 +100,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
+final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnNameSelection m_dialogCompColSelection;
 

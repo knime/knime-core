@@ -79,7 +79,7 @@ import org.knime.time.util.DurationPeriodFormatUtils;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNodeModel {
+final class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_APPEND = "Append selected columns";
 

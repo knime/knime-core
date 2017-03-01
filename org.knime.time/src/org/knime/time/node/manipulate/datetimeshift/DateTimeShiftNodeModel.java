@@ -95,7 +95,7 @@ import org.knime.time.Granularity;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
+final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_APPEND = "Append selected columns";
 

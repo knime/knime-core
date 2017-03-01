@@ -72,7 +72,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DurationPeriodToStringNodeDialog extends NodeDialogPane {
+final class DurationPeriodToStringNodeDialog extends NodeDialogPane {
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
     private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;

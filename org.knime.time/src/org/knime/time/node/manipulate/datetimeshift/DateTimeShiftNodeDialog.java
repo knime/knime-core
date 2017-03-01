@@ -93,7 +93,7 @@ import org.knime.time.Granularity;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DateTimeShiftNodeDialog extends NodeDialogPane {
+final class DateTimeShiftNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 

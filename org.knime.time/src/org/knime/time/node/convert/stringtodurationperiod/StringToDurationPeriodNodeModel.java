@@ -102,7 +102,7 @@ import org.knime.time.util.DurationPeriodFormatUtils;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class StringToDurationPeriodNodeModel extends NodeModel {
+final class StringToDurationPeriodNodeModel extends NodeModel {
     StringToDurationPeriodNodeModel() {
         super(1, 1);
     }

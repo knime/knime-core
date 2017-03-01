@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DurationPeriodToStringNodeFactory extends NodeFactory<DurationPeriodToStringNodeModel>{
+public final class DurationPeriodToStringNodeFactory extends NodeFactory<DurationPeriodToStringNodeModel>{
     /**
      * {@inheritDoc}
      */
