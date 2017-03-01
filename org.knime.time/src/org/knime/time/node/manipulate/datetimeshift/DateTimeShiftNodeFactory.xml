@@ -2,7 +2,8 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="datetimeshift.png">
 	<name>Date&amp;Time Shift</name>
-	<shortDescription>Shifts a date or time according to a period, duration or granularity.</shortDescription>
+	<shortDescription>Shifts a date or time according to a period, duration
+		or granularity.</shortDescription>
 	<fullDescription>
 		<intro> The node shifts a date or time with a defined period, duration
 			or granularity. The user can select the Date&amp;Time columns to
@@ -53,16 +54,17 @@
 				duration column.
 			</option>
 			<option name="Period/Duration Value">
-				Select to insert a format string (defined by the ISO-8601
-				<a
-					href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
-				or
-				<a
-					href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
-				) to use as
+				Select to insert a format string (defined by either the ISO-8601 representation (see
+            <a href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
+            or
+            <a href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
+            for details), the short letter representation (e.g. '2y 3M 1d';
+            <b>Period:</b> y: years, M: months, d: days;
+            <b>Duration:</b> H: hours, m: minutes, s: seconds)
+            or the long word representation (e.g. '2 years 3 months 1 day') to use as
 				constant shift value.
 				<br />
-				<b>Examples for Period:</b>
+				<b>Examples for ISO-8601 (Period):</b>
 				<ul>
 					<li>"P2Y" parses as "+2 years"
 					</li>
@@ -71,7 +73,7 @@
 					<li>"P1Y2M3W4D" parses as "1 year, 2 months, 3 weeks and 4 days"
 					</li>
 				</ul>
-				<b>Examples for Duration:</b>
+				<b>Examples for ISO-8601 (Duration):</b>
 				<ul>
 					<li>"PT15M" parses as "+15 minutes"
 					</li>

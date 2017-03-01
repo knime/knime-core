@@ -53,8 +53,6 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.time.Duration;
-import java.time.Period;
 import java.time.format.DateTimeParseException;
 
 import javax.swing.BorderFactory;
@@ -86,6 +84,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.time.Granularity;
+import org.knime.time.util.DurationPeriodFormatUtils;
 
 /**
  * The node dialog of the node which shifts date&time columns.
@@ -407,7 +406,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
             else {
                 try {
                     // if a period is written
-                    Period.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+                    DurationPeriodFormatUtils.parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                     for (final String include : includes) {
                         if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
                             return "A Period cannot be applied on a LocalTime!";
@@ -416,7 +415,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                 } catch (DateTimeParseException e) {
                     try {
                         // if a duration is written
-                        Duration.parse(
+                        DurationPeriodFormatUtils.parseDuration(
                             ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
