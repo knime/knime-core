@@ -67,7 +67,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class SettingsModelDateTime extends SettingsModel {
+public final class SettingsModelDateTime extends SettingsModel {
 
     private static final String KEY_DATE = "date";
 

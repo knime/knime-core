@@ -59,7 +59,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DurationPeriodFormatUtils {
+public final class DurationPeriodFormatUtils {
     /**
      * Formats the given duration into a time string of format H:mm:ss.S.
      *

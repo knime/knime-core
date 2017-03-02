@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class ModifyTimeZoneNodeFactory extends NodeFactory<ModifyTimeZoneNodeModel> {
+public final class ModifyTimeZoneNodeFactory extends NodeFactory<ModifyTimeZoneNodeModel> {
     /**
      * {@inheritDoc}
      */

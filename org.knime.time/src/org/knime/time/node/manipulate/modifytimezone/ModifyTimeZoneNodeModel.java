@@ -82,7 +82,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
+final class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
 
     @SuppressWarnings("unchecked")
     static final DataTypeColumnFilter ZONED_AND_LOCAL_FILTER =

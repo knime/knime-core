@@ -94,7 +94,7 @@ import com.toedter.calendar.JDateChooser;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class DialogComponentDateTimeSelection extends DialogComponent {
+public final class DialogComponentDateTimeSelection extends DialogComponent {
 
     private final static String TIME_FORMAT_WITHOUT_MS = "HH:mm:ss";
 

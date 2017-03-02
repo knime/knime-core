@@ -108,7 +108,7 @@ import org.knime.time.node.convert.DateTimeTypes;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class StringToDateTimeNodeModel extends NodeModel {
+final class StringToDateTimeNodeModel extends NodeModel {
 
     static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 

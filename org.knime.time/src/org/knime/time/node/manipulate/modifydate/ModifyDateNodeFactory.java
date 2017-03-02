@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class ModifyDateNodeFactory extends NodeFactory<ModifyDateNodeModel> {
+public final class ModifyDateNodeFactory extends NodeFactory<ModifyDateNodeModel> {
 
     /**
      * {@inheritDoc}

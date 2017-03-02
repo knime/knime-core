@@ -77,7 +77,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class ModifyTimeZoneNodeDialog extends NodeDialogPane {
+final class ModifyTimeZoneNodeDialog extends NodeDialogPane {
 
     private final DataColumnSpecFilterPanel m_dialogCompColFilter;
 

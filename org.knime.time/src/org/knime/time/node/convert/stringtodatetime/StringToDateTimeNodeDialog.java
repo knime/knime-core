@@ -98,7 +98,7 @@ import org.knime.time.node.convert.DateTimeTypes;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
+final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 

@@ -85,7 +85,7 @@ import org.knime.time.util.SettingsModelDateTime;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
+final class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
 
     @SuppressWarnings("unchecked")
     static final DataTypeColumnFilter LOCAL_TIME_FILTER = new DataTypeColumnFilter(LocalTimeValue.class);

@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class StringToDateTimeNodeFactory extends NodeFactory<StringToDateTimeNodeModel> {
+public final class StringToDateTimeNodeFactory extends NodeFactory<StringToDateTimeNodeModel> {
 
     /**
      * {@inheritDoc}
