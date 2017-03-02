@@ -71,14 +71,14 @@ import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.manipulate.datetimeshift.Granularity;
+import org.knime.time.Granularity;
 
 /**
  * The node dialog of the node which extracts duration or period fields.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
+final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnNameSelection m_dialogCompColSelect;
 
@@ -106,7 +106,7 @@ public class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
             ExtractDurationPeriodFieldsNodeModel.MODUS_SINGLE, ExtractDurationPeriodFieldsNodeModel.MODUS_SEVERAL);
 
         final String[] fieldsDuration = new String[]{Granularity.HOUR.toString(), Granularity.MINUTE.toString(),
-            Granularity.SECOND.toString(), Granularity.NANOSECOND.toString()};
+            Granularity.SECOND.toString(), Granularity.MILLISECOND.toString(), Granularity.NANOSECOND.toString()};
         m_dialogCompDurationFieldSelect =
             new DialogComponentStringSelection(ExtractDurationPeriodFieldsNodeModel.createDurationFieldSelectionModel(),
                 "Field:", fieldsDuration);

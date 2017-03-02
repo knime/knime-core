@@ -76,14 +76,14 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.node.manipulate.datetimeshift.Granularity;
+import org.knime.time.Granularity;
 
 /**
  * The node model of the node which extracts duration or period fields.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctionNodeModel {
+final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String MODUS_SINGLE = "Single Field";
 
@@ -103,6 +103,8 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
 
     private final SettingsModelBoolean m_secondModel = createFieldBooleanModel(Granularity.SECOND.toString());
 
+    private final SettingsModelBoolean m_milliModel = createFieldBooleanModel(Granularity.MILLISECOND.toString());
+
     private final SettingsModelBoolean m_nanoModel = createFieldBooleanModel(Granularity.NANOSECOND.toString());
 
     private final SettingsModelBoolean m_yearModel = createFieldBooleanModel(Granularity.YEAR.toString());
@@ -112,7 +114,7 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
     private final SettingsModelBoolean m_dayModel = createFieldBooleanModel(Granularity.DAY.toString());
 
     private final SettingsModelBoolean[] m_durModels =
-        new SettingsModelBoolean[]{m_hourModel, m_minuteModel, m_secondModel, m_nanoModel};
+        new SettingsModelBoolean[]{m_hourModel, m_minuteModel, m_secondModel, m_milliModel, m_nanoModel};
 
     private final SettingsModelBoolean[] m_perModels =
         new SettingsModelBoolean[]{m_yearModel, m_monthModel, m_dayModel};
@@ -217,6 +219,7 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
         m_hourModel.saveSettingsTo(settings);
         m_minuteModel.saveSettingsTo(settings);
         m_secondModel.saveSettingsTo(settings);
+        m_milliModel.saveSettingsTo(settings);
         m_nanoModel.saveSettingsTo(settings);
         m_yearModel.saveSettingsTo(settings);
         m_monthModel.saveSettingsTo(settings);
@@ -235,6 +238,7 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
         m_hourModel.validateSettings(settings);
         m_minuteModel.validateSettings(settings);
         m_secondModel.validateSettings(settings);
+        m_milliModel.validateSettings(settings);
         m_nanoModel.validateSettings(settings);
         m_yearModel.validateSettings(settings);
         m_monthModel.validateSettings(settings);
@@ -253,6 +257,7 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
         m_hourModel.loadSettingsFrom(settings);
         m_minuteModel.loadSettingsFrom(settings);
         m_secondModel.loadSettingsFrom(settings);
+        m_milliModel.loadSettingsFrom(settings);
         m_nanoModel.loadSettingsFrom(settings);
         m_yearModel.loadSettingsFrom(settings);
         m_monthModel.loadSettingsFrom(settings);
@@ -297,6 +302,16 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
                 // added, if the duration is negative and nanoseconds != 0
                 final long seconds = duration.getSeconds();
                 newCells[0] = LongCellFactory.create((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds);
+                return newCells;
+            }
+            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.MILLISECOND.toString())) {
+                try {
+                    newCells[0] = LongCellFactory.create(duration.toMillis());
+                } catch (ArithmeticException e) {
+                    newCells[0] = new MissingCell(e.getMessage());
+                    setWarningMessage(
+                        "The duration in row '" + row.getKey() + "' was too big to convert to milliseconds!");
+                }
                 return newCells;
             }
             if (m_durationFieldSelectModel.getStringValue().equals(Granularity.NANOSECOND.toString())) {
@@ -351,6 +366,10 @@ public class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFuncti
                         final long seconds = duration.getSeconds() % 60;
                         newCells[i] = IntCellFactory
                             .create((int)((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds));
+                    } else if (Granularity.MILLISECOND.toString().equals(model.getConfigName())) {
+                        int milli = duration.getNano() / 1_000_000;
+                        newCells[i] = IntCellFactory
+                            .create((duration.getSeconds() < 0 && milli > 0) ? (milli - 999) : milli);
                     } else if (Granularity.NANOSECOND.toString().equals(model.getConfigName())) {
                         final int nano = duration.getNano();
                         newCells[i] = IntCellFactory
