@@ -58,6 +58,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.filter.datetimebasedrowfilter.DateTimeBasedRowFilterNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.extract.ExtractDurationPeriodFieldsNodeFactory">
+      </node>
    </extension>
 
    <extension
