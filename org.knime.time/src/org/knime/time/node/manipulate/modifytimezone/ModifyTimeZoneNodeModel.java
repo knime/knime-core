@@ -113,6 +113,8 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_modifyAction = createModifySelectModel();
 
+    private boolean m_hasValidatedConfiguration = false;
+
     /**
      * @param typeColumnFilter column filter
      * @return the column select model, used in both dialog and model.
@@ -156,6 +158,18 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createModifySelectModel() {
         return new SettingsModelString("modify_select", MODIFY_OPTION_SET);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            throw new InvalidSettingsException("Node must be configured!");
+        }
+        DataTableSpec in = inSpecs[0];
+        ColumnRearranger r = createColumnRearranger(in);
+        DataTableSpec out = r.createSpec();
+        return new DataTableSpec[]{out};
     }
 
     /** {@inheritDoc} */
@@ -242,6 +256,7 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
         boolean includeLocalDateTime = m_modifyAction.getStringValue().equals(MODIFY_OPTION_SET);
         m_colSelect = createDCFilterConfiguration(includeLocalDateTime ? ZONED_AND_LOCAL_FILTER : ZONED_FILTER);
         m_colSelect.loadConfigurationInModel(settings);
+        m_hasValidatedConfiguration = true;
     }
 
     private final class SetTimeZoneCellFactory extends SingleCellFactory {

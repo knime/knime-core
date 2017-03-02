@@ -118,6 +118,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     private final SettingsModelString m_timeZoneSelect = createStringModel();
 
+    private boolean m_hasValidatedConfiguration = false;
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
@@ -258,6 +260,9 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            m_colSelect.loadDefaults(inSpecs[0]);
+        }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{columnRearranger.createSpec()};
     }
@@ -311,6 +316,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_timeZoneSelect.loadSettingsFrom(settings);
+        m_hasValidatedConfiguration = true;
     }
 
     /**

@@ -134,6 +134,9 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     private DateTimeTypes[] m_newTypes = null;
 
+    private boolean m_hasValidatedConfiguration = false;
+
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
@@ -313,6 +316,10 @@ final class OldToNewTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            m_colSelect.loadDefaults(inSpecs[0]);
+            m_selectedNewType = DateTimeTypes.LOCAL_DATE.name();
+        }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0], null);
         if (columnRearranger == null) {
             return new DataTableSpec[]{null};
@@ -394,6 +401,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
         m_selectedNewType = settings.getString("newTypeEnum");
+        m_hasValidatedConfiguration = true;
     }
 
     /**

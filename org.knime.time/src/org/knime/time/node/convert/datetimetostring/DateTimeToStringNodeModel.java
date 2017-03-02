@@ -70,7 +70,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -78,12 +77,16 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
+import org.knime.core.data.time.localdate.LocalDateValue;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
 import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -130,10 +133,13 @@ public class DateTimeToStringNodeModel extends NodeModel {
 
     private final SettingsModelString m_locale = createLocaleModel();
 
+    private boolean m_hasValidatedConfiguration = false;
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", StringValue.class);
+        return new SettingsModelColumnFilter2("col_select", LocalDateValue.class, LocalTimeValue.class,
+            LocalDateTimeValue.class, ZonedDateTimeValue.class);
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -214,6 +220,9 @@ public class DateTimeToStringNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            m_colSelect.loadDefaults(inSpecs[0]);
+        }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{columnRearranger.createSpec()};
     }
@@ -398,6 +407,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
         if (!createPredefinedFormats().contains(dateformat)) {
             StringHistory.getInstance(FORMAT_HISTORY_KEY).add(dateformat);
         }
+        m_hasValidatedConfiguration = true;
     }
 
     /**
