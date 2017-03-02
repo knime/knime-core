@@ -66,9 +66,8 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.LongCell.LongCellFactory;
-import org.knime.core.data.time.duration.DurationCell;
-import org.knime.core.data.time.duration.DurationCellFactory;
-import org.knime.core.data.time.period.PeriodCell;
+import org.knime.core.data.time.duration.DurationValue;
+import org.knime.core.data.time.period.PeriodValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -156,7 +155,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
         }
 
         final boolean isDurationColumn =
-            spec.getColumnSpec(m_colSelectModel.getStringValue()).getType().equals(DurationCellFactory.TYPE);
+            spec.getColumnSpec(m_colSelectModel.getStringValue()).getType().isCompatible(DurationValue.class);
         final List<DataColumnSpec> colSpecs = new ArrayList<>();
         if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
             colSpecs.add(
@@ -268,7 +267,6 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
      * {@link AbstractCellFactory} for single mode and duration.
      */
     private final class ExtractDurationSingleFieldCellFactory extends AbstractCellFactory {
-
         private final int m_colIdx;
 
         public ExtractDurationSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
@@ -288,7 +286,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
                 return newCells;
             }
 
-            final Duration duration = ((DurationCell)cell).getDuration();
+            final Duration duration = ((DurationValue)cell).getDuration();
             if (m_durationFieldSelectModel.getStringValue().equals(Granularity.HOUR.toString())) {
                 newCells[0] = LongCellFactory.create(duration.toHours());
                 return newCells;
@@ -332,7 +330,6 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
      * {@link AbstractCellFactory} for several mode and duration.
      */
     private final class ExtractDurationSeveralFieldsCellFactory extends AbstractCellFactory {
-
         private final int m_colIdx;
 
         public ExtractDurationSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
@@ -352,7 +349,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
                 return newCells;
             }
 
-            final Duration duration = ((DurationCell)cell).getDuration();
+            final Duration duration = ((DurationValue)cell).getDuration();
             int i = 0;
             for (final SettingsModelBoolean model : m_durModels) {
                 if (model.getBooleanValue()) {
@@ -388,7 +385,6 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
      * {@link AbstractCellFactory} for single mode and period.
      */
     private final class ExtractPeriodSingleFieldCellFactory extends AbstractCellFactory {
-
         private final int m_colIdx;
 
         public ExtractPeriodSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
@@ -408,7 +404,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
                 return newCells;
             }
 
-            final Period period = ((PeriodCell)cell).getPeriod();
+            final Period period = ((PeriodValue)cell).getPeriod();
             if (m_periodFieldSelectModel.getStringValue().equals(Granularity.YEAR.toString())) {
                 newCells[0] = LongCellFactory.create(period.toTotalMonths() / 12);
                 return newCells;
@@ -425,7 +421,6 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
      * {@link AbstractCellFactory} for several mode and period.
      */
     private final class ExtractPeriodSeveralFieldsCellFactory extends AbstractCellFactory {
-
         private final int m_colIdx;
 
         public ExtractPeriodSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
@@ -445,7 +440,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
                 return newCells;
             }
 
-            final Period period = ((PeriodCell)cell).getPeriod();
+            final Period period = ((PeriodValue)cell).getPeriod();
             int i = 0;
             for (final SettingsModelBoolean model : m_perModels) {
                 if (model.getBooleanValue()) {
