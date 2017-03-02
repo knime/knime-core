@@ -175,9 +175,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
             } else {
                 for (final SettingsModelBoolean model : m_perModels) {
                     if (model.getBooleanValue()) {
-                        if (model.getBooleanValue()) {
-                            colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
-                        }
+                        colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
                     }
                 }
             }
