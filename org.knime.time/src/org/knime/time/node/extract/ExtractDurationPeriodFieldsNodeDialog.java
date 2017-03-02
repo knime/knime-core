@@ -93,7 +93,7 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
     private final DialogComponentBoolean[] m_dialogCompsPeriodFields;
 
     /**
-     *
+     * Creates a new dialog.
      */
     @SuppressWarnings("unchecked")
     public ExtractDurationPeriodFieldsNodeDialog() {
@@ -122,7 +122,8 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
                 new DialogComponentBoolean(ExtractDurationPeriodFieldsNodeModel.createFieldBooleanModel(gran), gran);
         }
 
-        final String[] fieldsPeriod = new String[]{Granularity.YEAR.toString(), Granularity.MONTH.toString(), Granularity.DAY.toString()};
+        final String[] fieldsPeriod =
+            new String[]{Granularity.YEAR.toString(), Granularity.MONTH.toString(), Granularity.DAY.toString()};
         m_dialogCompsPeriodFields = new DialogComponentBoolean[fieldsPeriod.length];
         for (int i = 0; i < fieldsPeriod.length; i++) {
             final String gran = fieldsPeriod[i];
@@ -287,5 +288,4 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
             dc.loadSettingsFrom(settings, specs);
         }
     }
-
 }
