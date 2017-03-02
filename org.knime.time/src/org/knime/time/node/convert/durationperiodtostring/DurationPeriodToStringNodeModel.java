@@ -99,6 +99,8 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
 
     private final SettingsModelString m_format = createFormatModel();
 
+    private boolean m_hasValidatedConfiguration = false;
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createColSelectModel() {
@@ -132,6 +134,9 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
      */
     @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            m_colSelect.loadDefaults(spec);
+        }
         final ColumnRearranger rearranger = new ColumnRearranger(spec);
         final String[] includeList = m_colSelect.applyTo(spec).getIncludes();
         final int[] includeIndices =
@@ -186,6 +191,7 @@ public class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNod
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
+        m_hasValidatedConfiguration = true;
     }
 
     private final class DurationPeriodToStringCellFactory extends SingleCellFactory {
