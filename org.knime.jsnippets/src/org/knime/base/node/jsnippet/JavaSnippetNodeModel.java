@@ -98,6 +98,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         m_snippet.setSettings(m_settings);
+
         FlowVariableRepository flowVarRepository =
             new FlowVariableRepository(getAvailableInputFlowVariables());
         ValidationReport report = m_snippet.validateSettings(inSpecs[0],
