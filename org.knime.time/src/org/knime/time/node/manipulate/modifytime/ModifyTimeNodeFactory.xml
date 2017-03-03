@@ -5,15 +5,13 @@
 	<shortDescription>Modifies time information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
-			Modifies date&amp;time columns by
-			<ul>
-				<li>appending a time to local date columns (output type is local or zoned date time column),</li>
-				<li>changing the time in local or zoned date&amp;time columns, or
-				</li>
-				<li>removing the time from local or zoned date&amp;time columns
-					(output type is local date).
-				</li>
-			</ul>
+			Modifies date&amp;time columns in three different ways. The
+			node can append a time to local date columns (output type is local or
+			zoned date time column)
+			<b>or</b>
+			change the time in local or zoned date&amp;time columns
+			<b>or</b> remove the time from local or zoned date&amp;time columns
+                    (output type is local date). <br/>
 			This node is not used to add ("plus") or subtract ("minus") time. Use
 			the
 			<i>Date&amp;Time Shift</i>
@@ -63,7 +61,7 @@
 			</option>
 			<option name="Time Zone">
 				If checked, the user can choose a time zone to
-				append also. 
+				append also.
 			</option>
 		</tab>
 	</fullDescription>

@@ -5,15 +5,17 @@
 	<shortDescription>Modifies a time zone.</shortDescription>
 	<fullDescription>
 		<intro>
-			Modifies a column by
-			<ul>
-				<li>adding a time zone to local date&amp;time columns or changing the time zone in zoned date&amp;time
-				    columns (without adjusting the time!),
-				</li>
-				<li>shifting the time zone in zoned date&amp;time columns by adjusting the time (and potentially date)
-				    according to the new time zone offset, or</li>
-				<li>removing the time zone from zoned date&amp;time columns.</li>
-			</ul>
+			Modifies date&amp;time columns in three different ways. The
+			node can add a time zone to local date&amp;time columns or changing
+			the time zone in zoned date&amp;time
+			columns (without adjusting the time!)
+			<b>or</b>
+			shift the time zone in zoned date&amp;time columns by adjusting the
+			time (and potentially date)
+			according to the new time zone offset
+			<b>or</b>
+			remove the time zone from zoned date&amp;time columns.
+			<br />
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -34,15 +36,18 @@
 		</tab>
 		<tab name="Action Selection">
 			<option name="Set time zone">
-				Adds a time zone to local date&amp;time columns or changed the time zone in zoned date&amp;time
-                columns (without adjusting the time!).
+				Adds a time zone to local date&amp;time columns
+				or changed the time zone in zoned date&amp;time
+				columns (without adjusting the time!).
 			</option>
 			<option name="Shift time zone">
-				Shifts the time zone in zoned date&amp;time columns by adjusting the time (and potentially date)
-                according to the new time zone offset.
+				Shifts the time zone in zoned date&amp;time
+				columns by adjusting the time (and potentially date)
+				according to the new time zone offset.
 			</option>
 			<option name="Remove time zone">
-				Removes the time zone from zoned date&amp;time columns.
+				Removes the time zone from zoned date&amp;time
+				columns.
 			</option>
 			<option name="Time zone">A time zone to be set or shifted.</option>
 		</tab>

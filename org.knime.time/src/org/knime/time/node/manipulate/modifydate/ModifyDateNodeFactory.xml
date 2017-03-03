@@ -5,17 +5,15 @@
 	<shortDescription>Modifies date information of a date&amp;time cell.</shortDescription>
 	<fullDescription>
 		<intro>
-			Modifies date&amp;time columns by
-			<ul>
-				<li>appending a date to local time columns (output type is local or
-					zoned date time column),
-				</li>
-				<li>changing the date in local or zoned date&amp;time columns, or
-				</li>
-				<li>removing the date from local or zoned date&amp;time columns
-					(output type is local time).
-				</li>
-			</ul>
+			Modifies date&amp;time columns in three different ways. The
+			node can append a date to local time columns (output type is local or
+			zoned date time column)
+			<b>or</b>
+			change the date in local or zoned date&amp;time columns
+			<b>or</b>
+			remove the date from local or zoned date&amp;time columns
+			(output type is local time).
+			<br />
 			This node is not used to add ("plus") or subtract ("minus") date. Use
 			the
 			<i>Date&amp;Time Shift</i>
