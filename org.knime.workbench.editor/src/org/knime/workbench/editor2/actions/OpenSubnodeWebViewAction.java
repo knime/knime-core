@@ -111,6 +111,7 @@ public final class OpenSubnodeWebViewAction extends Action {
         return "Interactive View: " + getSubnodeViewName();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Web Node View " + getSubnodeViewName());
@@ -121,6 +122,7 @@ public final class OpenSubnodeWebViewAction extends Action {
             try {
                 SubnodeViewableModel model = new SubnodeViewableModel(m_nodeContainer, getSubnodeViewName());
                 view = OpenInteractiveWebViewAction.getConfiguredWizardNodeView(model);
+                model.registerView(view);
             } finally {
                 NodeContext.removeLastContext();
             }

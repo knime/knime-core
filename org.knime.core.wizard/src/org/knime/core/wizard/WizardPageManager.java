@@ -50,6 +50,7 @@ package org.knime.core.wizard;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -288,6 +289,36 @@ public final class WizardPageManager {
         }
     }
 
+    public Map<String, ValidationError> validateViewValues(final Map<String, String> viewValues, final NodeID containerNodeId) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            ObjectMapper mapper = new ObjectMapper();
+            for (String key : viewValues.keySet()) {
+                String content = mapper.writeValueAsString(viewValues.get(key));
+                viewValues.put(key, content);
+            }
+            if (!viewValues.isEmpty()) {
+                WizardExecutionController wec = m_wfm.getWizardExecutionController();
+                return wec.validateViewValuesInPage(viewValues, containerNodeId);
+            } else {
+                return Collections.emptyMap();
+            }
+        }
+    }
+
+    public void applyValidatedViewValues(final Map<String, String> viewValues, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            ObjectMapper mapper = new ObjectMapper();
+            for (String key : viewValues.keySet()) {
+                String content = mapper.writeValueAsString(viewValues.get(key));
+                viewValues.put(key, content);
+            }
+            if (!viewValues.isEmpty()) {
+                WizardExecutionController wec = m_wfm.getWizardExecutionController();
+                wec.loadValuesIntoPage(viewValues, containerNodeId, false, useAsDefault);
+            }
+        }
+    }
+
     /**
      * Applies a given map of view values to a given subnode.
      *
@@ -316,5 +347,4 @@ public final class WizardPageManager {
             return jsonString;
         }
     }
-
 }

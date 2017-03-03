@@ -4746,13 +4746,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void resetHaltedSubnode(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            // TODO commented out momentarily, should become function of individual execution controller
+            // and reactivated if needed. See AP-7065
+            /* for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
                 final InternalNodeContainerState destNCState = destNC.getInternalState();
                 CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
                     + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
-            }
+            } */
             invokeResetOnSingleNodeContainer(snc);
         }
     }

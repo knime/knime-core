@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -67,12 +68,12 @@ import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.wizard.WizardPageManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
@@ -80,6 +81,12 @@ import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.JSONWebNodePageConfiguration;
 import org.knime.js.core.JavaScriptViewCreator;
 import org.knime.workbench.editor2.subnode.SubnodeViewableModel.SubnodeViewValue;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -93,10 +100,12 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     private JSONWebNodePage m_page;
     private SubnodeViewValue m_value;
 
-    private final WorkflowManager m_wfm;
+    private final WizardPageManager m_wpm;
+    private final SubNodeContainer m_container;
     private final String m_viewName;
-    private String m_viewPath;
     private final JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> m_viewCreator;
+    private String m_viewPath;
+    private AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> m_view;
 
     /**
      * Creates a new instance of this viewable model
@@ -106,26 +115,39 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
      *
      */
     public SubnodeViewableModel(final SubNodeContainer nodeContainer, final String viewName) throws IOException {
-        m_wfm = nodeContainer.getParent();
         m_viewName = viewName;
         m_viewCreator = new SubnodeWizardViewCreator();
-        final WizardPageManager wpm = WizardPageManager.of(m_wfm);
-        m_page = wpm.createWizardPage(nodeContainer.getID());
+        m_wpm = WizardPageManager.of(nodeContainer.getParent());
+        m_container = nodeContainer;
+        m_page = m_wpm.createWizardPage(nodeContainer.getID());
         nodeContainer.addNodeStateChangeListener(new NodeStateChangeListener() {
-
             @Override
             public void stateChanged(final NodeStateEvent state) {
                 if (nodeContainer.getNodeContainerState().isExecuted()) {
                     try {
-                        m_page = wpm.createWizardPage(nodeContainer.getID());
+                        m_page = m_wpm.createWizardPage(nodeContainer.getID());
                     } catch (IOException e) {
                         reset();
                     }
                 } else {
                     reset();
                 }
+                if (m_view != null) {
+                    m_view.callViewableModelChanged();
+                }
             }
         });
+    }
+
+    /**
+     * Registers a view with this model, so it can be notified about model changed events.
+     * If a view is already registered, the method will not update it.
+     * @param view the view to register
+     */
+    public void registerView(final AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> view) {
+        if (m_view == null) {
+            m_view = view;
+        }
     }
 
     /**
@@ -133,7 +155,15 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
      */
     @Override
     public ValidationError validateViewValue(final SubnodeViewValue viewContent) {
-        //TODO this needs refactoring in WizardExecutionController
+        try {
+            Map<String, ValidationError> validationResult = m_wpm.validateViewValues(viewContent.getViewValues(), m_container.getID());
+            if (!validationResult.isEmpty()) {
+                return new CollectionValidationError(validationResult);
+            }
+        } catch (IOException e) {
+            LOGGER.error("Validating view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
+            /* FIXME what to do? */
+        }
         return null;
     }
 
@@ -141,9 +171,13 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
      * {@inheritDoc}
      */
     @Override
-    public void loadViewValue(final SubnodeViewValue viewContent, final boolean useAsDefault) {
-        // TODO this also needs refactoring in WizardExecutionController
-
+    public void loadViewValue(final SubnodeViewValue value, final boolean useAsDefault) {
+        try {
+            m_wpm.applyValidatedViewValues(value.getViewValues(), m_container.getID(), useAsDefault);
+        } catch (IOException e) {
+            LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
+            /* FIXME what to do? */
+        }
     }
 
     /**
@@ -212,7 +246,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
         if (create) {
             try {
-                m_viewPath = m_viewCreator.createWebResources(m_viewName, getViewRepresentation(), getViewValue());
+                m_viewPath = m_viewCreator.createWebResources(m_viewName, getViewRepresentation(), null);
             } catch (IOException e) {
                 LOGGER.error("Creating view HTML failed: " + e.getMessage(), e);
             }
@@ -221,8 +255,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     }
 
     private void reset() {
-        m_page = createEmptyViewRepresentation();
-        m_value = createEmptyViewValue();
+        m_page = null;
+        m_value = null;
         if (m_viewPath != null) {
             try {
                 File viewFile = new File(m_viewPath);
@@ -256,11 +290,12 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     //TODO decide if this belongs here. Could also be sth. like PageViewValue in org.knime.js.core
     static class SubnodeViewValue extends JSONViewContent {
 
-        private Map<String, String> m_viewValues;
+        private Map<String, String> m_viewValues = new HashMap<String, String>();
 
         /**
          * @return the viewValues
          */
+        @JsonAnyGetter
         public Map<String, String> getViewValues() {
             return m_viewValues;
         }
@@ -270,6 +305,14 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
          */
         public void setViewValues(final Map<String, String> viewValues) {
             m_viewValues = viewValues;
+        }
+
+        @JsonAnySetter
+        public void addViewValue(final String key, final Object value) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                m_viewValues.put(key, mapper.writeValueAsString(value));
+            } catch (JsonProcessingException e) { /* do nothing */ }
         }
 
         /**
@@ -362,7 +405,23 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
     }
 
+    private static class CollectionValidationError extends ValidationError {
 
+        private Map<String, String> m_errorMap;
+
+        private CollectionValidationError(final Map<String, ValidationError> errorCollection) {
+            m_errorMap = new HashMap<String, String>(errorCollection.size());
+            for (Entry<String, ValidationError> entry : errorCollection.entrySet()) {
+                m_errorMap.put(entry.getKey(), entry.getValue().getError());
+            }
+        }
+
+        /** @return the error */
+        @JsonProperty("error")
+        public Map<String, String> getErrorMap() {
+            return m_errorMap;
+        }
+    }
 
 
 

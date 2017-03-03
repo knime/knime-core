@@ -79,6 +79,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
     extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractWizardNodeView.class);
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
@@ -108,6 +109,24 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     @Override
     public void triggerReExecution(final VAL value, final boolean useAsNewDefault, final ReexecutionCallback callback) {
         m_delegate.triggerReExecution(value, useAsNewDefault, callback);
+    }
+
+    /**
+     * @since 3.4
+     */
+    public void callViewableModelChanged() {
+        try {
+            // call model changed on concrete implementation
+            modelChanged();
+        } catch (NullPointerException npe) {
+            LOGGER.coding("AbstractWizardNodeView.modelChanged() causes "
+                   + "NullPointerException during notification of a "
+                   + "changed model, reason: " + npe.getMessage(), npe);
+        } catch (Throwable t) {
+            LOGGER.error("AbstractWizardNodeView.modelChanged() causes an error "
+                   + "during notification of a changed model, reason: "
+                   + t.getMessage(), t);
+        }
     }
 
     /**

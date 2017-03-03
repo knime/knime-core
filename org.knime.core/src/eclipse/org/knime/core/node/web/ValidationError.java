@@ -51,14 +51,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * ViewContent that creates and reads from a JSON string.
+ * Error wrapper used for serialization/deserialization of validation errors.
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.10
  */
 @JsonAutoDetect
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public final class ValidationError {
+public class ValidationError {
 
     private String m_error;
 
