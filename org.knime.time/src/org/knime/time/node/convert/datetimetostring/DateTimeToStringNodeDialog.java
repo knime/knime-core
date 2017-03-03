@@ -71,10 +71,10 @@ import javax.swing.event.ChangeListener;
 import org.apache.commons.lang3.LocaleUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -240,7 +240,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                 int i = 0;
                 for (String include : includes) {
                     final DataType type = m_spec.getColumnSpec(include).getType();
-                    if (type.equals(LocalDateCellFactory.TYPE)) {
+                    if (type.isCompatible(LocalDateValue.class)) {
                         try {
                             final LocalDate now1 = LocalDate.now();
                             final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
@@ -253,7 +253,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
-                    } else if (type.equals(LocalTimeCellFactory.TYPE)) {
+                    } else if (type.isCompatible(LocalTimeValue.class)) {
                         try {
                             final LocalTime now2 = LocalTime.now();
                             final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
@@ -266,7 +266,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
-                    } else if (type.equals(LocalDateTimeCellFactory.TYPE)) {
+                    } else if (type.isCompatible(LocalDateTimeValue.class)) {
                         try {
                             final LocalDateTime now3 = LocalDateTime.now();
                             final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
@@ -279,7 +279,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
                         }
-                    } else if (type.equals(ZonedDateTimeCellFactory.TYPE)) {
+                    } else if (type.isCompatible(ZonedDateTimeValue.class)) {
                         try {
                             final ZonedDateTime now4 = ZonedDateTime.now();
                             final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);

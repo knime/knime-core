@@ -62,13 +62,10 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -323,7 +320,7 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final LocalTimeCell localTimeCell = (LocalTimeCell)cell;
+            final LocalTimeValue localTimeCell = (LocalTimeValue)cell;
             final LocalDate localDate = m_date.getLocalDate();
             if (m_timeZone.useZone()) {
                 return ZonedDateTimeCellFactory
@@ -352,13 +349,13 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
                 return cell;
             }
             final LocalDate localDate = m_date.getLocalDate();
-            if (cell instanceof LocalDateTimeCell) {
+            if (cell instanceof LocalDateTimeValue) {
                 return LocalDateTimeCellFactory
-                    .create(LocalDateTime.of(localDate, ((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime()));
+                    .create(LocalDateTime.of(localDate, ((LocalDateTimeValue)cell).getLocalDateTime().toLocalTime()));
             }
             return ZonedDateTimeCellFactory
-                .create(ZonedDateTime.of(localDate, ((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime(),
-                    ((ZonedDateTimeCell)cell).getZonedDateTime().getZone()));
+                .create(ZonedDateTime.of(localDate, ((ZonedDateTimeValue)cell).getZonedDateTime().toLocalTime(),
+                    ((ZonedDateTimeValue)cell).getZonedDateTime().getZone()));
         }
     }
 
@@ -379,10 +376,10 @@ class ModifyDateNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            if (cell instanceof LocalDateTimeCell) {
-                return LocalTimeCellFactory.create(((LocalDateTimeCell)cell).getLocalDateTime().toLocalTime());
+            if (cell instanceof LocalDateTimeValue) {
+                return LocalTimeCellFactory.create(((LocalDateTimeValue)cell).getLocalDateTime().toLocalTime());
             }
-            return LocalTimeCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalTime());
+            return LocalTimeCellFactory.create(((ZonedDateTimeValue)cell).getZonedDateTime().toLocalTime());
         }
     }
 }

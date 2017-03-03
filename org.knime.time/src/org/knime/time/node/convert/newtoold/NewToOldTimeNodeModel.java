@@ -65,13 +65,9 @@ import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdate.LocalDateValue;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -350,7 +346,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 return cell;
             }
             if (cell instanceof LocalDateTimeValue) {
-                final LocalDateTime ldt = ((LocalDateTimeCell)cell).getLocalDateTime();
+                final LocalDateTime ldt = ((LocalDateTimeValue)cell).getLocalDateTime();
                 if (ldt.getNano() == 0) {
                     return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
                         ldt.getHour(), ldt.getMinute(), ldt.getSecond());
@@ -362,12 +358,12 @@ final class NewToOldTimeNodeModel extends NodeModel {
             } else if (cell instanceof ZonedDateTimeValue) {
                 LocalDateTime ldt = null;
                 if (m_timeZoneSelect.getStringValue().equals(TIME_ZONE_OPT1)) {
-                    final ZonedDateTime zdt = ((ZonedDateTimeCell)cell).getZonedDateTime();
+                    final ZonedDateTime zdt = ((ZonedDateTimeValue)cell).getZonedDateTime();
                     final LocalDateTime ldtUTC = LocalDateTime.of(zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(),
                         zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano());
                     ldt = LocalDateTime.ofInstant(ldtUTC.toInstant(ZoneOffset.UTC), zdt.getZone());
                 } else {
-                    ldt = ((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime();
+                    ldt = ((ZonedDateTimeValue)cell).getZonedDateTime().toLocalDateTime();
                 }
                 if (ldt.getNano() == 0) {
                     return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
@@ -378,7 +374,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                         (int)TimeUnit.NANOSECONDS.toMillis(ldt.getNano()));
                 }
             } else if (cell instanceof LocalTimeValue) {
-                final LocalTime lt = ((LocalTimeCell)cell).getLocalTime();
+                final LocalTime lt = ((LocalTimeValue)cell).getLocalTime();
                 if (lt.getNano() == 0) {
                     return new DateAndTimeCell(lt.getHour(), lt.getMinute(), lt.getSecond(), -1);
                 } else {
@@ -386,7 +382,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                         (int)TimeUnit.NANOSECONDS.toMillis(lt.getNano()));
                 }
             } else if (cell instanceof LocalDateValue) {
-                final LocalDate ld = ((LocalDateCell)cell).getLocalDate();
+                final LocalDate ld = ((LocalDateValue)cell).getLocalDate();
                 return new DateAndTimeCell(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());

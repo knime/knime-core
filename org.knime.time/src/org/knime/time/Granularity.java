@@ -52,9 +52,9 @@ import java.time.Duration;
 import java.time.Period;
 import java.time.temporal.TemporalAmount;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.time.duration.DurationCellFactory;
-import org.knime.core.data.time.period.PeriodCellFactory;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.time.duration.DurationValue;
+import org.knime.core.data.time.period.PeriodValue;
 
 /**
  * An enumeration that contains all different granularities for Date&Time shifting.
@@ -63,23 +63,23 @@ import org.knime.core.data.time.period.PeriodCellFactory;
  */
 public enum Granularity {
 
-    YEAR("Year", PeriodCellFactory.TYPE),
-    MONTH("Month", PeriodCellFactory.TYPE),
-    WEEK("Week", PeriodCellFactory.TYPE),
-    DAY("Day", PeriodCellFactory.TYPE),
-    HOUR("Hour", DurationCellFactory.TYPE),
-    MINUTE("Minute", DurationCellFactory.TYPE),
-    SECOND("Second", DurationCellFactory.TYPE),
-    MILLISECOND("Millisecond", DurationCellFactory.TYPE),
-    NANOSECOND("Nanosecond", DurationCellFactory.TYPE);
+    YEAR("Year", PeriodValue.class),
+    MONTH("Month", PeriodValue.class),
+    WEEK("Week", PeriodValue.class),
+    DAY("Day", PeriodValue.class),
+    HOUR("Hour", DurationValue.class),
+    MINUTE("Minute", DurationValue.class),
+    SECOND("Second", DurationValue.class),
+    MILLISECOND("Millisecond", DurationValue.class),
+    NANOSECOND("Nanosecond", DurationValue.class);
 
     private final String m_name;
 
-    private final DataType m_dataType;
+    private final Class<? extends DataValue> m_dataValue;
 
-    private Granularity(final String name, final DataType dataType) {
+    private Granularity(final String name, final Class<? extends DataValue> dataValue) {
         m_name = name;
-        m_dataType = dataType;
+        m_dataValue = dataValue;
     }
 
     /**
@@ -94,7 +94,7 @@ public enum Granularity {
      * @return true if granularity belongs to a date, and false if it belongs to a time
      */
     public boolean isPartOfDate() {
-        return m_dataType.equals(PeriodCellFactory.TYPE);
+        return m_dataValue.equals(PeriodValue.class);
     }
 
     /**

@@ -69,9 +69,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.time.duration.DurationValue;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.period.PeriodCellFactory;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
 import org.knime.core.data.time.period.PeriodValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -386,9 +385,9 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                 } else {
                     // if a period column is selected
                     if (m_dialogCompPeriodOrDurationColSelection.getSelectedAsSpec().getType()
-                        .equals(PeriodCellFactory.TYPE)) {
+                        .isCompatible(PeriodValue.class)) {
                         for (final String include : includes) {
-                            if (m_spec.getColumnSpec(include).getType().equals(LocalTimeCellFactory.TYPE)) {
+                            if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
                                 return "A Period cannot be applied on a LocalTime!";
                             }
                         }
@@ -396,7 +395,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                     // if a duration column is selected
                     else {
                         for (final String include : includes) {
-                            if (m_spec.getColumnSpec(include).getType().equals(LocalDateCellFactory.TYPE)) {
+                            if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
                                 return "A Duration cannot be applied on a LocalDate!";
                             }
                         }
@@ -410,7 +409,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                     // if a period is written
                     Period.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                     for (final String include : includes) {
-                        if (m_spec.getColumnSpec(include).getType().equals(LocalTimeCellFactory.TYPE)) {
+                        if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
                             return "A Period cannot be applied on a LocalTime!";
                         }
                     }
@@ -420,7 +419,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                         Duration.parse(
                             ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                         for (final String include : includes) {
-                            if (m_spec.getColumnSpec(include).getType().equals(LocalDateCellFactory.TYPE)) {
+                            if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
                                 return "A Duration cannot be applied on a LocalDate!";
                             }
                         }
@@ -455,13 +454,13 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                 ((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue();
             if (!Granularity.fromString(granularity).isPartOfDate()) {
                 for (final String include : includes) {
-                    if (m_spec.getColumnSpec(include).getType().equals(LocalDateCellFactory.TYPE)) {
+                    if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
                         return granularity + " can not be applied on a LocalDate!";
                     }
                 }
             } else {
                 for (final String include : includes) {
-                    if (m_spec.getColumnSpec(include).getType().equals(LocalTimeCellFactory.TYPE)) {
+                    if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
                         return granularity + " can not be applied on a LocalTime!";
                     }
                 }

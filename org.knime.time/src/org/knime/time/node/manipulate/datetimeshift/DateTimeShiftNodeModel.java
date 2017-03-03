@@ -61,23 +61,18 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.time.duration.DurationCell;
-import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.duration.DurationValue;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
 import org.knime.core.data.time.localdate.LocalDateValue;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeValue;
-import org.knime.core.data.time.period.PeriodCell;
-import org.knime.core.data.time.period.PeriodCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+import org.knime.core.data.time.period.PeriodValue;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -252,7 +247,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
 
         if (m_periodSelection.isEnabled()) {
             if (m_periodColSelect.isEnabled()) {
-                if (spec.getColumnSpec(periodColIndex).getType().equals(PeriodCellFactory.TYPE)) {
+                if (spec.getColumnSpec(periodColIndex).getType().isCompatible(PeriodValue.class)) {
                     isPeriod = true;
                 } else {
                     isPeriod = false;
@@ -392,7 +387,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     if (row.getCell(m_periodColIdx).isMissing()) {
                         return new MissingCell("The period cell containing the value to shift is missing.");
                     }
-                    period = ((PeriodCell)row.getCell(m_periodColIdx)).getPeriod();
+                    period = ((PeriodValue)row.getCell(m_periodColIdx)).getPeriod();
                 } else {
                     period = Period.parse(m_periodValue.getStringValue());
                 }
@@ -403,23 +398,23 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     if (row.getCell(m_numericalColIdx).isMissing()) {
                         return new MissingCell("The numerical cell containing the value to shift is missing.");
                     }
-                    numericalValue = ((IntCell)row.getCell(m_numericalColIdx)).getIntValue();
+                    numericalValue = ((IntValue)row.getCell(m_numericalColIdx)).getIntValue();
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
                 period = (Period)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
             }
 
-            if (cell instanceof LocalDateCell) {
-                final LocalDate localDate = ((LocalDateCell)cell).getLocalDate();
+            if (cell instanceof LocalDateValue) {
+                final LocalDate localDate = ((LocalDateValue)cell).getLocalDate();
                 return LocalDateCellFactory.create(localDate.plus(period));
             }
-            if (cell instanceof LocalDateTimeCell) {
-                final LocalDateTime localDateTime = ((LocalDateTimeCell)cell).getLocalDateTime();
+            if (cell instanceof LocalDateTimeValue) {
+                final LocalDateTime localDateTime = ((LocalDateTimeValue)cell).getLocalDateTime();
                 return LocalDateTimeCellFactory.create(localDateTime.plus(period));
             }
-            if (cell instanceof ZonedDateTimeCell) {
-                final ZonedDateTime zonedDateTime = ((ZonedDateTimeCell)cell).getZonedDateTime();
+            if (cell instanceof ZonedDateTimeValue) {
+                final ZonedDateTime zonedDateTime = ((ZonedDateTimeValue)cell).getZonedDateTime();
                 return ZonedDateTimeCellFactory.create(zonedDateTime.plus(period));
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());
@@ -464,7 +459,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     if (row.getCell(m_durationColIdx).isMissing()) {
                         return new MissingCell("The duration cell containing the value to shift is missing.");
                     }
-                    duration = ((DurationCell)row.getCell(m_durationColIdx)).getDuration();
+                    duration = ((DurationValue)row.getCell(m_durationColIdx)).getDuration();
                 } else {
                     duration = Duration.parse(m_periodValue.getStringValue());
                 }
@@ -475,23 +470,23 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     if (row.getCell(m_numericalColIdx).isMissing()) {
                         return new MissingCell("The numerical cell containing the value to shift is missing.");
                     }
-                    numericalValue = ((IntCell)row.getCell(m_numericalColIdx)).getIntValue();
+                    numericalValue = ((IntValue)row.getCell(m_numericalColIdx)).getIntValue();
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
                 duration = (Duration)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
             }
 
-            if (cell instanceof LocalTimeCell) {
-                final LocalTime localTime = ((LocalTimeCell)cell).getLocalTime();
+            if (cell instanceof LocalTimeValue) {
+                final LocalTime localTime = ((LocalTimeValue)cell).getLocalTime();
                 return LocalTimeCellFactory.create(localTime.plus(duration));
             }
-            if (cell instanceof LocalDateTimeCell) {
-                final LocalDateTime localDateTime = ((LocalDateTimeCell)cell).getLocalDateTime();
+            if (cell instanceof LocalDateTimeValue) {
+                final LocalDateTime localDateTime = ((LocalDateTimeValue)cell).getLocalDateTime();
                 return LocalDateTimeCellFactory.create(localDateTime.plus(duration));
             }
-            if (cell instanceof ZonedDateTimeCell) {
-                final ZonedDateTime zonedDateTime = ((ZonedDateTimeCell)cell).getZonedDateTime();
+            if (cell instanceof ZonedDateTimeValue) {
+                final ZonedDateTime zonedDateTime = ((ZonedDateTimeValue)cell).getZonedDateTime();
                 return ZonedDateTimeCellFactory.create(zonedDateTime.plus(duration));
             }
             throw new IllegalStateException("Unexpected data type: " + cell.getClass());

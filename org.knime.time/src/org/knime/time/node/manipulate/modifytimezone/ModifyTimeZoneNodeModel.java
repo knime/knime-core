@@ -63,10 +63,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -279,12 +277,12 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            if (cell instanceof LocalDateTimeCell) {
+            if (cell instanceof LocalDateTimeValue) {
                 return ZonedDateTimeCellFactory
-                    .create(ZonedDateTime.of(((LocalDateTimeCell)cell).getLocalDateTime(), m_zone));
+                    .create(ZonedDateTime.of(((LocalDateTimeValue)cell).getLocalDateTime(), m_zone));
             }
             return ZonedDateTimeCellFactory
-                .create(ZonedDateTime.of(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime(), m_zone));
+                .create(ZonedDateTime.of(((ZonedDateTimeValue)cell).getZonedDateTime().toLocalDateTime(), m_zone));
         }
     }
 
@@ -309,7 +307,7 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
                 return cell;
             }
             return ZonedDateTimeCellFactory
-                .create(((ZonedDateTimeCell)cell).getZonedDateTime().toInstant().atZone(m_zone));
+                .create(((ZonedDateTimeValue)cell).getZonedDateTime().toInstant().atZone(m_zone));
         }
     }
 
@@ -330,7 +328,7 @@ class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            return LocalDateTimeCellFactory.create(((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime());
+            return LocalDateTimeCellFactory.create(((ZonedDateTimeValue)cell).getZonedDateTime().toLocalDateTime());
         }
     }
 }

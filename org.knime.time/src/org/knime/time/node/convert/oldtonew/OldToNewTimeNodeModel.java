@@ -70,7 +70,6 @@ import org.knime.core.data.MissingCell;
 import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
@@ -265,7 +264,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                         dataColumnSpecCreator =
                             new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
                     } else {
-                        final DateAndTimeCell timeCell = (DateAndTimeCell)cell;
+                        final DateAndTimeValue timeCell = (DateAndTimeValue)cell;
                         if (!timeCell.hasDate()) {
                             m_newTypes[i] = DateTimeTypes.LOCAL_TIME;
                             dataColumnSpecCreator =
@@ -633,7 +632,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
             if (cell.isMissing()) {
                 return cell;
             }
-            final DateAndTimeCell timeCell = (DateAndTimeCell)cell;
+            final DateAndTimeValue timeCell = (DateAndTimeValue)cell;
             int millis = 0;
             if (timeCell.hasMillis()) {
                 millis = timeCell.getMillis();

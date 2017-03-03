@@ -69,13 +69,9 @@ import javax.swing.UIManager;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
 import org.knime.core.data.time.localdate.LocalDateValue;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -440,15 +436,15 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
             startDateTimeModel
                 .setEnabled(!((SettingsModelBoolean)m_dialogCompStartAlwaysNow.getModel()).getBooleanValue()
                     && ((SettingsModelBoolean)m_dialogCompStartBoolean.getModel()).getBooleanValue());
-            startDateTimeModel.setUseDate(!type.equals(LocalTimeCellFactory.TYPE));
-            startDateTimeModel.setUseTime(!type.equals(LocalDateCellFactory.TYPE));
-            startDateTimeModel.setUseZone(type.equals(ZonedDateTimeCellFactory.TYPE));
+            startDateTimeModel.setUseDate(!type.isCompatible(LocalTimeValue.class));
+            startDateTimeModel.setUseTime(!type.isCompatible(LocalDateValue.class));
+            startDateTimeModel.setUseZone(type.isCompatible(ZonedDateTimeValue.class));
 
             endDateTimeModel.setEnabled(!((SettingsModelBoolean)m_dialogCompEndAlwaysNow.getModel()).getBooleanValue()
                 && ((SettingsModelBoolean)m_dialogCompEndBoolean.getModel()).getBooleanValue());
-            endDateTimeModel.setUseDate(!type.equals(LocalTimeCellFactory.TYPE));
-            endDateTimeModel.setUseTime(!type.equals(LocalDateCellFactory.TYPE));
-            endDateTimeModel.setUseZone(type.equals(ZonedDateTimeCellFactory.TYPE));
+            endDateTimeModel.setUseDate(!type.isCompatible(LocalTimeValue.class));
+            endDateTimeModel.setUseTime(!type.isCompatible(LocalDateValue.class));
+            endDateTimeModel.setUseZone(type.isCompatible(ZonedDateTimeValue.class));
         } catch (NullPointerException e) {
         }
     }
@@ -485,13 +481,13 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         String warning = "";
         try {
             Period.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
-            if (m_dialogCompColSelection.getSelectedAsSpec().getType().equals(LocalTimeCellFactory.TYPE)) {
+            if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
                 warning = "A period cannot be applied on a LocalTime column!";
             }
         } catch (DateTimeParseException e) {
             try {
                 Duration.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
-                if (m_dialogCompColSelection.getSelectedAsSpec().getType().equals(LocalDateCellFactory.TYPE)) {
+                if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
                     warning = "A duration cannot be applied on a LocalDate column!";
                 }
             } catch (DateTimeParseException e2) {
@@ -517,12 +513,12 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
             Granularity.fromString(((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue())
                 .getPeriodOrDuration(1);
         if (periodOrDuration instanceof Period
-            && m_dialogCompColSelection.getSelectedAsSpec().getType().equals(LocalTimeCellFactory.TYPE)) {
+            && m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
             warning = ((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue()
                 + " cannot be applied on a LocalTime column!";
         }
         if (periodOrDuration instanceof Duration
-            && m_dialogCompColSelection.getSelectedAsSpec().getType().equals(LocalDateCellFactory.TYPE)) {
+            && m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
             warning = ((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue()
                 + " cannot be applied on a LocalDate column!";
         }
@@ -545,19 +541,19 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
                 .equals(DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME)) {
             boolean isStartAfterEnd = false;
             final DataType dataType = m_dialogCompColSelection.getSelectedAsSpec().getType();
-            if (dataType.equals(LocalDateCellFactory.TYPE)) {
+            if (dataType.isCompatible(LocalDateValue.class)) {
                 isStartAfterEnd = ((SettingsModelDateTime)m_dialogCompStartDateTime.getModel()).getLocalDate()
                     .isAfter(((SettingsModelDateTime)m_dialogCompEndDateTime.getModel()).getLocalDate());
             }
-            if (dataType.equals(LocalTimeCellFactory.TYPE)) {
+            if (dataType.isCompatible(LocalTimeValue.class)) {
                 isStartAfterEnd = ((SettingsModelDateTime)m_dialogCompStartDateTime.getModel()).getLocalTime()
                     .isAfter(((SettingsModelDateTime)m_dialogCompEndDateTime.getModel()).getLocalTime());
             }
-            if (dataType.equals(LocalDateTimeCellFactory.TYPE)) {
+            if (dataType.isCompatible(LocalDateTimeValue.class)) {
                 isStartAfterEnd = ((SettingsModelDateTime)m_dialogCompStartDateTime.getModel()).getLocalDateTime()
                     .isAfter(((SettingsModelDateTime)m_dialogCompEndDateTime.getModel()).getLocalDateTime());
             }
-            if (dataType.equals(ZonedDateTimeCellFactory.TYPE)) {
+            if (dataType.isCompatible(ZonedDateTimeValue.class)) {
                 isStartAfterEnd = ((SettingsModelDateTime)m_dialogCompStartDateTime.getModel()).getZonedDateTime()
                     .isAfter(((SettingsModelDateTime)m_dialogCompEndDateTime.getModel()).getZonedDateTime());
             }

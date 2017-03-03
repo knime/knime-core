@@ -61,9 +61,7 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
-import org.knime.core.data.time.duration.DurationCell;
 import org.knime.core.data.time.duration.DurationValue;
-import org.knime.core.data.time.period.PeriodCell;
 import org.knime.core.data.time.period.PeriodValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -212,8 +210,8 @@ final class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNode
                 return cell;
             }
             final String format = m_format.getStringValue();
-            if (cell instanceof DurationCell) {
-                final Duration duration = ((DurationCell)cell).getDuration();
+            if (cell instanceof DurationValue) {
+                final Duration duration = ((DurationValue)cell).getDuration();
                 if (format.equals(FORMAT_ISO)) {
                     return StringCellFactory.create(duration.toString());
                 }
@@ -225,8 +223,8 @@ final class DurationPeriodToStringNodeModel extends SimpleStreamableFunctionNode
                 }
                 throw new IllegalStateException("Unexpected format: " + format);
             }
-            if (cell instanceof PeriodCell) {
-                final Period period = ((PeriodCell)cell).getPeriod();
+            if (cell instanceof PeriodValue) {
+                final Period period = ((PeriodValue)cell).getPeriod();
                 if (format.equals(FORMAT_ISO)) {
                     return StringCellFactory.create(period.toString());
                 }

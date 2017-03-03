@@ -64,14 +64,10 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCell;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.localtime.LocalTimeCell;
-import org.knime.core.data.time.localtime.LocalTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -237,22 +233,21 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         final ZonedDateTime executionEndTime = m_endAlwaysNow.getBooleanValue() ? ZonedDateTime.now() : null;
 
         // filter rows
-        final DataType colDataType = dataTable.getSpec().getColumnSpec(colIdx).getType();
         for (final DataRow row : dataTable) {
             exec.checkCanceled();
             final DataCell cell = row.getCell(colIdx);
             if (!cell.isMissing()) {
-                if (colDataType.equals(LocalDateCellFactory.TYPE)
-                    && filterRowLocalDate(((LocalDateCell)cell).getLocalDate(), executionStartTime, executionEndTime)) {
+                if (cell instanceof LocalDateValue
+                    && filterRowLocalDate(((LocalDateValue)cell).getLocalDate(), executionStartTime, executionEndTime)) {
                     container.addRowToTable(row);
-                } else if (colDataType.equals(LocalTimeCellFactory.TYPE)
-                    && filterRowLocalTime(((LocalTimeCell)cell).getLocalTime(), executionStartTime, executionEndTime)) {
+                } else if (cell instanceof LocalTimeValue
+                    && filterRowLocalTime(((LocalTimeValue)cell).getLocalTime(), executionStartTime, executionEndTime)) {
                     container.addRowToTable(row);
-                } else if (colDataType.equals(LocalDateTimeCellFactory.TYPE) && filterRowLocalDateTime(
-                    ((LocalDateTimeCell)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
+                } else if (cell instanceof LocalDateTimeValue && filterRowLocalDateTime(
+                    ((LocalDateTimeValue)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
                     container.addRowToTable(row);
-                } else if (colDataType.equals(ZonedDateTimeCellFactory.TYPE) && filterRowZonedDateTime(
-                    ((ZonedDateTimeCell)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
+                } else if (cell instanceof ZonedDateTimeValue && filterRowZonedDateTime(
+                    ((ZonedDateTimeValue)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
                     container.addRowToTable(row);
                 }
             }
@@ -561,17 +556,17 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
                     exec.checkCanceled();
                     final DataCell cell = row.getCell(colIdx);
                     if (!cell.isMissing()) {
-                        if (colDataType.equals(LocalDateCellFactory.TYPE) && filterRowLocalDate(
-                            ((LocalDateCell)cell).getLocalDate(), executionStartTime, executionEndTime)) {
+                        if (cell instanceof LocalDateValue
+                            && filterRowLocalDate(((LocalDateValue)cell).getLocalDate(), executionStartTime, executionEndTime)) {
                             out.push(row);
-                        } else if (colDataType.equals(LocalTimeCellFactory.TYPE) && filterRowLocalTime(
-                            ((LocalTimeCell)cell).getLocalTime(), executionStartTime, executionEndTime)) {
+                        } else if (cell instanceof LocalTimeValue
+                            && filterRowLocalTime(((LocalTimeValue)cell).getLocalTime(), executionStartTime, executionEndTime)) {
                             out.push(row);
-                        } else if (colDataType.equals(LocalDateTimeCellFactory.TYPE) && filterRowLocalDateTime(
-                            ((LocalDateTimeCell)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
+                        } else if (cell instanceof LocalDateTimeValue && filterRowLocalDateTime(
+                            ((LocalDateTimeValue)cell).getLocalDateTime(), executionStartTime, executionEndTime)) {
                             out.push(row);
-                        } else if (colDataType.equals(ZonedDateTimeCellFactory.TYPE) && filterRowZonedDateTime(
-                            ((ZonedDateTimeCell)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
+                        } else if (cell instanceof ZonedDateTimeValue && filterRowZonedDateTime(
+                            ((ZonedDateTimeValue)cell).getZonedDateTime(), executionStartTime, executionEndTime)) {
                             out.push(row);
                         }
                     }
