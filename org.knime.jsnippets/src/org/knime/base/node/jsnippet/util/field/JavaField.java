@@ -48,14 +48,29 @@
 package org.knime.base.node.jsnippet.util.field;
 
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
+import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.base.node.jsnippet.ui.InFieldsTableModel;
+import org.knime.base.node.jsnippet.ui.OutFieldsTableModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
 /**
- * Settings for java snippet field. The field can represent input and output columns or flow variables.
+ * Settings for a java snippet field. The field can represent input and output columns or flow variables.
  * <p>
- * This class might change and is not meant as public API.
  *
+ * JavaField is can be seen as a model for the mapping of KNIME input/output (Column or FlowVariable) to a java field in
+ * the Java Snippet.
+ *
+ * Settings are never checked for validity (in a semantic sense), but only for completeness (in a syntactic sense).
+ * Model validation is done in the following places:
+ *
+ * <ul>
+ * <li>{@link JavaSnippet#validateSettings}</li>
+ * <li>{@link InFieldsTableModel#isValidValue}</li>
+ * <li>{@link OutFieldsTableModel#isValidValue}</li>
+ * </ul>
+ *
+ * <b>This class is not meant as public API and may change.</br>
  * @author Heiko Hofer
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 2.12
@@ -186,8 +201,6 @@ public abstract class JavaField {
      * @return the javaType, may be <code>null</code>
      */
     public Class<?> getJavaType() {
-        if (m_javaType == null) {
-        }
         return m_javaType;
     }
 
@@ -209,17 +222,22 @@ public abstract class JavaField {
         config.addString(KNIME_NAME, m_knimeName);
         config.addString(JAVA_NAME, m_javaName);
 
-        Class<?> javaType = getJavaType();
+        final Class<?> javaType = getJavaType();
         if (javaType == null) {
-            // this is a CODING ERROR! saveSettings() should not be called before java type is set.
-            throw new NullPointerException("Java type has to be set before saveSettings() is called.");
-        }
-        config.addString(JAVA_TYPE, javaType.getName());
+            // The case when no match could be found for converter factory id.
+            // Just save the loaded settings as they are. The user may want to find a
+            // replacement via dialog.
+            config.addString(JAVA_TYPE, m_javaTypeName);
+            config.addString(JAVA_TYPE_PROVIDER, m_bundleName);
+        } else {
+            config.addString(JAVA_TYPE, javaType.getName());
 
-        // Add the bundle providing this java type in case it is not installed in the Application loading these settings.
-        if (javaType.getClassLoader() instanceof ModuleClassLoader) {
-            config.addString(JAVA_TYPE_PROVIDER, ((ModuleClassLoader)javaType.getClassLoader()).getBundle().getSymbolicName());
+            // Add the bundle providing this java type in case it is not installed in the Application loading these settings.
+            if (javaType.getClassLoader() instanceof ModuleClassLoader) {
+                config.addString(JAVA_TYPE_PROVIDER, ((ModuleClassLoader)javaType.getClassLoader()).getBundle().getSymbolicName());
+            }
         }
+
     }
 
     /**
@@ -259,34 +277,6 @@ public abstract class JavaField {
                 errorString.append("(Was provided by \"").append(m_bundleName).append("\")");
             }
             throw new InvalidSettingsException(errorString.toString(), e);
-        }
-
-        return m_javaType;
-    }
-
-    /**
-     * Loads KNIME name (variable or column name), java field name, java type name and the name of the bundle it
-     * originated from.
-     *
-     * @param config To load from.
-     */
-    public void loadSettingsForDialog(final Config config) {
-        m_knimeName = config.getString(KNIME_NAME, null);
-        m_javaName = config.getString(JAVA_NAME, null);
-        m_javaTypeName = config.getString(JAVA_TYPE, "");
-        m_bundleName = config.getString(JAVA_TYPE_PROVIDER, "");
-    }
-
-    /**
-     * Load m_javaType from m_javaTypeName, setting it to <code>null</code> if it cannot be found.
-     *
-     * @return The loaded class (m_javaType), can be <code>null</code>
-     */
-    protected Class<?> loadJavaTypeForDialog() {
-        try {
-            m_javaType = Class.forName(m_javaTypeName);
-        } catch (ClassNotFoundException e) {
-            m_javaType = null;
         }
 
         return m_javaType;

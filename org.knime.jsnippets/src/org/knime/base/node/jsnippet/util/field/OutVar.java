@@ -98,12 +98,6 @@ public class OutVar extends JavaFlowVarField {
     }
 
     @Override
-    public void loadSettingsForDialog(final Config config) {
-        super.loadSettingsForDialog(config);
-        m_replaceExisting = config.getBoolean(REPLACE_EXISTING, false);
-    }
-
-    @Override
     public boolean isInput() {
         return false;
     }
