@@ -94,6 +94,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
+import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.util.DurationPeriodFormatUtils;
 
@@ -131,6 +132,8 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
 
     private DataType[] m_detectedTypes;
 
+    private boolean m_hasValidatedConfiguration = false;
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createColSelectModel() {
@@ -165,10 +168,28 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
     }
 
     /**
+     * Sets the column selections to not include "real" string columns (only).
+     *
+     * @param tableSpec the corresponding spec
+     */
+    private void setDefaultColumnSelection(final DataTableSpec tableSpec) {
+        final InputFilter<DataColumnSpec> filter = new InputFilter<DataColumnSpec>() {
+            @Override
+            public boolean include(final DataColumnSpec spec) {
+                return spec.getType().getPreferredValueClass() == StringValue.class;
+            }
+        };
+        m_colSelect.loadDefaults(tableSpec, filter, true);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (!m_hasValidatedConfiguration) {
+            setDefaultColumnSelection(inSpecs[0]);
+        }
         final List<String> includeList =
             new LinkedList<String>(Arrays.asList(m_colSelect.applyTo(inSpecs[0]).getIncludes()));
         if (m_type.getStringValue().equals(OPTION_DURATION)) {
@@ -316,6 +337,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_type.loadSettingsFrom(settings);
         m_cancelOnFail.loadSettingsFrom(settings);
+        m_hasValidatedConfiguration = true;
     }
 
     /**
