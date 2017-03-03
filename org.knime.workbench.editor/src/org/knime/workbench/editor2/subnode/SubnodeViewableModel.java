@@ -119,13 +119,13 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         m_viewCreator = new SubnodeWizardViewCreator();
         m_wpm = WizardPageManager.of(nodeContainer.getParent());
         m_container = nodeContainer;
-        m_page = m_wpm.createWizardPage(nodeContainer.getID());
+        createPageAndValue();
         nodeContainer.addNodeStateChangeListener(new NodeStateChangeListener() {
             @Override
             public void stateChanged(final NodeStateEvent state) {
                 if (nodeContainer.getNodeContainerState().isExecuted()) {
                     try {
-                        m_page = m_wpm.createWizardPage(nodeContainer.getID());
+                        createPageAndValue();
                     } catch (IOException e) {
                         reset();
                     }
@@ -148,6 +148,18 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         if (m_view == null) {
             m_view = view;
         }
+    }
+
+    private void createPageAndValue() throws IOException {
+        m_page = m_wpm.createWizardPage(m_container.getID());
+        m_value = new SubnodeViewValue();
+        Map<String, String> valueMap = new HashMap<String, String>();
+        ObjectMapper mapper = new ObjectMapper();
+        for (Entry<String, JSONWebNode> entry : m_page.getWebNodes().entrySet()) {
+            String value = mapper.writeValueAsString(entry.getValue().getViewValue());
+            valueMap.put(entry.getKey(), value);
+        }
+        m_value.setViewValues(valueMap);
     }
 
     /**
@@ -343,6 +355,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             }
             SubnodeViewValue other = (SubnodeViewValue)obj;
             return new EqualsBuilder()
+                    //TODO: this needs to
                     .append(m_viewValues, other.m_viewValues)
                     .isEquals();
         }

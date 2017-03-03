@@ -307,11 +307,11 @@ public final class WizardPageManager {
 
     public void applyValidatedViewValues(final Map<String, String> viewValues, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
         try (WorkflowLock lock = m_wfm.lock()) {
-            ObjectMapper mapper = new ObjectMapper();
+            /*ObjectMapper mapper = new ObjectMapper();
             for (String key : viewValues.keySet()) {
                 String content = mapper.writeValueAsString(viewValues.get(key));
                 viewValues.put(key, content);
-            }
+            }*/
             if (!viewValues.isEmpty()) {
                 WizardExecutionController wec = m_wfm.getWizardExecutionController();
                 wec.loadValuesIntoPage(viewValues, containerNodeId, false, useAsDefault);

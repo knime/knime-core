@@ -416,7 +416,12 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             try {
                 VAL viewValue = getModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-                triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
+                if (getModel() instanceof NodeModel) {
+                    triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
+                } else {
+                    getModel().loadViewValue(viewValue, useAsDefault);
+                }
+
                 return true;
             } catch (Exception e) {
                 //TODO: display error?
