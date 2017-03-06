@@ -584,7 +584,7 @@ public class ThreadPool {
      */
     public <T> T runInvisible(final Callable<T> r) throws ExecutionException {
         if (!(Thread.currentThread() instanceof Worker)) {
-            throw new IllegalThreadStateException("The current thread is not"
+            throw new IllegalThreadStateException("The current thread is not "
                     + "taken out of a thread pool");
         }
 
