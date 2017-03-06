@@ -409,6 +409,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             valid = Boolean.parseBoolean(jsonString);
         }
         if (valid) {
+            //TODO: Christian Albrecht: validate also on model
             String pullMethod = template.getPullViewContentMethodName();
             String evalCode =
                 creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");

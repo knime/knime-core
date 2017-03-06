@@ -126,6 +126,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             @Override
             public void stateChanged(final NodeStateEvent state) {
                 if (nodeContainer.getNodeContainerState().isExecuted()) {
+                    //TODO: Christian Albrecht: what happens if reexecute fails?
+                    //TODO: is this the right thread for the update?
                     if (!m_isReexecuteInProgress.get()) {
                         try {
                             createPageAndValue();
