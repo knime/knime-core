@@ -89,6 +89,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.time.Granularity;
 import org.knime.time.util.DialogComponentDateTimeSelection;
 import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
+import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
 
 /**
@@ -480,13 +481,13 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
     private void checkPeriodOrDuration() {
         String warning = "";
         try {
-            Period.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+            DurationPeriodFormatUtils.parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
             if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
                 warning = "A period cannot be applied on a LocalTime column!";
             }
         } catch (DateTimeParseException e) {
             try {
-                Duration.parse(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+                DurationPeriodFormatUtils.parseDuration(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                 if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
                     warning = "A duration cannot be applied on a LocalDate column!";
                 }

@@ -51,11 +51,9 @@ package org.knime.time.node.filter.datetimebasedrowfilter;
 import java.io.File;
 import java.io.IOException;
 import java.time.DateTimeException;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Period;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
@@ -90,6 +88,7 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.time.Granularity;
+import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
 
 /**
@@ -506,9 +505,9 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         Temporal end = endDateTime;
         if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
             try {
-                end = startDateTime.plus(Period.parse(m_periodValueModel.getStringValue()));
+                end = startDateTime.plus(DurationPeriodFormatUtils.parsePeriod(m_periodValueModel.getStringValue()));
             } catch (DateTimeException e1) {
-                end = startDateTime.plus(Duration.parse(m_periodValueModel.getStringValue()));
+                end = startDateTime.plus(DurationPeriodFormatUtils.parseDuration(m_periodValueModel.getStringValue()));
             }
         }
         if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
