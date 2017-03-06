@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -106,6 +107,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     private final JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> m_viewCreator;
     private String m_viewPath;
     private AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> m_view;
+    private AtomicBoolean m_isReexecuteInProgress = new AtomicBoolean(false);
 
     /**
      * Creates a new instance of this viewable model
@@ -124,15 +126,20 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             @Override
             public void stateChanged(final NodeStateEvent state) {
                 if (nodeContainer.getNodeContainerState().isExecuted()) {
-                    try {
-                        createPageAndValue();
-                    } catch (IOException e) {
-                        reset();
+                    if (!m_isReexecuteInProgress.get()) {
+                        try {
+                            createPageAndValue();
+                        } catch (IOException e) {
+                            reset();
+                        }
+                    } else {
+                        m_isReexecuteInProgress.set(false);
+                        return;
                     }
-                } else {
+                } else if (!m_isReexecuteInProgress.get()) {
                     reset();
                 }
-                if (m_view != null) {
+                if (m_view != null && !m_isReexecuteInProgress.get()) {
                     m_view.callViewableModelChanged();
                 }
             }
@@ -185,7 +192,9 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public void loadViewValue(final SubnodeViewValue value, final boolean useAsDefault) {
         try {
+            m_isReexecuteInProgress.set(true);
             m_wpm.applyValidatedViewValues(value.getViewValues(), m_container.getID(), useAsDefault);
+            m_wpm.reexecuteSubnode(m_container);
         } catch (IOException e) {
             LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
             /* FIXME what to do? */

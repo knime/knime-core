@@ -779,6 +779,23 @@ public final class WizardExecutionController extends ExecutionController {
         reexecuteNode(currentID);
     }
 
+    /**
+     * @since 3.4
+     */
+    //TODO: the next two methods should be split up into separate classes
+    public void reexecuteSinglePage(final NodeID id) {
+        final WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            checkDiscard();
+            NodeContext.pushContext(manager);
+            try {
+                m_manager.executeUpToHere(id);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+    }
+
     private void reexecuteNode(final NodeID id) {
         if (m_manager.getNodeContainer(id).getInternalState().isExecuted()) {
             m_waitingSubnodes.remove(id);

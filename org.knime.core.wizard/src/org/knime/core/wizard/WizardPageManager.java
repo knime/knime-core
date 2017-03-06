@@ -67,6 +67,7 @@ import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.WorkflowLock;
@@ -316,6 +317,12 @@ public final class WizardPageManager {
                 WizardExecutionController wec = m_wfm.getWizardExecutionController();
                 wec.loadValuesIntoPage(viewValues, containerNodeId, false, useAsDefault);
             }
+        }
+    }
+
+    public void reexecuteSubnode(final SubNodeContainer container) {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            m_wfm.getWizardExecutionController().reexecuteSinglePage(container.getID());
         }
     }
 
