@@ -298,7 +298,8 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         panelNumericalColumnValue.add(m_dialogCompNumericalColSelection.getComponentPanel(), gbcNumericalColumnValue);
         gbcNumericalColumnValue.gridy++;
         panelNumericalColumnValue.add(m_dialogCompNumericalValue.getComponentPanel(), gbcNumericalColumnValue);
-        ((JSpinner.DefaultEditor)((JSpinner)m_dialogCompNumericalValue.getComponentPanel().getComponent(1)).getEditor()).getTextField().setHorizontalAlignment(SwingConstants.LEFT);
+        ((JSpinner.DefaultEditor)((JSpinner)m_dialogCompNumericalValue.getComponentPanel().getComponent(1)).getEditor())
+            .getTextField().setHorizontalAlignment(SwingConstants.LEFT);
         gbcNumericalSelection.weightx = 1;
         gbcNumericalSelection.gridx++;
         gbcNumericalSelection.insets = new Insets(0, 48, 0, 0);
@@ -406,7 +407,8 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
             else {
                 try {
                     // if a period is written
-                    DurationPeriodFormatUtils.parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+                    DurationPeriodFormatUtils.parsePeriod(
+                        ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                     for (final String include : includes) {
                         if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
                             return "A Period cannot be applied on a LocalTime!";

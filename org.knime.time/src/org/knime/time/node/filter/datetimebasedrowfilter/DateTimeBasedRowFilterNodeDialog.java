@@ -481,13 +481,15 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
     private void checkPeriodOrDuration() {
         String warning = "";
         try {
-            DurationPeriodFormatUtils.parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+            DurationPeriodFormatUtils
+                .parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
             if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
                 warning = "A period cannot be applied on a LocalTime column!";
             }
         } catch (DateTimeParseException e) {
             try {
-                DurationPeriodFormatUtils.parseDuration(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
+                DurationPeriodFormatUtils.parseDuration(
+                    ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                 if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
                     warning = "A duration cannot be applied on a LocalDate column!";
                 }
