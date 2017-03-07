@@ -49,6 +49,7 @@
 package org.knime.core.node.util.filter.nominal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -152,6 +153,7 @@ public class NominalValueFilterConfiguration extends NameFilterConfiguration {
                 names.add(dc.toString());
             }
         }
+        Collections.sort(names);
         super.loadConfigurationInDialog(settings, names.toArray(new String[names.size()]));
     }
 

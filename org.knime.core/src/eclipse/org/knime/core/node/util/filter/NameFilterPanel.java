@@ -81,7 +81,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
@@ -317,7 +316,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 onRemAll();
             }
         });
-        JToggleButton additionalButton = getAdditionalButton();
+        JCheckBox additionalButton = getAdditionalButton();
         if (additionalButton != null){
             buttonPan.add(Box.createVerticalStrut(25));
             additionalButton.setMaximumSize(new Dimension(125, 25));
@@ -486,7 +485,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @since 3.4
      * @nooverride This method is not intended to be re-implemented or extended by clients outside KNIME core.
      */
-    protected JToggleButton getAdditionalButton(){
+    protected JCheckBox getAdditionalButton(){
         return null;
     }
 

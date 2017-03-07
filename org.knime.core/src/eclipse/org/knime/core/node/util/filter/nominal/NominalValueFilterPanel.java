@@ -53,7 +53,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.JToggleButton;
+import javax.swing.JCheckBox;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.NominalValue;
@@ -74,7 +74,7 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
 
     private Set<DataCell> m_domain;
 
-    private JToggleButton m_includeMissing;
+    private JCheckBox m_includeMissing;
 
     /**
      * Creates a basic panel that allows the filtering of nominal values.
@@ -93,8 +93,8 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
     }
 
     @Override
-    protected JToggleButton getAdditionalButton() {
-        m_includeMissing = new JToggleButton("Incl. Missing");
+    protected JCheckBox getAdditionalButton() {
+        m_includeMissing = new JCheckBox("Incl. Missing");
         m_includeMissing.setToolTipText("Include Missing Values");
         return m_includeMissing;
     }
