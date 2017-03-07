@@ -84,6 +84,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.Granularity;
+import org.knime.time.util.DurationPeriodFormatUtils;
 
 /**
  * The node model of the node which shifts date&time columns.
@@ -255,7 +256,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
             } else {
                 periodColIndex = -1;
                 try {
-                    Period.parse(m_periodValue.getStringValue());
+                    DurationPeriodFormatUtils.parsePeriod(m_periodValue.getStringValue());
                     isPeriod = true;
                 } catch (DateTimeParseException e) {
                     isPeriod = false;
@@ -389,7 +390,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     }
                     period = ((PeriodValue)row.getCell(m_periodColIdx)).getPeriod();
                 } else {
-                    period = Period.parse(m_periodValue.getStringValue());
+                    period = DurationPeriodFormatUtils.parsePeriod(m_periodValue.getStringValue());
                 }
             } else {
                 final String granularity = m_numericalGranularity.getStringValue();
@@ -461,7 +462,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                     }
                     duration = ((DurationValue)row.getCell(m_durationColIdx)).getDuration();
                 } else {
-                    duration = Duration.parse(m_periodValue.getStringValue());
+                    duration = DurationPeriodFormatUtils.parseDuration(m_periodValue.getStringValue());
                 }
             } else {
                 final String granularity = m_numericalGranularity.getStringValue();

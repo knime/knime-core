@@ -119,6 +119,7 @@ public final class DurationPeriodFormatUtils {
         // replace ISO letters with date letters
         s = StringUtils.replaceOnce(s, "Y", "y ");
         s = StringUtils.replaceOnce(s, "M", "M ");
+        s = StringUtils.replaceOnce(s, "W", "W ");
         s = StringUtils.replaceOnce(s, "D", "d ");
 
         return s.trim();
@@ -138,12 +139,14 @@ public final class DurationPeriodFormatUtils {
         // replace ISO letters with words
         s = StringUtils.replaceOnce(s, "Y", " years ");
         s = StringUtils.replaceOnce(s, "M", " months ");
+        s = StringUtils.replaceOnce(s, "W", " weeks ");
         s = StringUtils.replaceOnce(s, "D", " days ");
 
         // handle plurals
         s = StringUtils.replaceOnce(s, " 1 years", " 1 year");
         s = StringUtils.replaceOnce(s, " -1 years", " -1 year");
         s = StringUtils.replaceOnce(s, " 1 months", " 1 month");
+        s = StringUtils.replaceOnce(s, " 1 weeks", " 1 week");
         s = StringUtils.replaceOnce(s, " -1 months", " -1 month");
         s = StringUtils.replaceOnce(s, " 1 days", " 1 day");
         s = StringUtils.replaceOnce(s, " -1 days", " -1 day");
@@ -170,7 +173,7 @@ public final class DurationPeriodFormatUtils {
         s = StringUtils.replaceOnce(s, "second", "S");
 
         // add leading 'PT'
-        if (!s.startsWith("PT")) {
+        if (!s.startsWith("PT") && !s.startsWith("-PT")) {
             s = "PT" + s;
         }
 
@@ -193,13 +196,15 @@ public final class DurationPeriodFormatUtils {
         // replace words with ISO letters
         s = StringUtils.replaceOnce(s, "years", "Y");
         s = StringUtils.replaceOnce(s, "months", "M");
+        s = StringUtils.replaceOnce(s, "weeks", "W");
         s = StringUtils.replaceOnce(s, "days", "D");
         s = StringUtils.replaceOnce(s, "year", "Y");
         s = StringUtils.replaceOnce(s, "month", "M");
+        s = StringUtils.replaceOnce(s, "week", "W");
         s = StringUtils.replaceOnce(s, "day", "D");
 
         // add leading 'P'
-        if (!s.startsWith("P")) {
+        if (!s.startsWith("P") && !s.startsWith("-P")) {
             s = "P" + s;
         }
 
