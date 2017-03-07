@@ -60,13 +60,13 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 @SuppressWarnings("serial")
-public final class DurationValueRenderer extends DefaultDataValueRenderer {
+public final class DurationISOValueRenderer extends DefaultDataValueRenderer {
 
-    private static final DurationValueRenderer INSTANCE = new DurationValueRenderer();
+    private static final DurationISOValueRenderer INSTANCE = new DurationISOValueRenderer();
 
-    private static final String DESCRIPTION_DURATION = "Default Duration";
+    private static final String DESCRIPTION_DURATION = "ISO-8601 Duration";
 
-    private DurationValueRenderer() {
+    private DurationISOValueRenderer() {
     }
 
     /**

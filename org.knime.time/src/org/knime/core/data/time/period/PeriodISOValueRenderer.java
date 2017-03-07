@@ -60,13 +60,13 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 @SuppressWarnings("serial")
-public final class PeriodValueRenderer extends DefaultDataValueRenderer {
+public final class PeriodISOValueRenderer extends DefaultDataValueRenderer {
 
-    private static final PeriodValueRenderer INSTANCE = new PeriodValueRenderer();
+    private static final PeriodISOValueRenderer INSTANCE = new PeriodISOValueRenderer();
 
-    private static final String DESCRIPTION_PERIOD = "Period";
+    private static final String DESCRIPTION_PERIOD = "ISO-8601 Period";
 
-    private PeriodValueRenderer() {
+    private PeriodISOValueRenderer() {
     }
 
     /**

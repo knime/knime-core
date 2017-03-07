@@ -122,7 +122,7 @@
       <dataValue
             valueClass="org.knime.core.data.time.duration.DurationValue">
          <renderer
-               rendererFactoryClass="org.knime.core.data.time.duration.DurationValueRenderer$DefaultRendererFactory"
+               rendererFactoryClass="org.knime.core.data.time.duration.DurationISOValueRenderer$DefaultRendererFactory"
                suggestAsDefault="false">
          </renderer>
          <renderer
@@ -137,7 +137,7 @@
       <dataValue
             valueClass="org.knime.core.data.time.period.PeriodValue">
          <renderer
-               rendererFactoryClass="org.knime.core.data.time.period.PeriodValueRenderer$DefaultRendererFactory"
+               rendererFactoryClass="org.knime.core.data.time.period.PeriodISOValueRenderer$DefaultRendererFactory"
                suggestAsDefault="false">
          </renderer>
          <renderer
