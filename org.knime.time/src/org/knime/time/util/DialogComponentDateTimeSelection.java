@@ -401,9 +401,9 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
             .setLocalTime(LocalTime.parse(((DateEditor)m_timeSpinner.getEditor()).getTextField().getText(), formatter));
         model.setZone(ZoneId.of((String)m_zoneComboBox.getSelectedItem()));
 
-        model.setUseDate(m_dateCheckbox.isSelected() && m_dateChooser.isEnabled());
-        model.setUseTime(m_timeCheckbox.isSelected() && m_timeSpinner.isEnabled());
-        model.setUseZone(m_zoneCheckbox.isSelected() && m_zoneComboBox.isEnabled());
+        model.setUseDate(m_dateCheckbox.isSelected());
+        model.setUseTime(m_timeCheckbox.isSelected());
+        model.setUseZone(m_zoneCheckbox.isSelected());
 
     }
 
