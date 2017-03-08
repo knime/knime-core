@@ -236,7 +236,7 @@ public class GlmNetLogRegLearner implements LogRegLearner {
         private final int m_cat;
 
         public ClassDataRow(final RegressionTrainingRow row) {
-            m_data = row.getParameterApache().getRow(0);
+            m_data = row.getParameter().getRow(0);
             m_cat = (int)row.getTarget();
         }
         /**
