@@ -283,13 +283,5 @@ public class RegressionTrainingRow {
         return m_parameter;
     }
 
-    /**
-     * Returns a {@link RealMatrix} with values of the parameters retrieved from the learning columns.
-     * @return the parameters
-     * @since 3.3
-     */
-    public RealMatrix getParameterApache() {
-        return MatrixUtils.createRealMatrix(m_parameter.getArray());
-    }
 }
 
