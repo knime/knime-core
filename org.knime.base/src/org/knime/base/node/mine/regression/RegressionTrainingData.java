@@ -238,7 +238,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * Can be used to access information about the target column.
      *
      * @return the index of the target column
-     * @since 3.3
+     * @since 3.4
      */
     public int getTargetIndex() {
         return m_target;
