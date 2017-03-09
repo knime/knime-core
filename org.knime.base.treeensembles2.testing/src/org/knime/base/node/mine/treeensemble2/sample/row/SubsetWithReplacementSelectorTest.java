@@ -48,8 +48,9 @@
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.number.OrderingComparison.lessThan;
+import static org.junit.Assert.assertThat;
 
 import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
@@ -64,7 +65,6 @@ import com.google.common.collect.Lists;
  * @author Adrian Nembach, KNIME.com
  */
 public class SubsetWithReplacementSelectorTest {
-
     @Test
     public void testSelect() throws Exception {
         final SubsetWithReplacementSelector selector = SubsetWithReplacementSelector.getInstance();
@@ -73,12 +73,12 @@ public class SubsetWithReplacementSelectorTest {
         for (int i = 1; i < 20; i++) {
             SubsetWithReplacementRowSample sample = selector.select(rd, 20, i);
             int included = SamplerTestUtil.countRows(sample);
-            assertEquals("The number of included rows should be " + i + "but was " + included, i, included);
+            assertThat("Unexpected number of included rows", included, is(i));
         }
 
         SubsetWithReplacementRowSample sample = selector.select(rd, 100, 100);
         int uniqueRows = SamplerTestUtil.countUniqueRows(sample);
-        assertTrue("A bootstrap sample will usually contain about 63.2% of the rows.", uniqueRows < 70);
+        assertThat("A bootstrap sample will usually contain about 63.2% of the rows.", uniqueRows, is(lessThan(70)));
     }
 
     @Test
@@ -90,10 +90,8 @@ public class SubsetWithReplacementSelectorTest {
         int[] offsets = new int[]{0, 7};
         SubsetWithReplacementRowSample combined =
             SubsetWithReplacementSelector.getInstance().combine(Lists.newArrayList(sample1, sample2), offsets, 15);
-        assertEquals(SamplerTestUtil.countRows(sample1) + SamplerTestUtil.countRows(sample2), SamplerTestUtil.countRows(combined));
-        assertEquals(15, combined.getNrRows());
+        assertThat("Unexpected number of combined rows", SamplerTestUtil.countRows(combined),
+            is(SamplerTestUtil.countRows(sample1) + SamplerTestUtil.countRows(sample2)));
+        assertThat("Unexpected number of rows", combined.getNrRows(), is(15));
     }
-
-
-
 }
