@@ -107,6 +107,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
 
     private Browser m_browser;
     private boolean m_viewSet = false;
+    private boolean m_initialized = false;
     private String m_title;
 
     /**
@@ -312,12 +313,14 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
 
                     @Override
                     public void completed(final ProgressEvent event) {
-                        if (m_viewSet) {
+                        if (m_viewSet && !m_initialized) {
                             WizardNode<REP, VAL> model = getModel();
                             WizardViewCreator<REP, VAL> creator = getViewCreator();
                             String initCall =
                                 creator.createInitJSViewMethodCall(model.getViewRepresentation(), model.getViewValue());
                             initCall = creator.wrapInTryCatch(initCall);
+                            //The execute call might fire the completed event again in some browsers!
+                            m_initialized = true;
                             m_browser.execute(initCall);
                         }
                     }
@@ -365,6 +368,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
 
     private void setBrowserURL() {
         try {
+            m_initialized = false;
             File src = getViewSource();
             if (src != null && src.exists()) {
                 m_browser.setUrl(getViewSource().getAbsolutePath());
