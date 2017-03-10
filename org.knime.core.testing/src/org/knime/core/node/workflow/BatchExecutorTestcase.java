@@ -69,19 +69,13 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
-import org.knime.workbench.explorer.ExplorerMountTable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
-
-import com.knime.explorer.teamspace.TeamSpaceContentProvider;
-import com.knime.explorer.teamspace.TeamSpaceContentProviderFactory;
-import com.knime.licenses.LicenseStore;
 
 /**
  * Testcases for the BatchExecutor
@@ -518,72 +512,6 @@ public class BatchExecutorTestcase {
         // does not need credentials and currently there is no node besides database nodes that uses credentials.
     }
 
-    /**
-     * Test if metanode links are updated correctly.
-     *
-     * @throws Exception if an error occurs
-     */
-    @Test
-    public void testUpdateMetanodeLinks() throws Exception {
-        Assume.assumeTrue(isTeamspaceAvailable());
-
-        // setup a teamspace for the metanode
-        String providerId = new TeamSpaceContentProviderFactory().getID();
-        File teamspaceLocation = findInPlugin("/files/originalMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
-
-        // check for updates with no update available
-        int ret =
-            BatchExecutor
-                .mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
-                    "-reset", "-updateLinks",
-                    "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
-
-        // point teamspace to updated metanode
-        csvOut.delete();
-        ExplorerMountTable.unmount("org.knime.core.testing");
-        teamspaceLocation = findInPlugin("/files/updatedMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
-
-        ret =
-            BatchExecutor
-                .mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
-                    "-reset", "-updateLinks",
-                    "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(csvOut));
-
-        // point teamspace to broken metanode
-        csvOut.delete();
-        ExplorerMountTable.unmount("org.knime.core.testing");
-        teamspaceLocation = findInPlugin("/files/brokenMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
-
-        ret =
-            BatchExecutor
-                .mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
-                    "-reset", "-updateLinks",
-                    "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Unexpected return value on updating broken metanode without immediate load failure",
-            BatchExecutor.EXIT_ERR_EXECUTION, ret);
-
-        ret =
-            BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
-                "-reset", "-updateLinks", "-failonloaderror",
-                "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Unexpected return value on updating broken metanode with immediate load failure",
-            BatchExecutor.EXIT_ERR_LOAD, ret);
-
-        // no links to update
-        File testflowZip = findInPlugin("/files/BatchExecutorTestflowEmpty.zip");
-        ret =
-            BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(), "-nosave",
-                "-failonloaderror", "-updateLinks"});
-        assertEquals("Non-zero return value", 0, ret);
-    }
-
     private int countWrittenLines(final File outputFile) throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(outputFile));
         int count = 0;
@@ -601,18 +529,5 @@ public class BatchExecutorTestcase {
             throw new FileNotFoundException(thisBundle.getLocation() + name);
         }
         return new File(FileLocator.toFileURL(url).getPath());
-    }
-
-    private static boolean isTeamspaceAvailable() {
-        try {
-            Class.forName(TeamSpaceContentProvider.class.getName());
-            Class.forName(LicenseStore.class.getName());
-            Class.forName(ExplorerMountTable.class.getName());
-            return true;
-        } catch (NoClassDefFoundError err) {
-            return false;
-        } catch (ClassNotFoundException ex) {
-            return false;
-        }
     }
 }
