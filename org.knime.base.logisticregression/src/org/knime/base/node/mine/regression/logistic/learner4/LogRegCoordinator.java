@@ -51,12 +51,17 @@ package org.knime.base.node.mine.regression.logistic.learner4;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -147,7 +152,8 @@ class LogRegCoordinator {
             m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
 
         ExecutionMonitor trainExec = exec.createSubProgress(1.0 - calcDomainTime);
-        LogisticRegressionContent content = learner.learn(data, trainExec);
+        LogRegLearnerResult result = learner.learn(data, trainExec);
+        LogisticRegressionContent content = createContentFromLearnerResult(result, data, trainingData.getDataTableSpec());
 
         return content;
     }
@@ -250,6 +256,65 @@ class LogRegCoordinator {
         } else {
             throw new InvalidSettingsException("The target is " + "not in the input.");
         }
+    }
+
+    private LogisticRegressionContent createContentFromLearnerResult(final LogRegLearnerResult result, final RegressionTrainingData data,
+        final DataTableSpec tableSpec) {
+        List<String> factorList = new ArrayList<String>();
+        List<String> covariateList = new ArrayList<String>();
+        Map<String, List<DataCell>> factorDomainValues =
+            new HashMap<String, List<DataCell>>();
+        for (int i : data.getActiveCols()) {
+            DataColumnSpec columnSpec = tableSpec.getColumnSpec(i);
+            if (data.getIsNominal().get(i)) {
+                String factor =
+                    columnSpec.getName();
+                factorList.add(factor);
+                List<DataCell> values = data.getDomainValues().get(i);
+                factorDomainValues.put(factor, values);
+            } else {
+                if (columnSpec.getType().isCompatible(BitVectorValue.class) || columnSpec.getType().isCompatible(ByteVectorValue.class) ) {
+                    int length = data.getVectorLengths().getOrDefault(i, 0).intValue();
+                    for (int j = 0; j < length; ++j) {
+                        covariateList.add(columnSpec.getName() + "[" + j + "]");
+                    }
+                } else {
+                    covariateList.add(
+                        columnSpec.getName());
+                }
+            }
+        }
+
+        final Map<? extends Integer, Integer> vectorIndexLengths = data.getVectorLengths();
+        final Map<String, Integer> vectorLengths = new LinkedHashMap<String, Integer>();
+        for (DataColumnSpec spec: m_specialColumns) {
+            int colIndex = tableSpec.findColumnIndex(spec.getName());
+            if (colIndex >= 0) {
+                vectorLengths.put(spec.getName(), vectorIndexLengths.get(colIndex));
+            }
+        }
+        RealMatrix beta = result.getBeta();
+        int cols = beta.getColumnDimension();
+        RealMatrix betaMat = MatrixUtils.createRealMatrix(1, beta.getRowDimension() * cols);
+        for (int i = 0; i < beta.getRowDimension(); i++) {
+            for (int j = 0; j < beta.getColumnDimension(); j++) {
+                betaMat.setEntry(0, i * cols + j, beta.getEntry(i, j));
+            }
+        }
+        RealMatrix covMat;
+        if (result.hasCovariateMatrix()) {
+            covMat = result.getCovariateMatrix();
+        } else {
+            covMat = MatrixUtils.createRealMatrix(beta.getColumnDimension() , beta.getColumnDimension());
+        }
+        // create content
+        LogisticRegressionContent content =
+            new LogisticRegressionContent(m_pmmlOutSpec,
+                    factorList, covariateList, vectorLengths,
+                    m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
+                    betaMat, result.getLogLike(), covMat, result.getIter());
+        return content;
+
     }
 
     private void checkConstantLearningFields(final BufferedDataTable data) throws InvalidSettingsException {
