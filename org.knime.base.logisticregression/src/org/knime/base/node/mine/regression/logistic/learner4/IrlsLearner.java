@@ -51,11 +51,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -71,8 +68,6 @@ import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.vector.bitvector.BitVectorValue;
-import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -166,7 +161,7 @@ final class IrlsLearner implements LogRegLearner {
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     @Override
-    public LogisticRegressionContent learn(final RegressionTrainingData data,
+    public LogRegLearnerResult learn(final RegressionTrainingData data,
             final ExecutionMonitor exec) throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
         int iter = 0;
@@ -178,6 +173,7 @@ final class IrlsLearner implements LogRegLearner {
         final int rC = trainingData.getRegressorCount();
 
         final RealMatrix beta = MatrixUtils.createRealMatrix(1, (tcC - 1) * (rC + 1));
+//        final RealMatrix beta = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
 
         Double loglike = 0.0;
         Double loglikeOld = 0.0;
@@ -224,8 +220,8 @@ final class IrlsLearner implements LogRegLearner {
                     || loglike < loglikeOld) && iter > 0) {
                 converged = true;
                 for (int k = 0; k < beta.getRowDimension(); k++) {
-                    if (abs(beta.getEntry(k, 0) - betaOld.getEntry(k, 0)) > m_eps
-                            * abs(betaOld.getEntry(k, 0))) {
+                    if (abs(beta.getEntry(0, k) - betaOld.getEntry(0, k)) > m_eps
+                            * abs(betaOld.getEntry(0, k))) {
                         converged = false;
                         break;
                     }
@@ -242,9 +238,9 @@ final class IrlsLearner implements LogRegLearner {
 
             // test for convergence
             converged = true;
-            for (int k = 0; k < beta.getRowDimension(); k++) {
-                if (abs(beta.getEntry(k, 0) - betaOld.getEntry(k, 0)) > m_eps
-                        * abs(betaOld.getEntry(k, 0))) {
+            for (int k = 0; k < beta.getColumnDimension(); k++) {
+                if (abs(beta.getEntry(0, k) - betaOld.getEntry(0, k)) > m_eps
+                        * abs(betaOld.getEntry(0, k))) {
                     converged = false;
                     break;
                 }
@@ -270,47 +266,13 @@ final class IrlsLearner implements LogRegLearner {
         }
         // The covariance matrix
         RealMatrix covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
-
-        List<String> factorList = new ArrayList<String>();
-        List<String> covariateList = new ArrayList<String>();
-        Map<String, List<DataCell>> factorDomainValues =
-            new HashMap<String, List<DataCell>>();
-        for (int i : trainingData.getActiveCols()) {
-            DataColumnSpec columnSpec = m_tableSpec.getColumnSpec(i);
-            if (trainingData.getIsNominal().get(i)) {
-                String factor =
-                    columnSpec.getName();
-                factorList.add(factor);
-                List<DataCell> values = trainingData.getDomainValues().get(i);
-                factorDomainValues.put(factor, values);
-            } else {
-                if (columnSpec.getType().isCompatible(BitVectorValue.class) || columnSpec.getType().isCompatible(ByteVectorValue.class) ) {
-                    int length = trainingData.getVectorLengths().getOrDefault(i, 0).intValue();
-                    for (int j = 0; j < length; ++j) {
-                        covariateList.add(columnSpec.getName() + "[" + j + "]");
-                    }
-                } else {
-                    covariateList.add(
-                        columnSpec.getName());
-                }
-            }
+        RealMatrix betaMat = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
+        for (int i = 0; i < beta.getColumnDimension(); i++) {
+            int r = i / rC;
+            int c = i % rC;
+            betaMat.setEntry(r, c, beta.getEntry(0, i));
         }
-
-        final Map<? extends Integer, Integer> vectorIndexLengths = trainingData.getVectorLengths();
-        final Map<String, Integer> vectorLengths = new LinkedHashMap<String, Integer>();
-        for (DataColumnSpec spec: m_specialColumns) {
-            int colIndex = m_tableSpec.findColumnIndex(spec.getName());
-            if (colIndex >= 0) {
-                vectorLengths.put(spec.getName(), vectorIndexLengths.get(colIndex));
-            }
-        }
-        // create content
-        LogisticRegressionContent content =
-            new LogisticRegressionContent(m_outSpec,
-                    factorList, covariateList, vectorLengths,
-                    m_targetReferenceCategory, m_sortTargetCategories, m_sortFactorsCategories,
-                    beta, loglike, covMat, iter);
-        return content;
+        return new LogRegLearnerResult(betaMat, covMat, iter, loglike);
     }
 
     /**
