@@ -74,7 +74,7 @@ public class SagLogRegLearner implements LogRegLearner {
      * {@inheritDoc}
      */
     @Override
-    public LogisticRegressionContent learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
+    public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
         final SagOptimizer sagOpt = new SagOptimizer();
         ClassData classData = new ClassData(data);
