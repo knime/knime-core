@@ -44,31 +44,53 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.02.2017 (Adrian Nembach): created
+ *   10.03.2017 (Adrian): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
+package org.knime.base.node.mine.regression.logistic.learner4.sag;
+
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 
 /**
- * Represents a single training row.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public interface TrainingRow {
+public class MultinomialLoss implements Loss<ClassificationTrainingRow> {
+
+    private final int m_nCats;
+
+    public MultinomialLoss(final int nCats) {
+        m_nCats = nCats;
+    }
 
     /**
-     * Returns the feature at index <b>idx</b>.
-     * Note that the index 0 is reserved for the intercept term.
-     *
-     * @param idx index of the feature to retrieve
-     * @return the feature at index <b>idx</b>
+     * {@inheritDoc}
      */
-    public double getFeature(final int idx);
+    @Override
+    public double evaluate(final ClassificationTrainingRow row, final double[] prediction) {
+        final double logSumExp = logSumExp(prediction);
+        return logSumExp - prediction[row.getCategory()];
+    }
 
     /**
-     * Returns a non-negative integer number that uniquely identifies the row.
-     *
-     * @return the Id of this row
+     * {@inheritDoc}
      */
-    public int getId();
+    @Override
+    public double[] gradient(final ClassificationTrainingRow row, final double[] prediction) {
+        double[] gradient = new double[m_nCats];
+        double logSumExp = logSumExp(prediction);
+        for (int i = 0; i < m_nCats; i++) {
+            double p = Math.exp(logSumExp - prediction[i]);
+            gradient[i] = row.getCategory() == i ? p - 1 : p;
+        }
+        return gradient;
+    }
+
+    private static double logSumExp(final double[] prediction) {
+        double sum = 0.0;
+        for (int i = 0; i < prediction.length; i++) {
+            sum += Math.exp(prediction[i]);
+        }
+        return Math.log(sum);
+    }
 
 }

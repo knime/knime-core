@@ -44,31 +44,18 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.02.2017 (Adrian Nembach): created
+ *   09.03.2017 (Adrian): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
+package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 /**
- * Represents a single training row.
+ * Represents the Gradient of a {@link Loss}.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public interface TrainingRow {
+public interface Gradient {
 
-    /**
-     * Returns the feature at index <b>idx</b>.
-     * Note that the index 0 is reserved for the intercept term.
-     *
-     * @param idx index of the feature to retrieve
-     * @return the feature at index <b>idx</b>
-     */
-    public double getFeature(final int idx);
+    public int getNrOfGradients();
 
-    /**
-     * Returns a non-negative integer number that uniquely identifies the row.
-     *
-     * @return the Id of this row
-     */
-    public int getId();
-
+    public double getGradientFor(int idx);
 }

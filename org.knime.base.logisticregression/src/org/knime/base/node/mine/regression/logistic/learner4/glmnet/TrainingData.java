@@ -70,4 +70,9 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
      */
     public int getFeatureCount();
 
+    /**
+     * Permute the ordering of the data.
+     */
+    public void permute();
+
 }
