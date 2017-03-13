@@ -44,38 +44,75 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   25.01.2017 (Adrian Nembach): created
+ *   13.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4;
 
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
+import org.apache.commons.math3.linear.RealMatrix;
 
 /**
- * A learner object that performs the task of learning a logistic regression model based on
- * the provided data.
+ * Encapsulates the result of a LogRegLearner.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface LogRegLearner {
+public final class LogRegLearnerResult {
+    private final RealMatrix m_beta;
+    private final RealMatrix m_covMat;
+    private final int m_iter;
+    private final double m_logLike;
 
     /**
-     * Learns a logistic regression model from the provided data.
+     * @param beta the parameter matrix
+     * @param covMat the covariate matrix
+     * @param iterations the number of iterations the algorithm took to find the model
+     * @param logLikelihood the logLikelihood of the final model on the training data
      *
-     * @param data training data from which the model should be learned
-     * @param progressMonitor monitor that allows to report the progress of the training
-     * @return the content of the logistic regression model that is learned
-     * @throws InvalidSettingsException if the settings cause inconsistencies during training
-     * @throws CanceledExecutionException if the training is canceled while in progress
      */
-    public LogRegLearnerResult learn(final RegressionTrainingData data, ExecutionMonitor progressMonitor) throws CanceledExecutionException, InvalidSettingsException;
+    public LogRegLearnerResult(final RealMatrix beta, final RealMatrix covMat, final int iterations, final double logLikelihood) {
+        m_beta = beta.copy();
+        m_covMat = covMat.copy();
+        m_iter = iterations;
+        m_logLike = logLikelihood;
+    }
 
     /**
-     * Returns any warnings that occurred during the training process.
-     *
-     * @return Any warnings that occurred during the training process
+     * @param beta the parameter matrix
+     * @param iterations the number of iterations the algorithm took to find the model
+     * @param logLikelihood the logLikelihood of the final model on the training data
      */
-    public String getWarningMessage();
+    public LogRegLearnerResult(final RealMatrix beta, final int iterations ,final double logLikelihood) {
+        this(beta, null, iterations, logLikelihood);
+    }
+
+    public boolean hasCovariateMatrix() {
+        return m_covMat != null;
+    }
+
+    public RealMatrix getCovariateMatrix() {
+        return m_covMat;
+    }
+
+    /**
+     * @return the beta
+     */
+    public RealMatrix getBeta() {
+        return m_beta;
+    }
+
+    /**
+     * @return the iter
+     */
+    public int getIter() {
+        return m_iter;
+    }
+
+    /**
+     * @return the logLike
+     */
+    public double getLogLike() {
+        return m_logLike;
+    }
+
+
+
 }
