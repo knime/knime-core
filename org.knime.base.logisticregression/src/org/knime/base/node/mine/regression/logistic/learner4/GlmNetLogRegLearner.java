@@ -49,11 +49,9 @@
 package org.knime.base.node.mine.regression.logistic.learner4;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -68,8 +66,6 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.PathStrategy
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.vector.bitvector.BitVectorValue;
-import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -109,7 +105,7 @@ public class GlmNetLogRegLearner implements LogRegLearner {
      * {@inheritDoc}
      */
     @Override
-    public LogisticRegressionContent learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
+    public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
         ClassData classData = new ClassData(data);
         double alpha = 0.8;
@@ -117,55 +113,12 @@ public class GlmNetLogRegLearner implements LogRegLearner {
         PathStrategy pathStrategy = /*new SingleLambdaPathStrategy(0.2)*/new MaxPathStrategy(lambda, alpha, 100, classData);
         MultinomialRegression learner = new MultinomialRegression(ProblemFormulation.Conventional, pathStrategy, alpha);
         double[][] beta = learner.fit(classData);
+        RealMatrix betaMat = MatrixUtils.createRealMatrix(beta);
+        // TODO also correctly return iterations and logLikelihood
+        int iterations = -1;
+        double logLikelihood = -1;
 
-        List<String> factorList = new ArrayList<String>();
-        List<String> covariateList = new ArrayList<String>();
-        Map<String, List<DataCell>> factorDomainValues =
-            new HashMap<String, List<DataCell>>();
-        for (int i : data.getActiveCols()) {
-            DataColumnSpec columnSpec = m_tableSpec.getColumnSpec(i);
-            if (data.getIsNominal().get(i)) {
-                String factor =
-                    columnSpec.getName();
-                factorList.add(factor);
-                List<DataCell> values = data.getDomainValues().get(i);
-                factorDomainValues.put(factor, values);
-            } else {
-                if (columnSpec.getType().isCompatible(BitVectorValue.class) || columnSpec.getType().isCompatible(ByteVectorValue.class) ) {
-                    int length = data.getVectorLengths().getOrDefault(i, 0).intValue();
-                    for (int j = 0; j < length; ++j) {
-                        covariateList.add(columnSpec.getName() + "[" + j + "]");
-                    }
-                } else {
-                    covariateList.add(
-                        columnSpec.getName());
-                }
-            }
-        }
-
-        final Map<? extends Integer, Integer> vectorIndexLengths = data.getVectorLengths();
-        final Map<String, Integer> vectorLengths = new LinkedHashMap<String, Integer>();
-        for (DataColumnSpec spec: m_specialColumns) {
-            int colIndex = m_tableSpec.findColumnIndex(spec.getName());
-            if (colIndex >= 0) {
-                vectorLengths.put(spec.getName(), vectorIndexLengths.get(colIndex));
-            }
-        }
-        int cols = beta[0].length;
-        RealMatrix betaMat = MatrixUtils.createRealMatrix(1, beta.length * cols);
-        for (int i = 0; i < beta.length; i++) {
-            for (int j = 0; j < beta[i].length; j++) {
-                betaMat.setEntry(0, i * cols + j, beta[i][j]);
-            }
-        }
-        RealMatrix covMat = MatrixUtils.createRealMatrix(classData.getFeatureCount() + 1 , classData.getFeatureCount() + 1);
-        // create content
-        LogisticRegressionContent content =
-            new LogisticRegressionContent(m_pmmlSpec,
-                    factorList, covariateList, vectorLengths,
-                    m_targetReferenceCategory, m_sortTargetCategories, m_sortFactorsCategories,
-                    betaMat, 0, covMat, 0);
-        return content;
+        return new LogRegLearnerResult(betaMat, iterations, logLikelihood);
     }
 
     /**
@@ -188,8 +141,9 @@ public class GlmNetLogRegLearner implements LogRegLearner {
             int nfet = data.getRegressorCount();
             m_fetCount = nfet;
             m_rows = new ArrayList<ClassificationTrainingRow>(nrows);
+            int id = 0;
             for (RegressionTrainingRow row : data) {
-                m_rows.add(new ClassDataRow(row));
+                m_rows.add(new ClassDataRow(row, id++));
             }
             m_catCount = data.getDomainValues().get(data.getTargetIndex()).size();
         }
@@ -228,16 +182,27 @@ public class GlmNetLogRegLearner implements LogRegLearner {
             return m_catCount;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void permute() {
+            Collections.shuffle(m_rows);
+        }
+
     }
 
     private static class ClassDataRow implements ClassificationTrainingRow {
 
         private final double[] m_data;
         private final int m_cat;
+        private final int m_id;
 
-        public ClassDataRow(final RegressionTrainingRow row) {
+        public ClassDataRow(final RegressionTrainingRow row, final int id) {
+            assert id >= 0;
             m_data = row.getParameter().getRow(0);
             m_cat = (int)row.getTarget();
+            m_id = id;
         }
         /**
          * {@inheritDoc}
@@ -253,6 +218,13 @@ public class GlmNetLogRegLearner implements LogRegLearner {
         @Override
         public int getCategory() {
             return m_cat;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int getId() {
+            return m_id;
         }
 
     }
