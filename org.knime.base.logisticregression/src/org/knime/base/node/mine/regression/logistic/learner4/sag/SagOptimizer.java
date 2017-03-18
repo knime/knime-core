@@ -63,6 +63,13 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 public class SagOptimizer <T extends TrainingRow> {
 
 
+    /**
+     * @param data the training data
+     * @param loss the loss function
+     * @param maxIter the maximum number of iterations
+     * @param lambda the degree of regularization
+     * @return a matrix of weights for a linear model
+     */
     public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxIter, final double lambda) {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
@@ -76,7 +83,7 @@ public class SagOptimizer <T extends TrainingRow> {
 //        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy =
 //                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
 
-        WeightVector w = new ScaledWeightVector(nFets, nCats);
+        WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats);
 
         // iterate over samples
         data.permute();

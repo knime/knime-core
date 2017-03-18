@@ -54,6 +54,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
+ * Performs a line search for the optimal lipschitz constant at every iteration.
+ * For more details see the paper "Minimizing Finite Sums with the Stochastic Average Gradient".
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -81,6 +83,10 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     }
 
     /**
+     * @param data the training data
+     * @param loss the loss function
+     * @param lambda the degree of regularization
+     * @param stepSizeType the step size type
      *
      */
     public LineSearchLearningRateStrategy(final TrainingData<T> data, final Loss<T> loss,

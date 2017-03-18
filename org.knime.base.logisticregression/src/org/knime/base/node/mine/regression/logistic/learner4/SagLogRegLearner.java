@@ -79,7 +79,7 @@ public class SagLogRegLearner implements LogRegLearner {
         throws CanceledExecutionException, InvalidSettingsException {
         final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer();
         ClassData classData = new ClassData(data);
-        MultinomialLoss loss = new MultinomialLoss(classData.m_catCount);
+        MultinomialLoss loss = MultinomialLoss.INSTANCE;
         double alpha = 1e-3;
         double lambda = 0;
         int maxIter = 500000;

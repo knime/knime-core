@@ -54,10 +54,25 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
  * Represents a loss function used by the {@link SagOptimizer}.
  *
  * @author Adrian Nembach, KNIME.com
+ * @param <T> The type of TrainingRow on which this loss can be evaluated
  */
 public interface Loss<T extends TrainingRow> {
 
+    /**
+     * Returns the loss for <b>row</b> with respect to the <b>prediction</b> supplied by the linear model.
+     *
+     * @param row for which the loss should be evaluated
+     * @param prediction of the linear model for <b>row</b>
+     * @return the loss for <b>row</b> and <b>prediction</b>
+     */
     public double evaluate(final T row, final double[] prediction);
 
+    /**
+     * Returns the gradient of the loss with respect to the <b>row</b> and the <b>prediction</b>.
+     *
+     * @param row for which the gradient should be calculated
+     * @param prediction of the linear model for <b>row</b>
+     * @return the gradient with respect to <b>row</b> and <b>prediction</b>
+     */
     public double[] gradient(final T row, final double[] prediction);
 }

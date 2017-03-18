@@ -51,16 +51,17 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 
 /**
+ * The multinomial loss or cross entropy.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class MultinomialLoss implements Loss<ClassificationTrainingRow> {
+public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
 
-    private final int m_nCats;
+    /**
+     * The instance of MultinomialLoss.
+     */
+    INSTANCE;
 
-    public MultinomialLoss(final int nCats) {
-        m_nCats = nCats;
-    }
 
     /**
      * {@inheritDoc}
