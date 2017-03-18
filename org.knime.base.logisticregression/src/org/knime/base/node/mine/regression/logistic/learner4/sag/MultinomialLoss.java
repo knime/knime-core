@@ -68,7 +68,8 @@ public class MultinomialLoss implements Loss<ClassificationTrainingRow> {
     @Override
     public double evaluate(final ClassificationTrainingRow row, final double[] prediction) {
         final double logSumExp = logSumExp(prediction);
-        return logSumExp - prediction[row.getCategory()];
+        final int cat = row.getCategory();
+        return cat == prediction.length ? logSumExp - 1 : logSumExp - prediction[row.getCategory()];
     }
 
     /**
@@ -76,11 +77,14 @@ public class MultinomialLoss implements Loss<ClassificationTrainingRow> {
      */
     @Override
     public double[] gradient(final ClassificationTrainingRow row, final double[] prediction) {
-        double[] gradient = new double[m_nCats];
+        double[] gradient = new double[prediction.length];
+        final int cat = row.getCategory();
         double logSumExp = logSumExp(prediction);
-        for (int i = 0; i < m_nCats; i++) {
-            double p = Math.exp(logSumExp - prediction[i]);
-            gradient[i] = row.getCategory() == i ? p - 1 : p;
+        for (int i = 0; i < prediction.length; i++) {
+            double p = Math.exp(prediction[i] - logSumExp);
+            assert Double.isFinite(p);
+            gradient[i] = cat == i ? p - 1.0 : p;
+
         }
         return gradient;
     }
@@ -90,7 +94,9 @@ public class MultinomialLoss implements Loss<ClassificationTrainingRow> {
         for (int i = 0; i < prediction.length; i++) {
             sum += Math.exp(prediction[i]);
         }
-        return Math.log(sum);
+        // plus 1 because the reference category always gets prediction 0
+        // and hence its contribution is 1 (exp(0) == 1)
+        return Math.log(sum + 1);
     }
 
 }
