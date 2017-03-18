@@ -69,6 +69,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
     @Override
     public double evaluate(final ClassificationTrainingRow row, final double[] prediction) {
         final double logSumExp = logSumExp(prediction);
+        assert Double.isFinite(logSumExp);
         final int cat = row.getCategory();
         return cat == prediction.length ? logSumExp - 1 : logSumExp - prediction[row.getCategory()];
     }
@@ -91,13 +92,20 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
     }
 
     private static double logSumExp(final double[] prediction) {
-        double sum = 0.0;
+        double max = 1.0;
         for (int i = 0; i < prediction.length; i++) {
-            sum += Math.exp(prediction[i]);
+            if (prediction[i] > max) {
+                max = prediction[i];
+            }
         }
-        // plus 1 because the reference category always gets prediction 0
-        // and hence its contribution is 1 (exp(0) == 1)
-        return Math.log(sum + 1);
+        // -max because the reference category always gets prediction 0
+        // and hence its contribution is -max (exp(0) == 1)
+        double sum = Math.exp(-max);
+        for (int i = 0; i < prediction.length; i++) {
+            sum += Math.exp(prediction[i] - max);
+        }
+
+        return Math.log(sum) + max;
     }
 
 }
