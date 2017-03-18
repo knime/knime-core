@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingData;
@@ -79,11 +80,11 @@ public class SagLogRegLearner implements LogRegLearner {
         final SagOptimizer sagOpt = new SagOptimizer();
         ClassData classData = new ClassData(data);
         MultinomialLoss loss = new MultinomialLoss(classData.m_catCount);
-        double alpha = 1e-5;
-        double lambda = 0.2;
-        int maxIter = 100000;
-        double[][] w = sagOpt.optimize(classData, loss, maxIter, alpha, lambda);
-        return null;
+        double alpha = 1e-3;
+        double lambda = 0;
+        int maxIter = 500000;
+        double[][] w = sagOpt.optimize(classData, loss, maxIter, lambda);
+        return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
     }
 
     /**

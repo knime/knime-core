@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingData;
@@ -60,18 +61,24 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.Classificati
  */
 public class SagOptimizer {
 
-    public double[][] optimize(final ClassificationTrainingData data, final Loss<ClassificationTrainingRow> loss, final int maxIter, final double alpha, final double lambda) {
+
+    public double[][] optimize(final ClassificationTrainingData data, final Loss<ClassificationTrainingRow> loss, final int maxIter, final double lambda) {
         final int nRows = data.getRowCount();
-        final int nFets = data.getFeatureCount();
+        final int nFets = data.getFeatureCount() + 1;
         final int nCats = data.getCategoryCount();
         // initialize
         double[][] g = new double[nCats - 1][nRows];
         double[][] d = new double[nCats - 1][nFets];
         int nCovered = 0;
 
-        WeightVector w = new SimpleWeightVector(nFets, nCats);
+        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
+//        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy =
+//                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
+
+        WeightVector w = new ScaledWeightVector(nFets, nCats);
 
         // iterate over samples
+        data.permute();
         Iterator<ClassificationTrainingRow> iterator = data.iterator();
         for (int k = 0; k < maxIter; k++) {
             ClassificationTrainingRow row;
@@ -83,13 +90,16 @@ public class SagOptimizer {
                 row = iterator.next();
             }
 
+            double[] prediction = w.predict(row);
             double[] sig = loss.gradient(row, w.predict(row));
 
             int id = row.getId();
             for (int c = 0; c < nCats - 1; c++) {
                 // TODO exploit sparseness
                 for (int i = 0; i < nFets; i++) {
-                    d[c][i] += row.getFeature(i) * (sig[c] - g[c][id]);
+                    double newD = row.getFeature(i) * (sig[c] - g[c][id]);
+                    assert Double.isFinite(newD);
+                    d[c][i] += newD;
                 }
                 g[c][id] = sig[c];
             }
@@ -99,11 +109,12 @@ public class SagOptimizer {
                 nCovered++;
             }
 
+            double alpha = learningRateStrategy.getCurrentLearningRate(row, prediction, sig);
             w.scale(alpha, lambda);
 
             w.update(alpha, d, nCovered);
 
-
+            w.checkNormalize();
 
         }
 
@@ -133,7 +144,7 @@ public class SagOptimizer {
         public double calculate(double val, int c, int i);
     }
     private abstract class AbstractWeightVector implements WeightVector {
-        private final double[][] m_data;
+        protected final double[][] m_data;
 
         public AbstractWeightVector(final int nFets, final int nCats) {
             m_data = new double[nCats - 1][nFets];
@@ -143,7 +154,9 @@ public class SagOptimizer {
         protected void updateData(final WeightVectorConsumer func) {
             for (int c = 0; c < m_data.length; c++) {
                 for (int i = 0; i < m_data[c].length; i++) {
-                    m_data[c][i] = func.calculate(m_data[c][i], c, i);
+                    double val = func.calculate(m_data[c][i], c, i);
+                    assert Double.isFinite(val);
+                    m_data[c][i] = val;
                 }
             }
         }
@@ -170,6 +183,11 @@ public class SagOptimizer {
                 prediction[c] = p;
             }
             return prediction;
+        }
+
+        @Override
+        public String toString() {
+            return "beta: " + Arrays.deepToString(m_data);
         }
     }
 
@@ -238,7 +256,7 @@ public class SagOptimizer {
             for (int c = 0; c < prediction.length; c++) {
                 prediction[c] *= m_scale;
             }
-            return null;
+            return prediction;
         }
     }
 
@@ -277,8 +295,12 @@ public class SagOptimizer {
          */
         @Override
         public void checkNormalize() {
+            for (int i = 0; i < m_data.length; i++) {
+                for (int j = 0; j < m_data[i].length; j++) {
+                    assert Double.isFinite(m_data[i][j]);
+                }
+            }
             // nothing to do here
-
         }
 
         /**
