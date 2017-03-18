@@ -57,7 +57,7 @@ import org.apache.commons.math3.util.MathUtils;
  */
 public class LogisticRegression extends AbstractLogisticRegression {
 
-    public double[] fit(final ClassificationTrainingData data, final double alpha, final double lambda) {
+    public double[] fit(final TrainingData<ClassificationTrainingRow> data, final double alpha, final double lambda) {
         final MutableWeightingStrategy weights = new MutableWeightingStrategy(new double[data.getRowCount()], 0);
         final UpdateStrategy updateStrategy = new NaiveUpdateStrategy<>(data, weights);
         final FeatureRegularization featureRegularization = new DefaultFeatureRegularization(data.getFeatureCount());

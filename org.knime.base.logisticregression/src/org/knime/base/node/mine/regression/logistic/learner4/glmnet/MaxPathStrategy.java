@@ -59,7 +59,7 @@ public class MaxPathStrategy implements PathStrategy {
     private double m_maxDot;
 
     public MaxPathStrategy(final double lambda, final double alpha, final int pathLength,
-        final ClassificationTrainingData data) {
+        final TrainingData<ClassificationTrainingRow> data) {
         double maxDot = AbstractLogisticRegression.maxWorkingResponseDotProduct(data);
         m_maxDot = maxDot;
         double lambdaMax = maxDot / (alpha);

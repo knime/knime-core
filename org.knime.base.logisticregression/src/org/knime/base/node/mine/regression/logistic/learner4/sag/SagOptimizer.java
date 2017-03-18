@@ -51,27 +51,28 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
  * Optimizer based on the stochastic average gradient method.
  *
  * @author Adrian Nembach, KNIME.com
+ * @param <T> The type of TrainingRow we are dealing with
  */
-public class SagOptimizer {
+public class SagOptimizer <T extends TrainingRow> {
 
 
-    public double[][] optimize(final ClassificationTrainingData data, final Loss<ClassificationTrainingRow> loss, final int maxIter, final double lambda) {
+    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxIter, final double lambda) {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
-        final int nCats = data.getCategoryCount();
+        final int nCats = data.getTargetDimension();
         // initialize
         double[][] g = new double[nCats - 1][nRows];
         double[][] d = new double[nCats - 1][nFets];
         int nCovered = 0;
 
-        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
+        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
 //        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy =
 //                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
 
@@ -79,9 +80,9 @@ public class SagOptimizer {
 
         // iterate over samples
         data.permute();
-        Iterator<ClassificationTrainingRow> iterator = data.iterator();
+        Iterator<T> iterator = data.iterator();
         for (int k = 0; k < maxIter; k++) {
-            ClassificationTrainingRow row;
+            T row;
             if (iterator.hasNext()) {
                 row = iterator.next();
             } else {
@@ -125,7 +126,7 @@ public class SagOptimizer {
     }
 
 
-    private interface WeightVector {
+    private interface WeightVector <T extends TrainingRow> {
 
         public void scale(double alpha, double lambda);
 
@@ -137,13 +138,13 @@ public class SagOptimizer {
 
         public double[][] getWeightVector();
 
-        public double[] predict(final ClassificationTrainingRow row);
+        public double[] predict(final T row);
     }
 
     private interface WeightVectorConsumer {
         public double calculate(double val, int c, int i);
     }
-    private abstract class AbstractWeightVector implements WeightVector {
+    private abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVector<T> {
         protected final double[][] m_data;
 
         public AbstractWeightVector(final int nFets, final int nCats) {
@@ -173,7 +174,7 @@ public class SagOptimizer {
          * {@inheritDoc}
          */
         @Override
-        public double[] predict(final ClassificationTrainingRow row) {
+        public double[] predict(final T row) {
             double[] prediction = new double[m_data.length];
             for (int c = 0; c < m_data.length; c++) {
                 double p = 0.0;
@@ -191,7 +192,7 @@ public class SagOptimizer {
         }
     }
 
-    private class ScaledWeightVector extends AbstractWeightVector {
+    private class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
         private double m_scale;
 
         public ScaledWeightVector(final int nFets, final int nCats) {
@@ -251,7 +252,7 @@ public class SagOptimizer {
          * {@inheritDoc}
          */
         @Override
-        public double[] predict(final ClassificationTrainingRow row) {
+        public double[] predict(final T row) {
             double[] prediction = super.predict(row);
             for (int c = 0; c < prediction.length; c++) {
                 prediction[c] *= m_scale;
@@ -265,7 +266,7 @@ public class SagOptimizer {
      *
      * @author Adrian Nembach, KNIME.com
      */
-    private class SimpleWeightVector extends AbstractWeightVector {
+    private class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
 
 
         public SimpleWeightVector(final int nFets, final int nCats) {

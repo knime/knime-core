@@ -86,7 +86,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
         m_alpha = alpha;
     }
 
-    public double[][] fit(final ClassificationTrainingData data) {
+    public double[][] fit(final TrainingData<ClassificationTrainingRow> data) {
 
         final int numClasses = extractNumberOfClassesFromData(data);
         if (numClasses < 3) {
@@ -167,7 +167,7 @@ public class MultinomialRegression extends AbstractLogisticRegression {
      * @param beta
      * @return the unnormalized log-likelihood
      */
-    private double calculateAllClassLossSum(final ClassificationTrainingData data, final double[][] beta) {
+    private double calculateAllClassLossSum(final TrainingData<ClassificationTrainingRow> data, final double[][] beta) {
 
         double loss = 0.0;
         int nc = beta.length;

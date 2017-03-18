@@ -56,8 +56,8 @@ import java.util.List;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.sag.MultinomialLoss;
 import org.knime.base.node.mine.regression.logistic.learner4.sag.SagOptimizer;
 import org.knime.core.node.CanceledExecutionException;
@@ -77,7 +77,7 @@ public class SagLogRegLearner implements LogRegLearner {
     @Override
     public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        final SagOptimizer sagOpt = new SagOptimizer();
+        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer();
         ClassData classData = new ClassData(data);
         MultinomialLoss loss = new MultinomialLoss(classData.m_catCount);
         double alpha = 1e-3;
@@ -96,7 +96,7 @@ public class SagLogRegLearner implements LogRegLearner {
         return null;
     }
 
-    private class ClassData implements ClassificationTrainingData {
+    private class ClassData implements TrainingData<ClassificationTrainingRow> {
 
         private final List<ClassificationTrainingRow> m_rows;
         private final int m_catCount;
@@ -145,7 +145,7 @@ public class SagLogRegLearner implements LogRegLearner {
          * {@inheritDoc}
          */
         @Override
-        public int getCategoryCount() {
+        public int getTargetDimension() {
             return m_catCount;
         }
 

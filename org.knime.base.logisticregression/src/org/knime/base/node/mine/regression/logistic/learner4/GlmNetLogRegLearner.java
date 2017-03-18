@@ -57,12 +57,12 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MaxPathStrategy;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression.ProblemFormulation;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.PathStrategy;
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -109,7 +109,7 @@ public class GlmNetLogRegLearner implements LogRegLearner {
         return "";
     }
 
-    private class ClassData implements ClassificationTrainingData {
+    private class ClassData implements TrainingData<ClassificationTrainingRow> {
 
         private final List<ClassificationTrainingRow> m_rows;
         private final int m_catCount;
@@ -158,7 +158,7 @@ public class GlmNetLogRegLearner implements LogRegLearner {
          * {@inheritDoc}
          */
         @Override
-        public int getCategoryCount() {
+        public int getTargetDimension() {
             return m_catCount;
         }
 

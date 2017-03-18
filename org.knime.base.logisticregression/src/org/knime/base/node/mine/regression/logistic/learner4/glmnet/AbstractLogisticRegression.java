@@ -58,8 +58,8 @@ import java.util.Iterator;
  */
 abstract class AbstractLogisticRegression {
 
-    static int extractNumberOfClassesFromData(final ClassificationTrainingData data) {
-        return data.getCategoryCount();
+    static int extractNumberOfClassesFromData(final TrainingData<ClassificationTrainingRow> data) {
+        return data.getTargetDimension();
     }
 
 
@@ -67,7 +67,7 @@ abstract class AbstractLogisticRegression {
         return 1.0 / (1 + Math.exp(-response));
     }
 
-    static double calculateSumLogLikelihood(final ClassificationTrainingData data, final double[] beta) {
+    static double calculateSumLogLikelihood(final TrainingData<ClassificationTrainingRow> data, final double[] beta) {
         double sumLogLikelihood = 0;
         for (ClassificationTrainingRow x : data) {
             double y = x.getCategory() == 0 ? 1 : 0;
@@ -80,9 +80,9 @@ abstract class AbstractLogisticRegression {
         return sumLogLikelihood;
     }
 
-    static double maxWorkingResponseDotProduct(final ClassificationTrainingData data) {
+    static double maxWorkingResponseDotProduct(final TrainingData<ClassificationTrainingRow> data) {
         final int nfet = data.getFeatureCount();
-        final int ncat = data.getCategoryCount();
+        final int ncat = data.getTargetDimension();
         final double[][] dotProducts = new double[ncat][nfet];
         final double k = ncat;
         // working response if row has not current class
@@ -114,7 +114,8 @@ abstract class AbstractLogisticRegression {
     }
 
     void updateApproximation(final MutableWeightingStrategy weights, final double[] workingResponses,
-        final ClassificationTrainingData data, final double[] beta, final int currentClass, final ApproximationPreparator approxPreparator) {
+        final TrainingData<ClassificationTrainingRow> data, final double[] beta, final int currentClass,
+        final ApproximationPreparator approxPreparator) {
         Iterator<ClassificationTrainingRow> iter = data.iterator();
         for (int rn = 0; iter.hasNext(); rn++) {
             ClassificationTrainingRow row = iter.next();
