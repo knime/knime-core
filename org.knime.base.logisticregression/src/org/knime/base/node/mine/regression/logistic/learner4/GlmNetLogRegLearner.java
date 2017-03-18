@@ -63,13 +63,9 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MaxPathStrat
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression.ProblemFormulation;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.PathStrategy;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * Logistic regression learner that is based on the glmnet algorithm.
@@ -78,27 +74,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  */
 public class GlmNetLogRegLearner implements LogRegLearner {
 
-    private final PMMLPortObjectSpec m_pmmlSpec;
-    private final DataTableSpec m_tableSpec;
-    private final List<DataColumnSpec> m_specialColumns;
-    private final DataCell m_targetReferenceCategory;
-    private final boolean m_sortTargetCategories;
-    private final boolean m_sortFactorsCategories;
 
     /**
      *
      */
-    public GlmNetLogRegLearner(final PMMLPortObjectSpec spec,
-    final DataTableSpec tableSpec,
-    final List<DataColumnSpec> specialColumns, final DataCell targetReferenceCategory,
-    final boolean sortTargetCategories,
-    final boolean sortFactorsCategories) {
-        m_pmmlSpec = spec;
-        m_tableSpec = tableSpec;
-        m_specialColumns = specialColumns;
-        m_targetReferenceCategory = targetReferenceCategory;
-        m_sortTargetCategories = sortTargetCategories;
-        m_sortFactorsCategories = sortFactorsCategories;
+    public GlmNetLogRegLearner() {
     }
 
     /**
@@ -229,56 +209,5 @@ public class GlmNetLogRegLearner implements LogRegLearner {
 
     }
 
-//    private class ClassDataRowIterator implements Iterator<ClassificationTrainingRow> {
-//
-//        private final Iterator<RegressionTrainingRow> m_iter;
-//
-//        ClassDataRowIterator(final Iterator<RegressionTrainingRow> iter) {
-//            m_iter = iter;
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public boolean hasNext() {
-//            return m_iter.hasNext();
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public ClassDataRow next() {
-//            return new ClassDataRow(m_iter.next());
-//        }
-//
-//    }
-//
-//    private class ClassDataRow implements ClassificationTrainingRow {
-//
-//        final RegressionTrainingRow m_row;
-//
-//        ClassDataRow(final RegressionTrainingRow row) {
-//            m_row = row;
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public double getFeature(final int idx) {
-//            return m_row.getParameterApache().getEntry(0, idx);
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public int getCategory() {
-//            return (int)m_row.getTarget();
-//        }
-//
-//    }
 
 }
