@@ -193,6 +193,14 @@ public class SagLogRegLearner implements LogRegLearner {
             return m_id;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return "[id: " + m_id + " cat: " + m_cat + "]";
+        }
+
     }
 
 }

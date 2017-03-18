@@ -53,6 +53,7 @@ import java.util.Iterator;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 
 /**
  * Optimizer based on the stochastic average gradient method.
@@ -79,9 +80,9 @@ public class SagOptimizer <T extends TrainingRow> {
         double[][] d = new double[nCats - 1][nFets];
         int nCovered = 0;
 
-        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
-//        LearningRateStrategy<ClassificationTrainingRow> learningRateStrategy =
-//                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
+//        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
+        LearningRateStrategy<T> learningRateStrategy =
+                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
 
         WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats);
 

@@ -68,7 +68,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     private final StepSizeType m_stepSizeType;
     private final int m_nRows;
 
-    private double m_lipschitz = 1;
+    private double m_lipschitz = 1.0;
 
     enum StepSizeType {
         /**
@@ -124,12 +124,17 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         double[] newPred = calculateNewPrediction(prediction, gradient, squaredNorm);
         double newLoss = m_loss.evaluate(row, newPred);
 
+        assert Double.isFinite(currentLoss);
+        assert Double.isFinite(gradientNorm);
+        assert Double.isFinite(gg);
+        assert Double.isFinite(newLoss);
+
         while (gradientNorm > 1e-8 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
             m_lipschitz *= 2;
             for (int i = 0; i < newPred.length; i++) {
                 newPred[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;
             }
-            newLoss = m_loss.evaluate(row, prediction);
+            newLoss = m_loss.evaluate(row, newPred);
         }
 
         double stepSize;
@@ -145,7 +150,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
                 throw new IllegalStateException("Unknown StepSizeType: " + m_stepSizeType);
         }
 
-        m_lipschitz *= Math.pow(2, -1 / m_nRows);
+        m_lipschitz *= Math.pow(2, -1.0 / m_nRows);
         return stepSize;
     }
 
@@ -168,7 +173,8 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
 
     private double calculateSquaredNorm(final T row) {
         double norm = 0.0;
-        for (int i = 0; i < m_nFets; i++) {
+        // row.getFeature(0) returns always a 1 for the intercept term
+        for (int i = 1; i <= m_nFets; i++) {
             double fet = row.getFeature(i);
             norm += fet * fet;
         }
