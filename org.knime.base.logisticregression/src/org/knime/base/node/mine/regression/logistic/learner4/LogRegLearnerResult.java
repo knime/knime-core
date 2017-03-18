@@ -70,7 +70,11 @@ public final class LogRegLearnerResult {
      */
     public LogRegLearnerResult(final RealMatrix beta, final RealMatrix covMat, final int iterations, final double logLikelihood) {
         m_beta = beta.copy();
-        m_covMat = covMat.copy();
+        if (covMat != null) {
+            m_covMat = covMat.copy();
+        } else {
+            m_covMat = null;
+        }
         m_iter = iterations;
         m_logLike = logLikelihood;
     }
