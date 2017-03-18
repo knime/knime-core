@@ -140,8 +140,8 @@ class LogRegCoordinator {
 //        LogRegLearner learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
 //        Collections.emptyList(), m_settings.getTargetReferenceCategory(),
 //            m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
-        LogRegLearner learner = new GlmNetLogRegLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(), Collections.emptyList(),
-            m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
+//        LogRegLearner learner = new GlmNetLogRegLearner();
+        LogRegLearner learner = new SagLogRegLearner();
         double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
         exec.setMessage("Analyzing categorical data");
         BufferedDataTable dataTable =
