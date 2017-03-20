@@ -44,92 +44,83 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   09.03.2017 (Adrian): created
+ *   20.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import java.util.Iterator;
-
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 
 /**
- * Optimizer based on the stochastic average gradient method.
+ * WeightVector implementation that uses a scalar variable to implement simple scaling
+ * of all weights.
  *
  * @author Adrian Nembach, KNIME.com
- * @param <T> The type of TrainingRow we are dealing with
  */
-public class SagOptimizer <T extends TrainingRow> {
+class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
+    private double m_scale;
 
-
-    /**
-     * @param data the training data
-     * @param loss the loss function
-     * @param maxIter the maximum number of iterations
-     * @param lambda the degree of regularization
-     * @return a matrix of weights for a linear model
-     */
-    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxIter, final double lambda) {
-        final int nRows = data.getRowCount();
-        final int nFets = data.getFeatureCount() + 1;
-        final int nCats = data.getTargetDimension();
-        // initialize
-        double[][] g = new double[nCats - 1][nRows];
-        double[][] d = new double[nCats - 1][nFets];
-        int nCovered = 0;
-
-//        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
-        LearningRateStrategy<T> learningRateStrategy =
-                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
-
-        WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats);
-
-        // iterate over samples
-        data.permute();
-        Iterator<T> iterator = data.iterator();
-        for (int k = 0; k < maxIter; k++) {
-            T row;
-            if (iterator.hasNext()) {
-                row = iterator.next();
-            } else {
-                data.permute();
-                iterator = data.iterator();
-                row = iterator.next();
-            }
-
-            double[] prediction = w.predict(row);
-            double[] sig = loss.gradient(row, w.predict(row));
-
-            int id = row.getId();
-            for (int c = 0; c < nCats - 1; c++) {
-                // TODO exploit sparseness
-                for (int i = 0; i < nFets; i++) {
-                    double newD = row.getFeature(i) * (sig[c] - g[c][id]);
-                    assert Double.isFinite(newD);
-                    d[c][i] += newD;
-                }
-                g[c][id] = sig[c];
-            }
-
-
-            if (nCovered < nRows) {
-                nCovered++;
-            }
-
-            double alpha = learningRateStrategy.getCurrentLearningRate(row, prediction, sig);
-            w.scale(alpha, lambda);
-
-            w.update(alpha, d, nCovered);
-
-            w.checkNormalize();
-
-        }
-
-        // finalize
-        w.finalize(d);
-
-        return w.getWeightVector();
+    public ScaledWeightVector(final int nFets, final int nCats) {
+        super(nFets, nCats);
+        m_scale = 1.0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scale(final double alpha, final double lambda) {
+        m_scale *= 1 - alpha * lambda;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final double alpha, final double[][] d, final int nCovered) {
+        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void checkNormalize() {
+        if (m_scale > 1e100 || m_scale < -1e100 || (m_scale > 0 && m_scale < 1e-100) || (m_scale < 0 && m_scale > -1e-100)) {
+            doFinalize();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[][] getWeightVector() {
+        assert m_scale == 1.0 : "Finalize must be called before this method.";
+        return super.getWeightVector();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finalize(final double[][] d) {
+        doFinalize();
+    }
+
+    private void doFinalize() {
+        updateData((final double val, final int c, final int i) -> val * m_scale);
+        m_scale = 1.0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row) {
+        double[] prediction = super.predict(row);
+        for (int c = 0; c < prediction.length; c++) {
+            prediction[c] *= m_scale;
+        }
+        return prediction;
+    }
 }
