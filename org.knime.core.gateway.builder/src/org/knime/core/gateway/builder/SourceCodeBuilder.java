@@ -252,9 +252,15 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
                     }
                 });
                 specsByPath.putAll(thisSpecs);
-                Map<String, ObjectSpec> specsById = new HashMap<>();
+                Map<String, ObjectSpec> serviceSpecsById = new HashMap<>();
+                Map<String, ObjectSpec> entitySpecsById = new HashMap<>();
                 specsByPath.values().forEach(s -> {
-                    specsById.put(s.getId(), s);
+                    if (s.getType().equals(ObjectSpec.ObjecType.ENTITY.id())) {
+                        entitySpecsById.put(s.getId(), s);
+                    }
+                    if (s.getType().equals(ObjectSpec.ObjecType.SERVICE.id())) {
+                        serviceSpecsById.put(s.getId(), s);
+                    }
                 });
 
                 //generate source files
@@ -270,7 +276,7 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
 
                     //get field import specs
                     List<ObjectSpec> fieldImportSpecs = entry.getValue().getFieldImportSpecs().stream().map(s -> {
-                        ObjectSpec os = specsById.get(s);
+                        ObjectSpec os = entitySpecsById.get(s);
                         if (os == null) {
                             //spec id couldn't be found -> very likely a missing dependency
                             throw new IllegalStateException("Object spec with id '" + s
@@ -288,7 +294,7 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
 
                         //get import specs
                         List<ObjectSpec> importSpecs =
-                            entry.getValue().getImportSpecs().stream().map(s -> specsById.get(s))
+                            entry.getValue().getImportSpecs().stream().map(s -> serviceSpecsById.get(s))
                                 .filter(s -> s.getType().equals(ObjectSpec.ObjecType.SERVICE.id()))
                                 .collect(Collectors.toList());
                         serviceGen.setServiceImport(importSpecs);
@@ -303,7 +309,7 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
 
                         //get import specs
                         List<ObjectSpec> importSpecs =
-                            entry.getValue().getImportSpecs().stream().map(s -> specsById.get(s))
+                            entry.getValue().getImportSpecs().stream().map(s -> entitySpecsById.get(s))
                                 .filter(s -> s.getType().equals(ObjectSpec.ObjecType.ENTITY.id()))
                                 .collect(Collectors.toList());
                         entityGen.setEntityImport(importSpecs);
