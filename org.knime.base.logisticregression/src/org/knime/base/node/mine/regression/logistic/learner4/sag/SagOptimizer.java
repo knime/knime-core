@@ -99,7 +99,7 @@ public class SagOptimizer <T extends TrainingRow> {
             }
 
             double[] prediction = w.predict(row);
-            double[] sig = loss.gradient(row, w.predict(row));
+            double[] sig = loss.gradient(row, prediction);
 
             int id = row.getId();
             for (int c = 0; c < nCats - 1; c++) {
@@ -123,6 +123,10 @@ public class SagOptimizer <T extends TrainingRow> {
             w.update(alpha, d, nCovered);
 
             w.checkNormalize();
+
+            if (w.getChangeToWeightRatio() < 1e-5) {
+                break;
+            }
 
         }
 

@@ -68,4 +68,6 @@ interface WeightVector <T extends TrainingRow> {
     public double[][] getWeightVector();
 
     public double[] predict(final T row);
+
+    public double getChangeToWeightRatio();
 }
