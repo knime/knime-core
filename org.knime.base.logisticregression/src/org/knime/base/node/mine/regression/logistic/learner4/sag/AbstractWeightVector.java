@@ -62,10 +62,6 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
 
     protected final double[][] m_data;
 
-    // note that any scaling that is applied to all weights will not change this ratio
-    // therefore we can implement it here in a memory-friendly way
-    private double m_maxChangeWeightRatio;
-
     public AbstractWeightVector(final int nFets, final int nCats) {
         m_data = new double[nCats - 1][nFets];
     }
@@ -76,17 +72,11 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         double maxWeight = 0.0;
         for (int c = 0; c < m_data.length; c++) {
             for (int i = 0; i < m_data[c].length; i++) {
-                double oldVal = m_data[c][i];
                 double val = func.calculate(m_data[c][i], c, i);
                 assert Double.isFinite(val);
-                double absVal = Math.abs(val);
-                maxWeight = absVal > maxWeight ? absVal : maxWeight;
-                double absDiff = Math.abs(oldVal - val);
-                maxChange = absDiff > maxChange ? absDiff : maxChange;
                 m_data[c][i] = val;
             }
         }
-        m_maxChangeWeightRatio = maxChange / maxWeight;
     }
 
     /**
@@ -113,13 +103,6 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         return prediction;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getChangeToWeightRatio() {
-        return m_maxChangeWeightRatio;
-    }
 
     @Override
     public String toString() {

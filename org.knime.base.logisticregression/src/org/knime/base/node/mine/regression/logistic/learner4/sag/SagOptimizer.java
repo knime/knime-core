@@ -84,6 +84,7 @@ public class SagOptimizer <T extends TrainingRow> {
                 new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
 
         WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats);
+        double[][] oldW = new double[nCats - 1][nFets];
 
         // iterate over samples
         data.permute();
@@ -124,7 +125,8 @@ public class SagOptimizer <T extends TrainingRow> {
 
             w.checkNormalize();
 
-            if (w.getChangeToWeightRatio() < 1e-5) {
+            // after each epoch check how much the weights changed
+            if ((k+1) % nRows == 0 && relativeChangeTooSmall(oldW, w)) {
                 break;
             }
 
@@ -134,6 +136,27 @@ public class SagOptimizer <T extends TrainingRow> {
         w.finalize(d);
 
         return w.getWeightVector();
+    }
+
+    private boolean relativeChangeTooSmall(final double[][] oldW, final WeightVector<T> w) {
+        double maxChange = 0.0;
+        double maxWeight = 0.0;
+
+        double[][] newW = w.getWeightVector();
+        assert oldW.length == newW.length : "Number of categories in oldW and newW don't match.";
+        for (int i = 0; i < oldW.length; i++) {
+            assert oldW[i].length == newW[i].length : "Number of feature weights in oldW and newW don't match.";
+            for (int j = 0; j < oldW[i].length; j++) {
+                double val = newW[i][j];
+                double absVal = Math.abs(val);
+                double absDiff = Math.abs(val - oldW[i][j]);
+                maxWeight = absVal > maxWeight ? absVal : maxWeight;
+                maxChange = absDiff > maxChange ? absDiff : maxChange;
+                oldW[i][j] = val;
+            }
+        }
+
+        return maxChange / maxWeight < 1e-3;
     }
 
 }

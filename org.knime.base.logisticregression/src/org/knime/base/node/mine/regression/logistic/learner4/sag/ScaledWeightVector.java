@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.apache.commons.math3.util.MathUtils;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
@@ -95,7 +96,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public double[][] getWeightVector() {
-        assert m_scale == 1.0 : "Finalize must be called before this method.";
+        doFinalize();
         return super.getWeightVector();
     }
 
@@ -108,8 +109,11 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     }
 
     private void doFinalize() {
-        updateData((final double val, final int c, final int i) -> val * m_scale);
-        m_scale = 1.0;
+        // a scale of 1.0 means that no update is necessary
+        if (!MathUtils.equals(m_scale, 1.0)) {
+            updateData((final double val, final int c, final int i) -> val * m_scale);
+            m_scale = 1.0;
+        }
     }
 
     /**
