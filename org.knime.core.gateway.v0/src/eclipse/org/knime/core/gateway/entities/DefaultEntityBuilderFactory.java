@@ -48,7 +48,7 @@
  */
 package org.knime.core.gateway.entities;
 
-import org.knime.core.gateway.codegen.spec.EntitySpecs;
+import org.knime.core.gateway.ObjectSpecUtil;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -67,9 +67,9 @@ public class DefaultEntityBuilderFactory implements EntityBuilderFactory {
     public <E extends GatewayEntity, B extends GatewayEntityBuilder<E>> B
         createEntityBuilder(final Class<B> builderInterface) {
         try {
-            String name = EntitySpecs.Builder.extractNameFromClass(builderInterface);
-            String namespace = EntitySpecs.Builder.extractNamespaceFromClass(builderInterface);
-            String clazz = EntitySpecs.Impl.getFullyQualifiedName(namespace, name);
+            String name = ObjectSpecUtil.extractNameFromClass(builderInterface, "builder");
+            String namespace = ObjectSpecUtil.extractNamespaceFromClass(builderInterface, "builder");
+            String clazz = ObjectSpecUtil.getFullyQualifiedName(namespace, name, "impl");
             //TODO more generic way to create the builder (e.g. in its own source file)
             clazz += "$" + "Default" + name + "Builder";
             return (B)Class.forName(clazz).newInstance();

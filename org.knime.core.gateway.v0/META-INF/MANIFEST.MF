@@ -21,9 +21,7 @@ Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.knime.core.gateway.codegen,
- org.knime.core.gateway.codegen.spec,
- org.knime.core.gateway.codegen.types,
+Export-Package: org.knime.core.gateway,
  org.knime.core.gateway.entities,
  org.knime.core.gateway.server,
  org.knime.core.gateway.services,

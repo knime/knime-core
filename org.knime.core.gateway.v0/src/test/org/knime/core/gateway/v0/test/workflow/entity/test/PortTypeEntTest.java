@@ -95,13 +95,13 @@ public class PortTypeEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("W3vwL");	
+ 		valueList.add("OyKNH");	
 
- 		valueList.add("ceJWG");	
+ 		valueList.add("fediD");	
 
  		valueList.add(true);	
 
- 		valueList.add(834853995);	
+ 		valueList.add(-521125611);	
 
  		valueList.add(false);	
 

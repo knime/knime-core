@@ -176,21 +176,21 @@ public class NativeNodeEntTest {
 		subList6.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList6);
 
- 		valueList.add("cPlIH");	
+ 		valueList.add("yQqXd");	
 
- 		valueList.add("OpTzS");	
+ 		valueList.add("YOW4g");	
 
- 		valueList.add("tLw99");	
+ 		valueList.add("lRMBO");	
 
- 		valueList.add("LZm7R");	
+ 		valueList.add("2MEES");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(false);	
+ 		valueList.add(true);	
 
- 		valueList.add("5im4t");	
+ 		valueList.add("szkWf");	
 
- 		valueList.add(false);	
+ 		valueList.add(true);	
 
  		valueList.add(NodeAnnotationEntTest.createValueList());
 

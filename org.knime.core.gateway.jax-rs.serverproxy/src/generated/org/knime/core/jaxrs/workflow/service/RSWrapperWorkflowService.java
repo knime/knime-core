@@ -46,7 +46,6 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
-import org.knime.core.jaxrs.workflow.service.RSWrapperWorkflowService;
 import java.util.List;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;

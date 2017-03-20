@@ -8,14 +8,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.knime.core.gateway.codegen.spec.ObjectSpec;
-import org.knime.core.gateway.codegen.spec.ServiceSpecs;
-import org.knime.core.gateway.codegen.types.ObjectDef;
-import org.knime.core.gateway.codegen.types.ServiceDef;
+import org.knime.core.gateway.ObjectSpecUtil;
+import org.knime.core.gateway.ServiceDefUtil;
 import org.knime.core.gateway.server.KnimeGatewayServer;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
@@ -34,26 +33,20 @@ import org.knime.core.jaxrs.providers.json.MapJSONDeserializer;
  */
 public class JettyRestServer implements KnimeGatewayServer {
 
-    public static final ObjectSpec RestWrapperServiceSpec =
-        new ObjectSpec("restwrapper", "RSWrapper##name##", "org.knime.core.jaxrs", "");
-
-    public final static ObjectSpec DefaultServiceSpec =
-        new ObjectSpec("default", "Default##name##", "org.knime.core.gateway.serverproxy", "");
-
     private Server m_server;
 
     @Override
     public void start(final int port) throws Exception {
         //create all default services and wrap them with the rest wrapper services
-        List<ServiceDef> serviceDefs = ObjectDef.readAll(ServiceDef.class);
+        Collection<Pair<String, String>> serviceDefs = ServiceDefUtil.getServices();
         List<GatewayService> services = serviceDefs.stream().map(sd -> {
             try {
                 Class<?> defaultServiceClass =
-                    DefaultServiceSpec.getClassForFullyQualifiedName(sd.getNamespace(), sd.getName());
-                Class<GatewayService> rsWrapperServiceClass = (Class<GatewayService>)RestWrapperServiceSpec
-                    .getClassForFullyQualifiedName(sd.getNamespace(), sd.getName());
+                    ObjectSpecUtil.getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "impl");
+                Class<GatewayService> rsWrapperServiceClass = (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil
+                    .getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "restwrapper");
                 Class<?> serviceInterface =
-                    ServiceSpecs.Api.getClassForFullyQualifiedName(sd.getNamespace(), sd.getName());
+                    ObjectSpecUtil.getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "api");
                 return rsWrapperServiceClass.getConstructor(serviceInterface)
                     .newInstance(defaultServiceClass.newInstance());
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -86,11 +79,11 @@ public class JettyRestServer implements KnimeGatewayServer {
         List<GatewayService> wrappedServices = Arrays.stream(services).map(s -> {
             try {
                 //TODO
-                String namespace = ServiceSpecs.Api.extractNamespaceFromClass(s.getClass());
-                String name = ServiceSpecs.Api.extractNameFromClass(s.getClass());
+                String namespace = ObjectSpecUtil.extractNamespaceFromClass(s.getClass(), "api");
+                String name = ObjectSpecUtil.extractNameFromClass(s.getClass(), "api");
                 Class<GatewayService> rsWrapperServiceClass =
-                    (Class<GatewayService>)RestWrapperServiceSpec.getClassForFullyQualifiedName(namespace, name);
-                Class<?> serviceInterface = ServiceSpecs.Api.getClassForFullyQualifiedName(namespace, name);
+                    (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "restwrapper");
+                Class<?> serviceInterface = ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "api");
                 return rsWrapperServiceClass.getConstructor(serviceInterface).newInstance(s);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException

@@ -101,19 +101,19 @@ public class WorkflowAnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("B21b6");	
+ 		valueList.add("sDE7g");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(-218785965);	
+ 		valueList.add(-151626414);	
 
- 		valueList.add(1788140145);	
+ 		valueList.add(561703821);	
 
- 		valueList.add(-1233684721);	
+ 		valueList.add(1052818443);	
 
- 		valueList.add(-2060662910);	
+ 		valueList.add(-1034189697);	
 
- 		valueList.add("Cecj3");	
+ 		valueList.add("bZfm7");	
 
         return valueList;
     }

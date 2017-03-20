@@ -106,7 +106,7 @@ public class TestEntFromJson implements TestEnt{
     
 	@Override
     public List<String> getPrimitiveList() {
-        	return m_PrimitiveList;
+        	return m_PrimitiveList.stream().map(l -> (String) l ).collect(Collectors.toList());
             
     }
     
@@ -121,7 +121,10 @@ public class TestEntFromJson implements TestEnt{
     
 	@Override
     public Map<Integer, String> getPrimitiveMap() {
-        	return m_PrimitiveMap;
+        	//TODO support non-primitive keys
+    	Map<Integer, String> res = new HashMap<>();
+        m_PrimitiveMap.entrySet().stream().forEach(e -> res.put(e.getKey(), (String) e.getValue()));
+        return res;
             
     }
     

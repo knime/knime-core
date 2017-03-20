@@ -1,0 +1,7 @@
+{
+	"project-dependencies" : [
+			"org.knime.core.gateway.v0"
+		],
+	"default-output-dir" : "src/generated",
+	"default-package" : "org.knime.core.gateway.jaxrs"
+}

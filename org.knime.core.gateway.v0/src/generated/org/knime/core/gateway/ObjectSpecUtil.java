@@ -43,141 +43,163 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Feb 6, 2017 (hornm): created
  */
-package org.knime.core.gateway.codegen.spec;
+package org.knime.core.gateway;
 
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Object specifications, such as package prefix and suffix, name pattern etc. In combination with a namespace and an object name
- * it mainly helps to build the fully qualified name of an interface or class (see
- * {@link #getFullyQualifiedName(String, String)}).
+ * Utility class to essentially deal with the names and namespaces of object definitions and the specifications.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ObjectSpec {
+public final class ObjectSpecUtil {
 
-    private static final String NAME_PLACEHOLDER = "##name##";
-
-    private String m_pattern;
-
-    private String m_packagePrefix;
-
-    private String m_packageSuffix;
-
-    private String m_id;
-
-    /**
-     * A new object spec. The fully qualified name of an object is build like that:
-     * {packagePrefix}.{object-namespace}.{packageSuffix}.{pattern-with-##name##-replaced-by-object-name}
-     *
-     * @param id a unique identifier for the object specification
-     * @param pattern essentially the name of the source file, i.e. the object class or interface. The placeholder
-     *            "##name##" will be replaced by the actual object name.
-     * @param packagePrefix
-     * @param packageSuffix
-     */
-    public ObjectSpec(final String id, final String pattern, final String packagePrefix,
-        final String packageSuffix) {
-        m_id = id;
-        m_pattern = pattern;
-        m_packagePrefix = packagePrefix;
-        m_packageSuffix = packageSuffix;
-    }
-
-    /**
-     * @return the naming pattern that contains a ##name##-placeholder
-     */
-    public String getPattern() {
-        return m_pattern;
-    }
-
-    /**
-     * @return the package prefix
-     */
-    public String getPackagePrefix() {
-        return m_packagePrefix;
-    }
-
-    /**
-     * @return the package suffix
-     */
-    public String getPackageSuffix() {
-        return m_packageSuffix;
-    }
-
-    String getId() {
-        return m_id;
+    private ObjectSpecUtil() {
+        //utility class
     }
 
     /**
      * Composes the fully qualified name with respect to this object specification. It is build in the following manner:
-     * <code>{packagePrefix}.{namespace}.{packageSuffix}.{pattern-with-##name##-replaced-by-objectName}</code>.
-     *
+     * <code>{packagePrefix}.{namespace}.{packageSuffix}.{pattern-with-     *
      * @param namespace
      * @param name
+     * @param specId
      *
      * @return the fully qualified name with respect to this object specification
      */
-    public String getFullyQualifiedName(final String namespace, final String name) {
+    public static String getFullyQualifiedName(final String namespace, final String name, final String specId) {
         StringBuilder builder = new StringBuilder();
-        builder.append(getPackagePrefix());
+        builder.append(getPackagePrefix(specId));
         if (namespace != null) {
             builder.append('.').append(namespace);
         }
-        if (StringUtils.isNotEmpty(getPackageSuffix())) {
-            builder.append('.').append(getPackageSuffix());
+        if (StringUtils.isNotEmpty(getPackageSuffix(specId))) {
+            builder.append('.').append(getPackageSuffix(specId));
         }
-        builder.append('.').append(getPattern().replace(NAME_PLACEHOLDER, name));
+        builder.append('.').append(getPattern(specId).replace(getNamePlaceholder(), name));
         return builder.toString();
     }
 
     /**
      * @param namespace
      * @param name
+     * @param specId
      * @return the actual class for the fully qualified name
      * @throws ClassNotFoundException
      */
-    public Class<?> getClassForFullyQualifiedName(final String namespace, final String name) throws ClassNotFoundException {
-        return Class.forName(getFullyQualifiedName(namespace, name));
+    public static Class<?> getClassForFullyQualifiedName(final String namespace, final String name, final String specId)
+        throws ClassNotFoundException {
+        return Class.forName(getFullyQualifiedName(namespace, name, specId));
     }
 
     /**
      * Little helper to extract the object's name of a fully qualified name, given this spec.
      *
      * @param clazz
+     * @param specId
      * @return the object's name
      */
-    public String extractNameFromClass(final Class<?> clazz) {
+    public static String extractNameFromClass(final Class<?> clazz, final String specId) {
         String n = clazz.getCanonicalName();
         //get rid of all inner classes, proxy classes etc.
         if (n.indexOf("$") > 0) {
             n = n.substring(0, n.indexOf("$"));
         }
         n = n.substring(n.lastIndexOf(".") + 1);
-        int patternOffset = getPattern().indexOf(NAME_PLACEHOLDER);
+        int patternOffset = getPattern(specId).indexOf(getNamePlaceholder());
         return n.substring(patternOffset,
-            n.length() - (getPattern().length() - patternOffset - NAME_PLACEHOLDER.length()));
+            n.length() - (getPattern(specId).length() - patternOffset - getNamePlaceholder().length()));
     }
 
     /**
      * Little helper to extract the object's namespace given this spec.
      *
      * @param clazz
+     * @param specId
      * @return the object's namespace
      */
-    public String extractNamespaceFromClass(final Class<?> clazz) {
+    public static String extractNamespaceFromClass(final Class<?> clazz, final String specId) {
         String n = clazz.getCanonicalName();
-        if (getPackagePrefix().length() > 0) {
-            n = n.substring(getPackagePrefix().length() + 1);
+        if (getPackagePrefix(specId).length() > 0) {
+            n = n.substring(getPackagePrefix(specId).length() + 1);
         }
-        if (getPackageSuffix().length() > 0) {
-            n = n.substring(0, n.lastIndexOf(".") - getPackageSuffix().length() - 1);
+        if (getPackageSuffix(specId).length() > 0) {
+            n = n.substring(0, n.lastIndexOf(".") - getPackageSuffix(specId).length() - 1);
         } else {
             n = n.substring(0, n.lastIndexOf("."));
         }
         return n;
     }
+
+    private static String getPattern(final String specId) {
+		if(specId.equals("test")) {
+			return "##name##Test";
+		}				
+		if(specId.equals("builder")) {
+			return "##name##Builder";
+		}				
+		if(specId.equals("api")) {
+			return "##name##";
+		}				
+		if(specId.equals("impl")) {
+			return "Default##name##";
+		}				
+		if(specId.equals("api")) {
+			return "##name##";
+		}				
+		if(specId.equals("test")) {
+			return "##name##Test";
+		}				
+		return null;
+    }
+
+    private static String getPackagePrefix(final String specId) {
+		if(specId.equals("test")) {
+			return "org.knime.core.gateway.v0";
+		}				
+		if(specId.equals("builder")) {
+			return "org.knime.core.gateway.v0";
+		}				
+		if(specId.equals("api")) {
+			return "org.knime.core.gateway.v0";
+		}				
+		if(specId.equals("impl")) {
+			return "org.knime.core.gateway.v0";
+		}				
+		if(specId.equals("api")) {
+			return "org.knime.core.gateway.v0";
+		}				
+		if(specId.equals("test")) {
+			return "org.knime.core.gateway.v0.test";
+		}				
+		return null;
+    }
+
+    private static String getPackageSuffix(final String specId) {
+		if(specId.equals("test")) {
+			return "test";
+		}				
+		if(specId.equals("builder")) {
+			return "builder";
+		}				
+		if(specId.equals("api")) {
+			return "";
+		}				
+		if(specId.equals("impl")) {
+			return "impl";
+		}				
+		if(specId.equals("api")) {
+			return "";
+		}				
+		if(specId.equals("test")) {
+			return "test";
+		}				
+		return null;
+    }
+
+    private static String getNamePlaceholder() {
+    	return "##name##";
+    }
+
 }

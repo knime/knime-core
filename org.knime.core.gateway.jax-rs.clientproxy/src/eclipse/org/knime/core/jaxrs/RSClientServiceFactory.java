@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
-import org.knime.core.gateway.codegen.spec.ServiceSpecs;
+import org.knime.core.gateway.ObjectSpecUtil;
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
@@ -77,10 +77,10 @@ public class RSClientServiceFactory implements ServiceFactory {
     @Override
     public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
         try {
-            String name = ServiceSpecs.Api.extractNameFromClass(serviceInterface);
-            String namespace = ServiceSpecs.Api.extractNamespaceFromClass(serviceInterface);
+            String name = ObjectSpecUtil.extractNameFromClass(serviceInterface, "api");
+            String namespace = ObjectSpecUtil.extractNamespaceFromClass(serviceInterface, "api");
             String fullyQualitifiedName =
-                org.knime.core.jaxrs.codegen.spec.ServiceSpecs.RestServiceSpec.getFullyQualifiedName(namespace, name);
+                org.knime.core.gateway.jaxrs.ObjectSpecUtil.getFullyQualifiedName(namespace, name, "rest");
 
             Class<?> rsServiceInterface = Class.forName(fullyQualitifiedName);
             List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),

@@ -1,0 +1,10 @@
+{
+	"id" : "tojson",
+	"type" : "entity",
+	"pattern" : "##name##ToJson",
+	"package-prefix" : "org.knime.core.jaxrs",
+	"package-suffix" : "",
+	"output-dir" : "src/generated",
+	"import-specs" : [],
+	"field-import-specs" : ["api"]
+}

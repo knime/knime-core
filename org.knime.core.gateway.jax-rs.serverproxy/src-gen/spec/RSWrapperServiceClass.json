@@ -1,0 +1,10 @@
+{
+	"id" : "restwrapper",
+	"type" : "service",
+	"pattern" : "RSWrapper##name##",
+	"package-prefix" : "org.knime.core.jaxrs",
+	"package-suffix" : "",
+	"output-dir" : "src/generated",
+	"import-specs" : ["api"],
+	"field-import-specs" : ["api"]
+}

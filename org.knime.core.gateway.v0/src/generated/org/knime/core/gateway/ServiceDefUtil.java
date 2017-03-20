@@ -43,26 +43,44 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Feb 21, 2017 (hornm): created
  */
-package org.knime.core.jaxrs.codegen.spec;
+package org.knime.core.gateway;
 
-import org.knime.core.gateway.codegen.spec.ObjectSpec;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
+ * Utility class that provides programmatic access to service definitions of this project.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class EntitySpecs {
+public class ServiceDefUtil {
 
-    private EntitySpecs() {
-        //utility class
+    private static List<Pair<String, String>> SERVICE_DEFS;
+
+    {
+        List<Pair<String, String>> list = new ArrayList<>();
+        list.add(Pair.of("TestService", "test.service"));
+        list.add(Pair.of("RepositoryService", "repository.service"));
+        list.add(Pair.of("ExecutionService", "workflow.service"));
+        list.add(Pair.of("WorkflowService", "workflow.service"));
+        list.add(Pair.of("NodeContainerService", "workflow.service"));
+        SERVICE_DEFS = Collections.unmodifiableList(list);
     }
 
-    public static final ObjectSpec FromJson =
-            new ObjectSpec("fromjson", "##name##FromJson", "org.knime.core.jaxrs", "");
+    private ServiceDefUtil() {
+        // utility class
+    }
 
-    public static final ObjectSpec ToJson = new ObjectSpec("tojson", "##name##ToJson", "org.knime.core.jaxrs", "");
+    /**
+     * @return all names and namespaces of the available services
+     */
+    public static Collection<Pair<String, String>> getServices() {
+        return SERVICE_DEFS;
+    }
 
 }

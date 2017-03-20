@@ -93,11 +93,11 @@ public class NodePortEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(966397281);	
+ 		valueList.add(600507697);	
 
  		valueList.add(PortTypeEntTest.createValueList());
 
- 		valueList.add("JcXVT");	
+ 		valueList.add("8xdsm");	
 
         return valueList;
     }

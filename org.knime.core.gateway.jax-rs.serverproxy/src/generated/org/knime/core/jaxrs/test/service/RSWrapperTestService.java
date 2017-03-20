@@ -47,7 +47,6 @@
 package org.knime.core.jaxrs.test.service;
 
 import java.util.List;
-import org.knime.core.jaxrs.test.service.RSWrapperTestService;
 import org.knime.core.gateway.v0.test.service.TestService;
 import org.knime.core.gateway.v0.test.entity.TestEnt;
 

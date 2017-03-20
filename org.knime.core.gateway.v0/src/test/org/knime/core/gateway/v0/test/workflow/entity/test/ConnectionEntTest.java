@@ -111,13 +111,13 @@ public class ConnectionEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("TSNyL");	
+ 		valueList.add("NWnyx");	
 
- 		valueList.add(-473982780);	
+ 		valueList.add(2004996484);	
 
- 		valueList.add("3VslU");	
+ 		valueList.add("y3JAg");	
 
- 		valueList.add(-768175616);	
+ 		valueList.add(1988471126);	
 
  		valueList.add(false);	
 
@@ -129,7 +129,7 @@ public class ConnectionEntTest {
 		subList6.add(XYEntTest.createValueList());
  		valueList.add(subList6);
 
- 		valueList.add("ADvOF");	
+ 		valueList.add("fE1Wn");	
 
         return valueList;
     }

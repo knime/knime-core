@@ -1,0 +1,10 @@
+{
+	"id" : "test",
+	"type" : "service",
+	"pattern" : "##name##Test",
+	"package-prefix" : "org.knime.core.gateway.v0",
+	"package-suffix" : "test",
+	"output-dir" : "src/test",
+	"import-specs" : ["api"],
+	"field-import-specs" : ["api", "test"]
+}

@@ -150,16 +150,16 @@ public class TestServiceTest {
     @Test
     public void test_updatePrimitives() {
 		//create parameter values
-		String s = "FM08Z";
+		String s = "sGlKv";
 		List<String> stringlist = new ArrayList<>();
-		stringlist.add("KbJpP");
-		stringlist.add("sgd52");
-		stringlist.add("FzX85");
-		stringlist.add("sIhSb");
-		stringlist.add("R4u9g");
+		stringlist.add("Y36Dh");
+		stringlist.add("fWFH7");
+		stringlist.add("ZTd2H");
+		stringlist.add("GfJ6l");
+		stringlist.add("BxnET");
  
 		//create return value   
-		double res = 0.936759910989434;        
+		double res = 0.9204246238097817;        
 
 		//mock return value
 		Mockito.when(m_serviceMock.updatePrimitives(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
