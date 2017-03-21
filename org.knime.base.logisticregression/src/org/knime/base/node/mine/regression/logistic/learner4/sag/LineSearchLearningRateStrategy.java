@@ -67,6 +67,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     private final int m_nFets;
     private final StepSizeType m_stepSizeType;
     private final int m_nRows;
+    private final double m_lipschitzMultiplier;
 
     private double m_lipschitz = 1.0;
 
@@ -100,6 +101,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         m_nFets = data.getFeatureCount();
         m_nRows = data.getRowCount();
         m_stepSizeType = stepSizeType;
+        m_lipschitzMultiplier = Math.pow(2, -1.0/m_nRows);
     }
 
     /**
@@ -120,16 +122,14 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         // line search for lipschitz
         double currentLoss = m_loss.evaluate(row, prediction);
         double gradientNorm = calculateSquaredNorm(gradient);
-        double gg = gradientNorm * squaredNorm;
         double[] newPred = calculateNewPrediction(prediction, gradient, squaredNorm);
         double newLoss = m_loss.evaluate(row, newPred);
 
         assert Double.isFinite(currentLoss);
         assert Double.isFinite(gradientNorm);
-        assert Double.isFinite(gg);
         assert Double.isFinite(newLoss);
 
-        while (gradientNorm > 1e-8 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
+        while (gradientNorm > 1e-8 && newLoss > currentLoss - gradientNorm / (2 * m_lipschitz)) {
             m_lipschitz *= 2;
             for (int i = 0; i < newPred.length; i++) {
                 newPred[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;
@@ -141,7 +141,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         // compute stepsize
         switch (m_stepSizeType) {
             case Default:
-                stepSize = 1 / m_lipschitz;
+                stepSize = 1 / (m_lipschitz + m_lambda);
                 break;
             case StronglyConvex:
                 stepSize = 2 / (m_lipschitz + (m_nRows + 1) * m_lambda);
@@ -150,7 +150,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
                 throw new IllegalStateException("Unknown StepSizeType: " + m_stepSizeType);
         }
 
-        m_lipschitz *= Math.pow(2, -1.0 / m_nRows);
+        m_lipschitz *= m_lipschitzMultiplier;
         return stepSize;
     }
 
