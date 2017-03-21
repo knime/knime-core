@@ -82,7 +82,7 @@ public class SagLogRegLearner implements LogRegLearner {
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
         double alpha = 1e-3;
         double lambda = 0;
-        int maxIter = 500000;
+        int maxIter = 50;
         double[][] w = sagOpt.optimize(classData, loss, maxIter, lambda);
         return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
     }

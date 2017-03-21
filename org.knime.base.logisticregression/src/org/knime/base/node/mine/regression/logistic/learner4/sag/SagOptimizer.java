@@ -48,8 +48,6 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import java.util.Iterator;
-
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
@@ -66,11 +64,11 @@ public class SagOptimizer <T extends TrainingRow> {
     /**
      * @param data the training data
      * @param loss the loss function
-     * @param maxIter the maximum number of iterations
+     * @param maxEpoch the maximum number of iterations
      * @param lambda the degree of regularization
      * @return a matrix of weights for a linear model
      */
-    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxIter, final double lambda) {
+    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxEpoch, final double lambda) {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
         final int nCats = data.getTargetDimension();
@@ -87,46 +85,40 @@ public class SagOptimizer <T extends TrainingRow> {
         double[][] oldW = new double[nCats - 1][nFets];
 
         // iterate over samples
-        data.permute();
-        Iterator<T> iterator = data.iterator();
-        for (int k = 0; k < maxIter; k++) {
-            T row;
-            if (iterator.hasNext()) {
-                row = iterator.next();
-            } else {
-                data.permute();
-                iterator = data.iterator();
-                row = iterator.next();
-            }
+        for (int k = 0; k < maxEpoch; k++) {
+            data.permute();
+            for (T row : data) {
 
-            double[] prediction = w.predict(row);
-            double[] sig = loss.gradient(row, prediction);
+                double[] prediction = w.predict(row);
+                double[] sig = loss.gradient(row, prediction);
 
-            int id = row.getId();
-            for (int c = 0; c < nCats - 1; c++) {
-                // TODO exploit sparseness
-                for (int i = 0; i < nFets; i++) {
-                    double newD = row.getFeature(i) * (sig[c] - g[c][id]);
-                    assert Double.isFinite(newD);
-                    d[c][i] += newD;
+                int id = row.getId();
+                for (int c = 0; c < nCats - 1; c++) {
+                    // TODO exploit sparseness
+                    for (int i = 0; i < nFets; i++) {
+                        double newD = row.getFeature(i) * (sig[c] - g[c][id]);
+                        assert Double.isFinite(newD);
+                        d[c][i] += newD;
+                    }
+                    g[c][id] = sig[c];
                 }
-                g[c][id] = sig[c];
+
+
+                if (nCovered < nRows) {
+                    nCovered++;
+                }
+
+                double alpha = learningRateStrategy.getCurrentLearningRate(row, prediction, sig);
+                w.scale(alpha, lambda);
+
+                w.update(alpha, d, nCovered);
+
+                w.checkNormalize();
             }
-
-
-            if (nCovered < nRows) {
-                nCovered++;
-            }
-
-            double alpha = learningRateStrategy.getCurrentLearningRate(row, prediction, sig);
-            w.scale(alpha, lambda);
-
-            w.update(alpha, d, nCovered);
-
-            w.checkNormalize();
 
             // after each epoch check how much the weights changed
-            if ((k+1) % nRows == 0 && relativeChangeTooSmall(oldW, w)) {
+            if (relativeChangeTooSmall(oldW, w)) {
+                System.out.println("Converged after " + (k+1) + " epochs.");
                 break;
             }
 
