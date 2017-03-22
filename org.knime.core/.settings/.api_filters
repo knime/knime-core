@@ -43,6 +43,29 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeFactory.java" type="org.knime.core.node.NodeFactory">
+        <filter id="421654647">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeFactory"/>
+                <message_argument value="isDeprecated()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveView.java" type="org.knime.core.node.interactive.InteractiveView">
+        <filter id="438399040">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="T"/>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/database/writer/DBWriter.java" type="org.knime.core.node.port.database.writer.DBWriter">
         <filter id="403804204">
             <message_arguments>
@@ -66,21 +89,6 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveView.java" type="org.knime.core.node.interactive.InteractiveView">
-        <filter id="438399040">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
-                <message_argument value="T"/>
-                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
-            </message_arguments>
-        </filter>
-        <filter id="439378009">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
-                <message_argument value="T"/>
             </message_arguments>
         </filter>
     </resource>

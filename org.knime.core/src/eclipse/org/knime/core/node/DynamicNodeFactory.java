@@ -125,4 +125,13 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
             return new NoDescriptionProxy(getClass());
         }
     }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.4
+     */
+    @Override
+    protected boolean isDeprecatedInternal() {
+        return super.isDeprecatedInternal();
+    }
 }
