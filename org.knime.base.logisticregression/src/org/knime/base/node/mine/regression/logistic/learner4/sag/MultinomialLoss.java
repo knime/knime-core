@@ -71,7 +71,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
         final double logSumExp = logSumExp(prediction);
         assert Double.isFinite(logSumExp);
         final int cat = row.getCategory();
-        return cat == prediction.length ? logSumExp - 1 : logSumExp - prediction[row.getCategory()];
+        return cat == prediction.length ? logSumExp : logSumExp - prediction[row.getCategory()];
     }
 
     /**
