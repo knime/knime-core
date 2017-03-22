@@ -114,9 +114,9 @@ public class RepoCategoryEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("M4G6v");	
+ 		valueList.add("OcmJJ");	
 
- 		valueList.add("pFmFV");	
+ 		valueList.add("uvlK8");	
 
  		List<List<Object>> subList3 = new ArrayList<>();
 		subList3.add(RepoCategoryEntTest.createValueList());

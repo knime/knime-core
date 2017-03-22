@@ -111,29 +111,29 @@ public class NodeAnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("f98iI");	
+ 		valueList.add("0xehO");	
 
- 		valueList.add("bfdps");	
+ 		valueList.add("W3b4O");	
 
- 		valueList.add(507985249);	
+ 		valueList.add(-1743381779);	
 
- 		valueList.add(-1158371266);	
+ 		valueList.add(-840842721);	
 
- 		valueList.add(879624638);	
+ 		valueList.add(454334434);	
 
- 		valueList.add(109292017);	
+ 		valueList.add(325722197);	
 
- 		valueList.add(1149968279);	
+ 		valueList.add(250789499);	
 
- 		valueList.add("XXvqp");	
+ 		valueList.add("pGgW1");	
 
- 		valueList.add(739370466);	
+ 		valueList.add(1616769127);	
 
- 		valueList.add(-1551719530);	
+ 		valueList.add(-182571202);	
 
- 		valueList.add(-576074134);	
+ 		valueList.add(-2130423255);	
 
- 		valueList.add(-1392759694);	
+ 		valueList.add(-1292784998);	
 
         return valueList;
     }

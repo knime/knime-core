@@ -110,7 +110,7 @@ public class ObjectSpecUtilGenerator extends SourceCodeGenerator {
             context.put("name_placeholder", ObjectSpec.NAME_PLACEHOLDER);
             Template template = null;
             try {
-                template = velocity.getTemplate("/vm-templates/" + SPEC_UTIL_TEMPLATE + ".vm");
+                template = velocity.getTemplate(SPEC_UTIL_TEMPLATE + ".vm");
             } catch (ResourceNotFoundException rnfe) {
                 throw new RuntimeException("Example : error : cannot find template", rnfe);
             } catch (ParseErrorException pee) {

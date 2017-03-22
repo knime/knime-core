@@ -89,9 +89,9 @@ public class XYEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(205757733);	
+ 		valueList.add(1369255007);	
 
- 		valueList.add(1899820557);	
+ 		valueList.add(570403194);	
 
         return valueList;
     }

@@ -89,11 +89,11 @@ public class ExecutionServiceTest {
     @Test
     public void test_getCanExecuteUpToHere() {
 		//create parameter values
-		String workflowID = "AOE4P";
-		String nodeID = "1l6SO";
+		String workflowID = "D0nkI";
+		String nodeID = "Rc5rB";
  
 		//create return value   
-		boolean res = true;        
+		boolean res = false;        
 
 		//mock return value
 		Mockito.when(m_serviceMock.getCanExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
@@ -108,8 +108,8 @@ public class ExecutionServiceTest {
     @Test
     public void test_setExecuteUpToHere() {
 		//create parameter values
-		String workflowID = "51lAq";
-		String nodeID = "W5tDU";
+		String workflowID = "66LMU";
+		String nodeID = "bXAax";
  
 		//create return value   
 		List<Object> values = WorkflowEntTest.createValueList();

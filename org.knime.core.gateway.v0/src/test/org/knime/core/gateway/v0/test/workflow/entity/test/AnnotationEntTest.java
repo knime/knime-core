@@ -107,27 +107,27 @@ public class AnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("fbzBk");	
+ 		valueList.add("BIWIE");	
 
- 		valueList.add(347474664);	
+ 		valueList.add(811311771);	
 
- 		valueList.add(1701083710);	
+ 		valueList.add(305613155);	
 
- 		valueList.add(-223926264);	
+ 		valueList.add(543875561);	
 
- 		valueList.add(1689845555);	
+ 		valueList.add(-607603272);	
 
- 		valueList.add(53133616);	
+ 		valueList.add(-251556952);	
 
- 		valueList.add("PJqdx");	
+ 		valueList.add("pCG4r");	
 
- 		valueList.add(543231156);	
+ 		valueList.add(1415349711);	
 
- 		valueList.add(-294240406);	
+ 		valueList.add(570121351);	
 
- 		valueList.add(366063472);	
+ 		valueList.add(-2018590427);	
 
- 		valueList.add(-2004414403);	
+ 		valueList.add(-183308356);	
 
         return valueList;
     }

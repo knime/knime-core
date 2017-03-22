@@ -89,9 +89,9 @@ public class JobManagerEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("ba3Xy");	
+ 		valueList.add("p4Wxt");	
 
- 		valueList.add("VINcX");	
+ 		valueList.add("Q8YIx");	
 
         return valueList;
     }

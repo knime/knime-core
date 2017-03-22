@@ -198,11 +198,11 @@ public class WorkflowEntTest {
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
  		Map<String, List<Object>> subMap1 = new HashMap<>();
- 		subMap1.put("vvHgE", NodeEntTest.createValueList());
- 		subMap1.put("HnNXy", NodeEntTest.createValueList());
- 		subMap1.put("UdWmg", NodeEntTest.createValueList());
- 		subMap1.put("6cnw6", NodeEntTest.createValueList());
- 		subMap1.put("tPvHl", NodeEntTest.createValueList());
+ 		subMap1.put("fosqT", NodeEntTest.createValueList());
+ 		subMap1.put("EctMI", NodeEntTest.createValueList());
+ 		subMap1.put("hc9Ij", NodeEntTest.createValueList());
+ 		subMap1.put("lla3W", NodeEntTest.createValueList());
+ 		subMap1.put("nJ5zx", NodeEntTest.createValueList());
  		valueList.add(subMap1);
 
  		List<List<Object>> subList2 = new ArrayList<>();
@@ -251,19 +251,19 @@ public class WorkflowEntTest {
 		subList9.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList9);
 
- 		valueList.add("neC1e");	
+ 		valueList.add("RKQe2");	
 
- 		valueList.add("C6Uuz");	
+ 		valueList.add("GjgY0");	
 
- 		valueList.add("04nv3");	
+ 		valueList.add("Wi6au");	
 
- 		valueList.add("U3331");	
+ 		valueList.add("nV2t4");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(false);	
+ 		valueList.add(true);	
 
- 		valueList.add("zFXE7");	
+ 		valueList.add("VuCCg");	
 
  		valueList.add(true);	
 

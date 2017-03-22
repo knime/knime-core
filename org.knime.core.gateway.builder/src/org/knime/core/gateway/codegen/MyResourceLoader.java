@@ -74,7 +74,7 @@ public class MyResourceLoader extends ResourceLoader {
      */
     @Override
     public InputStream getResourceStream(final String source) throws ResourceNotFoundException {
-        return getClass().getResourceAsStream(source);
+        return Thread.currentThread().getContextClassLoader().getResourceAsStream(source);
     }
 
     /**

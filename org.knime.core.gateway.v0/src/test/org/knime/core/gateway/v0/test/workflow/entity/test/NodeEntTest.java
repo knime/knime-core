@@ -168,19 +168,19 @@ public class NodeEntTest {
 		subList5.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList5);
 
- 		valueList.add("x2NYD");	
+ 		valueList.add("gSJz6");	
 
- 		valueList.add("OpA1H");	
+ 		valueList.add("JaPcI");	
 
- 		valueList.add("kXLZo");	
+ 		valueList.add("YwaMh");	
 
- 		valueList.add("bZfhO");	
+ 		valueList.add("MkKvE");	
 
  		valueList.add(BoundsEntTest.createValueList());
 
  		valueList.add(true);	
 
- 		valueList.add("r3eKe");	
+ 		valueList.add("ymBpt");	
 
  		valueList.add(true);	
 

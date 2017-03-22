@@ -89,9 +89,9 @@ public class NodeMessageEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("875Pt");	
+ 		valueList.add("QhpmC");	
 
- 		valueList.add("rOJcA");	
+ 		valueList.add("3A9kp");	
 
         return valueList;
     }

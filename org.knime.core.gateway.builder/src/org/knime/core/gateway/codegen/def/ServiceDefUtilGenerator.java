@@ -110,7 +110,7 @@ public class ServiceDefUtilGenerator extends SourceCodeGenerator {
             context.put("package", m_defaultPackage);
             Template template = null;
             try {
-                template = velocity.getTemplate("/vm-templates/" + DEF_UTIL_TEMPLATE + ".vm");
+                template = velocity.getTemplate(DEF_UTIL_TEMPLATE + ".vm");
             } catch (ResourceNotFoundException rnfe) {
                 throw new RuntimeException("Example : error : cannot find template", rnfe);
             } catch (ParseErrorException pee) {
