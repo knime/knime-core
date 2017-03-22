@@ -377,6 +377,7 @@ public final class RepositoryFactory {
                 GlobalClassCreator.lock.unlock();
             }
 
+            // DynamicNodeFactory implementations can set deprecation independently from extension
             if (factory.isDeprecated()) {
                 continue;
             }
