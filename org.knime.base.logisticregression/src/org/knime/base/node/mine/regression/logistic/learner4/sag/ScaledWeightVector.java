@@ -60,8 +60,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
     private double m_scale;
 
-    public ScaledWeightVector(final int nFets, final int nCats) {
-        super(nFets, nCats);
+    public ScaledWeightVector(final int nFets, final int nCats, final boolean fitIntercept) {
+        super(nFets, nCats, fitIntercept);
         m_scale = 1.0;
     }
 
@@ -78,7 +78,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public void update(final double alpha, final double[][] d, final int nCovered) {
-        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered));
+        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered), true);
     }
 
     /**
@@ -111,7 +111,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     private void doFinalize() {
         // a scale of 1.0 means that no update is necessary
         if (!MathUtils.equals(m_scale, 1.0)) {
-            updateData((final double val, final int c, final int i) -> val * m_scale);
+            updateData((final double val, final int c, final int i) -> val * m_scale, false);
             m_scale = 1.0;
         }
     }
@@ -121,9 +121,18 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public double[] predict(final T row) {
-        double[] prediction = super.predict(row);
+//        double[] prediction = super.predict(row);
+//        for (int c = 0; c < prediction.length; c++) {
+//            prediction[c] *= m_scale;
+//        }
+//        return prediction;
+        double[] prediction = new double[m_data.length];
         for (int c = 0; c < prediction.length; c++) {
-            prediction[c] *= m_scale;
+            double p = 0.0;
+            for (int i = 1; i < m_data[c].length; i++) {
+                p += m_data[c][i] * row.getFeature(i);
+            }
+            prediction[c] = m_data[c][0] + m_scale * p;
         }
         return prediction;
     }

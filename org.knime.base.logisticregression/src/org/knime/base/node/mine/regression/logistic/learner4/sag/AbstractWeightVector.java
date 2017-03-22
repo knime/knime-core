@@ -61,17 +61,19 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVector<T> {
 
     protected final double[][] m_data;
+    private final boolean m_fitIntercept;
 
-    public AbstractWeightVector(final int nFets, final int nCats) {
+    public AbstractWeightVector(final int nFets, final int nCats, final boolean fitIntercept) {
         m_data = new double[nCats - 1][nFets];
+        m_fitIntercept = fitIntercept;
     }
 
 
-    protected void updateData(final WeightVectorConsumer func) {
-        double maxChange = 0.0;
-        double maxWeight = 0.0;
+    protected void updateData(final WeightVectorConsumer func, final boolean includeIntercept) {
+        // if we decided to not fit the intercept at all, we never touch the intercept weight
+        int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
         for (int c = 0; c < m_data.length; c++) {
-            for (int i = 0; i < m_data[c].length; i++) {
+            for (int i = startIdx; i < m_data[c].length; i++) {
                 double val = func.calculate(m_data[c][i], c, i);
                 assert Double.isFinite(val);
                 m_data[c][i] = val;

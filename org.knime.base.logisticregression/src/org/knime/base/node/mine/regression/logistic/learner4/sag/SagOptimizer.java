@@ -68,7 +68,7 @@ public class SagOptimizer <T extends TrainingRow> {
      * @param lambda the degree of regularization
      * @return a matrix of weights for a linear model
      */
-    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxEpoch, final double lambda) {
+    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxEpoch, final double lambda, final boolean fitIntercept) {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
         final int nCats = data.getTargetDimension();
@@ -77,11 +77,11 @@ public class SagOptimizer <T extends TrainingRow> {
         double[][] d = new double[nCats - 1][nFets];
         int nCovered = 0;
 
-//        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-3);
+//        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-4);
         LearningRateStrategy<T> learningRateStrategy =
-                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
+                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.StronglyConvex);
 
-        WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats);
+        WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats, fitIntercept);
         double[][] oldW = new double[nCats - 1][nFets];
 
         // iterate over samples
@@ -113,12 +113,16 @@ public class SagOptimizer <T extends TrainingRow> {
 
                 w.update(alpha, d, nCovered);
 
+                System.out.println("step size: " + alpha);
+
                 w.checkNormalize();
             }
 
             // after each epoch check how much the weights changed
-            if (relativeChangeTooSmall(oldW, w)) {
-                System.out.println("Converged after " + (k+1) + " epochs.");
+            double rc = relativeChange(oldW, w);
+            System.out.println("Relative change: " + rc);
+            if (rc < 1e-5) {
+                System.out.println("Converged after " + (k+1) + " epochs (Change: " + rc + ").");
                 break;
             }
 
@@ -130,7 +134,7 @@ public class SagOptimizer <T extends TrainingRow> {
         return w.getWeightVector();
     }
 
-    private boolean relativeChangeTooSmall(final double[][] oldW, final WeightVector<T> w) {
+    private double relativeChange(final double[][] oldW, final WeightVector<T> w) {
         double maxChange = 0.0;
         double maxWeight = 0.0;
 
@@ -148,7 +152,7 @@ public class SagOptimizer <T extends TrainingRow> {
             }
         }
 
-        return maxChange / maxWeight < 1e-3;
+        return maxChange / maxWeight;
     }
 
 }

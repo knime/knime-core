@@ -77,13 +77,13 @@ public class SagLogRegLearner implements LogRegLearner {
     @Override
     public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer();
+        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>();
         ClassData classData = new ClassData(data);
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
         double alpha = 1e-3;
         double lambda = 0;
         int maxIter = 50;
-        double[][] w = sagOpt.optimize(classData, loss, maxIter, lambda);
+        double[][] w = sagOpt.optimize(classData, loss, maxIter, lambda, true);
         return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
     }
 

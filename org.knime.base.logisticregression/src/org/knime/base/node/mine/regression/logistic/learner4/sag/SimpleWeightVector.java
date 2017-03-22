@@ -57,8 +57,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
  */
 class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
 
-    public SimpleWeightVector(final int nFets, final int nCats) {
-        super(nFets, nCats);
+    public SimpleWeightVector(final int nFets, final int nCats, final boolean fitIntercept) {
+        super(nFets, nCats, fitIntercept);
     }
 
     /**
@@ -67,7 +67,8 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     @Override
     public void scale(final double alpha, final double lambda) {
         final double scalingFactor = 1 - alpha * lambda;
-        updateData((final double val, final int c, final int i) -> val * scalingFactor);
+        // the intercept is not scaled
+        updateData((final double val, final int c, final int i) -> val * scalingFactor, false);
     }
 
     /**
@@ -75,7 +76,7 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public void update(final double alpha, final double[][] d, final int nCovered) {
-        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / nCovered);
+        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / nCovered, true);
     }
 
 
@@ -84,11 +85,6 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public void checkNormalize() {
-        for (int i = 0; i < m_data.length; i++) {
-            for (int j = 0; j < m_data[i].length; j++) {
-                assert Double.isFinite(m_data[i][j]);
-            }
-        }
         // nothing to do here
     }
 
