@@ -90,7 +90,7 @@ public class TestEntToJson implements TestEnt{
     
 	@JsonProperty("PrimitiveList")
     public List<String> getPrimitiveList() {
-        	return m_e.getPrimitiveList().stream().map(l -> new StringToJson(l)).collect(Collectors.toList());
+        	return m_e.getPrimitiveList();
         }
     
 	@JsonProperty("XYMap")
@@ -103,10 +103,7 @@ public class TestEntToJson implements TestEnt{
     
 	@JsonProperty("PrimitiveMap")
     public Map<Integer, String> getPrimitiveMap() {
-        	//TODO support non-primitive map-keys
-    	Map<Integer, String> res = new HashMap<>();
-        m_e.getPrimitiveMap().entrySet().stream().forEach(e -> res.put(e.getKey(), new StringToJson(e.getValue())));
-        return res;
+        	return m_e.getPrimitiveMap();
         }
     
 
