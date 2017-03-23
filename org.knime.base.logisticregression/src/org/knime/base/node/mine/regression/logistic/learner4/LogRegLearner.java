@@ -59,7 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface LogRegLearner {
+public interface LogRegLearner {
 
     /**
      * Learns a logistic regression model from the provided data.
