@@ -83,4 +83,5 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
      */
     public int getTargetDimension();
 
+    public T getRandomRow();
 }

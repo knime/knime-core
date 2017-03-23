@@ -157,6 +157,15 @@ public class SagLogRegLearner implements LogRegLearner {
             Collections.shuffle(m_rows);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ClassificationTrainingRow getRandomRow() {
+            int idx = (int)(Math.random() * m_rows.size());
+            return m_rows.get(idx);
+        }
+
     }
 
     private static class ClassDataRow implements ClassificationTrainingRow {

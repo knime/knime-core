@@ -170,6 +170,14 @@ public class GlmNetLogRegLearner implements LogRegLearner {
             Collections.shuffle(m_rows);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ClassificationTrainingRow getRandomRow() {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
     private static class ClassDataRow implements ClassificationTrainingRow {
