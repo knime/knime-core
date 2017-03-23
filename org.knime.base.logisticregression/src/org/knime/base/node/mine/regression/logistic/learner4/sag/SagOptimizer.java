@@ -50,7 +50,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 
 /**
  * Optimizer based on the stochastic average gradient method.
@@ -60,6 +59,18 @@ import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearn
  */
 public class SagOptimizer <T extends TrainingRow> {
 
+    private final Loss<T> m_loss;
+    private final LearningRateStrategy<T> m_lrStrategy;
+
+    /**
+     * @param loss function to minimize
+     * @param learningRateStrategy provides the learning rates at each step
+     *
+     */
+    public SagOptimizer(final Loss<T> loss, final LearningRateStrategy<T> learningRateStrategy) {
+        m_loss = loss;
+        m_lrStrategy = learningRateStrategy;
+    }
 
     /**
      * @param data the training data
@@ -68,7 +79,7 @@ public class SagOptimizer <T extends TrainingRow> {
      * @param lambda the degree of regularization
      * @return a matrix of weights for a linear model
      */
-    public double[][] optimize(final TrainingData<T> data, final Loss<T> loss, final int maxEpoch, final double lambda, final boolean fitIntercept) {
+    public double[][] optimize(final TrainingData<T> data, final int maxEpoch, final double lambda, final boolean fitIntercept) {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
         final int nCats = data.getTargetDimension();
@@ -77,20 +88,18 @@ public class SagOptimizer <T extends TrainingRow> {
         double[][] d = new double[nCats - 1][nFets];
         int nCovered = 0;
 
-//        LearningRateStrategy<T> learningRateStrategy = new FixedLearningRateStrategy<>(1e-4);
-        LearningRateStrategy<T> learningRateStrategy =
-                new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.StronglyConvex);
-
-        WeightVector<T> w = new ScaledWeightVector<>(nFets, nCats, fitIntercept);
+        WeightVector<T> w = new SimpleWeightVector<>(nFets, nCats, fitIntercept);
         double[][] oldW = new double[nCats - 1][nFets];
+
+        double oldLoss = Double.POSITIVE_INFINITY;
 
         // iterate over samples
         for (int k = 0; k < maxEpoch; k++) {
-            data.permute();
-            for (T row : data) {
-
+//            data.permute();
+            for (int r = 0; r < data.getRowCount(); r++) {
+                T row = data.getRandomRow();
                 double[] prediction = w.predict(row);
-                double[] sig = loss.gradient(row, prediction);
+                double[] sig = m_loss.gradient(row, prediction);
 
                 int id = row.getId();
                 for (int c = 0; c < nCats - 1; c++) {
@@ -108,30 +117,53 @@ public class SagOptimizer <T extends TrainingRow> {
                     nCovered++;
                 }
 
-                double alpha = learningRateStrategy.getCurrentLearningRate(row, prediction, sig);
+                double alpha = m_lrStrategy.getCurrentLearningRate(row, prediction, sig);
                 w.scale(alpha, lambda);
 
                 w.update(alpha, d, nCovered);
 
-                System.out.println("step size: " + alpha);
+//                System.out.println("step size: " + alpha);
 
                 w.checkNormalize();
+
             }
 
             // after each epoch check how much the weights changed
             double rc = relativeChange(oldW, w);
             System.out.println("Relative change: " + rc);
-            if (rc < 1e-5) {
+            double newLoss = sumLoss(data, w);
+            System.out.println("Loss: " + newLoss);
+            System.out.println("d norm: " + squaredNorm(d));
+            if (rc < 1e-5 /*|| oldLoss < newLoss*/) {
                 System.out.println("Converged after " + (k+1) + " epochs (Change: " + rc + ").");
                 break;
             }
-
+            oldLoss = newLoss;
         }
 
         // finalize
         w.finalize(d);
 
         return w.getWeightVector();
+    }
+
+    private double squaredNorm(final double[][] mat) {
+        double norm = 0.0;
+        for (int i = 0; i < mat.length; i++) {
+            for(int j = 0; j < mat[0].length; j++) {
+                double e = mat[i][j];
+                norm += e * e;
+            }
+        }
+        return norm;
+    }
+
+    private double sumLoss(final TrainingData<T> data, final WeightVector<T> w) {
+        double l = 0.0;
+        for (T row : data) {
+            l += m_loss.evaluate(row, w.predict(row));
+        }
+        return l;
     }
 
     private double relativeChange(final double[][] oldW, final WeightVector<T> w) {

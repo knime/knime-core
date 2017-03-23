@@ -46,7 +46,7 @@
  * History
  *   10.03.2017 (Adrian): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4;
+package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,10 +56,11 @@ import java.util.List;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.MultinomialLoss;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.SagOptimizer;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -77,13 +78,15 @@ public class SagLogRegLearner implements LogRegLearner {
     @Override
     public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>();
-        ClassData classData = new ClassData(data);
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
+        ClassData classData = new ClassData(data);
         double alpha = 1e-3;
         double lambda = 0;
+        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
+                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
+        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
         int maxIter = 50;
-        double[][] w = sagOpt.optimize(classData, loss, maxIter, lambda, true);
+        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
         return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
     }
 
