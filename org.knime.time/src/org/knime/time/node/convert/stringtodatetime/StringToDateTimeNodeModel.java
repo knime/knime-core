@@ -129,7 +129,7 @@ final class StringToDateTimeNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_cancelOnFail = createCancelOnFailModel();
 
-    private String m_selectedType;
+    private String m_selectedType = DateTimeTypes.LOCAL_DATE_TIME.name();
 
     private int m_failCounter;
 
@@ -229,9 +229,6 @@ final class StringToDateTimeNodeModel extends NodeModel {
         if (!m_hasValidatedConfiguration) {
             setDefaultColumnSelection(inSpecs[0]);
             throw new InvalidSettingsException("Node must be configured!");
-        }
-        if (m_selectedType == null) {
-            m_selectedType = DateTimeTypes.LOCAL_DATE_TIME.name();
         }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{columnRearranger.createSpec()};
@@ -405,6 +402,7 @@ final class StringToDateTimeNodeModel extends NodeModel {
             }
             throw new InvalidSettingsException(msg, e);
         }
+        settings.getString("typeEnum");
     }
 
     /**
