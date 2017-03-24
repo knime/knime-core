@@ -51,6 +51,11 @@ package org.knime.workbench.workflowcoach.data;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -124,6 +130,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
     @Override
     public void upate() throws Exception {
         HttpClient client = new HttpClient();
+        applyProxySettings(client, new URI(m_url));
         client.getHttpConnectionManager().getParams().setConnectionTimeout(TIMEOUT);
         GetMethod method = new GetMethod(m_url);
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
@@ -181,5 +188,16 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
         TimeZone tZone = TimeZone.getTimeZone("GMT");
         dateFormat.setTimeZone(tZone);
         return dateFormat;
+    }
+
+    private static void applyProxySettings(final HttpClient webClient, final URI uri) throws URISyntaxException {
+        List<Proxy> l = ProxySelector.getDefault().select(uri);
+        for (Proxy proxy : l) {
+            final InetSocketAddress addr = (InetSocketAddress) proxy.address();
+            if (addr != null) {
+                webClient.getHostConfiguration().setProxy(addr.getHostString(), addr.getPort());
+                return;
+            }
+        }
     }
 }
