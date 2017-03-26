@@ -70,6 +70,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 import org.knime.core.node.util.filter.nominal.NominalValueFilterConfiguration;
 import org.knime.core.node.util.filter.nominal.NominalValueFilterPanel;
@@ -235,7 +236,10 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        settings.addString(CFG_SELECTED_COL, (String)m_columnSelection.getSelectedItem());
+        String selectedColumn = (String)m_columnSelection.getSelectedItem();
+        CheckUtils.checkSettingNotNull(selectedColumn, "No nominal column selected (there is no nominal column in "
+            + "the input or the upstream node is not executed)");
+        settings.addString(CFG_SELECTED_COL, selectedColumn);
         NominalValueFilterConfiguration config = new NominalValueFilterConfiguration(CFG_CONFIGROOTNAME);
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
