@@ -329,6 +329,20 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
+     * Test destination types of Integer and FileInputStream.
+     */
+    @Test
+    public void testNestedCollectionDestTypes() {
+        final Collection<DataType> destTypes =
+            JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[][].class).stream()
+                .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
+
+        assertEquals(2, destTypes.size());
+        assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(IntCell.TYPE))));
+        assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(LongCell.TYPE))));
+    }
+
+    /**
      * Test source types for DoubeCell.TYPE.
      */
     @Test
