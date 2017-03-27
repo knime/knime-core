@@ -46,7 +46,6 @@
 package org.knime.core.util;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
@@ -56,15 +55,16 @@ import java.util.List;
  * can access the files as needed via KNIME Rest API.
  *
  * @author Christian Dietz, KNIME.com GmbH.
+ * @since 3.3
  */
 public interface IRemoteFileUtilsService {
-
     /**
-     * @param parent {@link URI} of which all children will be returned as a {@link List} of {@link URL}.
+     * Lists all direct children of the provided URL. The URL is assumed to be a directory on a remote server.
      *
-     * @return children of parent as {@link List} of {@link URL}.
-     * @throws IOException
+     * @param parent {@link URL} of a directory on the remote server
+     *
+     * @return direct children of parent as {@link List} of {@link URL}.
+     * @throws IOException if an I/O error occurs while listing the children
      */
     List<URL> listRemoteFiles(URL parent) throws IOException;
-
 }
