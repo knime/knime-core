@@ -1188,12 +1188,14 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
      * @noreference This method is not intended to be referenced by clients.
      */
     public static Collection<? extends File> getBuildPathFromCache(final String converterFactoryId) {
-        if (converterFactoryId.startsWith(ArrayToCollectionConverterFactory.class.getName())) {
-            return CLASSPATH_CACHE.get(converterFactoryId.substring(ArrayToCollectionConverterFactory.class.getName().length() + 1, converterFactoryId.length()-1));
-        } else if (converterFactoryId.startsWith(CollectionConverterFactory.class.getName())) {
-            return CLASSPATH_CACHE.get(converterFactoryId.substring(CollectionConverterFactory.class.getName().length() + 1, converterFactoryId.length()-1));
+        String id = converterFactoryId;
+        while (id.startsWith(ArrayToCollectionConverterFactory.class.getName())) {
+            id = id.substring(ArrayToCollectionConverterFactory.class.getName().length() + 1, id.length() - 1);
         }
-        final Collection<File> buildPath = CLASSPATH_CACHE.get(converterFactoryId);
+        while (id.startsWith(CollectionConverterFactory.class.getName())) {
+            id = id.substring(CollectionConverterFactory.class.getName().length() + 1, id.length() - 1);
+        }
+        final Collection<File> buildPath = CLASSPATH_CACHE.get(id);
         return buildPath;
     }
 
