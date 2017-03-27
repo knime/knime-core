@@ -126,6 +126,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -755,6 +756,14 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     /**
      * Validate settings which is typically called in the configure method
      * of a node.
+     *
+     * What is checked:
+     * <ul>
+     *  <li>Whether converter factories matching the ids from the settings exist</li>
+     *  <li>Whether the code compiles</li>
+     *  <li>Whether columns required by input mappings still exist.</li>
+     * </ul>
+     *
      * @param spec the spec of the data table at the inport
      * @param flowVariableRepository the flow variables at the inport
      * @return the validation results
@@ -765,33 +774,33 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         List<String> warnings = new ArrayList<>();
 
         // check input fields
-        for (InCol field : m_fields.getInColFields()) {
-            if (field.getJavaType() == null) {
-                errors.add("Java type could not be loaded. Providing plugin may be missing.");
-            }
-            int index = spec.findColumnIndex(field.getKnimeName());
-            if (index >= 0) {
-                DataColumnSpec colSpec = spec.getColumnSpec(index);
-                if (!colSpec.getType().equals(field.getDataType())) {
-                    Optional<?> factory = ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+        for (final InCol field : m_fields.getInColFields()) {
+            final int index = spec.findColumnIndex(field.getKnimeName());
+            if (index < 0) {
+                errors.add("The column \"" + field.getKnimeName() + "\" is not found in the input table.");
+            } else {
+                final DataColumnSpec colSpec = spec.getColumnSpec(index);
+                final DataType type = colSpec.getType();
+
+                if (!type.equals(field.getDataType())) {
+                    // Input column type changed, try to find new converter
+                    final Optional<?> factory =
+                        ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+
                     if (factory.isPresent()) {
-                        warnings.add("The type of the column \""
-                                + field.getKnimeName()
-                                + "\" has changed but is compatible.");
+                        warnings.add(
+                            "The type of the column \"" + field.getKnimeName() + "\" has changed but is compatible.");
+                        field.setConverterFactory(type, (DataCellToJavaConverterFactory<?, ?>)factory.get());
                     } else {
-                        errors.add("The type of the column \""
-                                + field.getKnimeName()
-                                + "\" has changed.");
+                        errors.add("The type of the column \"" + field.getKnimeName() + "\" has changed.");
                     }
                 }
-            } else {
-                errors.add("The column \"" + field.getKnimeName()
-                        + "\" is not found in the input table.");
             }
 
             if (!field.getConverterFactory().isPresent()) {
-                errors.add("Missing converter for column \"" + field.getKnimeName()
-                    + "\" to java field \"" + field.getJavaName() + "\" (converter id: \"" + field.getConverterFactoryId() + "\")");
+                errors.add(
+                    String.format("Missing converter for column '%s' to java field '%s' (converter id: '%s')",
+                        field.getKnimeName(), field.getJavaName(), field.getConverterFactoryId()));
             }
         }
 
@@ -831,8 +840,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                         + "but an input with this name does exist.");
             }
             if (!field.getConverterFactory().isPresent()) {
-                errors.add("Missing converter for java field \"" + field.getJavaName()
-                    + "\" to column \"" + field.getKnimeName() + "\" (converter id: \"" + field.getConverterFactoryId() + "\")");
+                errors.add(String.format("Missing converter for java field '%s' to column '%s' (converter id: '%s')", field.getJavaName(), field.getKnimeName(), field.getConverterFactoryId()));
             }
         }
 
