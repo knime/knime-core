@@ -101,6 +101,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
 
         FlowVariableRepository flowVarRepository =
             new FlowVariableRepository(getAvailableInputFlowVariables());
+        // The following method also compile-checks the code and checks for missing converter factories
         ValidationReport report = m_snippet.validateSettings(inSpecs[0],
                 flowVarRepository);
         if (report.hasWarnings()) {
