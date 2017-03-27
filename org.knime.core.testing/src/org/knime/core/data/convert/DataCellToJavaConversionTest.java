@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -235,7 +236,7 @@ public class DataCellToJavaConversionTest {
         for (int i = 0; i < 5; ++i) {
             coll.add(new IntCell(i * i));
         }
-        // collection cells can allways contain missing cells.
+        // collection cells can always contain missing cells.
         coll.add(new MissingCell("42"));
 
         final ListCell listCell = CollectionCellFactory.createListCell(coll);
@@ -255,6 +256,39 @@ public class DataCellToJavaConversionTest {
         }
 
         assertNull(array[5]);
+    }
+
+    /**
+     * Test ListCell(ListCell(IntCell)) -> Integer[][] conversion.
+     *
+     * @throws Exception When something went wrong
+     */
+    @Test
+    public void testNestedCollectionTypes() throws Exception {
+        ArrayList<DataCell> coll = new ArrayList<>();
+        for (int i = 0; i < 5; ++i) {
+            coll.add(new IntCell(i * i));
+        }
+        // collection cells can always contain missing cells.
+        coll.add(new MissingCell("42"));
+
+        final ListCell listCell = CollectionCellFactory.createListCell(Arrays.asList(CollectionCellFactory.createListCell(coll)));
+
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, Integer[][]>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(listCell.getType(), Integer[][].class)
+                .stream().findFirst();
+        assertTrue(factory.isPresent());
+
+        final DataCellToJavaConverter<DataCell, Integer[][]> converter =
+            (DataCellToJavaConverter<DataCell, Integer[][]>)factory.get().create();
+        assertNotNull(converter);
+
+        final Integer[][] array = converter.convert(listCell);
+        for (int i = 0; i < 5; ++i) {
+            assertEquals(new Integer(i * i), array[0][i]);
+        }
+
+        assertNull(array[0][5]);
     }
 
     /**
