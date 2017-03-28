@@ -290,7 +290,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
         });
 
         //TODO: make initial size dynamic
-        m_shell.setSize(800, 600);
+        m_shell.setSize(1024, 768);
 
         Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
         // Left upper point for window
