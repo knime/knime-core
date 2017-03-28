@@ -341,6 +341,11 @@ public abstract class AbstractExecutionController extends ExecutionController {
         return !allInactive;
     }
 
+    /**
+     * Crates the wizard page for a given node id. Throws exception if no wizard page available.
+     * @param subnodeID the node id for the subnode to retrieve the wizard page for
+     * @return The wizard page for the given node id
+     */
     @SuppressWarnings("rawtypes")
     protected WizardPageContent getWizardPageInternal(final NodeID subnodeID) {
         if (subnodeID == null) {
@@ -443,8 +448,20 @@ public abstract class AbstractExecutionController extends ExecutionController {
         }
     }
 
+    /**
+     * Tries to load a map of view values to all appropriate views contained in a given subnode.
+     * @param viewContentMap the values to validate
+     * @param subnodeID the id fo the subnode containing the appropriate view nodes
+     * @param validate true, if validation is supposed to be done before applying the values, false otherwise
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
+     * @return Null or empty map if validation succeeds, map of errors otherwise
+     */
     @SuppressWarnings({"rawtypes", "unchecked" })
     protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap, final NodeID subnodeID, final boolean validate, final boolean useAsDefault) {
+        if (subnodeID == null) {
+            LOGGER.error("No node ID supplied for loading values into wizard page");
+            return null;
+        }
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", viewContentMap.size());
@@ -488,19 +505,31 @@ public abstract class AbstractExecutionController extends ExecutionController {
 
     abstract void checkNodeExecutedState(final SubNodeContainer snc, final NodeContainer destNC) throws IllegalStateException;
 
+    /**
+     * Validates a given set of serialized view values for a given subnode.
+     * @param viewValues the values to validate
+     * @param subnodeID the id of the subnode containing the appropriate view nodes
+     * @param wizardNodeSet the set of view nodes that the view values correspond to.
+     * @return Null or empty map if validation succeeds, map of errors otherwise
+     */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected Map<String, ValidationError> validateViewValuesInternal(final Map<String, String> viewValues, final NodeID verifiedID, final Map<NodeID, WizardNode> wizardNodeSet) {
+    protected Map<String, ValidationError> validateViewValuesInternal(final Map<String, String> viewValues, final NodeID subnodeID, final Map<NodeID, WizardNode> wizardNodeSet) {
+        if (subnodeID == null) {
+            LOGGER.error("No node ID supplied for validating view values of wizard page");
+            return null;
+        }
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
         Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
         for (Map.Entry<String, String> entry : viewValues.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
-            CheckUtils.checkState(id.hasPrefix(verifiedID), "The wizard page content for ID %s (suffix %s) "
-                        + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), verifiedID);
+            CheckUtils.checkState(id.hasPrefix(subnodeID), "The wizard page content for ID %s (suffix %s) "
+                        + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), subnodeID);
             WizardNode wizardNode = wizardNodeSet.get(id);
             CheckUtils.checkState(wizardNode != null, "No wizard node with ID %s in Wrapped Metanode, valid IDs are: "
                         + "%s", id, ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
+            @SuppressWarnings("null")
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
                 // node has no view value
@@ -524,22 +553,20 @@ public abstract class AbstractExecutionController extends ExecutionController {
         return Collections.emptyMap();
     }
 
-   /* private NodeID getVerifiedSubnodeID(final NodeID subnodeID) {
-        WorkflowManager manager = m_manager;
-        assert manager.isLockedByCurrentThread();
-        NodeID verifiedID = subnodeID;
-        if (verifiedID == null) {
-            CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
-            verifiedID = m_waitingSubnodes.get(0);
-        }
-        return verifiedID;
-    } */
-
+    /**
+     * Queries a subnode and returns all appropriate view nodes contained within.
+     * @param subnodeID the subnode id, not null
+     * @return a map of view nodes
+     */
     @SuppressWarnings("rawtypes")
-    protected Map<NodeID, WizardNode> getWizardNodeSetForVerifiedID(final NodeID verifiedID) {
+    protected Map<NodeID, WizardNode> getWizardNodeSetForVerifiedID(final NodeID subnodeID) {
+        if (subnodeID == null) {
+            LOGGER.error("No node ID supplied while trying to retrieve node set for wizard page");
+            return null;
+        }
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
-        SubNodeContainer subNodeNC = manager.getNodeContainer(verifiedID, SubNodeContainer.class, true);
+        SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
         return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
     }
@@ -552,6 +579,10 @@ public abstract class AbstractExecutionController extends ExecutionController {
         return new NodeID(m_manager.getID(), subnodeIDSuffix);
     }
 
+    /**
+     * Checks if the associated workflow manager has been discarded.
+     * @throws IllegalArgumentException if workflow manager is discarded
+     */
     protected void checkDiscard() {
         CheckUtils.checkArgument(m_manager != null, "%s has been disconnected from workflow",
                 AbstractExecutionController.class.getSimpleName());
@@ -561,7 +592,7 @@ public abstract class AbstractExecutionController extends ExecutionController {
     void discard() {
     }
 
-    /** Result value of {@link AbstractExecutionController#getCurrentWizardPage()}. */
+    /** Result value of {@link WizardExecutionController#getCurrentWizardPage()} and {@link SinglePageExecutionController#getWizardPage()}. */
     public static final class WizardPageContent {
 
         private final NodeIDSuffix m_pageNodeID;
