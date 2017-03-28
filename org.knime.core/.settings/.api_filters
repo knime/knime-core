@@ -121,6 +121,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WizardExecutionController"/>
+                <message_argument value="getCurrentWizardPage()"/>
+            </message_arguments>
+        </filter>
         <filter id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WizardExecutionController.WizardPageContent"/>
