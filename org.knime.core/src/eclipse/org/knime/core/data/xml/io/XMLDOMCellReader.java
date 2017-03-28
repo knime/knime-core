@@ -65,6 +65,7 @@ import org.knime.core.data.util.memory.MemoryAlertListener;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
@@ -127,6 +128,9 @@ class XMLDOMCellReader implements XMLCellReader {
     private XMLDOMCellReader(final InputSource is) throws ParserConfigurationException {
         m_in = is;
         m_builder = PARSER_FAC.newDocumentBuilder();
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_XML_DISABLE_EXT_ENTITIES)) {
+            m_builder.setEntityResolver(NoExternalEntityResolver.getInstance());
+        }
     }
 
     /**

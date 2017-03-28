@@ -67,6 +67,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.Pair;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -80,7 +81,7 @@ import org.w3c.dom.Text;
  * Read nodes from XML source which match an XPath expression. Note, that the
  * XPath syntax is very limited. Absolute path to nodes and the |-Operator is
  * supported, only.
- * 
+ *
  * @author Heiko Hofer
  */
 public class XMLXpathCellReader implements XMLCellReader {
@@ -132,8 +133,11 @@ public class XMLXpathCellReader implements XMLCellReader {
 	private void initStreamParser() throws XMLStreamException {
 		XMLInputFactory factory = XMLInputFactory.newInstance();
 		factory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
-		factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES,
-				Boolean.TRUE);
+		factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.TRUE);
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_XML_DISABLE_EXT_ENTITIES)) { // see AP-6752
+            factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+        }
+
 		m_parser = factory.createXMLStreamReader(m_in);
 	}
 
