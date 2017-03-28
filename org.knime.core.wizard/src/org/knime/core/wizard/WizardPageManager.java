@@ -65,11 +65,13 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.AbstractExecutionController;
+import org.knime.core.node.workflow.AbstractExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SinglePageExecutionController;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WizardExecutionController;
-import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.JSONViewContent;
@@ -124,12 +126,12 @@ public final class WizardPageManager {
     }
 
     /**
-     * Returns the underlying {@link WizardExecutionController} instance.
+     * Returns the underlying {@link AbstractExecutionController} instance.
      *<br><br>
      * WARNING: this method will most likely be removed, once functionality is completely encapsulated.
      *
      * @return
-     * the underlying {@link WizardExecutionController} instance.
+     * the underlying {@link AbstractExecutionController} instance.
      * @noreference This method is not intended to be referenced by clients.
      */
     public WizardExecutionController getWizardExecutionController() {
@@ -146,15 +148,30 @@ public final class WizardPageManager {
     }
 
     /**
+     * Creates a wizard page for the current subnode in wizard execution
+     * @return a {@link JSONWebNodePage} object which can be used for serialization
+     * @throws IOException if the layout of the wizard page can not be generated
+     */
+    public JSONWebNodePage createCurrentWizardPage() throws IOException {
+        WizardExecutionController wec = m_wfm.getWizardExecutionController();
+        WizardPageContent page = wec.getCurrentWizardPage();
+        return createWizardPageInternal(page);
+    }
+
+    /**
      * Creates a wizard page object from a given node id
      *
-     * @param containerNodeID the node id to create the wizard page for, null if the current subnode in wizard execution is supposed to be created
+     * @param containerNodeID the node id to create the wizard page for
      * @return a {@link JSONWebNodePage} object which can be used for serialization
      * @throws IOException if the layout of the wizard page can not be generated
      */
     public JSONWebNodePage createWizardPage(final NodeID containerNodeID) throws IOException {
-        WizardExecutionController wec = m_wfm.getWizardExecutionController();
-        WizardPageContent page = wec.getWizardPage(containerNodeID);
+        SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeID);
+        WizardPageContent page = sec.getWizardPage();
+        return createWizardPageInternal(page);
+    }
+
+    private JSONWebNodePage createWizardPageInternal(final WizardPageContent page) throws IOException {
         // process layout
         JSONLayoutPage layout = new JSONLayoutPage();
         try {
@@ -191,7 +208,7 @@ public final class WizardPageManager {
         for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
             WizardNode<?, ?> node = e.getValue();
             WebTemplate template =
-                WizardExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
+                AbstractExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
             List<String> jsList = new ArrayList<String>();
             List<String> cssList = new ArrayList<String>();
             for (WebResourceLocator locator : template.getWebResources()) {
@@ -217,9 +234,22 @@ public final class WizardPageManager {
     }
 
     /**
+     * Creates a JSON string containing a wizard page for the current subnode in wizard execution
+     *
+     * @return a JSON string containing the wizard page
+     * @throws IOException if the layout of the wizard page can not be generated
+     * @throws JsonProcessingException on serialization errors
+     */
+    public String createCurrentWizardPageString() throws IOException, JsonProcessingException {
+        JSONWebNodePage jsonPage = createCurrentWizardPage();
+        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
+        return mapper.writeValueAsString(jsonPage);
+    }
+
+    /**
      * Creates a JSON string containing a wizard page from a given node id
      *
-     * @param containerNodeID the node id to create the wizard page string for, null if the current subnode in wizard execution is supposed to be created
+     * @param containerNodeID the node id to create the wizard page string for
      * @return a JSON string containing the wizard page
      * @throws IOException if the layout of the wizard page can not be generated
      * @throws JsonProcessingException on serialization errors
@@ -298,8 +328,8 @@ public final class WizardPageManager {
                 viewValues.put(key, content);
             }
             if (!viewValues.isEmpty()) {
-                WizardExecutionController wec = m_wfm.getWizardExecutionController();
-                return wec.validateViewValuesInPage(viewValues, containerNodeId);
+                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                return sec.validateViewValuesInPage(viewValues);
             } else {
                 return Collections.emptyMap();
             }
@@ -314,15 +344,34 @@ public final class WizardPageManager {
                 viewValues.put(key, content);
             }*/
             if (!viewValues.isEmpty()) {
-                WizardExecutionController wec = m_wfm.getWizardExecutionController();
-                wec.loadValuesIntoPage(viewValues, containerNodeId, false, useAsDefault);
+                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                sec.loadValuesIntoPage(viewValues, false, useAsDefault);
             }
         }
     }
 
     public void reexecuteSubnode(final SubNodeContainer container) {
         try (WorkflowLock lock = m_wfm.lock()) {
-            m_wfm.getWizardExecutionController().reexecuteSinglePage(container.getID());
+            m_wfm.getSinglePageExecutionController(container.getID()).reexecuteSinglePage();
+        }
+    }
+
+    /**
+     * Applies a given map of view values to the current subnode in wizard execution.
+     *
+     * @param valueMap a map with {@link NodeIDSuffix} string as key and parsed view value as value
+     * @return A JSON-serialized string containing the validation result, null if validation succeeded.
+     * @throws IOException on JSON serialization errors
+     */
+    public String applyViewValuesToCurrentPage(final Map<String, String> valueMap) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            Map<String, String> viewContentMap = validateValueMap(valueMap);
+            Map<String, ValidationError> validationResults = null;
+            if (!valueMap.isEmpty()) {
+                WizardExecutionController wec = m_wfm.getWizardExecutionController();
+                validationResults = wec.loadValuesIntoCurrentPage(viewContentMap);
+            }
+            return serializeValidationResult(validationResults);
         }
     }
 
@@ -336,17 +385,30 @@ public final class WizardPageManager {
      */
     public String applyViewValues(final Map<String, String> valueMap, final NodeID containerNodeId) throws IOException {
         try (WorkflowLock lock = m_wfm.lock()) {
-            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> viewContentMap = validateValueMap(valueMap);
+            Map<String, ValidationError> validationResults = null;
+            if (!valueMap.isEmpty()) {
+                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                validationResults = sec.loadValuesIntoPage(viewContentMap);
+            }
+            return serializeValidationResult(validationResults);
+        }
+    }
 
+    private Map<String, String> validateValueMap(final Map<String, String> valueMap) throws IOException{
+        try (WorkflowLock lock = m_wfm.lock()) {
+            ObjectMapper mapper = new ObjectMapper();
             for (String key : valueMap.keySet()) {
                 String content = mapper.writeValueAsString(valueMap.get(key));
                 valueMap.put(key, content);
             }
-            Map<String, ValidationError> validationResults = null;
-            if (!valueMap.isEmpty()) {
-                WizardExecutionController wec = m_wfm.getWizardExecutionController();
-                validationResults = wec.loadValuesIntoPage(valueMap, containerNodeId);
-            }
+            return valueMap;
+        }
+    }
+
+    private String serializeValidationResult(final Map<String, ValidationError> validationResults) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            ObjectMapper mapper = new ObjectMapper();
             String jsonString = null;
             if (validationResults != null && !validationResults.isEmpty()) {
                 jsonString = mapper.writeValueAsString(validationResults);

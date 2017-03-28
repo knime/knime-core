@@ -2502,6 +2502,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Creates a new execution controller for the display and handling of a single page/metanode.
+     * @param pageID the node id of the metanode containing the single page view
+     * @return A new controller for execution handling of a single page.
+     * @throws IllegalStateException If this workflow is not a project.
+     * @since 3.4
+     */
+    public SinglePageExecutionController getSinglePageExecutionController(final NodeID pageID) {
+        CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
+        try (WorkflowLock lock = lock()) {
+            return new SinglePageExecutionController(this, pageID);
+        }
+    }
+
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
      *
@@ -4743,18 +4756,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If subnode does not exist
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
-    void resetHaltedSubnode(final NodeID id) {
+    void resetHaltedSubnode(final NodeID id, final AbstractExecutionController executionController) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-            // TODO Christian Albrecht: commented out momentarily, should become function of individual execution controller
-            // and reactivated if needed. See AP-7065
-            /* for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
-                final InternalNodeContainerState destNCState = destNC.getInternalState();
-                CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
-                    + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
-            } */
+                executionController.checkNodeExecutedState(snc, destNC);
+            }
             invokeResetOnSingleNodeContainer(snc);
         }
     }
