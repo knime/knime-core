@@ -54,7 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
-import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
+import org.knime.core.node.workflow.AbstractExecutionController.WizardPageContent;
 
 
 
@@ -101,7 +101,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
     @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
-        assertTrue("should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));
+        assertTrue("should have new wizard execution", AbstractExecutionController.hasWizardExecution(wfm));
         checkState(m_tableCreateNode1, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();

@@ -57,7 +57,7 @@ import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
+import org.knime.core.node.workflow.AbstractExecutionController.WizardPageContent;
 
 
 
@@ -101,7 +101,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
     @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
-        assertTrue("should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));
+        assertTrue("should have new wizard execution", AbstractExecutionController.hasWizardExecution(wfm));
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
 
