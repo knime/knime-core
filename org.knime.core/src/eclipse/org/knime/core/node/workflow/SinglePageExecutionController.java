@@ -53,6 +53,9 @@ import java.util.Map;
 import org.knime.core.node.web.ValidationError;
 
 /**
+ * A utility class received from the workflow manager that allows controlling wizard execution and combined view creation on a single subnode.
+ *
+ * <p>Do not use, no public API.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
@@ -71,7 +74,6 @@ public class SinglePageExecutionController extends AbstractExecutionController {
 
     /**
      * Gets the wizard page for a given node id. Throws exception if no wizard page available.
-     * @param subnodeID the node id for the subnode to retrieve the wizard page for
      * @return The wizard page for the given node id
      */
     public WizardPageContent getWizardPage() {
@@ -87,20 +89,20 @@ public class SinglePageExecutionController extends AbstractExecutionController {
     }
 
     /**
-     * @param viewContentMap
-     * @param subnodeID
-     * @return
+     * Tries to load a map of view values to all appropriate views contained in the given subnode.
+     * @param viewContentMap the values to load
+     * @return Null or empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap) {
         return loadValuesIntoPage(viewContentMap, true, false);
     }
 
     /**
-     * @param viewContentMap
-     * @param subnodeID
-     * @param validate
-     * @param useAsDefault
-     * @return
+     * Tries to load a map of view values to all appropriate views contained in the given subnode.
+     * @param viewContentMap the values to validate
+     * @param validate true, if validation is supposed to be done before applying the values, false otherwise
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
+     * @return Null or empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap, final boolean validate, final boolean useAsDefault) {
         WorkflowManager manager = m_manager;
@@ -124,10 +126,9 @@ public class SinglePageExecutionController extends AbstractExecutionController {
     }
 
     /**
-     * @param viewContentMap
-     * @param subnodeID
-     * @return
-     * @since 3.4
+     * Validates a given set of serialized view values for the given subnode.
+     * @param viewContentMap the values to validate
+     * @return Null or empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> validateViewValuesInPage(final Map<String, String> viewContentMap) {
         WorkflowManager manager = m_manager;
@@ -142,6 +143,9 @@ public class SinglePageExecutionController extends AbstractExecutionController {
         }
     }
 
+    /**
+     * Triggers workflow execution up until the given subnode.
+     */
     public void reexecuteSinglePage() {
         final WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {

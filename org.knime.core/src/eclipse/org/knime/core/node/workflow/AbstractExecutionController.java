@@ -85,8 +85,8 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
- * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
- * USed for the 2nd generation wizard execution based on SubNodes.
+ * An abstract utility class received from the workflow manager that allows defining wizard execution or generating combined views on subnodes.
+ * Used for example for the 2nd generation wizard execution based on SubNodes.
  *
  * <p>Do not use, no public API.
  *
@@ -450,7 +450,7 @@ public abstract class AbstractExecutionController extends ExecutionController {
 
     /**
      * Tries to load a map of view values to all appropriate views contained in a given subnode.
-     * @param viewContentMap the values to validate
+     * @param viewContentMap the values to load
      * @param subnodeID the id fo the subnode containing the appropriate view nodes
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
