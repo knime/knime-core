@@ -422,7 +422,9 @@ public final class WizardExecutionController extends ExecutionController {
     }
 
     /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
-     * @return The current wizard page. */
+     * @return The current wizard page.
+     * @since 3.4
+     */
     public WizardPageContent getCurrentWizardPage() {
         return getWizardPage(null);
     }
