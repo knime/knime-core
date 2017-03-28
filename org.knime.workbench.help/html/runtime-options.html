@@ -201,6 +201,10 @@
     <dd>Allows to disable the workaround for freezes when opening node dialogs under MacOSX.</dd>
     <dt>knime.data.bitvector.maxDisplayBits=<em>&lt;number&gt;</em></dt>
     <dd>Sets the maximum number of bits that are display in string representations of bit vectors.</dd>
+    
+    <dt>knime.xml.disable_external_entities=<em>(true|false)</em></dt>
+    <dd>If set to true, all nodes that parse XML files will not read external entities defined via a DTD. This is
+    usually only useful when running as an executor on the server and you want prevent XXE attacks.</dd>
   </dl>
 
 
