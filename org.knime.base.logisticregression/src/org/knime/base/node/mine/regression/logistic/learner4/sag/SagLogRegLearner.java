@@ -60,7 +60,6 @@ import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -81,12 +80,25 @@ public class SagLogRegLearner implements LogRegLearner {
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
         ClassData classData = new ClassData(data);
         double alpha = 1e-3;
-        double lambda = 0;
-        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
-                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
+        double lambda = 0.2;
+//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
+//                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
+        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-4);
         final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
-        int maxIter = 50;
-        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
+//        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
+//                new EagerSagUpdater.EagerSagUpdaterFactory<>(classData.getRowCount(), classData.getFeatureCount() + 1, classData.getTargetDimension());
+        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
+                EagerSgdUpdater.createFactory();
+//        RegularizationPrior prior = new GaussPrior(5);
+//        RegularizationPrior prior = UniformPrior.INSTANCE;
+//        RegularizationPrior prior = new AlternativeGaussPrior(0.1, classData.getRowCount());
+        RegularizationPrior prior = new LaplacePrior(0.1, classData.getRowCount(), true);
+        StoppingCriterion<ClassificationTrainingRow> stoppingCriterion = new BetaChangeStoppingCriterion<>(classData.getFeatureCount(), classData.getTargetDimension(), 1e-5);
+        EagerSgOptimizer<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> sgOpt =
+                new EagerSgOptimizer<>(loss, updaterFactory, prior, lrStrategy, stoppingCriterion);
+        int maxIter = 100;
+//        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
+        double[][] w = sgOpt.optimize(maxIter, classData);
         return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
     }
 

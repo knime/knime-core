@@ -78,7 +78,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public void update(final double alpha, final double[][] d, final int nCovered) {
-        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered), true);
+        update((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered), true);
     }
 
     /**
@@ -111,7 +111,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     private void doFinalize() {
         // a scale of 1.0 means that no update is necessary
         if (!MathUtils.equals(m_scale, 1.0)) {
-            updateData((final double val, final int c, final int i) -> val * m_scale, false);
+            update((final double val, final int c, final int i) -> val * m_scale, false);
             m_scale = 1.0;
         }
     }
@@ -135,5 +135,13 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
             prediction[c] = m_data[c][0] + m_scale * p;
         }
         return prediction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void scale(final double scaleFactor) {
+        m_scale *= scaleFactor;
     }
 }

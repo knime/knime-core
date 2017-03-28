@@ -121,15 +121,15 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
 
         // line search for lipschitz
         double currentLoss = m_loss.evaluate(row, prediction);
-        double gradientNorm = calculateSquaredNorm(gradient);
-        double[] newPred = calculateNewPrediction(prediction, gradient, squaredNorm);
+        double[] newPred = new double[prediction.length];
+        calculateNewPrediction(prediction, newPred, gradient, squaredNorm);
         double newLoss = m_loss.evaluate(row, newPred);
 
         assert Double.isFinite(currentLoss);
-        assert Double.isFinite(gradientNorm);
         assert Double.isFinite(newLoss);
+        double gg = calculateSquaredNorm(row, gradient);
 
-        while (gradientNorm > 1e-8 && newLoss > currentLoss - gradientNorm / (2 * m_lipschitz)) {
+        while (gg > 1.490116119384765625e-8 && m_lipschitz < 1e10 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
             m_lipschitz *= 2;
             for (int i = 0; i < newPred.length; i++) {
                 newPred[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;
@@ -154,12 +154,10 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         return stepSize;
     }
 
-    private double[] calculateNewPrediction(final double[] prediction, final double[] gradient, final double squaredNorm) {
-        double[] newPred = Arrays.copyOf(prediction, prediction.length);
-        for (int i = 0; i < newPred.length; i++) {
-            newPred[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;
+    private void calculateNewPrediction(final double[] prediction, final double[] newPrediction, final double[] gradient, final double squaredNorm) {
+        for (int i = 0; i < newPrediction.length; i++) {
+            newPrediction[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;
         }
-        return newPred;
     }
 
 
@@ -178,6 +176,18 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
             double fet = row.getFeature(i);
             norm += fet * fet;
         }
+        return norm;
+    }
+
+    private double calculateSquaredNorm(final T row, final double[] gradient) {
+        double norm = 0.0;
+        for (int c = 0; c < gradient.length; c++) {
+            for (int i = 0; i < m_nFets; i++) {
+                double g = row.getFeature(i) * gradient[c];
+                norm += g * g;
+            }
+        }
+
         return norm;
     }
 }

@@ -44,37 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   23.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
+ * The UpdateStrategy defines how the updates to the model are calculated.
+ * One example is the Stochastic Average Gradient update, another example the
+ * Stochastic Gradient Descent update.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+interface Updater <T extends TrainingRow> {
 
-    public void scale(double alpha, double lambda);
-
-    public void scale(double scaleFactor);
-
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
-    }
+    public void update(T x, double[] sig, WeightVector<T> beta, double stepSize);
 
 }

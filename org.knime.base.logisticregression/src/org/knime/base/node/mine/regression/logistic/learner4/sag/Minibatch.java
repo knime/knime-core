@@ -44,37 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   23.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
-
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
+ * A Minibatch consists of a small number of samples/rows (possibly only one) based on which
+ * the next update to the model is calculated.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
-
-    public void scale(double alpha, double lambda);
-
-    public void scale(double scaleFactor);
-
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
-    }
+interface Minibatch {
 
 }

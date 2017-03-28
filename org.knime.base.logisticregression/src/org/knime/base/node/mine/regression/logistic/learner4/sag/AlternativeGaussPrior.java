@@ -44,37 +44,31 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   27.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
-
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+public class AlternativeGaussPrior implements RegularizationPrior {
 
-    public void scale(double alpha, double lambda);
+    private final double m_factor;
 
-    public void scale(double scaleFactor);
+    /**
+     *
+     */
+    public AlternativeGaussPrior(final double variance, final int nRows) {
+        m_factor = 1.0 / (variance);
+    }
 
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final WeightVector<?> beta, final double stepSize) {
+        beta.update((val, c, i) -> val - stepSize * val * m_factor, false);
     }
 
 }

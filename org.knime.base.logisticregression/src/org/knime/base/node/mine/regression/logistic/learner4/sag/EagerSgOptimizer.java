@@ -44,37 +44,46 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>> extends AbstractSGOptimizer<T, U> {
 
-    public void scale(double alpha, double lambda);
+    /**
+     * @param loss
+     * @param updaterFactory
+     * @param prior
+     * @param learningRateStrategy
+     */
+    public EagerSgOptimizer(final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory, final RegularizationPrior prior,
+        final LearningRateStrategy<T> learningRateStrategy, final StoppingCriterion<T> stoppingCriterion) {
+        super(loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion);
+        // TODO Auto-generated constructor stub
+    }
 
-    public void scale(double scaleFactor);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void prepareIteration(final T x) {
+        // Nothing to do
 
-    public void update(double alpha, double[][] d, int nCovered);
+    }
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void postProcessEpoch() {
+        // Nothing to do
 
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
     }
 
 }

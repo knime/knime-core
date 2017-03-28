@@ -44,37 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
-
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+final class LaplacePrior implements RegularizationPrior {
 
-    public void scale(double alpha, double lambda);
+    static final double SQRT_TWO = Math.sqrt(2.0);
+    private final double m_factor;
+    private final int m_nRows;
+    private final boolean m_clip;
 
-    public void scale(double scaleFactor);
 
-    public void update(double alpha, double[][] d, int nCovered);
+    public LaplacePrior(final double variance, final int nRows, final boolean clip) {
+        assert variance > 0;
+        m_factor = SQRT_TWO / (Math.sqrt(variance) * nRows);
+        m_nRows = nRows;
+        m_clip = clip;
+    }
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final WeightVector<?> beta, final double stepSize) {
+        if (m_clip) {
+            beta.update((val, c, i) -> clip(val, stepSize), false);
+        } else {
+            beta.update((val, c, i) -> val - stepSize * m_factor * Math.signum(val), false);
+        }
+    }
 
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    private double clip(final double val, final double stepSize) {
+        double v = val - stepSize * m_factor * Math.signum(val);
+        if (val < 0) {
+            return v < 0.0 ? v : 0.0;
+        } else {
+            return v > 0.0 ? v : 0.0;
+        }
     }
 
 }

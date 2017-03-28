@@ -44,37 +44,25 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+interface StoppingCriterion <T extends TrainingRow> {
 
-    public void scale(double alpha, double lambda);
+    public boolean checkConvergence(WeightVector<T> beta);
 
-    public void scale(double scaleFactor);
-
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    public static <T extends TrainingRow> StoppingCriterion<T> or(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
+        return beta -> first.checkConvergence(beta) || second.checkConvergence(beta);
     }
 
+    public static <T extends TrainingRow> StoppingCriterion<T> and(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
+        return beta -> first.checkConvergence(beta) && second.checkConvergence(beta);
+    }
 }

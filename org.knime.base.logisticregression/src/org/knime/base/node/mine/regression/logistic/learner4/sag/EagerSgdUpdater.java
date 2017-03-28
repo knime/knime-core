@@ -44,37 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+class EagerSgdUpdater<T extends TrainingRow> implements EagerUpdater<T> {
 
-    public void scale(double alpha, double lambda);
+    static <T extends TrainingRow> UpdaterFactory<T, EagerUpdater<T>> createFactory() {
+        return new EagerSgdUpdaterFactory<T>();
+    }
 
-    public void scale(double scaleFactor);
+    private EagerSgdUpdater() { }
 
-    public void update(double alpha, double[][] d, int nCovered);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize) {
+        beta.update((val,c, i) -> val - stepSize * x.getFeature(i) * sig[c] , true);
+    }
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
+    private static class EagerSgdUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {
+        private final EagerSgdUpdater<T> m_instance;
 
-    public void checkNormalize();
+        /**
+         *
+         */
+        public EagerSgdUpdaterFactory() {
+            m_instance = new EagerSgdUpdater<>();
+        }
 
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EagerUpdater<T> create() {
+            return m_instance;
+        }
     }
 
 }

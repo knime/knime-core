@@ -44,37 +44,74 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
+ * @param <T> The type of row we are dealing with
+ * @param <U> The type of updater to use for updates
  */
-interface WeightVector <T extends TrainingRow> {
+abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>> {
 
-    public void scale(double alpha, double lambda);
+    private final UpdaterFactory<T, U> m_updaterFactory;
+    private final Loss<T> m_loss;
+    private final RegularizationPrior m_prior;
+    private final LearningRateStrategy<T> m_lrStrategy;
+    private final StoppingCriterion<T> m_stoppingCriterion;
 
-    public void scale(double scaleFactor);
-
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    /**
+     *
+     */
+    public AbstractSGOptimizer(final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory,
+        final RegularizationPrior prior, final LearningRateStrategy<T> learningRateStrategy,
+        final StoppingCriterion<T> stoppingCriterion) {
+        m_loss = loss;
+        m_prior = prior;
+        m_lrStrategy = learningRateStrategy;
+        m_updaterFactory = updaterFactory;
+        m_stoppingCriterion = stoppingCriterion;
     }
 
+    public double[][] optimize(final int maxEpoch, final TrainingData<T> data) {
+
+        final int nRows = data.getRowCount();
+        final int nFets = data.getFeatureCount() + 1;
+        final int nCats = data.getTargetDimension();
+        final U updater = m_updaterFactory.create();
+
+        final WeightVector<T> beta = new SimpleWeightVector<>(nFets, nCats, true);
+
+        for (int epoch = 0; epoch < maxEpoch; epoch++) {
+
+
+            for (int k = 0; k < nRows; k++) {
+                T x = data.getRandomRow();
+                prepareIteration(x);
+                double[] prediction = beta.predict(x);
+                double[] sig = m_loss.gradient(x, prediction);
+                double stepSize = m_lrStrategy.getCurrentLearningRate(x, prediction, sig);
+                // beta is updated in two steps
+                updater.update(x, sig, beta, stepSize);
+                m_prior.update(beta, stepSize);
+            }
+            postProcessEpoch();
+            if (m_stoppingCriterion.checkConvergence(beta)) {
+                System.out.println("Convergence reached after " + (epoch + 1) + " epochs.");
+                break;
+            }
+        }
+
+
+        return beta.getWeightVector();
+    }
+
+    protected abstract void prepareIteration(final T x);
+
+    protected abstract void postProcessEpoch();
 }

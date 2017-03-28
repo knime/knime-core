@@ -69,7 +69,8 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
     }
 
 
-    protected void updateData(final WeightVectorConsumer func, final boolean includeIntercept) {
+    @Override
+    public void update(final WeightVectorConsumer func, final boolean includeIntercept) {
         // if we decided to not fit the intercept at all, we never touch the intercept weight
         int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
         for (int c = 0; c < m_data.length; c++) {
@@ -111,7 +112,5 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         return "beta: " + Arrays.deepToString(m_data);
     }
 
-    protected interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
-    }
+
 }

@@ -44,37 +44,81 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
+
+import java.util.BitSet;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
 
-    public void scale(double alpha, double lambda);
+    private double[][] m_gradientSum;
+    private double[][] m_gradientMemory;
+    private BitSet m_seen;
+    private int m_nCovered = 0;
+    private int m_nFets;
+    private int m_nCats;
 
-    public void scale(double scaleFactor);
+    private EagerSagUpdater(final int nRows, final int nFets, final int nCats) {
+        m_gradientSum = new double[nCats][nFets];
+        m_gradientMemory = new double[nCats][nRows];
+        m_seen = new BitSet(nRows);
+        m_nFets = nFets;
+        m_nCats = nCats;
+    }
 
-    public void update(double alpha, double[][] d, int nCovered);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize) {
+        int id = x.getId();
+        if (!m_seen.get(id)) {
+            m_seen.set(id);
+            m_nCovered++;
+        }
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
+        for (int c = 0; c < m_nCats - 1; c++) {
+            // TODO exploit sparseness
+            for (int i = 0; i < m_nFets; i++) {
+                double newD = x.getFeature(i) * (sig[c] - m_gradientMemory[c][id]);
+                assert Double.isFinite(newD);
+                m_gradientSum[c][i] += newD;
+            }
+            m_gradientMemory[c][id] = sig[c];
+        }
 
-    public void checkNormalize();
+        beta.update((val, c, i) -> val - stepSize * m_gradientSum[c][i] / m_nCovered, true);
 
-    public void finalize(final double[][] d);
+    }
 
-    public double[][] getWeightVector();
+    static class EagerSagUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {
+        private final int m_nRows;
+        private final int m_nFets;
+        private final int m_nCats;
 
-    public double[] predict(final T row);
+        /**
+         *
+         */
+        public EagerSagUpdaterFactory(final int nRows, final int nFets, final int nCats) {
+            m_nRows = nRows;
+            m_nFets = nFets;
+            m_nCats = nCats;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public EagerSagUpdater<T> create() {
+            return new EagerSagUpdater<>(m_nRows, m_nFets, m_nCats);
+        }
 
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
     }
 
 }

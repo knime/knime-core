@@ -44,37 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
+ * Checks the relative change of the loss.
+ * Expensive because it has to iterate of the whole dataset.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+class LossChangeStoppingCriterion <T extends TrainingRow> implements StoppingCriterion<T> {
 
-    public void scale(double alpha, double lambda);
+    private double m_epsilon;
+    private double m_oldLoss;
+    private Loss<T> m_loss;
+    private TrainingData<T> m_data;
 
-    public void scale(double scaleFactor);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean checkConvergence(final WeightVector<T> beta) {
+        double loss = 0.0;
+        for (T x : m_data) {
+            loss += m_loss.evaluate(x, beta.predict(x));
+        }
+        double relDiff = relDiff(m_oldLoss, loss);
+        m_oldLoss = loss;
+        return relDiff < m_epsilon;
+    }
 
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    private static double relDiff(final double x, final double y) {
+        return Math.abs(x - y) / (Math.abs(x) + Math.abs(y));
     }
 
 }

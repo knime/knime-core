@@ -44,37 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.03.2017 (Adrian): created
+ *   24.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
+ * Checks the relative changes of the beta matrix.
+ * Cheap because only beta is iterated.
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+class BetaChangeStoppingCriterion <T extends TrainingRow> implements StoppingCriterion<T> {
 
-    public void scale(double alpha, double lambda);
+    private final double[][] m_oldBeta;
+    private final int m_nCats;
+    private final int m_nFets;
+    private final double m_epsilon;
 
-    public void scale(double scaleFactor);
+    /**
+     *
+     */
+    public BetaChangeStoppingCriterion(final int nFets, final int nCats, final double epsilon) {
+        m_nCats = nCats;
+        m_nFets = nFets;
+        m_epsilon = epsilon;
+        m_oldBeta = new double[nCats - 1][nFets];
+    }
 
-    public void update(double alpha, double[][] d, int nCovered);
-
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
-
-    public void checkNormalize();
-
-    public void finalize(final double[][] d);
-
-    public double[][] getWeightVector();
-
-    public double[] predict(final T row);
-
-    interface WeightVectorConsumer {
-        public double calculate(double val, int c, int i);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean checkConvergence(final WeightVector<T> beta) {
+        double absMaxVal = Double.NEGATIVE_INFINITY;
+        double absMaxChange = Double.NEGATIVE_INFINITY;
+        double[][] betaMat = beta.getWeightVector();
+        for (int c = 0; c < m_nCats - 1; c++) {
+            for (int i = 0; i < m_nFets; i++) {
+                double val = betaMat[c][i];
+                double absVal = Math.abs(val);
+                double absChange = Math.abs(val - m_oldBeta[c][i]);
+                absMaxChange = absChange > absMaxChange ? absChange : absMaxChange;
+                absMaxVal = absVal > absMaxVal ? absVal : absMaxVal;
+                m_oldBeta[c][i] = val;
+            }
+        }
+        return absMaxChange / absMaxVal < m_epsilon;
     }
 
 }

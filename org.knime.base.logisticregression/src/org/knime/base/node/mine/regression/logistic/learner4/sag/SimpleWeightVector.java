@@ -68,7 +68,12 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     public void scale(final double alpha, final double lambda) {
         final double scalingFactor = 1 - alpha * lambda;
         // the intercept is not scaled
-        updateData((final double val, final int c, final int i) -> val * scalingFactor, false);
+        scale(scalingFactor);
+    }
+
+    @Override
+    public void scale(final double scaleFactor) {
+        update((val, c, i) -> val * scaleFactor, false);
     }
 
     /**
@@ -76,7 +81,7 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      */
     @Override
     public void update(final double alpha, final double[][] d, final int nCovered) {
-        updateData((final double val, final int c, final int i) -> val - alpha * d[c][i] / nCovered, true);
+        update((final double val, final int c, final int i) -> val - alpha * d[c][i] / nCovered, true);
     }
 
 
