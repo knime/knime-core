@@ -4756,7 +4756,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If subnode does not exist
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
-    void resetHaltedSubnode(final NodeID id, final AbstractExecutionController executionController) {
+    void resetHaltedSubnode(final NodeID id, final ExecutionController executionController) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
             for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {

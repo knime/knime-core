@@ -65,8 +65,8 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.AbstractExecutionController;
-import org.knime.core.node.workflow.AbstractExecutionController.WizardPageContent;
+import org.knime.core.node.workflow.WebResourceExecutionController;
+import org.knime.core.node.workflow.WebResourceExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SinglePageExecutionController;
@@ -126,12 +126,12 @@ public final class WizardPageManager {
     }
 
     /**
-     * Returns the underlying {@link AbstractExecutionController} instance.
+     * Returns the underlying {@link WebResourceExecutionController} instance.
      *<br><br>
      * WARNING: this method will most likely be removed, once functionality is completely encapsulated.
      *
      * @return
-     * the underlying {@link AbstractExecutionController} instance.
+     * the underlying {@link WebResourceExecutionController} instance.
      * @noreference This method is not intended to be referenced by clients.
      */
     public WizardExecutionController getWizardExecutionController() {
@@ -208,7 +208,7 @@ public final class WizardPageManager {
         for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
             WizardNode<?, ?> node = e.getValue();
             WebTemplate template =
-                AbstractExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
+                WebResourceExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
             List<String> jsList = new ArrayList<String>();
             List<String> cssList = new ArrayList<String>();
             for (WebResourceLocator locator : template.getWebResources()) {

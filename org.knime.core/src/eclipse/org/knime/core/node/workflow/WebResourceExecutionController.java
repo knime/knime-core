@@ -94,9 +94,9 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
  * @since 3.4
  */
-public abstract class AbstractExecutionController extends ExecutionController {
+public abstract class WebResourceExecutionController extends ExecutionController {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractExecutionController.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceExecutionController.class);
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
     private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
@@ -305,7 +305,7 @@ public abstract class AbstractExecutionController extends ExecutionController {
     /** Created from workflow.
      * @param manager ...
      */
-    AbstractExecutionController(final WorkflowManager manager) {
+    WebResourceExecutionController(final WorkflowManager manager) {
         m_manager = CheckUtils.checkArgumentNotNull(manager);
     }
 
@@ -503,8 +503,6 @@ public abstract class AbstractExecutionController extends ExecutionController {
         return Collections.emptyMap();
     }
 
-    abstract void checkNodeExecutedState(final SubNodeContainer snc, final NodeContainer destNC) throws IllegalStateException;
-
     /**
      * Validates a given set of serialized view values for a given subnode.
      * @param viewValues the values to validate
@@ -585,7 +583,7 @@ public abstract class AbstractExecutionController extends ExecutionController {
      */
     protected void checkDiscard() {
         CheckUtils.checkArgument(m_manager != null, "%s has been disconnected from workflow",
-                AbstractExecutionController.class.getSimpleName());
+                WebResourceExecutionController.class.getSimpleName());
     }
 
     /** Sets manager to null. Called when new wizard is created on top of workflow. */

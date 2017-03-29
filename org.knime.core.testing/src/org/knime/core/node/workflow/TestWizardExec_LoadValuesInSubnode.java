@@ -59,7 +59,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.workflow.AbstractExecutionController.WizardPageContent;
+import org.knime.core.node.workflow.WebResourceExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.TestWizardExec_Loop_Simple.WizardHold;
 
@@ -102,7 +102,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     public void testWizardStepThroughWithSeveralLoopIterations() throws Exception {
         final int numLoops = 3;
         final WorkflowManager wfm = getManager();
-        assertTrue("Should have new wizard execution", AbstractExecutionController.hasWizardExecution(wfm));
+        assertTrue("Should have new wizard execution", WebResourceExecutionController.hasWizardExecution(wfm));
         checkState(m_filterSubnode, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();

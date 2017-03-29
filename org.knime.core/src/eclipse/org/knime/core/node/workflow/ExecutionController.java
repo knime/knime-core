@@ -84,4 +84,8 @@ class ExecutionController {
     void checkHaltingCriteria(final NodeID source) {
     }
 
+    void checkNodeExecutedState(final SubNodeContainer snc, final NodeContainer destNC) throws IllegalStateException {
+        throw new UnsupportedOperationException("This method is not supported on this class.");
+    }
+
 }

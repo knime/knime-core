@@ -60,7 +60,7 @@ import org.knime.core.node.web.ValidationError;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public class SinglePageExecutionController extends AbstractExecutionController {
+public class SinglePageExecutionController extends WebResourceExecutionController {
 
     private final NodeID m_nodeID;
 
