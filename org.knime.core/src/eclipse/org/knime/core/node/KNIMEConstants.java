@@ -198,7 +198,7 @@ public final class KNIMEConstants {
      * installations with increased security requirements. Setting this property to <code>true</code> will disable
      * reading external entities in XML files.
      *
-     * @since 3.3
+     * @since 3.4
      */
     // see AP-6752
     public static final String PROPERTY_XML_DISABLE_EXT_ENTITIES = "knime.xml.disable_external_entities";
