@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -94,7 +95,7 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
  * @since 3.4
  */
-public abstract class WebResourceExecutionController extends ExecutionController {
+public abstract class WebResourceExecutionController {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceExecutionController.class);
 
@@ -482,7 +483,7 @@ public abstract class WebResourceExecutionController extends ExecutionController
                     + "consider to change wrapped metanode layout to have self-contained executable units",
                     subNodeNC.getNameWithID());
         }
-        manager.resetSubnodeForViewUpdate(subnodeID, this);
+        manager.resetSubnodeForViewUpdate(subnodeID, createStateChecker());
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
@@ -502,6 +503,8 @@ public abstract class WebResourceExecutionController extends ExecutionController
         manager.configureNodeAndSuccessors(subnodeID, true);
         return Collections.emptyMap();
     }
+
+    abstract BiConsumer<SubNodeContainer, NodeContainer> createStateChecker();
 
     /**
      * Validates a given set of serialized view values for a given subnode.

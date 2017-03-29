@@ -59,10 +59,10 @@ package org.knime.core.node.workflow;
  *
  * @author Bernd Wiswedel, Michael Berthold, KNIME.com, Zurich, Switzerland
  */
-class ExecutionController {
+interface ExecutionController {
 
     /** Singleton instance that is used when not run in a wizard. */
-    static final ExecutionController NO_OP = new ExecutionController();
+    static final ExecutionController NO_OP = new ExecutionController() {};
 
     /**
      * Check if execution was halted at this node previously. If so, no successors
@@ -71,7 +71,7 @@ class ExecutionController {
      * @param source node to be checked.
      * @return derived classes can return true if the execution was stopped at this node.
      */
-    boolean isHalted(final NodeID source) {
+    default boolean isHalted(final NodeID source) {
         return false;
     }
 
@@ -81,11 +81,7 @@ class ExecutionController {
      *
      * @param source node to be checked.
      */
-    void checkHaltingCriteria(final NodeID source) {
-    }
-
-    void checkNodeExecutedState(final SubNodeContainer snc, final NodeContainer destNC) throws IllegalStateException {
-        throw new UnsupportedOperationException("This method is not supported on this class.");
+    default void checkHaltingCriteria(final NodeID source) {
     }
 
 }

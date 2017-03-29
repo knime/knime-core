@@ -127,6 +127,11 @@
                 <message_argument value="getCurrentWizardPage()"/>
             </message_arguments>
         </filter>
+        <filter id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WizardExecutionController"/>
+            </message_arguments>
+        </filter>
         <filter id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WizardExecutionController.WizardPageContent"/>

@@ -97,6 +97,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -4753,16 +4754,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * reset the node but not propagate any new configuration. Usually the workflow (metanode) will be
      * fully executed when this method is called but it's not asserted (see also SRV-745).
      * @param id The subnode id
+     * @param stateCheck A callback that allows individual implementations to check states of downstream nodes
      * @throws IllegalArgumentException If subnode does not exist
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
-    void resetSubnodeForViewUpdate(final NodeID id, final ExecutionController executionController) {
+    void resetSubnodeForViewUpdate(final NodeID id, final BiConsumer<SubNodeContainer, NodeContainer> stateCheck) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
             for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
-                executionController.checkNodeExecutedState(snc, destNC);
+                stateCheck.accept(snc, destNC); // for wizard execution: downstream nodes must not be executed
             }
             invokeResetOnSingleNodeContainer(snc);
         }

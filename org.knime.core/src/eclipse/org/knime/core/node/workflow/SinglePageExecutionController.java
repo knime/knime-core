@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.knime.core.node.web.ValidationError;
 
@@ -117,12 +118,10 @@ public class SinglePageExecutionController extends WebResourceExecutionControlle
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    void checkNodeExecutedState(final SubNodeContainer snc, final NodeContainer destNC) throws IllegalStateException {
-        /* no checks done here */
+    BiConsumer<SubNodeContainer, NodeContainer> createStateChecker() {
+        return (snc, nc) -> {/* no checks done here */};
     }
 
     /**
