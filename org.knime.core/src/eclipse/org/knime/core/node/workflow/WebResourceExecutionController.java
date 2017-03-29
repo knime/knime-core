@@ -482,7 +482,7 @@ public abstract class WebResourceExecutionController extends ExecutionController
                     + "consider to change wrapped metanode layout to have self-contained executable units",
                     subNodeNC.getNameWithID());
         }
-        manager.resetHaltedSubnode(subnodeID, this);
+        manager.resetSubnodeForViewUpdate(subnodeID, this);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
