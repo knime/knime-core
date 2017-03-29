@@ -72,6 +72,7 @@ import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -125,19 +126,25 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         nodeContainer.addNodeStateChangeListener(new NodeStateChangeListener() {
             @Override
             public void stateChanged(final NodeStateEvent state) {
-                if (nodeContainer.getNodeContainerState().isExecuted()) {
-                    //TODO: Christian Albrecht: what happens if reexecute fails?
+                NodeContainerState nodeContainerState = nodeContainer.getNodeContainerState();
+                if (nodeContainerState.isExecuted()) {
                     //TODO: is this the right thread for the update?
                     if (!m_isReexecuteInProgress.get()) {
                         try {
                             createPageAndValue();
                         } catch (IOException e) {
+                            // TODO log error
                             reset();
                         }
                     } else {
+                        // TODO sync view and model 'viewvalue' -- if they differ, repaint
                         m_isReexecuteInProgress.set(false);
                         return;
                     }
+                } else if (!nodeContainerState.isExecutionInProgress() && m_isReexecuteInProgress.get()) {
+                    // node failed during re-execution -- reset the view
+                    m_isReexecuteInProgress.set(false);
+                    reset();
                 } else if (!m_isReexecuteInProgress.get()) {
                     reset();
                 }
@@ -194,12 +201,14 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public void loadViewValue(final SubnodeViewValue value, final boolean useAsDefault) {
         try {
+            // TODO assert node is executed
             m_isReexecuteInProgress.set(true);
+            // TODO combine two lines into new method on WizardPageManager -- do with try (lock = lock())
             m_wpm.applyValidatedViewValues(value.getViewValues(), m_container.getID(), useAsDefault);
             m_wpm.reexecuteSubnode(m_container);
         } catch (IOException e) {
             LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
-            /* FIXME what to do? */
+            // TODO -- (verification) double check that view is blank if IOException occurred
         }
     }
 
@@ -290,6 +299,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
         m_viewPath = null;
     }
+
+    // TODO add discard method, remove state listener (see constructor)
 
     /**
      * {@inheritDoc}
