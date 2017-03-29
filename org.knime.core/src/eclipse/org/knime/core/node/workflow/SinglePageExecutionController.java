@@ -149,12 +149,7 @@ public class SinglePageExecutionController extends WebResourceExecutionControlle
         final WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
-            NodeContext.pushContext(manager);
-            try {
-                m_manager.executeUpToHere(m_nodeID);
-            } finally {
-                NodeContext.removeLastContext();
-            }
+            m_manager.executeUpToHere(m_nodeID);
         }
     }
 
