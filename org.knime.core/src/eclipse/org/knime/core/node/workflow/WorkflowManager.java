@@ -4759,15 +4759,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
     void resetSubnodeForViewUpdate(final NodeID id, final BiConsumer<SubNodeContainer, NodeContainer> stateCheck) {
-        try (WorkflowLock lock = lock()) {
-            SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-                NodeID dest = cc.getDest();
-                NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
-                stateCheck.accept(snc, destNC); // for wizard execution: downstream nodes must not be executed
-            }
-            invokeResetOnSingleNodeContainer(snc);
+        assert isLockedByCurrentThread();
+        SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            NodeID dest = cc.getDest();
+            NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
+            stateCheck.accept(snc, destNC); // for wizard execution: downstream nodes must not be executed
         }
+        invokeResetOnSingleNodeContainer(snc);
     }
 
     /** Reset node and all executed successors of a specific node and
