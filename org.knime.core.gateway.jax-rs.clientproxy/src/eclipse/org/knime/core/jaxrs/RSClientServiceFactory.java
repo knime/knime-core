@@ -79,10 +79,10 @@ public class RSClientServiceFactory implements ServiceFactory {
         try {
             String name = ObjectSpecUtil.extractNameFromClass(serviceInterface, "api");
             String namespace = ObjectSpecUtil.extractNamespaceFromClass(serviceInterface, "api");
-            String fullyQualitifiedName =
+            String fullyQualifiedName =
                 org.knime.core.gateway.jaxrs.ObjectSpecUtil.getFullyQualifiedName(namespace, name, "rest");
 
-            Class<?> rsServiceInterface = Class.forName(fullyQualitifiedName);
+            Class<?> rsServiceInterface = Class.forName(fullyQualifiedName);
             List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),
                 new EntityCollectionJSONSerializer(), new EntityCollectionJSONDeserializer(),
                 new MapJSONDeserializer());
