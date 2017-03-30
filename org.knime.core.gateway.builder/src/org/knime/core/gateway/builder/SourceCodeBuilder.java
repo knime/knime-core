@@ -104,7 +104,9 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  *
  * Or add it as a 'External Program' builder and run it via the main-method. Set as location
  * "<code>${system_path:java}</code>" and add into the arguments fields
- * "<code>-classpath "${project_classpath}" org.knime.core.gateway.builder.SourceCodeBuilder -project ${workspace_loc:/org.knime.core.gateway.v0}</code>"
+ * <pre>
+   -classpath "${project_classpath}" org.knime.core.gateway.builder.SourceCodeBuilder -project "${workspace_loc:/org.knime.core.gateway.v0}"
+   </pre>
  * (replace the project name!).
  *
  * <br>
@@ -123,7 +125,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  * </pre>
  *
  * <i>project-dependencies</i>: are the exact names of dependent project to read object specifications and api
- * definitions from (must be at the same level as the project the builder is run on.<br>
+ * definitions from (must be at the same level as the project the builder is run on.)<br>
  * <i>default-output-dir</i>: the default output directory to write the generated files to<br>
  * <i>default-package</i>: the default package<br>
  * See also {@link BuilderConfig}.</li>
