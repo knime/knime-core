@@ -89,9 +89,9 @@ public class EntityIDTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("RGKAV");	
+ 		valueList.add("CGvxL");	
 
- 		valueList.add("Q8TwX");	
+ 		valueList.add("CGvxL");	
 
         return valueList;
     }

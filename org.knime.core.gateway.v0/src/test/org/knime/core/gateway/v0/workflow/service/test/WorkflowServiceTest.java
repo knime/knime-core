@@ -90,7 +90,7 @@ public class WorkflowServiceTest {
     @Test
     public void test_getWorkflow() {
 		//create parameter values
-		String id = "mlA8D";
+		String id = "CGvxL";
  
 		//create return value   
 		List<Object> values = WorkflowEntTest.createValueList();
@@ -120,11 +120,11 @@ public class WorkflowServiceTest {
  
 		//create return value   
 		List<String> res = new ArrayList<>(5);
-        res.add("guljF");
-        res.add("EGvmJ");
-        res.add("IFhrW");
-        res.add("EYqZo");
-        res.add("KuFjx");
+        res.add("lzCuG");
+        res.add("5KrGg");
+        res.add("OuJNz");
+        res.add("5VLnL");
+        res.add("YJQGG");
 
 		//mock return value
 		Mockito.when(m_serviceMock.getAllWorkflows()).thenReturn(res);

@@ -101,11 +101,11 @@ public class MetaPortEntTest {
 
  		valueList.add(true);	
 
- 		valueList.add("cugZd");	
+ 		valueList.add("CGvxL");	
 
- 		valueList.add(-1444672132);	
+ 		valueList.add(-1155484576);	
 
- 		valueList.add(211409872);	
+ 		valueList.add(-1155484576);	
 
         return valueList;
     }

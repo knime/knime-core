@@ -298,9 +298,12 @@ public class Type {
     /**
      * Creates random values in case of primitive types. Otherwise <code>NOT A PRIMITIVE</code> is returned
      *
+     * @param seed for the random generator
+     *
      * @return primitive type values or <code>NOT A PRIMITIVE</code> if type is an entity
      */
-    public String createRandomPrimitive() {
+    public String createRandomPrimitive(final int seed) {
+        m_rand.setSeed(seed);
         if (isPrimitive()) {
             if (m_simpleName.toLowerCase().equals("boolean")) {
                 return String.valueOf(m_rand.nextBoolean());
@@ -311,7 +314,7 @@ public class Type {
             } else if (m_simpleName.toLowerCase().equals("double")) {
                 return String.valueOf(m_rand.nextDouble());
             } else if (m_simpleName.equals("String")) {
-                return "\"" + RandomStringUtils.randomAlphanumeric(5) + "\"";
+                return "\"" + RandomStringUtils.random(5, 0, 0, true, true, null, m_rand) + "\"";
             }
             return "NOT A PRIMITIVE";
         } else {

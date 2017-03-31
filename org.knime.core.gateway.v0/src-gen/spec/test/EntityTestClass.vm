@@ -156,23 +156,23 @@ public class ${name}Test {
 #elseif($type.isPrimitiveList())
  		List<Object> subList${foreach.count} = new ArrayList<>();
 #foreach($i in [1..5])
-		subList${idx}.add(${type.getTypeParameter(0).createRandomPrimitive()});
+		subList${idx}.add(${type.getTypeParameter(0).createRandomPrimitive($i)});
 #end
  		valueList.add(subList${foreach.count});
 #elseif($type.isEntityMap())
  		Map<${type.getTypeParameter(0).toString()}, List<Object>> subMap${foreach.count} = new HashMap<>();
 #foreach($i in [1..5])
- 		subMap${idx}.put(${type.getTypeParameter(0).createRandomPrimitive()}, ${type.getTypeParameter(1).toString("","Test")}.createValueList());
+ 		subMap${idx}.put(${type.getTypeParameter(0).createRandomPrimitive($i)}, ${type.getTypeParameter(1).toString("","Test")}.createValueList());
 #end
  		valueList.add(subMap${foreach.count});
 #elseif($type.isPrimitiveMap())
 		Map<${type.getTypeParameter(0).toString()}, Object> subMap${foreach.count} = new HashMap<>();
 #foreach($i in [1..5])
-		subMap${idx}.put(${type.getTypeParameter(0).createRandomPrimitive()}, ${type.getTypeParameter(1).createRandomPrimitive()});
+		subMap${idx}.put(${type.getTypeParameter(0).createRandomPrimitive($i)}, ${type.getTypeParameter(1).createRandomPrimitive($i)});
 #end
  		valueList.add(subMap${foreach.count});
 #elseif($type.isPrimitive())
- 		valueList.add(${type.createRandomPrimitive()});	
+ 		valueList.add(${type.createRandomPrimitive(0)});	
 #else
  		valueList.add(${type.toString("","Test")}.createValueList());
 #end

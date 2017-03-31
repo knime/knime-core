@@ -87,11 +87,11 @@ public class NodeContainerServiceTest {
     @Test
     public void test_getNodeSettingsJSON() {
 		//create parameter values
-		String workflowID = "uXDxa";
-		String nodeID = "REHjF";
+		String workflowID = "CGvxL";
+		String nodeID = "CGvxL";
  
 		//create return value   
-		String res = "yoFJH";        
+		String res = "CGvxL";        
 
 		//mock return value
 		Mockito.when(m_serviceMock.getNodeSettingsJSON(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);

@@ -105,10 +105,10 @@ public class ${name}Test {
 #elseif($type.isPrimitiveList())
 		${type.toString()} $param.getName() = new ArrayList<>();
 #foreach($i in [1..5])
-		${param.getName()}.add(${type.getTypeParameter(0).createRandomPrimitive()});
+		${param.getName()}.add(${type.getTypeParameter(0).createRandomPrimitive(${i})});
 #end
 #elseif($type.isPrimitive())
-		$type.toString() $param.getName() = $type.createRandomPrimitive();
+		$type.toString() $param.getName() = $type.createRandomPrimitive(0);
 #end
 #end ##param-loop
 
@@ -132,10 +132,10 @@ public class ${name}Test {
 #elseif($rettype.isPrimitiveList())
 		${rettype.toString()} res = new ArrayList<>(5);
 #foreach($i in [1..5])
-        res.add(${rettype.getTypeParameter(0).createRandomPrimitive()});
+        res.add(${rettype.getTypeParameter(0).createRandomPrimitive($i)});
 #end
 #elseif($rettype.isPrimitive())
-		${rettype.toString()} res = ${rettype.createRandomPrimitive()};        
+		${rettype.toString()} res = ${rettype.createRandomPrimitive(0)};        
 #elseif($rettype.isEntity())
 		List<Object> values = ${rettype.toString("", "Test")}.createValueList();
         ${rettype.toString()} res = ${rettype.toString("", "Test")}.createEnt(values);
