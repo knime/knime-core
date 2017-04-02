@@ -129,6 +129,8 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         panel.add(columnSelectionPanel, BorderLayout.NORTH);
         Box attributeSelectionBox = Box.createHorizontalBox();
         m_filterPanel = new NominalValueFilterPanel();
+        m_filterPanel.setIncludeTitle("Top");
+        m_filterPanel.setExcludeTitle("Bottom");
         attributeSelectionBox.add(m_filterPanel);
         panel.add(attributeSelectionBox, BorderLayout.CENTER);
         addTab("Selection", new JScrollPane(panel));
