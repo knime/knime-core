@@ -67,10 +67,19 @@ public class SinglePageWebResourceController extends WebResourceController {
 
     /**
      * @param manager
+     * @param nodeID
      */
-    SinglePageWebResourceController(final WorkflowManager manager, final NodeID nodeID) {
+    public SinglePageWebResourceController(final WorkflowManager manager, final NodeID nodeID) {
         super(manager);
         m_nodeID = nodeID;
+    }
+
+    /**
+     * Checks different criteria to determine if a combined page view is available for a given subnode.
+     * @return true, if a view on the subnode is available, false otherwise
+     */
+    public boolean isSubnodeViewAvailable() {
+        return super.isSubnodeViewAvailable(m_nodeID);
     }
 
     /**

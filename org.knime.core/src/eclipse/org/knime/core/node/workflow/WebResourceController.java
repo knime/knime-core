@@ -316,7 +316,7 @@ public abstract class WebResourceController {
      * @return true, if a view on the subnode is available, false otherwise
      * @since 3.4
      */
-    public boolean isSubnodeViewAvailable(final NodeID subnodeId) {
+    protected boolean isSubnodeViewAvailable(final NodeID subnodeId) {
         // potentially null when queried from contained metanode
         NodeContainer sourceNC = m_manager.getWorkflow().getNode(subnodeId);
         // only consider nodes that are...SubNodes and...

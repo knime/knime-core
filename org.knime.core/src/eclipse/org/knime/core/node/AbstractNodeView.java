@@ -206,6 +206,7 @@ public abstract class AbstractNodeView<T extends ViewableModel> {
      * {@link #openView(String, Rectangle)}. (Core) Sub-classes may widen the scope of this
      * method. */
     void closeView() {
+        /* needs to be called like this to avoid publicizing model methods */
         if (m_viewableModel instanceof NodeModel) {
             ((NodeModel)m_viewableModel).unregisterView(this);
         }

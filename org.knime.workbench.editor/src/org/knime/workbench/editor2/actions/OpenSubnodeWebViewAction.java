@@ -59,7 +59,7 @@ import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.wizard.WizardPageManager;
+import org.knime.core.wizard.SinglePageManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.subnode.SubnodeViewableModel;
@@ -92,8 +92,8 @@ public final class OpenSubnodeWebViewAction extends Action {
     @Override
     public boolean isEnabled() {
         boolean executed = m_nodeContainer.getNodeContainerState().isExecuted();
-        WizardPageManager wpm = WizardPageManager.of(m_nodeContainer.getParent());
-        return executed && wpm.hasWizardPage(m_nodeContainer.getID());
+        SinglePageManager spm = SinglePageManager.of(m_nodeContainer.getParent());
+        return executed && spm.hasWizardPage(m_nodeContainer.getID());
     }
 
     @Override
@@ -152,8 +152,8 @@ public final class OpenSubnodeWebViewAction extends Action {
     static boolean hasContainerView(final NodeContainer cont) {
         boolean hasView = false;
         if (cont instanceof SubNodeContainer) {
-            WizardPageManager wpm = WizardPageManager.of(cont.getParent());
-            hasView = wpm.hasWizardPage(cont.getID());
+            SinglePageManager spm = SinglePageManager.of(cont.getParent());
+            hasView = spm.hasWizardPage(cont.getID());
         }
         return hasView;
     }

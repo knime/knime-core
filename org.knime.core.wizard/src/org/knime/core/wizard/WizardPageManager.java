@@ -49,44 +49,24 @@
 package org.knime.core.wizard;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.ExternalNodeData.ExternalNodeDataBuilder;
-import org.knime.core.node.property.hilite.HiLiteManager;
-import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.web.WebResourceLocator;
-import org.knime.core.node.web.WebResourceLocator.WebResourceType;
-import org.knime.core.node.web.WebTemplate;
-import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.SinglePageWebResourceController;
 import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.js.core.JSONViewContent;
-import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
-import org.knime.js.core.JSONWebNodePageConfiguration;
-import org.knime.js.core.layout.bs.JSONLayoutColumn;
-import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
-import org.knime.js.core.layout.bs.JSONLayoutRow;
-import org.knime.js.core.layout.bs.JSONLayoutViewContent;
-import org.knime.js.core.selections.json.JSONSelectionTranslator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 
 /**
  * Utility class which handles serialization/deserialization of meta node or wizard views,
@@ -95,9 +75,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public final class WizardPageManager {
-
-    private final WorkflowManager m_wfm;
+public final class WizardPageManager extends PageManager {
 
     /**
      * Returns a {@link WizardPageManager} instance for the given {@link WorkflowManager}
@@ -115,15 +93,7 @@ public final class WizardPageManager {
      * @param workflowManager a {@link WorkflowManager} corresponding to the current workflow
      */
     private WizardPageManager(final WorkflowManager workflowManager) {
-        m_wfm = workflowManager;
-    }
-
-    /**
-     * Returns the underlying {@link WorkflowManager} instance
-     * @return The underlying {@link WorkflowManager} instance
-     */
-    public WorkflowManager getWorkflowManager() {
-        return m_wfm;
+        super(workflowManager);
     }
 
     /**
@@ -136,16 +106,7 @@ public final class WizardPageManager {
      * @noreference This method is not intended to be referenced by clients.
      */
     public WizardExecutionController getWizardExecutionController() {
-        return m_wfm.getWizardExecutionController();
-    }
-
-    /**
-     * Checks different criteria to determine if a combined page view is available for a given metanode.
-     * @param containerNodeID the {@link NodeID} of the metanode to check
-     * @return true, if a view on the metanode is available, false otherwise
-     */
-    public boolean hasWizardPage(final NodeID containerNodeID) {
-        return m_wfm.getWizardExecutionController().isSubnodeViewAvailable(containerNodeID);
+        return getWorkflowManager().getWizardExecutionController();
     }
 
     /**
@@ -154,84 +115,9 @@ public final class WizardPageManager {
      * @throws IOException if the layout of the wizard page can not be generated
      */
     public JSONWebNodePage createCurrentWizardPage() throws IOException {
-        WizardExecutionController wec = m_wfm.getWizardExecutionController();
+        WizardExecutionController wec = getWizardExecutionController();
         WizardPageContent page = wec.getCurrentWizardPage();
         return createWizardPageInternal(page);
-    }
-
-    /**
-     * Creates a wizard page object from a given node id
-     *
-     * @param containerNodeID the node id to create the wizard page for
-     * @return a {@link JSONWebNodePage} object which can be used for serialization
-     * @throws IOException if the layout of the wizard page can not be generated
-     */
-    public JSONWebNodePage createWizardPage(final NodeID containerNodeID) throws IOException {
-        SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeID);
-        WizardPageContent page = sec.getWizardPage();
-        return createWizardPageInternal(page);
-    }
-
-    private JSONWebNodePage createWizardPageInternal(final WizardPageContent page) throws IOException {
-        // process layout
-        JSONLayoutPage layout = new JSONLayoutPage();
-        try {
-            String lString = page.getLayoutInfo();
-            if (lString != null && !lString.isEmpty()) {
-                layout = getJSONLayoutFromSubnode(page.getPageNodeID(), page.getLayoutInfo());
-            }
-        } catch (IOException e) {
-            throw new IOException("Layout for page could not be generated: " + e.getMessage(), e);
-        }
-
-        // process selection translators
-        List<JSONSelectionTranslator> selectionTranslators = new ArrayList<JSONSelectionTranslator>();
-        if (page.getHiLiteTranslators() != null) {
-            for (HiLiteTranslator hiLiteTranslator : page.getHiLiteTranslators()) {
-                if (hiLiteTranslator != null) {
-                    selectionTranslators.add(new JSONSelectionTranslator(hiLiteTranslator));
-                }
-            }
-        }
-        if (page.getHiliteManagers() != null) {
-            for (HiLiteManager hiLiteManager : page.getHiliteManagers()) {
-                if (hiLiteManager != null) {
-                    selectionTranslators.add(new JSONSelectionTranslator(hiLiteManager));
-                }
-            }
-        }
-        if (selectionTranslators.size() < 1) {
-            selectionTranslators = null;
-        }
-        JSONWebNodePageConfiguration pageConfig = new JSONWebNodePageConfiguration(layout, null, selectionTranslators);
-
-        Map<String, JSONWebNode> nodes = new HashMap<String, JSONWebNode>();
-        for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
-            WizardNode<?, ?> node = e.getValue();
-            WebTemplate template =
-                WebResourceController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
-            List<String> jsList = new ArrayList<String>();
-            List<String> cssList = new ArrayList<String>();
-            for (WebResourceLocator locator : template.getWebResources()) {
-                if (locator.getType() == WebResourceType.JAVASCRIPT) {
-                    jsList.add(locator.getRelativePathTarget());
-                } else if (locator.getType() == WebResourceType.CSS) {
-                    cssList.add(locator.getRelativePathTarget());
-                }
-            }
-            JSONWebNode jsonNode = new JSONWebNode();
-            jsonNode.setJavascriptLibraries(jsList);
-            jsonNode.setStylesheets(cssList);
-            jsonNode.setNamespace(template.getNamespace());
-            jsonNode.setInitMethodName(template.getInitMethodName());
-            jsonNode.setValidateMethodName(template.getValidateMethodName());
-            jsonNode.setSetValidationErrorMethodName(template.getSetValidationErrorMethodName());
-            jsonNode.setGetViewValueMethodName(template.getPullViewContentMethodName());
-            jsonNode.setViewRepresentation((JSONViewContent)node.getViewRepresentation());
-            jsonNode.setViewValue((JSONViewContent)node.getViewValue());
-            nodes.put(e.getKey().toString(), jsonNode);
-        }
-        return new JSONWebNodePage(pageConfig, nodes);
     }
 
     /**
@@ -248,57 +134,13 @@ public final class WizardPageManager {
     }
 
     /**
-     * Creates a JSON string containing a wizard page from a given node id
-     *
-     * @param containerNodeID the node id to create the wizard page string for
-     * @return a JSON string containing the wizard page
-     * @throws IOException if the layout of the wizard page can not be generated
-     * @throws JsonProcessingException on serialization errors
-     */
-    public String createWizardPageString(final NodeID containerNodeID) throws IOException, JsonProcessingException {
-        JSONWebNodePage jsonPage = createWizardPage(containerNodeID);
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
-        return mapper.writeValueAsString(jsonPage);
-    }
-
-    private JSONLayoutPage getJSONLayoutFromSubnode(final NodeIDSuffix pageID, final String layoutInfo) throws IOException {
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
-        ObjectReader reader = mapper.readerForUpdating(new JSONLayoutPage());
-        JSONLayoutPage page = reader.readValue(layoutInfo);
-        if (page != null && page.getRows() != null) {
-            for (JSONLayoutRow row : page.getRows()) {
-                setNodeIDInContent(row, pageID);
-            }
-        }
-        return page;
-    }
-
-    private void setNodeIDInContent(final JSONLayoutContent content, final NodeIDSuffix pageID) {
-        if (content instanceof JSONLayoutRow) {
-            for (JSONLayoutColumn col : ((JSONLayoutRow)content).getColumns()) {
-                for (JSONLayoutContent subContent : col.getContent()) {
-                    setNodeIDInContent(subContent, pageID);
-                }
-            }
-        } else if (content instanceof JSONLayoutViewContent) {
-            JSONLayoutViewContent view = (JSONLayoutViewContent)content;
-            String nodeIDString = view.getNodeID();
-            if (pageID != null) {
-                NodeIDSuffix layoutNodeID = pageID.createChild(Integer.parseInt(view.getNodeID()));
-                nodeIDString = layoutNodeID.toString();
-            }
-            view.setNodeID(nodeIDString);
-        }
-    }
-
-    /**
      * Applies a given map of workflow parameters to the current workflow
      *
      * @param parameterMap a map with parameter name as key and parameter string value as value
      * @throws InvalidSettingsException If a parameter name is not valid or a not uniquely defined in the workflow or if the parameter value does not validate.
      */
     public void applyWorkflowParameters(final Map<String, String> parameterMap) throws InvalidSettingsException {
-        try (WorkflowLock lock = m_wfm.lock()) {
+        try (WorkflowLock lock = getWorkflowManager().lock()) {
             if (parameterMap.size() > 0) {
                 Map<String, ExternalNodeData> inputData = new HashMap<String, ExternalNodeData>(parameterMap.size());
                 for (String key : parameterMap.keySet()) {
@@ -308,7 +150,7 @@ public final class WizardPageManager {
                 }
                 try {
                     //FIXME: This call should happen on the WizardExecutionController, once there is no potential version issues
-                    m_wfm.setInputNodes(inputData);
+                    getWorkflowManager().setInputNodes(inputData);
                 } catch (Exception ex) {
                     String errorPrefix = "Could not set workflow parameters: ";
                     String errorMessage = ex.getMessage();
@@ -322,60 +164,6 @@ public final class WizardPageManager {
     }
 
     /**
-     * Validates a given map of view values contained in a given subnode.
-     * @param viewValues a map with {@link NodeIDSuffix} string as key and parsed view value as value
-     * @param containerNodeId the {@link NodeID} of the subnode
-     * @return Null or empty map if validation succeeds, map of errors otherwise
-     * @throws IOException on serialization error
-     */
-    public Map<String, ValidationError> validateViewValues(final Map<String, String> viewValues, final NodeID containerNodeId) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            ObjectMapper mapper = new ObjectMapper();
-            for (String key : viewValues.keySet()) {
-                String content = mapper.writeValueAsString(viewValues.get(key));
-                viewValues.put(key, content);
-            }
-            if (!viewValues.isEmpty()) {
-                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
-                return sec.validateViewValuesInPage(viewValues);
-            } else {
-                return Collections.emptyMap();
-            }
-        }
-    }
-
-    /**
-     * Applies a given map of view values to a given subnode which have already been validated.
-     * @param viewValues an already validated map with {@link NodeIDSuffix} string as key and parsed view value as value
-     * @param containerNodeId the {@link NodeID} of the subnode
-     * @param useAsDefault true, if values are supposed to be applied as new defaults, false if applied temporarily
-     * @throws IOException on serialization error
-     */
-    public void applyValidatedViewValues(final Map<String, String> viewValues, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            /*ObjectMapper mapper = new ObjectMapper();
-            for (String key : viewValues.keySet()) {
-                String content = mapper.writeValueAsString(viewValues.get(key));
-                viewValues.put(key, content);
-            }*/
-            if (!viewValues.isEmpty()) {
-                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
-                sec.loadValuesIntoPage(viewValues, false, useAsDefault);
-            }
-        }
-    }
-
-    /**
-     * Triggers reexecution of the subnode, including all contained nodes
-     * @param containerNodeId the {@link NodeID} of the subnode to reexecute.
-     */
-    public void reexecuteSubnode(final NodeID containerNodeId) {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            m_wfm.getSinglePageExecutionController(containerNodeId).reexecuteSinglePage();
-        }
-    }
-
-    /**
      * Applies a given map of view values to the current subnode in wizard execution.
      *
      * @param valueMap a map with {@link NodeIDSuffix} string as key and parsed view value as value
@@ -383,70 +171,14 @@ public final class WizardPageManager {
      * @throws IOException on JSON serialization errors
      */
     public String applyViewValuesToCurrentPage(final Map<String, String> valueMap) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
+        try (WorkflowLock lock = getWorkflowManager().lock()) {
             Map<String, String> viewContentMap = validateValueMap(valueMap);
             Map<String, ValidationError> validationResults = null;
             if (!valueMap.isEmpty()) {
-                WizardExecutionController wec = m_wfm.getWizardExecutionController();
+                WizardExecutionController wec = getWizardExecutionController();
                 validationResults = wec.loadValuesIntoCurrentPage(viewContentMap);
             }
             return serializeValidationResult(validationResults);
-        }
-    }
-
-    /**
-     * Applies a given map of view values to a given subnode.
-     *
-     * @param valueMap a map with {@link NodeIDSuffix} string as key and parsed view value as value
-     * @param containerNodeId the node ID to apply the values to
-     * @return A JSON-serialized string containing the validation result, null if validation succeeded.
-     * @throws IOException on JSON serialization errors
-     */
-    public String applyViewValues(final Map<String, String> valueMap, final NodeID containerNodeId) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            Map<String, String> viewContentMap = validateValueMap(valueMap);
-            Map<String, ValidationError> validationResults = null;
-            if (!valueMap.isEmpty()) {
-                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
-                validationResults = sec.loadValuesIntoPage(viewContentMap);
-            }
-            return serializeValidationResult(validationResults);
-        }
-    }
-
-    private Map<String, String> validateValueMap(final Map<String, String> valueMap) throws IOException{
-        try (WorkflowLock lock = m_wfm.lock()) {
-            ObjectMapper mapper = new ObjectMapper();
-            for (String key : valueMap.keySet()) {
-                String content = mapper.writeValueAsString(valueMap.get(key));
-                valueMap.put(key, content);
-            }
-            return valueMap;
-        }
-    }
-
-    private String serializeValidationResult(final Map<String, ValidationError> validationResults) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonString = null;
-            if (validationResults != null && !validationResults.isEmpty()) {
-                jsonString = mapper.writeValueAsString(validationResults);
-            }
-            return jsonString;
-        }
-    }
-
-    /**
-     * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution subsequently.
-     * @param valueMap an already validated map with {@link NodeIDSuffix} string as key and parsed view value as value
-     * @param containerNodeId the {@link NodeID} of the subnode
-     * @param useAsDefault true, if values are supposed to be applied as new defaults, false if applied temporarily
-     * @throws IOException on serialization error
-     */
-    public void applyValidatedValuesAndReexecute(final Map<String, String> valueMap, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
-        try (WorkflowLock lock = m_wfm.lock()) {
-            applyValidatedViewValues(valueMap, containerNodeId, useAsDefault);
-            reexecuteSubnode(containerNodeId);
         }
     }
 }

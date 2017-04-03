@@ -76,7 +76,7 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.wizard.WizardPageManager;
+import org.knime.core.wizard.SinglePageManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
@@ -92,6 +92,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
+ *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
@@ -102,7 +103,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     private JSONWebNodePage m_page;
     private SubnodeViewValue m_value;
 
-    private final WizardPageManager m_wpm;
+    private final SinglePageManager m_spm;
     private final SubNodeContainer m_container;
     private final String m_viewName;
     private final JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> m_viewCreator;
@@ -121,7 +122,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     public SubnodeViewableModel(final SubNodeContainer nodeContainer, final String viewName) throws IOException {
         m_viewName = viewName;
         m_viewCreator = new SubnodeWizardViewCreator();
-        m_wpm = WizardPageManager.of(nodeContainer.getParent());
+        m_spm = SinglePageManager.of(nodeContainer.getParent());
         m_container = nodeContainer;
         createPageAndValue();
         m_nodeStateChangeListener = new NodeStateChangeListener() {
@@ -175,7 +176,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     }
 
     private void createPageAndValue() throws IOException {
-        m_page = m_wpm.createWizardPage(m_container.getID());
+        m_page = m_spm.createWizardPage(m_container.getID());
         m_value = new SubnodeViewValue();
         Map<String, String> valueMap = new HashMap<String, String>();
         ObjectMapper mapper = new ObjectMapper();
@@ -192,7 +193,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public ValidationError validateViewValue(final SubnodeViewValue viewContent) {
         try {
-            Map<String, ValidationError> validationResult = m_wpm.validateViewValues(viewContent.getViewValues(), m_container.getID());
+            Map<String, ValidationError> validationResult = m_spm.validateViewValues(viewContent.getViewValues(), m_container.getID());
             if (!validationResult.isEmpty()) {
                 return new CollectionValidationError(validationResult);
             }
@@ -211,7 +212,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         try {
             // TODO assert node is executed
             m_isReexecuteInProgress.set(true);
-            m_wpm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
+            m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
         } catch (IOException e) {
             LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
             // TODO -- (verification) double check that view is blank if IOException occurred
