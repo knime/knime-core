@@ -101,7 +101,7 @@ public class ListFilesNodeModel extends NodeModel {
             throw new InvalidSettingsException("No configuration available.");
         }
         // check valid config
-        m_settings.getDirectoriesFromLocationString();
+        m_settings.getRootsFromLocationString();
         return new DataTableSpec[]{ListFiles.SPEC};
     }
 

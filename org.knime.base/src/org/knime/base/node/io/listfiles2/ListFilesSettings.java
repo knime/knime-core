@@ -45,12 +45,13 @@
  */
 package org.knime.base.node.io.listfiles2;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -66,7 +67,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ListFilesSettings {
+class ListFilesSettings {
 
     /** ID for the file history. */
     private static final String LIST_FILES_HISTORY_ID = "list_files_history_ID";
@@ -166,37 +167,36 @@ public class ListFilesSettings {
      * @return A list of files representing directories.
      * @throws InvalidSettingsException If the argument is invalid or does not represent a list of existing directories.
      */
-    public Collection<File> getDirectoriesFromLocationString() throws InvalidSettingsException {
+    public Collection<URL> getRootsFromLocationString() throws InvalidSettingsException {
         if (m_locationString == null || m_locationString.equals("")) {
             throw new InvalidSettingsException("Please select a folder!");
         }
         String[] subs = m_locationString.split(";");
-        List<File> result = new ArrayList<File>();
+        List<URL> result = new ArrayList<URL>();
         for (String s : subs) {
-            File f = null;
-
-                try {
-                    Path p = FileUtil.resolveToPath(FileUtil.toURL(s));
-                    if (p == null) {
-                        throw new InvalidSettingsException("Only relative knime URLs are supported.");
+            try {
+                URL u = FileUtil.toURL(s);
+                if ("file".equalsIgnoreCase(u.getProtocol())) {
+                    Path p = Paths.get(u.toURI());
+                    if (!Files.isDirectory(p)) {
+                        throw new InvalidSettingsException("\"" + s + "\" does not exist or is not a directory");
                     }
-                    f = p.toFile();
-                } catch (InvalidPathException e) {
-                    throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
-                } catch (MalformedURLException e) {
-                    throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
-                } catch (IOException e) {
-                    throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
-                } catch (URISyntaxException e) {
-                    throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
+                } else if (!"knime".equalsIgnoreCase(u.getProtocol())) {
+                    throw new InvalidSettingsException("Listing of " + u.getProtocol() + " URLs is not supported.");
+                } else {
+                    Path resolved = FileUtil.resolveToPath(u);
+                    if ((resolved != null) && !Files.isDirectory(resolved)) {
+                        throw new InvalidSettingsException("\"" + s + "\" does not exist or is not a directory");
+                    }
                 }
-
-
-            if (!f.isDirectory()) {
-                throw new InvalidSettingsException("\"" + s + "\" does not exist or is not a directory");
+                result.add(u);
+            } catch (InvalidPathException e) {
+                throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
+            } catch (IOException e) {
+                throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
+            } catch (URISyntaxException e) {
+                throw new InvalidSettingsException("Can not resolve \"" + s + "\" to a local path.", e);
             }
-
-            result.add(f);
         }
         return result;
     }
