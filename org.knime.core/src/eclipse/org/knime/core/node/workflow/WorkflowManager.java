@@ -2495,6 +2495,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WizardExecutionController getWizardExecutionController() {
         CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
+        CheckUtils.checkState(getContext().getServerAuthToken().isPresent(),
+            "Not running on server -- method not supposed to be called");
         try (WorkflowLock lock = lock()) {
             if (!(m_executionController instanceof WizardExecutionController)) {
                 m_executionController = new WizardExecutionController(this);
