@@ -95,9 +95,9 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
  * @since 3.4
  */
-public abstract class WebResourceExecutionController {
+public abstract class WebResourceController {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceExecutionController.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceController.class);
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
     private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
@@ -306,7 +306,7 @@ public abstract class WebResourceExecutionController {
     /** Created from workflow.
      * @param manager ...
      */
-    WebResourceExecutionController(final WorkflowManager manager) {
+    WebResourceController(final WorkflowManager manager) {
         m_manager = CheckUtils.checkArgumentNotNull(manager);
     }
 
@@ -586,14 +586,14 @@ public abstract class WebResourceExecutionController {
      */
     protected void checkDiscard() {
         CheckUtils.checkArgument(m_manager != null, "%s has been disconnected from workflow",
-                WebResourceExecutionController.class.getSimpleName());
+                WebResourceController.class.getSimpleName());
     }
 
     /** Sets manager to null. Called when new wizard is created on top of workflow. */
     void discard() {
     }
 
-    /** Result value of {@link WizardExecutionController#getCurrentWizardPage()} and {@link SinglePageExecutionController#getWizardPage()}. */
+    /** Result value of {@link WizardExecutionController#getCurrentWizardPage()} and {@link SinglePageWebResourceController#getWizardPage()}. */
     public static final class WizardPageContent {
 
         private final NodeIDSuffix m_pageNodeID;

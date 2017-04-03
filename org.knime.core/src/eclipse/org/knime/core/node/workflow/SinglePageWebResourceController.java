@@ -61,14 +61,14 @@ import org.knime.core.node.web.ValidationError;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public class SinglePageExecutionController extends WebResourceExecutionController {
+public class SinglePageWebResourceController extends WebResourceController {
 
     private final NodeID m_nodeID;
 
     /**
      * @param manager
      */
-    SinglePageExecutionController(final WorkflowManager manager, final NodeID nodeID) {
+    SinglePageWebResourceController(final WorkflowManager manager, final NodeID nodeID) {
         super(manager);
         m_nodeID = nodeID;
     }

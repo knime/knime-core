@@ -65,12 +65,11 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.WebResourceExecutionController;
-import org.knime.core.node.workflow.WebResourceExecutionController.WizardPageContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.SinglePageExecutionController;
-import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SinglePageWebResourceController;
+import org.knime.core.node.workflow.WebResourceController;
+import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -90,6 +89,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
 /**
+ * Utility class which handles serialization/deserialization of meta node or wizard views,
+ * as well as forwarding and bundling requests for single page views.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
@@ -126,12 +127,12 @@ public final class WizardPageManager {
     }
 
     /**
-     * Returns the underlying {@link WebResourceExecutionController} instance.
+     * Returns the underlying {@link WebResourceController} instance.
      *<br><br>
      * WARNING: this method will most likely be removed, once functionality is completely encapsulated.
      *
      * @return
-     * the underlying {@link WebResourceExecutionController} instance.
+     * the underlying {@link WebResourceController} instance.
      * @noreference This method is not intended to be referenced by clients.
      */
     public WizardExecutionController getWizardExecutionController() {
@@ -166,7 +167,7 @@ public final class WizardPageManager {
      * @throws IOException if the layout of the wizard page can not be generated
      */
     public JSONWebNodePage createWizardPage(final NodeID containerNodeID) throws IOException {
-        SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeID);
+        SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeID);
         WizardPageContent page = sec.getWizardPage();
         return createWizardPageInternal(page);
     }
@@ -208,7 +209,7 @@ public final class WizardPageManager {
         for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
             WizardNode<?, ?> node = e.getValue();
             WebTemplate template =
-                WebResourceExecutionController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
+                WebResourceController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
             List<String> jsList = new ArrayList<String>();
             List<String> cssList = new ArrayList<String>();
             for (WebResourceLocator locator : template.getWebResources()) {
@@ -320,6 +321,13 @@ public final class WizardPageManager {
         }
     }
 
+    /**
+     * Validates a given map of view values contained in a given subnode.
+     * @param viewValues a map with {@link NodeIDSuffix} string as key and parsed view value as value
+     * @param containerNodeId the {@link NodeID} of the subnode
+     * @return Null or empty map if validation succeeds, map of errors otherwise
+     * @throws IOException on serialization error
+     */
     public Map<String, ValidationError> validateViewValues(final Map<String, String> viewValues, final NodeID containerNodeId) throws IOException {
         try (WorkflowLock lock = m_wfm.lock()) {
             ObjectMapper mapper = new ObjectMapper();
@@ -328,7 +336,7 @@ public final class WizardPageManager {
                 viewValues.put(key, content);
             }
             if (!viewValues.isEmpty()) {
-                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
                 return sec.validateViewValuesInPage(viewValues);
             } else {
                 return Collections.emptyMap();
@@ -336,6 +344,13 @@ public final class WizardPageManager {
         }
     }
 
+    /**
+     * Applies a given map of view values to a given subnode which have already been validated.
+     * @param viewValues an already validated map with {@link NodeIDSuffix} string as key and parsed view value as value
+     * @param containerNodeId the {@link NodeID} of the subnode
+     * @param useAsDefault true, if values are supposed to be applied as new defaults, false if applied temporarily
+     * @throws IOException on serialization error
+     */
     public void applyValidatedViewValues(final Map<String, String> viewValues, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
         try (WorkflowLock lock = m_wfm.lock()) {
             /*ObjectMapper mapper = new ObjectMapper();
@@ -344,15 +359,19 @@ public final class WizardPageManager {
                 viewValues.put(key, content);
             }*/
             if (!viewValues.isEmpty()) {
-                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
                 sec.loadValuesIntoPage(viewValues, false, useAsDefault);
             }
         }
     }
 
-    public void reexecuteSubnode(final SubNodeContainer container) {
+    /**
+     * Triggers reexecution of the subnode, including all contained nodes
+     * @param containerNodeId the {@link NodeID} of the subnode to reexecute.
+     */
+    public void reexecuteSubnode(final NodeID containerNodeId) {
         try (WorkflowLock lock = m_wfm.lock()) {
-            m_wfm.getSinglePageExecutionController(container.getID()).reexecuteSinglePage();
+            m_wfm.getSinglePageExecutionController(containerNodeId).reexecuteSinglePage();
         }
     }
 
@@ -388,7 +407,7 @@ public final class WizardPageManager {
             Map<String, String> viewContentMap = validateValueMap(valueMap);
             Map<String, ValidationError> validationResults = null;
             if (!valueMap.isEmpty()) {
-                SinglePageExecutionController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
+                SinglePageWebResourceController sec = m_wfm.getSinglePageExecutionController(containerNodeId);
                 validationResults = sec.loadValuesIntoPage(viewContentMap);
             }
             return serializeValidationResult(validationResults);
@@ -414,6 +433,20 @@ public final class WizardPageManager {
                 jsonString = mapper.writeValueAsString(validationResults);
             }
             return jsonString;
+        }
+    }
+
+    /**
+     * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution subsequently.
+     * @param valueMap an already validated map with {@link NodeIDSuffix} string as key and parsed view value as value
+     * @param containerNodeId the {@link NodeID} of the subnode
+     * @param useAsDefault true, if values are supposed to be applied as new defaults, false if applied temporarily
+     * @throws IOException on serialization error
+     */
+    public void applyValidatedValuesAndReexecute(final Map<String, String> valueMap, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
+        try (WorkflowLock lock = m_wfm.lock()) {
+            applyValidatedViewValues(valueMap, containerNodeId, useAsDefault);
+            reexecuteSubnode(containerNodeId);
         }
     }
 }

@@ -50,7 +50,9 @@ package org.knime.core.node.wizard;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -83,6 +85,19 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
+    private final Set<DisposeListener> m_disposeListeners;
+
+    /**
+     * Listener which is notified, when the view is disposed.
+     * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
+     * @since 3.4
+     */
+    public static interface DisposeListener {
+        /**
+         * Called when the view is disposed.
+         */
+        public void viewDisposed();
+    }
 
     /**
      * @param nodeModel
@@ -91,6 +106,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     protected AbstractWizardNodeView(final T nodeModel) {
         super(nodeModel);
         m_delegate = new InteractiveViewDelegate<VAL>();
+        // this assumes that usually only one or no dispose listener is registered
+        m_disposeListeners = new HashSet<DisposeListener>(1);
     }
 
     @Override
@@ -154,6 +171,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     @Override
     protected void callCloseView() {
         closeView();
+        m_disposeListeners.forEach(listener -> listener.viewDisposed());
+        m_disposeListeners.clear();
     }
 
     /**
@@ -167,6 +186,26 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      * Called on view close.
      */
     protected abstract void closeView();
+
+    /**
+     * Adds a dispose listener to this view.
+     * @param listener the listener to add
+     * @return true if this view did not already contain the specified listener
+     * @since 3.4
+     */
+    public boolean addDisposeListener(final DisposeListener listener) {
+        return m_disposeListeners.add(listener);
+    }
+
+    /**
+     * Removes a dispose listener from this view.
+     * @param listener the listener to remove
+     * @return true if this view contained the specified listener
+     * @since 3.4
+     */
+    public boolean removeDisposeListener(final DisposeListener listener) {
+        return m_disposeListeners.remove(listener);
+    }
 
     /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.

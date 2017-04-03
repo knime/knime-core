@@ -58,7 +58,6 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -297,7 +296,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
         Point newLocation = new Point(middle.x - (m_shell.getSize().x / 2) + knimeWindowBounds.x,
                                       middle.y - (m_shell.getSize().y / 2) + knimeWindowBounds.y);
         m_shell.setLocation(newLocation.x, newLocation.y);
-        m_shell.addDisposeListener(new DisposeListener() {
+        m_shell.addDisposeListener(new org.eclipse.swt.events.DisposeListener() {
             @Override
             public void widgetDisposed(final DisposeEvent e) {
                 callCloseView();

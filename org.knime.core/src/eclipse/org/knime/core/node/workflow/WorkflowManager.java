@@ -2509,10 +2509,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalStateException If this workflow is not a project.
      * @since 3.4
      */
-    public SinglePageExecutionController getSinglePageExecutionController(final NodeID pageID) {
+    public SinglePageWebResourceController getSinglePageExecutionController(final NodeID pageID) {
         CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
         try (WorkflowLock lock = lock()) {
-            return new SinglePageExecutionController(this, pageID);
+            return new SinglePageWebResourceController(this, pageID);
         }
     }
 

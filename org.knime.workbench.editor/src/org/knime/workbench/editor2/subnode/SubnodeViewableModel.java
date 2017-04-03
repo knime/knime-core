@@ -109,6 +109,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     private String m_viewPath;
     private AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> m_view;
     private AtomicBoolean m_isReexecuteInProgress = new AtomicBoolean(false);
+    private NodeStateChangeListener m_nodeStateChangeListener;
 
     /**
      * Creates a new instance of this viewable model
@@ -123,7 +124,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         m_wpm = WizardPageManager.of(nodeContainer.getParent());
         m_container = nodeContainer;
         createPageAndValue();
-        nodeContainer.addNodeStateChangeListener(new NodeStateChangeListener() {
+        m_nodeStateChangeListener = new NodeStateChangeListener() {
             @Override
             public void stateChanged(final NodeStateEvent state) {
                 NodeContainerState nodeContainerState = nodeContainer.getNodeContainerState();
@@ -133,7 +134,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                         try {
                             createPageAndValue();
                         } catch (IOException e) {
-                            // TODO log error
+                            LOGGER.error("Creating view failed: " + e.getMessage(), e);
                             reset();
                         }
                     } else {
@@ -152,7 +153,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                     m_view.callViewableModelChanged();
                 }
             }
-        });
+        };
+        nodeContainer.addNodeStateChangeListener(m_nodeStateChangeListener);
     }
 
     /**
@@ -163,6 +165,12 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     public void registerView(final AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> view) {
         if (m_view == null) {
             m_view = view;
+            m_view.addDisposeListener(new AbstractWizardNodeView.DisposeListener() {
+                @Override
+                public void viewDisposed() {
+                    discard();
+                }
+            });
         }
     }
 
@@ -190,7 +198,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             }
         } catch (IOException e) {
             LOGGER.error("Validating view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
-            /* FIXME what to do? */
+            // TODO -- (verification) double check that view is blank if IOException occurred
         }
         return null;
     }
@@ -203,9 +211,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         try {
             // TODO assert node is executed
             m_isReexecuteInProgress.set(true);
-            // TODO combine two lines into new method on WizardPageManager -- do with try (lock = lock())
-            m_wpm.applyValidatedViewValues(value.getViewValues(), m_container.getID(), useAsDefault);
-            m_wpm.reexecuteSubnode(m_container);
+            m_wpm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
         } catch (IOException e) {
             LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
             // TODO -- (verification) double check that view is blank if IOException occurred
@@ -300,7 +306,17 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         m_viewPath = null;
     }
 
-    // TODO add discard method, remove state listener (see constructor)
+    /**
+     * Performs cleanup, call on view dispose.
+     */
+    public void discard() {
+        reset();
+        m_view = null;
+        if (m_nodeStateChangeListener != null) {
+            m_container.removeNodeStateChangeListener(m_nodeStateChangeListener);
+        }
+        m_nodeStateChangeListener = null;
+    }
 
     /**
      * {@inheritDoc}
@@ -377,7 +393,6 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             }
             SubnodeViewValue other = (SubnodeViewValue)obj;
             return new EqualsBuilder()
-                    //TODO: this needs to
                     .append(m_viewValues, other.m_viewValues)
                     .isEquals();
         }
