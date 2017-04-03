@@ -190,7 +190,8 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                         Files.createDirectories(parentDir);
                     }
                 } else {
-                    imageUrl = new URL(remoteBaseUrl.toString() + name);
+                    String baseUrl = remoteBaseUrl.toString();
+                    imageUrl = new URL(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + name);
                 }
 
 
