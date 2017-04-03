@@ -48,6 +48,7 @@ package org.knime.core.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Service enabling access to files which potentially live on remote file systems. An example is a remote executor,
@@ -61,10 +62,14 @@ public interface IRemoteFileUtilsService {
     /**
      * Lists all direct children of the provided URL. The URL is assumed to be a directory on a remote server.
      *
-     * @param parent {@link URL} of a directory on the remote server
+     * @param root {@link URL} of a directory on the remote server
+     * @param filter a filter for the URLs to be included in the result. The filter will only be called for files and
+     *            not directories.
+     * @param recursive <code>true</code> if files should be listed recursively, <code>false</code> if only direct
+     *            children of the root folder should be returned
      *
      * @return direct children of parent as {@link List} of {@link URL}.
      * @throws IOException if an I/O error occurs while listing the children
      */
-    List<URL> listRemoteFiles(URL parent) throws IOException;
+    List<URL> listRemoteFiles(URL root, Predicate<URL> filter, boolean recursive) throws IOException;
 }

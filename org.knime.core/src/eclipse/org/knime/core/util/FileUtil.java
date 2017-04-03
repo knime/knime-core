@@ -81,7 +81,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -1349,8 +1348,7 @@ public final class FileUtil {
                 List<URL> files;
                 if (ref != null) {
                     try {
-                        files =
-                            ctx.getService(ref).listRemoteFiles(url).stream().filter(filter).collect(Collectors.toList());
+                        files = ctx.getService(ref).listRemoteFiles(url, filter, recursive);
                     } finally {
                         ctx.ungetService(ref);
                     }
