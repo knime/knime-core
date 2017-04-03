@@ -15,7 +15,10 @@
 			can be listed as well). It is possible to apply a filter on the 
 			files, so that only the files of interests are included in the 
 			resulting list.	There are 3 filters available: file 
-			extension(s), wildcard pattern or regular expression.
+			extension(s), wildcard pattern or regular expression.<br />
+			Note that if remote locations are listed, e.g. if the workflow is running on a KNIME Server, then the
+			location column will be empty for files living in the KNIME Server repository. Only URLs are returned in
+			this case.
          </intro>
 
 		<option name="Location(s):">Select the folders to be scanned. Also KNIME-URLs like "knime://knime.workflow/" 
