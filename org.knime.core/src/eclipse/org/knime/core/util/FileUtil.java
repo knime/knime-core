@@ -1318,7 +1318,10 @@ public final class FileUtil {
      * is used.
      *
      * @param url any {@link URL}
-     * @param filter {@link Predicate} to filter {@link URL}s.
+     * @param filter {@link Predicate} to filter {@link URL}s. The filter is <em>not</em> applied to directories
+     *            encountered during recursive listing!
+     * @param recursive <code>true</code> if files should be listed recursively, <code>false</code> if only the contents
+     *            of the start folder should be listed
      * @return all {@link URL}s which pass the filter test.
      *
      * @throws IOException if an I/O error occurs while resolving the URL
@@ -1326,10 +1329,10 @@ public final class FileUtil {
      * @throws IllegalStateException if {@link NodeContext} or {@link WorkflowContext} are null.
      * @since 3.3
      */
-    public static List<URL> listFiles(final URL url, final Predicate<URL> filter)
+    public static List<URL> listFiles(final URL url, final Predicate<URL> filter, final boolean recursive)
         throws IOException, URISyntaxException {
         if ("file".equalsIgnoreCase(url.getProtocol())) {
-            return listLocalDirectory(url, filter);
+            return listLocalDirectory(url, filter, recursive);
         } else if ("knime".equalsIgnoreCase(url.getProtocol())) {
             WorkflowContext workflowContext = CheckUtils.checkArgumentNotNull(
                 CheckUtils.checkArgumentNotNull(
@@ -1357,22 +1360,32 @@ public final class FileUtil {
                 }
                 return files;
             } else {
-                return listLocalDirectory(url, filter);
+                return listLocalDirectory(url, filter, recursive);
             }
         } else {
             throw new IllegalArgumentException(url.getProtocol() + "-URLs cannot be listed");
         }
     }
 
-    private static List<URL> listLocalDirectory(final URL url, final Predicate<URL> filter)
+    private static List<URL> listLocalDirectory(final URL url, final Predicate<URL> filter, final boolean recursive)
         throws MalformedURLException, IOException, URISyntaxException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(FileUtil.resolveToPath(url))) {
             List<URL> res = new ArrayList<>();
             Iterator<Path> iterator = stream.iterator();
             while (iterator.hasNext()) {
-                URL candidate = iterator.next().toUri().toURL();
-                if (filter.test(candidate)) {
-                    res.add(candidate);
+                Path p = iterator.next();
+                if (Files.isDirectory(p)) {
+                    if (recursive) {
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new IOException("Interrupted by user");
+                        }
+                        res.addAll(listLocalDirectory(p.toUri().toURL(), filter, recursive));
+                    }
+                } else {
+                    URL candidate = p.toUri().toURL();
+                    if (filter.test(candidate)) {
+                        res.add(candidate);
+                    }
                 }
             }
             return res;
