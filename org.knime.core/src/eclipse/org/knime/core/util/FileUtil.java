@@ -1358,6 +1358,7 @@ public final class FileUtil {
                 }
                 return files;
             } else {
+                CheckUtils.checkArgumentNotNull(FileUtil.resolveToPath(url), "Only relative knime URLs are supported: \"%s\"", url);
                 return listLocalDirectory(url, filter, recursive);
             }
         } else {
