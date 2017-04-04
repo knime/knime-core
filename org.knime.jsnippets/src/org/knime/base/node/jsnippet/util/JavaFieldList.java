@@ -119,7 +119,7 @@ public class JavaFieldList<T extends JavaField> extends ArrayList<T> {
                 add(settings);
             } catch (InvalidSettingsException e) {
                 // should never happen.
-                throw new IllegalStateException("Integer key for config.getConfig() should always be valid, but was not.");
+                throw new IllegalStateException("Integer key for config.getConfig() should always be valid, but was not.", e);
             }
         }
     }
