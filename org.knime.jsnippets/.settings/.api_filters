@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.jsnippets" version="2">
+    <resource path="src/org/knime/base/node/jsnippet/util/field/InCol.java" type="org.knime.base.node.jsnippet.util.field.InCol">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.InCol"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/jsnippet/util/field/JavaColumnField.java" type="org.knime.base.node.jsnippet.util.field.JavaColumnField">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.JavaColumnField"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/jsnippet/util/field/JavaField.java" type="org.knime.base.node.jsnippet.util.field.JavaField">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.JavaField"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/jsnippet/util/field/JavaFlowVarField.java" type="org.knime.base.node.jsnippet.util.field.JavaFlowVarField">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.JavaFlowVarField"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/jsnippet/util/field/OutCol.java" type="org.knime.base.node.jsnippet.util.field.OutCol">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.OutCol"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/jsnippet/util/field/OutVar.java" type="org.knime.base.node.jsnippet.util.field.OutVar">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.jsnippet.util.field.OutVar"/>
+                <message_argument value="loadSettingsForDialog(Config)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
