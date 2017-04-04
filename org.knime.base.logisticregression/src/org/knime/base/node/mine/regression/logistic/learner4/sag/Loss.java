@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
@@ -75,4 +76,13 @@ public interface Loss<T extends TrainingRow> {
      * @return the gradient with respect to <b>row</b> and <b>prediction</b>
      */
     public double[] gradient(final T row, final double[] prediction);
+
+    /**
+     * Returns the hessian matrix (second derivatives) for the given weights.
+     *
+     * @param data data used to optimize the weights in <b>beta</b>
+     * @param beta weight vector describing a linear model for <b>data</b>
+     * @return the hessian matrix
+     */
+    public double[][] hessian(final TrainingData<T> data, final WeightVector<T> beta);
 }

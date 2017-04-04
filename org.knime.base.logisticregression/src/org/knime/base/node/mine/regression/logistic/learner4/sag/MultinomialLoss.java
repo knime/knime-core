@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 
 /**
  * The multinomial loss or cross entropy.
@@ -89,6 +90,55 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
 
         }
         return gradient;
+    }
+
+    @Override
+    public double[][] hessian(final TrainingData<ClassificationTrainingRow> data, final WeightVector<ClassificationTrainingRow> beta) {
+
+        final int nBetaVecs = data.getTargetDimension() - 1;
+        final int nFets = data.getFeatureCount() + 1;
+        final int matDim = nBetaVecs * nFets;
+        double[][] hessian = new double[matDim][matDim];
+        for (ClassificationTrainingRow x : data) {
+            double[] prediction = beta.predict(x);
+            // happens in place!
+            transform2Probabilites(x, prediction);
+            // hold one weight at a time fixed
+            for (int i = 0; i < matDim; i++) {
+                // category of the fixed weight
+                int iCat = i / nBetaVecs;
+                // feature of the fixed weight
+                int iFet = i % nFets;
+                // value of the feature for current row
+                double iFetVal = x.getFeature(iFet);
+                for (int cat = 0; cat < nBetaVecs; cat++) {
+                    for (int fet = 0; fet < nFets; fet++) {
+                        // value of feature for other weight
+                        double fetVal = x.getFeature(fet);
+                        double h = iFetVal * fetVal * prediction[iCat];
+                        if (iCat == cat) {
+                            // update if weight applies to same class
+                            h *= prediction[cat] * (1.0 - prediction[cat]);
+                        } else {
+                            // update if weight applies to different class
+                            h *= prediction[iCat] * prediction[cat];
+                        }
+                        // sum second derivatives over all rows
+                        hessian[i][cat * nBetaVecs + fet] += h;
+                    }
+                }
+            }
+        }
+
+
+        return hessian;
+    }
+
+    private void transform2Probabilites(final ClassificationTrainingRow x, final double[] prediction) {
+        double logSumExp = logSumExp(prediction);
+        for (int i = 0; i < prediction.length; i++) {
+            prediction[i] = Math.exp(prediction[i] - logSumExp);
+        }
     }
 
     private static double logSumExp(final double[] prediction) {

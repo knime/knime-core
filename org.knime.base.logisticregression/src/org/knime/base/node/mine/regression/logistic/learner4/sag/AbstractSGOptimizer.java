@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
@@ -118,8 +120,13 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
         }
 
-
         return beta.getWeightVector();
+    }
+
+    private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
+        final double[][] hessian = m_loss.hessian(m_data, beta);
+        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian).scalarMultiply(-1);
+        return MatrixUtils.inverse(observedInformation);
     }
 
     protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);
