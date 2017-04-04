@@ -601,6 +601,7 @@ public class RulePanel extends JPanel {
         m_parser.setFlowVariables(availableFlowVariables);
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.loadSettingsForDialog(settings);
+        update(specs[0], availableFlowVariables);
         if (m_nodeType.hasOutput()) {
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
