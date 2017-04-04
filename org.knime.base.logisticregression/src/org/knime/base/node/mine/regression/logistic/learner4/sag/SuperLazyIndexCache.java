@@ -44,31 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   03.04.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
+
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+public class SuperLazyIndexCache implements IndexCache {
 
-    private final double m_factor;
+    private int[] m_nonZeroIdxs;
 
     /**
-     *
+     * {@inheritDoc}
      */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
+    @Override
+    public void prepareRow(final TrainingRow x) {
+        m_nonZeroIdxs = x.getNonZeroIndices();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
+    public IndexIterator getIterator() {
+        return new SuperLazyIndexIterator();
+    }
+
+    private class SuperLazyIndexIterator implements IndexIterator {
+
+        private int m_pointer = -1;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return m_pointer < m_nonZeroIdxs.length - 1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int next() {
+            return m_nonZeroIdxs[++m_pointer];
+        }
+
     }
 
 }

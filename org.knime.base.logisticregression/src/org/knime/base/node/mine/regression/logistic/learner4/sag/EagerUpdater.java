@@ -56,4 +56,5 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
  */
 interface EagerUpdater<T extends TrainingRow> extends Updater<T> {
 
+    void update(T x, double[] sig, WeightVector<T> beta, double stepSize, int iteration);
 }

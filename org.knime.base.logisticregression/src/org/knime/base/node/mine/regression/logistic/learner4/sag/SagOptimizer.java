@@ -124,7 +124,7 @@ public class SagOptimizer <T extends TrainingRow> {
 
 //                System.out.println("step size: " + alpha);
 
-                w.checkNormalize();
+                w.normalize();
 
             }
 

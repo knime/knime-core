@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   30.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
@@ -52,23 +52,61 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegularizationUpdater {
 
-    private final double m_factor;
+    private final double[] m_cummulativeSum;
 
-    /**
-     *
-     */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
+    public LazyPriorUpdater(final Prior prior, final int nRows, final boolean clip) {
+        super(prior, nRows, clip);
+        m_cummulativeSum = new double[nRows];
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
+    public void update(final WeightVector<?> beta, final double stepSize, final int iteration) {
+        double prev = iteration == 0 ? 0 : m_cummulativeSum[iteration - 1];
+        m_cummulativeSum[iteration] = prev + stepSize / getNRows();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void lazyUpdate(final WeightVector<?> beta, final IndexCache indexCache, final int[] lastVisited, final int iteration) {
+        if (iteration > 0) {
+            double lastCummSum = m_cummulativeSum[iteration - 1];
+            if (isClip()) {
+                beta.update((val, c, i) -> clippedLazyUpdate(val, lastVisited[i], lastCummSum), false, indexCache);
+            } else {
+                beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false, indexCache);
+            }
+        }
+    }
+
+    private double doLazyUpdate(final double betaValue, final int lastVisited, final double lastCummSum) {
+        double prev = lastVisited == 0 ? 0.0 : m_cummulativeSum[lastVisited - 1];
+        return betaValue - (lastCummSum - prev) * evaluatePrior(betaValue);
+    }
+
+    private double clippedLazyUpdate(final double betaValue, final int lastVisited, final double lastCummSum) {
+        double prev = lastVisited == 0 ? 0.0 : m_cummulativeSum[lastVisited - 1];
+        return clip(betaValue, lastCummSum - prev);
+    }
+
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited) {
+        double lastCummSum = m_cummulativeSum[getNRows() - 1];
+        // intercept is not regularized
+        beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false);
+
+    }
+
 
 }

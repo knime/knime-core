@@ -50,6 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**
  * WeightVector implementation that uses a scalar variable to implement simple scaling
@@ -85,10 +86,8 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      * {@inheritDoc}
      */
     @Override
-    public void checkNormalize() {
-        if (m_scale > 1e100 || m_scale < -1e100 || (m_scale > 0 && m_scale < 1e-100) || (m_scale < 0 && m_scale > -1e-100)) {
-            doFinalize();
-        }
+    public void normalize() {
+        doFinalize();
     }
 
     /**
@@ -133,6 +132,48 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
                 p += m_data[c][i] * row.getFeature(i);
             }
             prediction[c] = m_data[c][0] + m_scale * p;
+            assert Double.isFinite(prediction[c]) : "Linear model outputs infinity.";
+        }
+        return prediction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row, final int[] nonZeroIndices) {
+        double[] prediction = new double[m_data.length];
+        for (int c = 0; c < prediction.length; c++) {
+            double p = 0.0;
+            for (int i = 1; i < m_data[c].length; i++) {
+                int idx = nonZeroIndices[i];
+                p += m_data[c][idx] * row.getFeature(idx);
+            }
+            prediction[c] = m_data[c][0] + m_scale * p;
+        }
+        return prediction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row, final IndexCache indexCache) {
+        double[] prediction = new double[m_data.length];
+        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
+            int i = iter.next();
+            if (i == 0) {
+                continue;
+            }
+            for (int c = 0; c < m_data.length; c++) {
+                prediction[c] += m_data[c][i] * row.getFeature(i);
+                assert Double.isFinite(prediction[c]) : "Linear model outputs infinity.";
+            }
+        }
+
+        // apply scale and add intercept
+        for (int c = 0; c < m_data.length; c++) {
+            prediction[c] = prediction[c] * m_scale + m_data[c][0];
         }
         return prediction;
     }
@@ -143,5 +184,13 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     @Override
     public void scale(final double scaleFactor) {
         m_scale *= scaleFactor;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double getScale() {
+        return m_scale;
     }
 }

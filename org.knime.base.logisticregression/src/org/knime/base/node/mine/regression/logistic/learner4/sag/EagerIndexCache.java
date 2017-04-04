@@ -44,31 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   30.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
+
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+class EagerIndexCache implements IndexCache {
 
-    private final double m_factor;
+    private final int m_nFets;
 
     /**
+     * @param nFets the number of features (including the intercept)
      *
      */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
+    public EagerIndexCache(final int nFets) {
+        CheckUtils.checkArgument(nFets > 0, "The number of features must be greater than 0.");
+        m_nFets = nFets;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
+    public void prepareRow(final TrainingRow x) {
+        // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IndexIterator getIterator() {
+        return new EagerIndexIterator();
+    }
+
+    private class EagerIndexIterator implements IndexIterator {
+
+        private int m_pointer = -1;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return m_pointer + 1 < m_nFets;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int next() {
+            return ++m_pointer;
+        }
+
     }
 
 }

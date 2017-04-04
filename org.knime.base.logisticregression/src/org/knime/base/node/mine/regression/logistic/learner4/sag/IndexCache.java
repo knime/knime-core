@@ -44,31 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   30.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+
 /**
+ * Is used to cache the positions of the nonZero indices of a TrainingRow
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+public interface IndexCache {
 
-    private final double m_factor;
+    /**
+     * @param x
+     */
+    public void prepareRow(final TrainingRow x);
+
+    /**
+     * @return
+     */
+    public IndexIterator getIterator();
 
     /**
      *
+     * @author Adrian Nembach, KNIME.com
      */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
-    }
+    public interface IndexIterator {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
+        public boolean hasNext();
+
+        public int next();
     }
 
 }

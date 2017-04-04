@@ -77,14 +77,14 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize) {
+    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize, final int iteration) {
         int id = x.getId();
         if (!m_seen.get(id)) {
             m_seen.set(id);
             m_nCovered++;
         }
 
-        for (int c = 0; c < m_nCats - 1; c++) {
+        for (int c = 0; c < m_nCats; c++) {
             // TODO exploit sparseness
             for (int i = 0; i < m_nFets; i++) {
                 double newD = x.getFeature(i) * (sig[c] - m_gradientMemory[c][id]);
@@ -93,9 +93,15 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
             }
             m_gradientMemory[c][id] = sig[c];
         }
+        double scale = beta.getScale();
+        beta.update((val, c, i) -> performUpdate(val, stepSize, scale, c, i), true);
+    }
 
-        beta.update((val, c, i) -> val - stepSize * m_gradientSum[c][i] / m_nCovered, true);
-
+    private double performUpdate(final double betaValue, final double stepSize, final double scale, final int catIdx, final int fetIdx) {
+        if (fetIdx == 0) {
+            return betaValue - stepSize * m_gradientSum[catIdx][fetIdx] / m_nCovered;
+        }
+        return betaValue - stepSize * m_gradientSum[catIdx][fetIdx] / (scale * m_nCovered);
     }
 
     static class EagerSagUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {

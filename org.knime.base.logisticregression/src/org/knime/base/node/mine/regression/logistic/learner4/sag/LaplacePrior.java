@@ -52,40 +52,23 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class LaplacePrior implements RegularizationPrior {
+final class LaplacePrior implements Prior {
 
-    static final double SQRT_TWO = Math.sqrt(2.0);
+    private static final double SQRT_TWO = Math.sqrt(2.0);
     private final double m_factor;
-    private final int m_nRows;
-    private final boolean m_clip;
 
 
-    public LaplacePrior(final double variance, final int nRows, final boolean clip) {
+    public LaplacePrior(final double variance) {
         assert variance > 0;
-        m_factor = SQRT_TWO / (Math.sqrt(variance) * nRows);
-        m_nRows = nRows;
-        m_clip = clip;
+        m_factor = SQRT_TWO / (Math.sqrt(variance));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void update(final WeightVector<?> beta, final double stepSize) {
-        if (m_clip) {
-            beta.update((val, c, i) -> clip(val, stepSize), false);
-        } else {
-            beta.update((val, c, i) -> val - stepSize * m_factor * Math.signum(val), false);
-        }
-    }
-
-    private double clip(final double val, final double stepSize) {
-        double v = val - stepSize * m_factor * Math.signum(val);
-        if (val < 0) {
-            return v < 0.0 ? v : 0.0;
-        } else {
-            return v > 0.0 ? v : 0.0;
-        }
+    public double calculate(final double betaValue) {
+        return m_factor * Math.signum(betaValue);
     }
 
 }

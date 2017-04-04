@@ -127,9 +127,23 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
 
         assert Double.isFinite(currentLoss);
         assert Double.isFinite(newLoss);
-        double gg = calculateSquaredNorm(row, gradient);
+        double gg = Double.NEGATIVE_INFINITY;
 
-        while (gg > 1.490116119384765625e-8 && m_lipschitz < 1e10 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
+        // use the max squared gradient among all classes
+        // this ensures that step size is small enough yet not too small
+        // which is what happens if the squared norm of the gradient matrix
+        // (we have for each class one gradient vector)
+        for (int c = 0; c < gradient.length; c++) {
+            double g = gradient[c];
+            double ngg = g * g * squaredNorm;
+            if (ngg > gg) {
+                gg = ngg;
+            }
+        }
+
+//        System.out.println("loss: " + currentLoss + " new loss: " + newLoss + " gg: " + gg + " lipschitz: " + m_lipschitz );
+
+        while (gg > 1.490116119384765625e-8 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
             m_lipschitz *= 2;
             for (int i = 0; i < newPred.length; i++) {
                 newPred[i] = prediction[i] - squaredNorm * gradient[i] / m_lipschitz;

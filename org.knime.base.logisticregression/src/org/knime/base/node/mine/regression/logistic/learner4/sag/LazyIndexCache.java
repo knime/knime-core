@@ -44,31 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   30.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
+
+import java.util.Arrays;
+
+import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+class LazyIndexCache implements IndexCache {
 
-    private final double m_factor;
+    private final int[] m_idxs;
 
-    /**
-     *
-     */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
+    LazyIndexCache(final int nFets) {
+        m_idxs = new int[nFets];
+        Arrays.fill(m_idxs, -1);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
+    public void prepareRow(final TrainingRow x) {
+        int i = 0;
+        for (int nonZero = x.getNextNonZeroIndex(0); nonZero >= 0; nonZero = x.getNextNonZeroIndex(nonZero + 1)) {
+            m_idxs[i++] = nonZero;
+        }
+        if (i < m_idxs.length) {
+            // a -1 indicates that there are no more indices to be seen
+            m_idxs[i] = -1;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IndexIterator getIterator() {
+        return new LazyIndexIterator();
+    }
+
+    private class LazyIndexIterator implements IndexIterator {
+
+        private int m_pointer = -1;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            int nextPointer = m_pointer + 1;
+            return nextPointer < m_idxs.length && m_idxs[nextPointer] != -1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int next() {
+            return m_idxs[++m_pointer];
+        }
+
     }
 
 }

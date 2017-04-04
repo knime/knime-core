@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   24.03.2017 (Adrian): created
+ *   31.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
@@ -52,7 +52,39 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface RegularizationPrior {
+abstract class AbstractPriorUpdater {
 
-    public void update(WeightVector<?> beta, final double stepSize);
+    private final boolean m_clip;
+    private final Prior m_prior;
+    private final int m_nRows;
+
+    /**
+     *
+     */
+    public AbstractPriorUpdater(final Prior prior, final int nRows, final boolean clipAtZero) {
+        m_prior = prior;
+        m_clip = clipAtZero;
+        m_nRows = nRows;
+    }
+
+    protected double clip(final double betaValue, final double normalizedStepSize) {
+        double v = betaValue - normalizedStepSize * m_prior.calculate(betaValue);
+        if (betaValue < 0) {
+            return v < 0.0 ? v : 0.0;
+        } else {
+            return v > 0.0 ? v : 0.0;
+        }
+    }
+
+    protected boolean isClip() {
+        return m_clip;
+    }
+
+    protected double evaluatePrior(final double betaValue) {
+        return m_prior.calculate(betaValue);
+    }
+
+    protected int getNRows() {
+        return m_nRows;
+    }
 }

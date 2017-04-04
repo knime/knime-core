@@ -71,4 +71,12 @@ public interface TrainingRow {
      */
     public int getId();
 
+    /**
+     * @param startIdx
+     * @return
+     */
+    public int getNextNonZeroIndex(final int startIdx);
+
+    public int[] getNonZeroIndices();
+
 }

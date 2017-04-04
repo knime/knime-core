@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   31.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
@@ -52,23 +52,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+interface Prior {
 
-    private final double m_factor;
-
-    /**
-     *
-     */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
-    }
-
+    public double calculate(final double betaValue);
 }

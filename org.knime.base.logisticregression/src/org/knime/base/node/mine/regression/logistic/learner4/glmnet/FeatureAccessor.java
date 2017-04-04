@@ -44,31 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.03.2017 (Adrian): created
+ *   28.03.2017 (Adrian): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4.sag;
+package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 /**
+ * Allows to retrieve the nonzero features of a {@link SparseFeatureContainer}.
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
-
-    private final double m_factor;
+public interface FeatureAccessor {
 
     /**
+     * Moves to the next nonzero feature and returns true or returns false if there is no more nonzero feature.
+     * Note that next must be called at least once before getFeatureIndex or getFeature() are called.
      *
+     * @return true if there is another nonzero feature and false if not
      */
-    public GaussPrior(final double variance) {
-        m_factor = 1.0 / (variance);
-    }
+    public boolean next();
 
     /**
-     * {@inheritDoc}
+     * Returns the index of the current feature, that is the position of the feature in the feature vector.
+     *
+     * @return index of current feature
      */
-    @Override
-    public double calculate(final double betaValue) {
-        return betaValue * m_factor;
-    }
+    public int getFeatureIndex();
 
+    /**
+     * Returns the value of the current feature.
+     *
+     * @return value of current feature
+     */
+    public double getFeature();
 }

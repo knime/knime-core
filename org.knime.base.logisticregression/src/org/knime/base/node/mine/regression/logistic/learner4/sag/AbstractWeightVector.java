@@ -51,6 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**
  * Abstract implementation of a WeightVector that implements the updating logic for the
@@ -68,6 +69,30 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         m_fitIntercept = fitIntercept;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final WeightVectorConsumer func,
+        final boolean includeIntercept, final IndexCache indexCache) {
+        boolean updateIntercept = m_fitIntercept && includeIntercept;
+            for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
+                int i = iter.next();
+                if (!updateIntercept && i == 0) {
+                    continue;
+                }
+                for (int c = 0; c < m_data.length; c++) {
+                    applyFunc(c, i, func);
+            }
+        }
+    }
+
+    private void applyFunc(final int c, final int i, final WeightVectorConsumer func) {
+        double val = func.calculate(m_data[c][i], c, i);
+        assert Double.isFinite(val);
+        m_data[c][i] = val;
+    }
+
 
     @Override
     public void update(final WeightVectorConsumer func, final boolean includeIntercept) {
@@ -75,11 +100,29 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
         for (int c = 0; c < m_data.length; c++) {
             for (int i = startIdx; i < m_data[c].length; i++) {
-                double val = func.calculate(m_data[c][i], c, i);
-                assert Double.isFinite(val);
-                m_data[c][i] = val;
+                applyFunc(c, i, func);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update(final WeightVectorConsumer func,
+        final boolean includeIntercept, final int[] nonZeroIndices) {
+        int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
+        assert nonZeroIndices[0] == 0 : "The intercept term should always be 1.";
+        for (int c = 0; c < m_data.length; c++) {
+            for (int i = startIdx; i < m_data[c].length; i++) {
+                int idx = nonZeroIndices[i];
+                if (idx == -1) {
+                    break;
+                }
+                applyFunc(c, idx, func);
+            }
+        }
+
     }
 
     /**
@@ -88,22 +131,6 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
     @Override
     public double[][] getWeightVector() {
         return m_data;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] predict(final T row) {
-        double[] prediction = new double[m_data.length];
-        for (int c = 0; c < m_data.length; c++) {
-            double p = 0.0;
-            for (int i = 0; i < m_data[c].length; i++) {
-                p += m_data[c][i] * row.getFeature(i);
-            }
-            prediction[c] = p;
-        }
-        return prediction;
     }
 
 

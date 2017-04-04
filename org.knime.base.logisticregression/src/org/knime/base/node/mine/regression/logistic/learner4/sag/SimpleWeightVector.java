@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**
  * Simple implementation of a weight vector that directly stores and manipulates the weights.
@@ -89,7 +90,7 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      * {@inheritDoc}
      */
     @Override
-    public void checkNormalize() {
+    public void normalize() {
         // nothing to do here
     }
 
@@ -99,5 +100,67 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     @Override
     public void finalize(final double[][] d) {
         // nothing to do here
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double getScale() {
+        // this simple implementation does not use a scalar scale
+        return 1.0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row) {
+        double[] prediction = new double[m_data.length];
+        for (int c = 0; c < m_data.length; c++) {
+            double p = 0.0;
+            for (int i = 0; i < m_data[c].length; i++) {
+                p += m_data[c][i] * row.getFeature(i);
+            }
+            prediction[c] = p;
+        }
+        return prediction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row, final int[] nonZeroIndices) {
+        double[] prediction = new double[m_data.length];
+        for (int c = 0; c < m_data.length; c++) {
+            double p = 0.0;
+            for (int i = 0; i < m_data[c].length; i++) {
+                int idx = nonZeroIndices[i];
+                if (idx == -1) {
+                    break;
+                }
+                p += m_data[c][idx] * row.getFeature(idx);
+            }
+            prediction[c] = p;
+        }
+        return prediction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double[] predict(final T row, final IndexCache indexCache) {
+        double[] prediction = new double[m_data.length];
+        for (int c = 0; c < m_data.length; c++) {
+            double p = 0.0;
+            for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
+                int i = iter.next();
+                p += m_data[c][i] * row.getFeature(i);
+            }
+            prediction[c] = p;
+        }
+        return prediction;
     }
 }

@@ -59,4 +59,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 interface LearningRateStrategy <T extends TrainingRow> {
 
     public double getCurrentLearningRate(final T row, final double[] prediction, final double[] gradient);
+
+    default void startNewEpoch(final int epoch) {
+        // do nothing
+    }
 }

@@ -66,7 +66,7 @@ class EagerSgdUpdater<T extends TrainingRow> implements EagerUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize) {
+    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize, final int iteration) {
         beta.update((val,c, i) -> val - stepSize * x.getFeature(i) * sig[c] , true);
     }
 

@@ -52,7 +52,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
  *
  * @author Adrian Nembach, KNIME.com
  */
-enum UniformPrior implements RegularizationPrior {
+enum UniformPrior implements Prior {
 
     INSTANCE;
 
@@ -60,8 +60,9 @@ enum UniformPrior implements RegularizationPrior {
      * {@inheritDoc}
      */
     @Override
-    public void update(final WeightVector<?> beta, final double stepSize) {
-        // do nothing
+    public double calculate(final double betaValue) {
+        // in this case there is nothing to calculate
+        return 0;
     }
 
 }

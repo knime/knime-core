@@ -56,5 +56,11 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
  */
 interface LazyUpdater <T extends TrainingRow> extends Updater<T> {
 
-    void lazyUpdate();
+    void update(T x, double[] sig, WeightVector<T> beta, double stepSize, int iteration, final IndexCache indexCache);
+
+    void lazyUpdate(final WeightVector<T> beta, final T x, final IndexCache indexCache, final int[] lastVisited, final int iteration);
+
+    void resetJITSystem(final WeightVector<T> beta, final int[] lastVisited);
+
+    void normalize(final WeightVector<T> beta, final int[] lastVisited, final int iteration);
 }

@@ -44,39 +44,57 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   24.03.2017 (Adrian): created
+ *   28.03.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import java.util.Arrays;
+
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, R extends RegularizationUpdater> extends AbstractSGOptimizer<T, U, R> {
+final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R extends LazyRegularizationUpdater> extends AbstractSGOptimizer<T, U, R> {
+
+    private int[] m_lastVisited;
+
 
     /**
+     * @param data
      * @param loss
      * @param updaterFactory
      * @param prior
      * @param learningRateStrategy
+     * @param stoppingCriterion
      */
-    public EagerSgOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory, final R prior,
-        final LearningRateStrategy<T> learningRateStrategy, final StoppingCriterion<T> stoppingCriterion) {
+    public LazySGOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory,
+        final R prior, final LearningRateStrategy<T> learningRateStrategy,
+        final StoppingCriterion<T> stoppingCriterion) {
         super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion);
+        m_lastVisited = new int[data.getFeatureCount() + 1];
     }
 
 
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void performUpdate(final T x, final U updater, final double[] gradient,
+        final WeightVector<T> beta, final double stepSize, final int iteration, final IndexCache indexCache) {
+        updater.update(x, gradient, beta, stepSize, iteration, indexCache);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected IndexCache createIndexCache(final int nFets) {
-        return new EagerIndexCache(nFets);
+        return new SuperLazyIndexCache();
     }
 
 
@@ -84,12 +102,16 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater, final int iteration,
-        final IndexCache indexCache) {
-        // nothing to prepare
-
+    protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater,
+        final int iteration, final IndexCache indexCache) {
+        // apply lazy updates
+        updater.lazyUpdate(beta, x, indexCache, m_lastVisited, iteration);
+        regUpdater.lazyUpdate(beta, indexCache, m_lastVisited, iteration);
+        // update when present features were last visited
+        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
+            m_lastVisited[iter.next()] = iteration;
+        }
     }
-
 
 
 
@@ -98,19 +120,10 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      */
     @Override
     protected void postProcessEpoch(final WeightVector<T> beta, final U updater, final R regUpdater) {
-        // nothing to postprocess
+        updater.resetJITSystem(beta, m_lastVisited);
+        regUpdater.resetJITSystem(beta, m_lastVisited);
+        Arrays.fill(m_lastVisited, 0);
     }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta, final double stepSize,
-        final int iteration, final IndexCache indexCache) {
-        updater.update(x, gradient, beta, stepSize, iteration);
-    }
-
 
 
 
@@ -119,8 +132,10 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      */
     @Override
     protected void normalize(final WeightVector<T> beta, final U updater, final int iteration) {
-        // nothing to do
-
+        updater.normalize(beta, m_lastVisited, iteration);
+        for (int i = 0; i < m_lastVisited.length; i++) {
+            m_lastVisited[i] = iteration + 1;
+        }
     }
 
 }
