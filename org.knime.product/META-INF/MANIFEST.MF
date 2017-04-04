@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Analytics Platform
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 3.3.1.qualifier
+Bundle-Version: 3.3.2.qualifier
 Bundle-ClassPath: knime-product.jar,
  lib/tagsoup-1.2.1.jar
 Bundle-Activator: org.knime.product.ProductPlugin
