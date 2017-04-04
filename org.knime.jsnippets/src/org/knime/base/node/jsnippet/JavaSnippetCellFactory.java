@@ -50,7 +50,6 @@ package org.knime.base.node.jsnippet;
 import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,13 +188,18 @@ public class JavaSnippetCellFactory implements CellFactory {
             // populate the system input column fields with data
             for (InCol inCol : m_snippet.getSystemFields().getInColFields()) {
                 Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
-                Cell cell = cellsMap.get(inCol.getKnimeName());
-                Object v = cell.getValueOfType(field.getType());
-                if (inCol.getDataType().isCollectionType() && v != null) {
-                    field.set(m_jsnippet, Arrays.copyOf((Object[])v, ((Object[])v).length, (Class<? extends Object[]>)inCol.getJavaType()));
-                } else {
-                    field.set(m_jsnippet, v);
+
+                final DataCell cell = row.getCell(m_spec.findColumnIndex(inCol.getKnimeName()));
+
+                // Get the converter factory for this column
+                final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
+                    ConverterUtil.getDataCellToJavaConverterFactory(inCol.getConverterFactoryId());
+                if (!factory.isPresent()) {
+                    throw new RuntimeException("Missing converter factory with ID: " + inCol.getConverterFactoryId());
                 }
+
+                final Object converted = factory.get().create().convertUnsafe(cell);
+                field.set(m_jsnippet, converted);
             }
             // reset the system output fields to null (see also bug 3781)
             for (OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
