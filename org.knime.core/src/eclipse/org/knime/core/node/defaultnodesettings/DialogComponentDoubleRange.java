@@ -54,8 +54,8 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -139,7 +139,8 @@ public class DialogComponentDoubleRange extends DialogComponent {
         super(model);
 
         model.prependChangeListener(new ChangeListener() {
-           public void stateChanged(final ChangeEvent e) {
+           @Override
+        public void stateChanged(final ChangeEvent e) {
                updateComponent();
            }
         });
@@ -152,6 +153,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
                 new JSpinner(new SpinnerNumberModel(model.getMinRange(),
                         lowerMin, lowerMax, lowerStepSize));
         m_spinnerMin.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent arg0) {
                     updateMinModel();
             }
@@ -164,6 +166,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
                 new JSpinner(new SpinnerNumberModel(model.getMaxRange(),
                         upperMin, upperMax, upperStepSize));
         m_spinnerMax.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent arg0) {
                     updateMaxModel();
             }
@@ -217,12 +220,20 @@ public class DialogComponentDoubleRange extends DialogComponent {
      */
     private void updateMinModel() {
         try {
-            m_spinnerMin.commitEdit();
             if (getModel() instanceof SettingsModelDoubleRange) {
-                final SettingsModelDoubleRange model
-                    = (SettingsModelDoubleRange)getModel();
-                model.setMinRange(((Double)m_spinnerMin.getValue())
-                        .doubleValue());
+                final SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
+                // if else clause only necessary if new value has been provided via spinner
+                // no effect on manually entered values
+                if (((Double)m_spinnerMin.getValue()).compareTo((Double)m_spinnerMax.getValue()) <= 0) {
+                    // commits the new value to the text field if new value valid (necessary if using spinner)
+                    m_spinnerMin.commitEdit();
+                } else {
+                    // sets value to its old value (necessary if using spinner)
+                    m_spinnerMin.setValue(
+                        ((Double)((DefaultEditor)m_spinnerMin.getEditor()).getTextField().getValue()).doubleValue());
+                }
+                // set new range (automatically resets value if new (manually entered) value is not allowed
+                model.setMinRange(((Double)m_spinnerMin.getValue()).doubleValue());
             }
         } catch (final ParseException e) {
             final JComponent editorMin = m_spinnerMin.getEditor();
@@ -234,12 +245,20 @@ public class DialogComponentDoubleRange extends DialogComponent {
 
     private void updateMaxModel() {
         try {
-            m_spinnerMax.commitEdit();
             if (getModel() instanceof SettingsModelDoubleRange) {
-                final SettingsModelDoubleRange model
-                    = (SettingsModelDoubleRange)getModel();
-                model.setMaxRange(((Double)m_spinnerMax.getValue())
-                        .doubleValue());
+                final SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
+                // if else clause only necessary if new value has been provided via spinner
+                // no effect on manually entered values
+                if (((Double)m_spinnerMin.getValue()).compareTo((Double)m_spinnerMax.getValue()) <= 0) {
+                    // commits the new value to the text field if new value valid (necessary if using spinner)
+                    m_spinnerMax.commitEdit();
+                } else {
+                    // sets value to its old value (necessary if using spinner)
+                    m_spinnerMax.setValue(
+                        ((Double)((DefaultEditor)m_spinnerMax.getEditor()).getTextField().getValue()).doubleValue());
+                }
+                // set new range (automatically resets value if new (manually entered) value is not allowed
+                model.setMaxRange(((Double)m_spinnerMax.getValue()).doubleValue());
             }
         } catch (final ParseException e) {
             final JComponent editorMax = m_spinnerMax.getEditor();
