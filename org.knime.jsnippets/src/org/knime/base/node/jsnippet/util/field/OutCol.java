@@ -118,13 +118,12 @@ public class OutCol extends JavaColumnField {
 
             // backwards compatibility with pre-converters javasnippet
             // Find a converter which can convert given types
-            final Optional<JavaToDataCellConverterFactory<?>> factory =
-                ConverterUtil.getConverterFactory(getJavaType(), getDataType());
-            if (!factory.isPresent()) {
+            m_factory = ConverterUtil.getConverterFactory(getJavaType(), getDataType());
+            if (!m_factory.isPresent()) {
                 throw new InvalidSettingsException(
                     "Cannot convert from " + getJavaType().getName() + " to " + getDataType().getName());
             }
-            m_converterFactoryId = factory.get().getIdentifier();
+            m_converterFactoryId = m_factory.get().getIdentifier();
         }
     }
 
