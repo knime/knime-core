@@ -49,7 +49,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -221,10 +221,10 @@ public class ListFiles {
      *
      * @param file
      */
-    private void addLocationToContainer(final URL url) throws UnsupportedEncodingException {
+    private void addLocationToContainer(final URL url) throws UnsupportedEncodingException, URISyntaxException {
         DataCell[] row = new DataCell[2];
         if ("file".equalsIgnoreCase(url.getProtocol())) {
-            row[0] = new StringCell(URLDecoder.decode(url.getPath(), "UTF-8"));
+            row[0] = new StringCell(Paths.get(url.toURI()).toString());
         } else {
             row[0] = new MissingCell("URL is remote and does not have a local location");
         }
