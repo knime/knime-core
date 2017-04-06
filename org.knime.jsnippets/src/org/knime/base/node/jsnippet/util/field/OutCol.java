@@ -51,6 +51,7 @@ package org.knime.base.node.jsnippet.util.field;
 import java.util.Optional;
 
 import org.knime.base.node.jsnippet.type.ConverterUtil;
+import org.knime.core.data.DataType;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
@@ -67,8 +68,6 @@ public class OutCol extends JavaColumnField {
     static final String REPLACE_EXISTING = "replaceExisting";
 
     private boolean m_replaceExisting;
-
-    private Optional<JavaToDataCellConverterFactory<?>> m_factory;
 
     /**
      * Create an instance.
@@ -92,15 +91,6 @@ public class OutCol extends JavaColumnField {
     }
 
     @Override
-    public Class<?> getJavaType() {
-        final Optional<JavaToDataCellConverterFactory<?>> factory = getConverterFactory();
-        if (factory.isPresent()) {
-            return factory.get().getSourceType();
-        }
-        return super.getJavaType();
-    }
-
-    @Override
     public void saveSettings(final Config config) {
         super.saveSettings(config);
         config.addBoolean(REPLACE_EXISTING, m_replaceExisting);
@@ -112,18 +102,42 @@ public class OutCol extends JavaColumnField {
         m_replaceExisting = config.getBoolean(REPLACE_EXISTING);
 
         if (m_converterFactoryId == null) {
-            // Throws InvalidSettingsException if type cannot be loaded, hence we can assume its presence
-            // later on
-            loadJavaType();
-
             // backwards compatibility with pre-converters javasnippet
             // Find a converter which can convert given types
-            m_factory = ConverterUtil.getConverterFactory(getJavaType(), getDataType());
-            if (!m_factory.isPresent()) {
+            final Optional<JavaToDataCellConverterFactory<?>> factory =
+                ConverterUtil.getConverterFactory(getJavaType(), getDataType());
+            if (!factory.isPresent()) {
                 throw new InvalidSettingsException(
                     "Cannot convert from " + getJavaType().getName() + " to " + getDataType().getName());
             }
-            m_converterFactoryId = m_factory.get().getIdentifier();
+            m_converterFactoryId = factory.get().getIdentifier();
+        } else {
+            final Optional<?> factory = ConverterUtil.getJavaToDataCellConverterFactory(m_converterFactoryId);
+            if (!factory.isPresent()) {
+                throw new InvalidSettingsException("Could not find ConverterFactory with ID \"" + m_converterFactoryId + "\"");
+            }
+        }
+    }
+
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        m_replaceExisting = config.getBoolean(REPLACE_EXISTING, false);
+
+        if (m_converterFactoryId == null) {
+            // need some additional magic to provide backwards compatibility with settings
+            // that do not contain a converter factory id
+            final DataType destType = getDataType();
+            final Class<?> sourceType = getJavaType();
+
+            final Optional<?> factory = ConverterUtil.getConverterFactory(sourceType, destType);
+            if (factory.isPresent()) {
+                m_converterFactoryId = ((JavaToDataCellConverterFactory<?>)factory.get()).getIdentifier();
+            } else {
+                // TODO: will this produce a warning dialog...?
+                throw new IllegalStateException("Was not able to find a ConverterFactory from " + sourceType.getName()
+                    + " to " + destType.getName() + " to provide backwards compatibility for output column settings.");
+            }
         }
     }
 
@@ -141,18 +155,5 @@ public class OutCol extends JavaColumnField {
         m_javaType = factory.getSourceType();
         m_knimeType = factory.getDestinationType();
         m_converterFactoryId = factory.getIdentifier();
-        m_factory = Optional.of(factory);
-    }
-
-    /**
-     * Get the converter factory associated with this input column field.
-     *
-     * @return An optional converter factory, present if converter factory id setting is valid, empty if not found.
-     */
-    public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory() {
-        if (m_factory == null || (m_factory.isPresent() && m_factory.get().getIdentifier().equals(m_converterFactoryId))) {
-            m_factory = ConverterUtil.getJavaToDataCellConverterFactory(m_converterFactoryId);
-        }
-        return m_factory;
     }
 }

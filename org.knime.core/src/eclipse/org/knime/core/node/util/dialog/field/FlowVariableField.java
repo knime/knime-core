@@ -103,6 +103,17 @@ public abstract class FlowVariableField extends AbstractField {
         m_knimeType = Type.valueOf(typeName);
     }
 
+
+    /** Loads parameters in Dialog.
+     * @param config To load from.
+     */
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        String typeName = config.getString(KNIME_TYPE, null);
+        m_knimeType = null != typeName ? Type.valueOf(typeName) : null;
+    }
+
     /**
      * A class for a field that represents an input variable.
      */

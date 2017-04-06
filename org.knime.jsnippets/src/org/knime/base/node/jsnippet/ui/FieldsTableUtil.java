@@ -267,18 +267,18 @@ final class FieldsTableUtil {
                 }
             }
 
-            String text = "null";
+            String text = "";
             if (value instanceof DataCellToJavaConverterFactory) {
                 final DataCellToJavaConverterFactory<?, ?> factory = (DataCellToJavaConverterFactory<?, ?>)value;
                 text = factory.getName();
             } else if (value instanceof JavaToDataCellConverterFactory) {
                 final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;
                 text = factory.getName();
-            } else if (value instanceof Class) {
+            } else if (null == value || !(value instanceof Class)) {
+                return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            } else {
                 Class javaType = (Class)value;
                 text = javaType.getSimpleName();
-            } else if (value != null) {
-                text = value.toString();
             }
 
             // let super class do the first step

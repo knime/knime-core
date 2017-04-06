@@ -77,9 +77,7 @@ public class ConverterFactoryJavaTypeListCellRenderer extends DefaultListCellRen
         final Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         assert c == this;
 
-        if (value instanceof String) {
-            setText((String)value);
-        } else if (value instanceof Class) {
+        if (value instanceof Class) {
             setText(((Class)value).getSimpleName());
         } else if (value instanceof JavaToDataCellConverterFactory<?>) {
             final JavaToDataCellConverterFactory<?> factory = (JavaToDataCellConverterFactory<?>)value;

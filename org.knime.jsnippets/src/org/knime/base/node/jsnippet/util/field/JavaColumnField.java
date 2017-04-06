@@ -97,6 +97,13 @@ public abstract class JavaColumnField extends JavaField {
     }
 
     @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        m_knimeType = config.getDataType(KNIME_TYPE, null);
+        m_converterFactoryId = config.getString(CONV_FACTORY, null);
+    }
+
+    @Override
     public FieldType getFieldType() {
         return FieldType.Column;
     }

@@ -101,8 +101,13 @@ public abstract class JavaFlowVarField extends JavaField {
         super.loadSettings(config);
         String typeName = config.getString(KNIME_TYPE);
         m_knimeType = Type.valueOf(typeName);
+    }
 
-        loadJavaType();
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        String typeName = config.getString(KNIME_TYPE, null);
+        m_knimeType = null != typeName ? Type.valueOf(typeName) : null;
     }
 
     @Override

@@ -98,10 +98,8 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         m_snippet.setSettings(m_settings);
-
         FlowVariableRepository flowVarRepository =
             new FlowVariableRepository(getAvailableInputFlowVariables());
-        // The following method also compile-checks the code and checks for missing converter factories
         ValidationReport report = m_snippet.validateSettings(inSpecs[0],
                 flowVarRepository);
         if (report.hasWarnings()) {
@@ -225,6 +223,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
             throws InvalidSettingsException {
         JavaSnippetSettings s = new JavaSnippetSettings();
         s.loadSettings(settings);
+        // TODO: Check settings
     }
 
     /**

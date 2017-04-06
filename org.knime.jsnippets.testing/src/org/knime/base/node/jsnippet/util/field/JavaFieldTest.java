@@ -2,11 +2,8 @@ package org.knime.base.node.jsnippet.util.field;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import java.lang.reflect.Field;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -171,13 +168,9 @@ public class JavaFieldTest {
      * Test loading and saving of {@link InVar}, {@link OutVar}, {@link InCol} and {@link OutCol}.
      *
      * @throws InvalidSettingsException
-     * @throws IllegalArgumentException
-     * @throws IllegalAccessException When something goes wrong while testing field values via reflection
-     * @throws SecurityException When something goes wrong while testing field values via reflection
-     * @throws NoSuchFieldException
      */
     @Test
-    public void testLoadAndSave() throws InvalidSettingsException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+    public void testLoadAndSave() throws InvalidSettingsException {
         {
             Config config = new NodeSettings("JavaFieldTestOutCol");
 
@@ -190,11 +183,6 @@ public class JavaFieldTest {
 
             final OutCol loaded = new OutCol();
             loaded.loadSettings(config);
-
-            /* Ensure via reflection that m_factory has *not* been set */
-            final Field field = OutCol.class.getDeclaredField("m_factory");
-            field.setAccessible(true);
-            assertNull(field.get(loaded));
 
             assertEquals(oc.getKnimeName(), loaded.getKnimeName());
             assertEquals(oc.getJavaName(), loaded.getJavaName());
@@ -214,11 +202,6 @@ public class JavaFieldTest {
 
             final InCol loaded = new InCol();
             loaded.loadSettings(config);
-
-            /* Ensure via reflection that m_factory has *not* been set */
-            final Field field = InCol.class.getDeclaredField("m_factory");
-            field.setAccessible(true);
-            assertNull(field.get(loaded));
 
             assertEquals(ic.getKnimeName(), loaded.getKnimeName());
             assertEquals(ic.getJavaName(), loaded.getJavaName());
@@ -266,9 +249,6 @@ public class JavaFieldTest {
         }
     }
 
-    /**
-     * Test behavior with invalid converter factory id.
-     */
     @Test
     public void testInvalidConverterFactoryId() {
         {
@@ -276,7 +256,6 @@ public class JavaFieldTest {
 
             config.addString(JavaField.JAVA_NAME, "jn");
             config.addString(JavaField.KNIME_NAME, "kn");
-            config.addBoolean(OutCol.REPLACE_EXISTING, false);
             config.addString(JavaField.CONV_FACTORY, "I DO NOT EXIST!");
             config.addString(JavaField.JAVA_TYPE, Integer.class.getName());
             config.addDataType(JavaField.KNIME_TYPE, IntCell.TYPE);
@@ -285,10 +264,9 @@ public class JavaFieldTest {
             final OutCol loaded = new OutCol();
             try {
                 loaded.loadSettings(config);
+                fail("Loading a missing converter factory ID should have failed!");
             } catch (InvalidSettingsException e) {
-                // Whether the converter factory is missing or not is checked in configure,
-                // and not during load.
-                fail("Loading a missing converter factory ID should not fail");
+                // good.
             }
         }
         {
@@ -303,12 +281,47 @@ public class JavaFieldTest {
             final InCol loaded = new InCol();
             try {
                 loaded.loadSettings(config);
+                fail("Loading a missing converter factory ID should have failed!");
             } catch (InvalidSettingsException e) {
-                // Whether the converter factory is missing or not is checked in configure,
-                // and not during load.
-                fail("Loading a missing converter factory ID should not fail");
+                // good.
             }
         }
+
+        // load for dialog should find replacement
+        {
+            Config config = new NodeSettings("JavaFieldTestOutCol");
+
+            config.addString(JavaField.JAVA_NAME, "java_name");
+            config.addString(JavaField.KNIME_NAME, "knime_name");
+            config.addString(JavaField.CONV_FACTORY, "I DO NOT EXIST!");
+            config.addString(JavaField.JAVA_TYPE, Integer.class.getName());
+            config.addDataType(JavaField.KNIME_TYPE, IntCell.TYPE);
+
+            // We are expecting the load to fail.
+            final OutCol loaded = new OutCol();
+            loaded.loadSettingsForDialog(config);
+
+            // The JavaField should load the invalid setting. The dialog would search for a replacement here and show a warning.
+            assertEquals("I DO NOT EXIST!", loaded.getConverterFactoryId());
+        }
+        {
+            Config config = new NodeSettings("JavaFieldTestInCol");
+
+            config.addString(JavaField.JAVA_NAME, "java_name");
+            config.addString(JavaField.KNIME_NAME, "knime_name");
+            config.addString(JavaField.CONV_FACTORY, "I DO NOT EXIST!");
+            config.addString(JavaField.JAVA_TYPE, Integer.class.getName());
+            config.addDataType(JavaField.KNIME_TYPE, IntCell.TYPE);
+
+            // We are expecting the load to fail.
+            final InCol loaded = new InCol();
+            loaded.loadSettingsForDialog(config);
+
+            // The JavaField should load the invalid setting. The dialog would search for a replacement here and show a warning.
+            assertEquals("I DO NOT EXIST!", loaded.getConverterFactoryId());
+        }
+
+        // TODO: Check this with DL4J enabled!
     }
 
     @Test
@@ -322,6 +335,14 @@ public class JavaFieldTest {
             config.addString(JavaField.JAVA_TYPE, Integer.class.getName());
             config.addDataType(JavaField.KNIME_TYPE, IntCell.TYPE);
             config.addBoolean(OutCol.REPLACE_EXISTING, true);
+
+            final OutCol loadedDialog = new OutCol();
+            loadedDialog.loadSettingsForDialog(config);
+
+            // The JavaField should silently find a replacement for the old settings
+            assertEquals("JavaField did not find a replacement for old settings", m_javaToDataCellConverterFactory.getIdentifier(), loadedDialog.getConverterFactoryId());
+            assertEquals(Integer.class, loadedDialog.getJavaType());
+            assertEquals(IntCell.TYPE, loadedDialog.getDataType());
 
             final OutCol loaded = new OutCol();
             loaded.loadSettings(config);
@@ -339,6 +360,14 @@ public class JavaFieldTest {
             // no converter factory ID.
             config.addString(JavaField.JAVA_TYPE, Integer.class.getName());
             config.addDataType(JavaField.KNIME_TYPE, IntCell.TYPE);
+
+            final InCol loadedDialog = new InCol();
+            loadedDialog.loadSettingsForDialog(config);
+
+            // The JavaField should silently find a replacement for the old settings
+            assertEquals("JavaField did not find a replacement for old settings", m_dataCellToJavaConverterFactory.getIdentifier(), loadedDialog.getConverterFactoryId());
+            assertEquals(Integer.class, loadedDialog.getJavaType());
+            assertEquals(IntCell.TYPE, loadedDialog.getDataType());
 
             final InCol loaded = new InCol();
             loaded.loadSettings(config);

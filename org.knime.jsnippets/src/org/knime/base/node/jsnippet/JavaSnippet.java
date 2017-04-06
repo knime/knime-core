@@ -126,7 +126,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -689,10 +688,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         final Set<String> fieldImports = new LinkedHashSet<>();
         for (JavaField field : fields) {
             Class<?> fieldType = field.getJavaType();
-            if (fieldType == null) {
-                continue;
-            }
-
             // Handle arrays of arrays of arrays of... AP-7012
             while (fieldType.isArray()) {
                 fieldType = fieldType.getComponentType();
@@ -756,14 +751,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     /**
      * Validate settings which is typically called in the configure method
      * of a node.
-     *
-     * What is checked:
-     * <ul>
-     *  <li>Whether converter factories matching the ids from the settings exist</li>
-     *  <li>Whether the code compiles</li>
-     *  <li>Whether columns required by input mappings still exist.</li>
-     * </ul>
-     *
      * @param spec the spec of the data table at the inport
      * @param flowVariableRepository the flow variables at the inport
      * @return the validation results
@@ -774,36 +761,27 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         List<String> warnings = new ArrayList<>();
 
         // check input fields
-        for (final InCol field : m_fields.getInColFields()) {
-            final int index = spec.findColumnIndex(field.getKnimeName());
-            if (index < 0) {
-                errors.add("The column \"" + field.getKnimeName() + "\" is not found in the input table.");
-            } else {
-                final DataColumnSpec colSpec = spec.getColumnSpec(index);
-                final DataType type = colSpec.getType();
-
-                if (!type.equals(field.getDataType())) {
-                    // Input column type changed, try to find new converter
-                    final Optional<?> factory =
-                        ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
-
+        for (InCol field : m_fields.getInColFields()) {
+            int index = spec.findColumnIndex(field.getKnimeName());
+            if (index >= 0) {
+                DataColumnSpec colSpec = spec.getColumnSpec(index);
+                if (!colSpec.getType().equals(field.getDataType())) {
+                    Optional<?> factory = ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
                     if (factory.isPresent()) {
-                        warnings.add(
-                            "The type of the column \"" + field.getKnimeName() + "\" has changed but is compatible.");
-                        field.setConverterFactory(type, (DataCellToJavaConverterFactory<?, ?>)factory.get());
+                        warnings.add("The type of the column \""
+                                + field.getKnimeName()
+                                + "\" has changed but is compatible.");
                     } else {
-                        errors.add("The type of the column \"" + field.getKnimeName() + "\" has changed.");
+                        errors.add("The type of the column \""
+                                + field.getKnimeName()
+                                + "\" has changed.");
                     }
                 }
-            }
-
-            if (!field.getConverterFactory().isPresent()) {
-                errors.add(
-                    String.format("Missing converter for column '%s' to java field '%s' (converter id: '%s')",
-                        field.getKnimeName(), field.getJavaName(), field.getConverterFactoryId()));
+            } else {
+                errors.add("The column \"" + field.getKnimeName()
+                        + "\" is not found in the input table.");
             }
         }
-
         // check input variables
         for (InVar field : m_fields.getInVarFields()) {
             FlowVariable var = flowVariableRepository.getFlowVariable(
@@ -822,10 +800,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
 
         // check output fields
         for (OutCol field : m_fields.getOutColFields()) {
-            if (field.getJavaType() == null) {
-                errors.add("Java type could not be loaded. Providing plugin may be missing.");
-            }
-
             int index = spec.findColumnIndex(field.getKnimeName());
             if (field.getReplaceExisting() && index < 0) {
                 errors.add("The output column \""
@@ -838,9 +812,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                         + field.getKnimeName()
                         + "\" is marked to be new, "
                         + "but an input with this name does exist.");
-            }
-            if (!field.getConverterFactory().isPresent()) {
-                errors.add(String.format("Missing converter for java field '%s' to column '%s' (converter id: '%s')", field.getJavaName(), field.getKnimeName(), field.getConverterFactoryId()));
             }
         }
 
@@ -1153,6 +1124,22 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         super.finalize();
     }
 
+    // --- Custom ClassLoader related methods and fields --- //
+
+    private static ClassLoader m_customClassLoader;
+
+    /**
+     * @return a custom {@link ClassLoader} which knows classes of <code>org.knime.jsnippets</code> <b>and</b>
+     *         <code>org.knime.core.data.convert</code> and buddies
+     */
+    public static synchronized ClassLoader getCustomClassLoader() {
+        if (m_customClassLoader == null) {
+            m_customClassLoader = new MultiParentClassLoader(JavaSnippet.class.getClassLoader(),
+                DataCellToJavaConverterRegistry.class.getClassLoader());
+        }
+        return m_customClassLoader;
+    }
+
     // --- Classpath caching related methods and fields --- //
     private static final Map<String, Set<File>> CLASSPATH_CACHE = new LinkedHashMap<>();
     private static final Map<Class<?>, Set<File>> CLASSPATH_FOR_CLASS_CACHE = new LinkedHashMap<>();
@@ -1284,7 +1271,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
             LOGGER.error("Classpath for \"" + javaType.getName() + "\" could not be assembled.", e);
             return null; // indicate that this type should not be provided in java snippet
-        } catch (IOException e) { // thrown by URLClassLoader.close()
+        } catch (IOException e) { // thrown by close
             LOGGER.error("Unable to close classloader used for testing of custom type classpath.", e);
         }
 
