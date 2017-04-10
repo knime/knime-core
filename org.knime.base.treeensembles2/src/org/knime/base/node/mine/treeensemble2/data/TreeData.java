@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.mine.treeensemble2.data;
 
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 
 /**
  *

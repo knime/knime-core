@@ -60,10 +60,10 @@ import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexM
 import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;

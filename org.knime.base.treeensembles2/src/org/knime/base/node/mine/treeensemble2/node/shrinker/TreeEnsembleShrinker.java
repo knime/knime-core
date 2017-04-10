@@ -55,10 +55,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.StringValue;
