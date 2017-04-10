@@ -49,7 +49,7 @@ package org.knime.base.node.mine.treeensemble2.data;
 
 import java.util.Comparator;
 
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
