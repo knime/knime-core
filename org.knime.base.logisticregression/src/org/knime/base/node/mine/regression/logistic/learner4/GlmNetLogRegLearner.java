@@ -214,6 +214,20 @@ public class GlmNetLogRegLearner implements LogRegLearner {
         public int getId() {
             return m_id;
         }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int getNextNonZeroIndex(final int startIdx) {
+            throw new UnsupportedOperationException();
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int[] getNonZeroIndices() {
+            throw new UnsupportedOperationException();
+        }
 
     }
 
