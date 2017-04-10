@@ -223,7 +223,7 @@ public abstract class AbstractGradientBoostingLearner {
     }
 
     private static Object handleMissingValues(final Object value, final TreeAttributeColumnData column) {
-        if (column.containsMissingValues()) {
+//        if (column.containsMissingValues()) {
             if (column instanceof TreeNumericColumnData) {
                 if (((Double)value).isNaN()) {
                     return PredictorRecord.NULL;
@@ -235,7 +235,7 @@ public abstract class AbstractGradientBoostingLearner {
                     return PredictorRecord.NULL;
                 }
             }
-        }
+//        }
 
         return value;
     }
