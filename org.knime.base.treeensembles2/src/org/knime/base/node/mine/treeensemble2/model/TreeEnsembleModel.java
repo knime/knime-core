@@ -361,7 +361,14 @@ public class TreeEnsembleModel {
         }
         final Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(length / 0.75 + 1.0));
         for (int i = 0; i < length; i++) {
-            valueMap.put(TreeNumericColumnMetaData.getAttributeNameDouble(i), Double.valueOf(dv.getValue(i)));
+            double val = dv.getValue(i);
+            String attributeName = TreeNumericColumnMetaData.getAttributeNameDouble(i);
+            if (Double.isNaN(val)) {
+                // treat NaNs as missing values
+                valueMap.put(attributeName, PredictorRecord.NULL);
+            } else {
+                valueMap.put(attributeName, Double.valueOf(val));
+            }
         }
         return new PredictorRecord(valueMap);
     }
@@ -435,7 +442,14 @@ public class TreeEnsembleModel {
                     valueMap.put(colName, Integer.valueOf(assignedInteger));
                 }
             } else if (colType.isCompatible(DoubleValue.class)) {
-                valueMap.put(colName, ((DoubleValue)cell).getDoubleValue());
+                double val = ((DoubleValue)cell).getDoubleValue();
+                if (Double.isNaN(val)) {
+                    // make sure that NaNs are treated as missing values
+                    // bug AP-7169
+                    valueMap.put(colName, PredictorRecord.NULL);
+                } else {
+                    valueMap.put(colName, val);
+                }
             } else {
                 throw new IllegalStateException("Expected nominal or numeric column type for column \"" + colName
                     + "\" but got \"" + colType + "\"");
