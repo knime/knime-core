@@ -74,6 +74,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -463,44 +464,46 @@ final class LogisticRegressionContent {
                 DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE
                 , DoubleCell.TYPE});
         BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
+        if (m_covMat == null) {
+            dc.close();
+            return dc.getTable();
+        }
+        List<DataCell> logits = this.getLogits();
+        List<String> parameters = this.getParameters();
+        int c = 0;
+        for (DataCell logit : logits) {
+            Map<String, Double> coefficients =
+                    this.getCoefficients(logit);
+            Map<String, Double> stdErrs =
+                    this.getStandardErrors(logit);
+            Map<String, Double> zScores =
+                    this.getZScores(logit);
+            Map<String, Double> pValues =
+                    this.getPValues(logit);
+
+            for (String parameter : parameters) {
+                List<DataCell> cells = new ArrayList<DataCell>();
+                cells.add(new StringCell(logit.toString()));
+                cells.add(new StringCell(parameter));
+                cells.add(new DoubleCell(coefficients.get(parameter)));
+                cells.add(new DoubleCell(stdErrs.get(parameter)));
+                cells.add(new DoubleCell(zScores.get(parameter)));
+                cells.add(new DoubleCell(pValues.get(parameter)));
+                c++;
+                dc.addRowToTable(new DefaultRow("Row" + c, cells));
+            }
+            List<DataCell> cells = new ArrayList<DataCell>();
+            cells.add(new StringCell(logit.toString()));
+            cells.add(new StringCell("Constant"));
+            cells.add(new DoubleCell(this.getIntercept(logit)));
+            cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
+            cells.add(new DoubleCell(this.getInterceptZScore(logit)));
+            cells.add(new DoubleCell(this.getInterceptPValue(logit)));
+            c++;
+            dc.addRowToTable(new DefaultRow("Row" + c, cells));
+        }
         dc.close();
         return dc.getTable();
-//        List<DataCell> logits = this.getLogits();
-//        List<String> parameters = this.getParameters();
-//        int c = 0;
-//        for (DataCell logit : logits) {
-//            Map<String, Double> coefficients =
-//                    this.getCoefficients(logit);
-//            Map<String, Double> stdErrs =
-//                    this.getStandardErrors(logit);
-//            Map<String, Double> zScores =
-//                    this.getZScores(logit);
-//            Map<String, Double> pValues =
-//                    this.getPValues(logit);
-//
-//            for (String parameter : parameters) {
-//                List<DataCell> cells = new ArrayList<DataCell>();
-//                cells.add(new StringCell(logit.toString()));
-//                cells.add(new StringCell(parameter));
-//                cells.add(new DoubleCell(coefficients.get(parameter)));
-//                cells.add(new DoubleCell(stdErrs.get(parameter)));
-//                cells.add(new DoubleCell(zScores.get(parameter)));
-//                cells.add(new DoubleCell(pValues.get(parameter)));
-//                c++;
-//                dc.addRowToTable(new DefaultRow("Row" + c, cells));
-//            }
-//            List<DataCell> cells = new ArrayList<DataCell>();
-//            cells.add(new StringCell(logit.toString()));
-//            cells.add(new StringCell("Constant"));
-//            cells.add(new DoubleCell(this.getIntercept(logit)));
-//            cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
-//            cells.add(new DoubleCell(this.getInterceptZScore(logit)));
-//            cells.add(new DoubleCell(this.getInterceptPValue(logit)));
-//            c++;
-//            dc.addRowToTable(new DefaultRow("Row" + c, cells));
-//        }
-//        dc.close();
-//        return dc.getTable();
     }
 
     /**

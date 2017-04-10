@@ -106,7 +106,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
             // hold one weight at a time fixed
             for (int i = 0; i < matDim; i++) {
                 // category of the fixed weight
-                int iCat = i / nBetaVecs;
+                int iCat = i / nFets;
                 // feature of the fixed weight
                 int iFet = i % nFets;
                 // value of the feature for current row
@@ -124,7 +124,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
                             h *= prediction[iCat] * prediction[cat];
                         }
                         // sum second derivatives over all rows
-                        hessian[i][cat * nBetaVecs + fet] += h;
+                        hessian[i][cat * nFets + fet] += h;
                     }
                 }
             }

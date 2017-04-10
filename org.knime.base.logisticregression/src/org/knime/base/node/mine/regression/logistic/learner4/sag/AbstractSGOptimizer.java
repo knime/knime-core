@@ -50,6 +50,8 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularMatrixException;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
 
@@ -82,7 +84,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         m_data = data;
     }
 
-    public double[][] optimize(final int maxEpoch, final TrainingData<T> data) {
+    public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data) {
 
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
@@ -91,8 +93,8 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         final IndexCache indexCache = createIndexCache(nFets);
 
         final WeightVector<T> beta = new SimpleWeightVector<>(nFets, nCats, true);
-
-        for (int epoch = 0; epoch < maxEpoch; epoch++) {
+        int epoch = 0;
+        for (; epoch < maxEpoch; epoch++) {
             // notify learning rate strategy that a new epoch starts
             m_lrStrategy.startNewEpoch(epoch);
             for (int k = 0; k < nRows; k++) {
@@ -119,14 +121,31 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
                 break;
             }
         }
+        double lossSum = totalLoss(beta);
+        RealMatrix betaMat = MatrixUtils.createRealMatrix(beta.getWeightVector());
+        RealMatrix covMat;
+        try {
+            covMat = calculateCovariateMatrix(beta);
+        } catch (SingularMatrixException e) {
+            covMat = null;
+        }
 
-        return beta.getWeightVector();
+        return new LogRegLearnerResult(betaMat, covMat, epoch + 1, lossSum);
+    }
+
+    private double totalLoss(final WeightVector<T> beta) {
+        double lossSum = 0.0;
+        for (T x : m_data) {
+            double[] prediction = beta.predict(x);
+            lossSum += m_loss.evaluate(x, prediction);
+        }
+        return lossSum;
     }
 
     private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
         final double[][] hessian = m_loss.hessian(m_data, beta);
-        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian).scalarMultiply(-1);
-        return MatrixUtils.inverse(observedInformation);
+        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian);
+        return MatrixUtils.inverse(observedInformation).scalarMultiply(-1);
     }
 
     protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);

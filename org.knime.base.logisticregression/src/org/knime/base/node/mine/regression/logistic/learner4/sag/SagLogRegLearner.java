@@ -54,7 +54,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
@@ -107,8 +106,9 @@ public class SagLogRegLearner implements LogRegLearner {
                 new LazySGOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
         int maxIter = 100;
 //        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
-        double[][] w = sgOpt.optimize(maxIter, classData);
-        return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
+//        double[][] w = sgOpt.optimize(maxIter, classData);
+//        return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
+        return sgOpt.optimize(maxIter, classData);
     }
 
     /**
