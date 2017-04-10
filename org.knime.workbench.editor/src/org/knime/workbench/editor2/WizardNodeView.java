@@ -84,6 +84,7 @@ import org.knime.core.node.wizard.WizardViewCreator;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.editor2.ElementRadioSelectionDialog.RadioItem;
+import org.knime.workbench.editor2.subnode.SubnodeViewableModel;
 
 /**
  * Standard implementation for interactive views which are launched on the client side via an integrated browser. They
@@ -394,6 +395,10 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
         m_shell = null;
         m_browser = null;
         m_viewSet = false;
+        // do instanceof check here to avoid a public discard method in the ViewableModel interface
+        if (getViewableModel() instanceof SubnodeViewableModel) {
+            ((SubnodeViewableModel)getViewableModel()).discard();
+        }
     }
 
     private boolean applyTriggered(final boolean useAsDefault) {

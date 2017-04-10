@@ -166,12 +166,6 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     public void registerView(final AbstractWizardNodeView<SubnodeViewableModel, JSONWebNodePage, SubnodeViewValue> view) {
         if (m_view == null) {
             m_view = view;
-            m_view.addDisposeListener(new AbstractWizardNodeView.DisposeListener() {
-                @Override
-                public void viewDisposed() {
-                    discard();
-                }
-            });
         }
     }
 
