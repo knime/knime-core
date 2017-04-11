@@ -76,6 +76,7 @@ import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
+import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
@@ -417,7 +418,6 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             valid = Boolean.parseBoolean(jsonString);
         }
         if (valid) {
-            //TODO: Christian Albrecht: validate also on model
             String pullMethod = template.getPullViewContentMethodName();
             String evalCode =
                 creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
@@ -425,6 +425,13 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             try {
                 VAL viewValue = getModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+                ValidationError error = getModel().validateViewValue(viewValue);
+                if (error != null) {
+                    String showErrorMethod = template.getSetValidationErrorMethodName();
+                    String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "(" + error.getError() +");");
+                    m_browser.execute(showErrorCall);
+                    return false;
+                }
                 if (getModel() instanceof NodeModel) {
                     triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
                 } else {
