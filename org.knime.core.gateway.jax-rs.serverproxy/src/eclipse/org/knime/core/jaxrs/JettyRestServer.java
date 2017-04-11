@@ -33,6 +33,10 @@ import org.knime.core.jaxrs.providers.json.MapJSONDeserializer;
  */
 public class JettyRestServer implements KnimeGatewayServer {
 
+    private static final String DEFAULT_SERVICE_PACKAGE = "org.knime.core.gateway.serverproxy.service";
+
+    private static final String DEFAULT_SERVICE_PREFIX = "Default";
+
     private Server m_server;
 
     @Override
@@ -40,11 +44,18 @@ public class JettyRestServer implements KnimeGatewayServer {
         //create all default services and wrap them with the rest wrapper services
         Collection<Pair<String, String>> serviceDefs = ServiceDefUtil.getServices();
         List<GatewayService> services = serviceDefs.stream().map(sd -> {
+            Class<?> defaultServiceClass;
+            String defaultServiceFullClassName = DEFAULT_SERVICE_PACKAGE + "." + DEFAULT_SERVICE_PREFIX + sd.getLeft();
             try {
-                Class<?> defaultServiceClass =
-                    ObjectSpecUtil.getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "impl");
-                Class<GatewayService> rsWrapperServiceClass = (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil
-                    .getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "restwrapper");
+                defaultServiceClass = Class.forName(defaultServiceFullClassName);
+            } catch (ClassNotFoundException ex1) {
+                throw new RuntimeException(
+                    "No default service implementation not found (" + defaultServiceFullClassName + ")", ex1);
+            }
+            try {
+                Class<GatewayService> rsWrapperServiceClass =
+                    (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil
+                        .getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "restwrapper");
                 Class<?> serviceInterface =
                     ObjectSpecUtil.getClassForFullyQualifiedName(sd.getRight(), sd.getLeft(), "api");
                 return rsWrapperServiceClass.getConstructor(serviceInterface)
@@ -82,7 +93,8 @@ public class JettyRestServer implements KnimeGatewayServer {
                 String namespace = ObjectSpecUtil.extractNamespaceFromClass(s.getClass(), "api");
                 String name = ObjectSpecUtil.extractNameFromClass(s.getClass(), "api");
                 Class<GatewayService> rsWrapperServiceClass =
-                    (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "restwrapper");
+                    (Class<GatewayService>)org.knime.core.jaxrs.serverproxy.ObjectSpecUtil
+                        .getClassForFullyQualifiedName(namespace, name, "restwrapper");
                 Class<?> serviceInterface = ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "api");
                 return rsWrapperServiceClass.getConstructor(serviceInterface).newInstance(s);
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
