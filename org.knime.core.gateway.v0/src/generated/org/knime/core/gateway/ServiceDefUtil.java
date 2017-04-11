@@ -62,7 +62,7 @@ public class ServiceDefUtil {
 
     private static List<Pair<String, String>> SERVICE_DEFS;
 
-    {
+    static {
         List<Pair<String, String>> list = new ArrayList<>();
         list.add(Pair.of("TestService", "test.service"));
         list.add(Pair.of("RepositoryService", "repository.service"));

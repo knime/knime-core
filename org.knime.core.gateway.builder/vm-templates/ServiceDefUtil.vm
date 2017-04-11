@@ -62,7 +62,7 @@ public class ServiceDefUtil {
 
     private static List<Pair<String, String>> SERVICE_DEFS;
 
-    {
+    static {
         List<Pair<String, String>> list = new ArrayList<>();
 #foreach($def in $serviceDefs)
         list.add(Pair.of("$def.getName()", "$def.getNamespace()"));
