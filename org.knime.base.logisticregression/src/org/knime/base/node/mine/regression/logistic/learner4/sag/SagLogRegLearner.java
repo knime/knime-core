@@ -64,6 +64,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeProgressMonitor;
 
 /**
  * LogRegLearner implementation that uses the SAG algorithm to find the model.
@@ -108,7 +109,8 @@ public class SagLogRegLearner implements LogRegLearner {
 //        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
 //        double[][] w = sgOpt.optimize(maxIter, classData);
 //        return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
-        return sgOpt.optimize(maxIter, classData);
+        SimpleProgress progMon = new SimpleProgress(progressMonitor.getProgressMonitor());
+        return sgOpt.optimize(maxIter, classData, progMon);
     }
 
     /**
@@ -118,6 +120,35 @@ public class SagLogRegLearner implements LogRegLearner {
     public String getWarningMessage() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    private class SimpleProgress implements Progress {
+
+        private final NodeProgressMonitor m_progMon;
+
+        /**
+         *
+         */
+        public SimpleProgress(final NodeProgressMonitor progMon) {
+            m_progMon = progMon;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setProgress(final double progress) {
+            m_progMon.setProgress(progress);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setProgress(final double progress, final String message) {
+            m_progMon.setProgress(progress, message);
+        }
+
     }
 
     private class ClassData implements TrainingData<ClassificationTrainingRow> {

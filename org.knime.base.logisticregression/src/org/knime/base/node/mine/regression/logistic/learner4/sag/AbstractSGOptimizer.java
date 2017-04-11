@@ -84,7 +84,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         m_data = data;
     }
 
-    public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data) {
+    public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data, final Progress progress) {
 
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
@@ -97,6 +97,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         for (; epoch < maxEpoch; epoch++) {
             // notify learning rate strategy that a new epoch starts
             m_lrStrategy.startNewEpoch(epoch);
+            progress.setProgress(((double)epoch) / maxEpoch, "Start epoch " + epoch + " of " + maxEpoch);
             for (int k = 0; k < nRows; k++) {
                 T x = data.getRandomRow();
                 indexCache.prepareRow(x);
