@@ -82,6 +82,7 @@ public interface RSExecutionService extends ExecutionService {
 
 	@Override
 	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
     @Path("/executeuptohere")
     public WorkflowEnt setExecuteUpToHere(
 		@QueryParam("workflowID") final String workflowID,		@QueryParam("nodeID") final String nodeID);

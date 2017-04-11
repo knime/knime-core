@@ -97,12 +97,12 @@ public interface RS${name} extends ${name} {
 #elseif(!$rettype.isVoid())
 	@Produces(MediaType.APPLICATION_JSON)
 #if($rettype.isList())
-#set($type=${rettype.getTypeParameter(0).toString()})
+#set($partype=${rettype.getTypeParameter(0)})
 #else
-#set($type=${rettype.toString()})
+#set($partype=${rettype})
 #end
-#if($type.isEntity())
-	@IOClasses(in=${type}FromJson.class, out=${type}ToJson.class)
+#if($partype.isEntity())
+	@IOClasses(in=${partype.toString()}FromJson.class, out=${partype.toString()}ToJson.class)
 #end
 #end
 #if(!$primitiveParams)
@@ -115,11 +115,11 @@ public interface RS${name} extends ${name} {
 		@QueryParam("$param.getName()") final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
 #else
 #if($param.getType().isList())
-#set($type=${param.getType().getTypeParameter(0).toString("","")})
+#set($partype=${param.getType().getTypeParameter(0)})
 #else
-#set($type=${param.getType().toString("","")})
+#set($partype=${param.getType()})
 #end
-		#if($type.isEntity())@IOClasses(in=${type}FromJson.class, out=${type}ToJson.class)#end final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
+		#if($partype.isEntity())@IOClasses(in=${partype.toString()}FromJson.class, out=${partype.toString()}ToJson.class)#end final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
 #end
 #end
 );

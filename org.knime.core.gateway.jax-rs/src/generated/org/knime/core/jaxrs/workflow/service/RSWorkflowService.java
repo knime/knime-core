@@ -77,6 +77,7 @@ public interface RSWorkflowService extends WorkflowService {
 	@Override
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
     @Path("/workflow")
     public WorkflowEnt getWorkflow(
 		@QueryParam("id") final String id);
@@ -86,7 +87,7 @@ public interface RSWorkflowService extends WorkflowService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/workflow")
     public void updateWorkflow(
-		 final WorkflowEnt wf);
+		@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class) final WorkflowEnt wf);
 
 	@Override
 	@GET
