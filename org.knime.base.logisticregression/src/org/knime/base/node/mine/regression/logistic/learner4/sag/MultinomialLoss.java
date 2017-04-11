@@ -118,13 +118,14 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
                         double h = iFetVal * fetVal * prediction[iCat];
                         if (iCat == cat) {
                             // update if weight applies to same class
-                            h *= prediction[cat] * (1.0 - prediction[cat]);
+                            h *= (1.0 - prediction[cat]);
                         } else {
                             // update if weight applies to different class
-                            h *= prediction[iCat] * prediction[cat];
+                            h *= prediction[cat];
                         }
                         // sum second derivatives over all rows
-                        hessian[i][cat * nFets + fet] += h;
+                        int c = cat * nFets + fet;
+                        hessian[i][c] += h;
                     }
                 }
             }
