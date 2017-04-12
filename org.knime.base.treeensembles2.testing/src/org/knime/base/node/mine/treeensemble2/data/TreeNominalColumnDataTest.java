@@ -70,7 +70,7 @@ import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMembershi
 import org.knime.base.node.mine.treeensemble2.learner.NominalBinarySplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.NominalMultiwaySplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalBinaryCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalBinaryCondition.SetLogic;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalCondition;
