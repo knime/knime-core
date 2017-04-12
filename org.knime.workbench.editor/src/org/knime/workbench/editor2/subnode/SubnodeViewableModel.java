@@ -139,8 +139,10 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                             reset();
                         }
                     } else {
-                        // TODO sync view and model 'viewvalue' -- if they differ, repaint
                         m_isReexecuteInProgress.set(false);
+                        if (m_view != null && getViewValue() != null && !getViewValue().equals(m_view.getLastRetrievedValue())) {
+                            m_view.callViewableModelChanged();
+                        }
                         return;
                     }
                 } else if (!nodeContainerState.isExecutionInProgress() && m_isReexecuteInProgress.get()) {
@@ -206,6 +208,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         try {
             // TODO assert node is executed
             m_isReexecuteInProgress.set(true);
+            m_value = value;
             m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
         } catch (IOException e) {
             LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);

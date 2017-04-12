@@ -51,6 +51,7 @@ package org.knime.core.node.wizard;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -83,6 +84,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
+
+    private AtomicReference<VAL> m_lastRetrievedValue;
 
     /**
      * @param nodeModel
@@ -167,6 +170,22 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      * Called on view close.
      */
     protected abstract void closeView();
+
+    /**
+     * @return the lastRetrievedValue
+     * @since 3.4
+     */
+    public VAL getLastRetrievedValue() {
+        return m_lastRetrievedValue.get();
+    }
+
+    /**
+     * @param lastRetrievedValue the lastRetrievedValue to set
+     * @since 3.4
+     */
+    protected void setLastRetrievedValue(final VAL lastRetrievedValue) {
+        m_lastRetrievedValue.set(lastRetrievedValue);
+    }
 
     /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.

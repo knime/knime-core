@@ -425,6 +425,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             try {
                 VAL viewValue = getModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+                setLastRetrievedValue(viewValue);
                 ValidationError error = getModel().validateViewValue(viewValue);
                 if (error != null) {
                     String showErrorMethod = template.getSetValidationErrorMethodName();
