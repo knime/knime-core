@@ -54,6 +54,7 @@ import org.apache.commons.math3.linear.SingularMatrixException;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.core.node.CanceledExecutionException;
 
 /**
  *
@@ -84,7 +85,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         m_data = data;
     }
 
-    public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data, final Progress progress) {
+    public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data, final Progress progress) throws CanceledExecutionException {
 
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount() + 1;
@@ -99,6 +100,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             m_lrStrategy.startNewEpoch(epoch);
             progress.setProgress(((double)epoch) / maxEpoch, "Start epoch " + epoch + " of " + maxEpoch);
             for (int k = 0; k < nRows; k++) {
+                progress.checkCanceled();
                 T x = data.getRandomRow();
                 indexCache.prepareRow(x);
                 prepareIteration(beta, x, updater, m_regUpdater, k, indexCache);

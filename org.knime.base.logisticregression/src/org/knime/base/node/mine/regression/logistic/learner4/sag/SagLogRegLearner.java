@@ -149,6 +149,14 @@ public class SagLogRegLearner implements LogRegLearner {
             m_progMon.setProgress(progress, message);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void checkCanceled() throws CanceledExecutionException {
+            m_progMon.checkCanceled();
+        }
+
     }
 
     private class ClassData implements TrainingData<ClassificationTrainingRow> {

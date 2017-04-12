@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -62,5 +63,7 @@ interface Progress {
     void setProgress(final double progress);
 
     void setProgress(final double progress, final String message);
+
+    void checkCanceled() throws CanceledExecutionException;
 
 }
