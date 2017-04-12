@@ -88,7 +88,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data, final Progress progress) throws CanceledExecutionException {
 
         final int nRows = data.getRowCount();
-        final int nFets = data.getFeatureCount() + 1;
+        final int nFets = data.getFeatureCount();
         final int nCats = data.getTargetDimension();
         final U updater = m_updaterFactory.create();
         final IndexCache indexCache = createIndexCache(nFets);

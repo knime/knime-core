@@ -89,7 +89,7 @@ public class SagLogRegLearner implements LogRegLearner {
         LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
         final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
         UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory =
-                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount() + 1, classData.getTargetDimension() - 1);
+                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
 //        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
 //                new EagerSagUpdater.EagerSagUpdaterFactory<>(classData.getRowCount(), classData.getFeatureCount() + 1, classData.getTargetDimension() - 1);
 //        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
@@ -168,7 +168,8 @@ public class SagLogRegLearner implements LogRegLearner {
 
         public ClassData(final RegressionTrainingData data) {
             int nrows = (int)data.getRowCount();
-            int nfet = data.getRegressorCount();
+            // plus 1 for the intercept term
+            int nfet = data.getRegressorCount() + 1;
             m_fetCount = nfet;
             m_rows = new ArrayList<ClassificationTrainingRow>(nrows);
             int id = 0;

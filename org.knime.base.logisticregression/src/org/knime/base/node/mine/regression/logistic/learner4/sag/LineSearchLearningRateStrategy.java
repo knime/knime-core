@@ -131,7 +131,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
 
         // use the max squared gradient among all classes
         // this ensures that step size is small enough yet not too small
-        // which is what happens if the squared norm of the gradient matrix
+        // which is what happens if the squared norm of the gradient matrix is used
         // (we have for each class one gradient vector)
         for (int c = 0; c < gradient.length; c++) {
             double g = gradient[c];
@@ -175,14 +175,6 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     }
 
 
-    private static double calculateSquaredNorm(final double[] arr) {
-        double norm = 0.0;
-        for (int i = 0; i < arr.length; i++) {
-            norm += arr[i] * arr[i];
-        }
-        return norm;
-    }
-
     private double calculateSquaredNorm(final T row) {
         double norm = 0.0;
         // row.getFeature(0) returns always a 1 for the intercept term
@@ -193,15 +185,4 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         return norm;
     }
 
-    private double calculateSquaredNorm(final T row, final double[] gradient) {
-        double norm = 0.0;
-        for (int c = 0; c < gradient.length; c++) {
-            for (int i = 0; i < m_nFets; i++) {
-                double g = row.getFeature(i) * gradient[c];
-                norm += g * g;
-            }
-        }
-
-        return norm;
-    }
 }

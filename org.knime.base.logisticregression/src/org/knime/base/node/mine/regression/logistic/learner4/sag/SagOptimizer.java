@@ -81,7 +81,7 @@ public class SagOptimizer <T extends TrainingRow> {
      */
     public double[][] optimize(final TrainingData<T> data, final int maxEpoch, final double lambda, final boolean fitIntercept) {
         final int nRows = data.getRowCount();
-        final int nFets = data.getFeatureCount() + 1;
+        final int nFets = data.getFeatureCount();
         final int nCats = data.getTargetDimension();
         // initialize
         double[][] g = new double[nCats - 1][nRows];

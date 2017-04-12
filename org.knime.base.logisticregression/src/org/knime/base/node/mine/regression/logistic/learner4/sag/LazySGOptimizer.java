@@ -75,7 +75,7 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
         final R prior, final LearningRateStrategy<T> learningRateStrategy,
         final StoppingCriterion<T> stoppingCriterion) {
         super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion);
-        m_lastVisited = new int[data.getFeatureCount() + 1];
+        m_lastVisited = new int[data.getFeatureCount()];
     }
 
 
