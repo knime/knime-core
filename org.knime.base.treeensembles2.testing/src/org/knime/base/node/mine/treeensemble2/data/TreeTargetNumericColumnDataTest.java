@@ -56,7 +56,7 @@ import org.junit.Test;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**

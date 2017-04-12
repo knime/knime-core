@@ -68,7 +68,7 @@ import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMembershi
 import org.knime.base.node.mine.treeensemble2.learner.NumericMissingSplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.NumericSplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition.NumericOperator;
