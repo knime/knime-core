@@ -64,6 +64,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.DefaultWebTemplate;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
@@ -142,11 +143,11 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                         m_isReexecuteInProgress.set(false);
                         try {
                             // check if value still matches last retrieved value from view
-                            SubnodeViewValue v = createValue();
+                            SubnodeViewValue v = getViewValue();
                             if (m_view != null && v != null && !v.equals(m_view.getLastRetrievedValue())) {
                                 m_view.callViewableModelChanged();
                             }
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             reset();
                         }
                         return;
@@ -180,19 +181,14 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
 
     private void createPageAndValue() throws IOException {
         m_page = m_spm.createWizardPage(m_container.getID());
-        createValue();
-    }
-
-    private SubnodeViewValue createValue() throws IOException {
-        m_value = new SubnodeViewValue();
         Map<String, String> valueMap = new HashMap<String, String>();
         ObjectMapper mapper = new ObjectMapper();
         for (Entry<String, JSONWebNode> entry : m_page.getWebNodes().entrySet()) {
             String value = mapper.writeValueAsString(entry.getValue().getViewValue());
             valueMap.put(entry.getKey(), value);
         }
+        m_value = new SubnodeViewValue();
         m_value.setViewValues(valueMap);
-        return m_value;
     }
 
     /**
@@ -206,8 +202,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 return new CollectionValidationError(validationResult);
             }
         } catch (IOException e) {
-            LOGGER.error("Validating view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
-            // TODO -- (verification) double check that view is blank if IOException occurred
+            logErrorAndReset("Validating view values for node " + m_container.getID() + " failed: ", e);
         }
         return null;
     }
@@ -218,13 +213,20 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public void loadViewValue(final SubnodeViewValue value, final boolean useAsDefault) {
         try {
-            // TODO assert node is executed
+            CheckUtils.checkState(m_container.getNodeContainerState().isExecuted(), "Node needs to be in executed state to apply new view values.");
             m_isReexecuteInProgress.set(true);
             m_value = value;
             m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
         } catch (IOException e) {
-            LOGGER.error("Loading view values for node " + m_container.getID() + " failed: " + e.getMessage(), e);
-            // TODO -- (verification) double check that view is blank if IOException occurred
+            logErrorAndReset("Loading view values for node " + m_container.getID() + " failed: ", e);
+        }
+    }
+
+    private void logErrorAndReset(final String message, final Exception ex) {
+        LOGGER.error(message + ex.getMessage(), ex);
+        reset();
+        if (m_view != null) {
+            m_view.callViewableModelChanged();
         }
     }
 

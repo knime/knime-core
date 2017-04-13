@@ -140,11 +140,11 @@ public class SinglePageManager extends PageManager {
      */
     public Map<String, ValidationError> validateViewValues(final Map<String, String> viewValues, final NodeID containerNodeId) throws IOException {
         try (WorkflowLock lock = getWorkflowManager().lock()) {
-            ObjectMapper mapper = new ObjectMapper();
+            /*ObjectMapper mapper = new ObjectMapper();
             for (String key : viewValues.keySet()) {
                 String content = mapper.writeValueAsString(viewValues.get(key));
                 viewValues.put(key, content);
-            }
+            }*/
             if (!viewValues.isEmpty()) {
                 SinglePageWebResourceController sec = getController(containerNodeId);
                 return sec.validateViewValuesInPage(viewValues);
