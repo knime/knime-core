@@ -190,6 +190,10 @@ public class JavaSnippetCellFactory implements CellFactory {
                 Field field = m_jsnippet.getClass().getField(inCol.getJavaName());
 
                 final DataCell cell = row.getCell(m_spec.findColumnIndex(inCol.getKnimeName()));
+                if (cell.isMissing()) {
+                    field.set(m_jsnippet, null);
+                    continue;
+                }
 
                 // Get the converter factory for this column
                 final Optional<DataCellToJavaConverterFactory<?, ?>> factory =
