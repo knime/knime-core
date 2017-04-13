@@ -2505,19 +2505,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Creates a new execution controller for the display and handling of a single page/metanode.
-     * @param pageID the node id of the metanode containing the single page view
-     * @return A new controller for execution handling of a single page.
-     * @throws IllegalStateException If this workflow is not a project.
-     * @since 3.4
-     */
-    public SinglePageWebResourceController getSinglePageExecutionController(final NodeID pageID) {
-        CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
-        try (WorkflowLock lock = lock()) {
-            return new SinglePageWebResourceController(this, pageID);
-        }
-    }
-
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
      *
