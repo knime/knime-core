@@ -85,7 +85,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     private final InteractiveViewDelegate<VAL> m_delegate;
 
-    private AtomicReference<VAL> m_lastRetrievedValue;
+    private AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
 
     /**
      * @param nodeModel

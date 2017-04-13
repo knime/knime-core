@@ -140,15 +140,22 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                         }
                     } else {
                         m_isReexecuteInProgress.set(false);
-                        if (m_view != null && getViewValue() != null && !getViewValue().equals(m_view.getLastRetrievedValue())) {
-                            m_view.callViewableModelChanged();
+                        try {
+                            // check if value still matches last retrieved value from view
+                            SubnodeViewValue v = createValue();
+                            if (m_view != null && v != null && !v.equals(m_view.getLastRetrievedValue())) {
+                                m_view.callViewableModelChanged();
+                            }
+                        } catch (IOException e) {
+                            reset();
                         }
                         return;
                     }
                 } else if (!nodeContainerState.isExecutionInProgress() && m_isReexecuteInProgress.get()) {
                     // node failed during re-execution -- reset the view
-                    m_isReexecuteInProgress.set(false);
-                    reset();
+                    //FIXME: this is still called during regular re-execution, even with the combined apply and reexecute
+                    /*m_isReexecuteInProgress.set(false);
+                    reset();*/
                 } else if (!m_isReexecuteInProgress.get()) {
                     reset();
                 }
@@ -173,6 +180,10 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
 
     private void createPageAndValue() throws IOException {
         m_page = m_spm.createWizardPage(m_container.getID());
+        createValue();
+    }
+
+    private SubnodeViewValue createValue() throws IOException {
         m_value = new SubnodeViewValue();
         Map<String, String> valueMap = new HashMap<String, String>();
         ObjectMapper mapper = new ObjectMapper();
@@ -181,6 +192,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             valueMap.put(entry.getKey(), value);
         }
         m_value.setViewValues(valueMap);
+        return m_value;
     }
 
     /**
