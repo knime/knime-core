@@ -50,6 +50,8 @@ package org.knime.time;
 
 import java.time.Duration;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 
 import org.knime.core.data.DataValue;
@@ -63,22 +65,18 @@ import org.knime.core.data.time.period.PeriodValue;
  */
 public enum Granularity {
 
-    YEAR("Year", PeriodValue.class),
-    MONTH("Month", PeriodValue.class),
-    WEEK("Week", PeriodValue.class),
-    DAY("Day", PeriodValue.class),
-    HOUR("Hour", DurationValue.class),
-    MINUTE("Minute", DurationValue.class),
-    SECOND("Second", DurationValue.class),
-    MILLISECOND("Millisecond", DurationValue.class),
-    NANOSECOND("Nanosecond", DurationValue.class);
+        YEAR(ChronoUnit.YEARS, PeriodValue.class), MONTH(ChronoUnit.MONTHS, PeriodValue.class),
+        WEEK(ChronoUnit.WEEKS, PeriodValue.class), DAY(ChronoUnit.DAYS, PeriodValue.class),
+        HOUR(ChronoUnit.HOURS, DurationValue.class), MINUTE(ChronoUnit.MINUTES, DurationValue.class),
+        SECOND(ChronoUnit.SECONDS, DurationValue.class), MILLISECOND(ChronoUnit.MILLIS, DurationValue.class),
+        NANOSECOND(ChronoUnit.NANOS, DurationValue.class);
 
-    private final String m_name;
+    private final ChronoUnit m_chronoUnit;
 
     private final Class<? extends DataValue> m_dataValue;
 
-    private Granularity(final String name, final Class<? extends DataValue> dataValue) {
-        m_name = name;
+    private Granularity(final ChronoUnit chronoUnit, final Class<? extends DataValue> dataValue) {
+        m_chronoUnit = chronoUnit;
         m_dataValue = dataValue;
     }
 
@@ -87,14 +85,14 @@ public enum Granularity {
      */
     @Override
     public String toString() {
-        return m_name;
+        return m_chronoUnit.toString();
     }
 
     /**
      * @return true if granularity belongs to a date, and false if it belongs to a time
      */
     public boolean isPartOfDate() {
-        return m_dataValue.equals(PeriodValue.class);
+        return m_chronoUnit.isDateBased();
     }
 
     /**
@@ -118,7 +116,7 @@ public enum Granularity {
     public static Granularity fromString(final String name) {
         if (name != null) {
             for (Granularity granularity : Granularity.values()) {
-                if (name.equalsIgnoreCase(granularity.name())) {
+                if (name.equals(granularity.toString())) {
                     return granularity;
                 }
             }
@@ -129,20 +127,21 @@ public enum Granularity {
     /**
      * @param value input parameter for {@link Period} or {@link Duration}
      * @return {@link Period} or {@link Duration}
+     * @throws ArithmeticException if the input overflows an integer
      */
-    public TemporalAmount getPeriodOrDuration(final int value) {
+    public TemporalAmount getPeriodOrDuration(final long value) throws ArithmeticException {
         final String name = name();
         if (name.equals(YEAR.name())) {
-            return Period.ofYears(value);
+            return Period.ofYears(Math.toIntExact(value));
         }
         if (name.equals(MONTH.name())) {
-            return Period.ofMonths(value);
+            return Period.ofMonths(Math.toIntExact(value));
         }
         if (name.equals(WEEK.name())) {
-            return Period.ofWeeks(value);
+            return Period.ofWeeks(Math.toIntExact(value));
         }
         if (name.equals(DAY.name())) {
-            return Period.ofDays(value);
+            return Period.ofDays(Math.toIntExact(value));
         }
         if (name.equals(HOUR.name())) {
             return Duration.ofHours(value);
@@ -160,5 +159,24 @@ public enum Granularity {
             return Duration.ofNanos(value);
         }
         throw new IllegalStateException(name() + " not defined.");
+    }
+
+    /**
+     * Calculates the amount of time between two temporal objects.
+     *
+     * @param temporal1Inclusive the base temporal object, not null
+     * @param temporal2Exclusive the other temporal object, exclusive, not null
+     * @return the amount of time between temporal1Inclusive and temporal2Exclusive in terms of this unit; positive if
+     *         temporal2Exclusive is later than temporal1Inclusive, negative if earlier
+     */
+    public long between(final Temporal temporal1Inclusive, final Temporal temporal2Exclusive) {
+        return m_chronoUnit.between(temporal1Inclusive, temporal2Exclusive);
+    }
+
+    /**
+     * @return the {@link ChronoUnit} of this {@link Granularity}
+     */
+    public ChronoUnit getChronoUnit() {
+        return m_chronoUnit;
     }
 }
