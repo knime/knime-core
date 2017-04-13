@@ -48,12 +48,13 @@
  */
 package org.knime.time.util;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
+import java.time.format.DateTimeParseException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -68,6 +69,8 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public final class SettingsModelDateTime extends SettingsModel {
+
+    private static final String KEY_DATE_TIME = "date&time";
 
     private static final String KEY_DATE = "date";
 
@@ -237,7 +240,7 @@ public final class SettingsModelDateTime extends SettingsModel {
             sameValue = (m_time == null);
         } else {
             sameValue = localTime.equals(m_time);
-            setUseMillis(localTime.getNano() > 0);
+            m_useMillis = localTime.getNano() > 0;
         }
         m_time = localTime;
 
@@ -313,16 +316,56 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        final NodeSettingsRO internals = settings.getNodeSettings(m_configName);
-        final long date = internals.getLong(KEY_DATE, LocalDate.now().getLong(ChronoField.EPOCH_DAY));
-        final long time = internals.getLong(KEY_TIME, LocalTime.now().getLong(ChronoField.NANO_OF_DAY));
-        final String zone = internals.getString(KEY_ZONE, ZoneId.systemDefault().getId());
-        setLocalDate(LocalDate.ofEpochDay(date));
-        setLocalTime(LocalTime.ofNanoOfDay(time));
-        setZone(ZoneId.of(zone));
-        setUseDate(internals.getBoolean(KEY_USE_DATE, true));
-        setUseTime(internals.getBoolean(KEY_USE_TIME, true));
-        setUseZone(internals.getBoolean(KEY_USE_ZONE, true));
+        final String string = settings.getString(m_configName);
+        if (string == null || string.equals("") || string.equals("missing")) {
+            setZonedDateTime(ZonedDateTime.now().withNano(0));
+            setUseDate(false);
+            setUseTime(false);
+            setUseZone(false);
+        } else {
+            try {
+                final ZonedDateTime zdt = ZonedDateTime.parse(string);
+                setZonedDateTime(zdt);
+                setUseDate(true);
+                setUseTime(true);
+                setUseZone(true);
+            } catch (DateTimeParseException e1) {
+                try {
+                    final LocalDateTime ldt = LocalDateTime.parse(string);
+                    setZonedDateTime(ZonedDateTime.of(ldt, ZoneId.systemDefault()));
+                    setUseDate(true);
+                    setUseTime(true);
+                    setUseZone(false);
+                } catch (DateTimeParseException e2) {
+                    try {
+                        final LocalDate ld = LocalDate.parse(string);
+                        setZonedDateTime(ZonedDateTime.of(ld, LocalTime.now(), ZoneId.systemDefault()));
+                        setUseDate(true);
+                        setUseTime(false);
+                        setUseZone(false);
+                    } catch (DateTimeParseException e3) {
+                        try {
+                            final LocalTime lt = LocalTime.parse(string);
+                            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), lt, ZoneId.systemDefault()));
+                            setUseDate(false);
+                            setUseTime(true);
+                            setUseZone(false);
+                        } catch (DateTimeParseException e4) {
+                            try {
+                                final ZoneId zone = ZoneId.of(string);
+                                setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), zone));
+                                setUseDate(false);
+                                setUseTime(false);
+                                setUseZone(true);
+                            } catch (DateTimeException e5) {
+                                throw new InvalidSettingsException(
+                                    "String '" + string + "' could not be parsed as a date, time or time zone.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -330,13 +373,31 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        final NodeSettingsRO internals = settings.getNodeSettings(m_configName);
-        internals.getLong(KEY_DATE);
-        internals.getLong(KEY_TIME);
-        internals.getString(KEY_ZONE);
-        internals.getBoolean(KEY_USE_DATE);
-        internals.getBoolean(KEY_USE_TIME);
-        internals.getBoolean(KEY_USE_ZONE);
+        final String string = settings.getString(m_configName);
+        if (string != null && !string.equals("") && !string.equals("missing")) {
+            try {
+                ZonedDateTime.parse(string);
+            } catch (DateTimeParseException e1) {
+                try {
+                    LocalDateTime.parse(string);
+                } catch (DateTimeParseException e2) {
+                    try {
+                        LocalDate.parse(string);
+                    } catch (DateTimeParseException e3) {
+                        try {
+                            LocalTime.parse(string);
+                        } catch (DateTimeParseException e4) {
+                            try {
+                                ZoneId.of(string);
+                            } catch (DateTimeException e5) {
+                                throw new InvalidSettingsException(
+                                    "String '" + string + "' could not be parsed as a date, time or time zone.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -352,13 +413,19 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        final NodeSettingsWO internals = settings.addNodeSettings(m_configName);
-        internals.addLong(KEY_DATE, m_date.getLong(ChronoField.EPOCH_DAY));
-        internals.addLong(KEY_TIME, m_time.getLong(ChronoField.NANO_OF_DAY));
-        internals.addString(KEY_ZONE, m_zone.getId());
-        internals.addBoolean(KEY_USE_DATE, m_useDate);
-        internals.addBoolean(KEY_USE_TIME, m_useTime);
-        internals.addBoolean(KEY_USE_ZONE, m_useZone);
+        if (m_useDate && m_useTime && m_useZone) {
+            settings.addString(m_configName, getZonedDateTime().toString());
+        } else if (m_useDate && !m_useTime && !m_useZone) {
+            settings.addString(m_configName, getLocalDate().toString());
+        } else if (!m_useDate && m_useTime && !m_useZone) {
+            settings.addString(m_configName, getLocalTime().toString());
+        } else if (!m_useDate && !m_useTime && m_useZone) {
+            settings.addString(m_configName, m_zone.toString());
+        } else if (m_useDate && m_useTime && !m_useZone) {
+            settings.addString(m_configName, getLocalDateTime().toString());
+        } else {
+            settings.addString(m_configName, null);
+        }
     }
 
     /**

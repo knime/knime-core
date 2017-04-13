@@ -375,16 +375,16 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
     protected void updateComponent() {
         final SettingsModelDateTime model = (SettingsModelDateTime)getModel();
         m_dateChooser.setDate(Date.from(model.getLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        m_dateCheckbox.setSelected(model.useDate());
+        m_dateCheckbox.setSelected(model.useDate() && m_displayOption.isShowDate());
         m_useMillis = model.useMillis();
         ((DateFormatter)m_editor.getTextField().getFormatter()).setFormat(
             new SimpleDateFormat(m_useMillis ? TIME_FORMAT_WITH_MS : TIME_FORMAT_WITHOUT_MS, Locale.getDefault()));
         m_timeSpinner.setValue(Date
             .from(model.getLocalTime().atDate(LocalDate.of(1970, 1, 1)).atZone(ZoneId.systemDefault()).toInstant()));
-        m_timeCheckbox.setSelected(model.useTime());
+        m_timeCheckbox.setSelected(model.useTime() && m_displayOption.isShowTime());
 
         m_zoneComboBox.setSelectedItem(model.getZone().getId());
-        m_zoneCheckbox.setSelected(model.useZone());
+        m_zoneCheckbox.setSelected(model.useZone() && m_displayOption.isShowZone());
         setEnabledComponents(model.isEnabled());
     }
 
@@ -429,13 +429,13 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_dateCheckbox.setEnabled(enabled);
-        m_dateLabel.setEnabled(enabled);
+        m_dateLabel.setEnabled(m_dateCheckbox.isSelected() && enabled);
         m_dateChooser.setEnabled(m_dateCheckbox.isSelected() && enabled);
         m_timeCheckbox.setEnabled(enabled);
-        m_timeLabel.setEnabled(enabled);
+        m_timeLabel.setEnabled(m_timeCheckbox.isSelected() && enabled);
         m_timeSpinner.setEnabled(m_timeCheckbox.isSelected() && enabled);
         m_zoneCheckbox.setEnabled(enabled);
-        m_zoneLabel.setEnabled(enabled);
+        m_zoneLabel.setEnabled(m_zoneCheckbox.isSelected() && enabled);
         m_zoneComboBox.setEnabled(m_zoneCheckbox.isSelected() && enabled);
     }
 
@@ -497,17 +497,9 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
              */
             SHOW_DATE_AND_TIME(true, false, true, false, false, false),
             /**
-             * Both date chooser and time spinner are shown.
+             * All three date chooser, time spinner and time zone combobox are shown.
              */
-            SHOW_DATE_AND_TIME_OPTIONAL(true, true, true, true, false, false),
-            /**
-             * Both date chooser and time spinner plus time zone are shown.
-             */
-            SHOW_DATE_AND_TIME_AND_TIMEZONE(true, false, true, false, true, false),
-            /**
-             * Both date chooser and time spinner are shown with an individual checkbox to activate them.
-             */
-            SHOW_DATE_AND_TIME_AND_TIMEZONE_OPTIONAL(true, true, true, true, true, true);
+            SHOW_DATE_AND_TIME_AND_TIMEZONE(true, false, true, false, true, false);
 
         private final boolean m_showDate;
 
