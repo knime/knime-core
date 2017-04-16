@@ -155,7 +155,7 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
                         }
                     } else {
                         // if values are in range -> round
-                        BigDecimal bd = new BigDecimal(value);
+                        BigDecimal bd = BigDecimal.valueOf(value); // do not use constructor, see AP-7016
 
                         switch (m_numberMode) {
                             case DECIMAL_PLACES:
