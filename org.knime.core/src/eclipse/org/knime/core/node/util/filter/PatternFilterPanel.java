@@ -54,6 +54,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -120,6 +121,11 @@ public class PatternFilterPanel<T> extends JPanel {
     private FilterIncludeExcludePreview<T> m_preview;
 
     /**
+     * Additional Checkbox (e.g. "Include Missing Values")
+     */
+    private JCheckBox m_additionalCheckbox;
+
+    /**
      * Create the pattern filter panel.
      *
      * @param parentFilter The filter that is parent to this pattern filter
@@ -163,12 +169,12 @@ public class PatternFilterPanel<T> extends JPanel {
         panel.add(m_caseSensitive, gbc);
         m_caseSensitive.setSelected(true);
         m_caseSensitiveValue = m_caseSensitive.isSelected();
-        JCheckBox additionalCheck = getAdditionalCheckbox();
-        if (additionalCheck != null) {
+        m_additionalCheckbox = createAdditionalCheckbox();
+        if (m_additionalCheckbox != null) {
             gbc.gridy++;
-            panel.add(additionalCheck, gbc);
-            additionalCheck.setSelected(false);
-            m_additionalCheckBoxValue = additionalCheck.isSelected();
+            panel.add(m_additionalCheckbox, gbc);
+            m_additionalCheckbox.setSelected(false);
+            m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
         }
         m_pattern.addCaretListener(new CaretListener() {
             @Override
@@ -217,12 +223,12 @@ public class PatternFilterPanel<T> extends JPanel {
                 }
             }
         });
-        if (additionalCheck != null) {
-            additionalCheck.addChangeListener(new ChangeListener() {
+        if (m_additionalCheckbox != null) {
+            m_additionalCheckbox.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent e) {
-                    if (m_additionalCheckBoxValue != additionalCheck.isSelected()) {
-                        m_additionalCheckBoxValue = additionalCheck.isSelected();
+                    if (m_additionalCheckBoxValue != m_additionalCheckbox.isSelected()) {
+                        m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
                         fireFilteringChangedEvent();
                     }
                 }
@@ -248,10 +254,19 @@ public class PatternFilterPanel<T> extends JPanel {
     }
 
     /**
-     * @return an additional Checkbox, e.g. for missing values
+     * An additional Checkbox, e.g. for missing values. Possibly overwritten by subclasses.
+     * Default implementation returns null.
+     * @return null (here)
      */
-    protected JCheckBox getAdditionalCheckbox() {
+    protected JCheckBox createAdditionalCheckbox() {
         return null;
+    }
+
+    /**
+     * @return the additionalCheckbox
+     */
+    protected final Optional<JCheckBox> getAdditionalCheckbox() {
+        return Optional.ofNullable(m_additionalCheckbox);
     }
 
     /**
@@ -264,6 +279,9 @@ public class PatternFilterPanel<T> extends JPanel {
         m_regex.setEnabled(enabled);
         m_wildcard.setEnabled(enabled);
         m_caseSensitive.setEnabled(enabled);
+        if (m_additionalCheckbox != null) {
+            m_additionalCheckbox.setEnabled(enabled);
+        }
         update();
     }
 
@@ -398,6 +416,23 @@ public class PatternFilterPanel<T> extends JPanel {
     void setFilter(final InputFilter<T> filter) {
         m_filter = filter;
         update();
+    }
+
+    /**
+     * @param exclude title for the left box
+     * @param include title for the right box
+     * @since 3.4
+     */
+    public void setBorderTitles(final String exclude, final String include) {
+        m_preview.setBorderTitles(exclude, include);
+    }
+
+    /**
+     * sets the text of the "Include Missing Value"-Checkbox
+     * @param newText
+     */
+    public void setAdditionalCheckboxText(final String newText){
+        m_additionalCheckbox.setText(newText);
     }
 
 }

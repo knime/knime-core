@@ -95,7 +95,7 @@ public class NominalValueRowSplitterNodeFactory extends NodeFactory<NominalValue
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new NominalValueRowFilterNodeDialog();
+        return new NominalValueRowFilterNodeDialog(true);
     }
 
 }

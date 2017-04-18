@@ -58,7 +58,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListCellRenderer;
-import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 
 /**
  * Preview twin list that shows the included and excluded elements.
@@ -70,13 +70,13 @@ import javax.swing.border.Border;
 @SuppressWarnings("serial")
 public final class FilterIncludeExcludePreview<T> extends JPanel {
 
-    private Border m_borderIncludeEnabled;
+    private TitledBorder m_borderIncludeEnabled;
 
-    private Border m_borderIncludeDisabled;
+    private TitledBorder m_borderIncludeDisabled;
 
-    private Border m_borderExcludeEnabled;
+    private TitledBorder m_borderExcludeEnabled;
 
-    private Border m_borderExcludeDisabled;
+    private TitledBorder m_borderExcludeDisabled;
 
     private JList<T> m_includeList;
 
@@ -181,6 +181,18 @@ public final class FilterIncludeExcludePreview<T> extends JPanel {
     public void setListSize(final Dimension size) {
         m_includePane.setPreferredSize(size);
         m_excludePane.setPreferredSize(size);
+    }
+
+    /**
+     * @param exclude title for the left box
+     * @param include title for the right box
+     * @since 3.4
+     */
+    public void setBorderTitles(final String exclude, final String include) {
+        m_borderIncludeEnabled.setTitle(include);
+        m_borderIncludeDisabled.setTitle(include);
+        m_borderExcludeEnabled.setTitle(exclude);
+        m_borderExcludeDisabled.setTitle(exclude);
     }
 
 }

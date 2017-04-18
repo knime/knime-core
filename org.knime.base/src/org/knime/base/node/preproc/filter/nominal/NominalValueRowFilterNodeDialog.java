@@ -109,9 +109,11 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     private NominalValueFilterPanel m_filterPanel;
 
     /**
-     * New pane for configuring the PossibleValueRowFilter node.
+     * New pane for configuring the NominalValueRowFilter node.
+     * @param splitter whether this dialog is for the splitter or the filter
+     * @since 3.4
      */
-    protected NominalValueRowFilterNodeDialog() {
+    protected NominalValueRowFilterNodeDialog(final boolean splitter) {
         m_colAttributes = new LinkedHashMap<String, Set<DataCell>>();
         m_columns = new DefaultComboBoxModel<>();
 
@@ -129,11 +131,23 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         panel.add(columnSelectionPanel, BorderLayout.NORTH);
         Box attributeSelectionBox = Box.createHorizontalBox();
         m_filterPanel = new NominalValueFilterPanel();
-        m_filterPanel.setIncludeTitle("Top");
-        m_filterPanel.setExcludeTitle("Bottom");
+        if (splitter) {
+            m_filterPanel.setIncludeTitle("Top");
+            m_filterPanel.setExcludeTitle("Bottom");
+            m_filterPanel.setAdditionalCheckboxText("<html>Incl. Missing<br/>Values (Top)</html>");
+            m_filterPanel.setPatternFilterBorderTitles("Mismatch (Bottom)", "Match (Top)");
+            m_filterPanel.setAdditionalPatternCheckboxText("Include Missing Values (Top)");
+        }
         attributeSelectionBox.add(m_filterPanel);
         panel.add(attributeSelectionBox, BorderLayout.CENTER);
         addTab("Selection", new JScrollPane(panel));
+    }
+
+    /**
+     * New pane for configuring the PossibleValueRowFilter node.
+     */
+    protected NominalValueRowFilterNodeDialog() {
+        this(false);
     }
 
     /**

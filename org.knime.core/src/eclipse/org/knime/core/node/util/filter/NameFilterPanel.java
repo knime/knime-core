@@ -64,6 +64,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -193,6 +194,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private JPanel m_nameFilterPanel;
 
+    /**
+     * additional checkbox for the middle button panel
+     * @since 3.4
+     */
+    private JCheckBox m_additionalCheckbox;
+
     private PatternFilterPanel<T> m_patternPanel;
 
     private JRadioButton m_nameButton;
@@ -316,12 +323,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 onRemAll();
             }
         });
-        JCheckBox additionalButton = getAdditionalButton();
-        if (additionalButton != null){
+        m_additionalCheckbox = createAdditionalButton();
+        if (m_additionalCheckbox != null){
             buttonPan.add(Box.createVerticalStrut(25));
-            additionalButton.setMaximumSize(new Dimension(125, 25));
-            buttonPan.add(additionalButton);
-            additionalButton.addActionListener(e -> fireFilteringChangedEvent());
+            m_additionalCheckbox.setMaximumSize(new Dimension(125, 25));
+            buttonPan.add(m_additionalCheckbox);
+            m_additionalCheckbox.addActionListener(e -> fireFilteringChangedEvent());
         }
         buttonPan.add(Box.createVerticalStrut(20));
         buttonPan.add(Box.createGlue());
@@ -485,8 +492,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @since 3.4
      * @nooverride This method is not intended to be re-implemented or extended by clients outside KNIME core.
      */
-    protected JCheckBox getAdditionalButton(){
+    protected JCheckBox createAdditionalButton(){
         return null;
+    }
+
+    /** The additional button as created by {@link #createAdditionalButton()} or an empty optional if the method
+     * was not overridden.
+     * @return the additionalCheckbox
+     * @since 3.4
+     */
+    protected final Optional<JCheckBox> getAdditionalButton() {
+        return Optional.ofNullable(m_additionalCheckbox);
     }
 
     /** @return a list cell renderer from items to be rendered in the filer */
@@ -529,6 +545,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_addButton.setEnabled(enabled);
         m_enforceInclusion.setEnabled(enabled);
         m_enforceExclusion.setEnabled(enabled);
+        if (m_additionalCheckbox != null) {
+            m_additionalCheckbox.setEnabled(enabled);
+        }
         Enumeration<AbstractButton> buttons = m_typeGroup.getElements();
         while (buttons.hasMoreElements()) {
             buttons.nextElement().setEnabled(enabled);
@@ -1261,6 +1280,36 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 removeType(m_patternButton);
             }
         }
+    }
+
+    /**
+     * @param exclude title for the left box
+     * @param include title for the right box
+     * @since 3.4
+     */
+    public void setPatternFilterBorderTitles(final String exclude, final String include) {
+        m_patternPanel.setBorderTitles(exclude, include);
+    }
+
+    /**
+     * sets the text of the "Include Missing Value"-checkbox
+     * @param newText
+     * @since 3.4
+     */
+    public void setAdditionalCheckboxText(final String newText){
+        if (m_additionalCheckbox != null) {
+            m_additionalCheckbox.setText(newText);
+            m_additionalCheckbox.setToolTipText(newText);
+        }
+    }
+
+    /**
+     * sets the text of the "Include Missing Value"-checkbox
+     * @param newText
+     * @since 3.4
+     */
+    public void setAdditionalPatternCheckboxText(final String newText){
+        m_patternPanel.setAdditionalCheckboxText(newText);
     }
 
 }

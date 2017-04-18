@@ -51,7 +51,7 @@ import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the "PossibleValueRowFilter" Node.
- * 
+ *
  *
  * @author KNIME GmbH
  */
@@ -95,7 +95,7 @@ public class NominalValueRowFilterNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new NominalValueRowFilterNodeDialog();
+        return new NominalValueRowFilterNodeDialog(false);
     }
 
 }

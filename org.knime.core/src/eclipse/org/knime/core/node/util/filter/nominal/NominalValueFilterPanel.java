@@ -50,6 +50,7 @@ package org.knime.core.node.util.filter.nominal;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.DefaultListCellRenderer;
@@ -74,8 +75,6 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
 
     private Set<DataCell> m_domain;
 
-    private JCheckBox m_includeMissing;
-
     /**
      * Creates a basic panel that allows the filtering of nominal values.
      */
@@ -93,10 +92,10 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
     }
 
     @Override
-    protected JCheckBox getAdditionalButton() {
-        m_includeMissing = new JCheckBox("Incl. Missing");
-        m_includeMissing.setToolTipText("Include Missing Values");
-        return m_includeMissing;
+    protected JCheckBox createAdditionalButton() {
+        JCheckBox additionalButton = new JCheckBox("<html>Incl. Missing<br/>Values</html>");
+        additionalButton.setToolTipText("Include Missing Values");
+        return additionalButton;
     }
 
     /**
@@ -150,8 +149,9 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
             }
         }
         super.loadConfiguration(config, names.toArray(new String[names.size()]));
-        if (m_includeMissing != null && config instanceof NominalValueFilterConfiguration) {
-            m_includeMissing.setSelected(((NominalValueFilterConfiguration)config).isIncludeMissing());
+        Optional<JCheckBox> additionalButtonOptional = getAdditionalButton();
+        if (additionalButtonOptional.isPresent() && config instanceof NominalValueFilterConfiguration) {
+            additionalButtonOptional.get().setSelected(((NominalValueFilterConfiguration)config).isIncludeMissing());
         }
     }
 
@@ -160,19 +160,11 @@ public class NominalValueFilterPanel extends NameFilterPanel<NominalValue> {
      */
     @Override
     public void saveConfiguration(final NameFilterConfiguration config) {
-        if (config instanceof NominalValueFilterConfiguration) {
-            ((NominalValueFilterConfiguration)config).setIncludeMissing(m_includeMissing.isSelected());
+        Optional<JCheckBox> additionalButtonOptional = getAdditionalButton();
+        if (additionalButtonOptional.isPresent() && config instanceof NominalValueFilterConfiguration) {
+            ((NominalValueFilterConfiguration)config).setIncludeMissing(additionalButtonOptional.get().isSelected());
         }
         super.saveConfiguration(config);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setEnabled(final boolean enabled) {
-        super.setEnabled(enabled);
-        m_includeMissing.setEnabled(enabled);
     }
 
     /**

@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.util.filter.nominal;
 
+import java.util.Optional;
+
 import javax.swing.JCheckBox;
 
 import org.knime.core.data.NominalValue;
@@ -64,8 +66,6 @@ import org.knime.core.node.util.filter.PatternFilterPanel;
 @SuppressWarnings("serial")
 final class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalValue> {
 
-    private JCheckBox m_includeMissing;
-
     /**
      * Create the pattern filter panel.
      *
@@ -80,18 +80,11 @@ final class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalVal
      * {@inheritDoc}
      */
     @Override
-    public void setEnabled(final boolean enabled) {
-        m_includeMissing.setEnabled(enabled);
-        super.setEnabled(enabled);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected void loadConfiguration(final PatternFilterConfiguration config, final String[] names) {
-        if (config instanceof NominalValuePatternFilterConfiguration) {
-            m_includeMissing.setSelected(((NominalValuePatternFilterConfiguration)config).isIncludeMissing());
+        Optional<JCheckBox> additionalCheckboxOptional = getAdditionalCheckbox();
+        if (additionalCheckboxOptional.isPresent() && config instanceof NominalValuePatternFilterConfiguration) {
+            JCheckBox additionalCheckbox = additionalCheckboxOptional.get();
+            additionalCheckbox.setSelected(((NominalValuePatternFilterConfiguration)config).isIncludeMissing());
         }
         super.loadConfiguration(config, names);
     }
@@ -101,8 +94,10 @@ final class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalVal
      */
     @Override
     protected void saveConfiguration(final PatternFilterConfiguration config) {
-        if (config instanceof NominalValuePatternFilterConfiguration) {
-            ((NominalValuePatternFilterConfiguration)config).setIncludeMissing(m_includeMissing.isSelected());
+        Optional<JCheckBox> additionalCheckboxOptional = getAdditionalCheckbox();
+        if (additionalCheckboxOptional.isPresent() && config instanceof NominalValuePatternFilterConfiguration) {
+            JCheckBox additionalCheckbox = additionalCheckboxOptional.get();
+            ((NominalValuePatternFilterConfiguration)config).setIncludeMissing(additionalCheckbox.isSelected());
         }
         super.saveConfiguration(config);
     }
@@ -111,9 +106,8 @@ final class NominalValuePatternFilterPanel extends PatternFilterPanel<NominalVal
      * {@inheritDoc}
      */
     @Override
-    protected JCheckBox getAdditionalCheckbox() {
-        m_includeMissing = new JCheckBox("Include Missing Values");
-        return m_includeMissing;
+    protected JCheckBox createAdditionalCheckbox() {
+        return new JCheckBox("Include Missing Values");
     }
 
 }
