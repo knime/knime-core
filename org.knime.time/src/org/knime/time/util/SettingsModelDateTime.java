@@ -48,7 +48,6 @@
  */
 package org.knime.time.util;
 
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,6 +55,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -69,21 +69,6 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public final class SettingsModelDateTime extends SettingsModel {
-
-    private static final String KEY_DATE_TIME = "date&time";
-
-    private static final String KEY_DATE = "date";
-
-    private static final String KEY_TIME = "time";
-
-    private static final String KEY_ZONE = "zone";
-
-    private static final String KEY_USE_DATE = "useDate";
-
-    private static final String KEY_USE_TIME = "useTime";
-
-    private static final String KEY_USE_ZONE = "useZone";
-
     private final String m_configName;
 
     private LocalDate m_date;
@@ -316,55 +301,86 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        final String string = settings.getString(m_configName);
-        if (string == null || string.equals("") || string.equals("missing")) {
+        String string = settings.getString(m_configName);
+
+        if (StringUtils.isEmpty(string) || string.equals("missing")) {
+            // table row to variable returns "missing" for flow variables when the node isn't executed yet
             setZonedDateTime(ZonedDateTime.now().withNano(0));
             setUseDate(false);
             setUseTime(false);
             setUseZone(false);
+        } else if (isZonedDateTime(string)) {
+            setZonedDateTime(ZonedDateTime.parse(string));
+            setUseDate(true);
+            setUseTime(true);
+            setUseZone(true);
+        } else if (isLocalDateTime(string)) {
+            setZonedDateTime(ZonedDateTime.of(LocalDateTime.parse(string), ZoneId.systemDefault()));
+            setUseDate(true);
+            setUseTime(true);
+            setUseZone(false);
+        } else if (isLocalDate(string)) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.parse(string), LocalTime.now(), ZoneId.systemDefault()));
+            setUseDate(true);
+            setUseTime(false);
+            setUseZone(false);
+        } else if (isLocalTime(string)) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.parse(string), ZoneId.systemDefault()));
+            setUseDate(false);
+            setUseTime(true);
+            setUseZone(false);
+        } else if (isTimezone(string)) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), ZoneId.of(string)));
+            setUseDate(false);
+            setUseTime(false);
+            setUseZone(true);
         } else {
-            try {
-                final ZonedDateTime zdt = ZonedDateTime.parse(string);
-                setZonedDateTime(zdt);
-                setUseDate(true);
-                setUseTime(true);
-                setUseZone(true);
-            } catch (DateTimeParseException e1) {
-                try {
-                    final LocalDateTime ldt = LocalDateTime.parse(string);
-                    setZonedDateTime(ZonedDateTime.of(ldt, ZoneId.systemDefault()));
-                    setUseDate(true);
-                    setUseTime(true);
-                    setUseZone(false);
-                } catch (DateTimeParseException e2) {
-                    try {
-                        final LocalDate ld = LocalDate.parse(string);
-                        setZonedDateTime(ZonedDateTime.of(ld, LocalTime.now(), ZoneId.systemDefault()));
-                        setUseDate(true);
-                        setUseTime(false);
-                        setUseZone(false);
-                    } catch (DateTimeParseException e3) {
-                        try {
-                            final LocalTime lt = LocalTime.parse(string);
-                            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), lt, ZoneId.systemDefault()));
-                            setUseDate(false);
-                            setUseTime(true);
-                            setUseZone(false);
-                        } catch (DateTimeParseException e4) {
-                            try {
-                                final ZoneId zone = ZoneId.of(string);
-                                setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), zone));
-                                setUseDate(false);
-                                setUseTime(false);
-                                setUseZone(true);
-                            } catch (DateTimeException e5) {
-                                throw new InvalidSettingsException(
-                                    "String '" + string + "' could not be parsed as a date, time or time zone.");
-                            }
-                        }
-                    }
-                }
-            }
+            throw new InvalidSettingsException("'" + string + "' could not be parsed as a date, time, or time zone.");
+        }
+    }
+
+    private static boolean isZonedDateTime(final String s) {
+        try {
+            ZonedDateTime.parse(s);
+            return true;
+        } catch (DateTimeParseException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isLocalDateTime(final String s) {
+        try {
+            LocalDateTime.parse(s);
+            return true;
+        } catch (DateTimeParseException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isLocalDate(final String s) {
+        try {
+            LocalDate.parse(s);
+            return true;
+        } catch (DateTimeParseException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isLocalTime(final String s) {
+        try {
+            LocalTime.parse(s);
+            return true;
+        } catch (DateTimeParseException ex) {
+            return false;
+        }
+    }
+
+    private static boolean isTimezone(final String s) {
+        try {
+            ZoneId.of(s);
+            return true;
+        } catch (DateTimeParseException ex) {
+            return false;
         }
     }
 
@@ -374,29 +390,10 @@ public final class SettingsModelDateTime extends SettingsModel {
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         final String string = settings.getString(m_configName);
-        if (string != null && !string.equals("") && !string.equals("missing")) {
-            try {
-                ZonedDateTime.parse(string);
-            } catch (DateTimeParseException e1) {
-                try {
-                    LocalDateTime.parse(string);
-                } catch (DateTimeParseException e2) {
-                    try {
-                        LocalDate.parse(string);
-                    } catch (DateTimeParseException e3) {
-                        try {
-                            LocalTime.parse(string);
-                        } catch (DateTimeParseException e4) {
-                            try {
-                                ZoneId.of(string);
-                            } catch (DateTimeException e5) {
-                                throw new InvalidSettingsException(
-                                    "String '" + string + "' could not be parsed as a date, time or time zone.");
-                            }
-                        }
-                    }
-                }
-            }
+        if (!StringUtils.isEmpty(string) && !string.equals("missing") && !isZonedDateTime(string)
+            && !isLocalDateTime(string) && !isLocalDate(string) && !isLocalTime(string) && !isTimezone(string)) {
+            throw new InvalidSettingsException(
+                "'" + string + "' could not be parsed as a date, time, or time zone.");
         }
     }
 

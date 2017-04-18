@@ -164,9 +164,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
         return new SettingsModelString("new_col_name", "date&time diff");
     }
 
-    /**
-     */
-    protected DateTimeDifferenceNodeModel() {
+    DateTimeDifferenceNodeModel() {
         super(1, 1);
     }
 
@@ -234,7 +232,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
         long currentRowIndex = 0;
 
         output.push(new AppendedColumnRow(previousRow,
-            new MissingCell("No previos row to calculate difference on available.")));
+            new MissingCell("No previous row for calculating difference available.")));
 
         while ((row = inData.poll()) != null) {
             exec.checkCanceled();
@@ -247,11 +245,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
             // compute new cells
             DataCell newCell;
 
-            if (type.isCompatible(ZonedDateTimeValue.class)) {
-                newCell = calculateTime(previousRow.getCell(colIdx1), row.getCell(colIdx1), null);
-            } else if (type.isCompatible(LocalDateTimeValue.class)) {
-                newCell = calculateTime(previousRow.getCell(colIdx1), row.getCell(colIdx1), null);
-            } else if (type.isCompatible(LocalDateValue.class)) {
+            if (type.isCompatible(LocalDateValue.class)) {
                 newCell = calculateDate(previousRow.getCell(colIdx1), row.getCell(colIdx1), null);
             } else {
                 newCell = calculateTime(previousRow.getCell(colIdx1), row.getCell(colIdx1), null);
@@ -297,11 +291,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
         final AbstractCellFactory cellFac;
         final DataType type = spec.getColumnSpec(colIdx1).getType();
 
-        if (type.isCompatible(ZonedDateTimeValue.class)) {
-            cellFac = new TimeDifferenceCellFactory(colIdx1, colIdx2, fixedDateTime, createColumnSpec(spec));
-        } else if (type.isCompatible(LocalDateTimeValue.class)) {
-            cellFac = new TimeDifferenceCellFactory(colIdx1, colIdx2, fixedDateTime, createColumnSpec(spec));
-        } else if (type.isCompatible(LocalDateValue.class)) {
+        if (type.isCompatible(LocalDateValue.class)) {
             cellFac = new DateDifferenceCellFactory(colIdx1, colIdx2,
                 fixedDateTime == null ? null : fixedDateTime.toLocalDate(), createColumnSpec(spec));
         } else {
@@ -407,7 +397,6 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
             return createColumnRearranger((DataTableSpec)inSpecs[0]).createStreamableFunction(0, 0);
         } else {
             return new StreamableOperator() {
-
                 @Override
                 public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                     throws Exception {
@@ -444,10 +433,9 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
 
     private DataCell calculateDate(final DataCell cell, final DataCell referenceCell, LocalDate fixedDateTime) {
         if (cell.isMissing()) {
-            return new MissingCell("Cell to calculate difference on is missing.");
-        }
-        if (fixedDateTime == null && referenceCell.isMissing()) {
-            return new MissingCell("Reference cell to calculate difference on is missing.");
+            return new MissingCell("Cell for calculating difference is missing.");
+        } else if (fixedDateTime == null && referenceCell.isMissing()) {
+            return new MissingCell("Reference cell for calculating difference is missing.");
         }
 
         fixedDateTime = fixedDateTime == null ? ((LocalDateValue)referenceCell).getLocalDate() : fixedDateTime;
@@ -507,11 +495,9 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
     private DataCell calculateTime(final DataCell cell, final DataCell referenceCell,
         final ZonedDateTime fixedDateTime) {
         if (cell.isMissing()) {
-            return new MissingCell("Cell to calculate difference on is missing.");
-        }
-
-        if (fixedDateTime == null && referenceCell.isMissing()) {
-            return new MissingCell("Reference cell to calculate difference on is missing.");
+            return new MissingCell("Cell for calculating difference is missing.");
+        } else if (fixedDateTime == null && referenceCell.isMissing()) {
+            return new MissingCell("Reference cell for calculating difference is missing.");
         }
 
         final Temporal temporal1;
