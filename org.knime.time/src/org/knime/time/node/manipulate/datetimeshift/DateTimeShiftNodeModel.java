@@ -62,6 +62,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -224,6 +225,29 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (m_periodColSelect.isEnabled() && m_periodColSelect.getStringValue().equals("")) {
             throw new InvalidSettingsException("No configuration available!");
+        }
+        if (m_periodSelection.isEnabled()) {
+            if (m_periodSelection.getStringValue().equals(OPTION_PERIOD_COLUMN)) {
+                final String periodColName = m_periodColSelect.getStringValue();
+                if (inSpecs[0].findColumnIndex(periodColName) < 0) {
+                    throw new InvalidSettingsException("Column " + periodColName + " not found in input table!");
+                }
+                if (!(inSpecs[0].getColumnSpec(periodColName).getType().isCompatible(DurationValue.class)
+                    || inSpecs[0].getColumnSpec(periodColName).getType().isCompatible(PeriodValue.class))) {
+                    throw new InvalidSettingsException("Column " + periodColName + " is not compatible!");
+                }
+            }
+        } else {
+            if (m_numericalSelection.getStringValue().equals(OPTION_NUMERICAL_COLUMN)) {
+                final String numericalColName = m_numericalColSelect.getStringValue();
+                if (inSpecs[0].findColumnIndex(numericalColName) < 0) {
+                    throw new InvalidSettingsException("Column " + numericalColName + " not found in input table!");
+                }
+                if (!(inSpecs[0].getColumnSpec(numericalColName).getType().isCompatible(IntValue.class)
+                    || inSpecs[0].getColumnSpec(numericalColName).getType().isCompatible(LongValue.class))) {
+                    throw new InvalidSettingsException("Column " + numericalColName + " is not compatible!");
+                }
+            }
         }
         DataTableSpec in = inSpecs[0];
         ColumnRearranger r = createColumnRearranger(in);
@@ -394,16 +418,22 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                 }
             } else {
                 final String granularity = m_numericalGranularity.getStringValue();
-                final int numericalValue;
+                final long numericalValue;
                 if (m_numericalColIdx >= 0) {
-                    if (row.getCell(m_numericalColIdx).isMissing()) {
+                    DataCell numericalCell = row.getCell(m_numericalColIdx);
+                    if (numericalCell.isMissing()) {
                         return new MissingCell("The numerical cell containing the value to shift is missing.");
                     }
-                    numericalValue = ((IntValue)row.getCell(m_numericalColIdx)).getIntValue();
+                    numericalValue = ((LongValue)numericalCell).getLongValue();
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
-                period = (Period)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
+                try {
+                    period = (Period)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
+                } catch (ArithmeticException e) {
+                    setWarningMessage("A missing value has been generated due to integer overflow.");
+                    return new MissingCell(e.getMessage());
+                }
             }
 
             if (cell instanceof LocalDateValue) {
@@ -466,16 +496,22 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                 }
             } else {
                 final String granularity = m_numericalGranularity.getStringValue();
-                final int numericalValue;
+                final long numericalValue;
                 if (m_numericalColIdx >= 0) {
-                    if (row.getCell(m_numericalColIdx).isMissing()) {
+                    final DataCell numericalCell = row.getCell(m_numericalColIdx);
+                    if (numericalCell.isMissing()) {
                         return new MissingCell("The numerical cell containing the value to shift is missing.");
                     }
-                    numericalValue = ((IntValue)row.getCell(m_numericalColIdx)).getIntValue();
+                    numericalValue = ((LongValue)numericalCell).getLongValue();
                 } else {
                     numericalValue = m_numericalValue.getIntValue();
                 }
-                duration = (Duration)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
+                try {
+                    duration = (Duration)Granularity.fromString(granularity).getPeriodOrDuration(numericalValue);
+                } catch (ArithmeticException e) {
+                    setWarningMessage("A missing value has been generated due to integer overflow.");
+                    return new MissingCell(e.getMessage());
+                }
             }
 
             if (cell instanceof LocalTimeValue) {
