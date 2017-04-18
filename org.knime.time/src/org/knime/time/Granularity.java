@@ -54,30 +54,22 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.time.duration.DurationValue;
-import org.knime.core.data.time.period.PeriodValue;
-
 /**
  * An enumeration that contains all different granularities for Date&Time shifting.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public enum Granularity {
-
-        YEAR(ChronoUnit.YEARS, PeriodValue.class), MONTH(ChronoUnit.MONTHS, PeriodValue.class),
-        WEEK(ChronoUnit.WEEKS, PeriodValue.class), DAY(ChronoUnit.DAYS, PeriodValue.class),
-        HOUR(ChronoUnit.HOURS, DurationValue.class), MINUTE(ChronoUnit.MINUTES, DurationValue.class),
-        SECOND(ChronoUnit.SECONDS, DurationValue.class), MILLISECOND(ChronoUnit.MILLIS, DurationValue.class),
-        NANOSECOND(ChronoUnit.NANOS, DurationValue.class);
+    YEAR(ChronoUnit.YEARS), MONTH(ChronoUnit.MONTHS),
+    WEEK(ChronoUnit.WEEKS), DAY(ChronoUnit.DAYS),
+    HOUR(ChronoUnit.HOURS), MINUTE(ChronoUnit.MINUTES),
+    SECOND(ChronoUnit.SECONDS), MILLISECOND(ChronoUnit.MILLIS),
+    NANOSECOND(ChronoUnit.NANOS);
 
     private final ChronoUnit m_chronoUnit;
 
-    private final Class<? extends DataValue> m_dataValue;
-
-    private Granularity(final ChronoUnit chronoUnit, final Class<? extends DataValue> dataValue) {
+    private Granularity(final ChronoUnit chronoUnit) {
         m_chronoUnit = chronoUnit;
-        m_dataValue = dataValue;
     }
 
     /**
