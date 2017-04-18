@@ -104,19 +104,6 @@ import org.knime.time.util.SettingsModelDateTime;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class DateTimeDifferenceNodeModel extends NodeModel {
-
-    final static String MODUS_USE_2ND_COL = "Use second column";
-
-    final static String MODUS_USE_FIXED_DATETIME = "Use fixed date&time";
-
-    final static String MODUS_USE_EXEC_DATETIME = "Use execution date&time";
-
-    final static String MODUS_USE_PREVIOUS_ROW = "Use previous row";
-
-    final static String OUTPUT_GRANULARITY = "Granularity";
-
-    final static String OUTPUT_DURATION = "Duration";
-
     private final SettingsModelString m_col1stSelectModel = createColSelectModel(1);
 
     private final SettingsModelString m_col2ndSelectModel = createColSelectModel(2);
@@ -138,7 +125,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createModusSelection() {
-        return new SettingsModelString("modus", MODUS_USE_2ND_COL);
+        return new SettingsModelString("modus", ModusOptions.Use2ndColumn.name());
     }
 
     /** @return the date time model, used in both dialog and model. */
@@ -148,14 +135,14 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createCalculationSelection() {
-        return new SettingsModelString("output", OUTPUT_GRANULARITY);
+        return new SettingsModelString("output", OutputMode.Granularity.name());
     }
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createGranularityModel(final SettingsModelString calcSelectionModel) {
         final SettingsModelString granularityModel = new SettingsModelString("granularity", Granularity.DAY.toString());
         calcSelectionModel.addChangeListener(
-            l -> granularityModel.setEnabled(calcSelectionModel.getStringValue().equals(OUTPUT_GRANULARITY)));
+            l -> granularityModel.setEnabled(calcSelectionModel.getStringValue().equals(OutputMode.Granularity.name())));
         return granularityModel;
     }
 
@@ -186,7 +173,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
             || type1.isCompatible(LocalDateTimeValue.class) || type1.isCompatible(ZonedDateTimeValue.class))) {
             throw new InvalidSettingsException("Column " + colName1 + " is not compatible!");
         }
-        if (m_modusSelectModel.getStringValue().equals(MODUS_USE_2ND_COL)) {
+        if (m_modusSelectModel.getStringValue().equals(ModusOptions.Use2ndColumn.name())) {
             if (inSpecs[0].findColumnIndex(colName2) < 0) {
                 throw new InvalidSettingsException("Column " + colName2 + " not found in input table!");
             }
@@ -206,7 +193,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
-        if (m_modusSelectModel.getStringValue().equals(MODUS_USE_PREVIOUS_ROW)) {
+        if (m_modusSelectModel.getStringValue().equals(ModusOptions.UsePreviousRow.name())) {
             final BufferedDataTableRowOutput out = new BufferedDataTableRowOutput(
                 exec.createDataContainer(new DataTableSpecCreator(inData[0].getDataTableSpec())
                     .addColumns(createColumnSpec(inData[0].getDataTableSpec())).createSpec()));
@@ -260,7 +247,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
     }
 
     private DataColumnSpec createColumnSpec(final DataTableSpec inSpec) {
-        if (m_calculationSelectModel.getStringValue().equals(OUTPUT_GRANULARITY)) {
+        if (m_calculationSelectModel.getStringValue().equals(OutputMode.Granularity.name())) {
             return new UniqueNameGenerator(inSpec).newColumn(m_newColNameModel.getStringValue(), LongCellFactory.TYPE);
         }
         final DataType type = inSpec.getColumnSpec(m_col1stSelectModel.getStringValue()).getType();
@@ -277,9 +264,9 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
         final ColumnRearranger rearranger = new ColumnRearranger(spec);
 
         final ZonedDateTime fixedDateTime;
-        if (m_modusSelectModel.getStringValue().equals(MODUS_USE_EXEC_DATETIME)) {
+        if (m_modusSelectModel.getStringValue().equals(ModusOptions.UseExecutionTime.name())) {
             fixedDateTime = ZonedDateTime.now().withNano(0);
-        } else if (m_modusSelectModel.getStringValue().equals(MODUS_USE_FIXED_DATETIME)) {
+        } else if (m_modusSelectModel.getStringValue().equals(ModusOptions.UseFixedTime.name())) {
             fixedDateTime = m_fixedDateTimeModel.getZonedDateTime();
         } else {
             fixedDateTime = null;
@@ -341,6 +328,15 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
         m_col1stSelectModel.validateSettings(settings);
         m_col2ndSelectModel.validateSettings(settings);
         m_modusSelectModel.validateSettings(settings);
+
+        SettingsModelString temp = createModusSelection();
+        temp.loadSettingsFrom(settings);
+        try {
+            ModusOptions.valueOf(temp.getStringValue());
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSettingsException("Unknown difference modus '" + temp.getStringValue() + "'");
+        }
+
         m_fixedDateTimeModel.validateSettings(settings);
         m_calculationSelectModel.validateSettings(settings);
         m_granularityModel.validateSettings(settings);
@@ -374,7 +370,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
      */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{m_modusSelectModel.getStringValue().equals(MODUS_USE_PREVIOUS_ROW)
+        return new InputPortRole[]{m_modusSelectModel.getStringValue().equals(ModusOptions.UsePreviousRow.name())
             ? InputPortRole.NONDISTRIBUTED_STREAMABLE : InputPortRole.DISTRIBUTED_STREAMABLE};
     }
 
@@ -393,7 +389,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 
-        if (!m_modusSelectModel.getStringValue().equals(MODUS_USE_PREVIOUS_ROW)) {
+        if (!m_modusSelectModel.getStringValue().equals(ModusOptions.UsePreviousRow.name())) {
             return createColumnRearranger((DataTableSpec)inSpecs[0]).createStreamableFunction(0, 0);
         } else {
             return new StreamableOperator() {
@@ -440,7 +436,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
 
         fixedDateTime = fixedDateTime == null ? ((LocalDateValue)referenceCell).getLocalDate() : fixedDateTime;
 
-        if (m_calculationSelectModel.getStringValue().equals(OUTPUT_DURATION)) {
+        if (m_calculationSelectModel.getStringValue().equals(OutputMode.Duration.name())) {
             final Period diffPeriod = Period.between(((LocalDateValue)cell).getLocalDate(), fixedDateTime);
             return PeriodCellFactory.create(diffPeriod);
         } else {
@@ -515,7 +511,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
                 fixedDateTime == null ? ((LocalTimeValue)referenceCell).getLocalTime() : fixedDateTime.toLocalTime();
         }
 
-        if (m_calculationSelectModel.getStringValue().equals(OUTPUT_DURATION)) {
+        if (m_calculationSelectModel.getStringValue().equals(OutputMode.Duration.name())) {
             final Duration diffDuration = Duration.between(temporal1, temporal2);
             return DurationCellFactory.create(diffDuration);
         } else {

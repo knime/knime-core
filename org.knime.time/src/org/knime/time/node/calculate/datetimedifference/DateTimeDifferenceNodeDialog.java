@@ -109,16 +109,14 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     public DateTimeDifferenceNodeDialog() {
         m_dialogComp1stColSelect = new DialogComponentColumnNameSelection(
-            DateTimeDifferenceNodeModel.createColSelectModel(1), "Date&Time Column: ", 0, true, LocalDateValue.class,
+            DateTimeDifferenceNodeModel.createColSelectModel(1), "Date&Time column ", 0, true, LocalDateValue.class,
             LocalTimeValue.class, LocalDateTimeValue.class, ZonedDateTimeValue.class);
 
         final SettingsModelString modusModel = DateTimeDifferenceNodeModel.createModusSelection();
-        m_dialogCompModusSelect = new DialogComponentButtonGroup(modusModel, true, null,
-            DateTimeDifferenceNodeModel.MODUS_USE_2ND_COL, DateTimeDifferenceNodeModel.MODUS_USE_EXEC_DATETIME,
-            DateTimeDifferenceNodeModel.MODUS_USE_FIXED_DATETIME, DateTimeDifferenceNodeModel.MODUS_USE_PREVIOUS_ROW);
+        m_dialogCompModusSelect = new DialogComponentButtonGroup(modusModel, null, true, ModusOptions.values());
 
         m_dialogComp2ndColSelect = new DialogComponentColumnNameSelection(
-            DateTimeDifferenceNodeModel.createColSelectModel(2), "Reference Column: ", 0, true, LocalDateValue.class,
+            DateTimeDifferenceNodeModel.createColSelectModel(2), "", 0, true, LocalDateValue.class,
             LocalTimeValue.class, LocalDateTimeValue.class, ZonedDateTimeValue.class);
 
         final SettingsModelDateTime dateTimeModel = DateTimeDifferenceNodeModel.createDateTimeModel();
@@ -126,8 +124,8 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
             new DialogComponentDateTimeSelection(dateTimeModel, null, DisplayOption.SHOW_DATE_AND_TIME_AND_TIMEZONE);
 
         final SettingsModelString calculationModel = DateTimeDifferenceNodeModel.createCalculationSelection();
-        m_dialogCompCalculationSelect = new DialogComponentButtonGroup(calculationModel, true, null,
-            DateTimeDifferenceNodeModel.OUTPUT_GRANULARITY, DateTimeDifferenceNodeModel.OUTPUT_DURATION);
+        m_dialogCompCalculationSelect =
+            new DialogComponentButtonGroup(calculationModel, null, true, OutputMode.values());
 
         m_dialogCompGranularity = new DialogComponentStringSelection(
             DateTimeDifferenceNodeModel.createGranularityModel(calculationModel), null, Granularity.strings());
@@ -150,7 +148,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
          * add column selection
          */
         final JPanel panelColSelect = new JPanel(new GridBagLayout());
-        panelColSelect.setBorder(BorderFactory.createTitledBorder("Column Selection"));
+        panelColSelect.setBorder(BorderFactory.createTitledBorder("Base column"));
         final GridBagConstraints gbcColSelect = new GridBagConstraints();
         gbcColSelect.insets = new Insets(5, 5, 5, 5);
         gbcColSelect.fill = GridBagConstraints.VERTICAL;
@@ -167,7 +165,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
         final JPanel panelModusSelect = new JPanel(new GridBagLayout());
         gbc.gridy++;
         panel.add(panelModusSelect, gbc);
-        panelModusSelect.setBorder(BorderFactory.createTitledBorder("Modus Selection"));
+        panelModusSelect.setBorder(BorderFactory.createTitledBorder("Calculate difference to ..."));
         final GridBagConstraints gbcModusSelect = new GridBagConstraints();
         gbcModusSelect.insets = new Insets(5, 5, 5, 5);
         gbcModusSelect.fill = GridBagConstraints.VERTICAL;
@@ -182,11 +180,10 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
         gbcModusSelect.weightx = 1;
         panelModusSelect.add(cardPanelModus, gbcModusSelect);
         // add card with column selection
-        cardPanelModus.add(m_dialogComp2ndColSelect.getComponentPanel(), DateTimeDifferenceNodeModel.MODUS_USE_2ND_COL);
-        cardPanelModus.add(m_dialogCompDateTimeSelect.getComponentPanel(),
-            DateTimeDifferenceNodeModel.MODUS_USE_FIXED_DATETIME);
-        cardPanelModus.add(new JPanel(), DateTimeDifferenceNodeModel.MODUS_USE_EXEC_DATETIME);
-        cardPanelModus.add(new JPanel(), DateTimeDifferenceNodeModel.MODUS_USE_PREVIOUS_ROW);
+        cardPanelModus.add(m_dialogComp2ndColSelect.getComponentPanel(), ModusOptions.Use2ndColumn.name());
+        cardPanelModus.add(m_dialogCompDateTimeSelect.getComponentPanel(), ModusOptions.UseFixedTime.name());
+        cardPanelModus.add(new JPanel(), ModusOptions.UseExecutionTime.name());
+        cardPanelModus.add(new JPanel(), ModusOptions.UsePreviousRow.name());
 
         /*
          * add calculation modus selection
@@ -195,7 +192,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
         gbc.gridy++;
         gbc.weighty = 1;
         panel.add(panelCalculationSelect, gbc);
-        panelCalculationSelect.setBorder(BorderFactory.createTitledBorder("Output Selection"));
+        panelCalculationSelect.setBorder(BorderFactory.createTitledBorder("Output options"));
         final GridBagConstraints gbcCalculationSelect = new GridBagConstraints();
         gbcCalculationSelect.insets = new Insets(5, 5, 5, 5);
         gbcCalculationSelect.fill = GridBagConstraints.VERTICAL;
@@ -279,8 +276,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
     private void updateWarningLabel() {
         m_warningLabel.setText("");
         if (((SettingsModelString)m_dialogCompModusSelect.getModel()).getStringValue()
-            .equals(DateTimeDifferenceNodeModel.MODUS_USE_2ND_COL)
-            && m_dialogComp1stColSelect.getSelectedAsSpec() != null
+            .equals(ModusOptions.Use2ndColumn.name()) && m_dialogComp1stColSelect.getSelectedAsSpec() != null
             && m_dialogComp2ndColSelect.getSelectedAsSpec() != null) {
             if (!m_dialogComp2ndColSelect.getSelectedAsSpec().getType()
                 .isCompatible(m_dialogComp1stColSelect.getSelectedAsSpec().getType().getPreferredValueClass())) {
@@ -289,7 +285,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
             }
         }
         if (((SettingsModelString)m_dialogCompCalculationSelect.getModel()).getStringValue()
-            .equals(DateTimeDifferenceNodeModel.OUTPUT_GRANULARITY)) {
+            .equals(OutputMode.Granularity.name())) {
             final Granularity granularity =
                 Granularity.fromString(((SettingsModelString)m_dialogCompGranularity.getModel()).getStringValue());
             if (m_dialogComp1stColSelect.getSelectedAsSpec() != null) {
