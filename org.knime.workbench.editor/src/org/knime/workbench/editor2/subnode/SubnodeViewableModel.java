@@ -87,9 +87,13 @@ import org.knime.workbench.editor2.subnode.SubnodeViewableModel.SubnodeViewValue
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  *
@@ -404,9 +408,26 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 return false;
             }
             SubnodeViewValue other = (SubnodeViewValue)obj;
-            return new EqualsBuilder()
-                    .append(m_viewValues, other.m_viewValues)
-                    .isEquals();
+            if (!m_viewValues.keySet().equals(other.m_viewValues.keySet())) {
+                return false;
+            }
+            EqualsBuilder builder = new EqualsBuilder();
+            ObjectMapper mapper = new ObjectMapper();
+            for (String key : m_viewValues.keySet()) {
+                try {
+                    // try deserializing and comparing generic JSON objects
+                    JsonNode first = mapper.readTree(m_viewValues.get(key));
+                    JsonNode second = mapper.readTree(other.m_viewValues.get(key));
+                    // the following would be better but concrete view classes might not be visible here
+                    /*JSONViewContent first = mapper.readValue(m_viewValues.get(key), JSONViewContent.class);
+                    JSONViewContent second = mapper.readValue(other.m_viewValues.get(key), JSONViewContent.class);*/
+                    builder.append(first, second);
+                } catch (Exception e) {
+                    //compare strings on exception
+                    builder.append(m_viewValues.get(key), other.m_viewValues.get(key));
+                }
+            }
+            return builder.isEquals();
         }
 
         /**
@@ -483,6 +504,31 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         public Map<String, String> getErrorMap() {
             return m_errorMap;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @JsonIgnore
+        public String getError() {
+            if (m_errorMap == null || m_errorMap.isEmpty()) {
+                return null;
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                JsonNodeFactory factory = JsonNodeFactory.instance;
+                ObjectNode sErrorMap = factory.objectNode();
+                for (Entry<String, String> entry : m_errorMap.entrySet()) {
+                    ObjectNode sSingleError = factory.objectNode();
+                    sSingleError.set("error", factory.textNode(entry.getValue()));
+                    sErrorMap.set(entry.getKey(), sSingleError);
+                }
+                return mapper.writeValueAsString(sErrorMap);
+            } catch (JsonProcessingException e) {
+                return "Validation errors present but could not be serialized: " + e.getMessage();
+            }
+        }
+
     }
 
 

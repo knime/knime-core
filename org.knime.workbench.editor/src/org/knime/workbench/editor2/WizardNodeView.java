@@ -429,7 +429,8 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
                 ValidationError error = getModel().validateViewValue(viewValue);
                 if (error != null) {
                     String showErrorMethod = template.getSetValidationErrorMethodName();
-                    String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "(" + error.getError() +");");
+                    String escapedError = error.getError().replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
+                    String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "('" + escapedError + "');");
                     m_browser.execute(showErrorCall);
                     return false;
                 }
@@ -441,7 +442,7 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
 
                 return true;
             } catch (Exception e) {
-                //TODO: display error?
+                LOGGER.error("Could not set error message or trigger re-execution: " + e.getMessage(), e);
                 return false;
             }
         } else {
