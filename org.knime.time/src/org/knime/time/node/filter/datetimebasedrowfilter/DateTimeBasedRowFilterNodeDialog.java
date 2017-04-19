@@ -190,7 +190,6 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.weighty = 1;
 
         /*
          * add column selection
@@ -211,6 +210,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
          * add date&time/format selection
          */
         gbc.gridy++;
+        gbc.weighty = 1;
         final JPanel panelDateTimeSelection = new JPanel(new GridBagLayout());
         panelDateTimeSelection.setBorder(BorderFactory.createTitledBorder("Date&Time Selection"));
         final GridBagConstraints gbcDateTimeSelection = new GridBagConstraints();
@@ -358,6 +358,8 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         m_typeWarningLabel = new JLabel();
         m_typeWarningLabel.setPreferredSize(new Dimension(410, new JLabel(" ").getPreferredSize().height));
         gbcDateTimeSelection.gridy++;
+        gbcDateTimeSelection.weighty = 1;
+        gbcDateTimeSelection.insets = new Insets(5, 5, 5, 5);
         m_typeWarningLabel.setForeground(Color.RED);
         panelDateTimeSelection.add(m_typeWarningLabel, gbcDateTimeSelection);
         panel.add(panelDateTimeSelection, gbc);
