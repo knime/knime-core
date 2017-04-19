@@ -63,7 +63,7 @@ import java.util.Set;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.sag.SagLogRegLearner;
+import org.knime.base.node.mine.regression.logistic.learner4.sg.SagLogRegLearner;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnProperties;
