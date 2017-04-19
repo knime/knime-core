@@ -49,6 +49,9 @@
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import org.apache.commons.math3.util.MathUtils;
+import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
 
 /**
  * Calculates a (binary) logistic regression model using elastic net regularized coordinate descent.

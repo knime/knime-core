@@ -46,42 +46,19 @@
  * History
  *   15.02.2017 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
+package org.knime.base.node.mine.regression.logistic.learner4;
 
 /**
- * Provides information and data for the learning process.
+ * Represents a row of the training data for classification problems.
  *
  * @author Adrian Nembach, KNIME.com
- * @param <T> TrainingRow type returned by the iterator
  */
-public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
+public interface ClassificationTrainingRow extends TrainingRow {
 
     /**
-     * Returns the number of rows in the training data.
+     * Returns the category of this row.
      *
-     * @return the number of rows in the training data
+     * @return the category of this row
      */
-    public int getRowCount();
-
-    /**
-     * Returns the number of features.
-     *
-     * @return the number of features
-     */
-    public int getFeatureCount();
-
-    /**
-     * Permute the ordering of the data.
-     */
-    public void permute();
-
-    /**
-     * Returns the dimension of the target variable.
-     * In case of classification data this would be the class count.
-     *
-     * @return the dimension of the target variable
-     */
-    public int getTargetDimension();
-
-    public T getRandomRow();
+    public int getCategory();
 }

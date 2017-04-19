@@ -48,7 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
 
 /**
  * Always returns the fixed learning rate specified beforehand.

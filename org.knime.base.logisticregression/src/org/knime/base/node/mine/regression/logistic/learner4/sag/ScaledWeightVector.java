@@ -49,7 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import org.apache.commons.math3.util.MathUtils;
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**

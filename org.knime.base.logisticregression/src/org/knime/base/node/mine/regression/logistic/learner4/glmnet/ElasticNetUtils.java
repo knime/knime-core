@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+
 /**
  * Utility class that provides static methods needed by the elastic net.
  *

@@ -50,6 +50,8 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.BitSet;
 
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+
 /**
  * Solves the elastic net problem:
  * min R_lambda(beta_0,beta) = min ( 1/(2N) sum_i (y_i-beta_0 - x_i^T * beta)^2 + lambda* P_alpha(beta)

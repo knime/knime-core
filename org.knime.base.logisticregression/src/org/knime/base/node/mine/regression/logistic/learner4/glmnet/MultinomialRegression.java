@@ -48,6 +48,10 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
+import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+
 /**
  * Performs regularized multinomial regression using coordinate descent in combination with iteratively reweighted least squares.
  *

@@ -50,7 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sag;
 
 import java.util.Arrays;
 
-import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.sag.IndexCache.IndexIterator;
 
 /**

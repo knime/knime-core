@@ -50,6 +50,10 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.Iterator;
 
+import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+
 
 /**
  * Contains methods that are used by both, logistic and multinomial regression.
