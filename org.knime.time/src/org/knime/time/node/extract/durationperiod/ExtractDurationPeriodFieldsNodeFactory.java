@@ -46,7 +46,7 @@
  * History
  *   Feb 9, 2017 (simon): created
  */
-package org.knime.time.node.extract;
+package org.knime.time.node.extract.durationperiod;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

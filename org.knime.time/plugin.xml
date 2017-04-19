@@ -61,7 +61,7 @@
       <node
             category-path="/preview/datetime"
             deprecated="false"
-            factory-class="org.knime.time.node.extract.ExtractDurationPeriodFieldsNodeFactory">
+            factory-class="org.knime.time.node.extract.durationperiod.ExtractDurationPeriodFieldsNodeFactory">
       </node>
       <node
             category-path="/preview/datetime"
