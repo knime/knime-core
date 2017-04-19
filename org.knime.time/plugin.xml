@@ -68,6 +68,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.calculate.datetimedifference.DateTimeDifferenceNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.extract.datetime.ExtractDateTimeFieldsNodeFactory">
+      </node>
    </extension>
 
    <extension
