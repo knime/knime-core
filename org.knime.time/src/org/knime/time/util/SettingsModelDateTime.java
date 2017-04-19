@@ -48,6 +48,7 @@
  */
 package org.knime.time.util;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -379,7 +380,7 @@ public final class SettingsModelDateTime extends SettingsModel {
         try {
             ZoneId.of(s);
             return true;
-        } catch (DateTimeParseException ex) {
+        } catch (DateTimeException ex) {
             return false;
         }
     }
