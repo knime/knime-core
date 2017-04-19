@@ -147,8 +147,8 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
 
     private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
         final double[][] hessian = m_loss.hessian(m_data, beta);
-        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian);
-        return MatrixUtils.inverse(observedInformation).scalarMultiply(-1);
+        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian).scalarMultiply(-1);
+        return MatrixUtils.inverse(observedInformation);
     }
 
     protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);

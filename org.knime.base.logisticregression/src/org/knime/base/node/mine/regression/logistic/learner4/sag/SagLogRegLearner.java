@@ -61,6 +61,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.sag.LineSearchLearningRateStrategy.StepSizeType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,29 +83,30 @@ public class SagLogRegLearner implements LogRegLearner {
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
         ClassData classData = new ClassData(data);
         double lambda = 0.01;
-//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
-//                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
+        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
+                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
 //        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
 //                new AnnealingLearningRateStrategy<ClassificationTrainingRow>(3, 1e-3);
-        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
+//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
         final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
-        UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory =
-                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
-//        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
-//                new EagerSagUpdater.EagerSagUpdaterFactory<>(classData.getRowCount(), classData.getFeatureCount() + 1, classData.getTargetDimension() - 1);
+//        UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory =
+//                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
+        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
+                new EagerSagUpdater.EagerSagUpdaterFactory<>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
 //        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
 //                EagerSgdUpdater.createFactory();
 //        RegularizationPrior prior = new GaussPrior(5);
 //        RegularizationPrior prior = UniformPrior.INSTANCE;
-//        EagerRegularizationUpdater prior = new EagerRegularizationUpdater(new LaplacePrior(5), classData.getRowCount(), true);
-        LazyRegularizationUpdater regUpdater = new LazyPriorUpdater(UniformPrior.INSTANCE, classData.getRowCount(), true);
-//        RegularizationUpdater regUpdater = new GaussRegularizationUpdater(1.0/lambda);
+        RegularizationUpdater regUpdater = new EagerPriorUpdater(new LaplacePrior(5), classData.getRowCount(), true);
+//        LazyRegularizationUpdater regUpdater = new LazyPriorUpdater(new LaplacePrior(0.001), classData.getRowCount(), true);
+//        LazyRegularizationUpdater regUpdater = UniformRegularizationUpdater.INSTANCE;
+//        LazyRegularizationUpdater regUpdater = new GaussRegularizationUpdater(1.0/lambda);
 //        RegularizationUpdater regUpdater = new EagerPriorUpdater(UniformPrior.INSTANCE, classData.getRowCount(), true);
         StoppingCriterion<ClassificationTrainingRow> stoppingCriterion = new BetaChangeStoppingCriterion<>(classData.getFeatureCount(), classData.getTargetDimension(), 1e-5);
-//        EagerSgOptimizer<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>, RegularizationUpdater> sgOpt =
-//                new EagerSgOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
-        LazySGOptimizer<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>, LazyRegularizationUpdater> sgOpt =
-                new LazySGOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
+        EagerSgOptimizer<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>, RegularizationUpdater> sgOpt =
+                new EagerSgOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
+//        LazySGOptimizer<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>, LazyRegularizationUpdater> sgOpt =
+//                new LazySGOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
         int maxIter = 100;
 //        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
 //        double[][] w = sgOpt.optimize(maxIter, classData);

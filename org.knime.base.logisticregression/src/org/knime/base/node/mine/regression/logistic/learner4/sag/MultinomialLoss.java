@@ -135,6 +135,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
         return hessian;
     }
 
+
     private void transform2Probabilites(final ClassificationTrainingRow x, final double[] prediction) {
         double logSumExp = logSumExp(prediction);
         for (int i = 0; i < prediction.length; i++) {

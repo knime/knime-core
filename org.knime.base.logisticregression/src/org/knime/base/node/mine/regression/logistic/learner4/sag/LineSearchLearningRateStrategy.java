@@ -178,7 +178,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     private double calculateSquaredNorm(final T row) {
         double norm = 0.0;
         // row.getFeature(0) returns always a 1 for the intercept term
-        for (int i = 1; i <= m_nFets; i++) {
+        for (int i = 1; i < m_nFets; i++) {
             double fet = row.getFeature(i);
             norm += fet * fet;
         }
