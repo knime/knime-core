@@ -48,11 +48,15 @@
  */
 package org.knime.core.wizard;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SinglePageWebResourceController;
@@ -129,6 +133,24 @@ public class SinglePageManager extends PageManager {
         JSONWebNodePage jsonPage = createWizardPage(containerNodeID);
         ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
         return mapper.writeValueAsString(jsonPage);
+    }
+
+    /**
+     * Creates a map of node id string to JSON view value string for all appropriate wizard nodes from a given node id.
+     *
+     * @param containerNodeID the node id to create the view value map for
+     * @return a map containing all appropriate view values
+     * @throws IOException on serialization error
+     */
+    public Map<String, String> createWizardPageViewValueMap(final NodeID containerNodeID) throws IOException {
+        SinglePageWebResourceController sec = getController(containerNodeID);
+        Map<NodeID, WebViewContent> viewMap = sec.getWizardPageViewValueMap();
+        Map<String, String> resultMap = new HashMap<String, String>();
+        for (Entry<NodeID, WebViewContent> entry : viewMap.entrySet()) {
+            WebViewContent c = entry.getValue();
+            resultMap.put(entry.getKey().toString(), new String(((ByteArrayOutputStream)c.saveToStream()).toByteArray()));
+        }
+        return resultMap;
     }
 
     /**

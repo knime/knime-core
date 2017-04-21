@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.web.WebViewContent;
 
 /**
  * A utility class received from the workflow manager that allows controlling wizard execution and combined view creation on a single subnode.
@@ -92,6 +93,22 @@ public class SinglePageWebResourceController extends WebResourceController {
             NodeContext.pushContext(manager);
             try {
                 return getWizardPageInternal(m_nodeID);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+    }
+
+    /**
+     * Retrieves all available view values from the available wizard nodes for the given node id.
+     * @return a map from NodeID to view value for all appropriate wizard nodes.
+     */
+    public Map<NodeID, WebViewContent> getWizardPageViewValueMap() {
+        WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            NodeContext.pushContext(manager);
+            try {
+                return getWizardPageViewValueMapInternal(m_nodeID);
             } finally {
                 NodeContext.removeLastContext();
             }

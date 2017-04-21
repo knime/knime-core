@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -396,6 +397,20 @@ public abstract class WebResourceController {
         List<HiLiteTranslator> translatorList = knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
         return new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+    }
+
+    protected Map<NodeID, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
+        if (subnodeID == null) {
+            LOGGER.error("No node ID supplied for creating wizard page");
+            return null;
+        }
+        final WorkflowManager manager = m_manager;
+        assert manager.isLockedByCurrentThread();
+        SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
+        WorkflowManager subWFM = subNC.getWorkflowManager();
+        return subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER).entrySet().stream()
+            .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
+            .collect(Collectors.toMap(e -> e.getKey(), e-> e.getValue().getViewValue()));
     }
 
     private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {

@@ -146,9 +146,10 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                     } else {
                         m_isReexecuteInProgress.set(false);
                         try {
-                            // check if value still matches last retrieved value from view
+                            // check if current value from page still matches last retrieved value from view
                             SubnodeViewValue v = getViewValue();
                             if (m_view != null && v != null && !v.equals(m_view.getLastRetrievedValue())) {
+                                m_value = v;
                                 m_view.callViewableModelChanged();
                             }
                         } catch (Exception e) {
@@ -193,6 +194,13 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
         m_value = new SubnodeViewValue();
         m_value.setViewValues(valueMap);
+    }
+
+    private SubnodeViewValue createViewValue() throws IOException {
+        Map<String, String> valueMap = m_spm.createWizardPageViewValueMap(m_container.getID());
+        SubnodeViewValue value = new SubnodeViewValue();
+        value.setViewValues(valueMap);
+        return value;
     }
 
     /**
