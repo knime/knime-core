@@ -54,8 +54,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
@@ -84,22 +86,21 @@ import com.fasterxml.jackson.databind.ObjectReader;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public abstract class PageManager {
+public abstract class AbstractPageManager {
 
     private final WorkflowManager m_wfm;
 
     /**
      *
      */
-    public PageManager(final WorkflowManager workflowManager) {
-        m_wfm = workflowManager;
+    public AbstractPageManager(final WorkflowManager workflowManager) {
+        m_wfm = CheckUtils.checkArgumentNotNull(workflowManager);
     }
 
     /**
-     * Returns the underlying {@link WorkflowManager} instance
-     * @return The underlying {@link WorkflowManager} instance
+     * @return The underlying {@link WorkflowManager} instance, not null.
      */
-    public WorkflowManager getWorkflowManager() {
+    public final WorkflowManager getWorkflowManager() {
         return m_wfm;
     }
 
@@ -108,7 +109,7 @@ public abstract class PageManager {
         JSONLayoutPage layout = new JSONLayoutPage();
         try {
             String lString = page.getLayoutInfo();
-            if (lString != null && !lString.isEmpty()) {
+            if (StringUtils.isNotEmpty(lString)) {
                 layout = getJSONLayoutFromSubnode(page.getPageNodeID(), page.getLayoutInfo());
             }
         } catch (IOException e) {

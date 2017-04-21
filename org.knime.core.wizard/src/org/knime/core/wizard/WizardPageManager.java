@@ -75,7 +75,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public final class WizardPageManager extends PageManager {
+public final class WizardPageManager extends AbstractPageManager {
 
     /**
      * Returns a {@link WizardPageManager} instance for the given {@link WorkflowManager}

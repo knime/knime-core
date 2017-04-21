@@ -64,17 +64,13 @@ import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.JSONWebNodePage;
-import org.knime.js.core.layout.bs.JSONLayoutPage;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
-public class SinglePageManager extends PageManager {
+public class SinglePageManager extends AbstractPageManager {
 
     /**
      * Returns a {@link SinglePageManager} instance for the given {@link SinglePageManager}
@@ -119,20 +115,6 @@ public class SinglePageManager extends PageManager {
         SinglePageWebResourceController sec = getController(containerNodeID);
         WizardPageContent page = sec.getWizardPage();
         return createWizardPageInternal(page);
-    }
-
-    /**
-     * Creates a JSON string containing a wizard page from a given node id
-     *
-     * @param containerNodeID the node id to create the wizard page string for
-     * @return a JSON string containing the wizard page
-     * @throws IOException if the layout of the wizard page can not be generated
-     * @throws JsonProcessingException on serialization errors
-     */
-    public String createWizardPageString(final NodeID containerNodeID) throws IOException, JsonProcessingException {
-        JSONWebNodePage jsonPage = createWizardPage(containerNodeID);
-        ObjectMapper mapper = JSONLayoutPage.getConfiguredVerboseObjectMapper();
-        return mapper.writeValueAsString(jsonPage);
     }
 
     /**
@@ -221,20 +203,23 @@ public class SinglePageManager extends PageManager {
      * Triggers reexecution of the subnode, including all contained nodes
      * @param containerNodeId the {@link NodeID} of the subnode to reexecute.
      */
-    public void reexecuteSubnode(final NodeID containerNodeId) {
+    private void reexecuteSubnode(final NodeID containerNodeId) {
         try (WorkflowLock lock = getWorkflowManager().lock()) {
             getController(containerNodeId).reexecuteSinglePage();
         }
     }
 
     /**
-     * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution subsequently.
+     * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution
+     * subsequently.
+     *
      * @param valueMap an already validated map with {@link NodeIDSuffix} string as key and parsed view value as value
      * @param containerNodeId the {@link NodeID} of the subnode
      * @param useAsDefault true, if values are supposed to be applied as new defaults, false if applied temporarily
      * @throws IOException on serialization error
      */
-    public void applyValidatedValuesAndReexecute(final Map<String, String> valueMap, final NodeID containerNodeId, final boolean useAsDefault) throws IOException {
+    public void applyValidatedValuesAndReexecute(final Map<String, String> valueMap, final NodeID containerNodeId,
+        final boolean useAsDefault) throws IOException {
         try (WorkflowLock lock = getWorkflowManager().lock()) {
             applyValidatedViewValues(valueMap, containerNodeId, useAsDefault);
             reexecuteSubnode(containerNodeId);
