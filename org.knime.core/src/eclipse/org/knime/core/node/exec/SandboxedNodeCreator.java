@@ -88,6 +88,7 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
@@ -198,18 +199,6 @@ public final class SandboxedNodeCreator {
     CanceledExecutionException, LockFailedException, InterruptedException {
         exec.setMessage("Creating virtual workflow");
 
-        // get all the flow variables currently available at the node to copy
-        List<FlowVariable> flowVars = new ArrayList<FlowVariable>();
-        if (m_nc instanceof SingleNodeContainer) {
-            final FlowObjectStack flowObjectStack = ((SingleNodeContainer)m_nc).getFlowObjectStack();
-            final Collection<FlowVariable> flowVarsIn =
-                    flowObjectStack.getAvailableFlowVariables(Type.values()).values();
-            flowVarsIn.stream().filter(fv -> !fv.isGlobalConstant()).forEachOrdered(fv -> flowVars.add(fv));
-            // getAvailableFlowVariables returns top down, make sure iterations on list return oldest entry first
-            // (will be pushed onto node stack using an iterator)
-            Collections.reverse(flowVars);
-        }
-
         final WorkflowManager parent = m_nc.getParent();
         // derive workflow context via NodeContext as the parent could only a be a metanode in a metanode...
         final WorkflowContext origContext = NodeContext.getContext().getWorkflowManager().getContext();
@@ -239,6 +228,18 @@ public final class SandboxedNodeCreator {
 
         WorkflowManager tempWFM =
             m_rootWFM.createAndAddProject("Sandbox Exec on " + m_nc.getNameWithID(), creationHelper);
+
+        // Add the workflow variables
+        List<FlowVariable> workflowVariables = parent.getProjectWFM().getWorkflowVariables();
+        tempWFM.addWorkflowVariables(true, workflowVariables.toArray(new FlowVariable[workflowVariables.size()]));
+
+        //update credentials store of the workflow
+        CredentialsStore cs  = tempWFM.getCredentialsStore();
+        workflowVariables.stream()
+            .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
+            .filter(f -> !cs.contains(f.getName()))
+            .forEach(cs::addFromFlowVariable);
+
         final int inCnt = m_inData.length;
         // port object IDs in static port object map, one entry for
         // each connected input (no value for unconnected optional inputs)
@@ -260,11 +261,11 @@ public final class SandboxedNodeCreator {
                 NodeID inID = tempWFM.createAndAddNode(isTable ? TABLE_READ_NODE_FACTORY : OBJECT_READ_NODE_FACTORY);
                 NodeSettings s = new NodeSettings("temp_data_in");
                 tempWFM.saveNodeSettings(inID, s);
+                List<FlowVariable> flowVars = getFlowVariablesOnPort(i);
                 PortObjectInNodeModel.setInputNodeSettings(s,
                     portObjectRepositoryID, flowVars, m_copyDataIntoNewContext);
 
                 //update credentials store of the workflow
-                CredentialsStore cs  = tempWFM.getCredentialsStore();
                 flowVars.stream()
                     .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
                     .filter(f -> !cs.contains(f.getName()))
@@ -429,6 +430,56 @@ public final class SandboxedNodeCreator {
             ConnectionContainer sbCC = sandboxWFM.getConnection(new ConnectionID(sandboxTargetID, cc.getDestPort()));
             sbCC.addProgressListener(pe -> cc.progressChanged(pe));
         }
+    }
+
+    /**
+     * Checks which flow variables are available on a port by looking on the output port connected to this input port.
+     *
+     * @param portIdx input port of the {@link NodeContainer} {@link #m_nc}
+     * @return the flow variables available at this port
+     */
+    private List<FlowVariable> getFlowVariablesOnPort(final int portIdx) {
+        WorkflowManager wfm = m_nc.getParent();
+        assert wfm != null;
+        // Find the corresponding output port
+        ConnectionContainer connection = wfm.getIncomingConnectionFor(m_nc.getID(), portIdx);
+        NodeOutPort outPort = null;
+        while (connection != null && outPort == null) {
+            switch (connection.getType()) {
+                case STD:
+                    // It's an standard connection. We can just get the outport
+                    NodeContainer sourceNode = wfm.getNodeContainer(connection.getSource());
+                    outPort = sourceNode.getOutPort(connection.getSourcePort());
+                    break;
+                case WFMIN:
+                    // It's connected to an wfm inport (first node in a metanode).
+                    // We need to use the connection outside of the metanode.
+                    wfm = wfm.getParent();
+                    NodeContainer metanode = wfm.getNodeContainer(connection.getSource());
+                    connection = wfm.getIncomingConnectionFor(metanode.getID(), connection.getSourcePort());
+                    break;
+                default:
+                    // This shouldn't happen because we start with an inport.
+                    // But if it does we break the loop and we will have the case that outPort is null (see next if statement).
+                    connection = null;
+                    break;
+            }
+        }
+        // We couldn't find a corresponding outport, this shouldn't happen. We will use an empty array.
+        if (outPort == null) {
+            LOGGER.warn(
+                "Couldn't find the outport to the inport with the index " + portIdx + ". Using empty flow variables.");
+            return new ArrayList<FlowVariable>();
+        }
+        // Get the flow variables on the outport and filter them
+        List<FlowVariable> flowVars = new ArrayList<FlowVariable>();
+        final FlowObjectStack flowObjectStack = outPort.getFlowObjectStack();
+        final Collection<FlowVariable> flowVarsIn = flowObjectStack.getAvailableFlowVariables(Type.values()).values();
+        flowVarsIn.stream().filter(fv -> !fv.isGlobalConstant()).forEachOrdered(fv -> flowVars.add(fv));
+        // getAvailableFlowVariables returns top down, make sure iterations on list return oldest entry first
+        // (will be pushed onto node stack using an iterator)
+        Collections.reverse(flowVars);
+        return flowVars;
     }
 
     /**
