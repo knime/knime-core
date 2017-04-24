@@ -166,7 +166,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                     }
                 }
             } else if (v != null) {
-                reset();
+                reset(); // sets #getViewValue to null
             }
             if (m_view != null && isCallModelChanged) {
                 m_view.callViewableModelChanged();
@@ -230,7 +230,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             CheckUtils.checkState(m_container.getNodeContainerState().isExecuted(),
                 "Node needs to be in executed state to apply new view values.");
             m_isReexecuteInProgress.set(true);
-            try (WorkflowLock lock = m_container.lock()) {
+            try (WorkflowLock lock = m_container.getParent().lock()) {
                 m_value = value;
                 m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
             } finally {
