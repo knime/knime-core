@@ -118,15 +118,6 @@ public class SinglePageWebResourceController extends WebResourceController {
 
     /**
      * Tries to load a map of view values to all appropriate views contained in the given subnode.
-     * @param viewContentMap the values to load
-     * @return Null or empty map if validation succeeds, map of errors otherwise
-     */
-    public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap) {
-        return loadValuesIntoPage(viewContentMap, true, false);
-    }
-
-    /**
-     * Tries to load a map of view values to all appropriate views contained in the given subnode.
      * @param viewContentMap the values to validate
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)

@@ -182,26 +182,6 @@ public class SinglePageManager extends AbstractPageManager {
     }
 
     /**
-     * Applies a given map of view values to a given subnode.
-     *
-     * @param valueMap a map with {@link NodeIDSuffix} string as key and parsed view value as value
-     * @param containerNodeId the node ID to apply the values to
-     * @return A JSON-serialized string containing the validation result, null if validation succeeded.
-     * @throws IOException on JSON serialization errors
-     */
-    public String applyViewValues(final Map<String, String> valueMap, final NodeID containerNodeId) throws IOException {
-        try (WorkflowLock lock = getWorkflowManager().lock()) {
-            Map<String, String> viewContentMap = validateValueMap(valueMap);
-            Map<String, ValidationError> validationResults = null;
-            if (!valueMap.isEmpty()) {
-                SinglePageWebResourceController sec = getController(containerNodeId);
-                validationResults = sec.loadValuesIntoPage(viewContentMap);
-            }
-            return serializeValidationResult(validationResults);
-        }
-    }
-
-    /**
      * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution
      * subsequently.
      *

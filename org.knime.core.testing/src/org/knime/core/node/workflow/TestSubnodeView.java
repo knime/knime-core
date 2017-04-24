@@ -226,7 +226,9 @@ public class TestSubnodeView extends WorkflowTestCase {
         // validate and reexecute
         Map<String, ValidationError> errorMap = m_spm.validateViewValues(valueMap, m_subnodeID);
         assertTrue("There should not be any validation errors", errorMap == null || errorMap.isEmpty());
-        m_spm.applyValidatedValuesAndReexecute(valueMap, m_subnodeID, false);
+        try (WorkflowLock lock = getManager().lock()) {
+            m_spm.applyValidatedValuesAndReexecute(valueMap, m_subnodeID, false);
+        }
         waitWhileNodeInExecution(m_subnodeID);
         assertTrue("Subnode should be executed.", getManager().getNodeContainer(m_subnodeID).getNodeContainerState().isExecuted());
 
