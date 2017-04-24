@@ -53,8 +53,11 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
+import org.apache.commons.lang3.LocaleUtils;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -78,8 +81,6 @@ import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * The node model of the node which extracts date&time fields.
- *
  * @author Marcel Wiedenmann, KNIME.com, Konstanz, Germany
  */
 final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeModel {
@@ -128,10 +129,6 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
 
     static SettingsModelString createLocaleModel() {
         return new SettingsModelString("locale", Locale.getDefault().toString());
-    }
-
-    static SettingsModelBoolean createOutputConcatModel() {
-        return new SettingsModelBoolean("output_concat", false);
     }
 
     static boolean isDateType(final DataType type) {
@@ -200,22 +197,28 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
     @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
         final String selectedCol = m_colSelectModel.getStringValue();
-        if (selectedCol == null) {
-            throw new InvalidSettingsException("Node must be configured!");
+        if (selectedCol == null || selectedCol.isEmpty()) {
+            throw new InvalidSettingsException("Node must be configured.");
+        }
+        final int selectedColIdx = spec.findColumnIndex(selectedCol);
+        if (selectedColIdx < 0) {
+            throw new InvalidSettingsException("Column " + selectedCol + " not found in the input table.");
         }
         final DataType selectedColType = spec.getColumnSpec(selectedCol).getType();
-        final int selectedColIdx = spec.findColumnIndex(selectedCol);
-
         final boolean isDate = isDateType(selectedColType);
         final boolean isTime = isTimeType(selectedColType);
+        if (!isDate && !isTime) {
+            throw new InvalidSettingsException("Column " + selectedCol + " does not contain a Date&Time type.");
+        }
         final boolean isLocalDate = selectedColType.isCompatible(LocalDateValue.class);
         final boolean isLocalTime = selectedColType.isCompatible(LocalTimeValue.class);
         final boolean isLocalDateTime = selectedColType.isCompatible(LocalDateTimeValue.class);
         final boolean isZonedDateTime = selectedColType.isCompatible(ZonedDateTimeValue.class);
 
-        final Locale locale = new Locale(m_localeModel.getStringValue());
+        final Locale locale = LocaleUtils.toLocale(m_localeModel.getStringValue());
 
-        final UniqueNameGenerator nameGen = new UniqueNameGenerator(spec);
+        final UniqueNameGenerator nameGenerator = new UniqueNameGenerator(spec);
+        final DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
         final ColumnRearranger rearranger = new ColumnRearranger(spec);
 
         if (isDate) {
@@ -225,7 +228,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // year:
 
             if (m_yearModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(YEAR, IntCell.TYPE);
+                final DataColumnSpec colSpec = nameGenerator.newColumn(YEAR, IntCell.TYPE);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -256,7 +259,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // quarter:
 
             if (m_quarterModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(QUARTER, IntCell.TYPE);
+                final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator, QUARTER, 1, 4);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -287,7 +290,8 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // month (number):
 
             if (m_monthNumberModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(MONTH_NUMBER, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, MONTH_NUMBER, 1, 12);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -318,7 +322,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // month (name):
 
             if (m_monthNameModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(MONTH_NAME, StringCell.TYPE);
+                final DataColumnSpec colSpec = nameGenerator.newColumn(MONTH_NAME, StringCell.TYPE);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -349,10 +353,10 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // week: TODO: weekOfWeekBasedYear vs. weekOfYear
+            // week:
 
             if (m_weekModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(WEEK, IntCell.TYPE);
+                final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator, WEEK, 1, 52);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -386,7 +390,8 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // day of year:
 
             if (m_dayYearModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(DAY_OF_YEAR, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, DAY_OF_YEAR, 1, 366);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -417,7 +422,8 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // day of month:
 
             if (m_dayMonthModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(DAY_OF_MONTH, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, DAY_OF_MONTH, 1, 31);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -445,10 +451,11 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // day of week (number): TODO: localized day numbering vs. ISO
+            // day of week (number):
 
             if (m_dayWeekNumberModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(DAY_OF_WEEK_NUMBER, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, DAY_OF_WEEK_NUMBER, 1, 7);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -481,7 +488,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // day of week (name):
 
             if (m_dayWeekNameModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(DAY_OF_WEEK_NAME, StringCell.TYPE);
+                final DataColumnSpec colSpec = nameGenerator.newColumn(DAY_OF_WEEK_NAME, StringCell.TYPE);
                 if (isLocalDate) {
                     rearranger.append(new AbstractLocalDateFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -519,7 +526,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // hour:
 
             if (m_hourModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(HOUR, IntCell.TYPE);
+                final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator, HOUR, 0, 23);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -550,7 +557,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // minute:
 
             if (m_minuteModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(MINUTE, IntCell.TYPE);
+                final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator, MINUTE, 0, 59);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -581,7 +588,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             // second:
 
             if (m_secondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(SECOND, IntCell.TYPE);
+                final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator, SECOND, 0, 59);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -609,10 +616,11 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // millisecond:
+            // subsecond (in milliseconds):
 
             if (m_millisecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(MILLISECOND, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, MILLISECOND, 0, 999);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -640,10 +648,11 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // microsecond:
+            // subsecond (in microseconds):
 
             if (m_microsecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(MICROSECOND, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, MICROSECOND, 0, 999_999);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -671,10 +680,11 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // nanosecond:
+            // subsecond (in nanoseconds):
 
             if (m_nanosecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec = nameGen.newColumn(NANOSECOND, IntCell.TYPE);
+                final DataColumnSpec colSpec =
+                    createBoundedIntColumn(domainCreator, nameGenerator, NANOSECOND, 0, 999_999_999);
                 if (isLocalTime) {
                     rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
@@ -709,7 +719,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 // time zone name:
 
                 if (m_timeZoneNameModel.getBooleanValue()) {
-                    final DataColumnSpec colSpec = nameGen.newColumn(TIME_ZONE_NAME, StringCell.TYPE);
+                    final DataColumnSpec colSpec = nameGenerator.newColumn(TIME_ZONE_NAME, StringCell.TYPE);
                     rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
 
                         @Override
@@ -722,7 +732,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 // time zone offset:
 
                 if (m_timeZoneOffsetModel.getBooleanValue()) {
-                    final DataColumnSpec colSpec = nameGen.newColumn(TIME_ZONE_OFFSET, StringCell.TYPE);
+                    final DataColumnSpec colSpec = nameGenerator.newColumn(TIME_ZONE_OFFSET, StringCell.TYPE);
                     rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
 
                         @Override
@@ -733,6 +743,10 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                     });
                 }
             }
+        }
+
+        if (rearranger.getColumnCount() == spec.getNumColumns()) {
+            getLogger().info("No fields will be extracted. Output table will equal input table.");
         }
 
         return rearranger;
@@ -790,6 +804,15 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
             sm.loadSettingsFrom(settings);
         }
         m_localeModel.loadSettingsFrom(settings);
+    }
+
+    private DataColumnSpec createBoundedIntColumn(final DataColumnDomainCreator domainCreator,
+        final UniqueNameGenerator nameGenerator, final String suggestedName, final int lower, final int upper) {
+        domainCreator.setLowerBound(IntCellFactory.create(lower));
+        domainCreator.setUpperBound(IntCellFactory.create(upper));
+        final DataColumnSpecCreator specCreator = nameGenerator.newCreator(suggestedName, IntCell.TYPE);
+        specCreator.setDomain(domainCreator.createDomain());
+        return specCreator.createSpec();
     }
 
     // cell factories:
