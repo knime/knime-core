@@ -202,16 +202,6 @@ public class SinglePageManager extends AbstractPageManager {
     }
 
     /**
-     * Triggers reexecution of the subnode, including all contained nodes
-     * @param containerNodeId the {@link NodeID} of the subnode to reexecute.
-     */
-    private void reexecuteSubnode(final NodeID containerNodeId) {
-        try (WorkflowLock lock = getWorkflowManager().lock()) {
-            getController(containerNodeId).reexecuteSinglePage();
-        }
-    }
-
-    /**
      * Applies a given map of view values to a given subnode which have already been validated and triggers reexecution
      * subsequently.
      *
@@ -222,9 +212,9 @@ public class SinglePageManager extends AbstractPageManager {
      */
     public void applyValidatedValuesAndReexecute(final Map<String, String> valueMap, final NodeID containerNodeId,
         final boolean useAsDefault) throws IOException {
-        try (WorkflowLock lock = getWorkflowManager().lock()) {
+        try (WorkflowLock lock = getWorkflowManager().assertLock()) {
             applyValidatedViewValues(valueMap, containerNodeId, useAsDefault);
-            reexecuteSubnode(containerNodeId);
+            getController(containerNodeId).reexecuteSinglePage();
         }
     }
 

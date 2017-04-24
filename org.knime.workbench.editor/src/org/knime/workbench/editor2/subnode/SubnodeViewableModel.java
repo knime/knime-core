@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
@@ -75,8 +76,8 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
-import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.wizard.SinglePageManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
@@ -130,48 +131,49 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         m_spm = SinglePageManager.of(nodeContainer.getParent());
         m_container = nodeContainer;
         createPageAndValue();
-        m_nodeStateChangeListener = new NodeStateChangeListener() {
-            @Override
-            public void stateChanged(final NodeStateEvent state) {
-                NodeContainerState nodeContainerState = nodeContainer.getNodeContainerState();
-                if (nodeContainerState.isExecuted()) {
-                    //TODO: is this the right thread for the update?
-                    if (!m_isReexecuteInProgress.get()) {
-                        try {
-                            createPageAndValue();
-                        } catch (IOException e) {
-                            LOGGER.error("Creating view failed: " + e.getMessage(), e);
-                            reset();
-                        }
-                    } else {
-                        m_isReexecuteInProgress.set(false);
-                        try {
-                            // check if current value from page still matches last retrieved value from view
-                            SubnodeViewValue v = getViewValue();
-                            if (m_view != null && v != null && !v.equals(m_view.getLastRetrievedValue())) {
-                                m_value = v;
-                                m_view.callViewableModelChanged();
-                            }
-                        } catch (Exception e) {
-                            reset();
-                        }
-                        return;
-                    }
-                } else if (!nodeContainerState.isExecutionInProgress() && m_isReexecuteInProgress.get()) {
-                    // node failed during re-execution -- reset the view
-                    //FIXME: this is still called during regular re-execution, even with the combined apply and reexecute
-                    /*m_isReexecuteInProgress.set(false);
-                    reset();*/
-                } else if (!m_isReexecuteInProgress.get()) {
-                    reset();
-                }
-                if (m_view != null && !m_isReexecuteInProgress.get()) {
-                    m_view.callViewableModelChanged();
-                }
-            }
-        };
+        m_nodeStateChangeListener = s -> onNodeStateChange();
         nodeContainer.addNodeStateChangeListener(m_nodeStateChangeListener);
     }
+
+
+    /** Called by state listener on subnode container. */
+    private void onNodeStateChange() {
+        NodeContainerState nodeContainerState = m_container.getNodeContainerState();
+
+        // only react on state changes when
+        //  - no re-exec is ongoing
+        //  - no irrelevant pre-exec -> queue -> post-exec step is ongoing.
+        //    (ideally this should be removed but those state changes on the SNC are not protected by the workflow lock)
+        if (!(m_isReexecuteInProgress.get() || nodeContainerState.isExecutionInProgress())) {
+
+            boolean isCallModelChanged = true;
+            SubnodeViewValue v = getViewValue();
+            if (nodeContainerState.isExecuted()) {
+                if (v == null) {
+                    // node was just executed, i.e. view is open and user executes via "run" button in main application
+                    try {
+                        createPageAndValue();
+                        assert m_value != null : "value supposed to be non-null on executed node";
+                    } catch (IOException e) {
+                        LOGGER.error("Creating view failed: " + e.getMessage(), e);
+                        reset();
+                    }
+                } else {
+                    // node was 're-executed', i.e. user clicked 'apply' button in view and subsequent
+                    // reset->configured->executing events were swallowed as part of m_isReexecutionInProgress
+                    if (m_view != null && v.equals(m_view.getLastRetrievedValue())) {
+                        isCallModelChanged = false;
+                    }
+                }
+            } else if (v != null) {
+                reset();
+            }
+            if (m_view != null && isCallModelChanged) {
+                m_view.callViewableModelChanged();
+            }
+        }
+    }
+
 
     /**
      * Registers a view with this model, so it can be notified about model changed events.
@@ -225,10 +227,21 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
     @Override
     public void loadViewValue(final SubnodeViewValue value, final boolean useAsDefault) {
         try {
-            CheckUtils.checkState(m_container.getNodeContainerState().isExecuted(), "Node needs to be in executed state to apply new view values.");
+            CheckUtils.checkState(m_container.getNodeContainerState().isExecuted(),
+                "Node needs to be in executed state to apply new view values.");
             m_isReexecuteInProgress.set(true);
-            m_value = value;
-            m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
+            try (WorkflowLock lock = m_container.lock()) {
+                m_value = value;
+                m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
+            } finally {
+                m_isReexecuteInProgress.set(false);
+                if (!m_container.getNodeContainerState().isExecutionInProgress()) {
+                    // this happens if after the reset the execution can't be triggered, e.g. because #configure of
+                    // a node rejects the current settings -> #onNodeStateChange has been called as part of the reset
+                    // but was ignored due to the m_isReexecuteInProgress = true.
+                    onNodeStateChange();
+                }
+            }
         } catch (IOException e) {
             logErrorAndReset("Loading view values for node " + m_container.getID() + " failed: ", e);
         }
@@ -310,7 +323,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
             try {
                 m_viewPath = m_viewCreator.createWebResources(m_viewName, getViewRepresentation(), null);
             } catch (IOException e) {
-                LOGGER.error("Creating view HTML failed: " + e.getMessage(), e);
+                LOGGER.error("Unable to create temporary web resource: " + e.getMessage(), e);
             }
         }
         return m_viewPath;
@@ -320,12 +333,10 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         m_page = null;
         m_value = null;
         if (m_viewPath != null) {
-            try {
-                File viewFile = new File(m_viewPath);
-                if (viewFile.exists()) {
-                    viewFile.delete();
-                }
-            } catch (Exception e) { /* do nothing */ }
+            File viewFile = new File(m_viewPath);
+            if (viewFile.exists() && !FileUtils.deleteQuietly(viewFile)) {
+                LOGGER.warnWithFormat("Unable to delete temporary file \"%s\"", viewFile.getAbsolutePath());
+            }
         }
         m_viewPath = null;
     }
@@ -431,6 +442,7 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                     JSONViewContent second = mapper.readValue(other.m_viewValues.get(key), JSONViewContent.class);*/
                     builder.append(first, second);
                 } catch (Exception e) {
+                    LOGGER.debug("Can't compare JsonNode in #equals", e);
                     //compare strings on exception
                     builder.append(m_viewValues.get(key), other.m_viewValues.get(key));
                 }
