@@ -83,6 +83,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
 /**
+ * Abstract utility class providing base functionality to handle serialization/deserialization of meta node or wizard views.
+ *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
  */
@@ -91,7 +93,9 @@ public abstract class AbstractPageManager {
     private final WorkflowManager m_wfm;
 
     /**
+     * Creates a new page manager
      *
+     * @param workflowManager the underlying {@link WorkflowManager} used e.g. for execution related tasks
      */
     public AbstractPageManager(final WorkflowManager workflowManager) {
         m_wfm = CheckUtils.checkArgumentNotNull(workflowManager);
@@ -104,6 +108,12 @@ public abstract class AbstractPageManager {
         return m_wfm;
     }
 
+    /**
+     * Performs a transformation from {@link WizardPageContent} to {@link JSONWebNodePage} which can be used for serialization.
+     * @param page the {@link WizardPageContent} to transform
+     * @return the transformed {@link JSONWebNodePage}
+     * @throws IOException if layout of page can not be generated
+     */
     protected JSONWebNodePage createWizardPageInternal(final WizardPageContent page) throws IOException {
         // process layout
         JSONLayoutPage layout = new JSONLayoutPage();
@@ -196,6 +206,12 @@ public abstract class AbstractPageManager {
         }
     }
 
+    /**
+     * Validates a value map using a JSON mapper.
+     * @param valueMap the map to validate
+     * @return a validated map of view values
+     * @throws IOException on serialization error
+     */
     protected Map<String, String> validateValueMap(final Map<String, String> valueMap) throws IOException{
         try (WorkflowLock lock = m_wfm.lock()) {
             ObjectMapper mapper = new ObjectMapper();
@@ -207,6 +223,12 @@ public abstract class AbstractPageManager {
         }
     }
 
+    /**
+     * Serializes a map of validation errors into a single JSON string.
+     * @param validationResults the map of errors to serialize
+     * @return the JSON serialized string
+     * @throws IOException on serialization error
+     */
     protected String serializeValidationResult(final Map<String, ValidationError> validationResults) throws IOException {
         try (WorkflowLock lock = m_wfm.lock()) {
             ObjectMapper mapper = new ObjectMapper();

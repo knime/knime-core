@@ -69,8 +69,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Utility class which handles serialization/deserialization of meta node or wizard views,
- * as well as forwarding and bundling requests for single page views.
+ * Utility class which handles serialization/deserialization of meta node or wizard views
+ * executed in wizard execution.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4

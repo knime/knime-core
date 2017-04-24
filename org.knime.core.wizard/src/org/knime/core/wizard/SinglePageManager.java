@@ -66,6 +66,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.JSONWebNodePage;
 
 /**
+ * Utility class which handles serialization/deserialization of meta node or wizard views,
+ * as well as forwarding and bundling requests for single page views.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
