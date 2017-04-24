@@ -128,9 +128,9 @@ public class SinglePageManager extends AbstractPageManager {
      */
     public Map<String, String> createWizardPageViewValueMap(final NodeID containerNodeID) throws IOException {
         SinglePageWebResourceController sec = getController(containerNodeID);
-        Map<NodeID, WebViewContent> viewMap = sec.getWizardPageViewValueMap();
+        Map<NodeIDSuffix, WebViewContent> viewMap = sec.getWizardPageViewValueMap();
         Map<String, String> resultMap = new HashMap<String, String>();
-        for (Entry<NodeID, WebViewContent> entry : viewMap.entrySet()) {
+        for (Entry<NodeIDSuffix, WebViewContent> entry : viewMap.entrySet()) {
             WebViewContent c = entry.getValue();
             resultMap.put(entry.getKey().toString(), new String(((ByteArrayOutputStream)c.saveToStream()).toByteArray()));
         }

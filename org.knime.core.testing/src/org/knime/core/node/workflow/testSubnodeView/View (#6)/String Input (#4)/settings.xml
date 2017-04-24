@@ -4,7 +4,7 @@
 <config key="flow_stack">
 <config key="Variable_0">
 <entry key="type" type="xstring" value="variable"/>
-<entry key="name" type="xstring" value="new variable"/>
+<entry key="name" type="xstring" value="string-input"/>
 <entry key="class" type="xstring" value="STRING"/>
 <entry key="value" type="xstring" value="https://www.knime.com/"/>
 </config>
@@ -22,7 +22,7 @@
 <entry key="hideInDialog" type="xboolean" value="false"/>
 <entry key="required" type="xboolean" value="true"/>
 <entry key="parameterName" type="xstring" value="string-input"/>
-<entry key="flowvariablename" type="xstring" value="new variable"/>
+<entry key="flowvariablename" type="xstring" value="string-input"/>
 <entry key="regex" type="xstring" value="^(https:[/][/]|http:[/][/]|www.)[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\-\._\?\,\'/\\\+&amp;amp;%\$#\=~])*$"/>
 <entry key="error_message" type="xstring" value="The given input '?' is not a valid URL"/>
 </config>

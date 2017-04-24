@@ -399,7 +399,7 @@ public abstract class WebResourceController {
         return new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
     }
 
-    protected Map<NodeID, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
+    protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for creating wizard page");
             return null;
@@ -410,7 +410,7 @@ public abstract class WebResourceController {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         return subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER).entrySet().stream()
             .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
-            .collect(Collectors.toMap(e -> e.getKey(), e-> e.getValue().getViewValue()));
+            .collect(Collectors.toMap(e -> NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e-> e.getValue().getViewValue()));
     }
 
     private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
