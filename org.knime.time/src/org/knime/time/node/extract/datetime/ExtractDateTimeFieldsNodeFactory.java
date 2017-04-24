@@ -53,8 +53,6 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the node which extracts date&time fields.
- *
  * @author Marcel Wiedenmann, KNIME.com, Konstanz, Germany
  */
 public final class ExtractDateTimeFieldsNodeFactory extends NodeFactory<ExtractDateTimeFieldsNodeModel> {

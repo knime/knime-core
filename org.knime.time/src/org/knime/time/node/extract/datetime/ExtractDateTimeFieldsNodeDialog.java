@@ -73,8 +73,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 
 /**
- * The node dialog of the node which extracts date&time fields.
- *
  * @author Marcel Wiedenmann, KNIME.com, Konstanz, Germany
  */
 final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
