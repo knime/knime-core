@@ -50,8 +50,11 @@ package org.knime.core.node.workflow;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
@@ -64,9 +67,13 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.wizard.SinglePageManager;
+import org.knime.core.wizard.SubnodeViewValue;
+import org.knime.core.wizard.SubnodeViewableModel;
+import org.knime.core.wizard.SubnodeViewableModel.CollectionValidationError;
 import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -146,6 +153,10 @@ public class TestSubnodeView extends WorkflowTestCase {
     public void testExecuteAndCreateSerializablePageView() throws Exception {
         initialExecute();
         JSONWebNodePage page = m_spm.createWizardPage(m_subnodeID);
+        validateJSONPage(page);
+    }
+
+    private void validateJSONPage(final JSONWebNodePage page) {
         assertNotNull("Page should have config object", page.getWebNodePageConfiguration());
         assertNotNull("Page should have map of nodes", page.getWebNodes());
         assertNotNull("Page should have layout information", page.getWebNodePageConfiguration().getLayout());
@@ -162,8 +173,8 @@ public class TestSubnodeView extends WorkflowTestCase {
         return valueMap;
     }
 
-    private Map<String, String> changeStringInputTo(final String newValue) throws Exception {
-        Map<String, String> valueMap = buildValueMap();
+    private Map<String, String> changeStringInputTo(final String newValue, final Map<String, String> valueMap) throws Exception {
+        //Map<String, String> valueMap = buildValueMap();
         String stringInputValue = valueMap.get(m_stringInputID.toString());
         assertNotNull("Value for string input node should exist", stringInputValue);
         ObjectMapper mapper = new ObjectMapper();
@@ -182,7 +193,7 @@ public class TestSubnodeView extends WorkflowTestCase {
     @Test
     public void testValidationError() throws Exception {
         initialExecute();
-        Map<String, String> valueMap = changeStringInputTo("foo");
+        Map<String, String> valueMap = changeStringInputTo("foo", buildValueMap());
         Map<String, ValidationError> errorMap = m_spm.validateViewValues(valueMap, m_subnodeID);
         assertNotNull("Error map should exist", errorMap);
         assertEquals("Error map should contain one entry", 1, errorMap.size());
@@ -198,7 +209,7 @@ public class TestSubnodeView extends WorkflowTestCase {
     @Test
     public void testValidationSucceed() throws Exception {
         initialExecute();
-        Map<String, String> valueMap = changeStringInputTo(CHANGED_URL);
+        Map<String, String> valueMap = changeStringInputTo(CHANGED_URL, buildValueMap());
         Map<String, ValidationError> errorMap = m_spm.validateViewValues(valueMap, m_subnodeID);
         assertTrue("There should not be any validation errors", errorMap == null || errorMap.isEmpty());
     }
@@ -211,17 +222,8 @@ public class TestSubnodeView extends WorkflowTestCase {
     public void testValidationAndReexecute() throws Exception {
         initialExecute();
         // change URL in string input
-        Map<String, String> valueMap = changeStringInputTo(CHANGED_URL);
-
-        // select one value in table
-        String tableValueString = valueMap.get(m_tableViewID.toString());
-        assertNotNull("Value for table view node should exist", tableValueString);
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode tableValue = mapper.readTree(tableValueString);
-        assertEquals("Default selection should not exist", NullNode.instance, tableValue.get("selection"));
-        ArrayNode selectionArray = ((ObjectNode)tableValue).putArray("selection");
-        selectionArray.add("Row1");
-        valueMap.put(m_tableViewID.toString(), mapper.writeValueAsString(tableValue));
+        Map<String, String> valueMap = changeStringInputTo(CHANGED_URL, buildValueMap());
+        selectRowInTable(valueMap);
 
         // validate and reexecute
         Map<String, ValidationError> errorMap = m_spm.validateViewValues(valueMap, m_subnodeID);
@@ -231,11 +233,70 @@ public class TestSubnodeView extends WorkflowTestCase {
         }
         waitWhileNodeInExecution(m_subnodeID);
         assertTrue("Subnode should be executed.", getManager().getNodeContainer(m_subnodeID).getNodeContainerState().isExecuted());
+        validateReexecutionResult();
+    }
 
+    private void selectRowInTable(final Map<String, String> valueMap) throws IOException, JsonProcessingException {
+        // select one value in table
+        String tableValueString = valueMap.get(m_tableViewID.toString());
+        assertNotNull("Value for table view node should exist", tableValueString);
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode tableValue = mapper.readTree(tableValueString);
+        assertEquals("Default selection should not exist", NullNode.instance, tableValue.get("selection"));
+        ArrayNode selectionArray = ((ObjectNode)tableValue).putArray("selection");
+        selectionArray.add("Row1");
+        valueMap.put(m_tableViewID.toString(), mapper.writeValueAsString(tableValue));
+    }
+
+    /**
+     * Creates and tests the {@link SubnodeViewableModel}
+     * @throws Exception
+     */
+    @Test
+    public void testSubnodeViewableModel() throws Exception {
+        initialExecute();
+
+        SubNodeContainer snc = getManager().getNodeContainer(m_subnodeID, SubNodeContainer.class, true);
+        SubnodeViewableModel svm = new SubnodeViewableModel(snc, "testView");
+        JSONWebNodePage page = svm.getViewRepresentation();
+        validateJSONPage(page);
+        SubnodeViewValue viewValue = svm.getViewValue();
+        assertNotNull("Combined view value should exist", viewValue);
+        assertNotNull("Combined view value map should exist", viewValue.getViewValues());
+        assertEquals("Combined view value should contain three entries", 3, viewValue.getViewValues().size());
+
+        Map<String, String> changedValueMap = new HashMap<String, String>(3);
+        changedValueMap.putAll(viewValue.getViewValues());
+        changedValueMap = changeStringInputTo("foo", changedValueMap);
+        SubnodeViewValue newViewValue = new SubnodeViewValue();
+        newViewValue.setViewValues(changedValueMap);
+        ValidationError validationError = svm.validateViewValue(newViewValue);
+        assertTrue("Validation error should be instance of CollectionValidationError", validationError instanceof CollectionValidationError);
+        Map<String, String> errorMap = ((CollectionValidationError)validationError).getErrorMap();
+        assertNotNull("Error map should exist", errorMap);
+
+        changedValueMap.putAll(viewValue.getViewValues());
+        changeStringInputTo(CHANGED_URL, changedValueMap);
+        selectRowInTable(changedValueMap);
+        validationError = svm.validateViewValue(newViewValue);
+        assertNull("There should not be any validation errors", validationError);
+        svm.loadViewValue(newViewValue, false);
+
+        waitWhileNodeInExecution(m_subnodeID);
+        assertTrue("Subnode should be executed.", getManager().getNodeContainer(m_subnodeID).getNodeContainerState().isExecuted());
+        validateReexecutionResult();
+
+        svm.discard();
+        assertNull("Page should be null after reset", svm.getViewRepresentation());
+        assertNull("View value should be null after reset", svm.getViewValue());
+    }
+
+    private void validateReexecutionResult() throws Exception {
         // validate results
         Map<String, String> newValueMap = buildValueMap();
         String stringInputValue = newValueMap.get(m_stringInputID.toString());
         assertNotNull("Value for string input node should exist", stringInputValue);
+        ObjectMapper mapper = new ObjectMapper();
         JsonNode jsonValue = mapper.readTree(stringInputValue);
         assertNotNull("String input value should contain new string value", jsonValue.get("string"));
         assertEquals("String input value should be '" + CHANGED_URL + "'", CHANGED_URL, jsonValue.get("string").asText());

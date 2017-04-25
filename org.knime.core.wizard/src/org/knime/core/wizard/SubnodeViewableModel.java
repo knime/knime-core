@@ -58,12 +58,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.DefaultWebTemplate;
@@ -78,19 +74,14 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLock;
-import org.knime.core.wizard.SubnodeViewableModel.SubnodeViewValue;
-import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.JSONWebNodePageConfiguration;
 import org.knime.js.core.JavaScriptViewCreator;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -160,8 +151,17 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 } else {
                     // node was 're-executed', i.e. user clicked 'apply' button in view and subsequent
                     // reset->configured->executing events were swallowed as part of m_isReexecutionInProgress
-                    if (m_view != null && v.equals(m_view.getLastRetrievedValue())) {
-                        isCallModelChanged = false;
+                    try {
+                        SubnodeViewValue newValue = createViewValue();
+                        assert newValue != null : "value supposed to be non-null after reexecute";
+                        if (m_view != null && newValue.equals(m_view.getLastRetrievedValue())) {
+                            isCallModelChanged = false;
+                        } else {
+                            m_value = newValue;
+                        }
+                    } catch (IOException e) {
+                        LOGGER.error("Retrieving view value map failed: " + e.getMessage(), e);
+                        reset();
                     }
                 }
             } else if (v != null) {
@@ -371,96 +371,6 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         return false;
     }
 
-    //TODO decide if this belongs here. Could also be sth. like PageViewValue in org.knime.js.core
-    static class SubnodeViewValue extends JSONViewContent {
-
-        private Map<String, String> m_viewValues = new HashMap<String, String>();
-
-        /**
-         * @return the viewValues
-         */
-        @JsonAnyGetter
-        public Map<String, String> getViewValues() {
-            return m_viewValues;
-        }
-
-        /**
-         * @param viewValues the viewValues to set
-         */
-        public void setViewValues(final Map<String, String> viewValues) {
-            m_viewValues = viewValues;
-        }
-
-        @JsonAnySetter
-        public void addViewValue(final String key, final Object value) {
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                m_viewValues.put(key, mapper.writeValueAsString(value));
-            } catch (JsonProcessingException e) { /* do nothing */ }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void saveToNodeSettings(final NodeSettingsWO settings) { /* nothing to save */ }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException { /* nothing to load */ }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (obj == this) {
-                return true;
-            }
-            if (obj.getClass() != getClass()) {
-                return false;
-            }
-            SubnodeViewValue other = (SubnodeViewValue)obj;
-            if (!m_viewValues.keySet().equals(other.m_viewValues.keySet())) {
-                return false;
-            }
-            EqualsBuilder builder = new EqualsBuilder();
-            ObjectMapper mapper = new ObjectMapper();
-            for (String key : m_viewValues.keySet()) {
-                try {
-                    // try deserializing and comparing generic JSON objects
-                    JsonNode first = mapper.readTree(m_viewValues.get(key));
-                    JsonNode second = mapper.readTree(other.m_viewValues.get(key));
-                    // the following would be better but concrete view classes might not be visible here
-                    /*JSONViewContent first = mapper.readValue(m_viewValues.get(key), JSONViewContent.class);
-                    JSONViewContent second = mapper.readValue(other.m_viewValues.get(key), JSONViewContent.class);*/
-                    builder.append(first, second);
-                } catch (Exception e) {
-                    LOGGER.debug("Can't compare JsonNode in #equals", e);
-                    //compare strings on exception
-                    builder.append(m_viewValues.get(key), other.m_viewValues.get(key));
-                }
-            }
-            return builder.isEquals();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return new HashCodeBuilder()
-                    .append(m_viewValues)
-                    .toHashCode();
-        }
-
-    }
-
     private static class SubnodeWizardViewCreator extends JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> {
 
         public SubnodeWizardViewCreator() {
@@ -507,7 +417,12 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         }
     }
 
-    private static class CollectionValidationError extends ValidationError {
+    /**
+     * Validation error class that wraps a map of validation errors.
+     *
+     * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
+     */
+    public static class CollectionValidationError extends ValidationError {
 
         private Map<String, String> m_errorMap;
 
@@ -547,9 +462,5 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 return "Validation errors present but could not be serialized: " + e.getMessage();
             }
         }
-
     }
-
-
-
 }

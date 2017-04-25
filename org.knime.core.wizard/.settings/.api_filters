@@ -21,6 +21,41 @@
     <resource path="src/org/knime/core/wizard/SubnodeViewableModel.java" type="org.knime.core.wizard.SubnodeViewableModel">
         <filter id="640712815">
             <message_arguments>
+                <message_argument value="NodeContainer"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="addNodeStateChangeListener(NodeStateChangeListener)"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="NodeContainer"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="getID()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="NodeContainer"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="getNodeContainerState()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="NodeContainer"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="getParent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="NodeContainer"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="removeNodeStateChangeListener(NodeStateChangeListener)"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
                 <message_argument value="WorkflowLock"/>
                 <message_argument value="SubnodeViewableModel"/>
                 <message_argument value="close()"/>
