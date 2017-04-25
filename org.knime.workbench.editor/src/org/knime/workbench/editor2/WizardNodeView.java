@@ -82,10 +82,10 @@ import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
+import org.knime.core.wizard.SubnodeViewableModel;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.editor2.ElementRadioSelectionDialog.RadioItem;
-import org.knime.workbench.editor2.subnode.SubnodeViewableModel;
 
 /**
  * Standard implementation for interactive views which are launched on the client side via an integrated browser. They

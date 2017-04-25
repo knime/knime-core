@@ -46,7 +46,7 @@
  * History
  *   24 Feb 2017 (albrecht): created
  */
-package org.knime.workbench.editor2.subnode;
+package org.knime.core.wizard;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,13 +78,12 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLock;
-import org.knime.core.wizard.SinglePageManager;
+import org.knime.core.wizard.SubnodeViewableModel.SubnodeViewValue;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
 import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.JSONWebNodePageConfiguration;
 import org.knime.js.core.JavaScriptViewCreator;
-import org.knime.workbench.editor2.subnode.SubnodeViewableModel.SubnodeViewValue;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;

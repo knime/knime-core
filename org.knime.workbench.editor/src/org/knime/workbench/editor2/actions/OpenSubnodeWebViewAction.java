@@ -60,9 +60,9 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.wizard.SinglePageManager;
+import org.knime.core.wizard.SubnodeViewableModel;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
-import org.knime.workbench.editor2.subnode.SubnodeViewableModel;
 
 /**
  * Action to open a combined interactive web view of a subnode,

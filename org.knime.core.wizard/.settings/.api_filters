@@ -18,6 +18,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/core/wizard/SubnodeViewableModel.java" type="org.knime.core.wizard.SubnodeViewableModel">
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="WorkflowLock"/>
+                <message_argument value="SubnodeViewableModel"/>
+                <message_argument value="close()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/core/wizard/WizardPageManager.java" type="org.knime.core.wizard.WizardPageManager">
         <filter id="640712815">
             <message_arguments>
