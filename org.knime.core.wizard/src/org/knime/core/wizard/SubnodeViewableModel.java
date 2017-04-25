@@ -87,7 +87,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- *
+ * ViewableModel implementation for combined subnode views.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
@@ -151,17 +151,8 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 } else {
                     // node was 're-executed', i.e. user clicked 'apply' button in view and subsequent
                     // reset->configured->executing events were swallowed as part of m_isReexecutionInProgress
-                    try {
-                        SubnodeViewValue newValue = createViewValue();
-                        assert newValue != null : "value supposed to be non-null after reexecute";
-                        if (m_view != null && newValue.equals(m_view.getLastRetrievedValue())) {
-                            isCallModelChanged = false;
-                        } else {
-                            m_value = newValue;
-                        }
-                    } catch (IOException e) {
-                        LOGGER.error("Retrieving view value map failed: " + e.getMessage(), e);
-                        reset();
+                    if (m_view != null && v.equals(m_view.getLastRetrievedValue())) {
+                        isCallModelChanged = false;
                     }
                 }
             } else if (v != null) {
