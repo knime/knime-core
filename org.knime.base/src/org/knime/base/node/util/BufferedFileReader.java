@@ -494,6 +494,7 @@ public final class BufferedFileReader extends BufferedReader {
      * @param dataLocation the URL of the source to read from. If it is zipped
      *            it will try to open a ZIP stream on it.
      * @param charsetName the character set to use. Must be supported by the VM
+     * @param timeout timeout for the reader. Can be {@code null}, which results in usage of default value
      * @return reader reading from the specified location.
      *
      * @throws IOException if something went wrong when opening the stream.
@@ -502,9 +503,10 @@ public final class BufferedFileReader extends BufferedReader {
      * @throws java.nio.charset.UnsupportedCharsetException If no support for
      *             the named charset is available in this instance of the Java
      *             virtual machine
+     * @since 3.4
      */
     public static BufferedFileReader createNewReader(final URL dataLocation,
-            final String charsetName) throws IOException {
+            final String charsetName, final Integer timeout) throws IOException {
 
         if (dataLocation == null) {
             throw new NullPointerException("Can't open a stream on a null "
@@ -525,9 +527,9 @@ public final class BufferedFileReader extends BufferedReader {
             // stream passed to the reader (either zipped or unzipped stream)
             InputStreamReader readerStream;
             // the stream used to get the byte count from
-            ByteCountingStream sourceStream =
-                    new ByteCountingStream(new BufferedInputStream(
-                            FileUtil.openStreamWithTimeout(dataLocation)));
+            ByteCountingStream sourceStream = new ByteCountingStream(
+                new BufferedInputStream(timeout != null ? FileUtil.openStreamWithTimeout(dataLocation, timeout)
+                    : FileUtil.openStreamWithTimeout(dataLocation)));
 
             try {
                 // first see if its a GZIPped file
@@ -537,9 +539,9 @@ public final class BufferedFileReader extends BufferedReader {
             } catch (Exception e) {
                 // if not, it could be a ZIPped file
                 sourceStream.close(); // close and reopen
-                sourceStream =
-                        new ByteCountingStream(new BufferedInputStream(
-                            FileUtil.openStreamWithTimeout(dataLocation)));
+                sourceStream = new ByteCountingStream(
+                    new BufferedInputStream(timeout != null ? FileUtil.openStreamWithTimeout(dataLocation, timeout)
+                        : FileUtil.openStreamWithTimeout(dataLocation)));
 
                 try {
                     zipStream = new ZipInputStream(sourceStream);
@@ -565,9 +567,9 @@ public final class BufferedFileReader extends BufferedReader {
             // couldn't figure out which reader to use? Take a regular one.
             if (readerStream == null) {
                 sourceStream.close(); // close and reopen
-                sourceStream =
-                        new ByteCountingStream(new BufferedInputStream(
-                                FileUtil.openStreamWithTimeout(dataLocation)));
+                sourceStream = new ByteCountingStream(
+                    new BufferedInputStream(timeout != null ? FileUtil.openStreamWithTimeout(dataLocation, timeout)
+                        : FileUtil.openStreamWithTimeout(dataLocation)));
                 readerStream = new InputStreamReader(sourceStream, cs);
 
             }
@@ -602,6 +604,36 @@ public final class BufferedFileReader extends BufferedReader {
             throw new IOException("Can't access '"
                     + dataLocation + "'. (" + msg + ")", e);
         }
+    }
+
+    /**
+     * Creates a new reader from the specified location with the default
+     * character set from the Java VM. The returned reader can be asked for the
+     * number of bytes read from the stream ({@link #getNumberOfBytesRead()}),
+     * and, if the location specifies a local file - and the size of it can be
+     * retrieved - the overall byte count in the stream
+     * ({@link #getFileSize()}).<br>
+     * If the specified file is compressed, it will try to create a ZIP stream
+     * (and the byte counts refer both to the compressed file).<br>
+     * In addition this reader can be asked for the current line it is reading
+     * from ({@link #getCurrentLine()})and the current line number
+     * ({@link #getCurrentLineNumber()}).
+     *
+     * @param dataLocation the URL of the source to read from. If it is zipped
+     *            it will try to open a ZIP stream on it.
+     * @param charsetName the character set to use. Must be supported by the VM
+     * @return reader reading from the specified location.
+     *
+     * @throws IOException if something went wrong when opening the stream.
+     * @throws java.nio.charset.IllegalCharsetNameException If the given charset
+     *             name is illegal
+     * @throws java.nio.charset.UnsupportedCharsetException If no support for
+     *             the named charset is available in this instance of the Java
+     *             virtual machine
+     */
+    public static BufferedFileReader createNewReader(final URL dataLocation,
+            final String charsetName) throws IOException {
+        return createNewReader(dataLocation, charsetName, null);
     }
 
     /**

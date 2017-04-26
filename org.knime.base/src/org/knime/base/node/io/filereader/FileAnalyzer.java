@@ -152,6 +152,7 @@ public final class FileAnalyzer {
             result.setCharsetName(userSettings.getCharsetName());
             result.setAnalyzeUsedAllRows(true);
             result.setMissValuePatternStrCols(userSettings.getMissValuePatternStrCols());
+            result.setConnectTimeout(userSettings.getConnectTimeout());
 
             //if the user didn't provide the charset, identify it by looking at the first bytes of the stream
             if (!userSettings.isCharsetUserSet()) {

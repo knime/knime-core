@@ -183,6 +183,8 @@ public class CSVReaderNodeModel extends NodeModel {
         settings.setCharsetName(m_config.getCharSetName());
         settings.setCharsetUserSet(true);
 
+        settings.setConnectTimeout(m_config.getConnectTimeout());
+
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");
