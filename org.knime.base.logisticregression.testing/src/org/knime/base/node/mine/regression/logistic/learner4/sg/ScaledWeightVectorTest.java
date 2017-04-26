@@ -44,25 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.04.2017 (Adrian): created
+ *   25.04.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 /**
- * Unit tests for the SimpleWeightVector.
+ * Contains unit tests for ScaledWeightVector objects.<br>
+ * Extends {@link AbstractWeightVectorTest}.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class SimpleWeightVectorTest extends AbstractWeightVectorTest {
+public class ScaledWeightVectorTest extends AbstractWeightVectorTest {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected SimpleWeightVector<MockClassificationTrainingRow> createTestVec(
-        final boolean fitIntercept, final int nRows, final int nCols) {
-        SimpleWeightVector<MockClassificationTrainingRow> vec = new SimpleWeightVector<>(nCols, nRows + 1, fitIntercept);
+    protected ScaledWeightVector<MockClassificationTrainingRow> createTestVec(final boolean fitIntercept, final int nRows, final int nCols) {
+        ScaledWeightVector<MockClassificationTrainingRow> vec = new ScaledWeightVector<>(nCols, nRows + 1, fitIntercept);
         double[][] data = vec.m_data;
         assertEquals(data.length, nRows);
         for (int i = 0; i < data.length; i++) {
@@ -71,31 +75,30 @@ public class SimpleWeightVectorTest extends AbstractWeightVectorTest {
         return vec;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Test
     public void testScale() throws Exception {
-        SimpleWeightVector<MockClassificationTrainingRow> vec = createTestVec(false, 3, 3);
-        double[][] data = vec.m_data;
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                data[i][j] = 1.0;
-            }
-        }
+        ScaledWeightVector<MockClassificationTrainingRow> vec = createTestVec(true, 3, 3);
+        vec.update((v, c, i) -> 1, true);
 
         vec.scale(3.0);
-        assertEquals(vec.getScale(), 1.0, EPSILON);
+        assertEquals(vec.getScale(), 3.0, EPSILON);
+        double[][] data = vec.m_data;
+        double[][] expectedData = new double[][] {
+            {1.0, 1.0, 1.0},
+            {1.0, 1.0, 1.0},
+            {1.0, 1.0, 1.0}};
+        assertArrayEquals(expectedData, data);
         double[][] beta = vec.getWeightVector();
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (j == 0) {
-                    assertEquals(data[i][j], 1.0, EPSILON);
-                    assertEquals(beta[i][j], 1.0, EPSILON);
-                } else {
-                    assertEquals(data[i][j], 3.0, EPSILON);
-                    assertEquals(beta[i][j], 3.0, EPSILON);
-                }
-            }
-        }
+        double[][] expectedBeta = new double[][] {
+            {1.0, 3.0, 3.0},
+            {1.0, 3.0, 3.0},
+            {1.0, 3.0, 3.0}
+        };
+        assertArrayEquals(expectedBeta, beta);
     }
 
 }
