@@ -72,6 +72,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
         final double logSumExp = logSumExp(prediction);
         assert Double.isFinite(logSumExp);
         final int cat = row.getCategory();
+        assert cat <= prediction.length;
         return cat == prediction.length ? logSumExp : logSumExp - prediction[row.getCategory()];
     }
 
@@ -87,7 +88,6 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
             double p = Math.exp(prediction[i] - logSumExp);
             assert Double.isFinite(p) && p <= 1.0 && p >= 0.0 ;
             gradient[i] = cat == i ? p - 1.0 : p;
-
         }
         return gradient;
     }
