@@ -62,17 +62,17 @@ public interface NodeOutPortEntBuilder extends GatewayEntityBuilder<NodeOutPortE
      * @return <code>this</code>
      */
 	NodeOutPortEntBuilder setPortIndex(int portIndex);
-
+	
     /**
      * @param portType The type of the port.
      * @return <code>this</code>
      */
 	NodeOutPortEntBuilder setPortType(PortTypeEnt portType);
-
+	
     /**
      * @param portName The name of the port.
      * @return <code>this</code>
      */
 	NodeOutPortEntBuilder setPortName(String portName);
-
+	
 }

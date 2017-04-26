@@ -47,14 +47,26 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -69,16 +81,25 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeEntFromJson implements NodeEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = NodeEntFromJson.class, name = "NodeEnt")
+,
+  @Type(value = NativeNodeEntFromJson.class, name = "NativeNodeEnt"),
+  @Type(value = WorkflowEntFromJson.class, name = "WorkflowEnt")})
+public class NodeEntFromJson  implements NodeEnt {
 
-	private EntityIDFromJson m_Parent;
-	private JobManagerEntFromJson m_JobManager;
+	private String m_Parent;
+	private Optional<JobManagerEntFromJson> m_JobManager;
 	private NodeMessageEntFromJson m_NodeMessage;
 	private List<NodeInPortEntFromJson> m_InPorts;
 	private List<NodeOutPortEntFromJson> m_OutPorts;
 	private String m_Name;
 	private String m_NodeID;
-	private String m_NodeTypeID;
 	private String m_NodeType;
 	private BoundsEntFromJson m_Bounds;
 	private boolean m_IsDeletable;
@@ -88,15 +109,14 @@ public class NodeEntFromJson implements NodeEnt{
 
 	@JsonCreator
 	private NodeEntFromJson(
-	@JsonProperty("Parent") EntityIDFromJson Parent,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeTypeID") String NodeTypeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
+	@JsonProperty("Parent") String Parent,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
 		m_Parent = Parent;
-		m_JobManager = JobManager;
+		m_JobManager = Optional.ofNullable(JobManager);
 		m_NodeMessage = NodeMessage;
 		m_InPorts = InPorts;
 		m_OutPorts = OutPorts;
 		m_Name = Name;
 		m_NodeID = NodeID;
-		m_NodeTypeID = NodeTypeID;
 		m_NodeType = NodeType;
 		m_Bounds = Bounds;
 		m_IsDeletable = IsDeletable;
@@ -104,17 +124,21 @@ public class NodeEntFromJson implements NodeEnt{
 		m_HasDialog = HasDialog;
 		m_NodeAnnotation = NodeAnnotation;
 	}
+	
+	protected NodeEntFromJson() {
+		//just a dummy constructor for subclasses
+	}
 
 
 	@Override
-    public EntityID getParent() {
-            return (EntityID) m_Parent;
+    public String getParent() {
+        	return m_Parent;
             
     }
     
 	@Override
-    public JobManagerEnt getJobManager() {
-            return (JobManagerEnt) m_JobManager;
+    public Optional<JobManagerEnt> getJobManager() {
+        	return m_JobManager.map(o -> (JobManagerEnt) o);
             
     }
     
@@ -145,12 +169,6 @@ public class NodeEntFromJson implements NodeEnt{
 	@Override
     public String getNodeID() {
         	return m_NodeID;
-            
-    }
-    
-	@Override
-    public String getNodeTypeID() {
-        	return m_NodeTypeID;
             
     }
     

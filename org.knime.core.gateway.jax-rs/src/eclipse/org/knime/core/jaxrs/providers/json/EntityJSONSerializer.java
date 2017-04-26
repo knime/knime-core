@@ -43,6 +43,7 @@ import org.knime.core.jaxrs.IOClasses;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  * Mainly serializes entities ({@link GatewayEntity}) to JSON. Jackson annotations of the objects/values to be serialized are
@@ -101,6 +102,10 @@ public class EntityJSONSerializer implements MessageBodyWriter<Object> {
                 }
             }).orElse(value);
         httpHeaders.putSingle(HttpHeaders.CONTENT_TYPE, mediaType + ";charset=UTF-8");
+
+        m_jsonMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        System.out.println(m_jsonMapper.writeValueAsString(wrappedValue));
+
         ObjectWriter writer = m_jsonMapper.writerWithView(Views.Default.class);
         writer.writeValue(new CloseShieldOutputStream(entityStream), wrappedValue);
         entityStream.write('\n');

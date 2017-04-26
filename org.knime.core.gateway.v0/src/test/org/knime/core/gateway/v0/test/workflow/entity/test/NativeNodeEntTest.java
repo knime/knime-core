@@ -57,8 +57,8 @@ import java.util.Random;
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 import java.util.List;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -68,7 +68,6 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
@@ -97,8 +96,8 @@ public class NativeNodeEntTest {
     public static NativeNodeEnt createEnt(final List<Object> valueList) {
         NativeNodeEntBuilder builder = EntityBuilderManager.builder(NativeNodeEntBuilder.class);
 		builder.setNodeFactoryID(NodeFactoryIDEntTest.createEnt((List<Object>) valueList.get(0)));
-		builder.setParent(EntityIDTest.createEnt((List<Object>) valueList.get(1)));
-		builder.setJobManager(JobManagerEntTest.createEnt((List<Object>) valueList.get(2)));
+		builder.setParent((String) valueList.get(1));
+		builder.setJobManager(Optional.of(JobManagerEntTest.createEnt((List<Object>) valueList.get(2))));
 		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(3)));
 		List<NodeInPortEnt> list4 = new ArrayList<>();
 		List<Object> subList4 = (List<Object>) valueList.get(4);
@@ -114,20 +113,19 @@ public class NativeNodeEntTest {
 		builder.setOutPorts(list5);
 		builder.setName((String) valueList.get(6));
 		builder.setNodeID((String) valueList.get(7));
-		builder.setNodeTypeID((String) valueList.get(8));
-		builder.setNodeType((String) valueList.get(9));
-		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(10)));
-		builder.setIsDeletable((boolean) valueList.get(11));
-		builder.setNodeState((String) valueList.get(12));
-		builder.setHasDialog((boolean) valueList.get(13));
-		builder.setNodeAnnotation(NodeAnnotationEntTest.createEnt((List<Object>) valueList.get(14)));
+		builder.setNodeType((String) valueList.get(8));
+		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(9)));
+		builder.setIsDeletable((boolean) valueList.get(10));
+		builder.setNodeState((String) valueList.get(11));
+		builder.setHasDialog((boolean) valueList.get(12));
+		builder.setNodeAnnotation(NodeAnnotationEntTest.createEnt((List<Object>) valueList.get(13)));
         return builder.build();
     }
 
     public static void testEnt(final NativeNodeEnt ent, final List<Object> valueList) {
 		NodeFactoryIDEntTest.testEnt(ent.getNodeFactoryID(), (List<Object>) valueList.get(0));
-		EntityIDTest.testEnt(ent.getParent(), (List<Object>) valueList.get(1));
-		JobManagerEntTest.testEnt(ent.getJobManager(), (List<Object>) valueList.get(2));
+		assertEquals(ent.getParent(), (String) valueList.get(1));
+		JobManagerEntTest.testEnt(ent.getJobManager().get(), (List<Object>) valueList.get(2));
 		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(3));
 		List<Object> subValueList4 = (List<Object>) valueList.get(4);
 		List<NodeInPortEnt> subList4 =  ent.getInPorts();
@@ -141,22 +139,21 @@ public class NativeNodeEntTest {
 		}
 		assertEquals(ent.getName(), (String) valueList.get(6));
 		assertEquals(ent.getNodeID(), (String) valueList.get(7));
-		assertEquals(ent.getNodeTypeID(), (String) valueList.get(8));
-		assertEquals(ent.getNodeType(), (String) valueList.get(9));
-		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(10));
-		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(11));
-		assertEquals(ent.getNodeState(), (String) valueList.get(12));
-		assertEquals(ent.getHasDialog(), (boolean) valueList.get(13));
-		NodeAnnotationEntTest.testEnt(ent.getNodeAnnotation(), (List<Object>) valueList.get(14));
+		assertEquals(ent.getNodeType(), (String) valueList.get(8));
+		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(9));
+		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(10));
+		assertEquals(ent.getNodeState(), (String) valueList.get(11));
+		assertEquals(ent.getHasDialog(), (boolean) valueList.get(12));
+		NodeAnnotationEntTest.testEnt(ent.getNodeAnnotation(), (List<Object>) valueList.get(13));
     }
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
  		valueList.add(NodeFactoryIDEntTest.createValueList());
 
- 		valueList.add(EntityIDTest.createValueList());
+ 		valueList.add("CGvxL");
 
- 		valueList.add(JobManagerEntTest.createValueList());
+		valueList.add(JobManagerEntTest.createValueList());
 
  		valueList.add(NodeMessageEntTest.createValueList());
 
@@ -176,21 +173,19 @@ public class NativeNodeEntTest {
 		subList6.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList6);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add("CGvxL");	
-
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(true);	
+ 		valueList.add(true);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add(true);	
+ 		valueList.add(true);
 
  		valueList.add(NodeAnnotationEntTest.createValueList());
 

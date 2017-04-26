@@ -56,8 +56,12 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodePortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 
@@ -93,11 +97,11 @@ public class NodePortEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
  		valueList.add(PortTypeEntTest.createValueList());
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
         return valueList;
     }

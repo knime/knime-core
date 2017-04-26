@@ -57,75 +57,75 @@ import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 public interface NodeAnnotationEntBuilder extends GatewayEntityBuilder<NodeAnnotationEnt> {
 
     /**
-     * @param node The node to which this annotation is attached.
+     * @param isDefault Default node annotation.
      * @return <code>this</code>
      */
-	NodeAnnotationEntBuilder setNode(String node);
-
+	NodeAnnotationEntBuilder setIsDefault(boolean isDefault);
+	
     /**
      * @param text The text.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setText(String text);
-
+	
     /**
      * @param backgroundColor The background color.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setBackgroundColor(int backgroundColor);
-
+	
     /**
      * @param x The x coordinate.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setX(int x);
-
+	
     /**
      * @param y The y coordinate.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setY(int y);
-
+	
     /**
      * @param width The width.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setWidth(int width);
-
+	
     /**
      * @param height The height.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setHeight(int height);
-
+	
     /**
      * @param textAlignment The text alignment.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setTextAlignment(String textAlignment);
-
+	
     /**
      * @param borderSize The border width.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setBorderSize(int borderSize);
-
+	
     /**
      * @param borderColor The border color.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setBorderColor(int borderColor);
-
+	
     /**
      * @param defaultFontSize The default font size.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setDefaultFontSize(int defaultFontSize);
-
+	
     /**
      * @param version The version.
      * @return <code>this</code>
      */
 	NodeAnnotationEntBuilder setVersion(int version);
-
+	
 }

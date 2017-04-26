@@ -49,7 +49,9 @@ package org.knime.core.jaxrs.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -62,7 +64,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowAnnotationEntToJson implements WorkflowAnnotationEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class WorkflowAnnotationEntToJson  implements WorkflowAnnotationEnt {
 
 	private final WorkflowAnnotationEnt m_e;
 	
@@ -72,43 +75,53 @@ public class WorkflowAnnotationEntToJson implements WorkflowAnnotationEnt{
 
 	@JsonProperty("Text")
     public String getText() {
-        	return m_e.getText();
-        }
+    	return m_e.getText();
+    }
     
 	@JsonProperty("Bounds")
     public BoundsEnt getBounds() {
-            return new BoundsEntToJson(m_e.getBounds());
-        }
+        return BoundsEntToJson.wrap(m_e.getBounds());
+    }
     
 	@JsonProperty("BgColor")
     public int getBgColor() {
-        	return m_e.getBgColor();
-        }
+    	return m_e.getBgColor();
+    }
     
 	@JsonProperty("BorderSize")
     public int getBorderSize() {
-        	return m_e.getBorderSize();
-        }
+    	return m_e.getBorderSize();
+    }
     
 	@JsonProperty("BorderColor")
     public int getBorderColor() {
-        	return m_e.getBorderColor();
-        }
+    	return m_e.getBorderColor();
+    }
     
 	@JsonProperty("FontSize")
     public int getFontSize() {
-        	return m_e.getFontSize();
-        }
+    	return m_e.getFontSize();
+    }
     
 	@JsonProperty("Alignment")
     public String getAlignment() {
-        	return m_e.getAlignment();
-        }
+    	return m_e.getAlignment();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "WorkflowAnnotationEnt";
+	}
+	
+	public static WorkflowAnnotationEnt wrap(WorkflowAnnotationEnt e) {
+	    return new WorkflowAnnotationEntToJson(e);
 	}
 
 }

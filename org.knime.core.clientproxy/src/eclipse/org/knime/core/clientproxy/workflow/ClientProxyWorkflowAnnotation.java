@@ -56,6 +56,7 @@ import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 /**
@@ -78,8 +79,12 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public AnnotationData getData() {
-        // TODO Auto-generated method stub
-        return null;
+        BoundsEnt bounds = m_anno.getBounds();
+        return AnnotationData.builder().setAlignment(TextAlignment.valueOf(m_anno.getAlignment()))
+            .setBgColor(m_anno.getBgColor()).setBorderColor(m_anno.getBorderColor())
+            .setBorderSize(m_anno.getBorderSize()).setDefaultFontSize(m_anno.getFontSize())
+            .setDimension(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight()).setText(m_anno.getText())
+            .build();
     }
 
     /**

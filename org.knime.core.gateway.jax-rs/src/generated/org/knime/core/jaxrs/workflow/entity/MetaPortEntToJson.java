@@ -49,7 +49,9 @@ package org.knime.core.jaxrs.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -62,7 +64,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class MetaPortEntToJson implements MetaPortEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class MetaPortEntToJson  implements MetaPortEnt {
 
 	private final MetaPortEnt m_e;
 	
@@ -72,33 +75,43 @@ public class MetaPortEntToJson implements MetaPortEnt{
 
 	@JsonProperty("PortType")
     public PortTypeEnt getPortType() {
-            return new PortTypeEntToJson(m_e.getPortType());
-        }
+        return PortTypeEntToJson.wrap(m_e.getPortType());
+    }
     
 	@JsonProperty("IsConnected")
     public boolean getIsConnected() {
-        	return m_e.getIsConnected();
-        }
+    	return m_e.getIsConnected();
+    }
     
 	@JsonProperty("Message")
     public String getMessage() {
-        	return m_e.getMessage();
-        }
+    	return m_e.getMessage();
+    }
     
 	@JsonProperty("OldIndex")
     public int getOldIndex() {
-        	return m_e.getOldIndex();
-        }
+    	return m_e.getOldIndex();
+    }
     
 	@JsonProperty("NewIndex")
     public int getNewIndex() {
-        	return m_e.getNewIndex();
-        }
+    	return m_e.getNewIndex();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "MetaPortEnt";
+	}
+	
+	public static MetaPortEnt wrap(MetaPortEnt e) {
+	    return new MetaPortEntToJson(e);
 	}
 
 }

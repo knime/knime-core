@@ -48,6 +48,7 @@ package org.knime.core.gateway.v0.workflow.entity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A complete workflow.
@@ -78,14 +79,19 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
  	List<MetaPortEnt> getMetaOutPorts();
  	
     /**
-     * @return The parent of the node.
+     * @return List of all workflow annotations.
      */
- 	EntityID getParent();
+ 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
+ 	
+    /**
+     * @return The parent workflow id of the node.
+     */
+ 	String getParent();
  	
     /**
      * @return The job manager (e.g. cluster or streaming).
      */
- 	JobManagerEnt getJobManager();
+ 	Optional<JobManagerEnt> getJobManager();
  	
     /**
      * @return The current node message (warning, error, none).
@@ -111,11 +117,6 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
      * @return The ID of the node.
      */
  	String getNodeID();
- 	
-    /**
-     * @return The ID of the node type (metanode, native nodes, etc).
-     */
- 	String getNodeTypeID();
  	
     /**
      * @return The type of the node as string.

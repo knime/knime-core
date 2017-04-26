@@ -50,7 +50,9 @@ package $package;
 import $import;
 #end
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -63,36 +65,76 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ${name}ToJson implements ${name}{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class ${name}ToJson #if($superTypes.size()>0)extends #foreach ($superType in $superTypes)${superType}ToJson#if($foreach.hasNext),#end#end#end implements ${name} {
 
 	private final ${name} m_e;
 	
 	public ${name}ToJson(final ${name} e) {
+#if($superTypes.size()>0)
+		super(e);
+#end
 		m_e = e;
 	}
 
 #foreach( $field in $fields )
+#if($field.getType().isOptional())
+	@JsonIgnore
+#else
 	@JsonProperty("${field.getName()}")
-    public $field.getType().toString("","") get$field.getName()() {
-    #if($field.getType().isPrimitive() || $field.getType().isPrimitiveList() || $field.getType().isPrimitiveMap())
+#end
+    public $field.getType().toString() get$field.getName()() {
+#if($field.getType().isPrimitive() || $field.getType().isPrimitiveList() || $field.getType().isPrimitiveMap())
     	return m_e.get${field.getName()}();
-    #elseif($field.getType().isEntityList())
-    	return m_e.get${field.getName()}().stream().map(l -> new ${field.getType().getTypeParameter(0).toString("","")}ToJson(l)).collect(Collectors.toList());
-    #elseif($field.getType().isEntityMap())
-    	//TODO support non-primitive map-keys
-    	$field.getType().toString("","") res = new HashMap<>();
-        m_e.get$field.getName()().entrySet().stream().forEach(e -> res.put(e.getKey(), new $field.getType().getTypeParameter(1).toString("","")ToJson(e.getValue())));
+#elseif($field.getType().isEntityList())
+    	return m_e.get${field.getName()}().stream().map(l -> ${field.getType().getTypeParameter(0).toString()}ToJson.wrap(l)).collect(Collectors.toList());
+#elseif($field.getType().isEntityMap())
+	   	//TODO support non-primitive map-keys
+    	$field.getType().toString() res = new HashMap<>();
+        m_e.get$field.getName()().entrySet().stream().forEach(e -> res.put(e.getKey(), ${field.getType().getTypeParameter(1).toString()}ToJson.wrap(e.getValue())));
         return res;
-    #else
-        return new ${field.getType().toString("","")}ToJson(m_e.get${field.getName()}());
-    #end
+#elseif($field.getType().isOptional())
+    	return m_e.get${field.getName()}().map(o -> ${field.getType().getTypeParameter(0).toString()}ToJson.wrap(o));
+#else
+        return ${field.getType().toString()}ToJson.wrap(m_e.get${field.getName()}());
+#end
     }
     
+#end
+
+#foreach( $field in $fields )
+#if($field.getType().isOptional())
+
+	/*
+	 * Workaround to exclude the property if the respective optional is empty.
+	 * There might be a better solution. 
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty("${field.getName()}")
+	public $field.getType().getTypeParameter(0).toString() get${field.getName()}Nullable() {
+		return get${field.getName()}().orElse(null);
+	}
+	
+#end
 #end
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "${name}";
+	}
+	
+	public static $name wrap($name e) {
+#foreach($subType in $subTypes)
+	    if(e instanceof $subType) {
+	        return ${subType}ToJson.wrap((${subType}) e);
+	    }
+#end
+	    return new ${name}ToJson(e);
 	}
 
 }

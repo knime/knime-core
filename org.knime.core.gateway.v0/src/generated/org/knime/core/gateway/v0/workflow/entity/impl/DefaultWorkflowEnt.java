@@ -48,9 +48,9 @@ package org.knime.core.gateway.v0.workflow.entity.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -58,6 +58,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 
@@ -78,14 +79,14 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 	private List<ConnectionEnt> m_Connections;
 	private List<MetaPortEnt> m_MetaInPorts;
 	private List<MetaPortEnt> m_MetaOutPorts;
-	private EntityID m_Parent;
-	private JobManagerEnt m_JobManager;
+	private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
+	private String m_Parent;
+	private Optional<JobManagerEnt> m_JobManager;
 	private NodeMessageEnt m_NodeMessage;
 	private List<NodeInPortEnt> m_InPorts;
 	private List<NodeOutPortEnt> m_OutPorts;
 	private String m_Name;
 	private String m_NodeID;
-	private String m_NodeTypeID;
 	private String m_NodeType;
 	private BoundsEnt m_Bounds;
 	private boolean m_IsDeletable;
@@ -101,6 +102,7 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 		m_Connections = builder.m_Connections;
 		m_MetaInPorts = builder.m_MetaInPorts;
 		m_MetaOutPorts = builder.m_MetaOutPorts;
+		m_WorkflowAnnotations = builder.m_WorkflowAnnotations;
 		m_Parent = builder.m_Parent;
 		m_JobManager = builder.m_JobManager;
 		m_NodeMessage = builder.m_NodeMessage;
@@ -108,7 +110,6 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 		m_OutPorts = builder.m_OutPorts;
 		m_Name = builder.m_Name;
 		m_NodeID = builder.m_NodeID;
-		m_NodeTypeID = builder.m_NodeTypeID;
 		m_NodeType = builder.m_NodeType;
 		m_Bounds = builder.m_Bounds;
 		m_IsDeletable = builder.m_IsDeletable;
@@ -138,12 +139,17 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
     }
     
 	@Override
-    public EntityID getParent() {
+    public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
+        return m_WorkflowAnnotations;
+    }
+    
+	@Override
+    public String getParent() {
         return m_Parent;
     }
     
 	@Override
-    public JobManagerEnt getJobManager() {
+    public Optional<JobManagerEnt> getJobManager() {
         return m_JobManager;
     }
     
@@ -170,11 +176,6 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 	@Override
     public String getNodeID() {
         return m_NodeID;
-    }
-    
-	@Override
-    public String getNodeTypeID() {
-        return m_NodeTypeID;
     }
     
 	@Override
@@ -226,14 +227,14 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 		private List<ConnectionEnt> m_Connections;
 		private List<MetaPortEnt> m_MetaInPorts;
 		private List<MetaPortEnt> m_MetaOutPorts;
-		private EntityID m_Parent;
-		private JobManagerEnt m_JobManager;
+		private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
+		private String m_Parent;
+		private Optional<JobManagerEnt> m_JobManager;
 		private NodeMessageEnt m_NodeMessage;
 		private List<NodeInPortEnt> m_InPorts;
 		private List<NodeOutPortEnt> m_OutPorts;
 		private String m_Name;
 		private String m_NodeID;
-		private String m_NodeTypeID;
 		private String m_NodeType;
 		private BoundsEnt m_Bounds;
 		private boolean m_IsDeletable;
@@ -270,13 +271,19 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
         }
         
 		@Override
-        public WorkflowEntBuilder setParent(final EntityID Parent) {
+        public WorkflowEntBuilder setWorkflowAnnotations(final List<WorkflowAnnotationEnt> WorkflowAnnotations) {
+			m_WorkflowAnnotations = WorkflowAnnotations;			
+            return this;
+        }
+        
+		@Override
+        public WorkflowEntBuilder setParent(final String Parent) {
 			m_Parent = Parent;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setJobManager(final JobManagerEnt JobManager) {
+        public WorkflowEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
 			m_JobManager = JobManager;			
             return this;
         }
@@ -308,12 +315,6 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 		@Override
         public WorkflowEntBuilder setNodeID(final String NodeID) {
 			m_NodeID = NodeID;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setNodeTypeID(final String NodeTypeID) {
-			m_NodeTypeID = NodeTypeID;			
             return this;
         }
         

@@ -46,6 +46,8 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
@@ -61,17 +63,17 @@ public interface NodePortEntBuilder extends GatewayEntityBuilder<NodePortEnt> {
      * @return <code>this</code>
      */
 	NodePortEntBuilder setPortIndex(int portIndex);
-
+	
     /**
      * @param portType The type of the port.
      * @return <code>this</code>
      */
 	NodePortEntBuilder setPortType(PortTypeEnt portType);
-
+	
     /**
      * @param portName The name of the port.
      * @return <code>this</code>
      */
 	NodePortEntBuilder setPortName(String portName);
-
+	
 }

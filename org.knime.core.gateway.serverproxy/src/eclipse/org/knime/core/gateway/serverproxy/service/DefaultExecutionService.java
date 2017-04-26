@@ -85,7 +85,7 @@ public class DefaultExecutionService implements ExecutionService {
             IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID).openProject();
             wfm.executeUpToHere(NodeID.fromString(nodeID));
             //TODO only update the downstream nodes, or better: the ones that changed its status
-            return buildWorkflowEnt(wfm);
+            return buildWorkflowEnt(wfm, workflowID);
         } catch (Exception ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);

@@ -50,7 +50,9 @@ import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -63,7 +65,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ConnectionEntToJson implements ConnectionEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class ConnectionEntToJson  implements ConnectionEnt {
 
 	private final ConnectionEnt m_e;
 	
@@ -73,43 +76,53 @@ public class ConnectionEntToJson implements ConnectionEnt{
 
 	@JsonProperty("Dest")
     public String getDest() {
-        	return m_e.getDest();
-        }
+    	return m_e.getDest();
+    }
     
 	@JsonProperty("DestPort")
     public int getDestPort() {
-        	return m_e.getDestPort();
-        }
+    	return m_e.getDestPort();
+    }
     
 	@JsonProperty("Source")
     public String getSource() {
-        	return m_e.getSource();
-        }
+    	return m_e.getSource();
+    }
     
 	@JsonProperty("SourcePort")
     public int getSourcePort() {
-        	return m_e.getSourcePort();
-        }
+    	return m_e.getSourcePort();
+    }
     
 	@JsonProperty("IsDeleteable")
     public boolean getIsDeleteable() {
-        	return m_e.getIsDeleteable();
-        }
+    	return m_e.getIsDeleteable();
+    }
     
 	@JsonProperty("BendPoints")
     public List<XYEnt> getBendPoints() {
-        	return m_e.getBendPoints().stream().map(l -> new XYEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getBendPoints().stream().map(l -> XYEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
 	@JsonProperty("Type")
     public String getType() {
-        	return m_e.getType();
-        }
+    	return m_e.getType();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "ConnectionEnt";
+	}
+	
+	public static ConnectionEnt wrap(ConnectionEnt e) {
+	    return new ConnectionEntToJson(e);
 	}
 
 }

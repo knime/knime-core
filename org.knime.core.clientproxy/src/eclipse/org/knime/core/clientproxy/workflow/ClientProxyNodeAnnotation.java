@@ -91,7 +91,8 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
         .setDefaultFontSize(m_nodeAnnotation.getDefaultFontSize())
         .setHeight(m_nodeAnnotation.getHeight())
         .setWidth(m_nodeAnnotation.getWidth())
-        .setAlignment(TextAlignment.valueOf(m_nodeAnnotation.getTextAlignment())).build();
+        .setAlignment(TextAlignment.valueOf(m_nodeAnnotation.getTextAlignment()))
+        .setIsDefault(m_nodeAnnotation.getIsDefault()).build();
     }
 
     /**
@@ -115,7 +116,8 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public StyleRange[] getStyleRanges() {
-        throw new UnsupportedOperationException();
+        //TODO
+        return null;
     }
 
     /**
@@ -219,7 +221,7 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public void setDimensionNoNotify(final int x, final int y, final int width, final int height) {
-        throw new UnsupportedOperationException();
+        //TODO
     }
 
     /**

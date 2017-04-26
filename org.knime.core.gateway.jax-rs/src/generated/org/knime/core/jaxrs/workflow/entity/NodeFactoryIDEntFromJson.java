@@ -48,6 +48,11 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,7 +66,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeFactoryIDEntFromJson implements NodeFactoryIDEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = NodeFactoryIDEntFromJson.class, name = "NodeFactoryIDEnt")
+})
+public class NodeFactoryIDEntFromJson  implements NodeFactoryIDEnt {
 
 	private String m_ClassName;
 	private String m_NodeName;
@@ -71,6 +84,10 @@ public class NodeFactoryIDEntFromJson implements NodeFactoryIDEnt{
 	@JsonProperty("ClassName") String ClassName,	@JsonProperty("NodeName") String NodeName	) {
 		m_ClassName = ClassName;
 		m_NodeName = NodeName;
+	}
+	
+	protected NodeFactoryIDEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

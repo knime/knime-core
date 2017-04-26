@@ -73,6 +73,22 @@ public interface WorkflowService extends GatewayService {
 	void updateWorkflow(final WorkflowEnt wf);
 	
     /**
+     * Get a list of IDs for all known workflows within the given workflow group
+     * @param workflowGroupID The ID of the workflow group or 'root'
+     * @return list of workflow ids
+     * 
+     */ 
+	List<String> getWorkflowIDs(final String workflowGroupID);
+	
+    /**
+     * Get a list of IDs for all known workflow groups within the given workflow group
+     * @param workflowGroupID The ID of the workflow group or 'root'
+     * @return list of workflow group ids
+     * 
+     */ 
+	List<String> getWorkflowGroupIDs(final String workflowGroupID);
+	
+    /**
      * Get a list of IDs for all known workflows
      * @return BERND
      * 

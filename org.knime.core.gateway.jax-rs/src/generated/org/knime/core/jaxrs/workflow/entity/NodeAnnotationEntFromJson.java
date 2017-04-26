@@ -49,6 +49,11 @@ package org.knime.core.jaxrs.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -62,9 +67,17 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeAnnotationEntFromJson implements NodeAnnotationEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = NodeAnnotationEntFromJson.class, name = "NodeAnnotationEnt")
+})
+public class NodeAnnotationEntFromJson extends AnnotationEntFromJson implements NodeAnnotationEnt {
 
-	private String m_Node;
+	private boolean m_IsDefault;
 	private String m_Text;
 	private int m_BackgroundColor;
 	private int m_X;
@@ -79,8 +92,8 @@ public class NodeAnnotationEntFromJson implements NodeAnnotationEnt{
 
 	@JsonCreator
 	private NodeAnnotationEntFromJson(
-	@JsonProperty("Node") String Node,	@JsonProperty("Text") String Text,	@JsonProperty("BackgroundColor") int BackgroundColor,	@JsonProperty("X") int X,	@JsonProperty("Y") int Y,	@JsonProperty("Width") int Width,	@JsonProperty("Height") int Height,	@JsonProperty("TextAlignment") String TextAlignment,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("DefaultFontSize") int DefaultFontSize,	@JsonProperty("Version") int Version	) {
-		m_Node = Node;
+	@JsonProperty("IsDefault") boolean IsDefault,	@JsonProperty("Text") String Text,	@JsonProperty("BackgroundColor") int BackgroundColor,	@JsonProperty("X") int X,	@JsonProperty("Y") int Y,	@JsonProperty("Width") int Width,	@JsonProperty("Height") int Height,	@JsonProperty("TextAlignment") String TextAlignment,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("DefaultFontSize") int DefaultFontSize,	@JsonProperty("Version") int Version	) {
+		m_IsDefault = IsDefault;
 		m_Text = Text;
 		m_BackgroundColor = BackgroundColor;
 		m_X = X;
@@ -93,11 +106,15 @@ public class NodeAnnotationEntFromJson implements NodeAnnotationEnt{
 		m_DefaultFontSize = DefaultFontSize;
 		m_Version = Version;
 	}
+	
+	protected NodeAnnotationEntFromJson() {
+		//just a dummy constructor for subclasses
+	}
 
 
 	@Override
-    public String getNode() {
-        	return m_Node;
+    public boolean getIsDefault() {
+        	return m_IsDefault;
             
     }
     

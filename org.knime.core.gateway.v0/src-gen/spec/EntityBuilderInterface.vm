@@ -66,6 +66,6 @@ public interface ${name}Builder extends GatewayEntityBuilder<${name}> {
      * @return <code>this</code>
      */
 	${name}Builder set$field.getName()($field.getType().toString("","") $StringUtils.uncapitalize($field.getName()));
-
+	
 #end
 }

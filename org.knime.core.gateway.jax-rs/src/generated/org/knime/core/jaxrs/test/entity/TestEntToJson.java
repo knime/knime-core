@@ -52,7 +52,9 @@ import org.knime.core.gateway.v0.test.entity.TestEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.jaxrs.workflow.entity.XYEntToJson;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -65,7 +67,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TestEntToJson implements TestEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class TestEntToJson  implements TestEnt {
 
 	private final TestEnt m_e;
 	
@@ -75,41 +78,51 @@ public class TestEntToJson implements TestEnt{
 
 	@JsonProperty("XY")
     public XYEnt getXY() {
-            return new XYEntToJson(m_e.getXY());
-        }
+        return XYEntToJson.wrap(m_e.getXY());
+    }
     
 	@JsonProperty("XYList")
     public List<XYEnt> getXYList() {
-        	return m_e.getXYList().stream().map(l -> new XYEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getXYList().stream().map(l -> XYEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
 	@JsonProperty("Other")
     public String getOther() {
-        	return m_e.getOther();
-        }
+    	return m_e.getOther();
+    }
     
 	@JsonProperty("PrimitiveList")
     public List<String> getPrimitiveList() {
-        	return m_e.getPrimitiveList();
-        }
+    	return m_e.getPrimitiveList();
+    }
     
 	@JsonProperty("XYMap")
     public Map<String, XYEnt> getXYMap() {
-        	//TODO support non-primitive map-keys
+	   	//TODO support non-primitive map-keys
     	Map<String, XYEnt> res = new HashMap<>();
-        m_e.getXYMap().entrySet().stream().forEach(e -> res.put(e.getKey(), new XYEntToJson(e.getValue())));
+        m_e.getXYMap().entrySet().stream().forEach(e -> res.put(e.getKey(), XYEntToJson.wrap(e.getValue())));
         return res;
-        }
+    }
     
 	@JsonProperty("PrimitiveMap")
     public Map<Integer, String> getPrimitiveMap() {
-        	return m_e.getPrimitiveMap();
-        }
+    	return m_e.getPrimitiveMap();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "TestEnt";
+	}
+	
+	public static TestEnt wrap(TestEnt e) {
+	    return new TestEntToJson(e);
 	}
 
 }

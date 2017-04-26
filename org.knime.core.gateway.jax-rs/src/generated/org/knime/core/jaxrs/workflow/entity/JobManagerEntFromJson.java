@@ -48,6 +48,11 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,7 +66,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class JobManagerEntFromJson implements JobManagerEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = JobManagerEntFromJson.class, name = "JobManagerEnt")
+})
+public class JobManagerEntFromJson  implements JobManagerEnt {
 
 	private String m_Name;
 	private String m_JobManagerID;
@@ -71,6 +84,10 @@ public class JobManagerEntFromJson implements JobManagerEnt{
 	@JsonProperty("Name") String Name,	@JsonProperty("JobManagerID") String JobManagerID	) {
 		m_Name = Name;
 		m_JobManagerID = JobManagerID;
+	}
+	
+	protected JobManagerEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

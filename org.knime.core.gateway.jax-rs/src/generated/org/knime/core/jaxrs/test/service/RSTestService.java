@@ -70,6 +70,7 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 @Path("/TestService")
 public interface RSTestService extends TestService {
 
@@ -77,18 +78,20 @@ public interface RSTestService extends TestService {
 	@Override
     @POST
 	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/test")
     public TestEnt updateTest(
-		 final TestEnt id);
+		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final TestEnt id);
 
 	@Override
     @POST
 	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/testlist")
     public List<TestEnt> updateTestList(
-		 final List<TestEnt> list);
+		@IOClasses(in=TestEntFromJson.class, out=TestEntToJson.class) final List<TestEnt> list);
 
 	@Override
     @POST

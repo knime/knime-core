@@ -49,6 +49,11 @@ package org.knime.core.jaxrs.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -62,7 +67,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class MetaPortEntFromJson implements MetaPortEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = MetaPortEntFromJson.class, name = "MetaPortEnt")
+})
+public class MetaPortEntFromJson  implements MetaPortEnt {
 
 	private PortTypeEntFromJson m_PortType;
 	private boolean m_IsConnected;
@@ -78,6 +91,10 @@ public class MetaPortEntFromJson implements MetaPortEnt{
 		m_Message = Message;
 		m_OldIndex = OldIndex;
 		m_NewIndex = NewIndex;
+	}
+	
+	protected MetaPortEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

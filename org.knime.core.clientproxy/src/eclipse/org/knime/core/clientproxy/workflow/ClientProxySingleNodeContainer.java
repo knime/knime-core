@@ -71,7 +71,7 @@ public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer imp
      */
     @Override
     public boolean isMemberOfScope() {
-        // TODO Auto-generated method stub
+        // TODO
         return false;
     }
 
@@ -80,7 +80,7 @@ public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer imp
      */
     @Override
     public boolean isInactive() {
-        // TODO Auto-generated method stub
+        // TODO
         return false;
     }
 
@@ -89,7 +89,7 @@ public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer imp
      */
     @Override
     public Element getXMLDescription() {
-        // TODO Auto-generated method stub
+        // TODO get xml description from underlying node model, if a native node
         return null;
     }
 

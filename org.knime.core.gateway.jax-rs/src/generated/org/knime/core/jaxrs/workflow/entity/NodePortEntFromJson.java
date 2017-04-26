@@ -46,8 +46,15 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -62,7 +69,17 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodePortEntFromJson implements NodePortEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = NodePortEntFromJson.class, name = "NodePortEnt")
+,
+  @Type(value = NodeInPortEntFromJson.class, name = "NodeInPortEnt"),
+  @Type(value = NodeOutPortEntFromJson.class, name = "NodeOutPortEnt")})
+public class NodePortEntFromJson  implements NodePortEnt {
 
 	private int m_PortIndex;
 	private PortTypeEntFromJson m_PortType;
@@ -74,6 +91,10 @@ public class NodePortEntFromJson implements NodePortEnt{
 		m_PortIndex = PortIndex;
 		m_PortType = PortType;
 		m_PortName = PortName;
+	}
+	
+	protected NodePortEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

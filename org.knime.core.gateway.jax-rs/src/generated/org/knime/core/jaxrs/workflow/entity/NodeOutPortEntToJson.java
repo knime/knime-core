@@ -50,7 +50,9 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -63,33 +65,45 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeOutPortEntToJson implements NodeOutPortEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class NodeOutPortEntToJson extends NodePortEntToJson implements NodeOutPortEnt {
 
 	private final NodeOutPortEnt m_e;
 	
 	public NodeOutPortEntToJson(final NodeOutPortEnt e) {
+		super(e);
 		m_e = e;
 	}
 
 	@JsonProperty("PortIndex")
     public int getPortIndex() {
-        	return m_e.getPortIndex();
-        }
+    	return m_e.getPortIndex();
+    }
     
 	@JsonProperty("PortType")
     public PortTypeEnt getPortType() {
-            return new PortTypeEntToJson(m_e.getPortType());
-        }
+        return PortTypeEntToJson.wrap(m_e.getPortType());
+    }
     
 	@JsonProperty("PortName")
     public String getPortName() {
-        	return m_e.getPortName();
-        }
+    	return m_e.getPortName();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "NodeOutPortEnt";
+	}
+	
+	public static NodeOutPortEnt wrap(NodeOutPortEnt e) {
+	    return new NodeOutPortEntToJson(e);
 	}
 
 }

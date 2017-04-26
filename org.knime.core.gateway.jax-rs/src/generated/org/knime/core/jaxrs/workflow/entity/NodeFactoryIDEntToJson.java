@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeFactoryIDEntToJson implements NodeFactoryIDEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class NodeFactoryIDEntToJson  implements NodeFactoryIDEnt {
 
 	private final NodeFactoryIDEnt m_e;
 	
@@ -71,18 +74,28 @@ public class NodeFactoryIDEntToJson implements NodeFactoryIDEnt{
 
 	@JsonProperty("ClassName")
     public String getClassName() {
-        	return m_e.getClassName();
-        }
+    	return m_e.getClassName();
+    }
     
 	@JsonProperty("NodeName")
     public String getNodeName() {
-        	return m_e.getNodeName();
-        }
+    	return m_e.getNodeName();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "NodeFactoryIDEnt";
+	}
+	
+	public static NodeFactoryIDEnt wrap(NodeFactoryIDEnt e) {
+	    return new NodeFactoryIDEntToJson(e);
 	}
 
 }

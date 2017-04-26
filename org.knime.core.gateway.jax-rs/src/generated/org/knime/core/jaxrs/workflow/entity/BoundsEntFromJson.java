@@ -48,6 +48,11 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,7 +66,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class BoundsEntFromJson implements BoundsEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = BoundsEntFromJson.class, name = "BoundsEnt")
+})
+public class BoundsEntFromJson  implements BoundsEnt {
 
 	private int m_X;
 	private int m_Y;
@@ -75,6 +88,10 @@ public class BoundsEntFromJson implements BoundsEnt{
 		m_Y = Y;
 		m_Width = Width;
 		m_Height = Height;
+	}
+	
+	protected BoundsEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

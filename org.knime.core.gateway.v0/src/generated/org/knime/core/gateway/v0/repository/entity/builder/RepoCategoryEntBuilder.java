@@ -63,23 +63,23 @@ public interface RepoCategoryEntBuilder extends GatewayEntityBuilder<RepoCategor
      * @return <code>this</code>
      */
 	RepoCategoryEntBuilder setName(String name);
-
+	
     /**
      * @param iconURL The URL of the icon..
      * @return <code>this</code>
      */
 	RepoCategoryEntBuilder setIconURL(String iconURL);
-
+	
     /**
      * @param categories Child categories.
      * @return <code>this</code>
      */
 	RepoCategoryEntBuilder setCategories(List<RepoCategoryEnt> categories);
-
+	
     /**
      * @param nodes Nodes in the category.
      * @return <code>this</code>
      */
 	RepoCategoryEntBuilder setNodes(List<RepoNodeTemplateEnt> nodes);
-
+	
 }

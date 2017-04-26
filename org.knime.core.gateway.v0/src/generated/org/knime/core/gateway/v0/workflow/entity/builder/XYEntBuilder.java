@@ -60,11 +60,11 @@ public interface XYEntBuilder extends GatewayEntityBuilder<XYEnt> {
      * @return <code>this</code>
      */
 	XYEntBuilder setX(int x);
-
+	
     /**
      * @param y Y coordinate.
      * @return <code>this</code>
      */
 	XYEntBuilder setY(int y);
-
+	
 }

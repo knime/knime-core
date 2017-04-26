@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class PortTypeEntToJson implements PortTypeEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class PortTypeEntToJson  implements PortTypeEnt {
 
 	private final PortTypeEnt m_e;
 	
@@ -71,33 +74,43 @@ public class PortTypeEntToJson implements PortTypeEnt{
 
 	@JsonProperty("Name")
     public String getName() {
-        	return m_e.getName();
-        }
+    	return m_e.getName();
+    }
     
 	@JsonProperty("PortObjectClassName")
     public String getPortObjectClassName() {
-        	return m_e.getPortObjectClassName();
-        }
+    	return m_e.getPortObjectClassName();
+    }
     
 	@JsonProperty("IsOptional")
     public boolean getIsOptional() {
-        	return m_e.getIsOptional();
-        }
+    	return m_e.getIsOptional();
+    }
     
 	@JsonProperty("Color")
     public int getColor() {
-        	return m_e.getColor();
-        }
+    	return m_e.getColor();
+    }
     
 	@JsonProperty("IsHidden")
     public boolean getIsHidden() {
-        	return m_e.getIsHidden();
-        }
+    	return m_e.getIsHidden();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "PortTypeEnt";
+	}
+	
+	public static PortTypeEnt wrap(PortTypeEnt e) {
+	    return new PortTypeEntToJson(e);
 	}
 
 }

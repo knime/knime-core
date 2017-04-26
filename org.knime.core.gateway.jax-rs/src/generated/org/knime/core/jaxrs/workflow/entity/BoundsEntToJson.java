@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class BoundsEntToJson implements BoundsEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class BoundsEntToJson  implements BoundsEnt {
 
 	private final BoundsEnt m_e;
 	
@@ -71,28 +74,38 @@ public class BoundsEntToJson implements BoundsEnt{
 
 	@JsonProperty("X")
     public int getX() {
-        	return m_e.getX();
-        }
+    	return m_e.getX();
+    }
     
 	@JsonProperty("Y")
     public int getY() {
-        	return m_e.getY();
-        }
+    	return m_e.getY();
+    }
     
 	@JsonProperty("Width")
     public int getWidth() {
-        	return m_e.getWidth();
-        }
+    	return m_e.getWidth();
+    }
     
 	@JsonProperty("Height")
     public int getHeight() {
-        	return m_e.getHeight();
-        }
+    	return m_e.getHeight();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "BoundsEnt";
+	}
+	
+	public static BoundsEnt wrap(BoundsEnt e) {
+	    return new BoundsEntToJson(e);
 	}
 
 }

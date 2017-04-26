@@ -1,14 +1,14 @@
 {
     "type" : "entity",
     "name" : "NodeAnnotationEnt",
-    "description" : "The annotation to a noe.",
+    "description" : "The annotation to a node.",
     "namespace" : "workflow.entity",
-    "parent" : "workflow.entity.AnnotationEnt",
+    "parents" : [ "workflow.entity.AnnotationEnt" ],
     "fields" : [
         {
-            "name" : "Node",
-            "description" : "The node to which this annotation is attached.",
-            "type" : "String"
+            "name" : "IsDefault",
+            "description" : "Default node annotation.",
+            "type" : "boolean"
         }
     ]
 }

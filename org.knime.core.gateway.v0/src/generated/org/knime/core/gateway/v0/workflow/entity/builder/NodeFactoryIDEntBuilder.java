@@ -60,11 +60,11 @@ public interface NodeFactoryIDEntBuilder extends GatewayEntityBuilder<NodeFactor
      * @return <code>this</code>
      */
 	NodeFactoryIDEntBuilder setClassName(String className);
-
+	
     /**
      * @param nodeName The static name of the node as appears on the screen.
      * @return <code>this</code>
      */
 	NodeFactoryIDEntBuilder setNodeName(String nodeName);
-
+	
 }

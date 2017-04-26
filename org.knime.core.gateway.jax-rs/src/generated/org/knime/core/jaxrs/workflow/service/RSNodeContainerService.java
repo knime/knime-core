@@ -66,6 +66,7 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 @Path("/NodeContainerService")
 public interface RSNodeContainerService extends NodeContainerService {
 

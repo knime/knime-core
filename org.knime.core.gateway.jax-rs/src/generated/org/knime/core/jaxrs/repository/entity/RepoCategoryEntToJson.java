@@ -50,7 +50,9 @@ import java.util.List;
 import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
 import org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -63,7 +65,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class RepoCategoryEntToJson implements RepoCategoryEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class RepoCategoryEntToJson  implements RepoCategoryEnt {
 
 	private final RepoCategoryEnt m_e;
 	
@@ -73,28 +76,38 @@ public class RepoCategoryEntToJson implements RepoCategoryEnt{
 
 	@JsonProperty("Name")
     public String getName() {
-        	return m_e.getName();
-        }
+    	return m_e.getName();
+    }
     
 	@JsonProperty("IconURL")
     public String getIconURL() {
-        	return m_e.getIconURL();
-        }
+    	return m_e.getIconURL();
+    }
     
 	@JsonProperty("Categories")
     public List<RepoCategoryEnt> getCategories() {
-        	return m_e.getCategories().stream().map(l -> new RepoCategoryEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getCategories().stream().map(l -> RepoCategoryEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
 	@JsonProperty("Nodes")
     public List<RepoNodeTemplateEnt> getNodes() {
-        	return m_e.getNodes().stream().map(l -> new RepoNodeTemplateEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getNodes().stream().map(l -> RepoNodeTemplateEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "RepoCategoryEnt";
+	}
+	
+	public static RepoCategoryEnt wrap(RepoCategoryEnt e) {
+	    return new RepoCategoryEntToJson(e);
 	}
 
 }

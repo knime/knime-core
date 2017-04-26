@@ -99,13 +99,13 @@ public class MetaPortEntTest {
         List<Object> valueList = new ArrayList<Object>();
  		valueList.add(PortTypeEntTest.createValueList());
 
- 		valueList.add(true);	
+ 		valueList.add(true);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
         return valueList;
     }

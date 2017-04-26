@@ -79,7 +79,7 @@ public class NodeAnnotationEntTest {
 
     public static NodeAnnotationEnt createEnt(final List<Object> valueList) {
         NodeAnnotationEntBuilder builder = EntityBuilderManager.builder(NodeAnnotationEntBuilder.class);
-		builder.setNode((String) valueList.get(0));
+		builder.setIsDefault((boolean) valueList.get(0));
 		builder.setText((String) valueList.get(1));
 		builder.setBackgroundColor((int) valueList.get(2));
 		builder.setX((int) valueList.get(3));
@@ -95,7 +95,7 @@ public class NodeAnnotationEntTest {
     }
 
     public static void testEnt(final NodeAnnotationEnt ent, final List<Object> valueList) {
-		assertEquals(ent.getNode(), (String) valueList.get(0));
+		assertEquals(ent.getIsDefault(), (boolean) valueList.get(0));
 		assertEquals(ent.getText(), (String) valueList.get(1));
 		assertEquals(ent.getBackgroundColor(), (int) valueList.get(2));
 		assertEquals(ent.getX(), (int) valueList.get(3));
@@ -111,29 +111,29 @@ public class NodeAnnotationEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("CGvxL");	
+ 		valueList.add(true);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
- 		valueList.add(-1155484576);	
+ 		valueList.add(-1155484576);
 
         return valueList;
     }

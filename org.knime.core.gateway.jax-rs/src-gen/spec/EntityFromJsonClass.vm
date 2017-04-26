@@ -50,6 +50,14 @@ package $package;
 import $import;
 #end
 
+#foreach( $import in $subTypesImports)
+import $import;
+#end
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,7 +71,21 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ${name}FromJson implements ${name}{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = ${name}FromJson.class, name = "${name}")
+#if($subTypes.size() > 0),
+#end
+#foreach($subType in $subTypes)
+  @Type(value = ${subType}FromJson.class, name = "${subType}")#if( $foreach.hasNext ),
+#end
+#end
+})
+public class ${name}FromJson #if($superTypes.size()>0)extends #foreach ($superType in $superTypes)${superType}FromJson#if($foreach.hasNext),#end#end#end implements ${name} {
 
 #foreach( $field in $fields )
 	private $field.getType().toString("","FromJson") m_$field.getName();
@@ -72,29 +94,43 @@ public class ${name}FromJson implements ${name}{
 	@JsonCreator
 	private ${name}FromJson(
 #foreach( $field in $fields )
+#if($field.getType().isOptional())
+	@JsonProperty("${field.getName()}") ${field.getType().getTypeParameter(0).toString("","FromJson")} ${field.getName()}#if( $foreach.hasNext ),#end
+#else
 	@JsonProperty("${field.getName()}") ${field.getType().toString("","FromJson")} ${field.getName()}#if( $foreach.hasNext ),#end
+#end
 #end
 	) {
 #foreach( $field in $fields )
+#if($field.getType().isOptional())
+		m_$field.getName() = Optional.ofNullable($field.getName());
+#else
 		m_$field.getName() = $field.getName();
 #end
+#end
+	}
+	
+	protected ${name}FromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 
 #foreach( $field in $fields )
 	@Override
-    public $field.getType().toString("","") get$field.getName()() {
+    public $field.getType().toString() get$field.getName()() {
     #if($field.getType().isPrimitive())
     	return m_${field.getName()};
     #elseif($field.getType().isList())
-    	return m_${field.getName()}.stream().map(l -> (${field.getType().getTypeParameter(0).toString("","")}) l ).collect(Collectors.toList());
+    	return m_${field.getName()}.stream().map(l -> (${field.getType().getTypeParameter(0).toString()}) l ).collect(Collectors.toList());
     #elseif($field.getType().isMap())
     	//TODO support non-primitive keys
-    	$field.getType().toString("","") res = new HashMap<>();
-        m_${field.getName()}.entrySet().stream().forEach(e -> res.put(e.getKey(), (${field.getType().getTypeParameter(1).toString("","")}) e.getValue()));
+    	$field.getType().toString() res = new HashMap<>();
+        m_${field.getName()}.entrySet().stream().forEach(e -> res.put(e.getKey(), (${field.getType().getTypeParameter(1).toString()}) e.getValue()));
         return res;
+    #elseif($field.getType().isOptional())
+    	return m_${field.getName()}.map(o -> (${field.getType().getTypeParameter(0).toString()}) o);
     #else
-        return (${field.getType().toString("","")}) m_${field.getName()};
+        return (${field.getType().toString()}) m_${field.getName()};
     #end
         
     }

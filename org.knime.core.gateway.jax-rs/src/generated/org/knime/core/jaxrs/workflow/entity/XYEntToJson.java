@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class XYEntToJson implements XYEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class XYEntToJson  implements XYEnt {
 
 	private final XYEnt m_e;
 	
@@ -71,18 +74,28 @@ public class XYEntToJson implements XYEnt{
 
 	@JsonProperty("X")
     public int getX() {
-        	return m_e.getX();
-        }
+    	return m_e.getX();
+    }
     
 	@JsonProperty("Y")
     public int getY() {
-        	return m_e.getY();
-        }
+    	return m_e.getY();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "XYEnt";
+	}
+	
+	public static XYEnt wrap(XYEnt e) {
+	    return new XYEntToJson(e);
 	}
 
 }

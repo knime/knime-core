@@ -60,23 +60,23 @@ public interface BoundsEntBuilder extends GatewayEntityBuilder<BoundsEnt> {
      * @return <code>this</code>
      */
 	BoundsEntBuilder setX(int x);
-
+	
     /**
      * @param y Y coordinate.
      * @return <code>this</code>
      */
 	BoundsEntBuilder setY(int y);
-
+	
     /**
      * @param width Width of the widget.
      * @return <code>this</code>
      */
 	BoundsEntBuilder setWidth(int width);
-
+	
     /**
      * @param height Height of the widget.
      * @return <code>this</code>
      */
 	BoundsEntBuilder setHeight(int height);
-
+	
 }

@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.repository.entity;
 
 import org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class RepoNodeTemplateEntToJson implements RepoNodeTemplateEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class RepoNodeTemplateEntToJson  implements RepoNodeTemplateEnt {
 
 	private final RepoNodeTemplateEnt m_e;
 	
@@ -71,33 +74,43 @@ public class RepoNodeTemplateEntToJson implements RepoNodeTemplateEnt{
 
 	@JsonProperty("Name")
     public String getName() {
-        	return m_e.getName();
-        }
+    	return m_e.getName();
+    }
     
 	@JsonProperty("Type")
     public String getType() {
-        	return m_e.getType();
-        }
+    	return m_e.getType();
+    }
     
 	@JsonProperty("ID")
     public String getID() {
-        	return m_e.getID();
-        }
+    	return m_e.getID();
+    }
     
 	@JsonProperty("IconURL")
     public String getIconURL() {
-        	return m_e.getIconURL();
-        }
+    	return m_e.getIconURL();
+    }
     
 	@JsonProperty("NodeTypeID")
     public String getNodeTypeID() {
-        	return m_e.getNodeTypeID();
-        }
+    	return m_e.getNodeTypeID();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "RepoNodeTemplateEnt";
+	}
+	
+	public static RepoNodeTemplateEnt wrap(RepoNodeTemplateEnt e) {
+	    return new RepoNodeTemplateEntToJson(e);
 	}
 
 }

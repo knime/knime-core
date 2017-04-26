@@ -48,6 +48,11 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,7 +66,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class XYEntFromJson implements XYEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = XYEntFromJson.class, name = "XYEnt")
+})
+public class XYEntFromJson  implements XYEnt {
 
 	private int m_X;
 	private int m_Y;
@@ -71,6 +84,10 @@ public class XYEntFromJson implements XYEnt{
 	@JsonProperty("X") int X,	@JsonProperty("Y") int Y	) {
 		m_X = X;
 		m_Y = Y;
+	}
+	
+	protected XYEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

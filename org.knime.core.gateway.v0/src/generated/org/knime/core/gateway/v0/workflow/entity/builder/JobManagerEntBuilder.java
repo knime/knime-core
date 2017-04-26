@@ -60,11 +60,11 @@ public interface JobManagerEntBuilder extends GatewayEntityBuilder<JobManagerEnt
      * @return <code>this</code>
      */
 	JobManagerEntBuilder setName(String name);
-
+	
     /**
      * @param jobManagerID ID of manager implementation.
      * @return <code>this</code>
      */
 	JobManagerEntBuilder setJobManagerID(String jobManagerID);
-
+	
 }

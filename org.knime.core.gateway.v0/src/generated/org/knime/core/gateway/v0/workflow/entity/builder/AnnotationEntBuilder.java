@@ -47,6 +47,7 @@
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 
 /**
  * Builder for {@link AnnotationEnt}.
@@ -60,65 +61,65 @@ public interface AnnotationEntBuilder extends GatewayEntityBuilder<AnnotationEnt
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setText(String text);
-
+	
     /**
      * @param backgroundColor The background color.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setBackgroundColor(int backgroundColor);
-
+	
     /**
      * @param x The x coordinate.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setX(int x);
-
+	
     /**
      * @param y The y coordinate.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setY(int y);
-
+	
     /**
      * @param width The width.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setWidth(int width);
-
+	
     /**
      * @param height The height.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setHeight(int height);
-
+	
     /**
      * @param textAlignment The text alignment.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setTextAlignment(String textAlignment);
-
+	
     /**
      * @param borderSize The border width.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setBorderSize(int borderSize);
-
+	
     /**
      * @param borderColor The border color.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setBorderColor(int borderColor);
-
+	
     /**
      * @param defaultFontSize The default font size.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setDefaultFontSize(int defaultFontSize);
-
+	
     /**
      * @param version The version.
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setVersion(int version);
-
+	
 }

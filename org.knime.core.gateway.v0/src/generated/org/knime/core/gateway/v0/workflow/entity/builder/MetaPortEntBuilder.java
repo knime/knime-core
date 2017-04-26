@@ -61,29 +61,29 @@ public interface MetaPortEntBuilder extends GatewayEntityBuilder<MetaPortEnt> {
      * @return <code>this</code>
      */
 	MetaPortEntBuilder setPortType(PortTypeEnt portType);
-
+	
     /**
      * @param isConnected Whether it is connected.
      * @return <code>this</code>
      */
 	MetaPortEntBuilder setIsConnected(boolean isConnected);
-
+	
     /**
      * @param message The message (summary of upstream node port).
      * @return <code>this</code>
      */
 	MetaPortEntBuilder setMessage(String message);
-
+	
     /**
      * @param oldIndex The old index (@Martin, please clarify?)
      * @return <code>this</code>
      */
 	MetaPortEntBuilder setOldIndex(int oldIndex);
-
+	
     /**
      * @param newIndex The new index (@Martin, please clarify?).
      * @return <code>this</code>
      */
 	MetaPortEntBuilder setNewIndex(int newIndex);
-
+	
 }

@@ -3,7 +3,7 @@
     "name" : "WorkflowEnt",
     "description" : "A complete workflow.",
     "namespace" : "workflow.entity",
-    "parent" : "workflow.entity.NodeEnt",
+    "parents" : [ "workflow.entity.NodeEnt"],
     "fields" : [
         {
             "name" : "Nodes",
@@ -24,6 +24,11 @@
             "name" : "MetaOutPorts",
             "description" : "The outputs of a metanode (if this workflow is one).",
             "type" : "List<workflow.entity.MetaPortEnt>"
+        },
+        {
+        	"name" : "WorkflowAnnotations",
+        	"description" : "List of all workflow annotations.",
+        	"type" : "List<workflow.entity.WorkflowAnnotationEnt>"        
         }
     ]
 }

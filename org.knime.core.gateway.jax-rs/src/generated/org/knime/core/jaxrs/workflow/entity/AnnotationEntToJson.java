@@ -47,8 +47,11 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +64,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class AnnotationEntToJson implements AnnotationEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class AnnotationEntToJson  implements AnnotationEnt {
 
 	private final AnnotationEnt m_e;
 	
@@ -71,63 +75,76 @@ public class AnnotationEntToJson implements AnnotationEnt{
 
 	@JsonProperty("Text")
     public String getText() {
-        	return m_e.getText();
-        }
+    	return m_e.getText();
+    }
     
 	@JsonProperty("BackgroundColor")
     public int getBackgroundColor() {
-        	return m_e.getBackgroundColor();
-        }
+    	return m_e.getBackgroundColor();
+    }
     
 	@JsonProperty("X")
     public int getX() {
-        	return m_e.getX();
-        }
+    	return m_e.getX();
+    }
     
 	@JsonProperty("Y")
     public int getY() {
-        	return m_e.getY();
-        }
+    	return m_e.getY();
+    }
     
 	@JsonProperty("Width")
     public int getWidth() {
-        	return m_e.getWidth();
-        }
+    	return m_e.getWidth();
+    }
     
 	@JsonProperty("Height")
     public int getHeight() {
-        	return m_e.getHeight();
-        }
+    	return m_e.getHeight();
+    }
     
 	@JsonProperty("TextAlignment")
     public String getTextAlignment() {
-        	return m_e.getTextAlignment();
-        }
+    	return m_e.getTextAlignment();
+    }
     
 	@JsonProperty("BorderSize")
     public int getBorderSize() {
-        	return m_e.getBorderSize();
-        }
+    	return m_e.getBorderSize();
+    }
     
 	@JsonProperty("BorderColor")
     public int getBorderColor() {
-        	return m_e.getBorderColor();
-        }
+    	return m_e.getBorderColor();
+    }
     
 	@JsonProperty("DefaultFontSize")
     public int getDefaultFontSize() {
-        	return m_e.getDefaultFontSize();
-        }
+    	return m_e.getDefaultFontSize();
+    }
     
 	@JsonProperty("Version")
     public int getVersion() {
-        	return m_e.getVersion();
-        }
+    	return m_e.getVersion();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "AnnotationEnt";
+	}
+	
+	public static AnnotationEnt wrap(AnnotationEnt e) {
+	    if(e instanceof NodeAnnotationEnt) {
+	        return NodeAnnotationEntToJson.wrap((NodeAnnotationEnt) e);
+	    }
+	    return new AnnotationEntToJson(e);
 	}
 
 }

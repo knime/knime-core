@@ -116,6 +116,56 @@ public class WorkflowServiceTest {
     }
 
     @Test
+    public void test_getWorkflowIDs() {
+		//create parameter values
+		String workflowGroupID = "CGvxL";
+ 
+		//create return value   
+		List<String> res = new ArrayList<>(5);
+        res.add("lzCuG");
+        res.add("5KrGg");
+        res.add("OuJNz");
+        res.add("5VLnL");
+        res.add("YJQGG");
+
+		//mock return value
+		Mockito.when(m_serviceMock.getWorkflowIDs(Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		List<String> methodRes = service(WorkflowService.class).getWorkflowIDs(workflowGroupID);
+
+		//compare results
+		for (int i = 0; i < methodRes.size(); i++) {
+			assertEquals(res.get(i), methodRes.get(i));
+        }
+    }
+
+    @Test
+    public void test_getWorkflowGroupIDs() {
+		//create parameter values
+		String workflowGroupID = "CGvxL";
+ 
+		//create return value   
+		List<String> res = new ArrayList<>(5);
+        res.add("lzCuG");
+        res.add("5KrGg");
+        res.add("OuJNz");
+        res.add("5VLnL");
+        res.add("YJQGG");
+
+		//mock return value
+		Mockito.when(m_serviceMock.getWorkflowGroupIDs(Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		List<String> methodRes = service(WorkflowService.class).getWorkflowGroupIDs(workflowGroupID);
+
+		//compare results
+		for (int i = 0; i < methodRes.size(); i++) {
+			assertEquals(res.get(i), methodRes.get(i));
+        }
+    }
+
+    @Test
     public void test_getAllWorkflows() {
  
 		//create return value   

@@ -48,7 +48,7 @@ package org.knime.core.gateway.v0.workflow.entity;
 
 
 /**
- * The annotation to a noe.
+ * The annotation to a node.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -56,9 +56,9 @@ package org.knime.core.gateway.v0.workflow.entity;
 public interface NodeAnnotationEnt extends GatewayEntity, AnnotationEnt  {
 
     /**
-     * @return The node to which this annotation is attached.
+     * @return Default node annotation.
      */
- 	String getNode();
+ 	boolean getIsDefault();
  	
     /**
      * @return The text.

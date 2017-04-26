@@ -100,5 +100,4 @@ public class EntityField {
     public Type getType() {
         return m_type;
     }
-
 }

@@ -50,6 +50,11 @@ import java.util.List;
 import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
 import org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,7 +68,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class RepoCategoryEntFromJson implements RepoCategoryEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = RepoCategoryEntFromJson.class, name = "RepoCategoryEnt")
+})
+public class RepoCategoryEntFromJson  implements RepoCategoryEnt {
 
 	private String m_Name;
 	private String m_IconURL;
@@ -77,6 +90,10 @@ public class RepoCategoryEntFromJson implements RepoCategoryEnt{
 		m_IconURL = IconURL;
 		m_Categories = Categories;
 		m_Nodes = Nodes;
+	}
+	
+	protected RepoCategoryEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

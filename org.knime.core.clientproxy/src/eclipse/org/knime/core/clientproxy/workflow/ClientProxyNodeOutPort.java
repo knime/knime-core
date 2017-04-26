@@ -110,8 +110,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -119,8 +118,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public NodeContainerState getNodeContainerState() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -128,8 +126,8 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        // TODO
+        return true;
     }
 
     /**
@@ -137,8 +135,8 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        //TODO
+        return true;
     }
 
     /**
@@ -146,8 +144,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public String getPortSummary() {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO port summary";
     }
 
     /**
@@ -155,7 +152,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public boolean isInactive() {
-        // TODO Auto-generated method stub
+        //TODO
         return false;
     }
 
@@ -164,8 +161,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public NodeContainerState getNodeState() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -173,8 +169,7 @@ public class ClientProxyNodeOutPort implements INodeOutPort {
      */
     @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
 }

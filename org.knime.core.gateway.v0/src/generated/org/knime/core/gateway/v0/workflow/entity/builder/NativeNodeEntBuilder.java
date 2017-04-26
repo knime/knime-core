@@ -47,8 +47,8 @@
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import java.util.List;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -70,89 +70,83 @@ public interface NativeNodeEntBuilder extends GatewayEntityBuilder<NativeNodeEnt
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeFactoryID(NodeFactoryIDEnt nodeFactoryID);
-
+	
     /**
-     * @param parent The parent of the node.
+     * @param parent The parent workflow id of the node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setParent(EntityID parent);
-
+	NativeNodeEntBuilder setParent(String parent);
+	
     /**
      * @param jobManager The job manager (e.g. cluster or streaming).
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setJobManager(JobManagerEnt jobManager);
-
+	NativeNodeEntBuilder setJobManager(Optional<JobManagerEnt> jobManager);
+	
     /**
      * @param nodeMessage The current node message (warning, error, none).
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeMessage(NodeMessageEnt nodeMessage);
-
+	
     /**
      * @param inPorts The list of inputs.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setInPorts(List<NodeInPortEnt> inPorts);
-
+	
     /**
      * @param outPorts The list of outputs.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setOutPorts(List<NodeOutPortEnt> outPorts);
-
+	
     /**
      * @param name The name.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setName(String name);
-
+	
     /**
      * @param nodeID The ID of the node.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeID(String nodeID);
-
-    /**
-     * @param nodeTypeID The ID of the node type (metanode, native nodes, etc).
-     * @return <code>this</code>
-     */
-	NativeNodeEntBuilder setNodeTypeID(String nodeTypeID);
-
+	
     /**
      * @param nodeType The type of the node as string.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeType(String nodeType);
-
+	
     /**
      * @param bounds The bounds / rectangle on screen of the node.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setBounds(BoundsEnt bounds);
-
+	
     /**
      * @param isDeletable Whether node is deletable.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setIsDeletable(boolean isDeletable);
-
+	
     /**
      * @param nodeState The state of the node.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeState(String nodeState);
-
+	
     /**
      * @param hasDialog Whether the node has a configuration dialog / user settings.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setHasDialog(boolean hasDialog);
-
+	
     /**
      * @param nodeAnnotation The annotation underneath the node.
      * @return <code>this</code>
      */
 	NativeNodeEntBuilder setNodeAnnotation(NodeAnnotationEnt nodeAnnotation);
-
+	
 }

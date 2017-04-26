@@ -48,7 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -61,7 +63,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class JobManagerEntToJson implements JobManagerEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class JobManagerEntToJson  implements JobManagerEnt {
 
 	private final JobManagerEnt m_e;
 	
@@ -71,18 +74,28 @@ public class JobManagerEntToJson implements JobManagerEnt{
 
 	@JsonProperty("Name")
     public String getName() {
-        	return m_e.getName();
-        }
+    	return m_e.getName();
+    }
     
 	@JsonProperty("JobManagerID")
     public String getJobManagerID() {
-        	return m_e.getJobManagerID();
-        }
+    	return m_e.getJobManagerID();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "JobManagerEnt";
+	}
+	
+	public static JobManagerEnt wrap(JobManagerEnt e) {
+	    return new JobManagerEntToJson(e);
 	}
 
 }

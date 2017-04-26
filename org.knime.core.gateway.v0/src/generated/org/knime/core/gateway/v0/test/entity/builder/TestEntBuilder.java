@@ -65,35 +65,35 @@ public interface TestEntBuilder extends GatewayEntityBuilder<TestEnt> {
      * @return <code>this</code>
      */
 	TestEntBuilder setXY(XYEnt xY);
-
+	
     /**
      * @param xYList The xy list property.
      * @return <code>this</code>
      */
 	TestEntBuilder setXYList(List<XYEnt> xYList);
-
+	
     /**
      * @param other The other property, no not this one. The other.
      * @return <code>this</code>
      */
 	TestEntBuilder setOther(String other);
-
+	
     /**
      * @param primitiveList Some simple list of strings.
      * @return <code>this</code>
      */
 	TestEntBuilder setPrimitiveList(List<String> primitiveList);
-
+	
     /**
      * @param xYMap Some map of properties.
      * @return <code>this</code>
      */
 	TestEntBuilder setXYMap(Map<String, XYEnt> xYMap);
-
+	
     /**
      * @param primitiveMap Some simple list.
      * @return <code>this</code>
      */
 	TestEntBuilder setPrimitiveMap(Map<Integer, String> primitiveMap);
-
+	
 }

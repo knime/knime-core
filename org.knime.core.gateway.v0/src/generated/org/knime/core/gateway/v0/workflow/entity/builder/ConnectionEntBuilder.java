@@ -62,41 +62,41 @@ public interface ConnectionEntBuilder extends GatewayEntityBuilder<ConnectionEnt
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setDest(String dest);
-
+	
     /**
      * @param destPort The destination port, starting at 0
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setDestPort(int destPort);
-
+	
     /**
      * @param source The source node.
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setSource(String source);
-
+	
     /**
      * @param sourcePort The source port, starting at 0.
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setSourcePort(int sourcePort);
-
+	
     /**
      * @param isDeleteable Whether the connection can currently be deleted.
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setIsDeleteable(boolean isDeleteable);
-
+	
     /**
      * @param bendPoints The list of handles/bend points.
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setBendPoints(List<XYEnt> bendPoints);
-
+	
     /**
      * @param type The type of the connection (standard, workflow input / output / through).
      * @return <code>this</code>
      */
 	ConnectionEntBuilder setType(String type);
-
+	
 }

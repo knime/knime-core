@@ -49,7 +49,9 @@ package org.knime.core.jaxrs.workflow.entity;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -62,78 +64,90 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeAnnotationEntToJson implements NodeAnnotationEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class NodeAnnotationEntToJson extends AnnotationEntToJson implements NodeAnnotationEnt {
 
 	private final NodeAnnotationEnt m_e;
 	
 	public NodeAnnotationEntToJson(final NodeAnnotationEnt e) {
+		super(e);
 		m_e = e;
 	}
 
-	@JsonProperty("Node")
-    public String getNode() {
-        	return m_e.getNode();
-        }
+	@JsonProperty("IsDefault")
+    public boolean getIsDefault() {
+    	return m_e.getIsDefault();
+    }
     
 	@JsonProperty("Text")
     public String getText() {
-        	return m_e.getText();
-        }
+    	return m_e.getText();
+    }
     
 	@JsonProperty("BackgroundColor")
     public int getBackgroundColor() {
-        	return m_e.getBackgroundColor();
-        }
+    	return m_e.getBackgroundColor();
+    }
     
 	@JsonProperty("X")
     public int getX() {
-        	return m_e.getX();
-        }
+    	return m_e.getX();
+    }
     
 	@JsonProperty("Y")
     public int getY() {
-        	return m_e.getY();
-        }
+    	return m_e.getY();
+    }
     
 	@JsonProperty("Width")
     public int getWidth() {
-        	return m_e.getWidth();
-        }
+    	return m_e.getWidth();
+    }
     
 	@JsonProperty("Height")
     public int getHeight() {
-        	return m_e.getHeight();
-        }
+    	return m_e.getHeight();
+    }
     
 	@JsonProperty("TextAlignment")
     public String getTextAlignment() {
-        	return m_e.getTextAlignment();
-        }
+    	return m_e.getTextAlignment();
+    }
     
 	@JsonProperty("BorderSize")
     public int getBorderSize() {
-        	return m_e.getBorderSize();
-        }
+    	return m_e.getBorderSize();
+    }
     
 	@JsonProperty("BorderColor")
     public int getBorderColor() {
-        	return m_e.getBorderColor();
-        }
+    	return m_e.getBorderColor();
+    }
     
 	@JsonProperty("DefaultFontSize")
     public int getDefaultFontSize() {
-        	return m_e.getDefaultFontSize();
-        }
+    	return m_e.getDefaultFontSize();
+    }
     
 	@JsonProperty("Version")
     public int getVersion() {
-        	return m_e.getVersion();
-        }
+    	return m_e.getVersion();
+    }
     
+
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "NodeAnnotationEnt";
+	}
+	
+	public static NodeAnnotationEnt wrap(NodeAnnotationEnt e) {
+	    return new NodeAnnotationEntToJson(e);
 	}
 
 }

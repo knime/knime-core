@@ -47,7 +47,9 @@
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;

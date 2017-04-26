@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -151,6 +152,21 @@ public final class EntityGenerator extends SourceCodeGenerator {
                 entityDefMap.put(d.getNameWithNamespace(), d);
             }
 
+            //identify all supertypes (supertypes are parents of other types) and collect all its subtypes
+            Map<String, List<EntityDef>> superTypeSubTypesMap = new HashMap<>();
+            for(EntityDef d : m_entityDefs) {
+                for(String parent : d.getParents()) {
+                    EntityDef superEntity = entityDefMap.get(parent);
+                    List<EntityDef> subTypes;
+                    if((subTypes = superTypeSubTypesMap.get(superEntity.getNameWithNamespace())) == null) {
+                        subTypes = new ArrayList<EntityDef>();
+                        superTypeSubTypesMap.put(superEntity.getNameWithNamespace(), subTypes);
+                    }
+                    subTypes.add(d);
+                }
+            }
+
+
             for (EntityDef entityDef : m_entityDefs) {
 
                 context.put("name", entityDef.getName());
@@ -171,26 +187,37 @@ public final class EntityGenerator extends SourceCodeGenerator {
                 List<EntityField> fields = new ArrayList<>(entityDef.getFields());
                 Set<String> imports = new HashSet<>();
                 imports.addAll(getJavaImports(entityDef));
-                List<String> superClasses = new ArrayList<String>();
-                entityDef.resolveParent(entityDefMap);
+                List<String> superTypes = new ArrayList<String>();
 
                 // add fields and imports from other entities, too
-                entityDef.getParentOptional().ifPresent(parent -> {
+                for (String parent : entityDef.getParents()) {
                     EntityDef superEntity = entityDefMap.get(parent);
                     CheckUtils.checkArgumentNotNull(superEntity, "No parent \"%s\" for child entity \"%s\"", parent,
                         entityDef.getName());
                     fields.addAll(superEntity.getFields());
                     addImports(imports, superEntity, false);
-                    superClasses.add(superEntity.getName());
-                });
+                    superTypes.add(superEntity.getName());
+                }
 
                 addImports(imports, entityDef, true);
+
+                //make subtypes available
+                List<EntityDef> subTypes = superTypeSubTypesMap.get(entityDef.getNameWithNamespace());
+                if(subTypes == null) {
+                    subTypes = Collections.emptyList();
+                }
+
+                //add subtypes 'api' imports
+                for(EntityDef ed : subTypes) {
+                    addImports(imports, ed, true);
+                }
 
                 imports.removeIf(s -> s.matches(Pattern.quote(fullPackageString) + "\\.[^\\.]+"));
 
                 context.put("fields", fields);
                 context.put("imports", imports.stream().sorted().collect(Collectors.toList()));
-                context.put("superClasses", superClasses);
+                context.put("superTypes", superTypes);
+                context.put("subTypes", subTypes.stream().map(ed -> ed.getName()).collect(Collectors.toList()));
 
                 Template template = null;
                 try {

@@ -70,6 +70,7 @@ import java.util.List;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 @Path("/RepositoryService")
 public interface RSRepositoryService extends RepositoryService {
 

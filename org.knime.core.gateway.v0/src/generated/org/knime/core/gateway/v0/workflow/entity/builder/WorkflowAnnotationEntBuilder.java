@@ -61,41 +61,41 @@ public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<Workf
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setText(String text);
-
+	
     /**
      * @param bounds Position/Size of an annotation.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBounds(BoundsEnt bounds);
-
+	
     /**
      * @param bgColor Background color.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBgColor(int bgColor);
-
+	
     /**
      * @param borderSize Border thickness.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBorderSize(int borderSize);
-
+	
     /**
      * @param borderColor Border color.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBorderColor(int borderColor);
-
+	
     /**
      * @param fontSize The font fize.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setFontSize(int fontSize);
-
+	
     /**
      * @param alignment Text alignment.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setAlignment(String alignment);
-
+	
 }

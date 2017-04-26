@@ -89,9 +89,9 @@ public class NodeFactoryIDEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
         return valueList;
     }

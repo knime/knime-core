@@ -46,8 +46,12 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodePortEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;

@@ -52,6 +52,11 @@ import org.knime.core.gateway.v0.test.entity.TestEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.jaxrs.workflow.entity.XYEntFromJson;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -65,7 +70,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class TestEntFromJson implements TestEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = TestEntFromJson.class, name = "TestEnt")
+})
+public class TestEntFromJson  implements TestEnt {
 
 	private XYEntFromJson m_XY;
 	private List<XYEntFromJson> m_XYList;
@@ -83,6 +96,10 @@ public class TestEntFromJson implements TestEnt{
 		m_PrimitiveList = PrimitiveList;
 		m_XYMap = XYMap;
 		m_PrimitiveMap = PrimitiveMap;
+	}
+	
+	protected TestEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

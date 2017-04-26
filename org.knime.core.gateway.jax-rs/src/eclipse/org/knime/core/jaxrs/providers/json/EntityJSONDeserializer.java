@@ -86,7 +86,7 @@ public class EntityJSONDeserializer implements MessageBodyReader<Object> {
         final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders, final InputStream entityStream)
         throws IOException, WebApplicationException {
 
-        //either use type or the type given in the provided annotation implementation (if a @UseClass annotation is present for the parameter)
+        //either use type or the type given in the provided annotation implementation (if a @IOClasses annotation is present for the parameter)
         Class<Object> subType = Arrays.stream(annotations)
             .filter(a -> IOClasses.class.isAssignableFrom(a.getClass()) && type.isAssignableFrom(((IOClasses)a).in()))
             .findFirst().map(a -> (Class<Object>)((IOClasses)a).in()).orElse(type);

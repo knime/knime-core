@@ -3,6 +3,6 @@
     "name" : "NodeOutPortEnt",
     "description" : "An output port of a node.",
     "namespace" : "workflow.entity",
-    "parent" : "workflow.entity.NodePortEnt",
+    "parents" : [ "workflow.entity.NodePortEnt" ],
     "fields" : [ ]
 }

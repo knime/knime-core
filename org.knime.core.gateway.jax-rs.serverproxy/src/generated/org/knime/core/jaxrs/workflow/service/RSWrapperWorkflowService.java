@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class RSWrapperWorkflowService implements RSWorkflowService {
 
     private WorkflowService m_service;
@@ -79,6 +80,18 @@ public class RSWrapperWorkflowService implements RSWorkflowService {
  	public void updateWorkflow(
 		final WorkflowEnt wf)   {
 		m_service.updateWorkflow(wf);
+    }
+				
+	@Override
+ 	public List<String> getWorkflowIDs(
+		final String workflowGroupID)   {
+		return m_service.getWorkflowIDs(workflowGroupID);
+    }
+				
+	@Override
+ 	public List<String> getWorkflowGroupIDs(
+		final String workflowGroupID)   {
+		return m_service.getWorkflowGroupIDs(workflowGroupID);
     }
 	
 	@Override

@@ -61,29 +61,29 @@ public interface RepoNodeTemplateEntBuilder extends GatewayEntityBuilder<RepoNod
      * @return <code>this</code>
      */
 	RepoNodeTemplateEntBuilder setName(String name);
-
+	
     /**
      * @param type The type of the node (for background color).
      * @return <code>this</code>
      */
 	RepoNodeTemplateEntBuilder setType(String type);
-
+	
     /**
      * @param iD The ID for later references.
      * @return <code>this</code>
      */
 	RepoNodeTemplateEntBuilder setID(String iD);
-
+	
     /**
      * @param iconURL The icon URL.
      * @return <code>this</code>
      */
 	RepoNodeTemplateEntBuilder setIconURL(String iconURL);
-
+	
     /**
      * @param nodeTypeID The node type ID (for description lookup).
      * @return <code>this</code>
      */
 	RepoNodeTemplateEntBuilder setNodeTypeID(String nodeTypeID);
-
+	
 }

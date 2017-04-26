@@ -53,7 +53,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -62,7 +61,6 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.util.HostUtils;
 
 /**
@@ -80,9 +78,6 @@ public class WorkflowProjectManager {
 
     private static final List<WorkflowProjectFactory> FACTORIES =
         collectExecutableExtensions(WorkflowProjectFactory.EXT_POINT_ID, WorkflowProjectFactory.EXT_POINT_ATTR);
-
-    //TODO just temporary for testing
-    private static final Map<String, IWorkflowManager> REGISTERED_WFS = new WeakHashMap<String, IWorkflowManager>();
 
     /**
      * The root of all workflow projects, no matter from what source
@@ -105,6 +100,14 @@ public class WorkflowProjectManager {
                 @Override
                 public String getName() {
                     return "Workflow Tree";
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public String getID() {
+                    return "root";
                 }
 
                 @Override
@@ -140,7 +143,7 @@ public class WorkflowProjectManager {
         if (m_workflowMap == null) {
             m_workflowMap = new HashMap<String, WorkflowProject>();
             WorkflowProjectManager.getWorkflowProjects().stream().forEach((wp) -> {
-                m_workflowMap.put(wp.getName(), wp);
+                m_workflowMap.put(wp.getID(), wp);
             });
         }
         return Collections.unmodifiableMap(m_workflowMap);
@@ -229,12 +232,4 @@ public class WorkflowProjectManager {
         return instances;
 
     }
-
-    /**
-     * TODO method to be removed, just for testing purposes
-     */
-    public static final void testClient() {
-        FACTORIES.stream().forEach(f -> f.testClient());
-    }
-
 }

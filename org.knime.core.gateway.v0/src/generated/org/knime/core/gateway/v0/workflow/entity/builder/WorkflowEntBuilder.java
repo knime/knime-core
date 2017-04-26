@@ -48,9 +48,9 @@ package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -58,6 +58,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 /**
@@ -72,107 +73,107 @@ public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodes(Map<String, NodeEnt> nodes);
-
+	
     /**
      * @param connections The list of connections.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setConnections(List<ConnectionEnt> connections);
-
+	
     /**
      * @param metaInPorts The inputs of a metanode (if this workflow is one).
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setMetaInPorts(List<MetaPortEnt> metaInPorts);
-
+	
     /**
      * @param metaOutPorts The outputs of a metanode (if this workflow is one).
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setMetaOutPorts(List<MetaPortEnt> metaOutPorts);
-
+	
     /**
-     * @param parent The parent of the node.
+     * @param workflowAnnotations List of all workflow annotations.
      * @return <code>this</code>
      */
-	WorkflowEntBuilder setParent(EntityID parent);
-
+	WorkflowEntBuilder setWorkflowAnnotations(List<WorkflowAnnotationEnt> workflowAnnotations);
+	
+    /**
+     * @param parent The parent workflow id of the node.
+     * @return <code>this</code>
+     */
+	WorkflowEntBuilder setParent(String parent);
+	
     /**
      * @param jobManager The job manager (e.g. cluster or streaming).
      * @return <code>this</code>
      */
-	WorkflowEntBuilder setJobManager(JobManagerEnt jobManager);
-
+	WorkflowEntBuilder setJobManager(Optional<JobManagerEnt> jobManager);
+	
     /**
      * @param nodeMessage The current node message (warning, error, none).
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodeMessage(NodeMessageEnt nodeMessage);
-
+	
     /**
      * @param inPorts The list of inputs.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setInPorts(List<NodeInPortEnt> inPorts);
-
+	
     /**
      * @param outPorts The list of outputs.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setOutPorts(List<NodeOutPortEnt> outPorts);
-
+	
     /**
      * @param name The name.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setName(String name);
-
+	
     /**
      * @param nodeID The ID of the node.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodeID(String nodeID);
-
-    /**
-     * @param nodeTypeID The ID of the node type (metanode, native nodes, etc).
-     * @return <code>this</code>
-     */
-	WorkflowEntBuilder setNodeTypeID(String nodeTypeID);
-
+	
     /**
      * @param nodeType The type of the node as string.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodeType(String nodeType);
-
+	
     /**
      * @param bounds The bounds / rectangle on screen of the node.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setBounds(BoundsEnt bounds);
-
+	
     /**
      * @param isDeletable Whether node is deletable.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setIsDeletable(boolean isDeletable);
-
+	
     /**
      * @param nodeState The state of the node.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodeState(String nodeState);
-
+	
     /**
      * @param hasDialog Whether the node has a configuration dialog / user settings.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setHasDialog(boolean hasDialog);
-
+	
     /**
      * @param nodeAnnotation The annotation underneath the node.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setNodeAnnotation(NodeAnnotationEnt nodeAnnotation);
-
+	
 }

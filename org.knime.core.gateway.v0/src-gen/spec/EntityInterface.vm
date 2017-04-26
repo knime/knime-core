@@ -59,13 +59,13 @@ import $import;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface $name extends GatewayEntity#foreach ($superClass in $superClasses), ${superClass} #end {
+public interface $name extends GatewayEntity#foreach ($superType in $superTypes), ${superType} #end {
 
 #foreach( $field in $fields )
     /**
      * @return $field.getDescription()
      */
- 	$field.getType().toString("","") get$field.getName()();
+ 	$field.getType().toString() get$field.getName()();
  	
 #end   
 }

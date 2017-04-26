@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class RSWrapperNodeContainerService implements RSNodeContainerService {
 
     private NodeContainerService m_service;

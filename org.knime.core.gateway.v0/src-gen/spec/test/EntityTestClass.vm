@@ -104,6 +104,8 @@ public class ${name}Test {
 		builder.set${field.getName()}(map${count});
 #elseif($field.getType().isPrimitive())
 		builder.set${field.getName()}((${field.getType().toString()}) valueList.get($count));
+#elseif($field.getType().isOptional())
+		builder.set${field.getName()}(Optional.of(${field.getType().getTypeParameter(0).toString("","Test")}.createEnt((List<Object>) valueList.get($count))));
 #else
 		builder.set${field.getName()}(${field.getType().toString("","Test")}.createEnt((List<Object>) valueList.get($count)));
 #end
@@ -136,6 +138,8 @@ public class ${name}Test {
 		}
 #elseif($field.getType().isPrimitive())
 		assertEquals(ent.get$field.getName()(), ($field.getType().toString()) valueList.get($count));
+#elseif($field.getType().isOptional())
+		${field.getType().getTypeParameter(0).toString("", "Test")}.testEnt(ent.get$field.getName()().get(), (List<Object>) valueList.get($count));
 #else
 		${field.getType().toString("", "Test")}.testEnt(ent.get$field.getName()(), (List<Object>) valueList.get($count));
 #end
@@ -172,7 +176,9 @@ public class ${name}Test {
 #end
  		valueList.add(subMap${foreach.count});
 #elseif($type.isPrimitive())
- 		valueList.add(${type.createRandomPrimitive(0)});	
+ 		valueList.add(${type.createRandomPrimitive(0)});
+#elseif($type.isOptional())
+		valueList.add(${type.getTypeParameter(0).toString("","Test")}.createValueList());
 #else
  		valueList.add(${type.toString("","Test")}.createValueList());
 #end

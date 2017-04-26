@@ -6,13 +6,13 @@
     "fields" : [
         {
             "name" : "Parent",
-            "description" : "The parent of the node.",
-            "type" : "workflow.entity.EntityID"
+            "description" : "The parent workflow id of the node.",
+            "type" : "String"
         },
         {
             "name" : "JobManager",
             "description" : "The job manager (e.g. cluster or streaming).",
-            "type" : "workflow.entity.JobManagerEnt"
+            "type" : "Optional<workflow.entity.JobManagerEnt>"
         },
         {
             "name" : "NodeMessage",
@@ -37,11 +37,6 @@
         {
             "name" : "NodeID",
             "description" : "The ID of the node.",
-            "type" : "String"
-        },
-        {
-            "name" : "NodeTypeID",
-            "description" : "The ID of the node type (metanode, native nodes, etc).",
             "type" : "String"
         },
         {

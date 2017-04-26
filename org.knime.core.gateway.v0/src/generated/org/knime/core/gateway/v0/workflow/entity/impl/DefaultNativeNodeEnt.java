@@ -47,8 +47,8 @@
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
 import java.util.List;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -73,14 +73,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DefaultNativeNodeEnt implements NativeNodeEnt {
 
 	private NodeFactoryIDEnt m_NodeFactoryID;
-	private EntityID m_Parent;
-	private JobManagerEnt m_JobManager;
+	private String m_Parent;
+	private Optional<JobManagerEnt> m_JobManager;
 	private NodeMessageEnt m_NodeMessage;
 	private List<NodeInPortEnt> m_InPorts;
 	private List<NodeOutPortEnt> m_OutPorts;
 	private String m_Name;
 	private String m_NodeID;
-	private String m_NodeTypeID;
 	private String m_NodeType;
 	private BoundsEnt m_Bounds;
 	private boolean m_IsDeletable;
@@ -100,7 +99,6 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
 		m_OutPorts = builder.m_OutPorts;
 		m_Name = builder.m_Name;
 		m_NodeID = builder.m_NodeID;
-		m_NodeTypeID = builder.m_NodeTypeID;
 		m_NodeType = builder.m_NodeType;
 		m_Bounds = builder.m_Bounds;
 		m_IsDeletable = builder.m_IsDeletable;
@@ -115,12 +113,12 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
     }
     
 	@Override
-    public EntityID getParent() {
+    public String getParent() {
         return m_Parent;
     }
     
 	@Override
-    public JobManagerEnt getJobManager() {
+    public Optional<JobManagerEnt> getJobManager() {
         return m_JobManager;
     }
     
@@ -147,11 +145,6 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
 	@Override
     public String getNodeID() {
         return m_NodeID;
-    }
-    
-	@Override
-    public String getNodeTypeID() {
-        return m_NodeTypeID;
     }
     
 	@Override
@@ -200,14 +193,13 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
 	public static class DefaultNativeNodeEntBuilder implements NativeNodeEntBuilder {
     
 		private NodeFactoryIDEnt m_NodeFactoryID;
-		private EntityID m_Parent;
-		private JobManagerEnt m_JobManager;
+		private String m_Parent;
+		private Optional<JobManagerEnt> m_JobManager;
 		private NodeMessageEnt m_NodeMessage;
 		private List<NodeInPortEnt> m_InPorts;
 		private List<NodeOutPortEnt> m_OutPorts;
 		private String m_Name;
 		private String m_NodeID;
-		private String m_NodeTypeID;
 		private String m_NodeType;
 		private BoundsEnt m_Bounds;
 		private boolean m_IsDeletable;
@@ -226,13 +218,13 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
         }
         
 		@Override
-        public NativeNodeEntBuilder setParent(final EntityID Parent) {
+        public NativeNodeEntBuilder setParent(final String Parent) {
 			m_Parent = Parent;			
             return this;
         }
         
 		@Override
-        public NativeNodeEntBuilder setJobManager(final JobManagerEnt JobManager) {
+        public NativeNodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
 			m_JobManager = JobManager;			
             return this;
         }
@@ -264,12 +256,6 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
 		@Override
         public NativeNodeEntBuilder setNodeID(final String NodeID) {
 			m_NodeID = NodeID;			
-            return this;
-        }
-        
-		@Override
-        public NativeNodeEntBuilder setNodeTypeID(final String NodeTypeID) {
-			m_NodeTypeID = NodeTypeID;			
             return this;
         }
         

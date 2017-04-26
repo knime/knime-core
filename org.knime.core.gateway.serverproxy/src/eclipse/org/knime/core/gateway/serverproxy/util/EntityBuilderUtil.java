@@ -65,6 +65,7 @@ import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.INodeInPort;
 import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeUIInformation;
@@ -72,27 +73,31 @@ import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -140,15 +145,17 @@ public class EntityBuilderUtil {
         INodeAnnotation na = nc.getNodeAnnotation();
         return builder(NodeAnnotationEntBuilder.class).setBackgroundColor(na.getBgColor())
             .setBorderColor(na.getBorderColor()).setBorderSize(na.getBorderSize())
-            .setDefaultFontSize(na.getDefaultFontSize()).setHeight(na.getHeight()).setNode("TODO").setText(na.getText())
+            .setDefaultFontSize(na.getDefaultFontSize()).setHeight(na.getHeight()).setText(na.getText())
             .setTextAlignment(na.getAlignment().toString()).setVersion(na.getVersion()).setWidth(na.getWidth())
-            .setX(na.getX()).setY(na.getY()).build();
+            .setX(na.getX()).setY(na.getY()).setIsDefault(na.getData().isDefault()).build();
     }
 
-    private static JobManagerEnt buildJobManagerEnt(final INodeContainer nc) {
-        Optional<JobManagerUID> jobManagerUID = nc.getJobManagerUID();
-        return builder(JobManagerEntBuilder.class).setJobManagerID(jobManagerUID.map(j -> j.getID()).orElse("Not set"))
-            .setName(jobManagerUID.map(j -> j.getName()).orElse("Not set")).build();
+    private static Optional<JobManagerEnt> buildJobManagerEnt(final Optional<JobManagerUID> jobManagerUID) {
+        if(!jobManagerUID.isPresent()) {
+            return Optional.empty();
+        }
+        return Optional.of(builder(JobManagerEntBuilder.class).setJobManagerID(jobManagerUID.map(j -> j.getID()).orElse("Not set"))
+            .setName(jobManagerUID.map(j -> j.getName()).orElse("Not set")).build());
     }
 
     private static BoundsEnt buildBoundsEnt(final NodeUIInformation ui) {
@@ -174,25 +181,32 @@ public class EntityBuilderUtil {
             .setType(nc.getNodeMessage().getMessageType().toString()).build();
     }
 
-    private static NodeEnt buildNodeEnt(final INodeContainer nc) {
-
-        String nodeTypeID = "";
+    private static NodeEnt buildNodeEnt(final INodeContainer nc, final String parentWorkflowID) {
         if(nc instanceof NativeNodeContainer) {
-            NodeFactory<NodeModel> factory = ((NativeNodeContainer)nc).getNode().getFactory();
-            if(factory instanceof DynamicNodeFactory) {
-                nodeTypeID = factory.getClass().getCanonicalName() + "#" + nc.getName();
-            } else {
-                nodeTypeID = factory.getClass().getCanonicalName();
-            }
+            return buildNativeNodeEnt((NativeNodeContainer) nc, parentWorkflowID);
         }
         return builder(NodeEntBuilder.class).setName(nc.getName()).setNodeID(nc.getID().toString())
             .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
             .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
             .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
-            .setParent(builder(EntityIDBuilder.class).setID("TODO").setType("WorkflowEnt").build())
-            .setJobManager(buildJobManagerEnt(nc)).setNodeAnnotation(buildNodeAnnotationEnt(nc))
+            .setParent(parentWorkflowID)
+            .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
+            .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog()).build();
+    }
+
+    private static NativeNodeEnt buildNativeNodeEnt(final NativeNodeContainer nc, final String parentWorkflowID) {
+        NodeFactory<NodeModel> factory = nc.getNode().getFactory();
+        NodeFactoryIDEnt nodeFactoryID = builder(NodeFactoryIDEntBuilder.class)
+                .setClassName(factory.getClass().getCanonicalName())
+                .setNodeName(nc.getName()).build();
+        return builder(NativeNodeEntBuilder.class).setName(nc.getName()).setNodeID(nc.getID().toString())
+            .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
+            .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
+            .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
+            .setParent(parentWorkflowID)
+            .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
             .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog())
-            .setNodeTypeID(nodeTypeID).build();
+            .setNodeFactoryID(nodeFactoryID).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {
@@ -207,10 +221,28 @@ public class EntityBuilderUtil {
             .setType(cc.getType().toString()).setBendPoints(bendpoints).build();
     }
 
-    public static WorkflowEnt buildWorkflowEnt(final IWorkflowManager wfm) {
+    private static WorkflowAnnotationEnt buildWorkflowAnnotationEnt(final IWorkflowAnnotation wa) {
+        BoundsEnt bounds = builder(BoundsEntBuilder.class)
+                .setX(wa.getX())
+                .setY(wa.getY())
+                .setWidth(wa.getWidth())
+                .setHeight(wa.getHeight())
+                .build();
+        return builder(WorkflowAnnotationEntBuilder.class)
+                .setAlignment(wa.getAlignment().toString())
+                .setBgColor(wa.getBgColor())
+                .setBorderColor(wa.getBorderColor())
+                .setBorderSize(wa.getBorderSize())
+                .setFontSize(wa.getDefaultFontSize())
+                .setBounds(bounds)
+                .setText(wa.getText())
+                .build();
+    }
+
+    public static WorkflowEnt buildWorkflowEnt(final IWorkflowManager wfm, final String workflowID) {
         Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
         Map<String, NodeEnt> nodes = nodeContainers.stream().map(nc -> {
-            return buildNodeEnt(nc);
+            return buildNodeEnt(nc, workflowID);
         }).collect(Collectors.toMap(n -> n.getNodeID(), n -> n));
         Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
         List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
@@ -219,13 +251,15 @@ public class EntityBuilderUtil {
         return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(connections)
             .setBounds(buildBoundsEnt(wfm.getUIInformation())).setHasDialog(wfm.hasDialog())
             .setInPorts(buildNodeInPortEnts(wfm)).setIsDeletable(wfm.isDeletable())
-            .setJobManager(buildJobManagerEnt(wfm)).setName(wfm.getName())
+            .setJobManager(buildJobManagerEnt(Optional.of(wfm.findJobManagerUID()))).setName(wfm.getName())
             .setNodeAnnotation(buildNodeAnnotationEnt(wfm)).setNodeID(wfm.getID().toString())
             .setNodeMessage(buildNodeMessageEnt(wfm)).setNodeState("TODO").setNodeType(wfm.getType().toString())
             .setOutPorts(buildNodeOutPortEnts(wfm))
-            .setParent(builder(EntityIDBuilder.class).setID("TODO").setType("WorkflowEnt").build())
+            .setParent(workflowID)
             .setMetaInPorts(buildDummyMetaPortEnt())
-            .setMetaOutPorts(buildDummyMetaPortEnt()).build();
+            .setMetaOutPorts(buildDummyMetaPortEnt())
+            .setWorkflowAnnotations(wfm.getWorkflowAnnotations().stream().map(wa -> buildWorkflowAnnotationEnt(wa)).collect(Collectors.toList()))
+            .build();
     }
 
 }

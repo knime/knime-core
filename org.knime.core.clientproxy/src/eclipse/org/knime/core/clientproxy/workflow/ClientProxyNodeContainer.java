@@ -72,12 +72,9 @@ import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
@@ -137,12 +134,10 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public IWorkflowManager getParent() {
-        EntityID parent = m_node.getParent();
-        assert parent.getType().equals("WorkflowEnt");
         //download 'workflow' from 'server'
-        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(parent.getID());
+        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(m_node.getParent());
         //return same instance if the instance for this ID has already been created
-        return WrapperMapUtil.getOrCreate(parent.getID(), we -> new ClientProxyWorkflowManager(workflow));
+        return WrapperMapUtil.getOrCreate(m_node.getParent(), we -> new ClientProxyWorkflowManager(workflow));
     }
 
     /**
@@ -150,12 +145,8 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public Optional<JobManagerUID> getJobManagerUID() {
-        JobManagerEnt jobManager = m_node.getJobManager();
-        JobManagerUID jobManagerUID = null;
-        if(jobManager != null) {
-            jobManagerUID = JobManagerUID.builder(jobManager.getJobManagerID()).setName(jobManager.getName()).build();
-        }
-        return Optional.ofNullable(jobManagerUID);
+        return m_node.getJobManager()
+            .map(jm -> JobManagerUID.builder(jm.getJobManagerID()).setName(jm.getName()).build());
     }
 
     /**
@@ -163,7 +154,10 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public JobManagerUID findJobManagerUID() {
-        return null;
+        //optionally derive the job manager uid from the parent
+        return m_node.getJobManager()
+            .map(jm -> JobManagerUID.builder(jm.getJobManagerID()).setName(jm.getName()).build())
+            .orElseGet(() -> getParent().findJobManagerUID());
     }
 
     /**
@@ -281,7 +275,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void setUIInformation(final NodeUIInformation uiInformation) {
-        throw new UnsupportedOperationException();
         //        service(NodeService.class).updateNode(null);
     }
 
@@ -315,37 +308,37 @@ public class ClientProxyNodeContainer implements INodeContainer {
 
             @Override
             public boolean isWaitingToBeExecuted() {
-                return state.equals("queued");
+                return state.equals("QUEUED");
             }
 
             @Override
             public boolean isIdle() {
-                return state.equals("idle");
+                return state.equals("IDLE");
             }
 
             @Override
             public boolean isHalted() {
-                return state.equals("halted");
+                return state.equals("HALTED");
             }
 
             @Override
             public boolean isExecutionInProgress() {
-                return state.equals("executing");
+                return state.equals("EXECUTING");
             }
 
             @Override
             public boolean isExecutingRemotely() {
-                return state.equals("executing_remotely");
+                return state.equals("EXECUTING_REMOTELY");
             }
 
             @Override
             public boolean isExecuted() {
-                return state.equals("executed");
+                return state.equals("EXECUTED");
             }
 
             @Override
             public boolean isConfigured() {
-                return state.equals("configured");
+                return state.equals("CONFIGURED");
             }
         };
     }
@@ -375,7 +368,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean isAllInputDataAvailable() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -384,8 +376,8 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean canExecuteUpToHere() {
-        //TODO
-        return service(ExecutionService.class).getCanExecuteUpToHere(null, null);
+        throw new UnsupportedOperationException();
+//        return service(ExecutionService.class).getCanExecuteUpToHere(null, null);
     }
 
     /**
@@ -393,8 +385,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void applySettingsFromDialog() throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -402,7 +393,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean areDialogSettingsValid() {
-        // TODO
         return false;
     }
 
@@ -419,7 +409,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -462,7 +451,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public int getNrViews() {
-        // TODO Auto-generated method stub
+        //TODO
         return 0;
     }
 
@@ -471,7 +460,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public int getNrNodeViews() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
@@ -480,7 +468,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getViewName(final int i) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -489,7 +476,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getNodeViewName(final int i) {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -498,7 +484,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean hasInteractiveView() {
-        // TODO Auto-generated method stub
+        //TODO
         return false;
     }
 
@@ -507,7 +493,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getInteractiveViewName() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -516,7 +501,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public URL getIcon() {
-        // TODO mapping from the node factory to the respective icon
+        //TODO if a native node - get the icon url via the node factory
         return null;
     }
 
@@ -549,8 +534,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getNameWithID() {
-        // TODO Auto-generated method stub
-        return null;
+        return getName() + " " + getID().toString();
     }
 
     /**
@@ -558,8 +542,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getDisplayLabel() {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO display label";
     }
 
     /**
@@ -567,8 +550,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getCustomName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO custom name";
     }
 
     /**
@@ -585,8 +567,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getCustomDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO custom description";
     }
 
     /**
@@ -594,8 +575,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void setCustomDescription(final String customDescription) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -603,8 +583,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void setDeletable(final boolean value) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -620,7 +599,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public boolean isDirty() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -629,8 +607,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void setDirty() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -638,8 +615,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -647,8 +623,8 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public NodeLocks getNodeLocks() {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO
+        return new NodeLocks(false, false, false);
     }
 
 }

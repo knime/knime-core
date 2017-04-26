@@ -50,6 +50,11 @@ import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,7 +68,15 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ConnectionEntFromJson implements ConnectionEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = ConnectionEntFromJson.class, name = "ConnectionEnt")
+})
+public class ConnectionEntFromJson  implements ConnectionEnt {
 
 	private String m_Dest;
 	private int m_DestPort;
@@ -83,6 +96,10 @@ public class ConnectionEntFromJson implements ConnectionEnt{
 		m_IsDeleteable = IsDeleteable;
 		m_BendPoints = BendPoints;
 		m_Type = Type;
+	}
+	
+	protected ConnectionEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

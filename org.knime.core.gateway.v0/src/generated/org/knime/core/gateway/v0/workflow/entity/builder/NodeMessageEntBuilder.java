@@ -60,11 +60,11 @@ public interface NodeMessageEntBuilder extends GatewayEntityBuilder<NodeMessageE
      * @return <code>this</code>
      */
 	NodeMessageEntBuilder setMessage(String message);
-
+	
     /**
      * @param type The type of message (warning, error).
      * @return <code>this</code>
      */
 	NodeMessageEntBuilder setType(String type);
-
+	
 }

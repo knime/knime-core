@@ -70,6 +70,11 @@ public interface WorkflowProject {
     String getName();
 
     /**
+     * @return an id of the workflow
+     */
+    String getID();
+
+    /**
      * @return the type of the workflow
      */
     WorkflowProjectType getType();

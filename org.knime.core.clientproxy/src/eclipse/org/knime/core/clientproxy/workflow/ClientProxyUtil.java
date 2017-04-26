@@ -44,21 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 7, 2016 (hornm): created
+ *   Apr 25, 2017 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.service;
+package org.knime.core.clientproxy.workflow;
 
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.util.WrapperMapUtil;
 
 /**
+ * Collection of utility methods helping to create the client-proxy class (e.g. {@link ClientProxyWorkflowManager}) from
+ * the respective entity classes (e.g. {@link WorkflowEnt}).
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ConnectionService {
+public class ClientProxyUtil {
 
-    void updateConnection(ConnectionEnt con);
+    /**
+     *
+     */
+    private ClientProxyUtil() {
+        // utility class
+    }
 
-    ConnectionEnt getConnection(EntityID id);
+    /**
+     * @param nodeEnt the node entity to be wrapped
+     * @param key a unique key representing the node entity to ensure that the very same object instance is returned for the same key
+     * @return the client-proxy node container
+     */
+    public static ClientProxyNodeContainer getNodeContainer(final NodeEnt nodeEnt, final Object key) {
+        //return exactly the same node container instance for the same node entity
+        return WrapperMapUtil.getOrCreate(key, k -> {
+            if (nodeEnt instanceof NativeNodeEnt) {
+                return new ClientProxySingleNodeContainer(nodeEnt);
+            }
+            if (nodeEnt instanceof WorkflowEnt) {
+                return new ClientProxyWorkflowManager((WorkflowEnt)nodeEnt);
+            }
+            throw new IllegalStateException("Node entity type " + nodeEnt.getClass().getName() + " not supported.");
+        }, ClientProxyNodeContainer.class);
+    }
+
+    public static ClientProxyWorkflowAnnotation getWorkflowAnnotation(final WorkflowAnnotationEnt wa) {
+        return WrapperMapUtil.getOrCreate(wa, o -> new ClientProxyWorkflowAnnotation(o),
+            ClientProxyWorkflowAnnotation.class);
+    }
+
+    public static ClientProxyConnectionContainer getConnectionContainer(final ConnectionEnt c) {
+        return WrapperMapUtil.getOrCreate(c, o -> new ClientProxyConnectionContainer(c),
+            ClientProxyConnectionContainer.class);
+    }
 
 }

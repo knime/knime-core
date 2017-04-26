@@ -65,6 +65,11 @@ public interface ProjectTreeNode {
     String getName();
 
     /**
+     * @return an id of the project tree node
+     */
+    String getID();
+
+    /**
      * @return list of all direct tree node children, an empty list if none
      */
     List<ProjectTreeNode> getChildren();

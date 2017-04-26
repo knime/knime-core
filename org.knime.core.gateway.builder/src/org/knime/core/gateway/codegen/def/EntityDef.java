@@ -49,15 +49,11 @@
 package org.knime.core.gateway.codegen.def;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.knime.core.node.util.CheckUtils;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -70,15 +66,13 @@ public class EntityDef extends ObjectDef {
 
     private final List<EntityField> m_fields;
 
-    private String m_parentEntityName;
-
-    private EntityDef m_parentEntity;
+    private List<String> m_parentEntityNames;
 
     /** Constructor used by Jackson.
      * @param namespace
      * @param name
      * @param description
-     * @param parentEntityName
+     * @param parentEntityNames
      * @param entityFields
      */
     @JsonCreator
@@ -86,34 +80,21 @@ public class EntityDef extends ObjectDef {
         @JsonProperty("namespace") final String namespace,
         @JsonProperty("name") final String name,
         @JsonProperty("description") final String description,
-        @JsonProperty("parent") final String parentEntityName,
+        @JsonProperty("parents") final String[] parentEntityNames,
         @JsonProperty("fields") final EntityField[] entityFields) {
         super(namespace, name, description);
         m_fields = Arrays.asList(entityFields);
-        m_parentEntityName = parentEntityName;
+        m_parentEntityNames = parentEntityNames == null ? Collections.emptyList() : Arrays.asList(parentEntityNames);
     }
 
-    @JsonIgnore
-    public void resolveParent(final Map<String, EntityDef> entityDef) {
-        if (m_parentEntityName != null) {
-            m_parentEntity = CheckUtils.checkArgumentNotNull(entityDef.get(m_parentEntityName),
-                "No parent entity \"%s\" for child \"%s\"", m_parentEntityName, getName());
-        }
-    }
-
-    @JsonProperty("parent")
-    public String getParent() {
-        return m_parentEntityName;
+    @JsonProperty("parents")
+    public List<String> getParents() {
+        return m_parentEntityNames;
     }
 
     @JsonProperty("fields")
     public List<EntityField> getFields() {
         return m_fields;
-    }
-
-    @JsonIgnore
-    public Optional<String> getParentOptional() {
-        return Optional.ofNullable(m_parentEntityName);
     }
 
     @Override

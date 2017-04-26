@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
+// AUTO-GENERATED CODE; DO NOT MODIFY
 public class RSWrapperRepositoryService implements RSRepositoryService {
 
     private RepositoryService m_service;

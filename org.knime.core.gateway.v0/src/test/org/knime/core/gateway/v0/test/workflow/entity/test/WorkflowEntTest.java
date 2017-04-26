@@ -58,9 +58,9 @@ import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
@@ -68,10 +68,10 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.EntityIDBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
@@ -79,6 +79,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 
 /**
@@ -123,24 +124,29 @@ public class WorkflowEntTest {
 			list3.add(MetaPortEntTest.createEnt((List<Object>) subList3.get(i)));
 		}
 		builder.setMetaOutPorts(list3);
-		builder.setParent(EntityIDTest.createEnt((List<Object>) valueList.get(4)));
-		builder.setJobManager(JobManagerEntTest.createEnt((List<Object>) valueList.get(5)));
-		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(6)));
-		List<NodeInPortEnt> list7 = new ArrayList<>();
-		List<Object> subList7 = (List<Object>) valueList.get(7);
-		for(int i = 0; i < subList7.size(); i++) {
-			list7.add(NodeInPortEntTest.createEnt((List<Object>) subList7.get(i)));
+		List<WorkflowAnnotationEnt> list4 = new ArrayList<>();
+		List<Object> subList4 = (List<Object>) valueList.get(4);
+		for(int i = 0; i < subList4.size(); i++) {
+			list4.add(WorkflowAnnotationEntTest.createEnt((List<Object>) subList4.get(i)));
 		}
-		builder.setInPorts(list7);
-		List<NodeOutPortEnt> list8 = new ArrayList<>();
+		builder.setWorkflowAnnotations(list4);
+		builder.setParent((String) valueList.get(5));
+		builder.setJobManager(Optional.of(JobManagerEntTest.createEnt((List<Object>) valueList.get(6))));
+		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(7)));
+		List<NodeInPortEnt> list8 = new ArrayList<>();
 		List<Object> subList8 = (List<Object>) valueList.get(8);
 		for(int i = 0; i < subList8.size(); i++) {
-			list8.add(NodeOutPortEntTest.createEnt((List<Object>) subList8.get(i)));
+			list8.add(NodeInPortEntTest.createEnt((List<Object>) subList8.get(i)));
 		}
-		builder.setOutPorts(list8);
-		builder.setName((String) valueList.get(9));
-		builder.setNodeID((String) valueList.get(10));
-		builder.setNodeTypeID((String) valueList.get(11));
+		builder.setInPorts(list8);
+		List<NodeOutPortEnt> list9 = new ArrayList<>();
+		List<Object> subList9 = (List<Object>) valueList.get(9);
+		for(int i = 0; i < subList9.size(); i++) {
+			list9.add(NodeOutPortEntTest.createEnt((List<Object>) subList9.get(i)));
+		}
+		builder.setOutPorts(list9);
+		builder.setName((String) valueList.get(10));
+		builder.setNodeID((String) valueList.get(11));
 		builder.setNodeType((String) valueList.get(12));
 		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(13)));
 		builder.setIsDeletable((boolean) valueList.get(14));
@@ -171,22 +177,26 @@ public class WorkflowEntTest {
 		for(int i = 0; i < subList3.size(); i++) {
 			MetaPortEntTest.testEnt(subList3.get(i), (List<Object>) subValueList3.get(i));
 		}
-		EntityIDTest.testEnt(ent.getParent(), (List<Object>) valueList.get(4));
-		JobManagerEntTest.testEnt(ent.getJobManager(), (List<Object>) valueList.get(5));
-		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(6));
-		List<Object> subValueList7 = (List<Object>) valueList.get(7);
-		List<NodeInPortEnt> subList7 =  ent.getInPorts();
-		for(int i = 0; i < subList7.size(); i++) {
-			NodeInPortEntTest.testEnt(subList7.get(i), (List<Object>) subValueList7.get(i));
+		List<Object> subValueList4 = (List<Object>) valueList.get(4);
+		List<WorkflowAnnotationEnt> subList4 =  ent.getWorkflowAnnotations();
+		for(int i = 0; i < subList4.size(); i++) {
+			WorkflowAnnotationEntTest.testEnt(subList4.get(i), (List<Object>) subValueList4.get(i));
 		}
+		assertEquals(ent.getParent(), (String) valueList.get(5));
+		JobManagerEntTest.testEnt(ent.getJobManager().get(), (List<Object>) valueList.get(6));
+		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(7));
 		List<Object> subValueList8 = (List<Object>) valueList.get(8);
-		List<NodeOutPortEnt> subList8 =  ent.getOutPorts();
+		List<NodeInPortEnt> subList8 =  ent.getInPorts();
 		for(int i = 0; i < subList8.size(); i++) {
-			NodeOutPortEntTest.testEnt(subList8.get(i), (List<Object>) subValueList8.get(i));
+			NodeInPortEntTest.testEnt(subList8.get(i), (List<Object>) subValueList8.get(i));
 		}
-		assertEquals(ent.getName(), (String) valueList.get(9));
-		assertEquals(ent.getNodeID(), (String) valueList.get(10));
-		assertEquals(ent.getNodeTypeID(), (String) valueList.get(11));
+		List<Object> subValueList9 = (List<Object>) valueList.get(9);
+		List<NodeOutPortEnt> subList9 =  ent.getOutPorts();
+		for(int i = 0; i < subList9.size(); i++) {
+			NodeOutPortEntTest.testEnt(subList9.get(i), (List<Object>) subValueList9.get(i));
+		}
+		assertEquals(ent.getName(), (String) valueList.get(10));
+		assertEquals(ent.getNodeID(), (String) valueList.get(11));
 		assertEquals(ent.getNodeType(), (String) valueList.get(12));
 		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(13));
 		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(14));
@@ -229,43 +239,49 @@ public class WorkflowEntTest {
 		subList4.add(MetaPortEntTest.createValueList());
  		valueList.add(subList4);
 
- 		valueList.add(EntityIDTest.createValueList());
+ 		List<List<Object>> subList5 = new ArrayList<>();
+		subList5.add(WorkflowAnnotationEntTest.createValueList());
+		subList5.add(WorkflowAnnotationEntTest.createValueList());
+		subList5.add(WorkflowAnnotationEntTest.createValueList());
+		subList5.add(WorkflowAnnotationEntTest.createValueList());
+		subList5.add(WorkflowAnnotationEntTest.createValueList());
+ 		valueList.add(subList5);
 
- 		valueList.add(JobManagerEntTest.createValueList());
+ 		valueList.add("CGvxL");
+
+		valueList.add(JobManagerEntTest.createValueList());
 
  		valueList.add(NodeMessageEntTest.createValueList());
 
- 		List<List<Object>> subList8 = new ArrayList<>();
-		subList8.add(NodeInPortEntTest.createValueList());
-		subList8.add(NodeInPortEntTest.createValueList());
-		subList8.add(NodeInPortEntTest.createValueList());
-		subList8.add(NodeInPortEntTest.createValueList());
-		subList8.add(NodeInPortEntTest.createValueList());
- 		valueList.add(subList8);
-
  		List<List<Object>> subList9 = new ArrayList<>();
-		subList9.add(NodeOutPortEntTest.createValueList());
-		subList9.add(NodeOutPortEntTest.createValueList());
-		subList9.add(NodeOutPortEntTest.createValueList());
-		subList9.add(NodeOutPortEntTest.createValueList());
-		subList9.add(NodeOutPortEntTest.createValueList());
+		subList9.add(NodeInPortEntTest.createValueList());
+		subList9.add(NodeInPortEntTest.createValueList());
+		subList9.add(NodeInPortEntTest.createValueList());
+		subList9.add(NodeInPortEntTest.createValueList());
+		subList9.add(NodeInPortEntTest.createValueList());
  		valueList.add(subList9);
 
- 		valueList.add("CGvxL");	
+ 		List<List<Object>> subList10 = new ArrayList<>();
+		subList10.add(NodeOutPortEntTest.createValueList());
+		subList10.add(NodeOutPortEntTest.createValueList());
+		subList10.add(NodeOutPortEntTest.createValueList());
+		subList10.add(NodeOutPortEntTest.createValueList());
+		subList10.add(NodeOutPortEntTest.createValueList());
+ 		valueList.add(subList10);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
  		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(true);	
+ 		valueList.add(true);
 
- 		valueList.add("CGvxL");	
+ 		valueList.add("CGvxL");
 
- 		valueList.add(true);	
+ 		valueList.add(true);
 
  		valueList.add(NodeAnnotationEntTest.createValueList());
 

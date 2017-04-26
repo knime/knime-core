@@ -3,7 +3,7 @@
     "name" : "NativeNodeEnt",
     "description" : "Native node extension of a NodeEnt",
     "namespace" : "workflow.entity",
-    "parent" : "workflow.entity.NodeEnt",
+    "parents" : [ "workflow.entity.NodeEnt"],
     "fields" : [
         {
             "name" : "NodeFactoryID",

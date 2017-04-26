@@ -52,7 +52,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +98,6 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.Pair;
-import org.knime.core.util.WrapperMapUtil;
 
 /**
  *
@@ -119,7 +120,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public ReentrantLock getReentrantLockInstance() {
-        // TODO Auto-generated method stub
+        // TODO
         return null;
     }
 
@@ -128,7 +129,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isLockedByCurrentThread() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -137,8 +137,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowManager getProjectWFM() {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO if this is a meta node
+        return this;
     }
 
     /**
@@ -146,8 +146,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void removeProject(final NodeID id) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -171,7 +170,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canRemoveNode(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -197,8 +195,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isProject() {
-        // TODO Auto-generated method stub
-        return false;
+        //TODO
+        return true;
     }
 
     /**
@@ -253,8 +251,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getSource().equals(nodeID) && c.getSourcePort() == portIdx) {
-                //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ClientProxyConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c));
             }
         }
         return res;
@@ -270,8 +267,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getSource().equals(nodeID)) {
-                //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ClientProxyConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c));
             }
         }
         return res;
@@ -286,8 +282,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getDest().equals(nodeID) && c.getDestPort() == portIdx) {
-                //TODO re-use connection container wrapper for the same connection entity
-                return new ClientProxyConnectionContainer(c);
+                return ClientProxyUtil.getConnectionContainer(c);
             }
         }
         return null;
@@ -303,8 +298,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if(c.getDest().equals(nodeID)) {
-                //TODO re-use connection container wrapper for the same connection entity
-                res.add(new ClientProxyConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c));
             }
         }
         return res;
@@ -319,7 +313,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         for (ConnectionEnt c : m_workflow.getConnections()) {
             if (m_workflow.getNodes().get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
                 && id.getDestinationPort() == c.getDestPort()) {
-                return new ClientProxyConnectionContainer(c);
+                return ClientProxyUtil.getConnectionContainer(c);
             }
         }
         return null;
@@ -394,8 +388,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -403,8 +396,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -412,8 +404,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -421,8 +412,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -430,8 +420,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void resetAll() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -439,8 +428,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void resetAndConfigureAll() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -448,8 +436,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void executeUpToHere(final NodeID... ids) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -457,7 +444,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canReExecuteNode(final NodeID id) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -466,8 +452,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void saveNodeSettingsToDefault(final NodeID id) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -475,8 +460,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -484,8 +468,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String canExpandSubNode(final NodeID subNodeID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -493,8 +476,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String canExpandMetaNode(final NodeID wfmID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -502,8 +484,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IExpandMetaNodeResult expandMetaNodeUndoable(final NodeID wfmID) throws IllegalArgumentException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -511,8 +492,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IExpandSubNodeResult expandSubNodeUndoable(final NodeID nodeID) throws IllegalStateException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -520,8 +500,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IMetaNodeToSubNodeResult convertMetaNodeToSubNode(final NodeID wfmID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -529,8 +508,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public ISubNodeToMetaNodeResult convertSubNodeToMetaNode(final NodeID subnodeID) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -538,8 +516,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -548,8 +525,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     @Override
     public ICollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs,
         final WorkflowAnnotationID[] orgAnnos, final String name) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -557,7 +533,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canResetNode(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -566,7 +541,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canResetContainedNodes() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -575,8 +549,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void resetAndConfigureNode(final NodeID id) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -584,7 +557,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canConfigureNodes() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -593,7 +565,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canExecuteNodeDirectly(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -602,7 +573,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canExecuteNode(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -611,7 +581,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canCancelNode(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -620,7 +589,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canCancelAll() {
-        // TODO Auto-generated method stub
+        //TODO
         return false;
     }
 
@@ -629,8 +598,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void cancelExecution(final INodeContainer nc) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -638,8 +606,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void pauseLoopExecution(final INodeContainer nc) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -647,8 +614,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void resumeLoopExecution(final INodeContainer nc, final boolean oneStep) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -656,7 +622,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canSetJobManager(final NodeID nodeID) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -665,8 +630,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setJobManager(final NodeID nodeID, final JobManagerUID jobMgr) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -674,8 +638,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void shutdown() {
-        // TODO Auto-generated method stub
-
+        //TODO
     }
 
     /**
@@ -683,8 +646,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean executeAllAndWaitUntilDone() {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -692,8 +654,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean executeAllAndWaitUntilDoneInterruptibly() throws InterruptedException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -701,8 +662,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean waitWhileInExecution(final long time, final TimeUnit unit) throws InterruptedException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -710,7 +670,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canExecuteAll() {
-        // TODO Auto-generated method stub
+        //TODO
         return false;
     }
 
@@ -719,8 +679,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void executeAll() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -728,8 +687,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String printNodeSummary(final NodeID prefix, final int indent) {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO node summary";
     }
 
     /**
@@ -740,7 +698,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         Collection<NodeEnt> nodes = m_workflow.getNodes().values();
         //return exactly the same node container instance for the same node entity
         return nodes.stream()
-            .map(n -> WrapperMapUtil.getOrCreate(n.getNodeID(), k -> new ClientProxyNodeContainer(n), ClientProxyNodeContainer.class))
+            .map(n -> ClientProxyUtil.getNodeContainer(n, n.getNodeID()))
             .collect(Collectors.toList());
     }
 
@@ -753,7 +711,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         List<? extends ConnectionEnt> connections = m_workflow.getConnections();
         //return exactly the same connection container instance for the same connection entity
         return connections.stream()
-            .map(c -> WrapperMapUtil.getOrCreate(c, k -> new ClientProxyConnectionContainer(c), ClientProxyConnectionContainer.class))
+            .map(c -> ClientProxyUtil.getConnectionContainer(c))
             .collect(Collectors.toList());
     }
 
@@ -765,16 +723,16 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         //TODO e.g. put the node entities into a hash map for quicker access
         final NodeEnt nodeEnt = m_workflow.getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
-        return WrapperMapUtil.getOrCreate(id, k -> new ClientProxyNodeContainer(nodeEnt), ClientProxyNodeContainer.class);
+        return ClientProxyUtil.getNodeContainer(nodeEnt, id);
     }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     public <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -782,7 +740,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean containsNodeContainer(final NodeID id) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -791,7 +748,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean containsExecutedNode() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -800,8 +756,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public List<NodeMessage> getNodeErrorMessages() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -809,8 +764,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public List<Pair<String, NodeMessage>> getNodeMessages(final Type... types) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return Collections.emptyList();
     }
 
     /**
@@ -818,8 +773,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isWriteProtected() {
-        // TODO Auto-generated method stub
-        return false;
+        //TODO
+        return true;
     }
 
     /**
@@ -827,8 +782,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO
+        return Collections.emptyList();
     }
 
     /**
@@ -836,7 +791,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean canUpdateMetaNodeLink(final NodeID id) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -845,7 +799,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -854,8 +807,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setWorkflowPassword(final String password, final String hint) throws NoSuchAlgorithmException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -863,7 +815,6 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isUnlocked() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -872,8 +823,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String getPasswordHint() {
-        // TODO Auto-generated method stub
-        return null;
+        return "TODO password hint";
     }
 
     /**
@@ -881,7 +831,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isEncrypted() {
-        // TODO Auto-generated method stub
+        //TODO
         return false;
     }
 
@@ -890,8 +840,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public OutputStream cipherOutput(final OutputStream out) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -899,8 +848,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String getCipherFileName(final String fileName) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -908,8 +856,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void addListener(final WorkflowListener listener) {
-        // TODO Auto-generated method stub
-
+        //TODO
     }
 
     /**
@@ -917,8 +864,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void removeListener(final WorkflowListener listener) {
-        // TODO Auto-generated method stub
-
+        //TODO
     }
 
     /**
@@ -926,8 +872,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setAutoSaveDirectoryDirtyRecursivly() {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -935,7 +880,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowInPort getInPort(final int index) {
-        // TODO Auto-generated method stub
+        //TODO
         return null;
     }
 
@@ -944,7 +889,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowOutPort getOutPort(final int index) {
-        // TODO Auto-generated method stub
+        //TODO
         return null;
     }
 
@@ -953,8 +898,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setName(final String name) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -962,8 +906,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean renameWorkflowDirectory(final String newName) {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -971,8 +914,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public String getNameField() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -980,8 +922,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -989,8 +930,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public EditorUIInformation getEditorUIInformation() {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO
+        return EditorUIInformation.builder().build();
     }
 
     /**
@@ -998,8 +939,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public int getNrWorkflowIncomingPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_workflow.getInPorts().size();
     }
 
     /**
@@ -1007,8 +947,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public int getNrWorkflowOutgoingPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_workflow.getOutPorts().size();
     }
 
     /**
@@ -1016,8 +955,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeOutPort getWorkflowIncomingPort(final int i) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1025,8 +964,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeInPort getWorkflowOutgoingPort(final int i) {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1034,8 +973,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1043,8 +981,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1070,8 +1007,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public Collection<IWorkflowAnnotation> getWorkflowAnnotations() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_workflow.getWorkflowAnnotations().stream().map(wa -> ClientProxyUtil.getWorkflowAnnotation(wa))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -1097,8 +1034,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void addWorkflowAnnotation(final IWorkflowAnnotation annotation) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1106,8 +1042,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void removeAnnotation(final IWorkflowAnnotation annotation) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1115,8 +1050,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void removeAnnotation(final WorkflowAnnotationID wfaID) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1124,8 +1058,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void bringAnnotationToFront(final IWorkflowAnnotation annotation) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1133,8 +1066,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void sendAnnotationToBack(final IWorkflowAnnotation annotation) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1151,8 +1083,15 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public List<INodeAnnotation> getNodeAnnotations() {
-        // TODO Auto-generated method stub
-        return null;
+        //TODO
+//        try (WorkflowLock lock = lock()) {
+            Collection<INodeContainer> nodeContainers = getAllNodeContainers();
+            List<INodeAnnotation> result = new LinkedList<INodeAnnotation>();
+            for (INodeContainer node : nodeContainers) {
+                result.add(node.getNodeAnnotation());
+            }
+            return result;
+//        }
     }
 
     /**
@@ -1160,8 +1099,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public <T> T castNodeModel(final NodeID id, final Class<T> cl) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1169,8 +1107,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1178,8 +1115,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeContainer findNodeContainer(final NodeID id) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1187,8 +1123,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public Map<String, ExternalNodeData> getInputNodes() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1196,8 +1131,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1205,8 +1139,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public Map<String, ExternalNodeData> getExternalOutputs() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1214,7 +1147,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void removeWorkflowVariable(final String name) {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
 
     }
 
@@ -1223,8 +1156,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public WorkflowContext getContext() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -1232,7 +1164,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public void notifyTemplateConnectionChangedListener() {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
 
     }
 

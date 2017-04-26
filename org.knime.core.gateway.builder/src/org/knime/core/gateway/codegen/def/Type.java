@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -73,7 +74,7 @@ public class Type {
     private Random m_rand = new Random();
 
     public static enum GenericType {
-            NONE, LIST, MAP;
+            NONE, LIST, MAP, OPTIONAL;
     }
 
     public static final Type VOID = new Type("void");
@@ -103,8 +104,12 @@ public class Type {
                 m_namespace = "java.util";
                 m_simpleName = "Map";
                 break;
+            case OPTIONAL:
+                m_namespace = "java.util";
+                m_simpleName = "Optional";
+                break;
             default:
-                throw new IllegalStateException("Constructor only meant for collections");
+                throw new IllegalStateException("Constructor only meant for collections and optional");
         }
     }
 
@@ -197,21 +202,28 @@ public class Type {
      *         <code>false</code> if type represents a list or map
      */
     public boolean isEntity() {
-        return !isVoid() && !isPrimitive() && !isList() && !isMap();
+        return !isVoid() && !isPrimitive() && !isList() && !isMap() && !isOptional();
     }
 
     /**
      * @return <code>true</code> if the type represents a list of primitives
      */
     public boolean isPrimitiveList() {
-        return m_genericType == GenericType.LIST && getTypeParameter(0).isPrimitive();
+        return isList() && getTypeParameter(0).isPrimitive();
     }
 
     /**
      * @return <code>true</code> if the type represents a map of primitives
      */
     public boolean isPrimitiveMap() {
-        return m_genericType == GenericType.MAP && getTypeParameter(1).isPrimitive();
+        return isMap() && getTypeParameter(1).isPrimitive();
+    }
+
+    /**
+     * @return <code>true</code> if the type represents an optional of a primitive
+     */
+    public boolean isPrimitiveOptional() {
+        return isOptional() && getTypeParameter(0).isPrimitive();
     }
 
     /**
@@ -231,6 +243,13 @@ public class Type {
     }
 
     /**
+     * @return <code>true</code> if the type represents an optional of an entity (i.e. complex types)
+     */
+    public boolean isEntityOptional() {
+        return isOptional() && getTypeParameter(0).isEntity();
+    }
+
+    /**
      * @return <code>true</code> if the type represents a list
      */
     public boolean isList() {
@@ -242,6 +261,13 @@ public class Type {
      */
     public boolean isMap() {
         return m_genericType == GenericType.MAP;
+    }
+
+    /**
+     * @return <code>true</code> if the type represents an optional
+     */
+    public boolean isOptional() {
+        return m_genericType == GenericType.OPTIONAL;
     }
 
     /**
@@ -265,6 +291,9 @@ public class Type {
                 break;
             case MAP:
                 result.add(Map.class.getName());
+                break;
+            case OPTIONAL:
+                result.add(Optional.class.getName());
                 break;
             default:
         }
@@ -333,6 +362,8 @@ public class Type {
             return new Type(GenericType.LIST, parseTypeParameters(s));
         } else if (s.startsWith("Map<")) {
             return new Type(GenericType.MAP, parseTypeParameters(s));
+        } else if(s.startsWith("Optional<")) {
+            return new Type(GenericType.OPTIONAL, parseTypeParameters(s));
         } else {
             return new Type(s);
         }

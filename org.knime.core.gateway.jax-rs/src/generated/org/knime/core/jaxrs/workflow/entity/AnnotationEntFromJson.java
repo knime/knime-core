@@ -47,6 +47,12 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -61,7 +67,16 @@ import java.util.stream.Collectors;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class AnnotationEntFromJson implements AnnotationEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = AnnotationEntFromJson.class, name = "AnnotationEnt")
+,
+  @Type(value = NodeAnnotationEntFromJson.class, name = "NodeAnnotationEnt")})
+public class AnnotationEntFromJson  implements AnnotationEnt {
 
 	private String m_Text;
 	private int m_BackgroundColor;
@@ -89,6 +104,10 @@ public class AnnotationEntFromJson implements AnnotationEnt{
 		m_BorderColor = BorderColor;
 		m_DefaultFontSize = DefaultFontSize;
 		m_Version = Version;
+	}
+	
+	protected AnnotationEntFromJson() {
+		//just a dummy constructor for subclasses
 	}
 
 

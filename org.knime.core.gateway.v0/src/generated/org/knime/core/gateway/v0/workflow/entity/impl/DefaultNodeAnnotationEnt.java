@@ -63,7 +63,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
 
-	private String m_Node;
+	private boolean m_IsDefault;
 	private String m_Text;
 	private int m_BackgroundColor;
 	private int m_X;
@@ -80,7 +80,7 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
      * @param builder
      */
     private DefaultNodeAnnotationEnt(final DefaultNodeAnnotationEntBuilder builder) {
-		m_Node = builder.m_Node;
+		m_IsDefault = builder.m_IsDefault;
 		m_Text = builder.m_Text;
 		m_BackgroundColor = builder.m_BackgroundColor;
 		m_X = builder.m_X;
@@ -95,8 +95,8 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
     }
 
 	@Override
-    public String getNode() {
-        return m_Node;
+    public boolean getIsDefault() {
+        return m_IsDefault;
     }
     
 	@Override
@@ -169,7 +169,7 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
 	*/
 	public static class DefaultNodeAnnotationEntBuilder implements NodeAnnotationEntBuilder {
     
-		private String m_Node;
+		private boolean m_IsDefault;
 		private String m_Text;
 		private int m_BackgroundColor;
 		private int m_X;
@@ -187,8 +187,8 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
         }
 
 		@Override
-        public NodeAnnotationEntBuilder setNode(final String Node) {
-			m_Node = Node;			
+        public NodeAnnotationEntBuilder setIsDefault(final boolean IsDefault) {
+			m_IsDefault = IsDefault;			
             return this;
         }
         

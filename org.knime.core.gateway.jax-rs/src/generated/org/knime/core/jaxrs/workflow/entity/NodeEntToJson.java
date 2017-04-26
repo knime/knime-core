@@ -47,16 +47,25 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.EntityID;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
 
@@ -69,7 +78,8 @@ import java.util.HashMap;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeEntToJson implements NodeEnt{
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public class NodeEntToJson  implements NodeEnt {
 
 	private final NodeEnt m_e;
 	
@@ -78,79 +88,101 @@ public class NodeEntToJson implements NodeEnt{
 	}
 
 	@JsonProperty("Parent")
-    public EntityID getParent() {
-            return new EntityIDToJson(m_e.getParent());
-        }
+    public String getParent() {
+    	return m_e.getParent();
+    }
     
-	@JsonProperty("JobManager")
-    public JobManagerEnt getJobManager() {
-            return new JobManagerEntToJson(m_e.getJobManager());
-        }
+	@JsonIgnore
+    public Optional<JobManagerEnt> getJobManager() {
+    	return m_e.getJobManager().map(o -> JobManagerEntToJson.wrap(o));
+    }
     
 	@JsonProperty("NodeMessage")
     public NodeMessageEnt getNodeMessage() {
-            return new NodeMessageEntToJson(m_e.getNodeMessage());
-        }
+        return NodeMessageEntToJson.wrap(m_e.getNodeMessage());
+    }
     
 	@JsonProperty("InPorts")
     public List<NodeInPortEnt> getInPorts() {
-        	return m_e.getInPorts().stream().map(l -> new NodeInPortEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getInPorts().stream().map(l -> NodeInPortEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
 	@JsonProperty("OutPorts")
     public List<NodeOutPortEnt> getOutPorts() {
-        	return m_e.getOutPorts().stream().map(l -> new NodeOutPortEntToJson(l)).collect(Collectors.toList());
-        }
+    	return m_e.getOutPorts().stream().map(l -> NodeOutPortEntToJson.wrap(l)).collect(Collectors.toList());
+    }
     
 	@JsonProperty("Name")
     public String getName() {
-        	return m_e.getName();
-        }
+    	return m_e.getName();
+    }
     
 	@JsonProperty("NodeID")
     public String getNodeID() {
-        	return m_e.getNodeID();
-        }
-    
-	@JsonProperty("NodeTypeID")
-    public String getNodeTypeID() {
-        	return m_e.getNodeTypeID();
-        }
+    	return m_e.getNodeID();
+    }
     
 	@JsonProperty("NodeType")
     public String getNodeType() {
-        	return m_e.getNodeType();
-        }
+    	return m_e.getNodeType();
+    }
     
 	@JsonProperty("Bounds")
     public BoundsEnt getBounds() {
-            return new BoundsEntToJson(m_e.getBounds());
-        }
+        return BoundsEntToJson.wrap(m_e.getBounds());
+    }
     
 	@JsonProperty("IsDeletable")
     public boolean getIsDeletable() {
-        	return m_e.getIsDeletable();
-        }
+    	return m_e.getIsDeletable();
+    }
     
 	@JsonProperty("NodeState")
     public String getNodeState() {
-        	return m_e.getNodeState();
-        }
+    	return m_e.getNodeState();
+    }
     
 	@JsonProperty("HasDialog")
     public boolean getHasDialog() {
-        	return m_e.getHasDialog();
-        }
+    	return m_e.getHasDialog();
+    }
     
 	@JsonProperty("NodeAnnotation")
     public NodeAnnotationEnt getNodeAnnotation() {
-            return new NodeAnnotationEntToJson(m_e.getNodeAnnotation());
-        }
+        return NodeAnnotationEntToJson.wrap(m_e.getNodeAnnotation());
+    }
     
+
+
+	/*
+	 * Workaround to exclude the property if the respective optional is empty.
+	 * There might be a better solution. 
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty("JobManager")
+	public JobManagerEnt getJobManagerNullable() {
+		return getJobManager().orElse(null);
+	}
+	
 
 	@Override
 	public String toString() {
 	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "NodeEnt";
+	}
+	
+	public static NodeEnt wrap(NodeEnt e) {
+	    if(e instanceof NativeNodeEnt) {
+	        return NativeNodeEntToJson.wrap((NativeNodeEnt) e);
+	    }
+	    if(e instanceof WorkflowEnt) {
+	        return WorkflowEntToJson.wrap((WorkflowEnt) e);
+	    }
+	    return new NodeEntToJson(e);
 	}
 
 }

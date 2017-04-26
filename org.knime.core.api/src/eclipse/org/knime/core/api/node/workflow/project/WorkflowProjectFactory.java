@@ -63,9 +63,4 @@ public interface WorkflowProjectFactory {
      * @return the root of the project tree
      */
     ProjectTreeNode getProjectTree();
-
-    /**
-     * TODO just for testing purposes, to be removed!!
-     */
-    void testClient();
 }
