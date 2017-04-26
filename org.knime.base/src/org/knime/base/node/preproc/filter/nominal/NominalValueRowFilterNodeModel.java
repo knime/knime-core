@@ -145,7 +145,11 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
         BufferedDataTable positiveTable =
                 exec.createBufferedDataTable(positive.getTable(), exec);
         if (positiveTable.size() <= 0) {
-            setWarningMessage("No rows matched! Input mirrored at out-port 1 (excluded)");
+            String warning = "No rows matched!";
+            if (m_splitter) {
+                warning = warning + " Input mirrored at out-port 1 (excluded)";
+            }
+            setWarningMessage(warning);
         }
         if(m_splitter) {
             negative.close();
