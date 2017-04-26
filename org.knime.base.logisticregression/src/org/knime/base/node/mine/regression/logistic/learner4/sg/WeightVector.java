@@ -57,11 +57,11 @@ import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
  */
 interface WeightVector <T extends TrainingRow> {
 
-    public void scale(double alpha, double lambda);
+//    public void scale(double alpha, double lambda);
 
     public void scale(double scaleFactor);
 
-    public void update(double alpha, double[][] d, int nCovered);
+//    public void update(double alpha, double[][] d, int nCovered);
 
     public void update(final WeightVectorConsumer func, final boolean includeIntercept);
 
@@ -70,8 +70,6 @@ interface WeightVector <T extends TrainingRow> {
     public void update(final WeightVectorConsumer func, final boolean includeIntercept, final IndexCache indexCache);
 
     public void normalize();
-
-    public void finalize(final double[][] d);
 
     public double[][] getWeightVector();
 

@@ -62,16 +62,6 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         super(nFets, nCats, fitIntercept);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void scale(final double alpha, final double lambda) {
-        final double scalingFactor = 1 - alpha * lambda;
-        // the intercept is not scaled
-        scale(scalingFactor);
-    }
-
     @Override
     public void scale(final double scaleFactor) {
         update((val, c, i) -> val * scaleFactor, false);
@@ -81,24 +71,7 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      * {@inheritDoc}
      */
     @Override
-    public void update(final double alpha, final double[][] d, final int nCovered) {
-        update((final double val, final int c, final int i) -> val - alpha * d[c][i] / nCovered, true);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void normalize() {
-        // nothing to do here
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void finalize(final double[][] d) {
         // nothing to do here
     }
 
@@ -135,7 +108,7 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         double[] prediction = new double[m_data.length];
         for (int c = 0; c < m_data.length; c++) {
             double p = 0.0;
-            for (int i = 0; i < m_data[c].length; i++) {
+            for (int i = 0; i < nonZeroIndices.length; i++) {
                 int idx = nonZeroIndices[i];
                 if (idx == -1) {
                     break;

@@ -118,9 +118,10 @@ public class SagOptimizer <T extends TrainingRow> {
                 }
 
                 double alpha = m_lrStrategy.getCurrentLearningRate(row, prediction, sig);
-                w.scale(alpha, lambda);
+                w.scale(1.0 - alpha * lambda);
 
-                w.update(alpha, d, nCovered);
+                final int finalCovered = nCovered;
+                w.update((val, c, i) -> val - alpha * d[c][i] / finalCovered, true);
 
 //                System.out.println("step size: " + alpha);
 
@@ -142,7 +143,7 @@ public class SagOptimizer <T extends TrainingRow> {
         }
 
         // finalize
-        w.finalize(d);
+        w.normalize();
 
         return w.getWeightVector();
     }

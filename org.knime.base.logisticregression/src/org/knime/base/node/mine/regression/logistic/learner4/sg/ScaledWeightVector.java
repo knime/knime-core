@@ -70,22 +70,6 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
      * {@inheritDoc}
      */
     @Override
-    public void scale(final double alpha, final double lambda) {
-        m_scale *= 1 - alpha * lambda;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void update(final double alpha, final double[][] d, final int nCovered) {
-        update((final double val, final int c, final int i) -> val - alpha * d[c][i] / (m_scale * nCovered), true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void normalize() {
         doFinalize();
     }
@@ -99,13 +83,6 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         return super.getWeightVector();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void finalize(final double[][] d) {
-        doFinalize();
-    }
 
     private void doFinalize() {
         // a scale of 1.0 means that no update is necessary
@@ -145,7 +122,7 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         double[] prediction = new double[m_data.length];
         for (int c = 0; c < prediction.length; c++) {
             double p = 0.0;
-            for (int i = 1; i < m_data[c].length; i++) {
+            for (int i = 1; i < nonZeroIndices.length; i++) {
                 int idx = nonZeroIndices[i];
                 p += m_data[c][idx] * row.getFeature(idx);
             }
