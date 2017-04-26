@@ -140,7 +140,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         });
         m_limitRowsChecker.doClick();
 
-        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 1));
+        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 500));
 
         addTab("Settings", initLayout());
 
