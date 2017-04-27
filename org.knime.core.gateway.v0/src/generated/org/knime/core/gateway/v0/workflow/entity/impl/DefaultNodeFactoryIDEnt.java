@@ -46,6 +46,7 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
 
@@ -63,7 +64,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
 
 	private String m_ClassName;
-	private String m_NodeName;
+	private Optional<String> m_NodeName;
 
     /**
      * @param builder
@@ -79,7 +80,7 @@ public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
     }
     
 	@Override
-    public String getNodeName() {
+    public Optional<String> getNodeName() {
         return m_NodeName;
     }
     
@@ -99,7 +100,7 @@ public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
 	public static class DefaultNodeFactoryIDEntBuilder implements NodeFactoryIDEntBuilder {
     
 		private String m_ClassName;
-		private String m_NodeName;
+		private Optional<String> m_NodeName = Optional.empty();
 
         public NodeFactoryIDEnt build() {
             return new DefaultNodeFactoryIDEnt(this);
@@ -112,7 +113,7 @@ public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
         }
         
 		@Override
-        public NodeFactoryIDEntBuilder setNodeName(final String NodeName) {
+        public NodeFactoryIDEntBuilder setNodeName(final Optional<String> NodeName) {
 			m_NodeName = NodeName;			
             return this;
         }

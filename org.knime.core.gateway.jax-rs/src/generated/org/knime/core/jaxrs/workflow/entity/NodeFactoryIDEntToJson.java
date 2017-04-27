@@ -46,6 +46,7 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -77,12 +78,23 @@ public class NodeFactoryIDEntToJson  implements NodeFactoryIDEnt {
     	return m_e.getClassName();
     }
     
-	@JsonProperty("NodeName")
-    public String getNodeName() {
+	@JsonIgnore
+    public Optional<String> getNodeName() {
     	return m_e.getNodeName();
     }
     
 
+
+	/*
+	 * Workaround to exclude the property if the respective optional is empty.
+	 * There might be a better solution. 
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty("NodeName")
+	public String getNodeNameNullable() {
+		return getNodeName().orElse(null);
+	}
+	
 
 	@Override
 	public String toString() {

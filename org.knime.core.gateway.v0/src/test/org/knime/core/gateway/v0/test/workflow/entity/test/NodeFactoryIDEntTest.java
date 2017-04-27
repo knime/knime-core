@@ -56,6 +56,7 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
 
@@ -78,20 +79,20 @@ public class NodeFactoryIDEntTest {
     public static NodeFactoryIDEnt createEnt(final List<Object> valueList) {
         NodeFactoryIDEntBuilder builder = EntityBuilderManager.builder(NodeFactoryIDEntBuilder.class);
 		builder.setClassName((String) valueList.get(0));
-		builder.setNodeName((String) valueList.get(1));
+		builder.setNodeName((Optional<String>) valueList.get(1));
         return builder.build();
     }
 
     public static void testEnt(final NodeFactoryIDEnt ent, final List<Object> valueList) {
 		assertEquals(ent.getClassName(), (String) valueList.get(0));
-		assertEquals(ent.getNodeName(), (String) valueList.get(1));
+		assertEquals(ent.getNodeName().get(),((Optional<String>) valueList.get(1)).get());
     }
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("CGvxL");
+ 		valueList.add("lzCuG");
 
- 		valueList.add("CGvxL");
+		valueList.add(Optional.of("5KrGg"));
 
         return valueList;
     }

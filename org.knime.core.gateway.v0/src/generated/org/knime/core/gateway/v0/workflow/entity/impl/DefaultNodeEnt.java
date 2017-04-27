@@ -193,7 +193,7 @@ public class DefaultNodeEnt implements NodeEnt {
 	public static class DefaultNodeEntBuilder implements NodeEntBuilder {
     
 		private String m_Parent;
-		private Optional<JobManagerEnt> m_JobManager;
+		private Optional<JobManagerEnt> m_JobManager = Optional.empty();
 		private NodeMessageEnt m_NodeMessage;
 		private List<NodeInPortEnt> m_InPorts;
 		private List<NodeOutPortEnt> m_OutPorts;

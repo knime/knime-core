@@ -93,13 +93,13 @@ public class BoundsEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(-1155484576);
+ 		valueList.add(-1155869325);
 
- 		valueList.add(-1155484576);
+ 		valueList.add(-1154715079);
 
- 		valueList.add(-1155484576);
+ 		valueList.add(-1155099828);
 
- 		valueList.add(-1155484576);
+ 		valueList.add(-1157023572);
 
         return valueList;
     }

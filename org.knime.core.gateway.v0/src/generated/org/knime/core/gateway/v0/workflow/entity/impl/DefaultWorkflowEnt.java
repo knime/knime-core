@@ -229,7 +229,7 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 		private List<MetaPortEnt> m_MetaOutPorts;
 		private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
 		private String m_Parent;
-		private Optional<JobManagerEnt> m_JobManager;
+		private Optional<JobManagerEnt> m_JobManager = Optional.empty();
 		private NodeMessageEnt m_NodeMessage;
 		private List<NodeInPortEnt> m_InPorts;
 		private List<NodeOutPortEnt> m_OutPorts;

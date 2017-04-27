@@ -95,15 +95,15 @@ public class RepoNodeTemplateEntTest {
 
     public static List<Object> createValueList() {
         List<Object> valueList = new ArrayList<Object>();
- 		valueList.add("CGvxL");
+ 		valueList.add("lzCuG");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("5KrGg");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("OuJNz");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("5VLnL");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("YJQGG");
 
         return valueList;
     }

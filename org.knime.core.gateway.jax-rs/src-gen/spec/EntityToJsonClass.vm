@@ -84,7 +84,7 @@ public class ${name}ToJson #if($superTypes.size()>0)extends #foreach ($superType
 	@JsonProperty("${field.getName()}")
 #end
     public $field.getType().toString() get$field.getName()() {
-#if($field.getType().isPrimitive() || $field.getType().isPrimitiveList() || $field.getType().isPrimitiveMap())
+#if($field.getType().isPrimitive() || $field.getType().isPrimitiveList() || $field.getType().isPrimitiveMap() || $field.getType().isPrimitiveOptional())
     	return m_e.get${field.getName()}();
 #elseif($field.getType().isEntityList())
     	return m_e.get${field.getName()}().stream().map(l -> ${field.getType().getTypeParameter(0).toString()}ToJson.wrap(l)).collect(Collectors.toList());

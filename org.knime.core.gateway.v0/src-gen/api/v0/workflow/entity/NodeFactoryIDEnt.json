@@ -11,8 +11,8 @@
         },
         {
             "name" : "NodeName",
-            "description" : "The static name of the node as appears on the screen.",
-            "type" : "String"
+            "description" : "The static name of the node as appears on the screen. Only required in case of 'dynamic' node factories.",
+            "type" : "Optional<String>"
         }
     ]
 }

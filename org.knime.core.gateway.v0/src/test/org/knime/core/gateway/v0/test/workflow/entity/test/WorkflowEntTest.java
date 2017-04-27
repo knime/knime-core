@@ -247,7 +247,7 @@ public class WorkflowEntTest {
 		subList5.add(WorkflowAnnotationEntTest.createValueList());
  		valueList.add(subList5);
 
- 		valueList.add("CGvxL");
+ 		valueList.add("Awjsg");
 
 		valueList.add(JobManagerEntTest.createValueList());
 
@@ -269,17 +269,17 @@ public class WorkflowEntTest {
 		subList10.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList10);
 
- 		valueList.add("CGvxL");
+ 		valueList.add("2AUEB");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("qG2lz");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("eHjGz");
 
  		valueList.add(BoundsEntTest.createValueList());
 
  		valueList.add(true);
 
- 		valueList.add("CGvxL");
+ 		valueList.add("OVbWL");
 
  		valueList.add(true);
 

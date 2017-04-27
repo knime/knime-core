@@ -46,6 +46,7 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 /**
@@ -62,9 +63,9 @@ public interface NodeFactoryIDEntBuilder extends GatewayEntityBuilder<NodeFactor
 	NodeFactoryIDEntBuilder setClassName(String className);
 	
     /**
-     * @param nodeName The static name of the node as appears on the screen.
+     * @param nodeName The static name of the node as appears on the screen. Only required in case of 'dynamic' node factories.
      * @return <code>this</code>
      */
-	NodeFactoryIDEntBuilder setNodeName(String nodeName);
+	NodeFactoryIDEntBuilder setNodeName(Optional<String> nodeName);
 	
 }

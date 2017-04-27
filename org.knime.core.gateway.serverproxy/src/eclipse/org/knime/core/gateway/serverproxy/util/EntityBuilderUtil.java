@@ -76,7 +76,6 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
@@ -98,6 +97,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -196,9 +196,12 @@ public class EntityBuilderUtil {
 
     private static NativeNodeEnt buildNativeNodeEnt(final NativeNodeContainer nc, final String parentWorkflowID) {
         NodeFactory<NodeModel> factory = nc.getNode().getFactory();
-        NodeFactoryIDEnt nodeFactoryID = builder(NodeFactoryIDEntBuilder.class)
-                .setClassName(factory.getClass().getCanonicalName())
-                .setNodeName(nc.getName()).build();
+        NodeFactoryIDEntBuilder nodeFactoryIDBuilder = builder(NodeFactoryIDEntBuilder.class)
+                .setClassName(factory.getClass().getCanonicalName());
+        //only set node name in case of a dynamic node factory
+        if (DynamicNodeFactory.class.isAssignableFrom(factory.getClass())) {
+            nodeFactoryIDBuilder.setNodeName(Optional.of(nc.getName()));
+        }
         return builder(NativeNodeEntBuilder.class).setName(nc.getName()).setNodeID(nc.getID().toString())
             .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
             .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
@@ -206,7 +209,7 @@ public class EntityBuilderUtil {
             .setParent(parentWorkflowID)
             .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
             .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog())
-            .setNodeFactoryID(nodeFactoryID).build();
+            .setNodeFactoryID(nodeFactoryIDBuilder.build()).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {

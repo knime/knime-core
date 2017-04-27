@@ -151,7 +151,7 @@ public class NativeNodeEntTest {
         List<Object> valueList = new ArrayList<Object>();
  		valueList.add(NodeFactoryIDEntTest.createValueList());
 
- 		valueList.add("CGvxL");
+ 		valueList.add("5KrGg");
 
 		valueList.add(JobManagerEntTest.createValueList());
 
@@ -173,17 +173,17 @@ public class NativeNodeEntTest {
 		subList6.add(NodeOutPortEntTest.createValueList());
  		valueList.add(subList6);
 
- 		valueList.add("CGvxL");
+ 		valueList.add("J9O7q");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("0qjmL");
 
- 		valueList.add("CGvxL");
+ 		valueList.add("fdY7G");
 
  		valueList.add(BoundsEntTest.createValueList());
 
  		valueList.add(true);
 
- 		valueList.add("CGvxL");
+ 		valueList.add("qG2lz");
 
  		valueList.add(true);
 

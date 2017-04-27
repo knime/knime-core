@@ -46,6 +46,7 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 
 
@@ -77,13 +78,13 @@ import java.util.stream.Collectors;
 public class NodeFactoryIDEntFromJson  implements NodeFactoryIDEnt {
 
 	private String m_ClassName;
-	private String m_NodeName;
+	private Optional<String> m_NodeName;
 
 	@JsonCreator
 	private NodeFactoryIDEntFromJson(
 	@JsonProperty("ClassName") String ClassName,	@JsonProperty("NodeName") String NodeName	) {
 		m_ClassName = ClassName;
-		m_NodeName = NodeName;
+		m_NodeName = Optional.ofNullable(NodeName);
 	}
 	
 	protected NodeFactoryIDEntFromJson() {
@@ -98,8 +99,8 @@ public class NodeFactoryIDEntFromJson  implements NodeFactoryIDEnt {
     }
     
 	@Override
-    public String getNodeName() {
-        	return m_NodeName;
+    public Optional<String> getNodeName() {
+        	return m_NodeName.map(o -> (String) o);
             
     }
     

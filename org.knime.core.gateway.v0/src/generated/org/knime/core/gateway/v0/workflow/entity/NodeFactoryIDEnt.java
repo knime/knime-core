@@ -46,6 +46,7 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
+import java.util.Optional;
 
 /**
  * Details on a single node implementation
@@ -61,8 +62,8 @@ public interface NodeFactoryIDEnt extends GatewayEntity {
  	String getClassName();
  	
     /**
-     * @return The static name of the node as appears on the screen.
+     * @return The static name of the node as appears on the screen. Only required in case of 'dynamic' node factories.
      */
- 	String getNodeName();
+ 	Optional<String> getNodeName();
  	
 }

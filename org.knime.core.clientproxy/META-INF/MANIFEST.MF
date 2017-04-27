@@ -12,7 +12,8 @@ Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[
  org.junit;bundle-version="4.12.0",
  org.knime.core.api;bundle-version="3.3.0",
  org.knime.core.gateway.v0;bundle-version="3.3.0",
- org.knime.core
+ org.knime.core,
+ org.knime.workbench.repository;bundle-version="3.3.1"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

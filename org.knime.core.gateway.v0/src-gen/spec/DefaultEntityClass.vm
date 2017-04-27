@@ -99,7 +99,11 @@ public class Default${name} implements ${name} {
 	public static class Default${name}Builder implements ${name}Builder {
     
 #foreach( $field in $fields )
-		private $field.getType().toString("","") m_$field.getName();
+#if($field.getType().isOptional())
+		private $field.getType().toString() m_$field.getName() = Optional.empty();
+#else
+		private $field.getType().toString() m_$field.getName();
+#end
 #end
 
         public ${name} build() {
@@ -108,7 +112,7 @@ public class Default${name} implements ${name} {
 
 #foreach( $field in $fields )
 		@Override
-        public ${name}Builder set$field.getName()(final $field.getType().toString("","") $field.getName()) {
+        public ${name}Builder set$field.getName()(final $field.getType().toString() $field.getName()) {
 			m_$field.getName() = $field.getName();			
             return this;
         }

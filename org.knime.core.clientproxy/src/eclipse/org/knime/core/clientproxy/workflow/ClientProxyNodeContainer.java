@@ -72,7 +72,9 @@ import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
@@ -84,6 +86,7 @@ import org.knime.core.node.config.base.JSONConfig;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.util.WrapperMapUtil;
+import org.knime.workbench.repository.RepositoryManager;
 
 /**
  *
@@ -95,22 +98,20 @@ public class ClientProxyNodeContainer implements INodeContainer {
 
     /*--------- listener administration------------*/
 
-    private final CopyOnWriteArraySet<NodeStateChangeListener>
-        m_stateChangeListeners =
-            new CopyOnWriteArraySet<NodeStateChangeListener>();
+    private final CopyOnWriteArraySet<NodeStateChangeListener> m_stateChangeListeners =
+        new CopyOnWriteArraySet<NodeStateChangeListener>();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
-    private final CopyOnWriteArraySet<NodeProgressListener>
-        m_progressListeners = new CopyOnWriteArraySet<NodeProgressListener>();
+    private final CopyOnWriteArraySet<NodeProgressListener> m_progressListeners =
+        new CopyOnWriteArraySet<NodeProgressListener>();
 
     private final CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
     private final CopyOnWriteArraySet<NodePropertyChangedListener> m_nodePropertyChangedListeners =
-            new CopyOnWriteArraySet<NodePropertyChangedListener>();
-
+        new CopyOnWriteArraySet<NodePropertyChangedListener>();
 
     /**
      * If the underlying entity is a node.
@@ -237,7 +238,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     @Override
     public void setNodeMessage(final NodeMessage newMessage) {
         throw new UnsupportedOperationException();
-//        service(NodeService.class).updateNode(null);
+        //        service(NodeService.class).updateNode(null);
     }
 
     /**
@@ -346,8 +347,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     /** {@inheritDoc} */
     @Override
     public ConfigBaseRO getNodeSettings() {
-        String json = service(NodeContainerService.class)
-                .getNodeSettingsJSON(m_node.getParent(), m_node.getNodeID());
+        String json = service(NodeContainerService.class).getNodeSettingsJSON(m_node.getParent(), m_node.getNodeID());
         try {
             return JSONConfig.readJSON(new NodeSettings("settings"), new StringReader(json));
         } catch (IOException ex) {
@@ -377,7 +377,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     @Override
     public boolean canExecuteUpToHere() {
         throw new UnsupportedOperationException();
-//        return service(ExecutionService.class).getCanExecuteUpToHere(null, null);
+        //        return service(ExecutionService.class).getCanExecuteUpToHere(null, null);
     }
 
     /**
@@ -434,7 +434,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public INodeOutPort getOutPort(final int index) {
-      //TODO possibly return the same node in port instance for the same index
+        //TODO possibly return the same node in port instance for the same index
         return new ClientProxyNodeOutPort(m_node.getOutPorts().get(index));
     }
 
@@ -501,8 +501,20 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public URL getIcon() {
-        //TODO if a native node - get the icon url via the node factory
-        return null;
+        //if a native node - get the icon url via the node factory
+        if (m_node instanceof NativeNodeEnt) {
+            NodeFactoryIDEnt nodeFactoryID = ((NativeNodeEnt)m_node).getNodeFactoryID();
+            try {
+                String id = nodeFactoryID.getClassName() + nodeFactoryID.getNodeName().map(n -> "#" + n).orElse("");
+                return RepositoryManager.INSTANCE.getNodeTemplate(id).createFactoryInstance()
+                    .getIcon();
+            } catch (Exception ex) {
+                // TODO better exception handling
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return null;
+        }
     }
 
     /**
