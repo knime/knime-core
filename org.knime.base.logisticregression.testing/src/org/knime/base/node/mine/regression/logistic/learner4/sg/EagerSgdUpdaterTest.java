@@ -44,49 +44,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   24.03.2017 (Adrian): created
+ *   27.04.2017 (Adrian): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import static org.junit.Assert.assertArrayEquals;
+
+import org.junit.Test;
 import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
 
 /**
+ * Unit tests for EagerSgdUpdater
  *
  * @author Adrian Nembach, KNIME.com
  */
-class EagerSgdUpdater<T extends TrainingRow> implements EagerUpdater<T> {
+public class EagerSgdUpdaterTest {
 
-    static <T extends TrainingRow> UpdaterFactory<T, EagerUpdater<T>> createFactory() {
-        return new EagerSgdUpdaterFactory<T>();
+    @Test
+    public void testUpdate() throws Exception {
+        EagerSgdUpdater<TrainingRow> updater = new EagerSgdUpdater.EagerSgdUpdaterFactory<>().create();
+        MockClassificationTrainingRow[] mockRows = new MockClassificationTrainingRow[]{
+            new MockClassificationTrainingRow(new double[]{1, 1}, 0, 0),
+            new MockClassificationTrainingRow(new double[]{2, 3}, 1, 1),
+            new MockClassificationTrainingRow(new double[]{4, 5}, 2, 0),
+        };
+        SimpleWeightVector<TrainingRow> beta =
+                new SimpleWeightVector<TrainingRow>(3, 3, true);
+        double[] gradient = new double[]{3, -2};
+
+        updater.update(mockRows[0], gradient, beta, 1.0, 0);
+        double[][] expectedBeta = new double[][]{
+            {-3.0, -3.0, -3.0},
+            {2.0, 2.0, 2.0}
+        };
+        assertArrayEquals(expectedBeta, beta.getWeightVector());
+
+        gradient = new double[]{1, 2};
+        updater.update(mockRows[1], gradient, beta, 2.0, 1);
+        expectedBeta = new double[][]{
+            {-5.0, -7.0, -9.0},
+            {-2.0, -6.0, -10.0}
+        };
+        assertArrayEquals(expectedBeta, beta.getWeightVector());
+
+        gradient = new double[]{0, 2};
+        updater.update(mockRows[0], gradient, beta, 2.0, 2);
+        expectedBeta = new double[][]{
+            {-5.0, -7.0, -9.0},
+            {-6.0, -10.0, -14.0}
+        };
+        assertArrayEquals(expectedBeta, beta.getWeightVector());
+
+        gradient = new double[]{-3.0, -1.0};
+        updater.update(mockRows[2], gradient, beta, 3.0, 3);
+        expectedBeta = new double[][]{
+            {4.0, 29.0, 36.0},
+            {-3.0, 2.0, 1.0}
+        };
+        assertArrayEquals(expectedBeta, beta.getWeightVector());
     }
-
-    private EagerSgdUpdater() { }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize, final int iteration) {
-        beta.update((val,c, i) -> val - stepSize * x.getFeature(i) * sig[c] , true);
-    }
-
-    static class EagerSgdUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {
-        private final EagerSgdUpdater<T> m_instance;
-
-        /**
-         *
-         */
-        public EagerSgdUpdaterFactory() {
-            m_instance = new EagerSgdUpdater<>();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public EagerSgdUpdater<T> create() {
-            return m_instance;
-        }
-    }
-
 }
