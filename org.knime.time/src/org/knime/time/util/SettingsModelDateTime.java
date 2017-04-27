@@ -55,6 +55,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.Temporal;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -123,27 +124,57 @@ public final class SettingsModelDateTime extends SettingsModel {
 
     /**
      * @param configName the identifier the value is stored with in the {@link org.knime.core.node.NodeSettings} object
-     * @param defaultDateTime the initial value, if <code>null</code> the current date and time is used
+     * @param defaultDateTime the initial value. Sets the settings according to the input type, if <code>null</code>
+     *            neither date, time nor zone is used. Input can be a {@link LocalDate}, {@link LocalTime},
+     *            {@link LocalDateTime} or {@link ZonedDateTime}, otherwise a {@link IllegalArgumentException} will be
+     *            thrown.
      *
      */
-    public SettingsModelDateTime(final String configName, final ZonedDateTime defaultDateTime) {
+    public SettingsModelDateTime(final String configName, final Temporal defaultDateTime) {
         if ((configName == null) || configName.isEmpty()) {
             throw new IllegalArgumentException("The configName must be a " + "non-empty string");
         }
         m_configName = configName;
         if (defaultDateTime != null) {
-            m_date = defaultDateTime.toLocalDate();
-            m_time = defaultDateTime.toLocalTime();
-            m_zone = defaultDateTime.getZone();
+            if (defaultDateTime instanceof LocalDate) {
+                m_date = (LocalDate)defaultDateTime;
+                m_time = LocalTime.now().withNano(0);
+                m_zone = ZoneId.systemDefault();
+                m_useDate = true;
+                m_useTime = false;
+                m_useZone = false;
+            } else if (defaultDateTime instanceof LocalTime) {
+                m_date = LocalDate.now();
+                m_time = (LocalTime)defaultDateTime;
+                m_zone = ZoneId.systemDefault();
+                m_useDate = false;
+                m_useTime = true;
+                m_useZone = false;
+            } else if (defaultDateTime instanceof LocalDateTime) {
+                m_date = ((LocalDateTime)defaultDateTime).toLocalDate();
+                m_time = ((LocalDateTime)defaultDateTime).toLocalTime();
+                m_zone = ZoneId.systemDefault();
+                m_useDate = true;
+                m_useTime = true;
+                m_useZone = false;
+            } else if (defaultDateTime instanceof ZonedDateTime) {
+                m_date = ((ZonedDateTime)defaultDateTime).toLocalDate();
+                m_time = ((ZonedDateTime)defaultDateTime).toLocalTime();
+                m_zone = ((ZonedDateTime)defaultDateTime).getZone();
+                m_useDate = true;
+                m_useTime = true;
+                m_useZone = true;
+            } else {
+                throw new IllegalArgumentException("Unsupported type: " + defaultDateTime.getClass());
+            }
         } else {
             m_date = LocalDate.now();
             m_time = LocalTime.now().withNano(0);
             m_zone = ZoneId.systemDefault();
+            m_useDate = false;
+            m_useTime = false;
+            m_useZone = false;
         }
-
-        m_useDate = true;
-        m_useTime = true;
-        m_useZone = true;
     }
 
     /**
@@ -179,6 +210,27 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     public ZonedDateTime getZonedDateTime() {
         return ZonedDateTime.of(m_date, m_time, m_zone);
+    }
+
+    /**
+     * returns null, if no date or time is selected
+     *
+     * @return the selected local date, local time, local date and time or zoned date and time
+     */
+    public Temporal getSelectedDateTime() {
+        if (m_useZone) {
+            return getZonedDateTime();
+        }
+        if (m_useDate && m_useTime) {
+            return getLocalDateTime();
+        }
+        if (m_useDate) {
+            return getLocalDate();
+        }
+        if (m_useTime) {
+            return getLocalTime();
+        }
+        return null;
     }
 
     /**
@@ -393,8 +445,7 @@ public final class SettingsModelDateTime extends SettingsModel {
         final String string = settings.getString(m_configName);
         if (!StringUtils.isEmpty(string) && !string.equals("missing") && !isZonedDateTime(string)
             && !isLocalDateTime(string) && !isLocalDate(string) && !isLocalTime(string) && !isTimezone(string)) {
-            throw new InvalidSettingsException(
-                "'" + string + "' could not be parsed as a date, time, or time zone.");
+            throw new InvalidSettingsException("'" + string + "' could not be parsed as a date, time, or time zone.");
         }
     }
 

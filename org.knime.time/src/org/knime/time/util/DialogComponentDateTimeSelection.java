@@ -82,6 +82,7 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.plaf.basic.BasicSpinnerUI;
 import javax.swing.text.DateFormatter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
@@ -225,12 +226,12 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
         /*
          * === add time zone components ===
          */
-        final String zoneLabel = "Time Zone:";
+        final String zoneLabel = "Time Zone: ";
         m_zoneCheckbox = new JCheckBox(zoneLabel, true);
         m_zoneLabel = new JLabel(zoneLabel);
         m_zoneComboBox = new JComboBox<String>();
         for (final String id : new TreeSet<String>(ZoneId.getAvailableZoneIds())) {
-            m_zoneComboBox.addItem(id);
+            m_zoneComboBox.addItem(StringUtils.abbreviateMiddle(id, "..", 29));
         }
         final ZoneId zone = model.getZone();
         if (zone != null) {
