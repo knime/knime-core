@@ -89,7 +89,6 @@ import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
@@ -184,14 +183,11 @@ public class EntityBuilderUtil {
     private static NodeEnt buildNodeEnt(final INodeContainer nc, final String parentWorkflowID) {
         if(nc instanceof NativeNodeContainer) {
             return buildNativeNodeEnt((NativeNodeContainer) nc, parentWorkflowID);
+        } else if(nc instanceof IWorkflowManager) {
+            return buildWorkflowEnt((IWorkflowManager) nc, nc.getID().toString());
+        } else {
+            throw new IllegalArgumentException("Node container " + nc.getClass().getCanonicalName() + " cannot be mapped to a node entity.");
         }
-        return builder(NodeEntBuilder.class).setName(nc.getName()).setNodeID(nc.getID().toString())
-            .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
-            .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
-            .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
-            .setParent(parentWorkflowID)
-            .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
-            .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog()).build();
     }
 
     private static NativeNodeEnt buildNativeNodeEnt(final NativeNodeContainer nc, final String parentWorkflowID) {
@@ -213,6 +209,7 @@ public class EntityBuilderUtil {
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {
+        //TODO
         //cc.getUIInfo() gives null!
         //      int[][] allBendpoints = cc.getUIInfo().getAllBendpoints();
         //      List<XYEnt> bendpoints = Arrays.stream(allBendpoints).map(a -> {

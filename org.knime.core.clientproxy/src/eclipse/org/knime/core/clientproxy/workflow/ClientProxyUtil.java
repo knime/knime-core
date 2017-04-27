@@ -51,6 +51,8 @@ package org.knime.core.clientproxy.workflow;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.util.WrapperMapUtil;
@@ -72,7 +74,8 @@ public class ClientProxyUtil {
 
     /**
      * @param nodeEnt the node entity to be wrapped
-     * @param key a unique key representing the node entity to ensure that the very same object instance is returned for the same key
+     * @param key a unique key representing the node entity to ensure that the very same object instance is returned for
+     *            the same key
      * @return the client-proxy node container
      */
     public static ClientProxyNodeContainer getNodeContainer(final NodeEnt nodeEnt, final Object key) {
@@ -96,6 +99,26 @@ public class ClientProxyUtil {
     public static ClientProxyConnectionContainer getConnectionContainer(final ConnectionEnt c) {
         return WrapperMapUtil.getOrCreate(c, o -> new ClientProxyConnectionContainer(c),
             ClientProxyConnectionContainer.class);
+    }
+
+    public static ClientProxyNodeInPort getNodeInPort(final NodeInPortEnt p) {
+        //possibly return the same node in port instance for the same index
+        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyNodeInPort(o), ClientProxyNodeInPort.class);
+    }
+
+    public static ClientProxyNodeOutPort getNodeOutPort(final NodeOutPortEnt p) {
+        //possibly return the same node out port instance for the same index
+        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyNodeOutPort(o), ClientProxyNodeOutPort.class);
+    }
+
+    public static ClientProxyWorkflowInPort getWorkflowInPort(final NodeInPortEnt p) {
+        //possibly return the same node in port instance for the same index
+        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyWorkflowInPort(o), ClientProxyWorkflowInPort.class);
+    }
+
+    public static ClientProxyWorkflowOutPort getWorkflowOutPort(final NodeOutPortEnt p) {
+        //possibly return the same node out port instance for the same index
+        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyWorkflowOutPort(o), ClientProxyWorkflowOutPort.class);
     }
 
 }

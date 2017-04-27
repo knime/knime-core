@@ -723,7 +723,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         //TODO e.g. put the node entities into a hash map for quicker access
         final NodeEnt nodeEnt = m_workflow.getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
-        return ClientProxyUtil.getNodeContainer(nodeEnt, id);
+        return ClientProxyUtil.getNodeContainer(nodeEnt, id.toString());
     }
 
 
@@ -880,8 +880,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowInPort getInPort(final int index) {
-        //TODO
-        return null;
+        return ClientProxyUtil.getWorkflowInPort(m_workflow.getInPorts().get(index));
     }
 
     /**
@@ -889,8 +888,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowOutPort getOutPort(final int index) {
-        //TODO
-        return null;
+        return ClientProxyUtil.getWorkflowOutPort(m_workflow.getOutPorts().get(index));
     }
 
     /**

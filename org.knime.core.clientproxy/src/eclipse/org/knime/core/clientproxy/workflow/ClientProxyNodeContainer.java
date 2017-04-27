@@ -425,8 +425,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public INodeInPort getInPort(final int index) {
-        //possibly return the same node in port instance for the same index
-        return new ClientProxyNodeInPort(m_node.getInPorts().get(index));
+        return ClientProxyUtil.getNodeInPort(m_node.getInPorts().get(index));
     }
 
     /**
@@ -434,8 +433,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public INodeOutPort getOutPort(final int index) {
-        //TODO possibly return the same node in port instance for the same index
-        return new ClientProxyNodeOutPort(m_node.getOutPorts().get(index));
+        return ClientProxyUtil.getNodeOutPort(m_node.getOutPorts().get(index));
     }
 
     /**
