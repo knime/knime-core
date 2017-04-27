@@ -73,8 +73,12 @@
             deprecated="false"
             factory-class="org.knime.time.node.extract.datetime.ExtractDateTimeFieldsNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.create.createdatetime.CreateDateTimeNodeFactory">
+      </node>
    </extension>
-
    <extension
          point="org.knime.workbench.repository.categories">
          <category
