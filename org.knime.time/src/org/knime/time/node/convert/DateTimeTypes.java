@@ -60,8 +60,8 @@ import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public enum DateTimeTypes {
-        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
-        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
+        LOCAL_DATE("Date", LocalDateCellFactory.TYPE), LOCAL_TIME("Time", LocalTimeCellFactory.TYPE),
+        LOCAL_DATE_TIME("Date&time", LocalDateTimeCellFactory.TYPE),
         ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
 
     private final String m_name;
