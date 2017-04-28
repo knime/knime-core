@@ -5,22 +5,17 @@
 	<shortDescription>Generates date&amp;time values.</shortDescription>
 	<fullDescription>
 		<intro>
-			Generates date&amp;time values, i.e. either a date, a time, a
-			date&amp;time (local) or a zoned date&amp;time. There are three
-			creation modes: Either a number of rows, a starting point and an
+			Generates date&amp;time values, i.e. either a date, a time, a date&amp;time (local) or a zoned
+			date&amp;time. There are three creation modes: Either a number of rows, a starting point, and an
 			ending point is selected (the steps in between will be calculated),
-			<b>or</b>
-			a number of rows, a starting point and a duration is selected (the
-			duration defines the steps between each row),
-			<b>or</b>
-			a starting point, an ending point and a duration is selected (the
-			number of rows corresponds to how often the duration fits between start
-			and end).
+			<b>or</b> a number of rows, a starting
+			point and a duration is selected (the duration defines the steps between each row),
+			<b>or</b> a starting point, an ending point and a duration is selected (the number of rows corresponds to
+			how often the duration fits between start and end).
 		</intro>
 		<tab name="Output Settings">
 			<option name="Output type">
-				The type to create can be selected. It can be
-				either a date, time, (local) date&amp;time or zoned
+				The type to create can be selected. It can be either a date, time, (local) date&amp;time, or zoned
 				date&amp;time.
 			</option>
 			<option name="New column name">
@@ -31,42 +26,29 @@
 			<option name="Number of rows: Fixed">
 				A fixed number of rows will be created by either
 				<ul>
-					<li>selecting a start and end date&amp;time with equal steps
-						between each row
+					<li>selecting a start and end date&amp;time with equal steps between each row
 					</li>
-					<li>or selecting a start date&amp;time and a duration (i.e. size of
-						steps between each row). The ending point depends on the selected
-						number of rows.
+					<li>or selecting a start date&amp;time and a duration (i.e. size of steps between each row). The
+					    ending point depends on the selected number of rows.
 					</li>
 				</ul>
 			</option>
 			<option name="Number of rows: Variable">
-				A variable number of rows will be created. A
-				start and end date&amp;time and a duration (i.e. size of
-				steps
-				between each row) must be selected. As many rows as possible will be
-				created. The last created row will contain a date&amp;time value
-				which is before/equal the selected end (if the duration is positive,
-				otherwise after/equal).
+				A variable number of rows will be created. A start and end date&amp;time and a duration (i.e. size of
+				steps between each row) must be selected. As many rows as possible will be created. The last created
+				row will contain a date&amp;time value which is before/equal the selected end (if the duration is
+				positive, otherwise after/equal).
 			</option>
 		</tab>
 		<tab name="Date&amp;Time Settings">
 			<option name="Start">
-				The starting point can be chosen. If the execution time shall be
-				used, the checkbox can be checked. The selected date has the format
-				<i>yyyy-MM-dd</i>
-				, the selected time can either
-				has the format
-				<i>HH:mm:ss</i>
-				or
-				<i>HH:mm:ss.SSS</i>
-				.
+				The starting point can be chosen. If the execution time shall be used, the checkbox can be checked. The
+				selected date has the format <i>yyyy-MM-dd</i>, the selected time can either have the format
+				<i>HH:mm:ss</i>	or<i>HH:mm:ss.SSS</i>.
 			</option>
 			<option name="Duration">
-				Either a duration (time based) or period (date based) can be chosen.
-				It describes the size of the steps between each created row.
-				The
-				inserted string can be either in
+				Either a duration (time based) or period (date based) can be chosen. It describes the size of the steps
+				between each created row. The inserted string can be either in
 				<br />
 				<b>1.</b>
 				the ISO-8601 representation (see
@@ -78,8 +60,7 @@
 				for details), examples below,
 				<br />
 				<b>2.</b>
-				the short letter representation (e.g.
-				'2y 3M 1d')
+				the short letter representation (e.g. '2y 3M 1d')
 				<br />
 				<u>Period:</u>
 				y: years, M: months, d: days
@@ -90,8 +71,7 @@
 				or
 				<br />
 				<b>3.</b>
-				the long word representation (e.g. '2 years 3 months 1
-				day').
+				the long word representation (e.g. '2 years 3 months 1 day').
 				<br />
 				<br />
 				<b>Examples for ISO-8601 (Period):</b>
@@ -114,27 +94,17 @@
 				</ul>
 			</option>
 			<option name="End">
-				The ending point can be chosen. If the execution time shall be
-				used,
-				the checkbox can be checked. The selected date has the format
-				<i>yyyy-MM-dd</i>
-				, the selected time can either
-				has the format
-				<i>HH:mm:ss</i>
-				or
-				<i>HH:mm:ss.SSS</i>
-				.
-				If zoned date&amp;time cells shall be created, the time zone will
-				be
-				the
-				same as the time zone of the starting point.
+				The end point can be chosen. If the execution time shall be used, the checkbox can be checked. The
+				selected date has the format <i>yyyy-MM-dd</i>, the selected time can either have the format
+				<i>HH:mm:ss</i>	or <i>HH:mm:ss.SSS</i>.
+				If zoned date&amp;time cells shall be created, the time zone will be the same as the time zone of the
+				starting point.
 			</option>
 		</tab>
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="Output table">
-			Output table containing the created
-			date&amp;time column.
+			Output table containing the created date&amp;time column.
 		</outPort>
 	</ports>
 </knimeNode>

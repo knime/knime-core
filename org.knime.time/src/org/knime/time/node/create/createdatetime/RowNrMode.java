@@ -67,7 +67,7 @@ enum RowNrMode implements ButtonGroupEnumInterface {
         m_isDefault = isDefault;
     }
 
-        /**
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -98,5 +98,4 @@ enum RowNrMode implements ButtonGroupEnumInterface {
     public boolean isDefault() {
         return m_isDefault;
     }
-
 }

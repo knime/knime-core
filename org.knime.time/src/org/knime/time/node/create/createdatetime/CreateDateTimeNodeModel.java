@@ -97,7 +97,6 @@ import org.knime.time.util.SettingsModelDateTime;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class CreateDateTimeNodeModel extends NodeModel {
-
     private final SettingsModelString m_columnName = createColumnNameModel();
 
     private final SettingsModelString m_rowNrOptionSelection = createRowNrOptionSelectionModel();
@@ -166,12 +165,8 @@ final class CreateDateTimeNodeModel extends NodeModel {
         };
         rowNrOptionSelectionModel.addChangeListener(changeListener);
         durationOrEndSelectionModel.addChangeListener(changeListener);
-
-        settingsModelString.setEnabled(rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
-            || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
-                && durationOrEndSelectionModel.getStringValue().equals(EndMode.Duration.name())));
+        changeListener.stateChanged(new ChangeEvent(rowNrOptionSelectionModel));
         return settingsModelString;
-
     }
 
     /** @return the date&time model, used in both dialog and model. */
@@ -179,29 +174,20 @@ final class CreateDateTimeNodeModel extends NodeModel {
         final SettingsModelString durationOrEndSelectionModel, final SettingsModelBoolean useExecTimeModel) {
         final SettingsModelDateTime settingsModelDateTime =
             new SettingsModelDateTime("end", LocalDateTime.now().withNano(0));
-        final ChangeListener changeListener = new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (durationOrEndSelectionModel.getStringValue() != null
-                    && rowNrOptionSelectionModel.getStringValue() != null) {
-                    settingsModelDateTime
-                        .setEnabled((rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
-                            || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
-                                && durationOrEndSelectionModel.getStringValue().equals(EndMode.End.name())))
-                            && !useExecTimeModel.getBooleanValue());
-                }
+        final ChangeListener changeListener = e -> {
+            if (durationOrEndSelectionModel.getStringValue() != null
+                && rowNrOptionSelectionModel.getStringValue() != null) {
+                settingsModelDateTime
+                    .setEnabled((rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
+                        || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
+                            && durationOrEndSelectionModel.getStringValue().equals(EndMode.End.name())))
+                        && !useExecTimeModel.getBooleanValue());
             }
         };
         rowNrOptionSelectionModel.addChangeListener(changeListener);
         durationOrEndSelectionModel.addChangeListener(changeListener);
         useExecTimeModel.addChangeListener(changeListener);
-
-        settingsModelDateTime.setEnabled(rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
-            || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
-                && durationOrEndSelectionModel.getStringValue().equals(EndMode.End.name())));
+        changeListener.stateChanged(new ChangeEvent(rowNrOptionSelectionModel));
         return settingsModelDateTime;
     }
 
@@ -214,29 +200,22 @@ final class CreateDateTimeNodeModel extends NodeModel {
     static SettingsModelBoolean createEndUseExecTimeModel(final SettingsModelString rowNrOptionSelectionModel,
         final SettingsModelString durationOrEndSelectionModel) {
         SettingsModelBoolean settingsModelBoolean = new SettingsModelBoolean("end_use_exec_time", false);
-        final ChangeListener changeListener = new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (durationOrEndSelectionModel.getStringValue() != null
-                    && rowNrOptionSelectionModel.getStringValue() != null) {
-                    settingsModelBoolean
-                        .setEnabled(rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
-                            || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
-                                && durationOrEndSelectionModel.getStringValue().equals(EndMode.End.name())));
-                }
+        final ChangeListener changeListener = e -> {
+            if (durationOrEndSelectionModel.getStringValue() != null
+                && rowNrOptionSelectionModel.getStringValue() != null) {
+                settingsModelBoolean
+                    .setEnabled(rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Variable.name())
+                        || (rowNrOptionSelectionModel.getStringValue().equals(RowNrMode.Fixed.name())
+                            && durationOrEndSelectionModel.getStringValue().equals(EndMode.End.name())));
             }
         };
         rowNrOptionSelectionModel.addChangeListener(changeListener);
         durationOrEndSelectionModel.addChangeListener(changeListener);
+        changeListener.stateChanged(new ChangeEvent(rowNrOptionSelectionModel));
         return settingsModelBoolean;
     }
 
-    /**
-     */
-    protected CreateDateTimeNodeModel() {
+    CreateDateTimeNodeModel() {
         super(0, 1);
     }
 
@@ -261,7 +240,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
         throws Exception {
         BufferedDataContainer container = exec.createDataContainer(createOutSpec());
 
-        // check and parse duration/period (may be wrong, if controlled  by flow variables)
+        // check and parse duration/period (may be wrong, if controlled by flow variables)
         TemporalAmount durationOrPeriod = null;
         if (m_duration.getStringValue() != null) {
             try {
@@ -276,14 +255,14 @@ final class CreateDateTimeNodeModel extends NodeModel {
             }
         }
 
-        // check start and end input (may be wrong, if controlled  by flow variables)
+        // check start and end input (may be wrong, if controlled by flow variables)
         final Class<? extends Temporal> classStart = m_start.getSelectedDateTime().getClass();
         final Class<? extends Temporal> classEnd = m_end.getSelectedDateTime().getClass();
         if (!classStart.equals(classEnd)
             && !(classStart.equals(ZonedDateTime.class) && classEnd.equals(LocalDateTime.class)
                 && m_selectedNewType.getDataType().equals(ZonedDateTimeCellFactory.TYPE))) {
-            throw new InvalidSettingsException(
-                "The type of start and end time are not compatible: Start is " + classStart + ", End is " + classEnd);
+            throw new InvalidSettingsException("The type of start and end time are not compatible: start is "
+                + classStart.getSimpleName() + " but end is " + classEnd.getSimpleName());
         }
 
         // in case the end time is controlled by a flow variable holding a zoned date time, remove the zone
@@ -337,11 +316,11 @@ final class CreateDateTimeNodeModel extends NodeModel {
     /**
      * Create date&time row with a fixed number of rows and a given starting point and duration/period.
      */
-    private void createByFixedRowNrAndDuration(final BufferedDataContainer container, final long nr_rows,
+    private void createByFixedRowNrAndDuration(final BufferedDataContainer container, final long nrRows,
         final Temporal startDateTime, final TemporalAmount durationOrPeriod, final boolean wasLocalDate,
         final boolean hasMillis) throws DateTimeException, ArithmeticException {
         Temporal intervalDateTime = startDateTime.minus(durationOrPeriod);
-        for (long row_idx = 0; row_idx < nr_rows; row_idx++) {
+        for (long rowIdx = 0; rowIdx < nrRows; rowIdx++) {
             intervalDateTime = intervalDateTime.plus(durationOrPeriod);
 
             final DataCell dataCell;
@@ -354,14 +333,12 @@ final class CreateDateTimeNodeModel extends NodeModel {
                 if (hasMillis) {
                     dataCell =
                         LocalTimeCellFactory.create(((LocalTime)intervalDateTime).truncatedTo(ChronoUnit.MILLIS));
-                } else {
+                } else if (((LocalTime)intervalDateTime).getNano() >= 500_000_000) {
                     // rounding
-                    if (((LocalTime)intervalDateTime).getNano() >= 500_000_000) {
-                        dataCell =
-                            LocalTimeCellFactory.create(((LocalTime)intervalDateTime).plusSeconds(1).withNano(0));
-                    } else {
-                        dataCell = LocalTimeCellFactory.create(((LocalTime)intervalDateTime).withNano(0));
-                    }
+                    dataCell =
+                        LocalTimeCellFactory.create(((LocalTime)intervalDateTime).plusSeconds(1).withNano(0));
+                } else {
+                    dataCell = LocalTimeCellFactory.create(((LocalTime)intervalDateTime).withNano(0));
                 }
             }
             // local date time
@@ -374,19 +351,15 @@ final class CreateDateTimeNodeModel extends NodeModel {
                     } else {
                         dataCell = LocalDateCellFactory.create(localDate);
                     }
+                } else if (hasMillis) {
+                    dataCell = LocalDateTimeCellFactory
+                        .create(((LocalDateTime)intervalDateTime).truncatedTo(ChronoUnit.MILLIS));
+                } else if (((LocalDateTime)intervalDateTime).getNano() >= 500_000_000) {
+                    // rounding
+                    dataCell = LocalDateTimeCellFactory
+                        .create(((LocalDateTime)intervalDateTime).plusSeconds(1).withNano(0));
                 } else {
-                    if (hasMillis) {
-                        dataCell = LocalDateTimeCellFactory
-                            .create(((LocalDateTime)intervalDateTime).truncatedTo(ChronoUnit.MILLIS));
-                    } else {
-                        // rounding
-                        if (((LocalDateTime)intervalDateTime).getNano() >= 500_000_000) {
-                            dataCell = LocalDateTimeCellFactory
-                                .create(((LocalDateTime)intervalDateTime).plusSeconds(1).withNano(0));
-                        } else {
-                            dataCell = LocalDateTimeCellFactory.create(((LocalDateTime)intervalDateTime).withNano(0));
-                        }
-                    }
+                    dataCell = LocalDateTimeCellFactory.create(((LocalDateTime)intervalDateTime).withNano(0));
                 }
             }
             // zoned date time
@@ -394,25 +367,23 @@ final class CreateDateTimeNodeModel extends NodeModel {
                 if (hasMillis) {
                     dataCell = ZonedDateTimeCellFactory
                         .create(((ZonedDateTime)intervalDateTime).truncatedTo(ChronoUnit.MILLIS));
-                } else {
+                } else if (((ZonedDateTime)intervalDateTime).getNano() >= 500_000_000) {
                     // rounding
-                    if (((ZonedDateTime)intervalDateTime).getNano() >= 500_000_000) {
-                        dataCell = ZonedDateTimeCellFactory
-                            .create(((ZonedDateTime)intervalDateTime).plusSeconds(1).withNano(0));
-                    } else {
-                        dataCell = ZonedDateTimeCellFactory.create(((ZonedDateTime)intervalDateTime).withNano(0));
-                    }
+                    dataCell = ZonedDateTimeCellFactory
+                        .create(((ZonedDateTime)intervalDateTime).plusSeconds(1).withNano(0));
+                } else {
+                    dataCell = ZonedDateTimeCellFactory.create(((ZonedDateTime)intervalDateTime).withNano(0));
                 }
             }
 
-            container.addRowToTable(new DefaultRow(new RowKey("Row" + row_idx), dataCell));
+            container.addRowToTable(new DefaultRow(new RowKey("Row" + rowIdx), dataCell));
         }
     }
 
     /**
      * Create date&time row with a fixed number of rows and a given starting point ending point.
      */
-    private void createByFixedRowNrAndEnd(final BufferedDataContainer container, final long nr_rows,
+    private void createByFixedRowNrAndEnd(final BufferedDataContainer container, final long nrRows,
         final Temporal startDateTime, final Temporal endDateTime) {
         Temporal start = startDateTime;
         Temporal end = endDateTime;
@@ -428,9 +399,9 @@ final class CreateDateTimeNodeModel extends NodeModel {
         }
 
         // === create all rows except the last one ===
-        if (nr_rows > 1) {
-            final Duration durationInterval = Duration.between(start, end).dividedBy(nr_rows - 1);
-            createByFixedRowNrAndDuration(container, nr_rows - 1, start, durationInterval, wasLocalDate, hasMillis);
+        if (nrRows > 1) {
+            final Duration durationInterval = Duration.between(start, end).dividedBy(nrRows - 1);
+            createByFixedRowNrAndDuration(container, nrRows - 1, start, durationInterval, wasLocalDate, hasMillis);
         } else {
             end = start;
         }
@@ -451,7 +422,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
             dataCell = ZonedDateTimeCellFactory.create(
                 hasMillis ? ((ZonedDateTime)end).truncatedTo(ChronoUnit.MILLIS) : ((ZonedDateTime)end).withNano(0));
         }
-        container.addRowToTable(new DefaultRow(new RowKey("Row" + (nr_rows - 1)), dataCell));
+        container.addRowToTable(new DefaultRow(new RowKey("Row" + (nrRows - 1)), dataCell));
     }
 
     /**
@@ -467,7 +438,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
         } else if (start instanceof ZonedDateTime) {
             return ((ZonedDateTime)start).getNano() > 0 || ((ZonedDateTime)end).getNano() > 0;
         } else {
-            throw new IllegalStateException("Unexpected data type: " + start.getClass());
+            throw new IllegalStateException("Unexpected data type: " + start.getClass().getSimpleName());
         }
     }
 
@@ -490,16 +461,12 @@ final class CreateDateTimeNodeModel extends NodeModel {
         Temporal end = endDateTime;
 
         // check if duration is zero
-        try {
-            if (((Period)durationOrPeriod).isZero()) {
-                setWarningMessage("Duration is zero! Node created an empty table.");
-                return;
-            }
-        } catch (ClassCastException e) {
-            if (((Duration)durationOrPeriod).isZero()) {
-                setWarningMessage("Duration is zero! Node created an empty table.");
-                return;
-            }
+        if ((durationOrPeriod instanceof Period) && ((Period)durationOrPeriod).isZero()) {
+            setWarningMessage("Duration is zero! Node created an empty table.");
+            return;
+        } else if ((durationOrPeriod instanceof Duration) && ((Duration)durationOrPeriod).isZero()) {
+            setWarningMessage("Duration is zero! Node created an empty table.");
+            return;
         }
 
         // === check if start date is after end ===
@@ -686,5 +653,4 @@ final class CreateDateTimeNodeModel extends NodeModel {
     protected void reset() {
         // nothing to do
     }
-
 }

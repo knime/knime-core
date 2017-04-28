@@ -56,7 +56,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 enum EndMode implements ButtonGroupEnumInterface {
-    Duration("Duration:", false),
+    Duration("Interval:", false),
     End("End:", true);
 
     private final String m_label;
@@ -98,5 +98,4 @@ enum EndMode implements ButtonGroupEnumInterface {
     public boolean isDefault() {
         return m_isDefault;
     }
-
 }

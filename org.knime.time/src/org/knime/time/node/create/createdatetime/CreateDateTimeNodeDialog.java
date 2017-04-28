@@ -92,7 +92,6 @@ import org.knime.time.util.SettingsModelDateTime;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class CreateDateTimeNodeDialog extends NodeDialogPane {
-
     final static String BUTTONS = "buttons";
 
     final static String LABELS = "labels";
@@ -121,10 +120,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
 
     private boolean m_updateWarningLabel = true;
 
-    /**
-     *
-     */
-    public CreateDateTimeNodeDialog() {
+    CreateDateTimeNodeDialog() {
         m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
 
         m_dialogCompColumnName =
@@ -350,14 +346,14 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
             Duration duration = null;
             Period period = null;
             if (((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue() == null) {
-                m_warningLabel.setText("Value does not represent a Period or Duration.");
+                m_warningLabel.setText("Please enter a duration.");
                 return;
             }
             try {
                 duration = DurationPeriodFormatUtils
                     .parseDuration(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
                 if (selectedItem.equals(DateTimeTypes.LOCAL_DATE)) {
-                    m_warningLabel.setText("A Duration cannot be applied on a Local Date.");
+                    m_warningLabel.setText("A duration cannot be applied to a local date.");
                     return;
                 }
             } catch (DateTimeParseException e1) {
@@ -365,11 +361,11 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                     period = DurationPeriodFormatUtils
                         .parsePeriod(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
                     if (selectedItem.equals(DateTimeTypes.LOCAL_TIME)) {
-                        m_warningLabel.setText("A Period cannot be applied on a Local Time.");
+                        m_warningLabel.setText("A period cannot be applied to a local time.");
                         return;
                     }
                 } catch (DateTimeParseException e2) {
-                    m_warningLabel.setText("Value does not represent a Period or Duration.");
+                    m_warningLabel.setText("Value does not represent a period or duration.");
                     return;
                 }
             }
@@ -405,7 +401,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                         isEqual = (((ZonedDateTime)start)).toLocalDateTime().isEqual(((LocalDateTime)end));
                     }
 
-                    final Boolean isDurationNegative;
+                    final boolean isDurationNegative;
                     if (duration != null) {
                         isDurationNegative = duration.isNegative();
                     } else if (period != null) {
@@ -468,5 +464,4 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         m_dialogCompStartUseExecTime.loadSettingsFrom(settings, specs);
         m_dialogCompEndUseExecTime.loadSettingsFrom(settings, specs);
     }
-
 }

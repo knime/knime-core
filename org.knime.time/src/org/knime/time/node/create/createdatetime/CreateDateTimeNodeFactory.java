@@ -58,7 +58,6 @@ import org.knime.core.node.NodeView;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public final class CreateDateTimeNodeFactory extends NodeFactory<CreateDateTimeNodeModel> {
-
     /**
      * {@inheritDoc}
      */
@@ -98,5 +97,4 @@ public final class CreateDateTimeNodeFactory extends NodeFactory<CreateDateTimeN
     protected NodeDialogPane createNodeDialogPane() {
         return new CreateDateTimeNodeDialog();
     }
-
 }

@@ -135,45 +135,43 @@ public final class SettingsModelDateTime extends SettingsModel {
             throw new IllegalArgumentException("The configName must be a " + "non-empty string");
         }
         m_configName = configName;
-        if (defaultDateTime != null) {
-            if (defaultDateTime instanceof LocalDate) {
-                m_date = (LocalDate)defaultDateTime;
-                m_time = LocalTime.now().withNano(0);
-                m_zone = ZoneId.systemDefault();
-                m_useDate = true;
-                m_useTime = false;
-                m_useZone = false;
-            } else if (defaultDateTime instanceof LocalTime) {
-                m_date = LocalDate.now();
-                m_time = (LocalTime)defaultDateTime;
-                m_zone = ZoneId.systemDefault();
-                m_useDate = false;
-                m_useTime = true;
-                m_useZone = false;
-            } else if (defaultDateTime instanceof LocalDateTime) {
-                m_date = ((LocalDateTime)defaultDateTime).toLocalDate();
-                m_time = ((LocalDateTime)defaultDateTime).toLocalTime();
-                m_zone = ZoneId.systemDefault();
-                m_useDate = true;
-                m_useTime = true;
-                m_useZone = false;
-            } else if (defaultDateTime instanceof ZonedDateTime) {
-                m_date = ((ZonedDateTime)defaultDateTime).toLocalDate();
-                m_time = ((ZonedDateTime)defaultDateTime).toLocalTime();
-                m_zone = ((ZonedDateTime)defaultDateTime).getZone();
-                m_useDate = true;
-                m_useTime = true;
-                m_useZone = true;
-            } else {
-                throw new IllegalArgumentException("Unsupported type: " + defaultDateTime.getClass());
-            }
-        } else {
+        if (defaultDateTime instanceof LocalDate) {
+            m_date = (LocalDate)defaultDateTime;
+            m_time = LocalTime.now().withNano(0);
+            m_zone = ZoneId.systemDefault();
+            m_useDate = true;
+            m_useTime = false;
+            m_useZone = false;
+        } else if (defaultDateTime instanceof LocalTime) {
+            m_date = LocalDate.now();
+            m_time = (LocalTime)defaultDateTime;
+            m_zone = ZoneId.systemDefault();
+            m_useDate = false;
+            m_useTime = true;
+            m_useZone = false;
+        } else if (defaultDateTime instanceof LocalDateTime) {
+            m_date = ((LocalDateTime)defaultDateTime).toLocalDate();
+            m_time = ((LocalDateTime)defaultDateTime).toLocalTime();
+            m_zone = ZoneId.systemDefault();
+            m_useDate = true;
+            m_useTime = true;
+            m_useZone = false;
+        } else if (defaultDateTime instanceof ZonedDateTime) {
+            m_date = ((ZonedDateTime)defaultDateTime).toLocalDate();
+            m_time = ((ZonedDateTime)defaultDateTime).toLocalTime();
+            m_zone = ((ZonedDateTime)defaultDateTime).getZone();
+            m_useDate = true;
+            m_useTime = true;
+            m_useZone = true;
+        } else if (defaultDateTime == null) {
             m_date = LocalDate.now();
             m_time = LocalTime.now().withNano(0);
             m_zone = ZoneId.systemDefault();
             m_useDate = false;
             m_useTime = false;
             m_useZone = false;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + defaultDateTime.getClass());
         }
     }
 
@@ -213,9 +211,9 @@ public final class SettingsModelDateTime extends SettingsModel {
     }
 
     /**
-     * returns null, if no date or time is selected
-     *
-     * @return the selected local date, local time, local date and time or zoned date and time
+     * Returns the selected local date, local time, local date and time or zoned date and time.
+     * 
+     * @return a date or <code>null</code>, if no date or time is selected 
      */
     public Temporal getSelectedDateTime() {
         if (m_useZone) {
