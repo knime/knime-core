@@ -87,9 +87,9 @@ public class FileReaderSettings extends TokenizerSettings {
         String to = System.getProperty(KNIMEConstants.PROPERTY_URL_TIMEOUT);
         if (to != null) {
             try {
-                m_defaultConnectTimeout = Integer.parseInt(to);
+                m_defaultConnectTimeout = Integer.parseInt(to) / 1000;
             } catch (NumberFormatException ex) {
-                m_defaultConnectTimeout = 1000;
+                m_defaultConnectTimeout = 1;
             }
         }
     }
@@ -721,7 +721,7 @@ public class FileReaderSettings extends TokenizerSettings {
      */
     public BufferedFileReader createNewInputReader() throws IOException {
         return BufferedFileReader.createNewReader(getDataFileLocation(),
-                getCharsetName(), m_connectTimeout);
+                getCharsetName(), m_connectTimeout * 1000);
     }
 
     /**
@@ -1206,7 +1206,7 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * @return the default connection timeout as set in the knime.ini in seconds
+     * @return the default connection timeout as set in the knime.ini <b><u>in seconds</u></b>
      * @see KNIMEConstants#PROPERTY_URL_TIMEOUT
      * @since 3.4
      */

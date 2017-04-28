@@ -140,7 +140,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         });
         m_limitRowsChecker.doClick();
 
-        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 500));
+        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
 
         addTab("Settings", initLayout());
 
@@ -191,7 +191,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        optionsPanel.add(getInFlowLayout(new JLabel("Connect timeout [ms]: ")), gbc);
+        optionsPanel.add(getInFlowLayout(new JLabel("Connect timeout [s]: ")), gbc);
         gbc.gridx += 1;
         optionsPanel.add(getInFlowLayout(m_connectTimeoutSpinner), gbc);
 
