@@ -49,9 +49,10 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.base.data.aggregation.general.AbstractRangeOperator;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
@@ -59,19 +60,15 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 
-
 /**
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class RangeOperator extends AggregationOperator {
+public class RangeOperator extends AbstractRangeOperator {
 
-    private DataCell m_min = null;
-
-    private DataCell m_max = null;
-
-
-    private final DataValueComparator m_comparator;
+    private static DataType specifyType(final DataColumnSpec spec) {
+        return spec != null ? spec.getType() : DoubleCell.TYPE;
+    }
 
     private final DataType m_type;
 
@@ -83,14 +80,9 @@ public class RangeOperator extends AggregationOperator {
     protected RangeOperator(final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(operatorData, globalSettings, opColSettings);
-        if (opColSettings.getOriginalColSpec() != null) {
-            m_type = opColSettings.getOriginalColSpec().getType();
-            m_comparator = m_type.getComparator();
-        } else {
-            m_type = DoubleCell.TYPE;
-            m_comparator = DoubleCell.TYPE.getComparator();
-        }
+        super(specifyType(opColSettings.getOriginalColSpec()), operatorData, globalSettings,
+            opColSettings);
+        m_type = specifyType(opColSettings.getOriginalColSpec());
     }
 
     /**Constructor for class RangeOperator.
@@ -117,74 +109,28 @@ public class RangeOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (m_min == null || m_max == null) {
-            //this is the first call
-            m_min = cell;
-            m_max = cell;
-            return false;
-        }
-        if (m_comparator.compare(m_min, cell) > 0) {
-            m_min = cell;
-        }
-        if (m_comparator.compare(m_max, cell) < 0) {
-            m_max = cell;
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected DataType getDataType(final DataType origType) {
-        //if the input is an int/long return also an int/long
-        if (m_type == IntCell.TYPE || m_type == LongCell.TYPE) {
-            return origType;
-        }
-        //if not always return a double
-        return DoubleCell.TYPE;
+        return m_type;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @since 3.4
      */
     @Override
-    protected DataCell getResultInternal() {
-        if (m_max == null || m_min == null) {
-            //the group contains only missing cells
-            return DataType.getMissingCell();
-        }
+    protected DataCell getResultInternal(final DataCell min, final DataCell max) {
         if (m_type == IntCell.TYPE) {
-            final int range = ((IntValue)m_max).getIntValue()
-                    - ((IntValue)m_min).getIntValue();
+            final int range = ((IntValue)max).getIntValue()
+                    - ((IntValue)min).getIntValue();
             return new IntCell(range);
         } else if (m_type == LongCell.TYPE) {
-            final long range = ((LongValue)m_max).getLongValue()
-                - ((LongValue)m_min).getLongValue();
+            final long range = ((LongValue)max).getLongValue()
+                - ((LongValue)min).getLongValue();
             return new LongCell(range);
         }
-        final double range = ((DoubleValue)m_max).getDoubleValue()
-                - ((DoubleValue)m_min).getDoubleValue();
+        final double range = ((DoubleValue)max).getDoubleValue()
+                - ((DoubleValue)min).getDoubleValue();
         return new DoubleCell(range);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_min = null;
-        m_max = null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Calculates the difference between the "
-        + "largest and smallest value.";
-    }
-
 }

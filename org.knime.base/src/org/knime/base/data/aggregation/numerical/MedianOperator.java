@@ -51,21 +51,35 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-import org.knime.base.data.aggregation.general.SortedListCellOperator;
+import org.knime.base.data.aggregation.general.AbstractMedianOperator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 
 
 /**
  * Computes the median of a list of numbers.
  * @author Tobias Koetter, University of Konstanz
  */
-public class MedianOperator extends SortedListCellOperator {
+public class MedianOperator extends AbstractMedianOperator {
 
     private static final DataType TYPE = DoubleCell.TYPE;
 
+    private static EvenListMedianMethod createCustomMeanMedianMethod() {
+        return new EvenListMedianMethod() {
+
+            @Override
+            public DataCell extractMedian(final List<DataCell> cells, final int lowerCandidateIdx,
+                final int upperCandidateIdx) {
+                final double double1 = ((DoubleValue)cells.get(lowerCandidateIdx)).getDoubleValue();
+                final double double2 = ((DoubleValue)cells.get(upperCandidateIdx)).getDoubleValue();
+
+                return DoubleCellFactory.create((double1 + double2) / 2);
+            }
+        };
+    }
 
     /**Constructor for class MedianOperator.
      * @param operatorData the operator data
@@ -75,7 +89,8 @@ public class MedianOperator extends SortedListCellOperator {
     protected MedianOperator(final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(operatorData, globalSettings, opColSettings);
+        super(createDefaultMedianMethodDescriptions(createCustomMeanMedianMethod()), operatorData,
+            globalSettings, opColSettings);
     }
 
     /**Constructor for class MedianOperator.
@@ -84,21 +99,8 @@ public class MedianOperator extends SortedListCellOperator {
      */
     public MedianOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Median", true, false, DoubleValue.class,
-                false), globalSettings, setInclMissingFlag(opColSettings));
-    }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
+        super("Median Number (double)", false, DoubleValue.class, createCustomMeanMedianMethod(),
+            globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**
@@ -116,32 +118,18 @@ public class MedianOperator extends SortedListCellOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new MedianOperator(getOperatorData(), globalSettings, opColSettings);
+        final MedianOperator operator = new MedianOperator(getOperatorData(), globalSettings,
+            opColSettings);
+        operator.setMedianMethod(getMedianMethod());
+        return operator;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataCell getResultInternal() {
-        final List<DataCell> cells = super.getCells();
-        if (cells.size() == 0) {
-            return DataType.getMissingCell();
-        }
-        if (cells.size() == 1) {
-            return convertToDoubleCellIfNecessary(cells.get(0));
-        }
-        sortCells(cells);
-        final double middle = cells.size() / 2.0;
-        if (middle > (int)middle) {
-            return convertToDoubleCellIfNecessary(cells.get((int)middle));
-        }
-        //the list is even return the middle two
-        final double val1 =
-            ((DoubleValue)cells.get((int) middle - 1)).getDoubleValue();
-        final double val2 =
-            ((DoubleValue)cells.get((int) middle)).getDoubleValue();
-        return new DoubleCell((val1 + val2) / 2);
+    protected DataCell getResultInternal(final DataCell median) {
+        return convertToDoubleCellIfNecessary(median);
     }
 
     /** Converts argument to DoubleCell if it does not fully support the
