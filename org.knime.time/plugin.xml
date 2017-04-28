@@ -215,5 +215,44 @@
          </serializer>
       </DataType>
    </extension>
+   <extension
+         point="org.knime.base.AggregationOperator">
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalDateMedianOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalTimeMedianOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalDateTimeMedianOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.PeriodOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalTimeDurationOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalDateTimeDurationOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalTimeMeanOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalDateTimeMeanOperator"
+            deprecated="false">
+      </AggregationOperator>
+      <AggregationOperator
+            AggregationOperator="org.knime.base.data.aggregation.datetime.LocalDateMeanOperator"
+            deprecated="false">
+      </AggregationOperator>
+   </extension>
    
 </plugin>
