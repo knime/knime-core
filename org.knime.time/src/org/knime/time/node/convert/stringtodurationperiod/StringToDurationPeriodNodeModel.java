@@ -51,6 +51,7 @@ package org.knime.time.node.convert.stringtodurationperiod;
 import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -215,7 +216,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         throws Exception {
         final BufferedDataTable in = inData[0];
         if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
-            detectTypes(new DataTableRowInput(in));
+            detectTypes(new DataTableRowInput(in), null);
             // no more rows to look at, guess that column is Period, if it was not detected
             for (int i = 0; i < m_detectedTypes.length; i++) {
                 if (m_detectedTypes[i] == null) {
@@ -232,7 +233,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
-    private void detectTypes(final RowInput rowInput) throws InterruptedException {
+    private void detectTypes(final RowInput rowInput, final DataRow firstRow) throws InterruptedException {
         final DataTableSpec spec = rowInput.getDataTableSpec();
         final String[] includes = m_colSelect.applyTo(spec).getIncludes();
         if (m_detectedTypes == null) {
@@ -246,12 +247,19 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         }
 
         if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
+            final List<DataRow> rows = new ArrayList<>();
+            if (firstRow != null) {
+                rows.add(firstRow);
+            }
             DataRow row;
             while ((row = rowInput.poll()) != null) {
+                rows.add(row);
+            }
+            for (final DataRow dataRow : rows) {
                 boolean isCellMissing = false;
                 for (int i = 0; i < includes.length; i++) {
                     if (m_detectedTypes[i] == null) {
-                        final DataCell cell = row.getCell(spec.findColumnIndex(includes[i]));
+                        final DataCell cell = dataRow.getCell(spec.findColumnIndex(includes[i]));
                         if (cell.isMissing()) {
                             isCellMissing = true;
                         } else {
@@ -403,7 +411,8 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
 
     @Override
     public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        final SimpleStreamableOperatorInternals simpleStreamableOperatorInternals = new SimpleStreamableOperatorInternals();
+        final SimpleStreamableOperatorInternals simpleStreamableOperatorInternals =
+            new SimpleStreamableOperatorInternals();
         simpleStreamableOperatorInternals.getConfig().addBoolean("needsIteration", true);
         simpleStreamableOperatorInternals.getConfig().addInt("sizeRow", 0);
         return simpleStreamableOperatorInternals;
@@ -520,14 +529,14 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
                     final Config config = m_internals.getConfig();
 
                     // detect types
-                    detectTypes(rowInput);
+                    detectTypes(rowInput, row);
                     for (int i = 0; i < m_detectedTypes.length; i++) {
                         config.addDataType("detected_type" + i, m_detectedTypes[i]);
                     }
 
                     // write detected types and column names into config
                     if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
-                        for (int i = 0; i < row.getNumCells(); i++) {
+                        for (int i = 0; i < rowInput.getDataTableSpec().getNumColumns(); i++) {
                             final int searchIdx = Arrays.binarySearch(includeIndexes, i);
                             config.addString("colname" + i, inSpec.getColumnNames()[i]);
                             if (searchIdx < 0) {
@@ -537,7 +546,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
                                     m_detectedTypes[searchIdx] != null ? m_detectedTypes[searchIdx] : null);
                             }
                         }
-                        config.addInt("sizeRow", row.getNumCells());
+                        config.addInt("sizeRow", rowInput.getDataTableSpec().getNumColumns());
                     } else {
                         for (int i = 0; i < inSpec.getNumColumns(); i++) {
                             config.addString("colname" + i, inSpec.getColumnNames()[i]);
