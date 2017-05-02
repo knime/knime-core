@@ -71,6 +71,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
  * @author Marcel Wiedenmann, KNIME.com, Konstanz, Germany
@@ -82,6 +83,8 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
     private final DialogComponentBoolean[] m_dialogCompDateFields;
 
     private final DialogComponentBoolean[] m_dialogCompTimeFields;
+
+    private final DialogComponentStringSelection m_dialogCompSubsecondUnits;
 
     private final DialogComponentBoolean[] m_dialogCompTimeZoneFields;
 
@@ -114,8 +117,7 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
 
         final String[] fieldsTime =
             new String[]{ExtractDateTimeFieldsNodeModel.HOUR, ExtractDateTimeFieldsNodeModel.MINUTE,
-                ExtractDateTimeFieldsNodeModel.SECOND, ExtractDateTimeFieldsNodeModel.MILLISECOND,
-                ExtractDateTimeFieldsNodeModel.MICROSECOND, ExtractDateTimeFieldsNodeModel.NANOSECOND};
+                ExtractDateTimeFieldsNodeModel.SECOND, ExtractDateTimeFieldsNodeModel.SUBSECOND};
 
         m_dialogCompTimeFields = new DialogComponentBoolean[fieldsTime.length];
         for (int i = 0; i < fieldsTime.length; i++) {
@@ -123,6 +125,12 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
             m_dialogCompTimeFields[i] =
                 new DialogComponentBoolean(ExtractDateTimeFieldsNodeModel.createFieldBooleanModel(field), field);
         }
+
+        final String[] subsecondUnits = new String[]{ExtractDateTimeFieldsNodeModel.MILLISECOND,
+            ExtractDateTimeFieldsNodeModel.MICROSECOND, ExtractDateTimeFieldsNodeModel.NANOSECOND};
+
+        m_dialogCompSubsecondUnits = new DialogComponentStringSelection(
+            ExtractDateTimeFieldsNodeModel.createSubsecondUnitsModel(), null, subsecondUnits);
 
         final String[] fieldsTimeZone = new String[]{ExtractDateTimeFieldsNodeModel.TIME_ZONE_NAME,
             ExtractDateTimeFieldsNodeModel.TIME_ZONE_OFFSET};
@@ -202,13 +210,20 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         constrTimeSelect.fill = GridBagConstraints.VERTICAL;
         constrTimeSelect.gridx = 0;
         constrTimeSelect.gridy = 0;
-        constrTimeSelect.weightx = 1;
+        constrTimeSelect.weightx = 0;
         constrTimeSelect.anchor = GridBagConstraints.WEST;
-        for (final DialogComponentBoolean dc : m_dialogCompTimeFields) {
+        for (int i = 0; i < m_dialogCompTimeFields.length - 1; i++) {
+            final DialogComponentBoolean dc = m_dialogCompTimeFields[i];
             panelTimeSelect.add(dc.getComponentPanel(), constrTimeSelect);
             constrTimeSelect.gridy++;
         }
-        constr.ipadx = 100;
+        constrTimeSelect.weightx = 0;
+        final DialogComponentBoolean dialogCompSubsecond = m_dialogCompTimeFields[m_dialogCompTimeFields.length - 1];
+        panelTimeSelect.add(dialogCompSubsecond.getComponentPanel(), constrTimeSelect);
+        constrTimeSelect.gridx++;
+        constrTimeSelect.weightx = 1;
+        panelTimeSelect.add(m_dialogCompSubsecondUnits.getComponentPanel(), constrTimeSelect);
+        constr.ipadx = 30;
         panel.add(panelTimeSelect, constr);
         constr.ipadx = 0;
         constr.gridy++;
@@ -235,7 +250,7 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         // output settings:
 
         final JPanel panelOutput = new JPanel(new GridBagLayout());
-        panelOutput.setBorder(BorderFactory.createTitledBorder("Localization"));
+        panelOutput.setBorder(BorderFactory.createTitledBorder("Localization (month and day names, etc.)"));
         final GridBagConstraints constrOutput = new GridBagConstraints();
         constrOutput.insets = new Insets(5, 5, 0, 5);
         constrOutput.fill = GridBagConstraints.VERTICAL;
@@ -256,6 +271,11 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
             refreshFieldsSelectionsEnabled();
         });
 
+        dialogCompSubsecond.getModel().addChangeListener(l -> {
+            m_dialogCompSubsecondUnits.getModel().setEnabled(dialogCompSubsecond.getModel().isEnabled()
+                && ((SettingsModelBoolean)dialogCompSubsecond.getModel()).getBooleanValue());
+        });
+
         // add panel to dialog:
 
         addTab("Options", panel);
@@ -273,6 +293,7 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         for (final DialogComponentBoolean dc : m_dialogCompTimeFields) {
             dc.saveSettingsTo(settings);
         }
+        m_dialogCompSubsecondUnits.saveSettingsTo(settings);
         for (final DialogComponentBoolean dc : m_dialogCompTimeZoneFields) {
             dc.saveSettingsTo(settings);
         }
@@ -292,6 +313,7 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         for (final DialogComponentBoolean dc : m_dialogCompTimeFields) {
             dc.loadSettingsFrom(settings, specs);
         }
+        m_dialogCompSubsecondUnits.loadSettingsFrom(settings, specs);
         for (final DialogComponentBoolean dc : m_dialogCompTimeZoneFields) {
             dc.loadSettingsFrom(settings, specs);
         }
@@ -302,14 +324,17 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
     private void refreshFieldsSelectionsEnabled() {
         if (m_dialogCompColSelect.getSelectedAsSpec() != null) {
             final DataType type = m_dialogCompColSelect.getSelectedAsSpec().getType();
+            final boolean isDate = ExtractDateTimeFieldsNodeModel.isDateType(type);
             for (final DialogComponentBoolean dc : m_dialogCompDateFields) {
-                dc.getModel().setEnabled(ExtractDateTimeFieldsNodeModel.isDateType(type));
+                dc.getModel().setEnabled(isDate);
             }
+            final boolean isTime = ExtractDateTimeFieldsNodeModel.isTimeType(type);
             for (final DialogComponentBoolean dc : m_dialogCompTimeFields) {
-                dc.getModel().setEnabled(ExtractDateTimeFieldsNodeModel.isTimeType(type));
+                dc.getModel().setEnabled(isTime);
             }
+            final boolean isZoned = ExtractDateTimeFieldsNodeModel.isZonedType(type);
             for (final DialogComponentBoolean dc : m_dialogCompTimeZoneFields) {
-                dc.getModel().setEnabled(ExtractDateTimeFieldsNodeModel.isZonedType(type));
+                dc.getModel().setEnabled(isZoned);
             }
         }
     }

@@ -109,11 +109,15 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
 
     static final String SECOND = "Second";
 
-    static final String MILLISECOND = "Subsecond (in milliseconds)";
+    static final String SUBSECOND = "Subsecond in";
 
-    static final String MICROSECOND = "Subsecond (in microseconds)";
+    static final String SUBSECOND_COL = "Subsecond";
 
-    static final String NANOSECOND = "Subsecond (in nanoseconds)";
+    static final String MILLISECOND = "milliseconds";
+
+    static final String MICROSECOND = "microseconds";
+
+    static final String NANOSECOND = "nanoseconds";
 
     static final String TIME_ZONE_NAME = "Time zone name";
 
@@ -125,6 +129,10 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
 
     static SettingsModelBoolean createFieldBooleanModel(final String key) {
         return new SettingsModelBoolean(key, false);
+    }
+
+    static SettingsModelString createSubsecondUnitsModel() {
+        return new SettingsModelString("subsecond_units", MILLISECOND);
     }
 
     static SettingsModelString createLocaleModel() {
@@ -169,11 +177,9 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
 
     private final SettingsModelBoolean m_secondModel = createFieldBooleanModel(SECOND);
 
-    private final SettingsModelBoolean m_millisecondModel = createFieldBooleanModel(MILLISECOND);
+    private final SettingsModelBoolean m_subsecondModel = createFieldBooleanModel(SUBSECOND);
 
-    private final SettingsModelBoolean m_microsecondModel = createFieldBooleanModel(MICROSECOND);
-
-    private final SettingsModelBoolean m_nanosecondModel = createFieldBooleanModel(NANOSECOND);
+    private final SettingsModelString m_subsecondUnitsModel = createSubsecondUnitsModel();
 
     private final SettingsModelBoolean m_timeZoneNameModel = createFieldBooleanModel(TIME_ZONE_NAME);
 
@@ -185,8 +191,8 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         new SettingsModelBoolean[]{m_yearModel, m_quarterModel, m_monthNumberModel, m_monthNameModel, m_weekModel,
             m_dayYearModel, m_dayMonthModel, m_dayWeekNumberModel, m_dayWeekNameModel};
 
-    private final SettingsModelBoolean[] m_timeModels = new SettingsModelBoolean[]{m_hourModel, m_minuteModel,
-        m_secondModel, m_millisecondModel, m_microsecondModel, m_nanosecondModel};
+    private final SettingsModelBoolean[] m_timeModels =
+        new SettingsModelBoolean[]{m_hourModel, m_minuteModel, m_secondModel, m_subsecondModel};
 
     private final SettingsModelBoolean[] m_timeZoneModels =
         new SettingsModelBoolean[]{m_timeZoneNameModel, m_timeZoneOffsetModel};
@@ -616,102 +622,99 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
                 }
             }
 
-            // subsecond (in milliseconds):
+            // subsecond:
 
-            if (m_millisecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec =
-                    createBoundedIntColumn(domainCreator, nameGenerator, MILLISECOND, 0, 999);
-                if (isLocalTime) {
-                    rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
+            if (m_subsecondModel.getBooleanValue()) {
+                final String subsecondUnit = m_subsecondUnitsModel.getStringValue();
+                if (subsecondUnit.equals(MILLISECOND)) {
+                    // in milliseconds
+                    final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator,
+                        SUBSECOND_COL + " (in " + MILLISECOND + ")", 0, 999);
+                    if (isLocalTime) {
+                        rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
 
-                        @Override
-                        protected DataCell getCell(final LocalTimeValue value) {
-                            return IntCellFactory.create(value.getLocalTime().get(ChronoField.MILLI_OF_SECOND));
-                        }
-                    });
-                } else if (isLocalDateTime) {
-                    rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+                            @Override
+                            protected DataCell getCell(final LocalTimeValue value) {
+                                return IntCellFactory.create(value.getLocalTime().get(ChronoField.MILLI_OF_SECOND));
+                            }
+                        });
+                    } else if (isLocalDateTime) {
+                        rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
 
-                        @Override
-                        protected DataCell getCell(final LocalDateTimeValue value) {
-                            return IntCellFactory.create(value.getLocalDateTime().get(ChronoField.MILLI_OF_SECOND));
-                        }
-                    });
-                } else if (isZonedDateTime) {
-                    rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+                            @Override
+                            protected DataCell getCell(final LocalDateTimeValue value) {
+                                return IntCellFactory.create(value.getLocalDateTime().get(ChronoField.MILLI_OF_SECOND));
+                            }
+                        });
+                    } else if (isZonedDateTime) {
+                        rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
 
-                        @Override
-                        protected DataCell getCell(final ZonedDateTimeValue value) {
-                            return IntCellFactory.create(value.getZonedDateTime().get(ChronoField.MILLI_OF_SECOND));
-                        }
-                    });
+                            @Override
+                            protected DataCell getCell(final ZonedDateTimeValue value) {
+                                return IntCellFactory.create(value.getZonedDateTime().get(ChronoField.MILLI_OF_SECOND));
+                            }
+                        });
+                    }
+                } else if (subsecondUnit.equals(MICROSECOND)) {
+                    // in microseconds
+                    final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator,
+                        SUBSECOND_COL + " (in " + MICROSECOND + ")", 0, 999_999);
+                    if (isLocalTime) {
+                        rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final LocalTimeValue value) {
+                                return IntCellFactory.create(value.getLocalTime().get(ChronoField.MICRO_OF_SECOND));
+                            }
+                        });
+                    } else if (isLocalDateTime) {
+                        rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final LocalDateTimeValue value) {
+                                return IntCellFactory.create(value.getLocalDateTime().get(ChronoField.MICRO_OF_SECOND));
+                            }
+                        });
+                    } else if (isZonedDateTime) {
+                        rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final ZonedDateTimeValue value) {
+                                return IntCellFactory.create(value.getZonedDateTime().get(ChronoField.MICRO_OF_SECOND));
+                            }
+                        });
+                    }
+                } else if (subsecondUnit.equals(NANOSECOND)) {
+                    // in nanoseconds
+                    final DataColumnSpec colSpec = createBoundedIntColumn(domainCreator, nameGenerator,
+                        SUBSECOND_COL + " (in " + NANOSECOND + ")", 0, 999_999_999);
+                    if (isLocalTime) {
+                        rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final LocalTimeValue value) {
+                                return IntCellFactory.create(value.getLocalTime().getNano());
+                            }
+                        });
+                    } else if (isLocalDateTime) {
+                        rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final LocalDateTimeValue value) {
+                                return IntCellFactory.create(value.getLocalDateTime().getNano());
+                            }
+                        });
+                    } else if (isZonedDateTime) {
+                        rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
+
+                            @Override
+                            protected DataCell getCell(final ZonedDateTimeValue value) {
+                                return IntCellFactory.create(value.getZonedDateTime().getNano());
+                            }
+                        });
+                    }
                 }
             }
-
-            // subsecond (in microseconds):
-
-            if (m_microsecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec =
-                    createBoundedIntColumn(domainCreator, nameGenerator, MICROSECOND, 0, 999_999);
-                if (isLocalTime) {
-                    rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final LocalTimeValue value) {
-                            return IntCellFactory.create(value.getLocalTime().get(ChronoField.MICRO_OF_SECOND));
-                        }
-                    });
-                } else if (isLocalDateTime) {
-                    rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final LocalDateTimeValue value) {
-                            return IntCellFactory.create(value.getLocalDateTime().get(ChronoField.MICRO_OF_SECOND));
-                        }
-                    });
-                } else if (isZonedDateTime) {
-                    rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final ZonedDateTimeValue value) {
-                            return IntCellFactory.create(value.getZonedDateTime().get(ChronoField.MICRO_OF_SECOND));
-                        }
-                    });
-                }
-            }
-
-            // subsecond (in nanoseconds):
-
-            if (m_nanosecondModel.getBooleanValue()) {
-                final DataColumnSpec colSpec =
-                    createBoundedIntColumn(domainCreator, nameGenerator, NANOSECOND, 0, 999_999_999);
-                if (isLocalTime) {
-                    rearranger.append(new AbstractLocalTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final LocalTimeValue value) {
-                            return IntCellFactory.create(value.getLocalTime().getNano());
-                        }
-                    });
-                } else if (isLocalDateTime) {
-                    rearranger.append(new AbstractLocalDateTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final LocalDateTimeValue value) {
-                            return IntCellFactory.create(value.getLocalDateTime().getNano());
-                        }
-                    });
-                } else if (isZonedDateTime) {
-                    rearranger.append(new AbstractZonedDateTimeFieldCellFactory(selectedColIdx, colSpec) {
-
-                        @Override
-                        protected DataCell getCell(final ZonedDateTimeValue value) {
-                            return IntCellFactory.create(value.getZonedDateTime().getNano());
-                        }
-                    });
-                }
-            }
-
             if (isZonedDateTime) {
 
                 // extract time zone fields:
@@ -764,6 +767,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         for (final SettingsModelBoolean sm : m_timeModels) {
             sm.saveSettingsTo(settings);
         }
+        m_subsecondUnitsModel.saveSettingsTo(settings);
         for (final SettingsModelBoolean sm : m_timeZoneModels) {
             sm.saveSettingsTo(settings);
         }
@@ -782,6 +786,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         for (final SettingsModelBoolean sm : m_timeModels) {
             sm.validateSettings(settings);
         }
+        m_subsecondUnitsModel.validateSettings(settings);
         for (final SettingsModelBoolean sm : m_timeZoneModels) {
             sm.validateSettings(settings);
         }
@@ -800,6 +805,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         for (final SettingsModelBoolean sm : m_timeModels) {
             sm.loadSettingsFrom(settings);
         }
+        m_subsecondUnitsModel.loadSettingsFrom(settings);
         for (final SettingsModelBoolean sm : m_timeZoneModels) {
             sm.loadSettingsFrom(settings);
         }

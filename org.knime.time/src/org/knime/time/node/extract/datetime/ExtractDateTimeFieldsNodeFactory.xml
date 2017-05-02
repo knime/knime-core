@@ -60,17 +60,15 @@
 				extracted as a number in range [0-59] and appended as an integer
 				column.
 			</option>
-			<option name="Subsecond (in milliseconds)">If checked, the millisecond of second will be
-				extracted as a number in range [0-999] and appended as an integer
-				column.
-			</option>
-			<option name="Subsecond (in microseconds)">If checked, the microsecond of second will be
-				extracted as a number in range [0-999,999] and appended as an
-				integer column.
-			</option>
-			<option name="Subsecond (in nanoseconds)">If checked, the nanosecond of second will be
-				extracted as a number in range [0-999,999,999] and appended as an
-				integer column.
+			<option name="Subsecond">
+				If checked, the fraction of second will be extracted as number and
+				appended as an integer column. The desired time unit can be
+				specified.
+				<ul>
+					<li>milliseconds: extract as milliseconds, range [0-999] </li>
+					<li>microseconds: extract as microseconds, range [0-999,999]</li>
+					<li>nanoseconds: extract as nanoseconds, range [0-999,999,999]</li>
+				</ul>
 			</option>
 		</tab>
 		<tab name="Time Zone Fields">
@@ -78,7 +76,8 @@
 				extracted as a non-localized name and appended as a string column.
 			</option>
 			<option name="Time zone offset"> If checked, the time zone offset will be
-				extracted as a localized, formatted number and appended as a string column.
+				extracted as a localized, formatted number and appended as a string
+				column.
 			</option>
 		</tab>
 		<tab name="Localization">
