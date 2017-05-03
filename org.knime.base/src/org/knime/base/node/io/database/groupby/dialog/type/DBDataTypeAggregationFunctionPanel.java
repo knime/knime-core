@@ -399,6 +399,12 @@ DBDataTypeAggregationFunctionRow, DataType> {
     public void initialize(final DataTableSpec spec, final List<DBDataTypeAggregationFunctionRow> colAggrs) {
         m_avAggrColSpecs.clear();
         final List<DataType> listElements = getTypeList(spec);
+
+        // add the old date&time type to the panel if an aggregator had been configured for it previously
+        if (colAggrs.stream().anyMatch(a -> a.getDataType().equals(DateAndTimeCell.TYPE))) {
+            listElements.add(DateAndTimeCell.TYPE);
+        }
+
         initialize(listElements, colAggrs, spec);
     }
 
@@ -415,7 +421,6 @@ DBDataTypeAggregationFunctionRow, DataType> {
         types.add(LongCell.TYPE);
         types.add(DoubleCell.TYPE);
         types.add(StringCell.TYPE);
-        types.add(DateAndTimeCell.TYPE);
         types.add(ListCell.getCollectionType(generalType));
         types.add(SetCell.getCollectionType(generalType));
         if (spec != null) {
