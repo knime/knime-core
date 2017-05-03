@@ -47,7 +47,6 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4;
 
-import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -55,14 +54,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.EnumSet;
 
 import javax.swing.BorderFactory;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.LearningRateStrategies;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Prior;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -83,6 +90,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  *
  * @author Heiko Hofer
  * @author Gabor Bakos
+ * @author Adrian Nembach, KNIME.com
  * @since 3.1
  */
 public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
@@ -98,41 +106,24 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
     private DataTableSpec m_inSpec;
 
+    // new in version 3.4
+    private JComboBox<Solver> m_solverComboBox;
+    private JCheckBox m_lazyCalculationCheckBox;
+    private JSpinner m_maxEpochSpinner;
+
+    private JComboBox<LearningRateStrategies> m_learningRateStrategyComboBox;
+    private JSpinner m_initialLearningRateSpinner;
+    private JSpinner m_learningRateDecaySpinner;
+
+    private JComboBox<Prior> m_priorComboBox;
+    private JSpinner m_priorVarianceSpinner;
+    private JLabel m_warningPanel;
+
     /**
      * Create new dialog for linear regression model.
      */
     public LogRegLearnerNodeDialogPane() {
         super();
-
-        JPanel panel = new JPanel(new BorderLayout());
-        JPanel northPanel = createTargetOptionsPanel();
-        northPanel.setBorder(BorderFactory.createTitledBorder("Target"));
-        panel.add(northPanel, BorderLayout.NORTH);
-
-        JPanel centerPanel = createIncludesPanel();
-        centerPanel.setBorder(BorderFactory.createTitledBorder("Values"));
-        panel.add(centerPanel, BorderLayout.CENTER);
-
-        addTab("Settings", panel);
-    }
-
-    /**
-     * Create options panel for the target.
-     */
-    private JPanel createTargetOptionsPanel() {
-        JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.BASELINE_LEADING;
-        c.insets = new Insets(5, 5, 0, 0);
-
-        p.add(new JLabel("Target Column:"), c);
-
-        c.gridx++;
         @SuppressWarnings("unchecked")
         final ColumnSelectionPanel columnSelectionPanel =
             new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0), NominalValue.class);
@@ -144,6 +135,154 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
                 updateTargetCategories((DataCell)m_targetReferenceCategory.getSelectedItem());
             }
         });
+        m_warningPanel = new JLabel();
+        m_targetReferenceCategory = new JComboBox<>();
+        m_filterPanel = new DataColumnSpecFilterPanel(false);
+        m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
+                + "First value is chosen as reference for dummy variables.");
+
+        m_lazyCalculationCheckBox = new JCheckBox("Perfom calculations lazily");
+        m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
+        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(1e-3, Double.MIN_VALUE, Double.MAX_VALUE, 1e-3));
+        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(1.0, Double.MIN_VALUE, Double.MAX_VALUE, 1e-3));
+        m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(1, Double.MIN_VALUE, Double.MAX_VALUE, 0.1));
+        m_priorComboBox = new JComboBox<>(Prior.values());
+        m_learningRateStrategyComboBox = new JComboBox<>(LearningRateStrategies.values());
+        m_solverComboBox = new JComboBox<>(Solver.values());
+        m_solverComboBox.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                Solver selected = (Solver)m_solverComboBox.getSelectedItem();
+                m_lazyCalculationCheckBox.setEnabled(selected.supportsLazy());
+            }
+        });
+
+        m_priorComboBox.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                Prior selected = (Prior)m_priorComboBox.getSelectedItem();
+                m_priorVarianceSpinner.setEnabled(selected.hasVariance());
+            }
+        });
+
+        m_learningRateStrategyComboBox.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                LearningRateStrategies selected = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
+                m_learningRateDecaySpinner.setEnabled(selected.hasDecayRate());
+                m_initialLearningRateSpinner.setEnabled(selected.hasInitialValue());
+            }
+
+        });
+
+        JPanel settingsPanel = createSettingPanel();
+        addTab("Settings", settingsPanel);
+    }
+
+    private void solverChanged(final Solver solver) {
+
+        boolean sgMethod = solver != Solver.IRLS;
+        if (sgMethod) {
+            m_lazyCalculationCheckBox.setEnabled(solver.supportsLazy());
+
+            ComboBoxModel<Prior> oldPriorModel = m_priorComboBox.getModel();
+            EnumSet<Prior> compatiblePriors = solver.getCompatiblePriors();
+            Prior oldSelectedPrior = (Prior)oldPriorModel.getSelectedItem();
+            m_priorComboBox.setModel(new DefaultComboBoxModel<>(compatiblePriors.toArray(new Prior[compatiblePriors.size()])));
+            if (compatiblePriors.contains(oldSelectedPrior)) {
+                m_priorComboBox.setSelectedItem(oldSelectedPrior);
+            } else {
+                // TODO warn user that the prior selection changed
+            }
+
+            LearningRateStrategies oldSelectedLRS = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
+            EnumSet<LearningRateStrategies> compatibleLRS = solver.getCompatibleLearningRateStrategies();
+            m_learningRateStrategyComboBox.setModel(new DefaultComboBoxModel<>(
+                    compatibleLRS.toArray(new LearningRateStrategies[compatibleLRS.size()])));
+            if (compatibleLRS.contains(oldSelectedLRS)) {
+                m_learningRateStrategyComboBox.setSelectedItem(oldSelectedLRS);
+            } else {
+                // TODO warn user that the selected learning rate strategy changed
+            }
+        } else {
+            m_lazyCalculationCheckBox.setEnabled(false);
+            m_learningRateStrategyComboBox.setEnabled(false);
+            m_learningRateDecaySpinner.setEnabled(false);
+            m_initialLearningRateSpinner.setEnabled(false);
+            m_priorComboBox.setEnabled(false);
+            m_priorVarianceSpinner.setEnabled(false);
+        }
+    }
+
+    private JPanel createSettingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+        JPanel northPanel = createTargetOptionsPanel();
+        northPanel.setBorder(BorderFactory.createTitledBorder("Target"));
+//        panel.add(northPanel, BorderLayout.NORTH);
+        panel.add(northPanel, c);
+        c.gridy++;
+
+        JPanel centerPanel = createSolverPanel();
+        centerPanel.setBorder(BorderFactory.createTitledBorder("Solver"));
+//        panel.add(centerPanel, BorderLayout.WEST);
+        panel.add(centerPanel, c);
+        c.gridy++;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.BOTH;
+
+        JPanel southPanel = createIncludesPanel();
+        southPanel.setBorder(BorderFactory.createTitledBorder("Values"));
+//        panel.add(southPanel, BorderLayout.SOUTH);
+        panel.add(southPanel, c);
+        return panel;
+    }
+
+    private JPanel createSolverPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+        p.add(new JLabel("Select solver:"), c);
+        c.gridx++;
+        c.weightx = 1;
+        p.add(m_solverComboBox, c);
+        return p;
+    }
+
+    /**
+     * Create options panel for the target.
+     */
+    private JPanel createTargetOptionsPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        p.add(new JLabel("Target Column:"), c);
+
+        c.gridx++;
+
         p.add(m_selectionPanel, c);
 
         c.gridx = 0;
@@ -151,27 +290,13 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         p.add(new JLabel("Reference Category:"), c);
 
         c.gridx++;
-        m_targetReferenceCategory = new JComboBox<>();
         p.add(m_targetReferenceCategory, c);
 
         c.gridx = 0;
         c.gridy++;
         c.gridwidth = 3;
         c.weightx = 1;
-        m_notSortTarget =
-            new JCheckBox("Use order from target column domain (only relevant for output representation)");
-        p.add(m_notSortTarget, c);
 
-        m_selectionPanel.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                Object selected = e.getItem();
-                if (selected instanceof DataColumnSpec) {
-                    m_filterPanel.resetHiding();
-                    m_filterPanel.hideNames((DataColumnSpec)selected);
-                }
-            }
-        });
 
         return p;
     }
@@ -190,12 +315,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.anchor = GridBagConstraints.BASELINE_LEADING;
         c.insets = new Insets(5, 5, 0, 0);
 
-        m_filterPanel = new DataColumnSpecFilterPanel(false);
+
         p.add(m_filterPanel, c);
 
         c.gridy++;
-        m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
-            + "First value is chosen as reference for dummy variables.");
+
         p.add(m_notSortIncludes, c);
 
         return p;
@@ -272,6 +396,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         m_notSortTarget.setSelected(!settings.getSortTargetCategories());
         m_notSortIncludes.setSelected(!settings.getSortIncludesCategories());
+        m_solverComboBox.setSelectedItem(settings.getSolver());
     }
 
     /**
@@ -288,6 +413,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         settings.setTargetReferenceCategory((DataCell)m_targetReferenceCategory.getSelectedItem());
         settings.setSortTargetCategories(!m_notSortTarget.isSelected());
         settings.setSortIncludesCategories(!m_notSortIncludes.isSelected());
+        settings.setSolver((Solver)m_solverComboBox.getSelectedItem());
 
         settings.saveSettings(s);
     }
