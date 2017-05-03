@@ -250,7 +250,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
                     durationOrPeriod = DurationPeriodFormatUtils.parsePeriod(m_duration.getStringValue());
                 } catch (DateTimeParseException ex2) {
                     throw new InvalidSettingsException(
-                        "'" + m_duration.getStringValue() + "' could not be parsed as Duration or Period!");
+                        "'" + m_duration.getStringValue() + "' could not be parsed as duration or period!");
                 }
             }
         }
@@ -462,10 +462,10 @@ final class CreateDateTimeNodeModel extends NodeModel {
 
         // check if duration is zero
         if ((durationOrPeriod instanceof Period) && ((Period)durationOrPeriod).isZero()) {
-            setWarningMessage("Duration is zero! Node created an empty table.");
+            setWarningMessage("Interval is zero! Node created an empty table.");
             return;
         } else if ((durationOrPeriod instanceof Duration) && ((Duration)durationOrPeriod).isZero()) {
-            setWarningMessage("Duration is zero! Node created an empty table.");
+            setWarningMessage("Interval is zero! Node created an empty table.");
             return;
         }
 
@@ -502,9 +502,9 @@ final class CreateDateTimeNodeModel extends NodeModel {
 
         // === check if input is legal: duration/period needs to be positive if end is after start and vice versa ===
         final String warningMsgPos =
-            "Duration must be positive, if end is after start date! Node created an empty table.";
+            "Interval must be positive, if end is after start date! Node created an empty table.";
         final String warningMsgNeg =
-            "Duration must be negative, if end is before start date! Node created an empty table.";
+            "Interval must be negative, if end is before start date! Node created an empty table.";
         if (start instanceof LocalDate) {
             if ((((LocalDate)end).isAfter((LocalDate)start))
                 && (((LocalDate)start.plus(durationOrPeriod)).isBefore((LocalDate)start))) {
