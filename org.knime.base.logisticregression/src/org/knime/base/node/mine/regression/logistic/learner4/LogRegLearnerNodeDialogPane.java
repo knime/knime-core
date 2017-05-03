@@ -138,14 +138,16 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_warningPanel = new JLabel();
         m_targetReferenceCategory = new JComboBox<>();
         m_filterPanel = new DataColumnSpecFilterPanel(false);
+        m_notSortTarget =
+                new JCheckBox("Use order from target column domain (only relevant for output representation)");
         m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
                 + "First value is chosen as reference for dummy variables.");
 
         m_lazyCalculationCheckBox = new JCheckBox("Perfom calculations lazily");
         m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
-        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(1e-3, Double.MIN_VALUE, Double.MAX_VALUE, 1e-3));
-        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(1.0, Double.MIN_VALUE, Double.MAX_VALUE, 1e-3));
-        m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(1, Double.MIN_VALUE, Double.MAX_VALUE, 0.1));
+        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(1e-3, Double.MIN_VALUE, 1e3, 1e-3));
+        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(1.0, Double.MIN_VALUE, 1e3, 1e-3));
+        m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(1, Double.MIN_VALUE, 1e3, 0.1));
         m_priorComboBox = new JComboBox<>(Prior.values());
         m_learningRateStrategyComboBox = new JComboBox<>(LearningRateStrategies.values());
         m_solverComboBox = new JComboBox<>(Solver.values());
@@ -154,7 +156,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 Solver selected = (Solver)m_solverComboBox.getSelectedItem();
-                m_lazyCalculationCheckBox.setEnabled(selected.supportsLazy());
+                solverChanged(selected);
             }
         });
 
@@ -178,8 +180,10 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         });
 
-        JPanel settingsPanel = createSettingPanel();
+        JPanel settingsPanel = createSettingsPanel();
         addTab("Settings", settingsPanel);
+        JPanel advancedSettingsPanel = createAdvancedSettingsPanel();
+        addTab("Advanced", advancedSettingsPanel);
     }
 
     private void solverChanged(final Solver solver) {
@@ -217,7 +221,108 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         }
     }
 
-    private JPanel createSettingPanel() {
+    private JPanel createAdvancedSettingsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        JPanel solverOptionsPanel = createSolverOptionsPanel();
+        solverOptionsPanel.setBorder(BorderFactory.createTitledBorder("Solver options"));
+        panel.add(solverOptionsPanel, c);
+
+        c.gridy++;
+        JPanel learningRateStrategyPanel = createLearningRateStrategyPanel();
+        learningRateStrategyPanel.setBorder(BorderFactory.createTitledBorder("Learning rate strategy"));
+        panel.add(learningRateStrategyPanel, c);
+
+        c.gridy++;
+        JPanel priorPanel = createPriorPanel();
+        priorPanel.setBorder(BorderFactory.createTitledBorder("Prior options"));
+        panel.add(priorPanel, c);
+
+        return panel;
+    }
+
+    private JPanel createSolverOptionsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        panel.add(new JLabel("Number of epochs"), c);
+        c.gridx++;
+        panel.add(m_maxEpochSpinner, c);
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        panel.add(m_lazyCalculationCheckBox, c);
+
+        return panel;
+    }
+
+    private JPanel createPriorPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        panel.add(new JLabel("Prior"), c);
+        c.gridx++;
+        panel.add(m_priorComboBox, c);
+        c.gridx = 0;
+        c.gridy++;
+        panel.add(new JLabel("Variance"), c);
+        c.gridx++;
+        panel.add(m_priorVarianceSpinner, c);
+
+        return panel;
+    }
+
+    private JPanel createLearningRateStrategyPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        panel.add(new JLabel("Learning rate strategy"), c);
+        c.gridx++;
+        panel.add(m_learningRateStrategyComboBox, c);
+        c.gridx = 0;
+        c.gridy++;
+        panel.add(new JLabel("Initial learning rate"), c);
+        c.gridx++;
+        panel.add(m_initialLearningRateSpinner, c);
+        c.gridx = 0;
+        c.gridy++;
+        panel.add(new JLabel("Decay rate"), c);
+        c.gridx++;
+        panel.add(m_learningRateDecaySpinner, c);
+
+        return panel;
+    }
+
+    private JPanel createSettingsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -296,7 +401,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridy++;
         c.gridwidth = 3;
         c.weightx = 1;
-
+        p.add(m_notSortTarget, c);
 
         return p;
     }
