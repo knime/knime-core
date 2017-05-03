@@ -182,7 +182,6 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
         types.add(LongCell.TYPE);
         types.add(DoubleCell.TYPE);
         types.add(StringCell.TYPE);
-        types.add(DateAndTimeCell.TYPE);
         types.add(ListCell.getCollectionType(generalType));
         types.add(SetCell.getCollectionType(generalType));
         if (spec != null) {
@@ -204,6 +203,12 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
     throws InvalidSettingsException {
         final List<DataType> typeList = getTypeList(spec);
         final List<DataTypeAggregator> aggregators = DataTypeAggregator.loadAggregators(settings, m_key, spec);
+
+        // add the old date&time type to the panel if an aggregator had been configured for it previously
+        if (aggregators.stream().anyMatch(a -> a.getDataType().equals(DateAndTimeCell.TYPE))) {
+            typeList.add(DateAndTimeCell.TYPE);
+        }
+
         initialize(typeList, aggregators, spec);
     }
 
