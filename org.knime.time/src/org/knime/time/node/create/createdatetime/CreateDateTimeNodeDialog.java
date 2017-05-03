@@ -134,7 +134,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
             CreateDateTimeNodeModel.createRowNrFixedModel(rowNrOptionSelectionModel), null, 10, 10);
 
         final SettingsModelBoolean modelStartUseExecTime = CreateDateTimeNodeModel.createStartUseExecTimeModel();
-        m_dialogCompStartUseExecTime = new DialogComponentBoolean(modelStartUseExecTime, "Use execution time");
+        m_dialogCompStartUseExecTime = new DialogComponentBoolean(modelStartUseExecTime, "Use execution date&time");
 
         final SettingsModelDateTime modelStart = CreateDateTimeNodeModel.createStartModel(modelStartUseExecTime);
         m_dialogCompStart =
@@ -150,7 +150,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
 
         final SettingsModelBoolean modelEndUseExecTime =
             CreateDateTimeNodeModel.createEndUseExecTimeModel(rowNrOptionSelectionModel, durationOrEndSelectionModel);
-        m_dialogCompEndUseExecTime = new DialogComponentBoolean(modelEndUseExecTime, "Use execution time");
+        m_dialogCompEndUseExecTime = new DialogComponentBoolean(modelEndUseExecTime, "Use execution date&time");
 
         final SettingsModelDateTime modelEnd = CreateDateTimeNodeModel.createEndModel(rowNrOptionSelectionModel,
             durationOrEndSelectionModel, modelEndUseExecTime);
@@ -220,35 +220,50 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         panelModusRowNr.add(m_dialogCompRowNrFixed.getComponentPanel(), gbcModusRowNr);
 
         /*
-         * add date&time selection
+         * add start selection
          */
-        final JPanel panelTime = new JPanel(new GridBagLayout());
+        final JPanel panelStartTime = new JPanel(new GridBagLayout());
         gbc.gridy++;
-        panel.add(panelTime, gbc);
-        panelTime.setBorder(BorderFactory.createTitledBorder("Date&Time Settings"));
-        final GridBagConstraints gbcTime = new GridBagConstraints();
-        gbcTime.fill = GridBagConstraints.VERTICAL;
-        gbcTime.gridx = 0;
-        gbcTime.gridy = 0;
-        gbcTime.anchor = GridBagConstraints.WEST;
-        gbcTime.insets = new Insets(20, 31, 5, 5);
+        panel.add(panelStartTime, gbc);
+        panelStartTime.setBorder(BorderFactory.createTitledBorder("Starting Point"));
+        final GridBagConstraints gbcStartTime = new GridBagConstraints();
+        gbcStartTime.fill = GridBagConstraints.VERTICAL;
+        gbcStartTime.gridx = 0;
+        gbcStartTime.gridy = 0;
+        gbcStartTime.anchor = GridBagConstraints.WEST;
+        gbcStartTime.insets = new Insets(18, 28, 5, 5);
 
-        panelTime.add(new JLabel("Start:"), gbcTime);
-        gbcTime.gridheight = 2;
-        gbcTime.insets = new Insets(5, 10, 0, 5);
-        gbcTime.gridx++;
-        panelTime.add(m_dialogCompStart.getComponentPanel(), gbcTime);
+        panelStartTime.add(new JLabel("Start:"), gbcStartTime);
+        gbcStartTime.gridheight = 2;
+        gbcStartTime.insets = new Insets(5, 39, 0, 5);
+        gbcStartTime.gridx++;
+        panelStartTime.add(m_dialogCompStart.getComponentPanel(), gbcStartTime);
 
-        gbcTime.gridy += 2;
-        gbcTime.insets = new Insets(0, 13, 5, 5);
-        gbcTime.gridheight = 1;
-        panelTime.add(m_dialogCompStartUseExecTime.getComponentPanel(), gbcTime);
+        gbcStartTime.gridy += 2;
+        gbcStartTime.insets = new Insets(0, 42, 5, 5);
+        gbcStartTime.gridheight = 1;
+        gbcStartTime.weightx = 1;
+        panelStartTime.add(m_dialogCompStartUseExecTime.getComponentPanel(), gbcStartTime);
+
+        /*
+         * add interval and end selection
+         */
+        final JPanel panelEndTime = new JPanel(new GridBagLayout());
+        gbc.gridy++;
+        panel.add(panelEndTime, gbc);
+        panelEndTime.setBorder(BorderFactory.createTitledBorder("Ending Point"));
+        final GridBagConstraints gbcEndTime = new GridBagConstraints();
+        gbcEndTime.fill = GridBagConstraints.VERTICAL;
+        gbcEndTime.gridx = 0;
+        gbcEndTime.gridy = 0;
+        gbcEndTime.anchor = GridBagConstraints.WEST;
+        gbcEndTime.insets = new Insets(0, 13, 5, 5);
 
         final JPanel panelSwitchModus = new JPanel(new CardLayout());
-        gbcTime.insets = new Insets(5, 5, 5, 5);
-        gbcTime.gridx = 0;
-        gbcTime.gridy += 1;
-        panelTime.add(panelSwitchModus, gbcTime);
+        gbcEndTime.insets = new Insets(5, 5, 5, 5);
+        gbcEndTime.gridx = 0;
+        gbcEndTime.gridy += 1;
+        panelEndTime.add(panelSwitchModus, gbcEndTime);
         final GridBagConstraints gbcDurationEnd = new GridBagConstraints();
         gbcDurationEnd.fill = GridBagConstraints.VERTICAL;
         gbcDurationEnd.gridx = 0;
@@ -271,11 +286,11 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         panelSwitchModus.add(panelDurationEnd, LABELS);
 
         final JPanel panelDurationEndSelection = new JPanel(new GridBagLayout());
-        gbcTime.gridx++;
-        gbcTime.weightx = 1;
-        gbcTime.weighty = 1;
-        gbcTime.gridheight = 2;
-        panelTime.add(panelDurationEndSelection, gbcTime);
+        gbcEndTime.gridx++;
+        gbcEndTime.weightx = 1;
+        gbcEndTime.weighty = 1;
+        gbcEndTime.gridheight = 2;
+        panelEndTime.add(panelDurationEndSelection, gbcEndTime);
         final GridBagConstraints gbcDurationEndSelection = new GridBagConstraints();
         gbcDurationEndSelection.fill = GridBagConstraints.VERTICAL;
         gbcDurationEndSelection.gridx = 0;
@@ -346,7 +361,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
             Duration duration = null;
             Period period = null;
             if (((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue() == null) {
-                m_warningLabel.setText("Please enter a duration.");
+                m_warningLabel.setText("Please enter an interval.");
                 return;
             }
             try {
@@ -373,7 +388,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                 .equals(RowNrMode.Variable.name())) {
                 // === check that duration is not zero and row number variable ===
                 if ((duration != null && duration.isZero()) || (period != null && period.isZero())) {
-                    m_warningLabel.setText("Duration must not be zero.");
+                    m_warningLabel.setText("Interval must not be zero.");
                 }
 
                 // === check that start is before end and duration positive and vice versa ===
@@ -411,11 +426,11 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                     }
 
                     if (isStartBeforeEnd && isDurationNegative) {
-                        m_warningLabel.setText("Start is before end, but the duration is negative.");
+                        m_warningLabel.setText("Start is before end, but the interval is negative.");
                         return;
                     }
                     if (!isStartBeforeEnd && !isEqual && !isDurationNegative) {
-                        m_warningLabel.setText("Start is after end, but the duration is positive.");
+                        m_warningLabel.setText("Start is after end, but the interval is positive.");
                         return;
                     }
                 }
