@@ -47,6 +47,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4;
 
+import java.util.EnumSet;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -63,10 +65,103 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @since 3.1
  */
 class LogRegLearnerSettings {
+
+    enum Solver {
+        IRLS("Iteratively reweighted least squares", false, EnumSet.noneOf(LearningRateStrategies.class), EnumSet.noneOf(Prior.class)),
+        SAG("Stochastic average gradient", true, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.LineSearch),
+            EnumSet.allOf(Prior.class)),
+        SGD("Stochastic gradient descent", false, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.Annealing),
+            EnumSet.allOf(Prior.class));
+
+        private final boolean m_supportsLazy;
+        private final String m_toString;
+        private final EnumSet<LearningRateStrategies> m_compatibleLRS;
+        private final EnumSet<Prior> m_compatiblePriors;
+
+        private Solver(final String toString, final boolean supportsLazy, final EnumSet<LearningRateStrategies> compatibleLRS,
+            final EnumSet<Prior> compatiblePriors) {
+            m_supportsLazy = supportsLazy;
+            m_toString = toString;
+            m_compatibleLRS = compatibleLRS;
+            m_compatiblePriors = compatiblePriors;
+        }
+
+        @Override
+        public String toString() {
+            return m_toString;
+        }
+
+        public boolean supportsLazy() {
+            return m_supportsLazy;
+        }
+
+        public EnumSet<Prior> getCompatiblePriors() {
+            return m_compatiblePriors;
+        }
+
+        public EnumSet<LearningRateStrategies> getCompatibleLearningRateStrategies() {
+            return m_compatibleLRS;
+        }
+
+        public boolean compatibleWith(final LearningRateStrategies lrs) {
+            return m_compatibleLRS.contains(lrs);
+        }
+
+        public boolean compatibleWith(final Prior prior) {
+            return m_compatiblePriors.contains(prior);
+        }
+    }
+
+    enum Prior {
+        Uniform(false),
+        Gauss(true),
+        Laplace(true);
+
+        private final boolean m_hasVariance;
+        private Prior(final boolean hasVariance) {
+            m_hasVariance = hasVariance;
+        }
+
+        public boolean hasVariance() {
+            return m_hasVariance;
+        }
+    }
+
+    enum LearningRateStrategies {
+        Fixed(true, false),
+        Annealing(true, true),
+        LineSearch(false, false);
+
+        private final boolean m_hasInitialValue;
+        private final boolean m_hasDecayRate;
+
+        private LearningRateStrategies(final boolean hasInitialValue, final boolean hasDecayRate) {
+            m_hasInitialValue = hasInitialValue;
+            m_hasDecayRate = hasDecayRate;
+        }
+
+        public boolean hasInitialValue() {
+            return m_hasInitialValue;
+        }
+
+        public boolean hasDecayRate() {
+            return m_hasDecayRate;
+        }
+    }
+
+
     private static final String CFG_TARGET = "target";
     private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
     private static final String CFG_SORT_TARGET_CATEGORIES = "sort_target_categories";
     private static final String CFG_SORT_INCLUDES_CATEGORIES = "sort_includes_categories";
+    private static final String CFG_SOLVER = "solver";
+    private static final String CFG_MAX_EPOCH = "maxEpoch";
+    private static final String CFG_PRIOR = "prior";
+    private static final String CFG_PRIOR_VARIANCE = "priorVariance";
+    private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
+    private static final String CFG_INITIAL_LEARNING_RATE = "initialLearningRate";
+    private static final String CFG_LEARNING_RATE_DECAY = "learningRateDecay";
+
 
     private String m_targetColumn;
 
@@ -80,6 +175,15 @@ class LogRegLearnerSettings {
     /** True when categories of nominal data in the include list should be sorted. */
     private boolean m_sortIncludesCategories;
 
+    private Solver m_solver;
+
+    private int m_maxEpoch;
+    private double m_priorVariance;
+    private double m_initialLearningRate;
+    private double m_learningRateDecay;
+    private LearningRateStrategies m_learningRateStrategy;
+    private Prior m_prior;
+
     /**
      * Create default settings.
      */
@@ -88,6 +192,7 @@ class LogRegLearnerSettings {
         m_targetReferenceCategory = null;
         m_sortTargetCategories = true;
         m_sortIncludesCategories = true;
+        m_solver = Solver.SAG;
     }
 
 
@@ -105,6 +210,15 @@ class LogRegLearnerSettings {
         m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES);
         m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES);
 
+        String solverString = settings.getString(CFG_SOLVER);
+        m_solver = Solver.valueOf(solverString);
+        m_maxEpoch = settings.getInt(CFG_MAX_EPOCH);
+        m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(CFG_LEARNING_RATE_STRATEGY));
+        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE);
+        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY);
+        m_prior = Prior.valueOf(settings.getString(CFG_PRIOR));
+        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE);
+
     }
 
     /**
@@ -120,6 +234,16 @@ class LogRegLearnerSettings {
         m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
         m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
         m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES, true);
+        String solverString = settings.getString(CFG_SOLVER, Solver.SAG.name());
+        m_solver = Solver.valueOf(solverString);
+        m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, 100);
+        m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
+            CFG_LEARNING_RATE_STRATEGY, LearningRateStrategies.Fixed.name()));
+        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, 1e-3);
+        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY, 1.0);
+        m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, Prior.Uniform.name()));
+        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, 0);
+
     }
 
     /**
@@ -133,6 +257,13 @@ class LogRegLearnerSettings {
         settings.addDataCell(CFG_TARGET_REFERENCE_CATEGORY, m_targetReferenceCategory);
         settings.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
         settings.addBoolean(CFG_SORT_INCLUDES_CATEGORIES, m_sortIncludesCategories);
+        settings.addString(CFG_SOLVER, m_solver.name());
+        settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
+        settings.addString(CFG_PRIOR, m_prior.name());
+        settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
+        settings.addDouble(CFG_LEARNING_RATE_DECAY, m_learningRateDecay);
+        settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
+        settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
     }
 
     /**
@@ -212,6 +343,118 @@ class LogRegLearnerSettings {
      */
     public void setIncludedColumns(final DataColumnSpecFilterConfiguration includedColumns) {
         m_includedColumns = includedColumns;
+    }
+
+
+    /**
+     * @return the solver
+     */
+    public Solver getSolver() {
+        return m_solver;
+    }
+
+
+    /**
+     * @param solver the solver to set
+     */
+    public void setSolver(final Solver solver) {
+        m_solver = solver;
+    }
+
+
+    /**
+     * @return the maxEpoch
+     */
+    public int getMaxEpoch() {
+        return m_maxEpoch;
+    }
+
+
+    /**
+     * @param maxEpoch the maxEpoch to set
+     */
+    public void setMaxEpoch(final int maxEpoch) {
+        m_maxEpoch = maxEpoch;
+    }
+
+
+    /**
+     * @return the priorVariance
+     */
+    public double getPriorVariance() {
+        return m_priorVariance;
+    }
+
+
+    /**
+     * @param priorVariance the priorVariance to set
+     */
+    public void setPriorVariance(final double priorVariance) {
+        m_priorVariance = priorVariance;
+    }
+
+
+    /**
+     * @return the initialLearningRate
+     */
+    public double getInitialLearningRate() {
+        return m_initialLearningRate;
+    }
+
+
+    /**
+     * @param initialLearningRate the initialLearningRate to set
+     */
+    public void setInitialLearningRate(final double initialLearningRate) {
+        m_initialLearningRate = initialLearningRate;
+    }
+
+
+    /**
+     * @return the learningRateDecay
+     */
+    public double getLearningRateDecay() {
+        return m_learningRateDecay;
+    }
+
+
+    /**
+     * @param learningRateDecay the learningRateDecay to set
+     */
+    public void setLearningRateDecay(final double learningRateDecay) {
+        m_learningRateDecay = learningRateDecay;
+    }
+
+
+    /**
+     * @return the learningRateStrategy
+     */
+    public LearningRateStrategies getLearningRateStrategy() {
+        return m_learningRateStrategy;
+    }
+
+
+    /**
+     * @param learningRateStrategy the learningRateStrategy to set
+     */
+    public void setLearningRateStrategy(final LearningRateStrategies learningRateStrategy) {
+        m_learningRateStrategy = learningRateStrategy;
+    }
+
+
+    /**
+     * @return the prior
+     */
+    public Prior getPrior() {
+        return m_prior;
+    }
+
+
+    /**
+     * @param prior the prior to set
+     */
+    public void setPrior(final Prior prior) {
+        m_prior = prior;
     }
 }
 
