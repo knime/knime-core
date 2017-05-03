@@ -58,27 +58,14 @@ import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortInfoEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 
@@ -112,47 +99,24 @@ public class WorkflowEntTest {
 			list1.add(ConnectionEntTest.createEnt((List<Object>) subList1.get(i)));
 		}
 		builder.setConnections(list1);
-		List<MetaPortEnt> list2 = new ArrayList<>();
+		List<MetaPortInfoEnt> list2 = new ArrayList<>();
 		List<Object> subList2 = (List<Object>) valueList.get(2);
 		for(int i = 0; i < subList2.size(); i++) {
-			list2.add(MetaPortEntTest.createEnt((List<Object>) subList2.get(i)));
+			list2.add(MetaPortInfoEntTest.createEnt((List<Object>) subList2.get(i)));
 		}
-		builder.setMetaInPorts(list2);
-		List<MetaPortEnt> list3 = new ArrayList<>();
+		builder.setMetaInPortInfos(list2);
+		List<MetaPortInfoEnt> list3 = new ArrayList<>();
 		List<Object> subList3 = (List<Object>) valueList.get(3);
 		for(int i = 0; i < subList3.size(); i++) {
-			list3.add(MetaPortEntTest.createEnt((List<Object>) subList3.get(i)));
+			list3.add(MetaPortInfoEntTest.createEnt((List<Object>) subList3.get(i)));
 		}
-		builder.setMetaOutPorts(list3);
+		builder.setMetaOutPortInfos(list3);
 		List<WorkflowAnnotationEnt> list4 = new ArrayList<>();
 		List<Object> subList4 = (List<Object>) valueList.get(4);
 		for(int i = 0; i < subList4.size(); i++) {
 			list4.add(WorkflowAnnotationEntTest.createEnt((List<Object>) subList4.get(i)));
 		}
 		builder.setWorkflowAnnotations(list4);
-		builder.setParent((String) valueList.get(5));
-		builder.setJobManager(Optional.of(JobManagerEntTest.createEnt((List<Object>) valueList.get(6))));
-		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(7)));
-		List<NodeInPortEnt> list8 = new ArrayList<>();
-		List<Object> subList8 = (List<Object>) valueList.get(8);
-		for(int i = 0; i < subList8.size(); i++) {
-			list8.add(NodeInPortEntTest.createEnt((List<Object>) subList8.get(i)));
-		}
-		builder.setInPorts(list8);
-		List<NodeOutPortEnt> list9 = new ArrayList<>();
-		List<Object> subList9 = (List<Object>) valueList.get(9);
-		for(int i = 0; i < subList9.size(); i++) {
-			list9.add(NodeOutPortEntTest.createEnt((List<Object>) subList9.get(i)));
-		}
-		builder.setOutPorts(list9);
-		builder.setName((String) valueList.get(10));
-		builder.setNodeID((String) valueList.get(11));
-		builder.setNodeType((String) valueList.get(12));
-		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(13)));
-		builder.setIsDeletable((boolean) valueList.get(14));
-		builder.setNodeState((String) valueList.get(15));
-		builder.setHasDialog((boolean) valueList.get(16));
-		builder.setNodeAnnotation(NodeAnnotationEntTest.createEnt((List<Object>) valueList.get(17)));
         return builder.build();
     }
 
@@ -168,41 +132,20 @@ public class WorkflowEntTest {
 			ConnectionEntTest.testEnt(subList1.get(i), (List<Object>) subValueList1.get(i));
 		}
 		List<Object> subValueList2 = (List<Object>) valueList.get(2);
-		List<MetaPortEnt> subList2 =  ent.getMetaInPorts();
+		List<MetaPortInfoEnt> subList2 =  ent.getMetaInPortInfos();
 		for(int i = 0; i < subList2.size(); i++) {
-			MetaPortEntTest.testEnt(subList2.get(i), (List<Object>) subValueList2.get(i));
+			MetaPortInfoEntTest.testEnt(subList2.get(i), (List<Object>) subValueList2.get(i));
 		}
 		List<Object> subValueList3 = (List<Object>) valueList.get(3);
-		List<MetaPortEnt> subList3 =  ent.getMetaOutPorts();
+		List<MetaPortInfoEnt> subList3 =  ent.getMetaOutPortInfos();
 		for(int i = 0; i < subList3.size(); i++) {
-			MetaPortEntTest.testEnt(subList3.get(i), (List<Object>) subValueList3.get(i));
+			MetaPortInfoEntTest.testEnt(subList3.get(i), (List<Object>) subValueList3.get(i));
 		}
 		List<Object> subValueList4 = (List<Object>) valueList.get(4);
 		List<WorkflowAnnotationEnt> subList4 =  ent.getWorkflowAnnotations();
 		for(int i = 0; i < subList4.size(); i++) {
 			WorkflowAnnotationEntTest.testEnt(subList4.get(i), (List<Object>) subValueList4.get(i));
 		}
-		assertEquals(ent.getParent(), (String) valueList.get(5));
-		JobManagerEntTest.testEnt(ent.getJobManager().get(), (List<Object>) valueList.get(6));
-		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(7));
-		List<Object> subValueList8 = (List<Object>) valueList.get(8);
-		List<NodeInPortEnt> subList8 =  ent.getInPorts();
-		for(int i = 0; i < subList8.size(); i++) {
-			NodeInPortEntTest.testEnt(subList8.get(i), (List<Object>) subValueList8.get(i));
-		}
-		List<Object> subValueList9 = (List<Object>) valueList.get(9);
-		List<NodeOutPortEnt> subList9 =  ent.getOutPorts();
-		for(int i = 0; i < subList9.size(); i++) {
-			NodeOutPortEntTest.testEnt(subList9.get(i), (List<Object>) subValueList9.get(i));
-		}
-		assertEquals(ent.getName(), (String) valueList.get(10));
-		assertEquals(ent.getNodeID(), (String) valueList.get(11));
-		assertEquals(ent.getNodeType(), (String) valueList.get(12));
-		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(13));
-		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(14));
-		assertEquals(ent.getNodeState(), (String) valueList.get(15));
-		assertEquals(ent.getHasDialog(), (boolean) valueList.get(16));
-		NodeAnnotationEntTest.testEnt(ent.getNodeAnnotation(), (List<Object>) valueList.get(17));
     }
 
     public static List<Object> createValueList() {
@@ -224,19 +167,19 @@ public class WorkflowEntTest {
  		valueList.add(subList2);
 
  		List<List<Object>> subList3 = new ArrayList<>();
-		subList3.add(MetaPortEntTest.createValueList());
-		subList3.add(MetaPortEntTest.createValueList());
-		subList3.add(MetaPortEntTest.createValueList());
-		subList3.add(MetaPortEntTest.createValueList());
-		subList3.add(MetaPortEntTest.createValueList());
+		subList3.add(MetaPortInfoEntTest.createValueList());
+		subList3.add(MetaPortInfoEntTest.createValueList());
+		subList3.add(MetaPortInfoEntTest.createValueList());
+		subList3.add(MetaPortInfoEntTest.createValueList());
+		subList3.add(MetaPortInfoEntTest.createValueList());
  		valueList.add(subList3);
 
  		List<List<Object>> subList4 = new ArrayList<>();
-		subList4.add(MetaPortEntTest.createValueList());
-		subList4.add(MetaPortEntTest.createValueList());
-		subList4.add(MetaPortEntTest.createValueList());
-		subList4.add(MetaPortEntTest.createValueList());
-		subList4.add(MetaPortEntTest.createValueList());
+		subList4.add(MetaPortInfoEntTest.createValueList());
+		subList4.add(MetaPortInfoEntTest.createValueList());
+		subList4.add(MetaPortInfoEntTest.createValueList());
+		subList4.add(MetaPortInfoEntTest.createValueList());
+		subList4.add(MetaPortInfoEntTest.createValueList());
  		valueList.add(subList4);
 
  		List<List<Object>> subList5 = new ArrayList<>();
@@ -246,44 +189,6 @@ public class WorkflowEntTest {
 		subList5.add(WorkflowAnnotationEntTest.createValueList());
 		subList5.add(WorkflowAnnotationEntTest.createValueList());
  		valueList.add(subList5);
-
- 		valueList.add("Awjsg");
-
-		valueList.add(JobManagerEntTest.createValueList());
-
- 		valueList.add(NodeMessageEntTest.createValueList());
-
- 		List<List<Object>> subList9 = new ArrayList<>();
-		subList9.add(NodeInPortEntTest.createValueList());
-		subList9.add(NodeInPortEntTest.createValueList());
-		subList9.add(NodeInPortEntTest.createValueList());
-		subList9.add(NodeInPortEntTest.createValueList());
-		subList9.add(NodeInPortEntTest.createValueList());
- 		valueList.add(subList9);
-
- 		List<List<Object>> subList10 = new ArrayList<>();
-		subList10.add(NodeOutPortEntTest.createValueList());
-		subList10.add(NodeOutPortEntTest.createValueList());
-		subList10.add(NodeOutPortEntTest.createValueList());
-		subList10.add(NodeOutPortEntTest.createValueList());
-		subList10.add(NodeOutPortEntTest.createValueList());
- 		valueList.add(subList10);
-
- 		valueList.add("2AUEB");
-
- 		valueList.add("qG2lz");
-
- 		valueList.add("eHjGz");
-
- 		valueList.add(BoundsEntTest.createValueList());
-
- 		valueList.add(true);
-
- 		valueList.add("OVbWL");
-
- 		valueList.add(true);
-
- 		valueList.add(NodeAnnotationEntTest.createValueList());
 
         return valueList;
     }

@@ -73,7 +73,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 public class DefaultNativeNodeEnt implements NativeNodeEnt {
 
 	private NodeFactoryIDEnt m_NodeFactoryID;
-	private String m_Parent;
+	private Optional<String> m_ParentNodeID;
+	private String m_RootWorkflowID;
 	private Optional<JobManagerEnt> m_JobManager;
 	private NodeMessageEnt m_NodeMessage;
 	private List<NodeInPortEnt> m_InPorts;
@@ -92,7 +93,8 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
      */
     private DefaultNativeNodeEnt(final DefaultNativeNodeEntBuilder builder) {
 		m_NodeFactoryID = builder.m_NodeFactoryID;
-		m_Parent = builder.m_Parent;
+		m_ParentNodeID = builder.m_ParentNodeID;
+		m_RootWorkflowID = builder.m_RootWorkflowID;
 		m_JobManager = builder.m_JobManager;
 		m_NodeMessage = builder.m_NodeMessage;
 		m_InPorts = builder.m_InPorts;
@@ -113,8 +115,13 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
     }
     
 	@Override
-    public String getParent() {
-        return m_Parent;
+    public Optional<String> getParentNodeID() {
+        return m_ParentNodeID;
+    }
+    
+	@Override
+    public String getRootWorkflowID() {
+        return m_RootWorkflowID;
     }
     
 	@Override
@@ -193,7 +200,8 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
 	public static class DefaultNativeNodeEntBuilder implements NativeNodeEntBuilder {
     
 		private NodeFactoryIDEnt m_NodeFactoryID;
-		private String m_Parent;
+		private Optional<String> m_ParentNodeID = Optional.empty();
+		private String m_RootWorkflowID;
 		private Optional<JobManagerEnt> m_JobManager = Optional.empty();
 		private NodeMessageEnt m_NodeMessage;
 		private List<NodeInPortEnt> m_InPorts;
@@ -218,8 +226,14 @@ public class DefaultNativeNodeEnt implements NativeNodeEnt {
         }
         
 		@Override
-        public NativeNodeEntBuilder setParent(final String Parent) {
-			m_Parent = Parent;			
+        public NativeNodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
+			m_ParentNodeID = ParentNodeID;			
+            return this;
+        }
+        
+		@Override
+        public NativeNodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
+			m_RootWorkflowID = RootWorkflowID;			
             return this;
         }
         

@@ -44,121 +44,89 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.impl;
+package org.knime.core.jaxrs.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
 
-import org.knime.core.gateway.entities.EntityBuilderFactory;
-import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Default implementation of the MetaPortEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
- * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
+ * Implementation of the {@link MetaPortInfoEnt} interface that can be deserialized from a json object (json-annotated constructor).
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultMetaPortEnt implements MetaPortEnt {
+// AUTO-GENERATED CODE; DO NOT MODIFY
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = MetaPortInfoEntFromJson.class, name = "MetaPortInfoEnt")
+})
+public class MetaPortInfoEntFromJson  implements MetaPortInfoEnt {
 
-	private PortTypeEnt m_PortType;
+	private PortTypeEntFromJson m_PortType;
 	private boolean m_IsConnected;
 	private String m_Message;
 	private int m_OldIndex;
 	private int m_NewIndex;
 
-    /**
-     * @param builder
-     */
-    private DefaultMetaPortEnt(final DefaultMetaPortEntBuilder builder) {
-		m_PortType = builder.m_PortType;
-		m_IsConnected = builder.m_IsConnected;
-		m_Message = builder.m_Message;
-		m_OldIndex = builder.m_OldIndex;
-		m_NewIndex = builder.m_NewIndex;
-    }
+	@JsonCreator
+	private MetaPortInfoEntFromJson(
+	@JsonProperty("PortType") PortTypeEntFromJson PortType,	@JsonProperty("IsConnected") boolean IsConnected,	@JsonProperty("Message") String Message,	@JsonProperty("OldIndex") int OldIndex,	@JsonProperty("NewIndex") int NewIndex	) {
+		m_PortType = PortType;
+		m_IsConnected = IsConnected;
+		m_Message = Message;
+		m_OldIndex = OldIndex;
+		m_NewIndex = NewIndex;
+	}
+	
+	protected MetaPortInfoEntFromJson() {
+		//just a dummy constructor for subclasses
+	}
+
 
 	@Override
     public PortTypeEnt getPortType() {
-        return m_PortType;
+            return (PortTypeEnt) m_PortType;
+            
     }
     
 	@Override
     public boolean getIsConnected() {
-        return m_IsConnected;
+        	return m_IsConnected;
+            
     }
     
 	@Override
     public String getMessage() {
-        return m_Message;
+        	return m_Message;
+            
     }
     
 	@Override
     public int getOldIndex() {
-        return m_OldIndex;
+        	return m_OldIndex;
+            
     }
     
 	@Override
     public int getNewIndex() {
-        return m_NewIndex;
+        	return m_NewIndex;
+            
     }
     
 
-	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
-
-	public static DefaultMetaPortEntBuilder builder() {
-		return new DefaultMetaPortEntBuilder();
-	}
-	
-	/**
-	* Default implementation of the MetaPortEntBuilder-interface.
-	*/
-	public static class DefaultMetaPortEntBuilder implements MetaPortEntBuilder {
-    
-		private PortTypeEnt m_PortType;
-		private boolean m_IsConnected;
-		private String m_Message;
-		private int m_OldIndex;
-		private int m_NewIndex;
-
-        public MetaPortEnt build() {
-            return new DefaultMetaPortEnt(this);
-        }
-
-		@Override
-        public MetaPortEntBuilder setPortType(final PortTypeEnt PortType) {
-			m_PortType = PortType;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortEntBuilder setIsConnected(final boolean IsConnected) {
-			m_IsConnected = IsConnected;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortEntBuilder setMessage(final String Message) {
-			m_Message = Message;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortEntBuilder setOldIndex(final int OldIndex) {
-			m_OldIndex = OldIndex;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortEntBuilder setNewIndex(final int NewIndex) {
-			m_NewIndex = NewIndex;			
-            return this;
-        }
-        
-    }
 }

@@ -47,7 +47,6 @@
 package org.knime.core.gateway.v0.workflow.entity;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -59,9 +58,14 @@ import java.util.Optional;
 public interface NodeEnt extends GatewayEntity {
 
     /**
-     * @return The parent workflow id of the node.
+     * @return The parent node id of the node or not present if it's the root node.
      */
- 	String getParent();
+ 	Optional<String> getParentNodeID();
+ 	
+    /**
+     * @return The id of the root workflow this node is contained in or represents.
+     */
+ 	String getRootWorkflowID();
  	
     /**
      * @return The job manager (e.g. cluster or streaming).

@@ -88,9 +88,14 @@ public class NativeNodeEntToJson extends NodeEntToJson implements NativeNodeEnt 
         return NodeFactoryIDEntToJson.wrap(m_e.getNodeFactoryID());
     }
     
-	@JsonProperty("Parent")
-    public String getParent() {
-    	return m_e.getParent();
+	@JsonIgnore
+    public Optional<String> getParentNodeID() {
+    	return m_e.getParentNodeID();
+    }
+    
+	@JsonProperty("RootWorkflowID")
+    public String getRootWorkflowID() {
+    	return m_e.getRootWorkflowID();
     }
     
 	@JsonIgnore
@@ -154,6 +159,17 @@ public class NativeNodeEntToJson extends NodeEntToJson implements NativeNodeEnt 
     }
     
 
+
+	/*
+	 * Workaround to exclude the property if the respective optional is empty.
+	 * There might be a better solution. 
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty("ParentNodeID")
+	public String getParentNodeIDNullable() {
+		return getParentNodeID().orElse(null);
+	}
+	
 
 	/*
 	 * Workaround to exclude the property if the respective optional is empty.

@@ -48,6 +48,10 @@
  */
 package org.knime.core.clientproxy.workflow;
 
+import static org.knime.core.gateway.services.ServiceManager.service;
+
+import java.util.Optional;
+
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -55,6 +59,8 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.util.WrapperMapUtil;
 
 /**
@@ -73,19 +79,35 @@ public class ClientProxyUtil {
     }
 
     /**
+     * @param rootWorkflowID
+     * @param nodeID
+     * @return
+     */
+    public static ClientProxyWorkflowManager getWorkflowManager(final String rootWorkflowID,
+        final Optional<String> nodeID) {
+        return WrapperMapUtil.getOrCreate(rootWorkflowID, we -> {
+            NodeEnt node = service(WorkflowService.class).getNode(rootWorkflowID, nodeID);
+            assert node instanceof WorkflowNodeEnt;
+            return new ClientProxyWorkflowManager((WorkflowNodeEnt) node);
+        });
+    }
+
+    /**
      * @param nodeEnt the node entity to be wrapped
+     * @param workflowEnt must be provided if the node entity is a metanode (i.e. {@link MetaNodeEnt}) - it represents the workflow associated with the meta node
      * @param key a unique key representing the node entity to ensure that the very same object instance is returned for
      *            the same key
      * @return the client-proxy node container
      */
-    public static ClientProxyNodeContainer getNodeContainer(final NodeEnt nodeEnt, final Object key) {
+    public static ClientProxyNodeContainer getNodeContainer(final NodeEnt nodeEnt,
+        final Optional<WorkflowEnt> workflowEnt, final Object key) {
         //return exactly the same node container instance for the same node entity
         return WrapperMapUtil.getOrCreate(key, k -> {
             if (nodeEnt instanceof NativeNodeEnt) {
                 return new ClientProxySingleNodeContainer(nodeEnt);
             }
-            if (nodeEnt instanceof WorkflowEnt) {
-                return new ClientProxyWorkflowManager((WorkflowEnt)nodeEnt);
+            if (nodeEnt instanceof WorkflowNodeEnt) {
+                return new ClientProxyWorkflowManager((WorkflowNodeEnt) nodeEnt);
             }
             throw new IllegalStateException("Node entity type " + nodeEnt.getClass().getName() + " not supported.");
         }, ClientProxyNodeContainer.class);
@@ -111,9 +133,9 @@ public class ClientProxyUtil {
         return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyNodeOutPort(o), ClientProxyNodeOutPort.class);
     }
 
-    public static ClientProxyWorkflowInPort getWorkflowInPort(final NodeInPortEnt p) {
+    public static ClientProxyWorkflowInPort getWorkflowInPort(final NodeInPortEnt p, final NodeOutPortEnt underlyingPort) {
         //possibly return the same node in port instance for the same index
-        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyWorkflowInPort(o), ClientProxyWorkflowInPort.class);
+        return WrapperMapUtil.getOrCreate(p, o -> new ClientProxyWorkflowInPort(o, underlyingPort), ClientProxyWorkflowInPort.class);
     }
 
     public static ClientProxyWorkflowOutPort getWorkflowOutPort(final NodeOutPortEnt p) {

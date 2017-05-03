@@ -47,12 +47,9 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -60,8 +57,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -87,9 +83,14 @@ public class NodeEntToJson  implements NodeEnt {
 		m_e = e;
 	}
 
-	@JsonProperty("Parent")
-    public String getParent() {
-    	return m_e.getParent();
+	@JsonIgnore
+    public Optional<String> getParentNodeID() {
+    	return m_e.getParentNodeID();
+    }
+    
+	@JsonProperty("RootWorkflowID")
+    public String getRootWorkflowID() {
+    	return m_e.getRootWorkflowID();
     }
     
 	@JsonIgnore
@@ -159,6 +160,17 @@ public class NodeEntToJson  implements NodeEnt {
 	 * There might be a better solution. 
 	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonProperty("ParentNodeID")
+	public String getParentNodeIDNullable() {
+		return getParentNodeID().orElse(null);
+	}
+	
+
+	/*
+	 * Workaround to exclude the property if the respective optional is empty.
+	 * There might be a better solution. 
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	@JsonProperty("JobManager")
 	public JobManagerEnt getJobManagerNullable() {
 		return getJobManager().orElse(null);
@@ -176,11 +188,11 @@ public class NodeEntToJson  implements NodeEnt {
 	}
 	
 	public static NodeEnt wrap(NodeEnt e) {
+	    if(e instanceof WorkflowNodeEnt) {
+	        return WorkflowNodeEntToJson.wrap((WorkflowNodeEnt) e);
+	    }
 	    if(e instanceof NativeNodeEnt) {
 	        return NativeNodeEntToJson.wrap((NativeNodeEnt) e);
-	    }
-	    if(e instanceof WorkflowEnt) {
-	        return WorkflowEntToJson.wrap((WorkflowEnt) e);
 	    }
 	    return new NodeEntToJson(e);
 	}

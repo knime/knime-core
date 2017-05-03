@@ -44,40 +44,46 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 
 /**
- * The port of a metanode.
- *
+ * Builder for {@link MetaPortInfoEnt}.
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface MetaPortEnt extends GatewayEntity {
+public interface MetaPortInfoEntBuilder extends GatewayEntityBuilder<MetaPortInfoEnt> {
 
     /**
-     * @return The type.
+     * @param portType The type.
+     * @return <code>this</code>
      */
- 	PortTypeEnt getPortType();
- 	
+	MetaPortInfoEntBuilder setPortType(PortTypeEnt portType);
+	
     /**
-     * @return Whether it is connected.
+     * @param isConnected Whether it is connected.
+     * @return <code>this</code>
      */
- 	boolean getIsConnected();
- 	
+	MetaPortInfoEntBuilder setIsConnected(boolean isConnected);
+	
     /**
-     * @return The message (summary of upstream node port).
+     * @param message The message (summary of upstream node port).
+     * @return <code>this</code>
      */
- 	String getMessage();
- 	
+	MetaPortInfoEntBuilder setMessage(String message);
+	
     /**
-     * @return The old index (@Martin, please clarify?)
+     * @param oldIndex The old index (@Martin, please clarify?)
+     * @return <code>this</code>
      */
- 	int getOldIndex();
- 	
+	MetaPortInfoEntBuilder setOldIndex(int oldIndex);
+	
     /**
-     * @return The new index (@Martin, please clarify?).
+     * @param newIndex The new index (@Martin, please clarify?).
+     * @return <code>this</code>
      */
- 	int getNewIndex();
- 	
+	MetaPortInfoEntBuilder setNewIndex(int newIndex);
+	
 }

@@ -43,71 +43,51 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Apr 28, 2017 (hornm): created
  */
-package org.knime.core.gateway.v0.test.workflow.entity.test;
+package org.knime.core.jaxrs.providers;
 
-import static org.junit.Assert.assertEquals;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Optional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import org.junit.Test;
-import org.knime.core.gateway.entities.EntityBuilderManager;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
+import javax.ws.rs.ext.ParamConverter;
+import javax.ws.rs.ext.ParamConverterProvider;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-// AUTO-GENERATED CODE; DO NOT MODIFY
-public class MetaPortEntTest {
+public class OptionalParamConverter implements ParamConverterProvider {
 
-    private static Random RAND = new Random();
+    private static final String EMPTY_OPTIONAL_PLACEHOLDER = "EMPTY_OPTIONAL";
 
-    @Test
-    public void test() {
-        List<Object> valueList = createValueList();
-        MetaPortEnt ent = createEnt(valueList);
-        testEnt(ent, valueList);
-    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType,
+        final Annotation[] annotations) {
+        if (rawType == Optional.class) {
+            return (ParamConverter<T>)new ParamConverter<Optional<String>>() {
 
-    public static MetaPortEnt createEnt(final List<Object> valueList) {
-        MetaPortEntBuilder builder = EntityBuilderManager.builder(MetaPortEntBuilder.class);
-		builder.setPortType(PortTypeEntTest.createEnt((List<Object>) valueList.get(0)));
-		builder.setIsConnected((boolean) valueList.get(1));
-		builder.setMessage((String) valueList.get(2));
-		builder.setOldIndex((int) valueList.get(3));
-		builder.setNewIndex((int) valueList.get(4));
-        return builder.build();
-    }
+                @Override
+                public Optional<String> fromString(final String value) {
+                    if (value.equals(EMPTY_OPTIONAL_PLACEHOLDER) || value.length() == 0) {
+                        return Optional.empty();
+                    }
+                    return Optional.ofNullable(value);
+                }
 
-    public static void testEnt(final MetaPortEnt ent, final List<Object> valueList) {
-		PortTypeEntTest.testEnt(ent.getPortType(), (List<Object>) valueList.get(0));
-		assertEquals(ent.getIsConnected(), (boolean) valueList.get(1));
-		assertEquals(ent.getMessage(), (String) valueList.get(2));
-		assertEquals(ent.getOldIndex(), (int) valueList.get(3));
-		assertEquals(ent.getNewIndex(), (int) valueList.get(4));
-    }
-
-    public static List<Object> createValueList() {
-        List<Object> valueList = new ArrayList<Object>();
- 		valueList.add(PortTypeEntTest.createValueList());
-
- 		valueList.add(true);
-
- 		valueList.add("OuJNz");
-
- 		valueList.add(-1157023572);
-
- 		valueList.add(-1157408321);
-
-        return valueList;
+                @Override
+                public String toString(final Optional<String> value) {
+                    return value.orElse(EMPTY_OPTIONAL_PLACEHOLDER);
+                }
+            };
+        } else {
+            return null;
+        }
     }
 
 }

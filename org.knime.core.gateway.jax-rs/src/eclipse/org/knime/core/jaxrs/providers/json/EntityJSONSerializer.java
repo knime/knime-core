@@ -95,9 +95,9 @@ public class EntityJSONSerializer implements MessageBodyWriter<Object> {
             a -> IOClasses.class.isAssignableFrom(a.getClass()) && typeInterface.isAssignableFrom(((IOClasses)a).out()))
             .findFirst().map(a -> {
                 try {
-                    return (Object)((IOClasses)a).out().getConstructor(typeInterface).newInstance(value);
-                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                        | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
+                    return ((IOClasses)a).out().getDeclaredMethod("wrap", typeInterface).invoke(null, value);
+                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                        | NoSuchMethodException | SecurityException ex) {
                     throw new RuntimeException(ex);
                 }
             }).orElse(value);

@@ -47,12 +47,9 @@
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -60,8 +57,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 
 /**
  * Builder for {@link NodeEnt}.
@@ -71,10 +67,16 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 public interface NodeEntBuilder extends GatewayEntityBuilder<NodeEnt> {
 
     /**
-     * @param parent The parent workflow id of the node.
+     * @param parentNodeID The parent node id of the node or not present if it's the root node.
      * @return <code>this</code>
      */
-	NodeEntBuilder setParent(String parent);
+	NodeEntBuilder setParentNodeID(Optional<String> parentNodeID);
+	
+    /**
+     * @param rootWorkflowID The id of the root workflow this node is contained in or represents.
+     * @return <code>this</code>
+     */
+	NodeEntBuilder setRootWorkflowID(String rootWorkflowID);
 	
     /**
      * @param jobManager The job manager (e.g. cluster or streaming).

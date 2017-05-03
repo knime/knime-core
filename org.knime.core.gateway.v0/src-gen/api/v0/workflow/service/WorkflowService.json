@@ -14,9 +14,35 @@
             },
             "params" : [
                 {
-                    "description" : "The identifier as per #getAllWorkflows",
-                    "name" : "id",
+                    "description" : "The identifier as per #getAllWorkflows of the root 'node'",
+                    "name" : "rootWorkflowID",
                     "type" : "String"
+                },
+                {
+                    "description" : "An optional node id if a subworkflow (contained in a meta node) is requested.",
+                    "name" : "nodeID",
+                    "type" : "Optional<String>"
+                }
+            ]
+        },
+        {
+            "name" : "Node",
+            "operation" : "get",
+            "description" : "Get the node entity for a given root workflow and node ID.",
+            "result" : {
+                "description" : "BERND",
+                "type" : "workflow.entity.NodeEnt"
+            },
+            "params" : [
+                {
+                    "description" : "The identifier as per #getAllWorkflows of the root workflow",
+                    "name" : "rootWorkflowID",
+                    "type" : "String"
+                },
+                {
+                    "description" : "The node ID requested. If not present the root workflow node will be returned.",
+                    "name" : "nodeID",
+                    "type" : "Optional<String>"
                 }
             ]
         },

@@ -76,16 +76,13 @@ import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.JSONConfig;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.util.WrapperMapUtil;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
@@ -113,10 +110,12 @@ public class ClientProxyNodeContainer implements INodeContainer {
     private final CopyOnWriteArraySet<NodePropertyChangedListener> m_nodePropertyChangedListeners =
         new CopyOnWriteArraySet<NodePropertyChangedListener>();
 
+
     /**
      * If the underlying entity is a node.
      *
      * @param node
+     * @param parentNode the parent node, never <code>null</code>
      */
     public ClientProxyNodeContainer(final NodeEnt node) {
         m_node = node;
@@ -135,10 +134,18 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public IWorkflowManager getParent() {
-        //download 'workflow' from 'server'
-        final WorkflowEnt workflow = service(WorkflowService.class).getWorkflow(m_node.getParent());
-        //return same instance if the instance for this ID has already been created
-        return WrapperMapUtil.getOrCreate(m_node.getParent(), we -> new ClientProxyWorkflowManager(workflow));
+        return m_node.getParentNodeID().map(s -> {
+          //get parent wf
+          String parentNodeID;
+          if(NodeID.fromString(s).getPrefix() == NodeID.ROOTID) {
+              //parent is the highest level workflow
+              //the node id has then no meaning here and need to be empty
+              parentNodeID = null;
+          } else {
+              parentNodeID = s;
+          }
+          return ClientProxyUtil.getWorkflowManager(m_node.getRootWorkflowID(), Optional.ofNullable(parentNodeID));
+        }).orElse(null);
     }
 
     /**
@@ -347,7 +354,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     /** {@inheritDoc} */
     @Override
     public ConfigBaseRO getNodeSettings() {
-        String json = service(NodeContainerService.class).getNodeSettingsJSON(m_node.getParent(), m_node.getNodeID());
+        String json = service(NodeContainerService.class).getNodeSettingsJSON(m_node.getRootWorkflowID(), m_node.getNodeID());
         try {
             return JSONConfig.readJSON(new NodeSettings("settings"), new StringReader(json));
         } catch (IOException ex) {
@@ -552,7 +559,14 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getDisplayLabel() {
-        return "TODO display label";
+        //copied from NodeContainer
+        String label = getID().toString() + " - " + getName();
+        // if this node has an annotation add the first line to the label - TODO
+        //        String customLabel = getDisplayCustomLine();
+        //        if (!customLabel.isEmpty()) {
+        //            label += " (" + customLabel + ")";
+        //        }
+        return label;
     }
 
     /**
@@ -560,6 +574,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getCustomName() {
+        //TODO
         return "TODO custom name";
     }
 

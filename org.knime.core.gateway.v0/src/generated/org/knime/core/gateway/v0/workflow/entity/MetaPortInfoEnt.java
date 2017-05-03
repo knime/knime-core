@@ -44,51 +44,40 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.List;
-import java.util.Map;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 /**
- * Builder for {@link WorkflowEnt}.
+ * The port of a metanode.
+ *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
+public interface MetaPortInfoEnt extends GatewayEntity {
 
     /**
-     * @param nodes The node map.
-     * @return <code>this</code>
+     * @return The type.
      */
-	WorkflowEntBuilder setNodes(Map<String, NodeEnt> nodes);
-	
+ 	PortTypeEnt getPortType();
+ 	
     /**
-     * @param connections The list of connections.
-     * @return <code>this</code>
+     * @return Whether it is connected.
      */
-	WorkflowEntBuilder setConnections(List<ConnectionEnt> connections);
-	
+ 	boolean getIsConnected();
+ 	
     /**
-     * @param metaInPortInfos The inputs of a metanode (if this workflow is one).
-     * @return <code>this</code>
+     * @return The message (summary of upstream node port).
      */
-	WorkflowEntBuilder setMetaInPortInfos(List<MetaPortInfoEnt> metaInPortInfos);
-	
+ 	String getMessage();
+ 	
     /**
-     * @param metaOutPortInfos The outputs of a metanode (if this workflow is one).
-     * @return <code>this</code>
+     * @return The old index (@Martin, please clarify?)
      */
-	WorkflowEntBuilder setMetaOutPortInfos(List<MetaPortInfoEnt> metaOutPortInfos);
-	
+ 	int getOldIndex();
+ 	
     /**
-     * @param workflowAnnotations List of all workflow annotations.
-     * @return <code>this</code>
+     * @return The new index (@Martin, please clarify?).
      */
-	WorkflowEntBuilder setWorkflowAnnotations(List<WorkflowAnnotationEnt> workflowAnnotations);
-	
+ 	int getNewIndex();
+ 	
 }

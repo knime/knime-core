@@ -48,15 +48,14 @@ package org.knime.core.gateway.v0.workflow.entity;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * A complete workflow.
+ * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
+public interface WorkflowEnt extends GatewayEntity {
 
     /**
      * @return The node map.
@@ -71,81 +70,16 @@ public interface WorkflowEnt extends GatewayEntity, NodeEnt  {
     /**
      * @return The inputs of a metanode (if this workflow is one).
      */
- 	List<MetaPortEnt> getMetaInPorts();
+ 	List<MetaPortInfoEnt> getMetaInPortInfos();
  	
     /**
      * @return The outputs of a metanode (if this workflow is one).
      */
- 	List<MetaPortEnt> getMetaOutPorts();
+ 	List<MetaPortInfoEnt> getMetaOutPortInfos();
  	
     /**
      * @return List of all workflow annotations.
      */
  	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
- 	
-    /**
-     * @return The parent workflow id of the node.
-     */
- 	String getParent();
- 	
-    /**
-     * @return The job manager (e.g. cluster or streaming).
-     */
- 	Optional<JobManagerEnt> getJobManager();
- 	
-    /**
-     * @return The current node message (warning, error, none).
-     */
- 	NodeMessageEnt getNodeMessage();
- 	
-    /**
-     * @return The list of inputs.
-     */
- 	List<NodeInPortEnt> getInPorts();
- 	
-    /**
-     * @return The list of outputs.
-     */
- 	List<NodeOutPortEnt> getOutPorts();
- 	
-    /**
-     * @return The name.
-     */
- 	String getName();
- 	
-    /**
-     * @return The ID of the node.
-     */
- 	String getNodeID();
- 	
-    /**
-     * @return The type of the node as string.
-     */
- 	String getNodeType();
- 	
-    /**
-     * @return The bounds / rectangle on screen of the node.
-     */
- 	BoundsEnt getBounds();
- 	
-    /**
-     * @return Whether node is deletable.
-     */
- 	boolean getIsDeletable();
- 	
-    /**
-     * @return The state of the node.
-     */
- 	String getNodeState();
- 	
-    /**
-     * @return Whether the node has a configuration dialog / user settings.
-     */
- 	boolean getHasDialog();
- 	
-    /**
-     * @return The annotation underneath the node.
-     */
- 	NodeAnnotationEnt getNodeAnnotation();
  	
 }

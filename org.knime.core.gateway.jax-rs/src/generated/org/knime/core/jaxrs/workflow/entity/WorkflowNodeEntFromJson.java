@@ -50,13 +50,12 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -72,7 +71,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Implementation of the {@link NativeNodeEnt} interface that can be deserialized from a json object (json-annotated constructor).
+ * Implementation of the {@link WorkflowNodeEnt} interface that can be deserialized from a json object (json-annotated constructor).
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -82,11 +81,12 @@ import java.util.stream.Collectors;
   include = JsonTypeInfo.As.PROPERTY, 
   property = "EntityType")
 @JsonSubTypes({ 
-  @Type(value = NativeNodeEntFromJson.class, name = "NativeNodeEnt")
+  @Type(value = WorkflowNodeEntFromJson.class, name = "WorkflowNodeEnt")
 })
-public class NativeNodeEntFromJson extends NodeEntFromJson implements NativeNodeEnt {
+public class WorkflowNodeEntFromJson extends NodeEntFromJson implements WorkflowNodeEnt {
 
-	private NodeFactoryIDEntFromJson m_NodeFactoryID;
+	private List<NodeOutPortEntFromJson> m_WorkflowIncomingPorts;
+	private List<NodeInPortEntFromJson> m_WorkflowOutgoingPorts;
 	private Optional<String> m_ParentNodeID;
 	private String m_RootWorkflowID;
 	private Optional<JobManagerEntFromJson> m_JobManager;
@@ -103,9 +103,10 @@ public class NativeNodeEntFromJson extends NodeEntFromJson implements NativeNode
 	private NodeAnnotationEntFromJson m_NodeAnnotation;
 
 	@JsonCreator
-	private NativeNodeEntFromJson(
-	@JsonProperty("NodeFactoryID") NodeFactoryIDEntFromJson NodeFactoryID,	@JsonProperty("ParentNodeID") String ParentNodeID,	@JsonProperty("RootWorkflowID") String RootWorkflowID,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
-		m_NodeFactoryID = NodeFactoryID;
+	private WorkflowNodeEntFromJson(
+	@JsonProperty("WorkflowIncomingPorts") List<NodeOutPortEntFromJson> WorkflowIncomingPorts,	@JsonProperty("WorkflowOutgoingPorts") List<NodeInPortEntFromJson> WorkflowOutgoingPorts,	@JsonProperty("ParentNodeID") String ParentNodeID,	@JsonProperty("RootWorkflowID") String RootWorkflowID,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
+		m_WorkflowIncomingPorts = WorkflowIncomingPorts;
+		m_WorkflowOutgoingPorts = WorkflowOutgoingPorts;
 		m_ParentNodeID = Optional.ofNullable(ParentNodeID);
 		m_RootWorkflowID = RootWorkflowID;
 		m_JobManager = Optional.ofNullable(JobManager);
@@ -122,14 +123,20 @@ public class NativeNodeEntFromJson extends NodeEntFromJson implements NativeNode
 		m_NodeAnnotation = NodeAnnotation;
 	}
 	
-	protected NativeNodeEntFromJson() {
+	protected WorkflowNodeEntFromJson() {
 		//just a dummy constructor for subclasses
 	}
 
 
 	@Override
-    public NodeFactoryIDEnt getNodeFactoryID() {
-            return (NodeFactoryIDEnt) m_NodeFactoryID;
+    public List<NodeOutPortEnt> getWorkflowIncomingPorts() {
+        	return m_WorkflowIncomingPorts.stream().map(l -> (NodeOutPortEnt) l ).collect(Collectors.toList());
+            
+    }
+    
+	@Override
+    public List<NodeInPortEnt> getWorkflowOutgoingPorts() {
+        	return m_WorkflowOutgoingPorts.stream().map(l -> (NodeInPortEnt) l ).collect(Collectors.toList());
             
     }
     

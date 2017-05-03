@@ -17,6 +17,7 @@ import org.knime.core.gateway.ObjectSpecUtil;
 import org.knime.core.gateway.ServiceDefUtil;
 import org.knime.core.gateway.server.KnimeGatewayServer;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.jaxrs.providers.OptionalParamConverter;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONSerializer;
 import org.knime.core.jaxrs.providers.json.EntityJSONDeserializer;
@@ -114,6 +115,7 @@ public class JettyRestServer implements KnimeGatewayServer {
         resourceSingletons.add(new EntityCollectionJSONSerializer());
         resourceSingletons.add(new EntityCollectionJSONDeserializer());
         resourceSingletons.add(new MapJSONDeserializer());
+        resourceSingletons.add(new OptionalParamConverter());
 
         CXFNonSpringJaxrsServlet context = new CXFNonSpringJaxrsServlet(resourceSingletons);
 

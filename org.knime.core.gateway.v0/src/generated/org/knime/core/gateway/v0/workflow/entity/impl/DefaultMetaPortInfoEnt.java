@@ -46,14 +46,9 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import java.util.List;
-import java.util.Map;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortInfoEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
@@ -61,53 +56,53 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default implementation of the WorkflowEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the MetaPortInfoEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultWorkflowEnt implements WorkflowEnt {
+public class DefaultMetaPortInfoEnt implements MetaPortInfoEnt {
 
-	private Map<String, NodeEnt> m_Nodes;
-	private List<ConnectionEnt> m_Connections;
-	private List<MetaPortInfoEnt> m_MetaInPortInfos;
-	private List<MetaPortInfoEnt> m_MetaOutPortInfos;
-	private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
+	private PortTypeEnt m_PortType;
+	private boolean m_IsConnected;
+	private String m_Message;
+	private int m_OldIndex;
+	private int m_NewIndex;
 
     /**
      * @param builder
      */
-    private DefaultWorkflowEnt(final DefaultWorkflowEntBuilder builder) {
-		m_Nodes = builder.m_Nodes;
-		m_Connections = builder.m_Connections;
-		m_MetaInPortInfos = builder.m_MetaInPortInfos;
-		m_MetaOutPortInfos = builder.m_MetaOutPortInfos;
-		m_WorkflowAnnotations = builder.m_WorkflowAnnotations;
+    private DefaultMetaPortInfoEnt(final DefaultMetaPortInfoEntBuilder builder) {
+		m_PortType = builder.m_PortType;
+		m_IsConnected = builder.m_IsConnected;
+		m_Message = builder.m_Message;
+		m_OldIndex = builder.m_OldIndex;
+		m_NewIndex = builder.m_NewIndex;
     }
 
 	@Override
-    public Map<String, NodeEnt> getNodes() {
-        return m_Nodes;
+    public PortTypeEnt getPortType() {
+        return m_PortType;
     }
     
 	@Override
-    public List<ConnectionEnt> getConnections() {
-        return m_Connections;
+    public boolean getIsConnected() {
+        return m_IsConnected;
     }
     
 	@Override
-    public List<MetaPortInfoEnt> getMetaInPortInfos() {
-        return m_MetaInPortInfos;
+    public String getMessage() {
+        return m_Message;
     }
     
 	@Override
-    public List<MetaPortInfoEnt> getMetaOutPortInfos() {
-        return m_MetaOutPortInfos;
+    public int getOldIndex() {
+        return m_OldIndex;
     }
     
 	@Override
-    public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
-        return m_WorkflowAnnotations;
+    public int getNewIndex() {
+        return m_NewIndex;
     }
     
 
@@ -116,52 +111,52 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 	    return ToStringBuilder.reflectionToString(this);
 	}
 
-	public static DefaultWorkflowEntBuilder builder() {
-		return new DefaultWorkflowEntBuilder();
+	public static DefaultMetaPortInfoEntBuilder builder() {
+		return new DefaultMetaPortInfoEntBuilder();
 	}
 	
 	/**
-	* Default implementation of the WorkflowEntBuilder-interface.
+	* Default implementation of the MetaPortInfoEntBuilder-interface.
 	*/
-	public static class DefaultWorkflowEntBuilder implements WorkflowEntBuilder {
+	public static class DefaultMetaPortInfoEntBuilder implements MetaPortInfoEntBuilder {
     
-		private Map<String, NodeEnt> m_Nodes;
-		private List<ConnectionEnt> m_Connections;
-		private List<MetaPortInfoEnt> m_MetaInPortInfos;
-		private List<MetaPortInfoEnt> m_MetaOutPortInfos;
-		private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
+		private PortTypeEnt m_PortType;
+		private boolean m_IsConnected;
+		private String m_Message;
+		private int m_OldIndex;
+		private int m_NewIndex;
 
-        public WorkflowEnt build() {
-            return new DefaultWorkflowEnt(this);
+        public MetaPortInfoEnt build() {
+            return new DefaultMetaPortInfoEnt(this);
         }
 
 		@Override
-        public WorkflowEntBuilder setNodes(final Map<String, NodeEnt> Nodes) {
-			m_Nodes = Nodes;			
+        public MetaPortInfoEntBuilder setPortType(final PortTypeEnt PortType) {
+			m_PortType = PortType;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
-			m_Connections = Connections;			
+        public MetaPortInfoEntBuilder setIsConnected(final boolean IsConnected) {
+			m_IsConnected = IsConnected;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setMetaInPortInfos(final List<MetaPortInfoEnt> MetaInPortInfos) {
-			m_MetaInPortInfos = MetaInPortInfos;			
+        public MetaPortInfoEntBuilder setMessage(final String Message) {
+			m_Message = Message;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setMetaOutPortInfos(final List<MetaPortInfoEnt> MetaOutPortInfos) {
-			m_MetaOutPortInfos = MetaOutPortInfos;			
+        public MetaPortInfoEntBuilder setOldIndex(final int OldIndex) {
+			m_OldIndex = OldIndex;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setWorkflowAnnotations(final List<WorkflowAnnotationEnt> WorkflowAnnotations) {
-			m_WorkflowAnnotations = WorkflowAnnotations;			
+        public MetaPortInfoEntBuilder setNewIndex(final int NewIndex) {
+			m_NewIndex = NewIndex;			
             return this;
         }
         

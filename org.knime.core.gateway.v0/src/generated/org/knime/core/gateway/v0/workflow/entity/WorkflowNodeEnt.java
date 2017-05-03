@@ -44,89 +44,97 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.jaxrs.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
-
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
- * Implementation of the {@link MetaPortEnt} interface that can be deserialized from a json object (json-annotated constructor).
+ * A node containing (referencing) a workflow (also referred to it as metanode)
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-@JsonTypeInfo(
-  use = JsonTypeInfo.Id.NAME, 
-  include = JsonTypeInfo.As.PROPERTY, 
-  property = "EntityType")
-@JsonSubTypes({ 
-  @Type(value = MetaPortEntFromJson.class, name = "MetaPortEnt")
-})
-public class MetaPortEntFromJson  implements MetaPortEnt {
+public interface WorkflowNodeEnt extends GatewayEntity, NodeEnt  {
 
-	private PortTypeEntFromJson m_PortType;
-	private boolean m_IsConnected;
-	private String m_Message;
-	private int m_OldIndex;
-	private int m_NewIndex;
-
-	@JsonCreator
-	private MetaPortEntFromJson(
-	@JsonProperty("PortType") PortTypeEntFromJson PortType,	@JsonProperty("IsConnected") boolean IsConnected,	@JsonProperty("Message") String Message,	@JsonProperty("OldIndex") int OldIndex,	@JsonProperty("NewIndex") int NewIndex	) {
-		m_PortType = PortType;
-		m_IsConnected = IsConnected;
-		m_Message = Message;
-		m_OldIndex = OldIndex;
-		m_NewIndex = NewIndex;
-	}
-	
-	protected MetaPortEntFromJson() {
-		//just a dummy constructor for subclasses
-	}
-
-
-	@Override
-    public PortTypeEnt getPortType() {
-            return (PortTypeEnt) m_PortType;
-            
-    }
-    
-	@Override
-    public boolean getIsConnected() {
-        	return m_IsConnected;
-            
-    }
-    
-	@Override
-    public String getMessage() {
-        	return m_Message;
-            
-    }
-    
-	@Override
-    public int getOldIndex() {
-        	return m_OldIndex;
-            
-    }
-    
-	@Override
-    public int getNewIndex() {
-        	return m_NewIndex;
-            
-    }
-    
-
+    /**
+     * @return List of all incoming workflow ports.
+     */
+ 	List<NodeOutPortEnt> getWorkflowIncomingPorts();
+ 	
+    /**
+     * @return List of all outgoing workflow ports.
+     */
+ 	List<NodeInPortEnt> getWorkflowOutgoingPorts();
+ 	
+    /**
+     * @return The parent node id of the node or not present if it's the root node.
+     */
+ 	Optional<String> getParentNodeID();
+ 	
+    /**
+     * @return The id of the root workflow this node is contained in or represents.
+     */
+ 	String getRootWorkflowID();
+ 	
+    /**
+     * @return The job manager (e.g. cluster or streaming).
+     */
+ 	Optional<JobManagerEnt> getJobManager();
+ 	
+    /**
+     * @return The current node message (warning, error, none).
+     */
+ 	NodeMessageEnt getNodeMessage();
+ 	
+    /**
+     * @return The list of inputs.
+     */
+ 	List<NodeInPortEnt> getInPorts();
+ 	
+    /**
+     * @return The list of outputs.
+     */
+ 	List<NodeOutPortEnt> getOutPorts();
+ 	
+    /**
+     * @return The name.
+     */
+ 	String getName();
+ 	
+    /**
+     * @return The ID of the node.
+     */
+ 	String getNodeID();
+ 	
+    /**
+     * @return The type of the node as string.
+     */
+ 	String getNodeType();
+ 	
+    /**
+     * @return The bounds / rectangle on screen of the node.
+     */
+ 	BoundsEnt getBounds();
+ 	
+    /**
+     * @return Whether node is deletable.
+     */
+ 	boolean getIsDeletable();
+ 	
+    /**
+     * @return The state of the node.
+     */
+ 	String getNodeState();
+ 	
+    /**
+     * @return Whether the node has a configuration dialog / user settings.
+     */
+ 	boolean getHasDialog();
+ 	
+    /**
+     * @return The annotation underneath the node.
+     */
+ 	NodeAnnotationEnt getNodeAnnotation();
+ 	
 }

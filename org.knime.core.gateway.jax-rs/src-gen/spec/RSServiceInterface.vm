@@ -51,6 +51,7 @@ import $import;
 #end
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -76,7 +77,7 @@ public interface RS${name} extends ${name} {
 ##check whether all parameters are primitives
 #set( $primitiveParams = true )
 #foreach( $param in $method.getParameters() )
-#if(!$param.getType().isPrimitive())
+#if(!$param.getType().isPrimitive() && !$param.getType().isPrimitiveOptional())
 #set($primitiveParams = false)
 #break
 #end
@@ -110,10 +111,12 @@ public interface RS${name} extends ${name} {
     @Consumes(MediaType.APPLICATION_JSON)
 #end
     @Path("/$method.getNameWithoutOperation().toLowerCase()")
-    public $rettype.toString("","") $method.getName()(
+    public $rettype.toString() $method.getName()(
 #foreach($param in $method.getParameters())
 #if(${param.getType().isPrimitive()})
-		@QueryParam("$param.getName()") final $param.getType().toString("","") $param.getName()#if($foreach.hasNext),#end
+		@QueryParam("$param.getName()") final $param.getType().toString() $param.getName()#if($foreach.hasNext),#end
+#elseif(${param.getType().isPrimitiveOptional()})
+		@DefaultValue(value="") @QueryParam("$param.getName()") final $param.getType().toString() $param.getName()#if($foreach.hasNext),#end
 #else
 #if($param.getType().isList())
 #set($partype=${param.getType().getTypeParameter(0)})

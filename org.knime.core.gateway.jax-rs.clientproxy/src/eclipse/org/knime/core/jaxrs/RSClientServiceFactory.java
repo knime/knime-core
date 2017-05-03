@@ -55,6 +55,7 @@ import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.knime.core.gateway.ObjectSpecUtil;
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.jaxrs.providers.OptionalParamConverter;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONSerializer;
 import org.knime.core.jaxrs.providers.json.EntityJSONDeserializer;
@@ -85,7 +86,7 @@ public class RSClientServiceFactory implements ServiceFactory {
             Class<?> rsServiceInterface = Class.forName(fullyQualifiedName);
             List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),
                 new EntityCollectionJSONSerializer(), new EntityCollectionJSONDeserializer(),
-                new MapJSONDeserializer());
+                new MapJSONDeserializer(), new OptionalParamConverter());
             return (S)JAXRSClientFactory.create("http://localhost:3000/", rsServiceInterface, providers);
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);

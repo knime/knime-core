@@ -46,13 +46,18 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
+import org.knime.core.jaxrs.workflow.entity.NodeEntFromJson;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntToJson;
 import java.util.List;
+import org.knime.core.jaxrs.workflow.entity.NodeEntToJson;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntFromJson;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -81,7 +86,15 @@ public interface RSWorkflowService extends WorkflowService {
 	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
     @Path("/workflow")
     public WorkflowEnt getWorkflow(
-		@QueryParam("id") final String id);
+		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
+
+	@Override
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=NodeEntFromJson.class, out=NodeEntToJson.class)
+    @Path("/node")
+    public NodeEnt getNode(
+		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
 
 	@Override
     @POST

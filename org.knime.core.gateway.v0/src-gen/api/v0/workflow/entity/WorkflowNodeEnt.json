@@ -1,0 +1,19 @@
+{
+    "type" : "entity",
+    "name" : "WorkflowNodeEnt",
+    "description" : "A node containing (referencing) a workflow (also referred to it as metanode)",
+    "namespace" : "workflow.entity",
+    "parents" : [ "workflow.entity.NodeEnt"],
+    "fields" : [
+    	{
+            "name" : "WorkflowIncomingPorts",
+            "description" : "List of all incoming workflow ports.",
+            "type" : "List<workflow.entity.NodeOutPortEnt>"
+        },
+        {
+            "name" : "WorkflowOutgoingPorts",
+            "description" : "List of all outgoing workflow ports.",
+            "type" : "List<workflow.entity.NodeInPortEnt>"
+        }
+    ]
+}

@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeAnnotation;
@@ -72,7 +73,7 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -82,11 +83,12 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortInfoEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeFactoryIDEntBuilder;
@@ -96,10 +98,16 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.JobManagerUtil;
+import org.knime.core.util.PortTypeUtil;
 
 /**
  * Collects helper methods to build entity instances basically from core.api-classes (e.g. IWorkflowManager etc.).
@@ -121,23 +129,49 @@ public class EntityBuilderUtil {
     private static List<NodeInPortEnt> buildNodeInPortEnts(final INodeContainer nc) {
         List<NodeInPortEnt> inPorts = new ArrayList<>(nc.getNrInPorts());
         for (int i = 0; i < nc.getNrInPorts(); i++) {
-            INodeInPort inPort = nc.getInPort(i);
-            PortTypeEnt pType = buildPortTypeEnt(inPort.getPortTypeUID());
-            inPorts.add(builder(NodeInPortEntBuilder.class).setPortIndex(i).setPortName(inPort.getPortName())
-                .setPortType(pType).build());
+            inPorts.add(buildNodeInPortEnt(nc.getInPort(i)));
         }
         return inPorts;
+    }
+
+    private static List<NodeInPortEnt> buildWorkflowOutgoingPortEnts(final IWorkflowManager wm) {
+        List<NodeInPortEnt> inPorts = new ArrayList<>(wm.getNrWorkflowOutgoingPorts());
+        for (int i = 0; i < wm.getNrWorkflowOutgoingPorts(); i++) {
+            inPorts.add(buildNodeInPortEnt(wm.getWorkflowOutgoingPort(i)));
+        }
+        return inPorts;
+    }
+
+    private static NodeInPortEnt buildNodeInPortEnt(final INodeInPort inPort) {
+        PortTypeEnt pType = buildPortTypeEnt(inPort.getPortTypeUID());
+        return builder(NodeInPortEntBuilder.class)
+                .setPortIndex(inPort.getPortIndex())
+                .setPortName(inPort.getPortName())
+                .setPortType(pType).build();
     }
 
     private static List<NodeOutPortEnt> buildNodeOutPortEnts(final INodeContainer nc) {
         List<NodeOutPortEnt> outPorts = new ArrayList<>(nc.getNrOutPorts());
         for (int i = 0; i < nc.getNrOutPorts(); i++) {
-            INodeOutPort outPort = nc.getOutPort(i);
-            PortTypeEnt pType = buildPortTypeEnt(outPort.getPortTypeUID());
-            outPorts.add(builder(NodeOutPortEntBuilder.class).setPortIndex(i).setPortName(outPort.getPortName())
-                .setPortType(pType).build());
+            outPorts.add(buildNodeOutPortEnt(nc.getOutPort(i)));
         }
         return outPorts;
+    }
+
+    private static List<NodeOutPortEnt> buildWorkflowIncomingPortEnts(final IWorkflowManager wm) {
+        List<NodeOutPortEnt> outPorts = new ArrayList<>(wm.getNrWorkflowIncomingPorts());
+        for (int i = 0; i < wm.getNrWorkflowIncomingPorts(); i++) {
+            outPorts.add(buildNodeOutPortEnt(wm.getWorkflowIncomingPort(i)));
+        }
+        return outPorts;
+    }
+
+    private static NodeOutPortEnt buildNodeOutPortEnt(final INodeOutPort outPort) {
+        PortTypeEnt pType = buildPortTypeEnt(outPort.getPortTypeUID());
+        return builder(NodeOutPortEntBuilder.class)
+                .setPortIndex(outPort.getPortIndex())
+                .setPortName(outPort.getPortName())
+                .setPortType(pType).build();
     }
 
     private static NodeAnnotationEnt buildNodeAnnotationEnt(final INodeContainer nc) {
@@ -150,11 +184,11 @@ public class EntityBuilderUtil {
     }
 
     private static Optional<JobManagerEnt> buildJobManagerEnt(final Optional<JobManagerUID> jobManagerUID) {
-        if(!jobManagerUID.isPresent()) {
-            return Optional.empty();
-        }
-        return Optional.of(builder(JobManagerEntBuilder.class).setJobManagerID(jobManagerUID.map(j -> j.getID()).orElse("Not set"))
-            .setName(jobManagerUID.map(j -> j.getName()).orElse("Not set")).build());
+        return jobManagerUID.map(uid -> {
+            return builder(JobManagerEntBuilder.class)
+                .setJobManagerID(jobManagerUID.map(j -> j.getID()).orElse("Not set"))
+                .setName(jobManagerUID.map(j -> j.getName()).orElse("Not set")).build();
+        });
     }
 
     private static BoundsEnt buildBoundsEnt(final NodeUIInformation ui) {
@@ -169,10 +203,39 @@ public class EntityBuilderUtil {
             .build();
     }
 
-    //TODO
-    private static List<MetaPortEnt> buildDummyMetaPortEnt() {
-        PortTypeEnt portType = builder(PortTypeEntBuilder.class).setColor(0).setIsHidden(false).setIsOptional(true).setName("name").setPortObjectClassName("bliblablub").build();
-        return Arrays.asList(builder(MetaPortEntBuilder.class).setIsConnected(false).setMessage("test").setNewIndex(0).setOldIndex(1).setPortType(portType).build());
+    //TODO!!
+    private static MetaPortInfoEnt buildMetaPortInfoEnt(final MetaPortInfo info) {
+        PortType pt = PortTypeUtil.getPortType(info.getTypeUID());
+        PortTypeEnt portType = builder(PortTypeEntBuilder.class)
+                .setColor(pt.getColor())
+                .setIsHidden(pt.isHidden())
+                .setIsOptional(pt.isOptional())
+                .setName(pt.getName())
+                .setPortObjectClassName(pt.getPortObjectClass().getCanonicalName()).build();
+        return builder(MetaPortInfoEntBuilder.class)
+            .setIsConnected(info.isConnected())
+            .setMessage(info.getMessage())
+            .setNewIndex(info.getNewIndex())
+            .setOldIndex(info.getNewIndex())
+            .setPortType(portType).build();
+    }
+
+    private static List<MetaPortInfoEnt> buildMetaInPortInfoEnts(final IWorkflowManager wm) {
+        if (wm.getNrWorkflowIncomingPorts() == 0) {
+            return Collections.emptyList();
+        } else {
+            return Arrays.stream(wm.getParent().getMetanodeInputPortInfo(wm.getID())).map(i -> buildMetaPortInfoEnt(i))
+                .collect(Collectors.toList());
+        }
+    }
+
+    private static List<MetaPortInfoEnt> buildMetaOutPortInfoEnts(final IWorkflowManager wm) {
+        if (wm.getNrWorkflowOutgoingPorts() == 0) {
+            return Collections.emptyList();
+        } else {
+            return Arrays.stream(wm.getParent().getMetanodeOutputPortInfo(wm.getID())).map(i -> buildMetaPortInfoEnt(i))
+                .collect(Collectors.toList());
+        }
     }
 
     private static NodeMessageEnt buildNodeMessageEnt(final INodeContainer nc) {
@@ -180,17 +243,22 @@ public class EntityBuilderUtil {
             .setType(nc.getNodeMessage().getMessageType().toString()).build();
     }
 
-    private static NodeEnt buildNodeEnt(final INodeContainer nc, final String parentWorkflowID) {
+    /**
+     * @param nc
+     * @param rootWorkflowID must be present, if nc is of type {@link IWorkflowManager}
+     * @return
+     */
+    public static NodeEnt buildNodeEnt(final INodeContainer nc, final String rootWorkflowID) {
         if(nc instanceof NativeNodeContainer) {
-            return buildNativeNodeEnt((NativeNodeContainer) nc, parentWorkflowID);
+            return buildNativeNodeEnt((NativeNodeContainer) nc, rootWorkflowID);
         } else if(nc instanceof IWorkflowManager) {
-            return buildWorkflowEnt((IWorkflowManager) nc, nc.getID().toString());
+            return buildWorkflowNodeEnt((IWorkflowManager) nc, rootWorkflowID);
         } else {
             throw new IllegalArgumentException("Node container " + nc.getClass().getCanonicalName() + " cannot be mapped to a node entity.");
         }
     }
 
-    private static NativeNodeEnt buildNativeNodeEnt(final NativeNodeContainer nc, final String parentWorkflowID) {
+    private static NativeNodeEnt buildNativeNodeEnt(final NativeNodeContainer nc, final String rootWorkflowID) {
         NodeFactory<NodeModel> factory = nc.getNode().getFactory();
         NodeFactoryIDEntBuilder nodeFactoryIDBuilder = builder(NodeFactoryIDEntBuilder.class)
                 .setClassName(factory.getClass().getCanonicalName());
@@ -202,10 +270,32 @@ public class EntityBuilderUtil {
             .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
             .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
             .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
-            .setParent(parentWorkflowID)
+            .setParentNodeID(Optional.ofNullable(nc.getParent()).map(p -> p.getID().toString()))
+            .setRootWorkflowID(rootWorkflowID)
             .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
             .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog())
             .setNodeFactoryID(nodeFactoryIDBuilder.build()).build();
+    }
+
+    public static WorkflowNodeEnt buildWorkflowNodeEnt(final IWorkflowManager wm, final String rootWorkflowID) {
+        Optional<JobManagerUID> jobManagerUID;
+        if (wm.getParent() == WorkflowManager.ROOT) {
+            //TODO somehow get the default job manager from the workflow manager itself!!
+            jobManagerUID =
+                Optional.of(JobManagerUtil.getJobManagerUID(NodeExecutionJobManagerPool.getDefaultJobManagerFactory()));
+        } else {
+            jobManagerUID = wm.getJobManagerUID();
+        }
+        return builder(WorkflowNodeEntBuilder.class).setName(wm.getName()).setNodeID(wm.getID().toString())
+                .setNodeMessage(buildNodeMessageEnt(wm)).setNodeType(wm.getType().toString())
+                .setBounds(buildBoundsEnt(wm.getUIInformation())).setIsDeletable(wm.isDeletable())
+                .setNodeState(wm.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(wm))
+                .setParentNodeID(wm.getParent() == WorkflowManager.ROOT ? Optional.empty() : Optional.of(wm.getParent().getID().toString()))
+                .setJobManager(buildJobManagerEnt(jobManagerUID)).setNodeAnnotation(buildNodeAnnotationEnt(wm))
+                .setInPorts(buildNodeInPortEnts(wm)).setHasDialog(wm.hasDialog())
+                .setWorkflowIncomingPorts(buildWorkflowIncomingPortEnts(wm))
+                .setWorkflowOutgoingPorts(buildWorkflowOutgoingPortEnts(wm))
+                .setRootWorkflowID(rootWorkflowID).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {
@@ -239,25 +329,25 @@ public class EntityBuilderUtil {
                 .build();
     }
 
-    public static WorkflowEnt buildWorkflowEnt(final IWorkflowManager wfm, final String workflowID) {
+    /**
+     * @param wfm
+     * @param rootWorkflowID the workflow ID of the root workflow
+     * @return
+     */
+    public static WorkflowEnt buildWorkflowEnt(final IWorkflowManager wfm, final String rootWorkflowID) {
         Collection<INodeContainer> nodeContainers = wfm.getAllNodeContainers();
         Map<String, NodeEnt> nodes = nodeContainers.stream().map(nc -> {
-            return buildNodeEnt(nc, workflowID);
+            return buildNodeEnt(nc, rootWorkflowID);
         }).collect(Collectors.toMap(n -> n.getNodeID(), n -> n));
         Collection<IConnectionContainer> connectionContainers = wfm.getConnectionContainers();
         List<ConnectionEnt> connections = connectionContainers.stream().map(cc -> {
             return buildContainerEnt(cc);
         }).collect(Collectors.toList());
-        return builder(WorkflowEntBuilder.class).setNodes(nodes).setConnections(connections)
-            .setBounds(buildBoundsEnt(wfm.getUIInformation())).setHasDialog(wfm.hasDialog())
-            .setInPorts(buildNodeInPortEnts(wfm)).setIsDeletable(wfm.isDeletable())
-            .setJobManager(buildJobManagerEnt(Optional.of(wfm.findJobManagerUID()))).setName(wfm.getName())
-            .setNodeAnnotation(buildNodeAnnotationEnt(wfm)).setNodeID(wfm.getID().toString())
-            .setNodeMessage(buildNodeMessageEnt(wfm)).setNodeState("TODO").setNodeType(wfm.getType().toString())
-            .setOutPorts(buildNodeOutPortEnts(wfm))
-            .setParent(workflowID)
-            .setMetaInPorts(buildDummyMetaPortEnt())
-            .setMetaOutPorts(buildDummyMetaPortEnt())
+        return builder(WorkflowEntBuilder.class)
+            .setNodes(nodes)
+            .setConnections(connections)
+            .setMetaInPortInfos(buildMetaInPortInfoEnts(wfm))
+            .setMetaOutPortInfos(buildMetaOutPortInfoEnts(wfm))
             .setWorkflowAnnotations(wfm.getWorkflowAnnotations().stream().map(wa -> buildWorkflowAnnotationEnt(wa)).collect(Collectors.toList()))
             .build();
     }

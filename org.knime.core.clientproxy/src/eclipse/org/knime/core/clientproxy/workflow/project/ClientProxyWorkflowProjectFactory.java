@@ -60,7 +60,7 @@ import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowManager;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
@@ -138,7 +138,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
 
     private class MyWorkflowProject implements WorkflowProject {
 
-        private WorkflowEnt m_workflow;
+        private WorkflowNodeEnt m_workflowNodeEnt;
 
         private String m_workflowID;
 
@@ -149,7 +149,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         public MyWorkflowProject(final String workflowID) {
             m_workflowID = workflowID;
-            m_workflow = service(WorkflowService.class).getWorkflow(workflowID);
+            m_workflowNodeEnt = (WorkflowNodeEnt) service(WorkflowService.class).getNode(workflowID, Optional.empty());
         }
 
         /**
@@ -157,7 +157,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public String getName() {
-            return m_workflow.getName();
+            return m_workflowNodeEnt.getName();
         }
 
         /**
@@ -189,7 +189,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
         public IWorkflowManager openProject() throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
             if (m_cachedWFM == null) {
-                m_cachedWFM = new ClientProxyWorkflowManager(m_workflow);
+                m_cachedWFM = new ClientProxyWorkflowManager(m_workflowNodeEnt);
             }
             return m_cachedWFM;
         }

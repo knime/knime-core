@@ -1,6 +1,6 @@
 {
     "type" : "entity",
-    "name" : "MetaPortEnt",
+    "name" : "MetaPortInfoEnt",
     "description" : "The port of a metanode.",
     "namespace" : "workflow.entity",
     "fields" : [

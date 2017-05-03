@@ -48,6 +48,7 @@
  */
 package org.knime.core.gateway.serverproxy.service;
 
+import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildNodeEnt;
 import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWorkflowEnt;
 
 import java.io.IOException;
@@ -59,16 +60,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.util.LockFailedException;
@@ -94,10 +98,38 @@ public class DefaultWorkflowService implements WorkflowService {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEnt getWorkflow(final String id) {
-        //TODO somehow get the right IWorkflowManager for the given id and create a WorkflowEnt from it
+    public WorkflowEnt getWorkflow(final String rootWorkflowID, final Optional<String> nodeID) {
+        //get the right IWorkflowManager for the given id and create a WorkflowEnt from it
         try {
-            return buildWorkflowEnt(getWorkflowProjectForID(id, m_root).openProject(), id);
+            if (nodeID.isPresent()) {
+                INodeContainer metaNode = getWorkflowProjectForID(rootWorkflowID, m_root).openProject()
+                    .getNodeContainer(NodeID.fromString(nodeID.get()));
+                assert metaNode instanceof IWorkflowManager;
+                IWorkflowManager wfm = (IWorkflowManager)metaNode;
+                return buildWorkflowEnt(wfm, rootWorkflowID);
+            } else {
+                return buildWorkflowEnt(getWorkflowProjectForID(rootWorkflowID, m_root).openProject(), rootWorkflowID);
+            }
+        } catch (Exception ex) {
+            // TODO better exception handling
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeEnt getNode(final String rootWorkflowID, final Optional<String> nodeID) {
+        //get the right IWorkflowManager for the given id and create a WorkflowEnt from it
+        try {
+            if (nodeID.isPresent()) {
+                INodeContainer node = getWorkflowProjectForID(rootWorkflowID, m_root).openProject()
+                    .getNodeContainer(NodeID.fromString(nodeID.get()));
+                return buildNodeEnt(node, rootWorkflowID);
+            } else {
+                return buildNodeEnt(getWorkflowProjectForID(rootWorkflowID, m_root).openProject(), rootWorkflowID);
+            }
         } catch (Exception ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);

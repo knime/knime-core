@@ -50,16 +50,12 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
@@ -68,13 +64,15 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default implementation of the NodeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the WorkflowNodeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultNodeEnt implements NodeEnt {
+public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
 
+	private List<NodeOutPortEnt> m_WorkflowIncomingPorts;
+	private List<NodeInPortEnt> m_WorkflowOutgoingPorts;
 	private Optional<String> m_ParentNodeID;
 	private String m_RootWorkflowID;
 	private Optional<JobManagerEnt> m_JobManager;
@@ -93,7 +91,9 @@ public class DefaultNodeEnt implements NodeEnt {
     /**
      * @param builder
      */
-    private DefaultNodeEnt(final DefaultNodeEntBuilder builder) {
+    private DefaultWorkflowNodeEnt(final DefaultWorkflowNodeEntBuilder builder) {
+		m_WorkflowIncomingPorts = builder.m_WorkflowIncomingPorts;
+		m_WorkflowOutgoingPorts = builder.m_WorkflowOutgoingPorts;
 		m_ParentNodeID = builder.m_ParentNodeID;
 		m_RootWorkflowID = builder.m_RootWorkflowID;
 		m_JobManager = builder.m_JobManager;
@@ -110,6 +110,16 @@ public class DefaultNodeEnt implements NodeEnt {
 		m_NodeAnnotation = builder.m_NodeAnnotation;
     }
 
+	@Override
+    public List<NodeOutPortEnt> getWorkflowIncomingPorts() {
+        return m_WorkflowIncomingPorts;
+    }
+    
+	@Override
+    public List<NodeInPortEnt> getWorkflowOutgoingPorts() {
+        return m_WorkflowOutgoingPorts;
+    }
+    
 	@Override
     public Optional<String> getParentNodeID() {
         return m_ParentNodeID;
@@ -186,15 +196,17 @@ public class DefaultNodeEnt implements NodeEnt {
 	    return ToStringBuilder.reflectionToString(this);
 	}
 
-	public static DefaultNodeEntBuilder builder() {
-		return new DefaultNodeEntBuilder();
+	public static DefaultWorkflowNodeEntBuilder builder() {
+		return new DefaultWorkflowNodeEntBuilder();
 	}
 	
 	/**
-	* Default implementation of the NodeEntBuilder-interface.
+	* Default implementation of the WorkflowNodeEntBuilder-interface.
 	*/
-	public static class DefaultNodeEntBuilder implements NodeEntBuilder {
+	public static class DefaultWorkflowNodeEntBuilder implements WorkflowNodeEntBuilder {
     
+		private List<NodeOutPortEnt> m_WorkflowIncomingPorts;
+		private List<NodeInPortEnt> m_WorkflowOutgoingPorts;
 		private Optional<String> m_ParentNodeID = Optional.empty();
 		private String m_RootWorkflowID;
 		private Optional<JobManagerEnt> m_JobManager = Optional.empty();
@@ -210,90 +222,102 @@ public class DefaultNodeEnt implements NodeEnt {
 		private boolean m_HasDialog;
 		private NodeAnnotationEnt m_NodeAnnotation;
 
-        public NodeEnt build() {
-            return new DefaultNodeEnt(this);
+        public WorkflowNodeEnt build() {
+            return new DefaultWorkflowNodeEnt(this);
         }
 
 		@Override
-        public NodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
+        public WorkflowNodeEntBuilder setWorkflowIncomingPorts(final List<NodeOutPortEnt> WorkflowIncomingPorts) {
+			m_WorkflowIncomingPorts = WorkflowIncomingPorts;			
+            return this;
+        }
+        
+		@Override
+        public WorkflowNodeEntBuilder setWorkflowOutgoingPorts(final List<NodeInPortEnt> WorkflowOutgoingPorts) {
+			m_WorkflowOutgoingPorts = WorkflowOutgoingPorts;			
+            return this;
+        }
+        
+		@Override
+        public WorkflowNodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
 			m_ParentNodeID = ParentNodeID;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
+        public WorkflowNodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
 			m_RootWorkflowID = RootWorkflowID;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
+        public WorkflowNodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
 			m_JobManager = JobManager;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
+        public WorkflowNodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
 			m_NodeMessage = NodeMessage;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
+        public WorkflowNodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
 			m_InPorts = InPorts;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
+        public WorkflowNodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
 			m_OutPorts = OutPorts;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setName(final String Name) {
+        public WorkflowNodeEntBuilder setName(final String Name) {
 			m_Name = Name;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setNodeID(final String NodeID) {
+        public WorkflowNodeEntBuilder setNodeID(final String NodeID) {
 			m_NodeID = NodeID;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setNodeType(final String NodeType) {
+        public WorkflowNodeEntBuilder setNodeType(final String NodeType) {
 			m_NodeType = NodeType;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setBounds(final BoundsEnt Bounds) {
+        public WorkflowNodeEntBuilder setBounds(final BoundsEnt Bounds) {
 			m_Bounds = Bounds;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setIsDeletable(final boolean IsDeletable) {
+        public WorkflowNodeEntBuilder setIsDeletable(final boolean IsDeletable) {
 			m_IsDeletable = IsDeletable;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setNodeState(final String NodeState) {
+        public WorkflowNodeEntBuilder setNodeState(final String NodeState) {
 			m_NodeState = NodeState;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setHasDialog(final boolean HasDialog) {
+        public WorkflowNodeEntBuilder setHasDialog(final boolean HasDialog) {
 			m_HasDialog = HasDialog;			
             return this;
         }
         
 		@Override
-        public NodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+        public WorkflowNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
 			m_NodeAnnotation = NodeAnnotation;			
             return this;
         }

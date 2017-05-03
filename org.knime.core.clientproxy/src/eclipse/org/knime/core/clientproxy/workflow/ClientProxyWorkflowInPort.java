@@ -51,6 +51,7 @@ package org.knime.core.clientproxy.workflow;
 import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.IWorkflowInPort;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 
 /**
  *
@@ -58,11 +59,14 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
  */
 public class ClientProxyWorkflowInPort extends ClientProxyNodeInPort implements IWorkflowInPort {
 
+    private NodeOutPortEnt m_underlyingPort;
+
     /**
      *
      */
-    public ClientProxyWorkflowInPort(final NodeInPortEnt inPort) {
+    public ClientProxyWorkflowInPort(final NodeInPortEnt inPort, final NodeOutPortEnt underlyingPort) {
         super(inPort);
+        m_underlyingPort = underlyingPort;
     }
 
 
@@ -79,7 +83,7 @@ public class ClientProxyWorkflowInPort extends ClientProxyNodeInPort implements 
      */
     @Override
     public INodeOutPort getUnderlyingPort() {
-        throw new UnsupportedOperationException();
+        return ClientProxyUtil.getNodeOutPort(m_underlyingPort);
     }
 
 }

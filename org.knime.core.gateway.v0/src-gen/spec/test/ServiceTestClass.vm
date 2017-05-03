@@ -109,6 +109,8 @@ public class ${name}Test {
 #end
 #elseif($type.isPrimitive())
 		$type.toString() $param.getName() = $type.createRandomPrimitive(0);
+#elseif($type.isPrimitiveOptional())
+		$type.toString() $param.getName() = Optional.of($type.getTypeParameter(0).createRandomPrimitive(0));
 #end
 #end ##param-loop
 

@@ -48,16 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
@@ -87,48 +80,22 @@ import java.util.stream.Collectors;
 @JsonSubTypes({ 
   @Type(value = WorkflowEntFromJson.class, name = "WorkflowEnt")
 })
-public class WorkflowEntFromJson extends NodeEntFromJson implements WorkflowEnt {
+public class WorkflowEntFromJson  implements WorkflowEnt {
 
 	private Map<String, NodeEntFromJson> m_Nodes;
 	private List<ConnectionEntFromJson> m_Connections;
-	private List<MetaPortEntFromJson> m_MetaInPorts;
-	private List<MetaPortEntFromJson> m_MetaOutPorts;
+	private List<MetaPortInfoEntFromJson> m_MetaInPortInfos;
+	private List<MetaPortInfoEntFromJson> m_MetaOutPortInfos;
 	private List<WorkflowAnnotationEntFromJson> m_WorkflowAnnotations;
-	private String m_Parent;
-	private Optional<JobManagerEntFromJson> m_JobManager;
-	private NodeMessageEntFromJson m_NodeMessage;
-	private List<NodeInPortEntFromJson> m_InPorts;
-	private List<NodeOutPortEntFromJson> m_OutPorts;
-	private String m_Name;
-	private String m_NodeID;
-	private String m_NodeType;
-	private BoundsEntFromJson m_Bounds;
-	private boolean m_IsDeletable;
-	private String m_NodeState;
-	private boolean m_HasDialog;
-	private NodeAnnotationEntFromJson m_NodeAnnotation;
 
 	@JsonCreator
 	private WorkflowEntFromJson(
-	@JsonProperty("Nodes") Map<String, NodeEntFromJson> Nodes,	@JsonProperty("Connections") List<ConnectionEntFromJson> Connections,	@JsonProperty("MetaInPorts") List<MetaPortEntFromJson> MetaInPorts,	@JsonProperty("MetaOutPorts") List<MetaPortEntFromJson> MetaOutPorts,	@JsonProperty("WorkflowAnnotations") List<WorkflowAnnotationEntFromJson> WorkflowAnnotations,	@JsonProperty("Parent") String Parent,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
+	@JsonProperty("Nodes") Map<String, NodeEntFromJson> Nodes,	@JsonProperty("Connections") List<ConnectionEntFromJson> Connections,	@JsonProperty("MetaInPortInfos") List<MetaPortInfoEntFromJson> MetaInPortInfos,	@JsonProperty("MetaOutPortInfos") List<MetaPortInfoEntFromJson> MetaOutPortInfos,	@JsonProperty("WorkflowAnnotations") List<WorkflowAnnotationEntFromJson> WorkflowAnnotations	) {
 		m_Nodes = Nodes;
 		m_Connections = Connections;
-		m_MetaInPorts = MetaInPorts;
-		m_MetaOutPorts = MetaOutPorts;
+		m_MetaInPortInfos = MetaInPortInfos;
+		m_MetaOutPortInfos = MetaOutPortInfos;
 		m_WorkflowAnnotations = WorkflowAnnotations;
-		m_Parent = Parent;
-		m_JobManager = Optional.ofNullable(JobManager);
-		m_NodeMessage = NodeMessage;
-		m_InPorts = InPorts;
-		m_OutPorts = OutPorts;
-		m_Name = Name;
-		m_NodeID = NodeID;
-		m_NodeType = NodeType;
-		m_Bounds = Bounds;
-		m_IsDeletable = IsDeletable;
-		m_NodeState = NodeState;
-		m_HasDialog = HasDialog;
-		m_NodeAnnotation = NodeAnnotation;
 	}
 	
 	protected WorkflowEntFromJson() {
@@ -152,98 +119,20 @@ public class WorkflowEntFromJson extends NodeEntFromJson implements WorkflowEnt 
     }
     
 	@Override
-    public List<MetaPortEnt> getMetaInPorts() {
-        	return m_MetaInPorts.stream().map(l -> (MetaPortEnt) l ).collect(Collectors.toList());
+    public List<MetaPortInfoEnt> getMetaInPortInfos() {
+        	return m_MetaInPortInfos.stream().map(l -> (MetaPortInfoEnt) l ).collect(Collectors.toList());
             
     }
     
 	@Override
-    public List<MetaPortEnt> getMetaOutPorts() {
-        	return m_MetaOutPorts.stream().map(l -> (MetaPortEnt) l ).collect(Collectors.toList());
+    public List<MetaPortInfoEnt> getMetaOutPortInfos() {
+        	return m_MetaOutPortInfos.stream().map(l -> (MetaPortInfoEnt) l ).collect(Collectors.toList());
             
     }
     
 	@Override
     public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
         	return m_WorkflowAnnotations.stream().map(l -> (WorkflowAnnotationEnt) l ).collect(Collectors.toList());
-            
-    }
-    
-	@Override
-    public String getParent() {
-        	return m_Parent;
-            
-    }
-    
-	@Override
-    public Optional<JobManagerEnt> getJobManager() {
-        	return m_JobManager.map(o -> (JobManagerEnt) o);
-            
-    }
-    
-	@Override
-    public NodeMessageEnt getNodeMessage() {
-            return (NodeMessageEnt) m_NodeMessage;
-            
-    }
-    
-	@Override
-    public List<NodeInPortEnt> getInPorts() {
-        	return m_InPorts.stream().map(l -> (NodeInPortEnt) l ).collect(Collectors.toList());
-            
-    }
-    
-	@Override
-    public List<NodeOutPortEnt> getOutPorts() {
-        	return m_OutPorts.stream().map(l -> (NodeOutPortEnt) l ).collect(Collectors.toList());
-            
-    }
-    
-	@Override
-    public String getName() {
-        	return m_Name;
-            
-    }
-    
-	@Override
-    public String getNodeID() {
-        	return m_NodeID;
-            
-    }
-    
-	@Override
-    public String getNodeType() {
-        	return m_NodeType;
-            
-    }
-    
-	@Override
-    public BoundsEnt getBounds() {
-            return (BoundsEnt) m_Bounds;
-            
-    }
-    
-	@Override
-    public boolean getIsDeletable() {
-        	return m_IsDeletable;
-            
-    }
-    
-	@Override
-    public String getNodeState() {
-        	return m_NodeState;
-            
-    }
-    
-	@Override
-    public boolean getHasDialog() {
-        	return m_HasDialog;
-            
-    }
-    
-	@Override
-    public NodeAnnotationEnt getNodeAnnotation() {
-            return (NodeAnnotationEnt) m_NodeAnnotation;
             
     }
     

@@ -5,8 +5,13 @@
     "namespace" : "workflow.entity",
     "fields" : [
         {
-            "name" : "Parent",
-            "description" : "The parent workflow id of the node.",
+            "name" : "ParentNodeID",
+            "description" : "The parent node id of the node or not present if it's the root node.",
+            "type" : "Optional<String>"
+        },
+        {
+            "name" : "RootWorkflowID",
+            "description" : "The id of the root workflow this node is contained in or represents.",
             "type" : "String"
         },
         {

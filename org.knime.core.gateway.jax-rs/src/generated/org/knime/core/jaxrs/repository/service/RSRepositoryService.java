@@ -53,6 +53,7 @@ import org.knime.core.jaxrs.repository.entity.RepoCategoryEntFromJson;
 import org.knime.core.jaxrs.repository.entity.RepoCategoryEntToJson;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;

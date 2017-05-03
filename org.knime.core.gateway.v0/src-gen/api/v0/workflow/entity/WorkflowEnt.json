@@ -1,9 +1,8 @@
 {
     "type" : "entity",
     "name" : "WorkflowEnt",
-    "description" : "A complete workflow.",
+    "description" : "A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt",
     "namespace" : "workflow.entity",
-    "parents" : [ "workflow.entity.NodeEnt"],
     "fields" : [
         {
             "name" : "Nodes",
@@ -16,14 +15,14 @@
             "type" : "List<workflow.entity.ConnectionEnt>"
         },
         {
-            "name" : "MetaInPorts",
+            "name" : "MetaInPortInfos",
             "description" : "The inputs of a metanode (if this workflow is one).",
-            "type" : "List<workflow.entity.MetaPortEnt>"
+            "type" : "List<workflow.entity.MetaPortInfoEnt>"
         },
         {
-            "name" : "MetaOutPorts",
+            "name" : "MetaOutPortInfos",
             "description" : "The outputs of a metanode (if this workflow is one).",
-            "type" : "List<workflow.entity.MetaPortEnt>"
+            "type" : "List<workflow.entity.MetaPortInfoEnt>"
         },
         {
         	"name" : "WorkflowAnnotations",

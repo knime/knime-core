@@ -47,6 +47,8 @@
 package org.knime.core.jaxrs.workflow.service;
 
 import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
@@ -72,8 +74,16 @@ public class RSWrapperWorkflowService implements RSWorkflowService {
 				
 	@Override
  	public WorkflowEnt getWorkflow(
-		final String id)   {
-		return m_service.getWorkflow(id);
+		final String rootWorkflowID,
+		final Optional<String> nodeID)   {
+		return m_service.getWorkflow(rootWorkflowID, nodeID);
+    }
+				
+	@Override
+ 	public NodeEnt getNode(
+		final String rootWorkflowID,
+		final Optional<String> nodeID)   {
+		return m_service.getNode(rootWorkflowID, nodeID);
     }
 				
 	@Override

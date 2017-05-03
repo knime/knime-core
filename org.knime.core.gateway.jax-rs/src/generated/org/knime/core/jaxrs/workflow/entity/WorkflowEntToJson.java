@@ -48,16 +48,9 @@ package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
@@ -77,12 +70,11 @@ import java.util.HashMap;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public class WorkflowEntToJson extends NodeEntToJson implements WorkflowEnt {
+public class WorkflowEntToJson  implements WorkflowEnt {
 
 	private final WorkflowEnt m_e;
 	
 	public WorkflowEntToJson(final WorkflowEnt e) {
-		super(e);
 		m_e = e;
 	}
 
@@ -99,14 +91,14 @@ public class WorkflowEntToJson extends NodeEntToJson implements WorkflowEnt {
     	return m_e.getConnections().stream().map(l -> ConnectionEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
-	@JsonProperty("MetaInPorts")
-    public List<MetaPortEnt> getMetaInPorts() {
-    	return m_e.getMetaInPorts().stream().map(l -> MetaPortEntToJson.wrap(l)).collect(Collectors.toList());
+	@JsonProperty("MetaInPortInfos")
+    public List<MetaPortInfoEnt> getMetaInPortInfos() {
+    	return m_e.getMetaInPortInfos().stream().map(l -> MetaPortInfoEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
-	@JsonProperty("MetaOutPorts")
-    public List<MetaPortEnt> getMetaOutPorts() {
-    	return m_e.getMetaOutPorts().stream().map(l -> MetaPortEntToJson.wrap(l)).collect(Collectors.toList());
+	@JsonProperty("MetaOutPortInfos")
+    public List<MetaPortInfoEnt> getMetaOutPortInfos() {
+    	return m_e.getMetaOutPortInfos().stream().map(l -> MetaPortInfoEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
 	@JsonProperty("WorkflowAnnotations")
@@ -114,83 +106,7 @@ public class WorkflowEntToJson extends NodeEntToJson implements WorkflowEnt {
     	return m_e.getWorkflowAnnotations().stream().map(l -> WorkflowAnnotationEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
-	@JsonProperty("Parent")
-    public String getParent() {
-    	return m_e.getParent();
-    }
-    
-	@JsonIgnore
-    public Optional<JobManagerEnt> getJobManager() {
-    	return m_e.getJobManager().map(o -> JobManagerEntToJson.wrap(o));
-    }
-    
-	@JsonProperty("NodeMessage")
-    public NodeMessageEnt getNodeMessage() {
-        return NodeMessageEntToJson.wrap(m_e.getNodeMessage());
-    }
-    
-	@JsonProperty("InPorts")
-    public List<NodeInPortEnt> getInPorts() {
-    	return m_e.getInPorts().stream().map(l -> NodeInPortEntToJson.wrap(l)).collect(Collectors.toList());
-    }
-    
-	@JsonProperty("OutPorts")
-    public List<NodeOutPortEnt> getOutPorts() {
-    	return m_e.getOutPorts().stream().map(l -> NodeOutPortEntToJson.wrap(l)).collect(Collectors.toList());
-    }
-    
-	@JsonProperty("Name")
-    public String getName() {
-    	return m_e.getName();
-    }
-    
-	@JsonProperty("NodeID")
-    public String getNodeID() {
-    	return m_e.getNodeID();
-    }
-    
-	@JsonProperty("NodeType")
-    public String getNodeType() {
-    	return m_e.getNodeType();
-    }
-    
-	@JsonProperty("Bounds")
-    public BoundsEnt getBounds() {
-        return BoundsEntToJson.wrap(m_e.getBounds());
-    }
-    
-	@JsonProperty("IsDeletable")
-    public boolean getIsDeletable() {
-    	return m_e.getIsDeletable();
-    }
-    
-	@JsonProperty("NodeState")
-    public String getNodeState() {
-    	return m_e.getNodeState();
-    }
-    
-	@JsonProperty("HasDialog")
-    public boolean getHasDialog() {
-    	return m_e.getHasDialog();
-    }
-    
-	@JsonProperty("NodeAnnotation")
-    public NodeAnnotationEnt getNodeAnnotation() {
-        return NodeAnnotationEntToJson.wrap(m_e.getNodeAnnotation());
-    }
-    
 
-
-	/*
-	 * Workaround to exclude the property if the respective optional is empty.
-	 * There might be a better solution. 
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	@JsonProperty("JobManager")
-	public JobManagerEnt getJobManagerNullable() {
-		return getJobManager().orElse(null);
-	}
-	
 
 	@Override
 	public String toString() {

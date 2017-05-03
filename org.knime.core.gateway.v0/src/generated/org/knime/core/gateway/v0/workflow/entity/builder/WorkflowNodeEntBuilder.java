@@ -50,109 +50,114 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 
 /**
- * Builder for {@link NativeNodeEnt}.
+ * Builder for {@link WorkflowNodeEnt}.
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface NativeNodeEntBuilder extends GatewayEntityBuilder<NativeNodeEnt> {
+public interface WorkflowNodeEntBuilder extends GatewayEntityBuilder<WorkflowNodeEnt> {
 
     /**
-     * @param nodeFactoryID The ID of the node factory defining all details.
+     * @param workflowIncomingPorts List of all incoming workflow ports.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeFactoryID(NodeFactoryIDEnt nodeFactoryID);
+	WorkflowNodeEntBuilder setWorkflowIncomingPorts(List<NodeOutPortEnt> workflowIncomingPorts);
+	
+    /**
+     * @param workflowOutgoingPorts List of all outgoing workflow ports.
+     * @return <code>this</code>
+     */
+	WorkflowNodeEntBuilder setWorkflowOutgoingPorts(List<NodeInPortEnt> workflowOutgoingPorts);
 	
     /**
      * @param parentNodeID The parent node id of the node or not present if it's the root node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setParentNodeID(Optional<String> parentNodeID);
+	WorkflowNodeEntBuilder setParentNodeID(Optional<String> parentNodeID);
 	
     /**
      * @param rootWorkflowID The id of the root workflow this node is contained in or represents.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setRootWorkflowID(String rootWorkflowID);
+	WorkflowNodeEntBuilder setRootWorkflowID(String rootWorkflowID);
 	
     /**
      * @param jobManager The job manager (e.g. cluster or streaming).
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setJobManager(Optional<JobManagerEnt> jobManager);
+	WorkflowNodeEntBuilder setJobManager(Optional<JobManagerEnt> jobManager);
 	
     /**
      * @param nodeMessage The current node message (warning, error, none).
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeMessage(NodeMessageEnt nodeMessage);
+	WorkflowNodeEntBuilder setNodeMessage(NodeMessageEnt nodeMessage);
 	
     /**
      * @param inPorts The list of inputs.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setInPorts(List<NodeInPortEnt> inPorts);
+	WorkflowNodeEntBuilder setInPorts(List<NodeInPortEnt> inPorts);
 	
     /**
      * @param outPorts The list of outputs.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setOutPorts(List<NodeOutPortEnt> outPorts);
+	WorkflowNodeEntBuilder setOutPorts(List<NodeOutPortEnt> outPorts);
 	
     /**
      * @param name The name.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setName(String name);
+	WorkflowNodeEntBuilder setName(String name);
 	
     /**
      * @param nodeID The ID of the node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeID(String nodeID);
+	WorkflowNodeEntBuilder setNodeID(String nodeID);
 	
     /**
      * @param nodeType The type of the node as string.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeType(String nodeType);
+	WorkflowNodeEntBuilder setNodeType(String nodeType);
 	
     /**
      * @param bounds The bounds / rectangle on screen of the node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setBounds(BoundsEnt bounds);
+	WorkflowNodeEntBuilder setBounds(BoundsEnt bounds);
 	
     /**
      * @param isDeletable Whether node is deletable.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setIsDeletable(boolean isDeletable);
+	WorkflowNodeEntBuilder setIsDeletable(boolean isDeletable);
 	
     /**
      * @param nodeState The state of the node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeState(String nodeState);
+	WorkflowNodeEntBuilder setNodeState(String nodeState);
 	
     /**
      * @param hasDialog Whether the node has a configuration dialog / user settings.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setHasDialog(boolean hasDialog);
+	WorkflowNodeEntBuilder setHasDialog(boolean hasDialog);
 	
     /**
      * @param nodeAnnotation The annotation underneath the node.
      * @return <code>this</code>
      */
-	NativeNodeEntBuilder setNodeAnnotation(NodeAnnotationEnt nodeAnnotation);
+	WorkflowNodeEntBuilder setNodeAnnotation(NodeAnnotationEnt nodeAnnotation);
 	
 }

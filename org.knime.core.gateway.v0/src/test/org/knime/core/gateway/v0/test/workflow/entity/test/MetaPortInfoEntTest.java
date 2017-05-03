@@ -44,46 +44,70 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.v0.test.workflow.entity.test;
 
-import org.knime.core.gateway.v0.workflow.entity.MetaPortEnt;
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.junit.Test;
+import org.knime.core.gateway.entities.EntityBuilderManager;
+import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortInfoEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
 
 /**
- * Builder for {@link MetaPortEnt}.
+ *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface MetaPortEntBuilder extends GatewayEntityBuilder<MetaPortEnt> {
+public class MetaPortInfoEntTest {
 
-    /**
-     * @param portType The type.
-     * @return <code>this</code>
-     */
-	MetaPortEntBuilder setPortType(PortTypeEnt portType);
-	
-    /**
-     * @param isConnected Whether it is connected.
-     * @return <code>this</code>
-     */
-	MetaPortEntBuilder setIsConnected(boolean isConnected);
-	
-    /**
-     * @param message The message (summary of upstream node port).
-     * @return <code>this</code>
-     */
-	MetaPortEntBuilder setMessage(String message);
-	
-    /**
-     * @param oldIndex The old index (@Martin, please clarify?)
-     * @return <code>this</code>
-     */
-	MetaPortEntBuilder setOldIndex(int oldIndex);
-	
-    /**
-     * @param newIndex The new index (@Martin, please clarify?).
-     * @return <code>this</code>
-     */
-	MetaPortEntBuilder setNewIndex(int newIndex);
-	
+    private static Random RAND = new Random();
+
+    @Test
+    public void test() {
+        List<Object> valueList = createValueList();
+        MetaPortInfoEnt ent = createEnt(valueList);
+        testEnt(ent, valueList);
+    }
+
+    public static MetaPortInfoEnt createEnt(final List<Object> valueList) {
+        MetaPortInfoEntBuilder builder = EntityBuilderManager.builder(MetaPortInfoEntBuilder.class);
+		builder.setPortType(PortTypeEntTest.createEnt((List<Object>) valueList.get(0)));
+		builder.setIsConnected((boolean) valueList.get(1));
+		builder.setMessage((String) valueList.get(2));
+		builder.setOldIndex((int) valueList.get(3));
+		builder.setNewIndex((int) valueList.get(4));
+        return builder.build();
+    }
+
+    public static void testEnt(final MetaPortInfoEnt ent, final List<Object> valueList) {
+		PortTypeEntTest.testEnt(ent.getPortType(), (List<Object>) valueList.get(0));
+		assertEquals(ent.getIsConnected(), (boolean) valueList.get(1));
+		assertEquals(ent.getMessage(), (String) valueList.get(2));
+		assertEquals(ent.getOldIndex(), (int) valueList.get(3));
+		assertEquals(ent.getNewIndex(), (int) valueList.get(4));
+    }
+
+    public static List<Object> createValueList() {
+        List<Object> valueList = new ArrayList<Object>();
+ 		valueList.add(PortTypeEntTest.createValueList());
+
+ 		valueList.add(true);
+
+ 		valueList.add("OuJNz");
+
+ 		valueList.add(-1157023572);
+
+ 		valueList.add(-1157408321);
+
+        return valueList;
+    }
+
 }
