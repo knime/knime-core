@@ -56,10 +56,10 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 enum ModusOptions implements ButtonGroupEnumInterface {
-    Use2ndColumn("... use second column", true),
-    UseExecutionTime("... current execution date&time", false),
-    UseFixedTime("... fixed date&time", false),
-    UsePreviousRow("... previous row", false);
+    Use2ndColumn("second column", true),
+    UseExecutionTime("current execution date&time", false),
+    UseFixedTime("fixed date&time", false),
+    UsePreviousRow("previous row", false);
 
     private final String m_label;
     private final boolean m_isDefault;

@@ -165,7 +165,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
         final JPanel panelModusSelect = new JPanel(new GridBagLayout());
         gbc.gridy++;
         panel.add(panelModusSelect, gbc);
-        panelModusSelect.setBorder(BorderFactory.createTitledBorder("Calculate difference to ..."));
+        panelModusSelect.setBorder(BorderFactory.createTitledBorder("Calculate difference to"));
         final GridBagConstraints gbcModusSelect = new GridBagConstraints();
         gbcModusSelect.insets = new Insets(5, 5, 5, 5);
         gbcModusSelect.fill = GridBagConstraints.VERTICAL;
