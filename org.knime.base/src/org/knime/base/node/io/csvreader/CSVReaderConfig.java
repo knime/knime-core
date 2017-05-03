@@ -134,6 +134,7 @@ public final class CSVReaderConfig {
         m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
         // added in 3.1
         m_charSet = settings.getString("characterSetName", null);
+        // added in 3.4
         m_connectTimeout = settings.getInt("connectTimeout", FileReaderSettings.getDefaultConnectTimeout());
     }
 

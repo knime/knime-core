@@ -80,19 +80,7 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * @author ohl, University of Konstanz
  */
 public class FileReaderSettings extends TokenizerSettings {
-
-    private static int m_defaultConnectTimeout;
-
-    static {
-        String to = System.getProperty(KNIMEConstants.PROPERTY_URL_TIMEOUT);
-        if (to != null) {
-            try {
-                m_defaultConnectTimeout = Integer.parseInt(to) / 1000;
-            } catch (NumberFormatException ex) {
-                m_defaultConnectTimeout = 1;
-            }
-        }
-    }
+    private static final int DEFAULT_CONNECT_TIMEOUT = Integer.getInteger(KNIMEConstants.PROPERTY_URL_TIMEOUT, 1);
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
@@ -302,7 +290,7 @@ public class FileReaderSettings extends TokenizerSettings {
 
         m_charsetName = null; // uses the default char set name
 
-        m_connectTimeout = m_defaultConnectTimeout;
+        m_connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
     }
 
@@ -443,7 +431,7 @@ public class FileReaderSettings extends TokenizerSettings {
             // default to null - which uses the default char set name
             m_charsetName = cfg.getString(CFGKEY_CHARSETNAME, null);
 
-            m_connectTimeout = cfg.getInt(CFGKEY_CONNECTTIMEOUT, m_defaultConnectTimeout);
+            m_connectTimeout = cfg.getInt(CFGKEY_CONNECTTIMEOUT, DEFAULT_CONNECT_TIMEOUT);
 
         } // if (cfg != null)
 
@@ -1206,16 +1194,20 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * @return the default connection timeout as set in the knime.ini <b><u>in seconds</u></b>
+     * Returns the default connection timeout as set in the knime.ini <b><u>in seconds</u></b>;
+     * 
+     * @return the timeout
      * @see KNIMEConstants#PROPERTY_URL_TIMEOUT
      * @since 3.4
      */
     public static int getDefaultConnectTimeout(){
-        return m_defaultConnectTimeout;
+        return DEFAULT_CONNECT_TIMEOUT;
     }
 
     /**
-     * @return the connection timeout in seconds
+     * Returns the connection timeout in seconds.
+     * 
+     * @return the timeout 
      * @since 3.4
      */
     public int getConnectTimeout(){
@@ -1223,7 +1215,8 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * Sets a new connection timeout
+     * Sets a new connection timeout.
+     * 
      * @param value the new connection timeout in seconds
      * @since 3.4
      */
