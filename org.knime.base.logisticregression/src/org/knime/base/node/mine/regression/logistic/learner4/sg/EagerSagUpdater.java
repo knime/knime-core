@@ -101,7 +101,7 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
         if (fetIdx == 0) {
             return betaValue - stepSize * m_gradientSum[catIdx][fetIdx] / m_nCovered;
         }
-        return betaValue - stepSize * m_gradientSum[catIdx][fetIdx] / (scale * m_nCovered);
+        return betaValue - (stepSize/ (scale * m_nCovered)) * m_gradientSum[catIdx][fetIdx] ;
     }
 
     static class EagerSagUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {

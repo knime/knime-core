@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
@@ -114,6 +115,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         double scale = beta.getScale();
         m_cummulativeSum[iteration] = prev + stepSize / (scale * m_covered);
         // the intersect is not scaled!
+        assert x.getFeature(0) == 1.0 : "The artificial intercept feature must always be 1!";
         m_intersectStepSize = stepSize / m_covered;
     }
 
@@ -163,6 +165,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
     public void resetJITSystem(final WeightVector<T> beta, final int[] lastVisited) {
         int lastIteration = m_cummulativeSum.length - 1;
         beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], lastIteration), true);
+        Arrays.fill(m_cummulativeSum, 0.0);
     }
 
     static class LazySagUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, LazyUpdater<T>> {
@@ -184,7 +187,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
          * {@inheritDoc}
          */
         @Override
-        public LazyUpdater<T> create() {
+        public LazySagUpdater<T> create() {
             return new LazySagUpdater<>(m_nRows, m_nFets, m_nCats);
         }
 

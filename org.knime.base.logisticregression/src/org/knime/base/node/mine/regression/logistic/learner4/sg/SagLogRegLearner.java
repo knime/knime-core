@@ -61,7 +61,6 @@ import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrain
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.sg.LineSearchLearningRateStrategy.StepSizeType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -83,11 +82,11 @@ public class SagLogRegLearner implements LogRegLearner {
         MultinomialLoss loss = MultinomialLoss.INSTANCE;
         ClassData classData = new ClassData(data);
         double lambda = 0.01;
-        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
-                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
+//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
+//                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
 //        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
 //                new AnnealingLearningRateStrategy<ClassificationTrainingRow>(3, 1e-3);
-//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
+        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
         final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
 //        UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory =
 //                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
@@ -97,9 +96,9 @@ public class SagLogRegLearner implements LogRegLearner {
 //                EagerSgdUpdater.createFactory();
 //        RegularizationPrior prior = new GaussPrior(5);
 //        RegularizationPrior prior = UniformPrior.INSTANCE;
-        RegularizationUpdater regUpdater = new EagerPriorUpdater(new LaplacePrior(5), classData.getRowCount(), true);
+//        RegularizationUpdater regUpdater = new EagerPriorUpdater(new LaplacePrior(5), classData.getRowCount(), true);
 //        LazyRegularizationUpdater regUpdater = new LazyPriorUpdater(new LaplacePrior(0.001), classData.getRowCount(), true);
-//        LazyRegularizationUpdater regUpdater = UniformRegularizationUpdater.INSTANCE;
+        LazyRegularizationUpdater regUpdater = UniformRegularizationUpdater.INSTANCE;
 //        LazyRegularizationUpdater regUpdater = new GaussRegularizationUpdater(1.0/lambda);
 //        RegularizationUpdater regUpdater = new EagerPriorUpdater(UniformPrior.INSTANCE, classData.getRowCount(), true);
         StoppingCriterion<ClassificationTrainingRow> stoppingCriterion = new BetaChangeStoppingCriterion<>(classData.getFeatureCount(), classData.getTargetDimension(), 1e-5);
