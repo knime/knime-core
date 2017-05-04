@@ -90,6 +90,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.convert.durationtonumber.DurationToNumberNodeFactory">
       </node>
+      <node
+            category-path="/preview/datetime"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
