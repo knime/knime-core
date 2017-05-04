@@ -156,6 +156,7 @@ class LogRegLearnerSettings {
     private static final String CFG_SORT_INCLUDES_CATEGORIES = "sort_includes_categories";
     private static final String CFG_SOLVER = "solver";
     private static final String CFG_MAX_EPOCH = "maxEpoch";
+    private static final String CFG_PERFORM_LAZY = "performLazy";
     private static final String CFG_PRIOR = "prior";
     private static final String CFG_PRIOR_VARIANCE = "priorVariance";
     private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
@@ -178,6 +179,7 @@ class LogRegLearnerSettings {
     private Solver m_solver;
 
     private int m_maxEpoch;
+    private boolean m_performLazy;
     private double m_priorVariance;
     private double m_initialLearningRate;
     private double m_learningRateDecay;
@@ -213,6 +215,7 @@ class LogRegLearnerSettings {
         String solverString = settings.getString(CFG_SOLVER);
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH);
+        m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(CFG_LEARNING_RATE_STRATEGY));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE);
         m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY);
@@ -237,12 +240,13 @@ class LogRegLearnerSettings {
         String solverString = settings.getString(CFG_SOLVER, Solver.SAG.name());
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, 100);
+        m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY, false);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
             CFG_LEARNING_RATE_STRATEGY, LearningRateStrategies.Fixed.name()));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, 1e-3);
         m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY, 1.0);
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, Prior.Uniform.name()));
-        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, 0);
+        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, 0.1);
 
     }
 
@@ -258,12 +262,13 @@ class LogRegLearnerSettings {
         settings.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
         settings.addBoolean(CFG_SORT_INCLUDES_CATEGORIES, m_sortIncludesCategories);
         settings.addString(CFG_SOLVER, m_solver.name());
+        settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
+        settings.addBoolean(CFG_PERFORM_LAZY, m_performLazy);
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
         settings.addString(CFG_PRIOR, m_prior.name());
         settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
         settings.addDouble(CFG_LEARNING_RATE_DECAY, m_learningRateDecay);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
-        settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
     }
 
     /**
@@ -455,6 +460,22 @@ class LogRegLearnerSettings {
      */
     public void setPrior(final Prior prior) {
         m_prior = prior;
+    }
+
+
+    /**
+     * @return the performLazy
+     */
+    public boolean isPerformLazy() {
+        return m_performLazy;
+    }
+
+
+    /**
+     * @param performLazy the performLazy to set
+     */
+    public void setPerformLazy(final boolean performLazy) {
+        m_performLazy = performLazy;
     }
 }
 

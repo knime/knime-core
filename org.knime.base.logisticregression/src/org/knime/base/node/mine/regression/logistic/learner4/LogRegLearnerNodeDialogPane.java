@@ -174,8 +174,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 LearningRateStrategies selected = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
-                m_learningRateDecaySpinner.setEnabled(selected.hasDecayRate());
-                m_initialLearningRateSpinner.setEnabled(selected.hasInitialValue());
+                enforceLRSCompatibilities(selected);
             }
 
         });
@@ -186,39 +185,61 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         addTab("Advanced", advancedSettingsPanel);
     }
 
+    private void enforcePriorCompatibilities(final Prior prior) {
+        m_priorVarianceSpinner.setEnabled(prior.hasVariance());
+    }
+
+    private void enforceLRSCompatibilities(final LearningRateStrategies lrs) {
+        m_learningRateDecaySpinner.setEnabled(lrs.hasDecayRate());
+        m_initialLearningRateSpinner.setEnabled(lrs.hasInitialValue());
+    }
+
     private void solverChanged(final Solver solver) {
 
         boolean sgMethod = solver != Solver.IRLS;
         if (sgMethod) {
+            setEnabledSGRelated(true);
             m_lazyCalculationCheckBox.setEnabled(solver.supportsLazy());
 
             ComboBoxModel<Prior> oldPriorModel = m_priorComboBox.getModel();
             EnumSet<Prior> compatiblePriors = solver.getCompatiblePriors();
             Prior oldSelectedPrior = (Prior)oldPriorModel.getSelectedItem();
             m_priorComboBox.setModel(new DefaultComboBoxModel<>(compatiblePriors.toArray(new Prior[compatiblePriors.size()])));
+            Prior newSelectedPrior;
             if (compatiblePriors.contains(oldSelectedPrior)) {
                 m_priorComboBox.setSelectedItem(oldSelectedPrior);
+                newSelectedPrior = oldSelectedPrior;
             } else {
+                newSelectedPrior = (Prior)m_priorComboBox.getSelectedItem();
                 // TODO warn user that the prior selection changed
             }
+            enforcePriorCompatibilities(newSelectedPrior);
 
             LearningRateStrategies oldSelectedLRS = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
             EnumSet<LearningRateStrategies> compatibleLRS = solver.getCompatibleLearningRateStrategies();
             m_learningRateStrategyComboBox.setModel(new DefaultComboBoxModel<>(
                     compatibleLRS.toArray(new LearningRateStrategies[compatibleLRS.size()])));
+            LearningRateStrategies newSelectedLRS = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
             if (compatibleLRS.contains(oldSelectedLRS)) {
                 m_learningRateStrategyComboBox.setSelectedItem(oldSelectedLRS);
+                newSelectedLRS = oldSelectedLRS;
             } else {
+                newSelectedLRS = (LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem();
                 // TODO warn user that the selected learning rate strategy changed
             }
+            enforceLRSCompatibilities(newSelectedLRS);
         } else {
-            m_lazyCalculationCheckBox.setEnabled(false);
-            m_learningRateStrategyComboBox.setEnabled(false);
-            m_learningRateDecaySpinner.setEnabled(false);
-            m_initialLearningRateSpinner.setEnabled(false);
-            m_priorComboBox.setEnabled(false);
-            m_priorVarianceSpinner.setEnabled(false);
+            setEnabledSGRelated(false);
         }
+    }
+
+    private void setEnabledSGRelated(final boolean enable) {
+        m_lazyCalculationCheckBox.setEnabled(enable);
+        m_learningRateStrategyComboBox.setEnabled(enable);
+        m_learningRateDecaySpinner.setEnabled(enable);
+        m_initialLearningRateSpinner.setEnabled(enable);
+        m_priorComboBox.setEnabled(enable);
+        m_priorVarianceSpinner.setEnabled(enable);
     }
 
     private JPanel createAdvancedSettingsPanel() {
@@ -502,6 +523,13 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_notSortTarget.setSelected(!settings.getSortTargetCategories());
         m_notSortIncludes.setSelected(!settings.getSortIncludesCategories());
         m_solverComboBox.setSelectedItem(settings.getSolver());
+        m_maxEpochSpinner.setValue(settings.getMaxEpoch());
+        m_lazyCalculationCheckBox.setSelected(settings.isPerformLazy());
+        m_learningRateStrategyComboBox.setSelectedItem(settings.getLearningRateStrategy());
+        m_learningRateDecaySpinner.setValue(settings.getLearningRateDecay());
+        m_initialLearningRateSpinner.setValue(settings.getInitialLearningRate());
+        m_priorComboBox.setSelectedItem(settings.getPrior());
+        m_priorVarianceSpinner.setValue(settings.getPriorVariance());
     }
 
     /**
@@ -519,6 +547,13 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         settings.setSortTargetCategories(!m_notSortTarget.isSelected());
         settings.setSortIncludesCategories(!m_notSortIncludes.isSelected());
         settings.setSolver((Solver)m_solverComboBox.getSelectedItem());
+        settings.setMaxEpoch((int)m_maxEpochSpinner.getValue());
+        settings.setPerformLazy(m_lazyCalculationCheckBox.isSelected());
+        settings.setLearningRateStrategy((LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem());
+        settings.setLearningRateDecay((double)m_learningRateDecaySpinner.getValue());
+        settings.setInitialLearningRate((double)m_initialLearningRateSpinner.getValue());
+        settings.setPrior((Prior)m_priorComboBox.getSelectedItem());
+        settings.setPriorVariance((double)m_priorVarianceSpinner.getValue());
 
         settings.saveSettings(s);
     }
