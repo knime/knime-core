@@ -59,6 +59,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -161,6 +162,9 @@ public class ROCCalculator {
             for (DataRow row : sortedTable) {
                 exec.checkCanceled();
                 DataCell realClass = row.getCell(classIndex);
+                if (realClass instanceof MissingCell || row.getCell(scoreColIndex) instanceof MissingCell) {
+                    m_warningMessage = "Table contains missing values";
+                }
                 if (realClass.toString().equals(m_posClass)) {
                     tp++;
                 } else {
