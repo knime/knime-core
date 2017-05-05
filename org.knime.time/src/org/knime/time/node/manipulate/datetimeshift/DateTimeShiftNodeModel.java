@@ -59,6 +59,7 @@ import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
@@ -299,16 +300,18 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final SingleCellFactory cellFac;
+                final DataColumnSpec dataColSpec =
+                    new DataColumnSpecCreator(includedCol, spec.getColumnSpec(includedCol).getType()).createSpec();
                 if (isPeriod) {
-                    cellFac = new DateTimeShiftPeriodCellFactory(spec.getColumnSpec(includedCol), includeIndices[i++],
-                        periodColIndex, numericalColIndex);
+                    cellFac = new DateTimeShiftPeriodCellFactory(dataColSpec, includeIndices[i++], periodColIndex,
+                        numericalColIndex);
                 } else {
-                    cellFac = new DateTimeShiftDurationCellFactory(spec.getColumnSpec(includedCol), includeIndices[i++],
-                        periodColIndex, numericalColIndex);
+                    cellFac = new DateTimeShiftDurationCellFactory(dataColSpec, includeIndices[i++], periodColIndex,
+                        numericalColIndex);
                 }
                 rearranger.replace(cellFac, includedCol);
             } else {
-                DataColumnSpec dataColSpec = new UniqueNameGenerator(spec)
+                final DataColumnSpec dataColSpec = new UniqueNameGenerator(spec)
                     .newColumn(includedCol + m_suffix.getStringValue(), spec.getColumnSpec(includedCol).getType());
                 final SingleCellFactory cellFac;
                 if (isPeriod) {
