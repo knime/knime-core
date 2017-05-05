@@ -77,6 +77,8 @@ public class LiftCalculator {
     private String m_responseLabel;
     private double m_intervalWidth;
 
+    private boolean m_ignoreMissingValues;
+
     private BufferedDataTable m_lift;
     private BufferedDataTable m_response;
     private SortedTable m_sorted;
@@ -115,6 +117,24 @@ public class LiftCalculator {
         m_probabilityColumn = probabilityColumn;
         m_responseLabel = responseLabel;
         m_intervalWidth = intervalWidth;
+        m_ignoreMissingValues = false;
+    }
+
+    /**
+     * Creates a new instance of LisftCalculator.
+     * @param responseColumn the response column
+     * @param probabilityColumn the probability column
+     * @param responseLabel the response label
+     * @param intervalWidth the interval width
+     * @param ignoreMissingValues whether ignore missing values
+     */
+    public LiftCalculator(final String responseColumn, final String probabilityColumn,
+                            final String responseLabel, final double intervalWidth, final boolean ignoreMissingValues) {
+        m_responseColumn = responseColumn;
+        m_probabilityColumn = probabilityColumn;
+        m_responseLabel = responseLabel;
+        m_intervalWidth = intervalWidth;
+        m_ignoreMissingValues = ignoreMissingValues;
     }
 
     /**
@@ -148,8 +168,13 @@ public class LiftCalculator {
         int rowIndex = 0;
         for (DataRow row : m_sorted) {
             if (row.getCell(predColIndex).isMissing() || row.getCell(probColInd).isMissing()) {
-                warning = "Table contains missing values";
+                warning = "Table contains missing values.";
                 if (row.getCell(predColIndex).isMissing()) {
+                    // miss. values in class column we always ignore
+                    continue;
+                }
+                if (m_ignoreMissingValues) {
+                    warning = "Missing values were ignored according to the node settings.";
                     continue;
                 }
             }
