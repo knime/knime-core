@@ -131,6 +131,7 @@ public class LiftCalculator {
         List<String> inclList = new LinkedList<String>();
 
         inclList.add(m_probabilityColumn);
+        int probColInd = table.getDataTableSpec().findColumnIndex(m_probabilityColumn);
 
         boolean[] order = new boolean[]{false};
 
@@ -146,10 +147,11 @@ public class LiftCalculator {
 
         int rowIndex = 0;
         for (DataRow row : m_sorted) {
-            if (row.getCell(predColIndex).isMissing()) {
-                warning = "There are missing values."
-                        + " Please check your data.";
-                continue;
+            if (row.getCell(predColIndex).isMissing() || row.getCell(probColInd).isMissing()) {
+                warning = "Table contains missing values";
+                if (row.getCell(predColIndex).isMissing()) {
+                    continue;
+                }
             }
 
             String response =
