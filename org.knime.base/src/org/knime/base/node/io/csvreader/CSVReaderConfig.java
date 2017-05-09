@@ -47,7 +47,6 @@
  */
 package org.knime.base.node.io.csvreader;
 
-import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -93,7 +92,7 @@ public final class CSVReaderConfig {
         m_limitRowsCount = -1L;
         m_skipFirstLinesCount = -1;
         m_charSet = null; // uses default encoding
-        m_connectTimeout = FileReaderSettings.getDefaultConnectTimeout();
+        m_connectTimeout = -1;
     }
 
     /** Load settings, used in dialog (no errors).
@@ -111,7 +110,7 @@ public final class CSVReaderConfig {
         m_limitRowsCount = settings.getLong("limitRowsCount", m_limitRowsCount);
         m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
         m_charSet = settings.getString("characterSetName", null); // if key doesn't exist use default encoding
-        m_connectTimeout = settings.getInt("connectTimeout", FileReaderSettings.getDefaultConnectTimeout());
+        m_connectTimeout = settings.getInt("connectTimeout", -1);
     }
 
     /** Load in model, fail if settings are invalid.
@@ -135,7 +134,7 @@ public final class CSVReaderConfig {
         // added in 3.1
         m_charSet = settings.getString("characterSetName", null);
         // added in 3.4
-        m_connectTimeout = settings.getInt("connectTimeout", FileReaderSettings.getDefaultConnectTimeout());
+        m_connectTimeout = settings.getInt("connectTimeout", -1);
     }
 
     /** Save configuration to argument.
@@ -155,7 +154,9 @@ public final class CSVReaderConfig {
         settings.addLong("limitRowsCount", m_limitRowsCount);
         settings.addInt("skipFirstLinesCount", m_skipFirstLinesCount);
         settings.addString("characterSetName", m_charSet);
-        settings.addInt("connectTimeout", m_connectTimeout);
+        if(m_connectTimeout > 0){
+            settings.addInt("connectTimeout", m_connectTimeout);
+        }
     }
 
     /** @return the location */

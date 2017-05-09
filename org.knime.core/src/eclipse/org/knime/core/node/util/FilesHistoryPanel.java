@@ -76,6 +76,7 @@ import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -406,6 +407,8 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final JSpinner m_connectTimeoutSpinner;
 
+    private final JCheckBox m_userSetTimeoutCheckBox;
+
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
@@ -526,6 +529,15 @@ public final class FilesHistoryPanel extends JPanel {
         m_warnMsg.setForeground(Color.red);
 
         m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE / 1000, 1));
+        m_connectTimeoutSpinner.setEnabled(false);
+        m_userSetTimeoutCheckBox = new JCheckBox("Connect timeout [s]: ");
+        m_userSetTimeoutCheckBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_connectTimeoutSpinner.setEnabled(m_userSetTimeoutCheckBox.isSelected());
+            }
+        });
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -606,7 +618,7 @@ public final class FilesHistoryPanel extends JPanel {
         c.gridx = 0;
         c.weightx = 0;
         JPanel timeoutPanel = new JPanel();
-        timeoutPanel.add(new JLabel("Connect timeout [s]: "));
+        timeoutPanel.add(m_userSetTimeoutCheckBox);
         timeoutPanel.add(m_connectTimeoutSpinner);
         timeoutPanel.setVisible(false);
         add(timeoutPanel, c);
@@ -755,8 +767,33 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
+     * @return true if a custom timeout should be used
+     * @since 3.4
+     */
+    public boolean isConnectTimeoutUserSet(){
+        return m_userSetTimeoutCheckBox.isSelected();
+    }
+
+    /**
+     * @param userSet whether a custom timeout should be used
+     * @since 3.4
+     */
+    public void setConnectTimeoutUserSet(final boolean userSet){
+        if (SwingUtilities.isEventDispatchThread()) {
+            m_userSetTimeoutCheckBox.setSelected(userSet);
+        } else {
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    m_userSetTimeoutCheckBox.setSelected(userSet);
+                }
+            });
+        }
+    }
+
+    /**
      * Returns the connect timeout in seconds
-     * 
+     *
      * @return connect timeout in seconds
      * @since 3.4
      */
@@ -766,7 +803,7 @@ public final class FilesHistoryPanel extends JPanel {
 
     /**
      * Sets the connect timeout in the dialog in seconds
-     * 
+     *
      * @param timeout in seconds
      * @since 3.4
      */
@@ -872,7 +909,7 @@ public final class FilesHistoryPanel extends JPanel {
 
     /**
      * Sets whether to show the connect timeout field in the panel.
-     * 
+     *
      * @param showTimeout
      * @since 3.4
      */

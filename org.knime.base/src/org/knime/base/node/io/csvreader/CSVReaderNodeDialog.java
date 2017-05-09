@@ -229,7 +229,10 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         config.loadSettingsInDialog(settings);
         m_filePanel.updateHistory();
         m_filePanel.setSelectedFile(config.getLocation());
-        m_filePanel.setConnectTimeout(config.getConnectTimeout() / 1000);
+        boolean userSetConnectTimeout = config.getConnectTimeout()>0;
+        m_filePanel.setConnectTimeoutUserSet(userSetConnectTimeout);
+        m_filePanel.setConnectTimeout(userSetConnectTimeout ? config.getConnectTimeout()
+            : (int)Math.max(Math.round(FileReaderSettings.getDefaultConnectTimeout() / 1000.0), 1));
         m_colDelimiterField.setText(escape(config.getColDelimiter()));
         m_rowDelimiterField.setText(escape(config.getRowDelimiter()));
         m_quoteStringField.setText(config.getQuoteString());
@@ -283,7 +286,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());
-        config.setConnectTimeout(m_filePanel.getConnectTimeout() * 1000);
+        config.setConnectTimeout(m_filePanel.isConnectTimeoutUserSet() ? m_filePanel.getConnectTimeout() : -1);
 
         config.saveSettingsTo(settings);
         m_filePanel.addToHistory();
