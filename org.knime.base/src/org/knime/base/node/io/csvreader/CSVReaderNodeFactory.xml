@@ -24,6 +24,9 @@
         </p>
 		</intro>
 		<tab name="CSV Reader">
+			<option name="Connetion Timeout">
+			  Optional timeout in seconds for connections when reading remote files.
+			</option>
 			<option name="Column Delimiter">
 			  The character string delimiting columns. Use '\t' for tab character. 
 			</option>
