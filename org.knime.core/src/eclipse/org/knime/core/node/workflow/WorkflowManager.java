@@ -5201,8 +5201,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean executeAllAndWaitUntilDoneInterruptibly() throws InterruptedException {
         checkState(this != ROOT, "Can't execute ROOT workflow");
+        executeAll(); // outside of lock as this could lock up parent when running in external executor
+        // at this point the WFM is either executing or IDLE (because all nodes are red or this is really fast)
+        // #waitWhileInExecution will do status check and return appropriately
         try (WorkflowLock lock = lock()) {
-            executeAll();
             waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
             return getInternalState().isExecuted();
         }
