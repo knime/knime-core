@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -100,6 +101,7 @@ import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
@@ -114,6 +116,7 @@ import org.knime.core.util.SimpleFileFilter;
  */
 @SuppressWarnings("serial")
 public final class FilesHistoryPanel extends JPanel {
+    private static final int DEFAULT_CONNECT_TIMEOUT = Integer.getInteger(KNIMEConstants.PROPERTY_URL_TIMEOUT, 1);
     /**
      * Enum for whether and which location validation should be performed.
      *
@@ -767,38 +770,14 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
-     * @return true if a custom timeout should be used
-     * @since 3.4
-     */
-    public boolean isConnectTimeoutUserSet(){
-        return m_userSetTimeoutCheckBox.isSelected();
-    }
-
-    /**
-     * @param userSet whether a custom timeout should be used
-     * @since 3.4
-     */
-    public void setConnectTimeoutUserSet(final boolean userSet){
-        if (SwingUtilities.isEventDispatchThread()) {
-            m_userSetTimeoutCheckBox.setSelected(userSet);
-        } else {
-            ViewUtils.invokeAndWaitInEDT(new Runnable() {
-                @Override
-                public void run() {
-                    m_userSetTimeoutCheckBox.setSelected(userSet);
-                }
-            });
-        }
-    }
-
-    /**
      * Returns the connect timeout in seconds
      *
      * @return connect timeout in seconds
      * @since 3.4
      */
-    public int getConnectTimeout(){
-        return (int)m_connectTimeoutSpinner.getValue();
+    public Optional<Integer> getConnectTimeout() {
+        return Optional
+            .ofNullable(m_userSetTimeoutCheckBox.isSelected() ? (int)m_connectTimeoutSpinner.getValue() : null);
     }
 
     /**
@@ -807,14 +786,22 @@ public final class FilesHistoryPanel extends JPanel {
      * @param timeout in seconds
      * @since 3.4
      */
-    public void setConnectTimeout(final int  timeout) {
+    public void setConnectTimeout(final int timeout) {
+        final int timeoutToUse =
+            timeout <= 0 ? (int)Math.max(Math.round(DEFAULT_CONNECT_TIMEOUT / 1000.0), 1) : timeout;
         if (SwingUtilities.isEventDispatchThread()) {
-            m_connectTimeoutSpinner.setValue(timeout);
+            m_connectTimeoutSpinner.setValue(timeoutToUse);
+            if (timeout > 0 && !m_userSetTimeoutCheckBox.isSelected()) {
+                m_userSetTimeoutCheckBox.doClick();
+            }
         } else {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    m_connectTimeoutSpinner.setValue(timeout);
+                    m_connectTimeoutSpinner.setValue(timeoutToUse);
+                    if (timeout > 0 && !m_userSetTimeoutCheckBox.isSelected()) {
+                        m_userSetTimeoutCheckBox.doClick();
+                    }
                 }
             });
         }
