@@ -90,12 +90,14 @@ public final class DialogComponentPasswordField extends DialogComponent {
     /**
      * Constructor put label and JTextField into panel.
      *
-     * @param label label for dialog in front of JTextField
      * @param passwordModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextField
      * @since 3.4
      */
     public DialogComponentPasswordField(final SettingsModelPassword passwordModel, final String label) {
         this((SettingsModelString)passwordModel, label);
+        //we can still call the old constructor since SettingsModelPassword extends SettingsModelString but
+        //encrypts the string value
     }
 
     /**
@@ -113,14 +115,16 @@ public final class DialogComponentPasswordField extends DialogComponent {
     /**
      * Constructor put label and JTextField into panel.
      *
-     * @param label label for dialog in front of JTextField
      * @param passwordModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextField
      * @param compWidth the width of the component (in columns/characters)
      * @since 3.4
      */
     public DialogComponentPasswordField(final SettingsModelPassword passwordModel, final String label,
         final int compWidth) {
         this((SettingsModelString)passwordModel, label, compWidth);
+        //we can still call the old constructor since SettingsModelPassword extends SettingsModelString but
+        //encrypts the string value
     }
     /**
      * Constructor put label and JTextField into panel.
