@@ -1194,7 +1194,7 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * Returns the default connection timeout as set in the knime.ini <b><u>in seconds</u></b>;
+     * Returns the default connection timeout as set in the knime.ini in milliseconds;
      *
      * @return the timeout
      * @see KNIMEConstants#PROPERTY_URL_TIMEOUT
@@ -1217,7 +1217,7 @@ public class FileReaderSettings extends TokenizerSettings {
     /**
      * Sets a new connection timeout.
      *
-     * @param value the new connection timeout in milliseconds
+     * @param value the new connection timeout in seconds
      * @since 3.4
      */
     public void setConnectTimeout(final int value){

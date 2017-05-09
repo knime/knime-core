@@ -229,7 +229,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         config.loadSettingsInDialog(settings);
         m_filePanel.updateHistory();
         m_filePanel.setSelectedFile(config.getLocation());
-        boolean userSetConnectTimeout = config.getConnectTimeout()>0;
+        boolean userSetConnectTimeout = config.getConnectTimeout() > 0;
         m_filePanel.setConnectTimeoutUserSet(userSetConnectTimeout);
         m_filePanel.setConnectTimeout(userSetConnectTimeout ? config.getConnectTimeout()
             : (int)Math.max(Math.round(FileReaderSettings.getDefaultConnectTimeout() / 1000.0), 1));
