@@ -1736,7 +1736,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 m_workflowCanBeDeleted.acquire();
                 newWorkflowDir.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
                     (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false,
-                    t -> m_workflowCanBeDeleted.release());
+                    false, t -> m_workflowCanBeDeleted.release());
             } catch (CoreException | InterruptedException e) {
                 String msg =
                     "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
@@ -3330,7 +3330,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         try {
             m_workflowCanBeDeleted.acquire();
             remoteStore.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
-                (RemoteExplorerFileStore)remoteStore, /*deleteSource=*/false, t -> m_workflowCanBeDeleted.release());
+                (RemoteExplorerFileStore)remoteStore, /*deleteSource=*/false, false, t -> m_workflowCanBeDeleted.release());
         } catch (CoreException | InterruptedException e) {
             String msg = "Failed to upload the workflow to its remote location\n(" + e.getMessage() + ")";
             LOGGER.error(msg, e);
