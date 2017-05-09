@@ -270,12 +270,12 @@ public final class CSVReaderConfig {
         m_charSet = charSet;
     }
 
-    /** @return the timeout for remote files in seconds */
+    /** @return the timeout for remote files in milliseconds */
     public int getConnectTimeout(){
         return m_connectTimeout;
     }
 
-    /** @param value the connect timeout to set. */
+    /** @param value the connect timeout to set in milliseconds. */
     void setConnectTimeout(final int value){
         m_connectTimeout = value;
     }

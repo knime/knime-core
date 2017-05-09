@@ -81,7 +81,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
@@ -402,6 +404,8 @@ public final class FilesHistoryPanel extends JPanel {
 
     private String m_forcedFileExtensionOnSave = null;
 
+    private final JSpinner m_connectTimeoutSpinner;
+
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
@@ -521,6 +525,8 @@ public final class FilesHistoryPanel extends JPanel {
         m_warnMsg.setMinimumSize(new Dimension(350, 25));
         m_warnMsg.setForeground(Color.red);
 
+        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE / 1000, 1));
+
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
@@ -595,6 +601,15 @@ public final class FilesHistoryPanel extends JPanel {
             c.gridwidth = (fvm == null) ? 2 : 3;
             add(m_warnMsg, c);
         }
+        m_connectTimeoutSpinner.setPreferredSize(new Dimension(100, m_connectTimeoutSpinner.getPreferredSize().height));
+        c.gridy++;
+        c.gridx = 0;
+        c.weightx = 0;
+        JPanel timeoutPanel = new JPanel();
+        timeoutPanel.add(new JLabel("Connect timeout [s]: "));
+        timeoutPanel.add(m_connectTimeoutSpinner);
+        timeoutPanel.setVisible(false);
+        add(timeoutPanel, c);
         fileLocationChanged();
         updateHistory();
     }
@@ -739,6 +754,35 @@ public final class FilesHistoryPanel extends JPanel {
         }
     }
 
+    /**
+     * Returns the connect timeout in seconds
+     * 
+     * @return connect timeout in seconds
+     * @since 3.4
+     */
+    public int getConnectTimeout(){
+        return (int)m_connectTimeoutSpinner.getValue();
+    }
+
+    /**
+     * Sets the connect timeout in the dialog in seconds
+     * 
+     * @param timeout in seconds
+     * @since 3.4
+     */
+    public void setConnectTimeout(final int  timeout) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            m_connectTimeoutSpinner.setValue(timeout);
+        } else {
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    m_connectTimeoutSpinner.setValue(timeout);
+                }
+            });
+        }
+    }
+
     /** Updates the elements in the combo box, reads the file history. */
     public void updateHistory() {
         StringHistory history = StringHistory.getInstance(m_historyID);
@@ -824,6 +868,16 @@ public final class FilesHistoryPanel extends JPanel {
     public void setDialogTypeSaveWithExtension(final String forcedExtension) {
         setDialogType(JFileChooser.SAVE_DIALOG);
         m_forcedFileExtensionOnSave = StringUtils.defaultIfBlank(forcedExtension, null);
+    }
+
+    /**
+     * Sets whether to show the connect timeout field in the panel.
+     * 
+     * @param showTimeout
+     * @since 3.4
+     */
+    public void setShowConnectTimeoutField(final boolean showTimeout){
+        m_connectTimeoutSpinner.getParent().setVisible(showTimeout);
     }
 
     /**

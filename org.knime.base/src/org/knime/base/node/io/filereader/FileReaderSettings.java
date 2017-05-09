@@ -709,7 +709,7 @@ public class FileReaderSettings extends TokenizerSettings {
      */
     public BufferedFileReader createNewInputReader() throws IOException {
         return BufferedFileReader.createNewReader(getDataFileLocation(),
-                getCharsetName(), m_connectTimeout * 1000);
+                getCharsetName(), m_connectTimeout);
     }
 
     /**
@@ -1205,7 +1205,7 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * Returns the connection timeout in seconds.
+     * Returns the connection timeout in milliseconds.
      * 
      * @return the timeout 
      * @since 3.4
@@ -1217,7 +1217,7 @@ public class FileReaderSettings extends TokenizerSettings {
     /**
      * Sets a new connection timeout.
      * 
-     * @param value the new connection timeout in seconds
+     * @param value the new connection timeout in milliseconds
      * @since 3.4
      */
     public void setConnectTimeout(final int value){

@@ -102,7 +102,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
     private final JSpinner m_limitRowsSpinner;
     private final JCheckBox m_skipFirstLinesChecker;
     private final JSpinner m_skipFirstLinesSpinner;
-    private final JSpinner m_connectTimeoutSpinner;
     private final CharsetNamePanel m_encodingPanel;
 
 
@@ -112,6 +111,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
                 "csv_read", LocationValidation.FileInput, ".csv", ".txt");
         m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
+        m_filePanel.setShowConnectTimeoutField(true);
 
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
@@ -139,8 +139,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
-
-        m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
 
         addTab("Settings", initLayout());
 
@@ -191,12 +189,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
 
         gbc.gridx = 0;
         gbc.gridy += 1;
-        optionsPanel.add(getInFlowLayout(new JLabel("Connect timeout [s]: ")), gbc);
-        gbc.gridx += 1;
-        optionsPanel.add(getInFlowLayout(m_connectTimeoutSpinner), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
         optionsPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
         gbc.gridx += 1;
         optionsPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
@@ -237,6 +229,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         config.loadSettingsInDialog(settings);
         m_filePanel.updateHistory();
         m_filePanel.setSelectedFile(config.getLocation());
+        m_filePanel.setConnectTimeout(config.getConnectTimeout() / 1000);
         m_colDelimiterField.setText(escape(config.getColDelimiter()));
         m_rowDelimiterField.setText(escape(config.getRowDelimiter()));
         m_quoteStringField.setText(config.getQuoteString());
@@ -261,7 +254,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             m_limitRowsSpinner.setValue(50);
         }
         m_encodingPanel.loadSettings(getEncodingSettings(config));
-        m_connectTimeoutSpinner.setValue(config.getConnectTimeout());
     }
 
     private FileReaderSettings getEncodingSettings(final CSVReaderConfig settings) {
@@ -291,7 +283,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());
-        config.setConnectTimeout((Integer)m_connectTimeoutSpinner.getValue());
+        config.setConnectTimeout(m_filePanel.getConnectTimeout() * 1000);
 
         config.saveSettingsTo(settings);
         m_filePanel.addToHistory();
