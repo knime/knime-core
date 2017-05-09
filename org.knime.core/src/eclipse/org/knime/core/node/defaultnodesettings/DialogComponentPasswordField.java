@@ -91,12 +91,11 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * Constructor put label and JTextField into panel.
      *
      * @param label label for dialog in front of JTextField
-     * @param stringModel the model that stores the value for this component.
+     * @param passwordModel the model that stores the value for this component.
+     * @since 3.4
      */
-    public DialogComponentPasswordField(final SettingsModelString stringModel,
-            final String label) {
-        this(stringModel, label,
-                calcDefaultWidth(stringModel.getStringValue()));
+    public DialogComponentPasswordField(final SettingsModelPassword passwordModel, final String label) {
+        this((SettingsModelString)passwordModel, label);
     }
 
     /**
@@ -104,10 +103,36 @@ public final class DialogComponentPasswordField extends DialogComponent {
      *
      * @param label label for dialog in front of JTextField
      * @param stringModel the model that stores the value for this component.
-     * @param compWidth the width of the component (in columns/characters)
+     * @deprecated use {@link #DialogComponentPasswordField(SettingsModelPassword, String)} instead
      */
+    @Deprecated
     public DialogComponentPasswordField(final SettingsModelString stringModel,
-            final String label, final int compWidth) {
+            final String label) {
+        this(stringModel, label, calcDefaultWidth(stringModel.getStringValue()));
+    }
+    /**
+     * Constructor put label and JTextField into panel.
+     *
+     * @param label label for dialog in front of JTextField
+     * @param passwordModel the model that stores the value for this component.
+     * @param compWidth the width of the component (in columns/characters)
+     * @since 3.4
+     */
+    public DialogComponentPasswordField(final SettingsModelPassword passwordModel, final String label,
+        final int compWidth) {
+        this((SettingsModelString)passwordModel, label, compWidth);
+    }
+    /**
+     * Constructor put label and JTextField into panel.
+     *
+     * @param label label for dialog in front of JTextField
+     * @param stringModel the model that stores the value for this component.
+     * @param compWidth the width of the component (in columns/characters)
+     * @deprecated use {@link #DialogComponentPasswordField(SettingsModelPassword, String, int)} instead
+     */
+    @Deprecated
+    public DialogComponentPasswordField(final SettingsModelString stringModel, final String label,
+        final int compWidth) {
         super(stringModel);
 
         m_label = new JLabel(label);
@@ -116,10 +141,12 @@ public final class DialogComponentPasswordField extends DialogComponent {
         m_pwField.setColumns(compWidth);
 
         m_pwField.addFocusListener(new FocusListener() {
+            @Override
             public void focusLost(final FocusEvent e) {
                 // not doing anything
             }
 
+            @Override
             public void focusGained(final FocusEvent e) {
                 // if the password field contains the value we've set, we
                 // clear the field (because the user can't know what's in there)
@@ -138,6 +165,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
         });
         m_pwField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -146,6 +174,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
                 }
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -154,6 +183,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
                 }
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -168,6 +198,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
 
         // update the pw field, whenever the model changes
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
