@@ -63,6 +63,7 @@ import java.util.Set;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.SagLogRegLearner;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -142,7 +143,12 @@ class LogRegCoordinator {
 //        Collections.emptyList(), m_settings.getTargetReferenceCategory(),
 //            m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
 //        LogRegLearner learner = new GlmNetLogRegLearner();
-        LogRegLearner learner = new SagLogRegLearner();
+        LogRegLearner learner;
+        if (m_settings.getSolver() == Solver.IRLS) {
+            learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec());
+        } else {
+            learner = new SagLogRegLearner(m_settings);
+        }
         double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
         exec.setMessage("Analyzing categorical data");
         BufferedDataTable dataTable =

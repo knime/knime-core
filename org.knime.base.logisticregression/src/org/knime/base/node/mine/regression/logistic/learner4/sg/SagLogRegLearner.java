@@ -60,7 +60,10 @@ import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.sg.LineSearchLearningRateStrategy.StepSizeType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -73,45 +76,128 @@ import org.knime.core.node.NodeProgressMonitor;
  */
 public class SagLogRegLearner implements LogRegLearner {
 
+    private LogRegLearnerSettings m_settings;
+
+    /**
+     *
+     */
+    public SagLogRegLearner(final LogRegLearnerSettings settings) {
+        m_settings = settings;
+    }
+
+    private LearningRateStrategy<ClassificationTrainingRow> createLearningRateStrategy(
+        final LogRegLearnerSettings settings, final boolean isSag,
+        final TrainingData<ClassificationTrainingRow> data, final Loss<ClassificationTrainingRow> loss) throws InvalidSettingsException {
+        switch (settings.getLearningRateStrategy()) {
+            case Annealing:
+                if (isSag) {
+                    throw new InvalidSettingsException("Stochastic average gradient does not support the annealing"
+                        + " learning rate strategy.");
+                }
+                return new AnnealingLearningRateStrategy<>(
+                        settings.getLearningRateDecay(), settings.getInitialLearningRate());
+            case Fixed:
+                return new FixedLearningRateStrategy<>(settings.getInitialLearningRate());
+            case LineSearch:
+                if (!isSag) {
+                    throw new InvalidSettingsException("Stochastic gradient descent does not support the "
+                        + "line search learning rate strategy.");
+                }
+                double lambda = 1 / settings.getPriorVariance();
+                return new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
+            default:
+                throw new InvalidSettingsException("Unknown learning rate strategy \"" + settings.getLearningRateStrategy() + "\".");
+        }
+    }
+
+    private RegularizationUpdater createRegularizationUpdater(final LogRegLearnerSettings settings,
+        final TrainingData<ClassificationTrainingRow> data) throws InvalidSettingsException {
+        Prior prior;
+        switch (settings.getPrior()) {
+            case Gauss:
+                prior = new GaussPrior(settings.getPriorVariance());
+                break;
+            case Laplace:
+                prior = new LaplacePrior(settings.getPriorVariance());
+                break;
+            case Uniform:
+                return UniformRegularizationUpdater.INSTANCE;
+            default:
+                throw new InvalidSettingsException("Unknown prior type \"" + settings.getPrior() + "\".");
+        }
+        if (settings.isPerformLazy()) {
+            return new LazyPriorUpdater(prior, data.getRowCount(), true);
+        } else {
+            return new EagerPriorUpdater(prior, data.getRowCount(), true);
+        }
+    }
+
+    private UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> createLazyUpdater(
+        final LogRegLearnerSettings settings, final TrainingData<ClassificationTrainingRow> data) {
+        assert settings.isPerformLazy() : "This method should only be called if a lazy updater is required.";
+        int nRows = data.getRowCount();
+        int nFets = data.getFeatureCount();
+        int betaDim = data.getTargetDimension() - 1;
+        switch (settings.getSolver()) {
+            case IRLS:
+                throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
+            case SAG:
+                    return new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(nRows, nFets, betaDim);
+            case SGD:
+                    throw new IllegalStateException("Currently is no lazy implementation for stochastic gradient descent available.");
+            default:
+                throw new IllegalArgumentException("The solver \"" + settings.getSolver() + "\" is unknown.");
+        }
+    }
+
+    private UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> createEagerUpdater(
+        final LogRegLearnerSettings settings, final TrainingData<ClassificationTrainingRow> data) {
+        assert !settings.isPerformLazy() : "This method should only be called if an eager updater is required.";
+        int nRows = data.getRowCount();
+        int nFets = data.getFeatureCount();
+        int betaDim = data.getTargetDimension() - 1;
+        switch (settings.getSolver()) {
+            case IRLS:
+                throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
+            case SAG:
+                return new EagerSagUpdater.EagerSagUpdaterFactory<>(nRows, nFets, betaDim);
+            case SGD:
+                return new EagerSgdUpdater.EagerSgdUpdaterFactory<>();
+            default:
+                throw new IllegalArgumentException("The solver \"" + settings.getSolver() + "\" is unknown.");
+        }
+    }
+
+    private AbstractSGOptimizer createOptimizer(
+        final LogRegLearnerSettings settings, final TrainingData<ClassificationTrainingRow> data) throws InvalidSettingsException {
+        final Loss<ClassificationTrainingRow> loss = MultinomialLoss.INSTANCE;
+        final StoppingCriterion<ClassificationTrainingRow> stoppingCriterion =
+                new BetaChangeStoppingCriterion<>(data.getFeatureCount(), data.getTargetDimension(), 1e-5);
+        LearningRateStrategy<ClassificationTrainingRow> lrs = createLearningRateStrategy(settings, settings.getSolver() == Solver.SAG, data, loss);
+        RegularizationUpdater regUpdater = createRegularizationUpdater(settings, data);
+        if (settings.isPerformLazy()) {
+            UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory = createLazyUpdater(settings, data);
+            return new LazySGOptimizer<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>, LazyRegularizationUpdater>(
+                    data, loss, updaterFactory, (LazyRegularizationUpdater)regUpdater, lrs, stoppingCriterion);
+        } else {
+            UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory = createEagerUpdater(settings, data);
+            return new EagerSgOptimizer<>(data, loss, updaterFactory, regUpdater, lrs, stoppingCriterion);
+
+        }
+
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        MultinomialLoss loss = MultinomialLoss.INSTANCE;
         ClassData classData = new ClassData(data);
-        double lambda = 0.01;
-//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
-//                new LineSearchLearningRateStrategy<ClassificationTrainingRow>(classData, loss, lambda, StepSizeType.Default);
-//        LearningRateStrategy<ClassificationTrainingRow> lrStrategy =
-//                new AnnealingLearningRateStrategy<ClassificationTrainingRow>(3, 1e-3);
-        LearningRateStrategy<ClassificationTrainingRow> lrStrategy = new FixedLearningRateStrategy<ClassificationTrainingRow>(1e-1);
-        final SagOptimizer<ClassificationTrainingRow> sagOpt = new SagOptimizer<>(loss, lrStrategy);
-//        UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory =
-//                new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
-        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
-                new EagerSagUpdater.EagerSagUpdaterFactory<>(classData.getRowCount(), classData.getFeatureCount(), classData.getTargetDimension() - 1);
-//        UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory =
-//                EagerSgdUpdater.createFactory();
-//        RegularizationPrior prior = new GaussPrior(5);
-//        RegularizationPrior prior = UniformPrior.INSTANCE;
-//        RegularizationUpdater regUpdater = new EagerPriorUpdater(new LaplacePrior(5), classData.getRowCount(), true);
-//        LazyRegularizationUpdater regUpdater = new LazyPriorUpdater(new LaplacePrior(0.001), classData.getRowCount(), true);
-        LazyRegularizationUpdater regUpdater = UniformRegularizationUpdater.INSTANCE;
-//        LazyRegularizationUpdater regUpdater = new GaussRegularizationUpdater(1.0/lambda);
-//        RegularizationUpdater regUpdater = new EagerPriorUpdater(UniformPrior.INSTANCE, classData.getRowCount(), true);
-        StoppingCriterion<ClassificationTrainingRow> stoppingCriterion = new BetaChangeStoppingCriterion<>(classData.getFeatureCount(), classData.getTargetDimension(), 1e-5);
-        EagerSgOptimizer<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>, RegularizationUpdater> sgOpt =
-                new EagerSgOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
-//        LazySGOptimizer<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>, LazyRegularizationUpdater> sgOpt =
-//                new LazySGOptimizer<>(classData, loss, updaterFactory, regUpdater, lrStrategy, stoppingCriterion);
-        int maxIter = 100;
-//        double[][] w = sagOpt.optimize(classData, maxIter, lambda, true);
-//        double[][] w = sgOpt.optimize(maxIter, classData);
-//        return new LogRegLearnerResult(MatrixUtils.createRealMatrix(w), -1, -1);
+        AbstractSGOptimizer sgOpt = createOptimizer(m_settings, classData);
+
         SimpleProgress progMon = new SimpleProgress(progressMonitor.getProgressMonitor());
-        return sgOpt.optimize(maxIter, classData, progMon);
+        return sgOpt.optimize(m_settings.getMaxEpoch(), classData, progMon);
     }
 
     /**

@@ -64,9 +64,9 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @author Adrian Nembach, KNIME.com
  * @since 3.1
  */
-class LogRegLearnerSettings {
+public class LogRegLearnerSettings {
 
-    enum Solver {
+    public enum Solver {
         IRLS("Iteratively reweighted least squares", false, EnumSet.noneOf(LearningRateStrategies.class), EnumSet.noneOf(Prior.class)),
         SAG("Stochastic average gradient", true, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.LineSearch),
             EnumSet.allOf(Prior.class)),
@@ -112,7 +112,7 @@ class LogRegLearnerSettings {
         }
     }
 
-    enum Prior {
+    public enum Prior {
         Uniform(false),
         Gauss(true),
         Laplace(true);
@@ -127,7 +127,7 @@ class LogRegLearnerSettings {
         }
     }
 
-    enum LearningRateStrategies {
+    public enum LearningRateStrategies {
         Fixed(true, false),
         Annealing(true, true),
         LineSearch(false, false);
@@ -270,6 +270,7 @@ class LogRegLearnerSettings {
         settings.addDouble(CFG_LEARNING_RATE_DECAY, m_learningRateDecay);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
     }
+
 
     /**
      * The target column which is the dependent variable.
