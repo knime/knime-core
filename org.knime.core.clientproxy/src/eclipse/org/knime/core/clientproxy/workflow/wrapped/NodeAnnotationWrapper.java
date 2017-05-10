@@ -54,7 +54,7 @@ import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -71,8 +71,8 @@ public class NodeAnnotationWrapper implements INodeAnnotation {
         m_delegate = delegate;
     }
 
-    public static final NodeAnnotationWrapper wrap(final INodeAnnotation na) {
-        return WrapperMapUtil.getOrCreate(na, o -> new NodeAnnotationWrapper(o), NodeAnnotationWrapper.class);
+    public static final NodeAnnotationWrapper wrap(final INodeAnnotation na, final ObjectCache objCache) {
+        return objCache.getOrCreate(na, o -> new NodeAnnotationWrapper(o), NodeAnnotationWrapper.class);
     }
 
     /**

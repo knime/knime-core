@@ -49,7 +49,7 @@
 package org.knime.core.clientproxy.workflow.wrapped;
 
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.w3c.dom.Element;
 
 /**
@@ -63,13 +63,14 @@ public class SingleNodeContainerWrapper extends NodeContainerWrapper implements 
     /**
      *
      */
-    private SingleNodeContainerWrapper(final ISingleNodeContainer delegate) {
-        super(delegate);
+    private SingleNodeContainerWrapper(final ISingleNodeContainer delegate, final ObjectCache objCache) {
+        super(delegate, objCache);
         m_delegate = delegate;
     }
 
-    public static final SingleNodeContainerWrapper wrap(final ISingleNodeContainer snc) {
-        return WrapperMapUtil.getOrCreate(snc, o -> new SingleNodeContainerWrapper(o), SingleNodeContainerWrapper.class);
+    public static final SingleNodeContainerWrapper wrap(final ISingleNodeContainer snc, final ObjectCache objCache) {
+        return objCache.getOrCreate(snc, o -> new SingleNodeContainerWrapper(o, objCache),
+            SingleNodeContainerWrapper.class);
     }
 
     /**

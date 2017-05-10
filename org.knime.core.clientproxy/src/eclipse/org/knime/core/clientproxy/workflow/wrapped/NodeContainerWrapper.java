@@ -67,6 +67,7 @@ import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NodeID;
@@ -79,20 +80,22 @@ import org.knime.core.node.workflow.NodeMessage;
 public abstract class NodeContainerWrapper implements INodeContainer {
 
     private final INodeContainer m_delegate;
+    protected ObjectCache m_objCache;
 
     /**
      * @param delegate the implementation to delegate to
      *
      */
-    protected NodeContainerWrapper(final INodeContainer delegate) {
+    protected NodeContainerWrapper(final INodeContainer delegate, final ObjectCache objCache) {
         m_delegate = delegate;
+        m_objCache = objCache;
     }
 
     public static final NodeContainerWrapper wrap(final INodeContainer nc) {
         if(nc instanceof ISingleNodeContainer) {
-            return SingleNodeContainerWrapper.wrap((ISingleNodeContainer)nc);
+            return NodeContainerWrapper.wrap(nc);
         } else if(nc instanceof IWorkflowManager) {
-            return WorkflowManagerWrapper.wrap((IWorkflowManager) nc);
+            return NodeContainerWrapper.wrap(nc);
         } else {
             throw new UnsupportedOperationException();
         }
@@ -121,7 +124,7 @@ public abstract class NodeContainerWrapper implements INodeContainer {
 
     @Override
     public IWorkflowManager getParent() {
-        return WorkflowManagerWrapper.wrap(m_delegate.getParent());
+        return WorkflowManagerWrapper.wrap(m_delegate.getParent(), m_objCache);
     }
 
     @Override
@@ -347,7 +350,7 @@ public abstract class NodeContainerWrapper implements INodeContainer {
 
     @Override
     public INodeAnnotation getNodeAnnotation() {
-        return NodeAnnotationWrapper.wrap(m_delegate.getNodeAnnotation());
+        return NodeAnnotationWrapper.wrap(m_delegate.getNodeAnnotation(), m_objCache);
     }
 
     @Override

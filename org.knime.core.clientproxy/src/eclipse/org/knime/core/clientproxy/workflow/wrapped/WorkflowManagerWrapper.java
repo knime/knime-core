@@ -79,6 +79,7 @@ import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -86,7 +87,6 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.Pair;
-import org.knime.core.util.WrapperMapUtil;
 
 /**
  * Implements the {@link IWorkflowManager} interface by simply wrapping the {@link IWorkflowManager} implementation.
@@ -102,13 +102,13 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param delegate the wfm to delegate all the calls to
      */
-    private WorkflowManagerWrapper(final IWorkflowManager delegate) {
-        super(delegate);
+    private WorkflowManagerWrapper(final IWorkflowManager delegate, final ObjectCache objCache) {
+        super(delegate, objCache);
         m_delegate = delegate;
     }
 
-    public static final WorkflowManagerWrapper wrap(final IWorkflowManager wfm) {
-        return WrapperMapUtil.getOrCreate(wfm, o -> new WorkflowManagerWrapper(o), WorkflowManagerWrapper.class);
+    public static final WorkflowManagerWrapper wrap(final IWorkflowManager wfm, final ObjectCache objCache) {
+        return objCache.getOrCreate(wfm, o -> new WorkflowManagerWrapper(o, objCache), WorkflowManagerWrapper.class);
     }
 
     /**
@@ -154,7 +154,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public IWorkflowManager getProjectWFM() {
-        return new WorkflowManagerWrapper(m_delegate.getProjectWFM());
+        return new WorkflowManagerWrapper(m_delegate.getProjectWFM(), m_objCache);
     }
 
     /**
@@ -214,7 +214,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public WorkflowManagerWrapper createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts, final String name) {
-        return new WorkflowManagerWrapper(m_delegate.createAndAddSubWorkflow(inPorts, outPorts, name));
+        return new WorkflowManagerWrapper(m_delegate.createAndAddSubWorkflow(inPorts, outPorts, name), m_objCache);
     }
 
     /**
@@ -994,7 +994,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public NodeOutPortWrapper getWorkflowIncomingPort(final int i) {
-        return NodeOutPortWrapper.wrap(m_delegate.getWorkflowIncomingPort(i));
+        return NodeOutPortWrapper.wrap(m_delegate.getWorkflowIncomingPort(i), m_objCache);
     }
 
     /**
@@ -1004,7 +1004,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public NodeInPortWrapper getWorkflowOutgoingPort(final int i) {
-        return NodeInPortWrapper.wrap(m_delegate.getWorkflowOutgoingPort(i));
+        return NodeInPortWrapper.wrap(m_delegate.getWorkflowOutgoingPort(i), m_objCache);
     }
 
     /**
@@ -1048,7 +1048,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public WorkflowInPortWrapper getInPort(final int index) {
-        return WorkflowInPortWrapper.wrap(m_delegate.getInPort(index));
+        return WorkflowInPortWrapper.wrap(m_delegate.getInPort(index), m_objCache);
     }
 
     /**
@@ -1056,7 +1056,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public WorkflowOutPortWrapper getOutPort(final int index) {
-        return WorkflowOutPortWrapper.wrap(m_delegate.getOutPort(index));
+        return WorkflowOutPortWrapper.wrap(m_delegate.getOutPort(index), m_objCache);
     }
 
     /**
@@ -1065,7 +1065,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public Collection<IWorkflowAnnotation> getWorkflowAnnotations() {
-        return m_delegate.getWorkflowAnnotations().stream().map(wa -> WorkflowAnnotationWrapper.wrap(wa)).collect(Collectors.toList());
+        return m_delegate.getWorkflowAnnotations().stream().map(wa -> WorkflowAnnotationWrapper.wrap(wa, m_objCache))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -1084,7 +1085,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public WorkflowAnnotationWrapper getWorkflowAnnotation(final WorkflowAnnotationID wfaID) {
-        return WorkflowAnnotationWrapper.wrap(m_delegate.getWorkflowAnnotation(wfaID));
+        return WorkflowAnnotationWrapper.wrap(m_delegate.getWorkflowAnnotation(wfaID), m_objCache);
     }
 
     /**
@@ -1147,7 +1148,8 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      */
     @Override
     public List<INodeAnnotation> getNodeAnnotations() {
-        return m_delegate.getNodeAnnotations().stream().map(na -> NodeAnnotationWrapper.wrap(na)).collect(Collectors.toList());
+        return m_delegate.getNodeAnnotations().stream().map(na -> NodeAnnotationWrapper.wrap(na, m_objCache))
+            .collect(Collectors.toList());
     }
 
     /**

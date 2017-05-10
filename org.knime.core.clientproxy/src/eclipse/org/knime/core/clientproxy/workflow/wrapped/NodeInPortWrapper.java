@@ -50,7 +50,7 @@ package org.knime.core.clientproxy.workflow.wrapped;
 
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.api.node.workflow.INodeInPort;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -67,8 +67,8 @@ public class NodeInPortWrapper implements INodeInPort {
         m_delegate = delegate;
     }
 
-    public static final NodeInPortWrapper wrap(final INodeInPort nip) {
-        return WrapperMapUtil.getOrCreate(nip, o -> new NodeInPortWrapper(o), NodeInPortWrapper.class);
+    public static final NodeInPortWrapper wrap(final INodeInPort nip, final ObjectCache objCache) {
+        return objCache.getOrCreate(nip, o -> new NodeInPortWrapper(o), NodeInPortWrapper.class);
     }
 
     /**

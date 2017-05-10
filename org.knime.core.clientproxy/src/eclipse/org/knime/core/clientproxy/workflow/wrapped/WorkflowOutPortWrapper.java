@@ -49,7 +49,7 @@
 package org.knime.core.clientproxy.workflow.wrapped;
 
 import org.knime.core.api.node.workflow.IWorkflowOutPort;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -67,8 +67,8 @@ public class WorkflowOutPortWrapper extends NodeOutPortWrapper implements IWorkf
         m_delegate = delegate;
     }
 
-    public static final WorkflowOutPortWrapper wrap(final IWorkflowOutPort wop) {
-        return WrapperMapUtil.getOrCreate(wop, o -> new WorkflowOutPortWrapper(o), WorkflowOutPortWrapper.class);
+    public static final WorkflowOutPortWrapper wrap(final IWorkflowOutPort wop, final ObjectCache objCache) {
+        return objCache.getOrCreate(wop, o -> new WorkflowOutPortWrapper(o), WorkflowOutPortWrapper.class);
     }
 
     /**

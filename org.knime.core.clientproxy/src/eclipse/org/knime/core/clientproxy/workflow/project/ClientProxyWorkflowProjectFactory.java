@@ -59,6 +59,7 @@ import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowManager;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
@@ -189,7 +190,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
         public IWorkflowManager openProject() throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
             if (m_cachedWFM == null) {
-                m_cachedWFM = new ClientProxyWorkflowManager(m_workflowNodeEnt);
+                m_cachedWFM = new ClientProxyWorkflowManager(m_workflowNodeEnt, new ObjectCache());
             }
             return m_cachedWFM;
         }

@@ -53,7 +53,7 @@ import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -70,8 +70,8 @@ public class NodeOutPortWrapper implements INodeOutPort {
         m_delegate = delegate;
     }
 
-    public static final NodeOutPortWrapper wrap(final INodeOutPort nop) {
-        return WrapperMapUtil.getOrCreate(nop, o -> new NodeOutPortWrapper(o), NodeOutPortWrapper.class);
+    public static final NodeOutPortWrapper wrap(final INodeOutPort nop, final ObjectCache objCache) {
+        return objCache.getOrCreate(nop, o -> new NodeOutPortWrapper(o), NodeOutPortWrapper.class);
     }
 
     /**

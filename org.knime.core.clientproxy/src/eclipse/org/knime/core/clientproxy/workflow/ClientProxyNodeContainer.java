@@ -71,6 +71,8 @@ import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.clientproxy.util.ClientProxyUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -92,6 +94,8 @@ import org.knime.workbench.repository.RepositoryManager;
 public class ClientProxyNodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
+
+    private ObjectCache m_objCache;
 
     /*--------- listener administration------------*/
 
@@ -115,10 +119,12 @@ public class ClientProxyNodeContainer implements INodeContainer {
      * If the underlying entity is a node.
      *
      * @param node
+     * @param objCache
      * @param parentNode the parent node, never <code>null</code>
      */
-    public ClientProxyNodeContainer(final NodeEnt node) {
+    public ClientProxyNodeContainer(final NodeEnt node, final ObjectCache objCache) {
         m_node = node;
+        m_objCache = objCache;
     }
 
     /**
@@ -135,16 +141,17 @@ public class ClientProxyNodeContainer implements INodeContainer {
     @Override
     public IWorkflowManager getParent() {
         return m_node.getParentNodeID().map(s -> {
-          //get parent wf
-          String parentNodeID;
-          if(NodeID.fromString(s).getPrefix() == NodeID.ROOTID) {
-              //parent is the highest level workflow
-              //the node id has then no meaning here and need to be empty
-              parentNodeID = null;
-          } else {
-              parentNodeID = s;
-          }
-          return ClientProxyUtil.getWorkflowManager(m_node.getRootWorkflowID(), Optional.ofNullable(parentNodeID));
+            //get parent wf
+            String parentNodeID;
+            if (NodeID.fromString(s).getPrefix() == NodeID.ROOTID) {
+                //parent is the highest level workflow
+                //the node id has then no meaning here and need to be empty
+                parentNodeID = null;
+            } else {
+                parentNodeID = s;
+            }
+            return ClientProxyUtil.getWorkflowManager(m_node.getRootWorkflowID(), Optional.ofNullable(parentNodeID),
+                m_objCache);
         }).orElse(null);
     }
 
@@ -432,7 +439,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public INodeInPort getInPort(final int index) {
-        return ClientProxyUtil.getNodeInPort(m_node.getInPorts().get(index));
+        return ClientProxyUtil.getNodeInPort(m_node.getInPorts().get(index), m_objCache);
     }
 
     /**
@@ -440,7 +447,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public INodeOutPort getOutPort(final int index) {
-        return ClientProxyUtil.getNodeOutPort(m_node.getOutPorts().get(index));
+        return ClientProxyUtil.getNodeOutPort(m_node.getOutPorts().get(index), m_objCache);
     }
 
     /**

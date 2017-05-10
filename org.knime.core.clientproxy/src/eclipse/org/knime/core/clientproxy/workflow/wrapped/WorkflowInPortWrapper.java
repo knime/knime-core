@@ -49,7 +49,7 @@
 package org.knime.core.clientproxy.workflow.wrapped;
 
 import org.knime.core.api.node.workflow.IWorkflowInPort;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -58,18 +58,20 @@ import org.knime.core.util.WrapperMapUtil;
 public class WorkflowInPortWrapper extends NodeInPortWrapper implements IWorkflowInPort {
 
     private IWorkflowInPort m_delegate;
+    private ObjectCache m_objCache;
 
     /**
      * @param delegate the implementation to delegate to
      *
      */
-    private WorkflowInPortWrapper(final IWorkflowInPort delegate) {
+    private WorkflowInPortWrapper(final IWorkflowInPort delegate, final ObjectCache objCache) {
         super(delegate);
         m_delegate = delegate;
+        m_objCache = objCache;
     }
 
-    public static final WorkflowInPortWrapper wrap(final IWorkflowInPort wip) {
-        return WrapperMapUtil.getOrCreate(wip, o -> new WorkflowInPortWrapper(o), WorkflowInPortWrapper.class);
+    public static final WorkflowInPortWrapper wrap(final IWorkflowInPort wip, final ObjectCache objCache) {
+        return objCache.getOrCreate(wip, o -> new WorkflowInPortWrapper(o, objCache), WorkflowInPortWrapper.class);
     }
 
     /**
@@ -101,7 +103,7 @@ public class WorkflowInPortWrapper extends NodeInPortWrapper implements IWorkflo
      */
     @Override
     public NodeOutPortWrapper getUnderlyingPort() {
-        return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort());
+        return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort(), m_objCache);
     }
 
 

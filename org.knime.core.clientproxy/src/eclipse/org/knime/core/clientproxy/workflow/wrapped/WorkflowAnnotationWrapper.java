@@ -56,7 +56,7 @@ import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
-import org.knime.core.util.WrapperMapUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 
 /**
  *
@@ -73,8 +73,8 @@ public class WorkflowAnnotationWrapper implements IWorkflowAnnotation {
         m_delegate = delegate;
     }
 
-    public static final WorkflowAnnotationWrapper wrap(final IWorkflowAnnotation wa) {
-        return WrapperMapUtil.getOrCreate(wa, o -> new WorkflowAnnotationWrapper(o), WorkflowAnnotationWrapper.class);
+    public static final WorkflowAnnotationWrapper wrap(final IWorkflowAnnotation wa, final ObjectCache objCache) {
+        return objCache.getOrCreate(wa, o -> new WorkflowAnnotationWrapper(o), WorkflowAnnotationWrapper.class);
     }
 
     /**

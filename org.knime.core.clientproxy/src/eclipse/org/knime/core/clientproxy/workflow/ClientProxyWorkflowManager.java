@@ -87,6 +87,8 @@ import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
+import org.knime.core.clientproxy.util.ClientProxyUtil;
+import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.gateway.services.ServiceManager;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
@@ -111,13 +113,15 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
 
     private WorkflowEnt m_workflowEnt;
     private final WorkflowNodeEnt m_workflowNodeEnt;
+    private ObjectCache m_objCache;
 
     /**
      * @param workflowNodeEnt
      */
-    public ClientProxyWorkflowManager(final WorkflowNodeEnt workflowNodeEnt) {
-        super(workflowNodeEnt);
+    public ClientProxyWorkflowManager(final WorkflowNodeEnt workflowNodeEnt, final ObjectCache objCache) {
+        super(workflowNodeEnt, objCache);
         m_workflowNodeEnt = workflowNodeEnt;
+        m_objCache = objCache;
     }
 
     private WorkflowEnt getWorkflow() {
@@ -266,7 +270,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : getWorkflow().getConnections()) {
             if(c.getSource().equals(nodeID) && c.getSourcePort() == portIdx) {
-                res.add(ClientProxyUtil.getConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c, m_objCache));
             }
         }
         return res;
@@ -282,7 +286,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : getWorkflow().getConnections()) {
             if(c.getSource().equals(nodeID)) {
-                res.add(ClientProxyUtil.getConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c, m_objCache));
             }
         }
         return res;
@@ -297,7 +301,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : getWorkflow().getConnections()) {
             if(c.getDest().equals(nodeID) && c.getDestPort() == portIdx) {
-                return ClientProxyUtil.getConnectionContainer(c);
+                return ClientProxyUtil.getConnectionContainer(c, m_objCache);
             }
         }
         return null;
@@ -313,7 +317,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         String nodeID = id.toString();
         for (ConnectionEnt c : getWorkflow().getConnections()) {
             if(c.getDest().equals(nodeID)) {
-                res.add(ClientProxyUtil.getConnectionContainer(c));
+                res.add(ClientProxyUtil.getConnectionContainer(c, m_objCache));
             }
         }
         return res;
@@ -328,7 +332,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         for (ConnectionEnt c : getWorkflow().getConnections()) {
             if (getWorkflow().getNodes().get(c.getDest()).getNodeID().equals(id.getDestinationNode().toString())
                 && id.getDestinationPort() == c.getDestPort()) {
-                return ClientProxyUtil.getConnectionContainer(c);
+                return ClientProxyUtil.getConnectionContainer(c, m_objCache);
             }
         }
         return null;
@@ -712,7 +716,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     public Collection<INodeContainer> getAllNodeContainers() {
         Collection<NodeEnt> nodes = getWorkflow().getNodes().values();
         //return exactly the same node container instance for the same node entity
-        return nodes.stream().map(n -> ClientProxyUtil.getNodeContainer(n, Optional.of(getWorkflow()), n.getNodeID()))
+        return nodes.stream()
+            .map(n -> ClientProxyUtil.getNodeContainer(n, Optional.of(getWorkflow()), n.getNodeID(), m_objCache))
             .collect(Collectors.toList());
     }
 
@@ -725,7 +730,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         List<? extends ConnectionEnt> connections = getWorkflow().getConnections();
         //return exactly the same connection container instance for the same connection entity
         return connections.stream()
-            .map(c -> ClientProxyUtil.getConnectionContainer(c))
+            .map(c -> ClientProxyUtil.getConnectionContainer(c, m_objCache))
             .collect(Collectors.toList());
     }
 
@@ -737,7 +742,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         //TODO e.g. put the node entities into a hash map for quicker access
         final NodeEnt nodeEnt = getWorkflow().getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
-        return ClientProxyUtil.getNodeContainer(nodeEnt, Optional.of(getWorkflow()), id.toString());
+        return ClientProxyUtil.getNodeContainer(nodeEnt, Optional.of(getWorkflow()), id.toString(), m_objCache);
     }
 
 
@@ -895,7 +900,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     @Override
     public IWorkflowInPort getInPort(final int index) {
         //get underlying port
-        return ClientProxyUtil.getWorkflowInPort(m_workflowNodeEnt.getInPorts().get(index), null);
+        return ClientProxyUtil.getWorkflowInPort(m_workflowNodeEnt.getInPorts().get(index), null, m_objCache);
     }
 
     /**
@@ -903,7 +908,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowOutPort getOutPort(final int index) {
-        return ClientProxyUtil.getWorkflowOutPort(m_workflowNodeEnt.getOutPorts().get(index));
+        return ClientProxyUtil.getWorkflowOutPort(m_workflowNodeEnt.getOutPorts().get(index), m_objCache);
     }
 
     /**
@@ -968,7 +973,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeOutPort getWorkflowIncomingPort(final int i) {
-        return ClientProxyUtil.getNodeOutPort(m_workflowNodeEnt.getWorkflowIncomingPorts().get(i));
+        return ClientProxyUtil.getNodeOutPort(m_workflowNodeEnt.getWorkflowIncomingPorts().get(i), m_objCache);
     }
 
     /**
@@ -976,7 +981,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeInPort getWorkflowOutgoingPort(final int i) {
-        return ClientProxyUtil.getNodeInPort(m_workflowNodeEnt.getWorkflowOutgoingPorts().get(i));
+        return ClientProxyUtil.getNodeInPort(m_workflowNodeEnt.getWorkflowOutgoingPorts().get(i), m_objCache);
     }
 
     /**
@@ -1018,8 +1023,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public Collection<IWorkflowAnnotation> getWorkflowAnnotations() {
-        return getWorkflow().getWorkflowAnnotations().stream().map(wa -> ClientProxyUtil.getWorkflowAnnotation(wa))
-            .collect(Collectors.toList());
+        return getWorkflow().getWorkflowAnnotations().stream()
+            .map(wa -> ClientProxyUtil.getWorkflowAnnotation(wa, m_objCache)).collect(Collectors.toList());
     }
 
     /**
