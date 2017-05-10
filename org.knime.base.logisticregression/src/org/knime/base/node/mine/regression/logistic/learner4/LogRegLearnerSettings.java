@@ -240,6 +240,7 @@ public class LogRegLearnerSettings {
     private static final String CFG_SOLVER = "solver";
     private static final String CFG_MAX_EPOCH = "maxEpoch";
     private static final String CFG_PERFORM_LAZY = "performLazy";
+    private static final String CFG_EPSILON = "epsilon";
     private static final String CFG_PRIOR = "prior";
     private static final String CFG_PRIOR_VARIANCE = "priorVariance";
     private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
@@ -249,6 +250,7 @@ public class LogRegLearnerSettings {
     static final Solver DEFAULT_SOLVER = Solver.SAG;
     static final boolean DEFAULT_PERFORM_LAZY = false;
     static final int DEFAULT_MAX_EPOCH = 100;
+    static final double DEFAULT_EPSILON = 1e-5;
     static final LearningRateStrategies DEFAULT_LEARNINGRATE_STRATEGY = LearningRateStrategies.Fixed;
     static final double DEFAULT_INITIAL_LEARNING_RATE = 1e-3;
     static final double DEFAULT_LEARNING_RATE_DECAY = 1;
@@ -268,13 +270,16 @@ public class LogRegLearnerSettings {
     /** True when categories of nominal data in the include list should be sorted. */
     private boolean m_sortIncludesCategories;
 
+    // solver and relevant parameters
     private Solver m_solver;
-
     private int m_maxEpoch;
     private boolean m_performLazy;
+    private double m_epsilon;
+    // learning rate strategy and relevant parameters
     private LearningRateStrategies m_learningRateStrategy;
     private double m_initialLearningRate;
     private double m_learningRateDecay;
+    // prior and relevant parameters
     private Prior m_prior;
     private double m_priorVariance;
 
@@ -289,6 +294,7 @@ public class LogRegLearnerSettings {
         m_solver = DEFAULT_SOLVER;
         m_maxEpoch = DEFAULT_MAX_EPOCH;
         m_performLazy = DEFAULT_PERFORM_LAZY;
+        m_epsilon = DEFAULT_EPSILON;
         m_learningRateStrategy = DEFAULT_LEARNINGRATE_STRATEGY;
         m_initialLearningRate = DEFAULT_INITIAL_LEARNING_RATE;
         m_learningRateDecay = DEFAULT_LEARNING_RATE_DECAY;
@@ -315,6 +321,7 @@ public class LogRegLearnerSettings {
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH);
         m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY);
+        m_epsilon = settings.getDouble(CFG_EPSILON);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(CFG_LEARNING_RATE_STRATEGY));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE);
         m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY);
@@ -340,6 +347,7 @@ public class LogRegLearnerSettings {
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, DEFAULT_MAX_EPOCH);
         m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY, DEFAULT_PERFORM_LAZY);
+        m_epsilon = settings.getDouble(CFG_EPSILON, DEFAULT_EPSILON);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
             CFG_LEARNING_RATE_STRATEGY, DEFAULT_LEARNINGRATE_STRATEGY.name()));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, DEFAULT_INITIAL_LEARNING_RATE);
@@ -365,6 +373,7 @@ public class LogRegLearnerSettings {
         // if the solver doesn't support laziness, we shouldn't store that the calculations
         // should be performed laziness
         settings.addBoolean(CFG_PERFORM_LAZY, m_solver.m_supportsLazy && m_performLazy);
+        settings.addDouble(CFG_EPSILON, m_epsilon);
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
         settings.addString(CFG_PRIOR, m_prior.name());
         settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
@@ -482,6 +491,22 @@ public class LogRegLearnerSettings {
      */
     public void setMaxEpoch(final int maxEpoch) {
         m_maxEpoch = maxEpoch;
+    }
+
+
+    /**
+     * @return the epsilon
+     */
+    public double getEpsilon() {
+        return m_epsilon;
+    }
+
+
+    /**
+     * @param epsilon the epsilon to set
+     */
+    public void setEpsilon(final double epsilon) {
+        m_epsilon = epsilon;
     }
 
 

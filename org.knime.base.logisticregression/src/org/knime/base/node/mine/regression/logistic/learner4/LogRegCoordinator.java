@@ -145,7 +145,8 @@ class LogRegCoordinator {
 //        LogRegLearner learner = new GlmNetLogRegLearner();
         LogRegLearner learner;
         if (m_settings.getSolver() == Solver.IRLS) {
-            learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec());
+            learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
+                m_settings.getMaxEpoch(), m_settings.getEpsilon());
         } else {
             learner = new SagLogRegLearner(m_settings);
         }

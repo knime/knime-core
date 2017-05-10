@@ -110,6 +110,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JComboBox<Solver> m_solverComboBox;
     private JCheckBox m_lazyCalculationCheckBox;
     private JSpinner m_maxEpochSpinner;
+    private JSpinner m_epsilonSpinner;
 
     private JComboBox<LearningRateStrategies> m_learningRateStrategyComboBox;
     private JSpinner m_initialLearningRateSpinner;
@@ -144,10 +145,14 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
                 + "First value is chosen as reference for dummy variables.");
 
         m_lazyCalculationCheckBox = new JCheckBox("Perfom calculations lazily");
-        m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 1));
-        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(1e-3, Double.MIN_VALUE, 1e3, 1e-3));
-        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(1.0, Double.MIN_VALUE, 1e3, 1e-3));
-        m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(1, Double.MIN_VALUE, 1e3, 0.1));
+        m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_MAX_EPOCH, 1, Integer.MAX_VALUE, 1));
+        m_epsilonSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_EPSILON, 0.0, 100.0, 1e-5));
+        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_INITIAL_LEARNING_RATE,
+            Double.MIN_VALUE, 1e3, 1e-3));
+        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_LEARNING_RATE_DECAY,
+            Double.MIN_VALUE, 1e3, 1e-3));
+        m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_PRIOR_VARIANCE,
+            Double.MIN_VALUE, 1e3, 0.1));
         m_priorComboBox = new JComboBox<>(Prior.values());
         m_learningRateStrategyComboBox = new JComboBox<>(LearningRateStrategies.values());
         m_solverComboBox = new JComboBox<>(Solver.values());
@@ -245,7 +250,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JPanel createAdvancedSettingsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.NONE;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         c.weighty = 1;
         c.gridx = 0;
@@ -272,18 +277,16 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
     private JPanel createSolverOptionsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.BASELINE_LEADING;
-        c.insets = new Insets(5, 5, 0, 0);
+        GridBagConstraints c = makeSettingsConstraints();
 
         panel.add(new JLabel("Number of epochs"), c);
         c.gridx++;
         panel.add(m_maxEpochSpinner, c);
+        c.gridx = 0;
+        c.gridy++;
+        panel.add(new JLabel("Epsilon"), c);
+        c.gridx++;
+        panel.add(m_epsilonSpinner, c);
         c.gridx = 0;
         c.gridy++;
         c.gridwidth = 2;
@@ -294,14 +297,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
     private JPanel createPriorPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.BASELINE_LEADING;
-        c.insets = new Insets(5, 5, 0, 0);
+        GridBagConstraints c = makeSettingsConstraints();
 
         panel.add(new JLabel("Prior"), c);
         c.gridx++;
@@ -315,16 +311,21 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         return panel;
     }
 
-    private JPanel createLearningRateStrategyPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
+    private GridBagConstraints makeSettingsConstraints() {
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
+        c.fill = GridBagConstraints.NONE;
         c.weightx = 0;
         c.weighty = 0;
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.BASELINE_LEADING;
         c.insets = new Insets(5, 5, 0, 0);
+        return c;
+    }
+
+    private JPanel createLearningRateStrategyPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = makeSettingsConstraints();
 
         panel.add(new JLabel("Learning rate strategy"), c);
         c.gridx++;
@@ -376,14 +377,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
     private JPanel createSolverPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.BASELINE_LEADING;
-        c.insets = new Insets(5, 5, 0, 0);
+        GridBagConstraints c = makeSettingsConstraints();
         p.add(new JLabel("Select solver:"), c);
         c.gridx++;
         c.weightx = 1;
@@ -396,14 +390,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
      */
     private JPanel createTargetOptionsPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.NONE;
-        c.weightx = 0;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.BASELINE_LEADING;
-        c.insets = new Insets(5, 5, 0, 0);
+        GridBagConstraints c = makeSettingsConstraints();
 
         p.add(new JLabel("Target Column:"), c);
 

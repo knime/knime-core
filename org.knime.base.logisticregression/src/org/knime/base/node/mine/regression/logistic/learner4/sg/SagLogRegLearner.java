@@ -172,7 +172,7 @@ public class SagLogRegLearner implements LogRegLearner {
         final LogRegLearnerSettings settings, final TrainingData<ClassificationTrainingRow> data) throws InvalidSettingsException {
         final Loss<ClassificationTrainingRow> loss = MultinomialLoss.INSTANCE;
         final StoppingCriterion<ClassificationTrainingRow> stoppingCriterion =
-                new BetaChangeStoppingCriterion<>(data.getFeatureCount(), data.getTargetDimension(), 1e-5);
+                new BetaChangeStoppingCriterion<>(data.getFeatureCount(), data.getTargetDimension(), settings.getEpsilon());
         LearningRateStrategy<ClassificationTrainingRow> lrs = createLearningRateStrategy(settings, settings.getSolver() == Solver.SAG, data, loss);
         RegularizationUpdater regUpdater = createRegularizationUpdater(settings, data);
         if (settings.isPerformLazy()) {
