@@ -163,6 +163,15 @@ public class LogRegLearnerSettings {
     private static final String CFG_INITIAL_LEARNING_RATE = "initialLearningRate";
     private static final String CFG_LEARNING_RATE_DECAY = "learningRateDecay";
 
+    static final Solver DEFAULT_SOLVER = Solver.SAG;
+    static final boolean DEFAULT_PERFORM_LAZY = false;
+    static final int DEFAULT_MAX_EPOCH = 100;
+    static final LearningRateStrategies DEFAULT_LEARNINGRATE_STRATEGY = LearningRateStrategies.Fixed;
+    static final double DEFAULT_INITIAL_LEARNING_RATE = 1e-3;
+    static final double DEFAULT_LEARNING_RATE_DECAY = 1;
+    static final Prior DEFAULT_PRIOR = Prior.Uniform;
+    static final double DEFAULT_PRIOR_VARIANCE = 0.1;
+
 
     private String m_targetColumn;
 
@@ -180,11 +189,11 @@ public class LogRegLearnerSettings {
 
     private int m_maxEpoch;
     private boolean m_performLazy;
-    private double m_priorVariance;
+    private LearningRateStrategies m_learningRateStrategy;
     private double m_initialLearningRate;
     private double m_learningRateDecay;
-    private LearningRateStrategies m_learningRateStrategy;
     private Prior m_prior;
+    private double m_priorVariance;
 
     /**
      * Create default settings.
@@ -194,7 +203,14 @@ public class LogRegLearnerSettings {
         m_targetReferenceCategory = null;
         m_sortTargetCategories = true;
         m_sortIncludesCategories = true;
-        m_solver = Solver.SAG;
+        m_solver = DEFAULT_SOLVER;
+        m_maxEpoch = DEFAULT_MAX_EPOCH;
+        m_performLazy = DEFAULT_PERFORM_LAZY;
+        m_learningRateStrategy = DEFAULT_LEARNINGRATE_STRATEGY;
+        m_initialLearningRate = DEFAULT_INITIAL_LEARNING_RATE;
+        m_learningRateDecay = DEFAULT_LEARNING_RATE_DECAY;
+        m_prior = DEFAULT_PRIOR;
+        m_priorVariance = DEFAULT_PRIOR_VARIANCE;
     }
 
 
@@ -237,16 +253,16 @@ public class LogRegLearnerSettings {
         m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
         m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
         m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES, true);
-        String solverString = settings.getString(CFG_SOLVER, Solver.SAG.name());
+        String solverString = settings.getString(CFG_SOLVER, DEFAULT_SOLVER.name());
         m_solver = Solver.valueOf(solverString);
-        m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, 100);
-        m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY, false);
+        m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, DEFAULT_MAX_EPOCH);
+        m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY, DEFAULT_PERFORM_LAZY);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
-            CFG_LEARNING_RATE_STRATEGY, LearningRateStrategies.Fixed.name()));
-        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, 1e-3);
-        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY, 1.0);
-        m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, Prior.Uniform.name()));
-        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, 0.1);
+            CFG_LEARNING_RATE_STRATEGY, DEFAULT_LEARNINGRATE_STRATEGY.name()));
+        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, DEFAULT_INITIAL_LEARNING_RATE);
+        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY, DEFAULT_LEARNING_RATE_DECAY);
+        m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, DEFAULT_PRIOR.name()));
+        m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, DEFAULT_PRIOR_VARIANCE);
 
     }
 
