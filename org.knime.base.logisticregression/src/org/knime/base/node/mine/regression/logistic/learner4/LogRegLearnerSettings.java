@@ -66,10 +66,31 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class LogRegLearnerSettings {
 
+    /**
+     * The different solvers that the Logistic Regression node supports.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     public enum Solver {
+        /**
+         * Uses Iteratively reweighted least squares to estimate the model.
+         * This algorithm is widely used but suffers from scaling problems if the number of features is high.
+         * It also can't find solution to linearly separable problems or problems where there are more features than samples,
+         * due to the lack of a regularization.
+         */
         IRLS("Iteratively reweighted least squares", false, EnumSet.noneOf(LearningRateStrategies.class), EnumSet.noneOf(Prior.class)),
+        /**
+         * A fast and robust stochastic gradient descent variant that can be used for large scale problems.
+         * It also allows to add regularization and is hence suitable for problems where the IRLS algorithm fails.
+         * Limitations of SAG are that it has to store the raw gradients for all samples (sounds worse than it is since this
+         * corresponds to a single double/float for each row) and it requires real random drawing of samples.
+         */
         SAG("Stochastic average gradient", true, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.LineSearch),
             EnumSet.allOf(Prior.class)),
+        /**
+         * Vanilla stochastic gradient descent. Converges slower than SAG but doesn't require to store any data.
+         * Also supports regularization.
+         */
         SGD("Stochastic gradient descent", false, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.Annealing),
             EnumSet.allOf(Prior.class));
 
@@ -91,30 +112,65 @@ public class LogRegLearnerSettings {
             return m_toString;
         }
 
+        /**
+         * Indicates whether the solver supports lazy calculation.
+         * @return true if lazy calculation is supported
+         */
         public boolean supportsLazy() {
             return m_supportsLazy;
         }
 
+        /**
+         * Returns an EnumSet containing the compatible priors.
+         * @return EnumSet of compatible priors
+         */
         public EnumSet<Prior> getCompatiblePriors() {
             return m_compatiblePriors;
         }
 
+        /**
+         * Returns an EnumSet of compatible {@link LearningRateStrategies}.
+         * @return EnumSet of compatible {@link LearningRateStrategies}
+         */
         public EnumSet<LearningRateStrategies> getCompatibleLearningRateStrategies() {
             return m_compatibleLRS;
         }
 
+        /**
+         * Indicates whether the solver is compatible with <b>lrs</b>.
+         * @param lrs the {@link LearningRateStrategies} to check for compatibility
+         * @return true if <b>lrs</b> is compatible
+         */
         public boolean compatibleWith(final LearningRateStrategies lrs) {
             return m_compatibleLRS.contains(lrs);
         }
 
+        /**
+         * Indicates whether the solver is compatible with <b>prior</b>.
+         * @param prior the {@link Prior} to check for compatibility
+         * @return true if <b>prior</b> is compatible
+         */
         public boolean compatibleWith(final Prior prior) {
             return m_compatiblePriors.contains(prior);
         }
     }
 
+    /**
+     * Enum that represents the different weight priors that are supported by the SG framework.
+     * @author Adrian Nembach, KNIME.com
+     */
     public enum Prior {
+        /**
+         * A Uniform prior for the weights is equivalent to using no prior at all.
+         */
         Uniform(false),
+        /**
+         * A Gauss prior for the weights is equivalent to L2 regularization.
+         */
         Gauss(true),
+        /**
+         * A Laplace prior for the weights is equivalent to L1 regularization.
+         */
         Laplace(true);
 
         private final boolean m_hasVariance;
@@ -122,14 +178,33 @@ public class LogRegLearnerSettings {
             m_hasVariance = hasVariance;
         }
 
+        /**
+         * Indicates whether the prior requires a value for the variance.
+         * @return true if the prior requires a variance value
+         */
         public boolean hasVariance() {
             return m_hasVariance;
         }
     }
 
+    /**
+     * Enum that contains the learning rate strategies supported by the SG framework and their properties.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     public enum LearningRateStrategies {
+        /**
+         * Uses the initial learning rate for the whole training.
+         */
         Fixed(true, false),
+        /**
+         * Anneals the learning rate after each epoch.
+         */
         Annealing(true, true),
+        /**
+         * Performs a line search for the Lipschitz constant and uses the estimate
+         * to calculate the optimal learning rate. Can only be used with the SAG algorithm.
+         */
         LineSearch(false, false);
 
         private final boolean m_hasInitialValue;
@@ -140,10 +215,18 @@ public class LogRegLearnerSettings {
             m_hasDecayRate = hasDecayRate;
         }
 
+        /**
+         * Indicates whether the strategy requires an initial value.
+         * @return true if the strategy requires an initial value
+         */
         public boolean hasInitialValue() {
             return m_hasInitialValue;
         }
 
+        /**
+         * Indicates whether the strategy requires a decay rate.
+         * @return true if the strategy requires a decay rate
+         */
         public boolean hasDecayRate() {
             return m_hasDecayRate;
         }
@@ -279,7 +362,9 @@ public class LogRegLearnerSettings {
         settings.addBoolean(CFG_SORT_INCLUDES_CATEGORIES, m_sortIncludesCategories);
         settings.addString(CFG_SOLVER, m_solver.name());
         settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
-        settings.addBoolean(CFG_PERFORM_LAZY, m_performLazy);
+        // if the solver doesn't support laziness, we shouldn't store that the calculations
+        // should be performed laziness
+        settings.addBoolean(CFG_PERFORM_LAZY, m_solver.m_supportsLazy && m_performLazy);
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
         settings.addString(CFG_PRIOR, m_prior.name());
         settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
