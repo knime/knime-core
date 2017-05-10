@@ -692,6 +692,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
     private void removeNodeCopies(final NativeNodeContainer[] nodeContainers) {
         for (int i = 0; i < nodeContainers.length; i++) {
+            nodeContainers[i].getNode().setFileStoreHandler(null);
             NodeID id = nodeContainers[i].getID();
             WorkflowManager workflowManager = nodeContainers[i].getParent();
             workflowManager.removeNode(id);
