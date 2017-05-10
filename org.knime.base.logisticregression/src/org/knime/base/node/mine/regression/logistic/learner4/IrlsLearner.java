@@ -50,9 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4;
 import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -65,8 +63,6 @@ import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.util.DoubleFormat;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -102,16 +98,6 @@ final class IrlsLearner implements LogRegLearner {
             + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
             + "causes and fixes";
 
-
-    /** the target reference category, if not set it is the last category. */
-    private DataCell m_targetReferenceCategory;
-    /** true when target categories should be sorted. */
-    private boolean m_sortTargetCategories;
-    /** true when categories of nominal data in the include list should be sorted. */
-    private boolean m_sortFactorsCategories;
-
-    private List<DataColumnSpec> m_specialColumns;
-
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
      * @param specialColumns The special columns that are learning columns, but cannot be represented as PMML columns (vectors).
@@ -120,11 +106,8 @@ final class IrlsLearner implements LogRegLearner {
      * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      */
     IrlsLearner(final PMMLPortObjectSpec spec,
-        final DataTableSpec tableSpec,
-        final List<DataColumnSpec> specialColumns, final DataCell targetReferenceCategory,
-        final boolean sortTargetCategories,
-        final boolean sortFactorsCategories) {
-        this(spec, tableSpec, specialColumns, targetReferenceCategory, sortTargetCategories, sortFactorsCategories, 30, 1e-14);
+        final DataTableSpec tableSpec) {
+        this(spec, tableSpec, 30, 1e-14);
     }
 
     /**
@@ -138,16 +121,9 @@ final class IrlsLearner implements LogRegLearner {
      */
     IrlsLearner(final PMMLPortObjectSpec spec,
             final DataTableSpec tableSpec,
-            final List<DataColumnSpec> specialColumns, final DataCell targetReferenceCategory,
-            final boolean sortTargetCategories,
-            final boolean sortFactorsCategories,
             final int maxIter, final double eps) {
         m_outSpec = spec;
         m_tableSpec = tableSpec;
-        m_specialColumns = new ArrayList<>(specialColumns);
-        m_targetReferenceCategory = targetReferenceCategory;
-        m_sortTargetCategories = sortTargetCategories;
-        m_sortFactorsCategories = sortFactorsCategories;
         m_maxIter = maxIter;
         m_eps = eps;
         m_penaltyTerm = 0.0;
@@ -268,8 +244,8 @@ final class IrlsLearner implements LogRegLearner {
         RealMatrix covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
         RealMatrix betaMat = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
         for (int i = 0; i < beta.getColumnDimension(); i++) {
-            int r = i / rC;
-            int c = i % rC;
+            int r = i / (rC + 1);
+            int c = i % (rC + 1);
             betaMat.setEntry(r, c, beta.getEntry(0, i));
         }
         return new LogRegLearnerResult(betaMat, covMat, iter, loglike);
