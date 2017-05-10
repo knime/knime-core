@@ -494,7 +494,7 @@ public final class BufferedFileReader extends BufferedReader {
      * @param dataLocation the URL of the source to read from. If it is zipped
      *            it will try to open a ZIP stream on it.
      * @param charsetName the character set to use. Must be supported by the VM
-     * @param timeout timeout for the reader. Can be {@code null}, which results in usage of default value
+     * @param timeout timeout for the reader in milliseconds. Can be {@code null}, which results in usage of default value
      * @return reader reading from the specified location.
      *
      * @throws IOException if something went wrong when opening the stream.

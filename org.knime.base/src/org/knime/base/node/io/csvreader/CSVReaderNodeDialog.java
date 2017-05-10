@@ -283,7 +283,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());
-        config.setConnectTimeout(m_filePanel.getConnectTimeout().orElse(-1));
+        config.setConnectTimeout(m_filePanel.getConnectTimeout().orElse(null));
 
         config.saveSettingsTo(settings);
         m_filePanel.addToHistory();

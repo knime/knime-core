@@ -69,6 +69,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -116,7 +117,9 @@ import org.knime.core.util.SimpleFileFilter;
  */
 @SuppressWarnings("serial")
 public final class FilesHistoryPanel extends JPanel {
-    private static final int DEFAULT_CONNECT_TIMEOUT = Integer.getInteger(KNIMEConstants.PROPERTY_URL_TIMEOUT, 1);
+    private static final Duration DEFAULT_CONNECT_TIMEOUT =
+        Duration.ofMillis(Integer.getInteger(KNIMEConstants.PROPERTY_URL_TIMEOUT, 1000));
+
     /**
      * Enum for whether and which location validation should be performed.
      *
@@ -534,13 +537,8 @@ public final class FilesHistoryPanel extends JPanel {
         m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE / 1000, 1));
         m_connectTimeoutSpinner.setEnabled(false);
         m_userSetTimeoutCheckBox = new JCheckBox("Connect timeout [s]: ");
-        m_userSetTimeoutCheckBox.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_connectTimeoutSpinner.setEnabled(m_userSetTimeoutCheckBox.isSelected());
-            }
-        });
+        m_userSetTimeoutCheckBox
+            .addActionListener(e -> m_connectTimeoutSpinner.setEnabled(m_userSetTimeoutCheckBox.isSelected()));
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -770,36 +768,35 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
-     * Returns the connect timeout in seconds
+     * Returns the connect timeout.
      *
-     * @return connect timeout in seconds
+     * @return the connect timeout if set by the user or an empty optional
      * @since 3.4
      */
-    public Optional<Integer> getConnectTimeout() {
-        return Optional
-            .ofNullable(m_userSetTimeoutCheckBox.isSelected() ? (int)m_connectTimeoutSpinner.getValue() : null);
+    public Optional<Duration> getConnectTimeout() {
+        return m_userSetTimeoutCheckBox.isSelected()
+            ? Optional.of(Duration.ofSeconds((int)m_connectTimeoutSpinner.getValue())) : Optional.empty();
     }
 
     /**
-     * Sets the connect timeout in the dialog in seconds
+     * Sets the connect timeout in the dialog. Note the that currently the component will only show full seconds.
      *
-     * @param timeout in seconds
+     * @param timeout the timeout or <code>null</code> if the default timeout should be used
      * @since 3.4
      */
-    public void setConnectTimeout(final int timeout) {
-        final int timeoutToUse =
-            timeout <= 0 ? (int)Math.max(Math.round(DEFAULT_CONNECT_TIMEOUT / 1000.0), 1) : timeout;
+    public void setConnectTimeout(final Duration timeout) {
+        final Duration timeoutToUse = timeout == null ? DEFAULT_CONNECT_TIMEOUT : timeout;
         if (SwingUtilities.isEventDispatchThread()) {
-            m_connectTimeoutSpinner.setValue(timeoutToUse);
-            if (timeout > 0 && !m_userSetTimeoutCheckBox.isSelected()) {
+            m_connectTimeoutSpinner.setValue(timeoutToUse.getSeconds());
+            if ((timeout != null) && !m_userSetTimeoutCheckBox.isSelected()) {
                 m_userSetTimeoutCheckBox.doClick();
             }
         } else {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    m_connectTimeoutSpinner.setValue(timeoutToUse);
-                    if (timeout > 0 && !m_userSetTimeoutCheckBox.isSelected()) {
+                    m_connectTimeoutSpinner.setValue(timeoutToUse.getSeconds());
+                    if ((timeout != null) && !m_userSetTimeoutCheckBox.isSelected()) {
                         m_userSetTimeoutCheckBox.doClick();
                     }
                 }

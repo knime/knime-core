@@ -1260,7 +1260,7 @@ public final class FileUtil {
      * connecting and reading.
      *
      * @param url any URL
-     * @param timeout the read/connection timeout
+     * @param timeout the read/connection timeout in milliseconds
      * @return an input stream
      * @throws IOException if an I/O error occurs
      * @since 2.10
