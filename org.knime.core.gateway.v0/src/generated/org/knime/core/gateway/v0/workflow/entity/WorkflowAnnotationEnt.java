@@ -46,6 +46,7 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
+import java.util.List;
 
 /**
  * A workflow annotation.
@@ -89,5 +90,10 @@ public interface WorkflowAnnotationEnt extends GatewayEntity {
      * @return Text alignment.
      */
  	String getAlignment();
+ 	
+    /**
+     * @return Defines ranges of different styles within the annotation.
+     */
+ 	List<StyleRangeEnt> getStyleRanges();
  	
 }

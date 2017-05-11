@@ -38,6 +38,11 @@
             "name" : "Alignment",
             "description" : "Text alignment.",
             "type" : "String"
+        },
+        {
+        	"name" : "StyleRanges",
+        	"description" : "Defines ranges of different styles within the annotation.",
+        	"type" : "List<workflow.entity.StyleRangeEnt>"
         }
     ]
 }

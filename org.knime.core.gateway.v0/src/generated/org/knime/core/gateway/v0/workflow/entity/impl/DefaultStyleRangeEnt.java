@@ -46,11 +46,8 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.StyleRangeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
@@ -58,59 +55,50 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default implementation of the WorkflowAnnotationEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the StyleRangeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
+public class DefaultStyleRangeEnt implements StyleRangeEnt {
 
-	private String m_Text;
-	private BoundsEnt m_Bounds;
-	private int m_BgColor;
-	private int m_BorderSize;
-	private int m_BorderColor;
+	private int m_Start;
+	private int m_Length;
+	private String m_FontName;
+	private String m_FontStyle;
 	private int m_FontSize;
-	private String m_Alignment;
-	private List<StyleRangeEnt> m_StyleRanges;
+	private int m_ForegroundColor;
 
     /**
      * @param builder
      */
-    private DefaultWorkflowAnnotationEnt(final DefaultWorkflowAnnotationEntBuilder builder) {
-		m_Text = builder.m_Text;
-		m_Bounds = builder.m_Bounds;
-		m_BgColor = builder.m_BgColor;
-		m_BorderSize = builder.m_BorderSize;
-		m_BorderColor = builder.m_BorderColor;
+    private DefaultStyleRangeEnt(final DefaultStyleRangeEntBuilder builder) {
+		m_Start = builder.m_Start;
+		m_Length = builder.m_Length;
+		m_FontName = builder.m_FontName;
+		m_FontStyle = builder.m_FontStyle;
 		m_FontSize = builder.m_FontSize;
-		m_Alignment = builder.m_Alignment;
-		m_StyleRanges = builder.m_StyleRanges;
+		m_ForegroundColor = builder.m_ForegroundColor;
     }
 
 	@Override
-    public String getText() {
-        return m_Text;
+    public int getStart() {
+        return m_Start;
     }
     
 	@Override
-    public BoundsEnt getBounds() {
-        return m_Bounds;
+    public int getLength() {
+        return m_Length;
     }
     
 	@Override
-    public int getBgColor() {
-        return m_BgColor;
+    public String getFontName() {
+        return m_FontName;
     }
     
 	@Override
-    public int getBorderSize() {
-        return m_BorderSize;
-    }
-    
-	@Override
-    public int getBorderColor() {
-        return m_BorderColor;
+    public String getFontStyle() {
+        return m_FontStyle;
     }
     
 	@Override
@@ -119,13 +107,8 @@ public class DefaultWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
     }
     
 	@Override
-    public String getAlignment() {
-        return m_Alignment;
-    }
-    
-	@Override
-    public List<StyleRangeEnt> getStyleRanges() {
-        return m_StyleRanges;
+    public int getForegroundColor() {
+        return m_ForegroundColor;
     }
     
 
@@ -134,73 +117,59 @@ public class DefaultWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
 	    return ToStringBuilder.reflectionToString(this);
 	}
 
-	public static DefaultWorkflowAnnotationEntBuilder builder() {
-		return new DefaultWorkflowAnnotationEntBuilder();
+	public static DefaultStyleRangeEntBuilder builder() {
+		return new DefaultStyleRangeEntBuilder();
 	}
 	
 	/**
-	* Default implementation of the WorkflowAnnotationEntBuilder-interface.
+	* Default implementation of the StyleRangeEntBuilder-interface.
 	*/
-	public static class DefaultWorkflowAnnotationEntBuilder implements WorkflowAnnotationEntBuilder {
+	public static class DefaultStyleRangeEntBuilder implements StyleRangeEntBuilder {
     
-		private String m_Text;
-		private BoundsEnt m_Bounds;
-		private int m_BgColor;
-		private int m_BorderSize;
-		private int m_BorderColor;
+		private int m_Start;
+		private int m_Length;
+		private String m_FontName;
+		private String m_FontStyle;
 		private int m_FontSize;
-		private String m_Alignment;
-		private List<StyleRangeEnt> m_StyleRanges;
+		private int m_ForegroundColor;
 
-        public WorkflowAnnotationEnt build() {
-            return new DefaultWorkflowAnnotationEnt(this);
+        public StyleRangeEnt build() {
+            return new DefaultStyleRangeEnt(this);
         }
 
 		@Override
-        public WorkflowAnnotationEntBuilder setText(final String Text) {
-			m_Text = Text;			
+        public StyleRangeEntBuilder setStart(final int Start) {
+			m_Start = Start;			
             return this;
         }
         
 		@Override
-        public WorkflowAnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
-			m_Bounds = Bounds;			
+        public StyleRangeEntBuilder setLength(final int Length) {
+			m_Length = Length;			
             return this;
         }
         
 		@Override
-        public WorkflowAnnotationEntBuilder setBgColor(final int BgColor) {
-			m_BgColor = BgColor;			
+        public StyleRangeEntBuilder setFontName(final String FontName) {
+			m_FontName = FontName;			
             return this;
         }
         
 		@Override
-        public WorkflowAnnotationEntBuilder setBorderSize(final int BorderSize) {
-			m_BorderSize = BorderSize;			
+        public StyleRangeEntBuilder setFontStyle(final String FontStyle) {
+			m_FontStyle = FontStyle;			
             return this;
         }
         
 		@Override
-        public WorkflowAnnotationEntBuilder setBorderColor(final int BorderColor) {
-			m_BorderColor = BorderColor;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setFontSize(final int FontSize) {
+        public StyleRangeEntBuilder setFontSize(final int FontSize) {
 			m_FontSize = FontSize;			
             return this;
         }
         
 		@Override
-        public WorkflowAnnotationEntBuilder setAlignment(final String Alignment) {
-			m_Alignment = Alignment;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
-			m_StyleRanges = StyleRanges;			
+        public StyleRangeEntBuilder setForegroundColor(final int ForegroundColor) {
+			m_ForegroundColor = ForegroundColor;			
             return this;
         }
         

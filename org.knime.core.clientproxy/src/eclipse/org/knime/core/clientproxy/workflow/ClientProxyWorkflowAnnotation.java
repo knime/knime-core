@@ -109,8 +109,30 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public StyleRange[] getStyleRanges() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_anno.getStyleRanges().stream().map(sr -> {
+                    return StyleRange.builder()
+                            .setStart(sr.getStart())
+                            .setLength(sr.getLength())
+                            .setFontName(sr.getFontName())
+                            .setFontSize(sr.getFontSize())
+                            .setFgColor(sr.getForegroundColor())
+                            .setFontStyle(getFontStyleIdx(sr.getFontStyle()))
+                            .build();
+                }).toArray(StyleRange[]::new);
+    }
+
+    private int getFontStyleIdx(final String fontStyle) {
+        //indices from SWT-class
+        if (fontStyle.equals("normal")) {
+            return 0;
+        } else if (fontStyle.equals("bold")) {
+            return 1;
+        } else if (fontStyle.equals("italic")) {
+            return 2;
+        } else {
+            //return normal style by default
+            return 0;
+        }
     }
 
     /**

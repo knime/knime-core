@@ -46,7 +46,9 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 
@@ -84,10 +86,11 @@ public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
 	private int m_BorderColor;
 	private int m_FontSize;
 	private String m_Alignment;
+	private List<StyleRangeEntFromJson> m_StyleRanges;
 
 	@JsonCreator
 	private WorkflowAnnotationEntFromJson(
-	@JsonProperty("Text") String Text,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("BgColor") int BgColor,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("FontSize") int FontSize,	@JsonProperty("Alignment") String Alignment	) {
+	@JsonProperty("Text") String Text,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("BgColor") int BgColor,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("FontSize") int FontSize,	@JsonProperty("Alignment") String Alignment,	@JsonProperty("StyleRanges") List<StyleRangeEntFromJson> StyleRanges	) {
 		m_Text = Text;
 		m_Bounds = Bounds;
 		m_BgColor = BgColor;
@@ -95,6 +98,7 @@ public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
 		m_BorderColor = BorderColor;
 		m_FontSize = FontSize;
 		m_Alignment = Alignment;
+		m_StyleRanges = StyleRanges;
 	}
 	
 	protected WorkflowAnnotationEntFromJson() {
@@ -141,6 +145,12 @@ public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
 	@Override
     public String getAlignment() {
         	return m_Alignment;
+            
+    }
+    
+	@Override
+    public List<StyleRangeEnt> getStyleRanges() {
+        	return m_StyleRanges.stream().map(l -> (StyleRangeEnt) l ).collect(Collectors.toList());
             
     }
     

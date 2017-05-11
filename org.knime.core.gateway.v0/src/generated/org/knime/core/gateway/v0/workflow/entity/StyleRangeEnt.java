@@ -44,66 +44,45 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 /**
- * Builder for {@link WorkflowAnnotationEnt}.
+ * Defines the style of a range (e.g. within a workflow annotation).
+ *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<WorkflowAnnotationEnt> {
+public interface StyleRangeEnt extends GatewayEntity {
 
     /**
-     * @param text The text.
-     * @return <code>this</code>
+     * @return Style range start.
      */
-	WorkflowAnnotationEntBuilder setText(String text);
-	
+ 	int getStart();
+ 	
     /**
-     * @param bounds Position/Size of an annotation.
-     * @return <code>this</code>
+     * @return Style range length.
      */
-	WorkflowAnnotationEntBuilder setBounds(BoundsEnt bounds);
-	
+ 	int getLength();
+ 	
     /**
-     * @param bgColor Background color.
-     * @return <code>this</code>
+     * @return Style range font name.
      */
-	WorkflowAnnotationEntBuilder setBgColor(int bgColor);
-	
+ 	String getFontName();
+ 	
     /**
-     * @param borderSize Border thickness.
-     * @return <code>this</code>
+     * @return The font style, e.g. normal, bold or italic.
      */
-	WorkflowAnnotationEntBuilder setBorderSize(int borderSize);
-	
+ 	String getFontStyle();
+ 	
     /**
-     * @param borderColor Border color.
-     * @return <code>this</code>
+     * @return Style range font size.
      */
-	WorkflowAnnotationEntBuilder setBorderColor(int borderColor);
-	
+ 	int getFontSize();
+ 	
     /**
-     * @param fontSize The font fize.
-     * @return <code>this</code>
+     * @return Style range foreground color.
      */
-	WorkflowAnnotationEntBuilder setFontSize(int fontSize);
-	
-    /**
-     * @param alignment Text alignment.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setAlignment(String alignment);
-	
-    /**
-     * @param styleRanges Defines ranges of different styles within the annotation.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setStyleRanges(List<StyleRangeEnt> styleRanges);
-	
+ 	int getForegroundColor();
+ 	
 }

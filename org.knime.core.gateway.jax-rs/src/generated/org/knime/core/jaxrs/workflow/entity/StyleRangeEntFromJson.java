@@ -44,66 +44,96 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.jaxrs.workflow.entity;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Builder for {@link WorkflowAnnotationEnt}.
+ * Implementation of the {@link StyleRangeEnt} interface that can be deserialized from a json object (json-annotated constructor).
+ *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<WorkflowAnnotationEnt> {
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = StyleRangeEntFromJson.class, name = "StyleRangeEnt")
+})
+public class StyleRangeEntFromJson  implements StyleRangeEnt {
 
-    /**
-     * @param text The text.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setText(String text);
+	private int m_Start;
+	private int m_Length;
+	private String m_FontName;
+	private String m_FontStyle;
+	private int m_FontSize;
+	private int m_ForegroundColor;
+
+	@JsonCreator
+	private StyleRangeEntFromJson(
+	@JsonProperty("Start") int Start,	@JsonProperty("Length") int Length,	@JsonProperty("FontName") String FontName,	@JsonProperty("FontStyle") String FontStyle,	@JsonProperty("FontSize") int FontSize,	@JsonProperty("ForegroundColor") int ForegroundColor	) {
+		m_Start = Start;
+		m_Length = Length;
+		m_FontName = FontName;
+		m_FontStyle = FontStyle;
+		m_FontSize = FontSize;
+		m_ForegroundColor = ForegroundColor;
+	}
 	
-    /**
-     * @param bounds Position/Size of an annotation.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBounds(BoundsEnt bounds);
-	
-    /**
-     * @param bgColor Background color.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBgColor(int bgColor);
-	
-    /**
-     * @param borderSize Border thickness.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBorderSize(int borderSize);
-	
-    /**
-     * @param borderColor Border color.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBorderColor(int borderColor);
-	
-    /**
-     * @param fontSize The font fize.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setFontSize(int fontSize);
-	
-    /**
-     * @param alignment Text alignment.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setAlignment(String alignment);
-	
-    /**
-     * @param styleRanges Defines ranges of different styles within the annotation.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setStyleRanges(List<StyleRangeEnt> styleRanges);
-	
+	protected StyleRangeEntFromJson() {
+		//just a dummy constructor for subclasses
+	}
+
+
+	@Override
+    public int getStart() {
+        	return m_Start;
+            
+    }
+    
+	@Override
+    public int getLength() {
+        	return m_Length;
+            
+    }
+    
+	@Override
+    public String getFontName() {
+        	return m_FontName;
+            
+    }
+    
+	@Override
+    public String getFontStyle() {
+        	return m_FontStyle;
+            
+    }
+    
+	@Override
+    public int getFontSize() {
+        	return m_FontSize;
+            
+    }
+    
+	@Override
+    public int getForegroundColor() {
+        	return m_ForegroundColor;
+            
+    }
+    
+
 }

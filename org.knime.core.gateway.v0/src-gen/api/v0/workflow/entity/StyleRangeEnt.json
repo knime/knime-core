@@ -1,0 +1,38 @@
+{
+    "type" : "entity",
+    "name" : "StyleRangeEnt",
+    "description" : "Defines the style of a range (e.g. within a workflow annotation).",
+    "namespace" : "workflow.entity",
+    "fields" : [
+        {
+            "name" : "Start",
+            "description" : "Style range start.",
+            "type" : "int"
+        },
+        {
+            "name" : "Length",
+            "description" : "Style range length.",
+            "type" : "int"
+        },
+        {
+            "name" : "FontName",
+            "description" : "Style range font name.",
+            "type" : "String"
+        },
+        {
+            "name" : "FontStyle",
+            "description" : "The font style, e.g. normal, bold or italic.",
+            "type" : "String"
+        },
+        {
+            "name" : "FontSize",
+            "description" : "Style range font size.",
+            "type" : "int"
+        },
+        {
+            "name" : "ForegroundColor",
+            "description" : "Style range foreground color.",
+            "type" : "int"
+        }
+    ]
+}

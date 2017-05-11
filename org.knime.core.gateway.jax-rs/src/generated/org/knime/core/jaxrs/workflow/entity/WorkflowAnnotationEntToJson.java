@@ -46,7 +46,9 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -106,6 +108,11 @@ public class WorkflowAnnotationEntToJson  implements WorkflowAnnotationEnt {
 	@JsonProperty("Alignment")
     public String getAlignment() {
     	return m_e.getAlignment();
+    }
+    
+	@JsonProperty("StyleRanges")
+    public List<StyleRangeEnt> getStyleRanges() {
+    	return m_e.getStyleRanges().stream().map(l -> StyleRangeEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
 

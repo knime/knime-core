@@ -44,66 +44,78 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.jaxrs.workflow.entity;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
+import java.util.HashMap;
+
 
 /**
- * Builder for {@link WorkflowAnnotationEnt}.
+ * Wrapper class for the {@link StyleRangeEnt} interface with Json-annotated getter-methods.
+ *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<WorkflowAnnotationEnt> {
+public class StyleRangeEntToJson  implements StyleRangeEnt {
 
-    /**
-     * @param text The text.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setText(String text);
+	private final StyleRangeEnt m_e;
 	
-    /**
-     * @param bounds Position/Size of an annotation.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBounds(BoundsEnt bounds);
+	public StyleRangeEntToJson(final StyleRangeEnt e) {
+		m_e = e;
+	}
+
+	@JsonProperty("Start")
+    public int getStart() {
+    	return m_e.getStart();
+    }
+    
+	@JsonProperty("Length")
+    public int getLength() {
+    	return m_e.getLength();
+    }
+    
+	@JsonProperty("FontName")
+    public String getFontName() {
+    	return m_e.getFontName();
+    }
+    
+	@JsonProperty("FontStyle")
+    public String getFontStyle() {
+    	return m_e.getFontStyle();
+    }
+    
+	@JsonProperty("FontSize")
+    public int getFontSize() {
+    	return m_e.getFontSize();
+    }
+    
+	@JsonProperty("ForegroundColor")
+    public int getForegroundColor() {
+    	return m_e.getForegroundColor();
+    }
+    
+
+
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
 	
-    /**
-     * @param bgColor Background color.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBgColor(int bgColor);
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "StyleRangeEnt";
+	}
 	
-    /**
-     * @param borderSize Border thickness.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBorderSize(int borderSize);
-	
-    /**
-     * @param borderColor Border color.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setBorderColor(int borderColor);
-	
-    /**
-     * @param fontSize The font fize.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setFontSize(int fontSize);
-	
-    /**
-     * @param alignment Text alignment.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setAlignment(String alignment);
-	
-    /**
-     * @param styleRanges Defines ranges of different styles within the annotation.
-     * @return <code>this</code>
-     */
-	WorkflowAnnotationEntBuilder setStyleRanges(List<StyleRangeEnt> styleRanges);
-	
+	public static StyleRangeEnt wrap(StyleRangeEnt e) {
+	    return new StyleRangeEntToJson(e);
+	}
+
 }

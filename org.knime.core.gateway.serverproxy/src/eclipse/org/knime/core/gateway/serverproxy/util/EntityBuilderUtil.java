@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
@@ -81,6 +82,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
@@ -96,6 +98,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.PortTypeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.StyleRangeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
@@ -318,6 +321,8 @@ public class EntityBuilderUtil {
                 .setWidth(wa.getWidth())
                 .setHeight(wa.getHeight())
                 .build();
+        List<StyleRangeEnt> styleRanges =
+            Arrays.stream(wa.getStyleRanges()).map(sr -> buildStyleRangeEnt(sr)).collect(Collectors.toList());
         return builder(WorkflowAnnotationEntBuilder.class)
                 .setAlignment(wa.getAlignment().toString())
                 .setBgColor(wa.getBgColor())
@@ -326,7 +331,32 @@ public class EntityBuilderUtil {
                 .setFontSize(wa.getDefaultFontSize())
                 .setBounds(bounds)
                 .setText(wa.getText())
+                .setStyleRanges(styleRanges)
                 .build();
+    }
+
+    private static StyleRangeEnt buildStyleRangeEnt(final StyleRange sr) {
+        return builder(StyleRangeEntBuilder.class)
+                .setFontName(sr.getFontName())
+                .setFontSize(sr.getFontSize())
+                .setForegroundColor(sr.getFgColor())
+                .setLength(sr.getLength())
+                .setStart(sr.getStart())
+                .setFontStyle(getFontStyleString(sr.getFontStyle()))
+                .build();
+    }
+
+    private static String getFontStyleString(final int fontStyle) {
+        switch (fontStyle) {
+            case 0:
+                return "normal";
+            case 1:
+                return "bold";
+            case 2:
+                return "italic";
+            default:
+                return "normal";
+        }
     }
 
     /**
