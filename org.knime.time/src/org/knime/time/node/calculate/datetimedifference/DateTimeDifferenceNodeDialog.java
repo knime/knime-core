@@ -78,10 +78,10 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.DataValueColumnFilter;
-import org.knime.time.Granularity;
 import org.knime.time.util.DialogComponentDateTimeSelection;
-import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
+import org.knime.time.util.Granularity;
 import org.knime.time.util.SettingsModelDateTime;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 
 /**
  * The node dialog of the node which calculates differences between two date&time values.

@@ -75,7 +75,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.Granularity;
+import org.knime.time.util.Granularity;
 
 /**
  * The node model of the node which extracts duration or period fields.

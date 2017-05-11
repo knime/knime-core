@@ -46,7 +46,7 @@
  * History
  *   Oct 10, 2016 (simon): created
  */
-package org.knime.time;
+package org.knime.time.util;
 
 import java.time.Duration;
 import java.time.Period;

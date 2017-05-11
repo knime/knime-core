@@ -85,8 +85,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.Granularity;
 import org.knime.time.util.DurationPeriodFormatUtils;
+import org.knime.time.util.Granularity;
 
 /**
  * The node model of the node which shifts date&time columns.

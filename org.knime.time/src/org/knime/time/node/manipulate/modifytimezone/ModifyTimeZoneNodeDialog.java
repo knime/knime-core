@@ -69,8 +69,8 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.time.util.DialogComponentDateTimeSelection;
-import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 import org.knime.time.util.SettingsModelDateTime;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 
 /**
  * The node dialog of the node which modifies a time zone.

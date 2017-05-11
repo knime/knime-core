@@ -91,7 +91,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node dialog of the node which converts strings to the new date&time types.
@@ -106,7 +106,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
 
     private final DialogComponentString m_dialogCompSuffix;
 
-    private final JComboBox<DateTimeTypes> m_typeCombobox;
+    private final JComboBox<DateTimeType> m_typeCombobox;
 
     private final DialogComponentStringSelection m_dialogCompLocale;
 
@@ -211,7 +211,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         gbcTypeFormat.gridy = 0;
         gbcTypeFormat.weighty = 0;
         gbcTypeFormat.anchor = GridBagConstraints.WEST;
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
+        m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
         final JPanel panelTypeList = new JPanel(new FlowLayout());
         final JLabel labelType = new JLabel("New type: ");
         panelTypeList.add(labelType);
@@ -303,28 +303,28 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
             final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
             try {
                 ZonedDateTime.parse(preview, formatter);
-                m_typeCombobox.setSelectedItem(DateTimeTypes.ZONED_DATE_TIME);
+                m_typeCombobox.setSelectedItem(DateTimeType.ZONED_DATE_TIME);
                 m_formatModel.setStringValue(format);
                 break;
             } catch (DateTimeException e) {
             }
             try {
                 LocalDateTime.parse(preview, formatter);
-                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE_TIME);
+                m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_DATE_TIME);
                 m_formatModel.setStringValue(format);
                 break;
             } catch (DateTimeException e) {
             }
             try {
                 LocalDate.parse(preview, formatter);
-                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_DATE);
+                m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_DATE);
                 m_formatModel.setStringValue(format);
                 break;
             } catch (DateTimeException e) {
             }
             try {
                 LocalTime.parse(preview, formatter);
-                m_typeCombobox.setSelectedItem(DateTimeTypes.LOCAL_TIME);
+                m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_TIME);
                 m_formatModel.setStringValue(format);
                 break;
             } catch (DateTimeException e) {
@@ -359,7 +359,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * method for change/action listener of type and date combo boxes.
      */
     private boolean formatListener(final String format) {
-        switch ((DateTimeTypes)m_typeCombobox.getSelectedItem()) {
+        switch ((DateTimeType)m_typeCombobox.getSelectedItem()) {
             case LOCAL_DATE: {
                 try {
                     final LocalDate now1 = LocalDate.now();
@@ -367,7 +367,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                     LocalDate.parse(now1.format(formatter1), formatter1);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
-                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_DATE.toString()
+                    return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_DATE.toString()
                         + " needs a date, but does not support a time, time zone or offset!");
                 } catch (IllegalArgumentException exception) {
                     return setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -380,7 +380,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                     LocalTime.parse(now2.format(formatter2), formatter2);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
-                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_TIME.toString()
+                    return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_TIME.toString()
                         + " needs a time, but does not support a date, time zone or offset!");
                 } catch (IllegalArgumentException exception) {
                     return setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -394,7 +394,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                     LocalDateTime.parse(format2, formatter3);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
-                    return setTypeFormatWarningMessage(exception, DateTimeTypes.LOCAL_DATE_TIME.toString()
+                    return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_DATE_TIME.toString()
                         + " needs date and time, but does not support a time zone or offset!");
                 } catch (IllegalArgumentException exception) {
                     return setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -408,7 +408,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
                     return setTypeFormatWarningMessage(exception,
-                        DateTimeTypes.ZONED_DATE_TIME.toString() + " needs date, time and a time zone or offset!");
+                        DateTimeType.ZONED_DATE_TIME.toString() + " needs date, time and a time zone or offset!");
                 } catch (IllegalArgumentException exception) {
                     return setTypeFormatWarningMessage(exception, exception.getMessage());
                 }
@@ -444,7 +444,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_dialogCompColFilter.saveSettingsTo(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
-        settings.addString("typeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
+        settings.addString("typeEnum", ((DateTimeType)m_typeCombobox.getModel().getSelectedItem()).name());
         m_dialogCompFormatSelect.saveSettingsTo(settings);
         m_dialogCompLocale.saveSettingsTo(settings);
         m_dialogCompCancelOnFail.saveSettingsTo(settings);
@@ -462,7 +462,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_typeCombobox.setSelectedItem(
-            DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
+            DateTimeType.valueOf(settings.getString("typeEnum", DateTimeType.LOCAL_DATE_TIME.name())));
         m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
         m_dialogCompLocale.loadSettingsFrom(settings, specs);
         m_dialogCompCancelOnFail.loadSettingsFrom(settings, specs);
@@ -486,7 +486,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_typeCombobox.setSelectedItem(
-            DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
+            DateTimeType.valueOf(settings.getString("typeEnum", DateTimeType.LOCAL_DATE_TIME.name())));
         m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
         m_dialogCompLocale.loadSettingsFrom(settings, specs);
         m_dialogCompCancelOnFail.loadSettingsFrom(settings, specs);

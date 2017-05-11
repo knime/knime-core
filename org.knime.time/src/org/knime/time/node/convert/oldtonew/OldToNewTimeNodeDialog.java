@@ -73,7 +73,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node dialog of the node which converts old to new date&time types.
@@ -90,7 +90,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentBoolean m_dialogCompZoneBool;
 
-    private final JComboBox<DateTimeTypes> m_typeCombobox;
+    private final JComboBox<DateTimeType> m_typeCombobox;
 
     private final DialogComponentBoolean m_dialogCompTypeBool;
 
@@ -115,7 +115,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTypeBool =
             new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)");
 
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
+        m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
 
         final SettingsModelBoolean zoneModelBool =
             OldToNewTimeNodeModel.createZoneModelBool(typeModelBool, m_typeCombobox);
@@ -228,7 +228,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                if (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeTypes.ZONED_DATE_TIME)) {
+                if (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeType.ZONED_DATE_TIME)) {
                     zoneSelectModel.setEnabled(true);
                 } else {
                     zoneSelectModel.setEnabled(false);
@@ -248,7 +248,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTypeBool.saveSettingsTo(settings);
         m_dialogCompZoneBool.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
-        settings.addString("newTypeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
+        settings.addString("newTypeEnum", ((DateTimeType)m_typeCombobox.getModel().getSelectedItem()).name());
     }
 
     /**
@@ -263,7 +263,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTypeBool.loadSettingsFrom(settings, specs);
         m_typeCombobox.setEnabled(!m_dialogCompTypeBool.isSelected());
         m_typeCombobox
-            .setSelectedItem(DateTimeTypes.valueOf(settings.getString("newTypeEnum", DateTimeTypes.LOCAL_DATE.name())));
+            .setSelectedItem(DateTimeType.valueOf(settings.getString("newTypeEnum", DateTimeType.LOCAL_DATE.name())));
         m_dialogCompZoneBool.loadSettingsFrom(settings, specs);
         m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
     }

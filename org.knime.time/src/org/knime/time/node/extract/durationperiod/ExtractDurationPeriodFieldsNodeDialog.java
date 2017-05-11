@@ -71,7 +71,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.Granularity;
+import org.knime.time.util.Granularity;
 
 /**
  * The node dialog of the node which extracts duration or period fields.

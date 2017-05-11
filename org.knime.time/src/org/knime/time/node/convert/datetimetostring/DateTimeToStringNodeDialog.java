@@ -86,7 +86,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node dialog of the node which converts strings to the new date&time types.
@@ -248,7 +248,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
                             setTypeFormatWarningMessage(exception,
-                                "'" + includes[i] + "' is a " + DateTimeTypes.LOCAL_DATE.toString()
+                                "'" + includes[i] + "' is a " + DateTimeType.LOCAL_DATE.toString()
                                     + " and only contains a date, but the format contains time fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -261,7 +261,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
                             setTypeFormatWarningMessage(exception,
-                                "'" + includes[i] + "' is a " + DateTimeTypes.LOCAL_TIME.toString()
+                                "'" + includes[i] + "' is a " + DateTimeType.LOCAL_TIME.toString()
                                     + " and only contains a time, but the format contains date fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -274,7 +274,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
                             setTypeFormatWarningMessage(exception, "'" + includes[i] + "' is a "
-                                + DateTimeTypes.LOCAL_DATE_TIME.toString()
+                                + DateTimeType.LOCAL_DATE_TIME.toString()
                                 + " and only contains a date and a time, but the format contains time zone fields!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());
@@ -287,7 +287,7 @@ final class DateTimeToStringNodeDialog extends NodeDialogPane {
                             setTypeFormatWarningNull();
                         } catch (DateTimeException exception) {
                             setTypeFormatWarningMessage(exception,
-                                "'" + includes[i] + "' is a " + DateTimeTypes.ZONED_DATE_TIME.toString()
+                                "'" + includes[i] + "' is a " + DateTimeType.ZONED_DATE_TIME.toString()
                                     + " and only contains a date, time, and time zone or offset!");
                         } catch (IllegalArgumentException exception) {
                             setTypeFormatWarningMessage(exception, exception.getMessage());

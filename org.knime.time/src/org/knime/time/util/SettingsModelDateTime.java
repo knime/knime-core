@@ -48,14 +48,13 @@
  */
 package org.knime.time.util;
 
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -212,8 +211,8 @@ public final class SettingsModelDateTime extends SettingsModel {
 
     /**
      * Returns the selected local date, local time, local date and time or zoned date and time.
-     * 
-     * @return a date or <code>null</code>, if no date or time is selected 
+     *
+     * @return a date or <code>null</code>, if no date or time is selected
      */
     public Temporal getSelectedDateTime() {
         if (m_useZone) {
@@ -303,6 +302,52 @@ public final class SettingsModelDateTime extends SettingsModel {
     }
 
     /**
+     * @param temporal sets the settings according to the input type, if <code>null</code> neither date, time nor zone
+     *            is used. Input can be a {@link LocalDate}, {@link LocalTime}, {@link LocalDateTime} or
+     *            {@link ZonedDateTime}, otherwise a {@link IllegalArgumentException} will be thrown.
+     */
+    public void setTemporal(final Temporal temporal) {
+        if (temporal instanceof LocalDate) {
+            setLocalDate((LocalDate)temporal);
+            setLocalTime(LocalTime.now().withNano(0));
+            setZone(ZoneId.systemDefault());
+            setUseDate(true);
+            setUseTime(false);
+            setUseZone(false);
+        } else if (temporal instanceof LocalTime) {
+            setLocalDate(LocalDate.now());
+            setLocalTime((LocalTime)temporal);
+            setZone(ZoneId.systemDefault());
+            setUseDate(false);
+            setUseTime(true);
+            setUseZone(false);
+        } else if (temporal instanceof LocalDateTime) {
+            setLocalDate(((LocalDateTime)temporal).toLocalDate());
+            setLocalTime(((LocalDateTime)temporal).toLocalTime());
+            setZone(ZoneId.systemDefault());
+            setUseDate(true);
+            setUseTime(true);
+            setUseZone(false);
+        } else if (temporal instanceof ZonedDateTime) {
+            setLocalDate(((ZonedDateTime)temporal).toLocalDate());
+            setLocalTime(((ZonedDateTime)temporal).toLocalTime());
+            setZone(((ZonedDateTime)temporal).getZone());
+            setUseDate(true);
+            setUseTime(true);
+            setUseZone(true);
+        } else if (temporal == null) {
+            setLocalDate(LocalDate.now());
+            setLocalTime(LocalTime.now().withNano(0));
+            setZone(ZoneId.systemDefault());
+            setUseDate(false);
+            setUseTime(false);
+            setUseZone(false);
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + temporal.getClass());
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
@@ -312,6 +357,7 @@ public final class SettingsModelDateTime extends SettingsModel {
         modelClone.setUseDate(m_useDate);
         modelClone.setUseTime(m_useTime);
         modelClone.setUseZone(m_useZone);
+        modelClone.setUseMillis(m_useMillis);
         return modelClone;
     }
 
@@ -352,7 +398,13 @@ public final class SettingsModelDateTime extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        String string = settings.getString(m_configName);
+        final String string = settings.getString(m_configName);
+
+        final Optional<ZonedDateTime> asZonedDateTime = DateTimeUtils.asZonedDateTime(string);
+        final Optional<LocalDateTime> asLocalDateTime = DateTimeUtils.asLocalDateTime(string);
+        final Optional<LocalDate> asLocalDate = DateTimeUtils.asLocalDate(string);
+        final Optional<LocalTime> asLocalTime = DateTimeUtils.asLocalTime(string);
+        final Optional<ZoneId> asTimezone = DateTimeUtils.asTimezone(string);
 
         if (StringUtils.isEmpty(string) || string.equals("missing")) {
             // table row to variable returns "missing" for flow variables when the node isn't executed yet
@@ -360,78 +412,33 @@ public final class SettingsModelDateTime extends SettingsModel {
             setUseDate(false);
             setUseTime(false);
             setUseZone(false);
-        } else if (isZonedDateTime(string)) {
-            setZonedDateTime(ZonedDateTime.parse(string));
+        } else if (asZonedDateTime.isPresent()) {
+            setZonedDateTime(asZonedDateTime.get());
             setUseDate(true);
             setUseTime(true);
             setUseZone(true);
-        } else if (isLocalDateTime(string)) {
-            setZonedDateTime(ZonedDateTime.of(LocalDateTime.parse(string), ZoneId.systemDefault()));
+        } else if (asLocalDateTime.isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(asLocalDateTime.get(), ZoneId.systemDefault()));
             setUseDate(true);
             setUseTime(true);
             setUseZone(false);
-        } else if (isLocalDate(string)) {
-            setZonedDateTime(ZonedDateTime.of(LocalDate.parse(string), LocalTime.now(), ZoneId.systemDefault()));
+        } else if (asLocalDate.isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(asLocalDate.get(), LocalTime.now(), ZoneId.systemDefault()));
             setUseDate(true);
             setUseTime(false);
             setUseZone(false);
-        } else if (isLocalTime(string)) {
-            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.parse(string), ZoneId.systemDefault()));
+        } else if (asLocalTime.isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), asLocalTime.get(), ZoneId.systemDefault()));
             setUseDate(false);
             setUseTime(true);
             setUseZone(false);
-        } else if (isTimezone(string)) {
-            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), ZoneId.of(string)));
+        } else if (asTimezone.isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), asTimezone.get()));
             setUseDate(false);
             setUseTime(false);
             setUseZone(true);
         } else {
             throw new InvalidSettingsException("'" + string + "' could not be parsed as a date, time, or time zone.");
-        }
-    }
-
-    private static boolean isZonedDateTime(final String s) {
-        try {
-            ZonedDateTime.parse(s);
-            return true;
-        } catch (DateTimeParseException ex) {
-            return false;
-        }
-    }
-
-    private static boolean isLocalDateTime(final String s) {
-        try {
-            LocalDateTime.parse(s);
-            return true;
-        } catch (DateTimeParseException ex) {
-            return false;
-        }
-    }
-
-    private static boolean isLocalDate(final String s) {
-        try {
-            LocalDate.parse(s);
-            return true;
-        } catch (DateTimeParseException ex) {
-            return false;
-        }
-    }
-
-    private static boolean isLocalTime(final String s) {
-        try {
-            LocalTime.parse(s);
-            return true;
-        } catch (DateTimeParseException ex) {
-            return false;
-        }
-    }
-
-    private static boolean isTimezone(final String s) {
-        try {
-            ZoneId.of(s);
-            return true;
-        } catch (DateTimeException ex) {
-            return false;
         }
     }
 
@@ -441,8 +448,10 @@ public final class SettingsModelDateTime extends SettingsModel {
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         final String string = settings.getString(m_configName);
-        if (!StringUtils.isEmpty(string) && !string.equals("missing") && !isZonedDateTime(string)
-            && !isLocalDateTime(string) && !isLocalDate(string) && !isLocalTime(string) && !isTimezone(string)) {
+        if (!StringUtils.isEmpty(string) && !string.equals("missing")
+            && !DateTimeUtils.asZonedDateTime(string).isPresent() && !DateTimeUtils.asLocalDateTime(string).isPresent()
+            && !DateTimeUtils.asLocalDate(string).isPresent() && !DateTimeUtils.asLocalTime(string).isPresent()
+            && !DateTimeUtils.asTimezone(string).isPresent()) {
             throw new InvalidSettingsException("'" + string + "' could not be parsed as a date, time, or time zone.");
         }
     }

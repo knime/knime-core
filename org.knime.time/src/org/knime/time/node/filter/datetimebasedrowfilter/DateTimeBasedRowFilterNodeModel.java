@@ -87,8 +87,8 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
-import org.knime.time.Granularity;
 import org.knime.time.util.DurationPeriodFormatUtils;
+import org.knime.time.util.Granularity;
 import org.knime.time.util.SettingsModelDateTime;
 
 /**

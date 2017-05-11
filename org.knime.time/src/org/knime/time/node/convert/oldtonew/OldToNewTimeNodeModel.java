@@ -104,7 +104,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The {@link NodeModel} implementation of the node which converts old to new date&time types.
@@ -131,7 +131,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     private String m_selectedNewType;
 
-    private DateTimeTypes[] m_newTypes = null;
+    private DateTimeType[] m_newTypes = null;
 
     private boolean m_hasValidatedConfiguration = false;
 
@@ -169,7 +169,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
      * @return the boolean model, used in both dialog and model.
      */
     static SettingsModelBoolean createZoneModelBool(final SettingsModelBoolean typeModelBool,
-        final JComboBox<DateTimeTypes> typeCombobox) {
+        final JComboBox<DateTimeType> typeCombobox) {
         final SettingsModelBoolean zoneModelBool = new SettingsModelBoolean("zone_bool", false);
         typeModelBool.addChangeListener(new ChangeListener() {
 
@@ -247,7 +247,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
      */
     private DataColumnSpec[] getNewIncludedColumnSpecs(final DataTableSpec inSpec, final DataRow row) {
         final String[] includes = m_colSelect.applyTo(inSpec).getIncludes();
-        m_newTypes = new DateTimeTypes[includes.length];
+        m_newTypes = new DateTimeType[includes.length];
         final DataColumnSpec[] newSpec = new DataColumnSpec[includes.length];
 
         /*
@@ -260,27 +260,27 @@ final class OldToNewTimeNodeModel extends NodeModel {
                 for (int i = 0; i < includes.length; i++) {
                     final DataCell cell = row.getCell(inSpec.findColumnIndex(includes[i]));
                     if (cell.isMissing()) {
-                        m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
+                        m_newTypes[i] = DateTimeType.LOCAL_DATE_TIME;
                         dataColumnSpecCreator =
                             new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
                     } else {
                         final DateAndTimeValue timeCell = (DateAndTimeValue)cell;
                         if (!timeCell.hasDate()) {
-                            m_newTypes[i] = DateTimeTypes.LOCAL_TIME;
+                            m_newTypes[i] = DateTimeType.LOCAL_TIME;
                             dataColumnSpecCreator =
                                 new DataColumnSpecCreator(includes[i], DataType.getType(LocalTimeCell.class));
                         } else {
                             if (!timeCell.hasTime()) {
-                                m_newTypes[i] = DateTimeTypes.LOCAL_DATE;
+                                m_newTypes[i] = DateTimeType.LOCAL_DATE;
                                 dataColumnSpecCreator =
                                     new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateCell.class));
                             } else {
                                 if (m_addZone.getBooleanValue()) {
-                                    m_newTypes[i] = DateTimeTypes.ZONED_DATE_TIME;
+                                    m_newTypes[i] = DateTimeType.ZONED_DATE_TIME;
                                     dataColumnSpecCreator = new DataColumnSpecCreator(includes[i],
                                         DataType.getType(ZonedDateTimeCell.class));
                                 } else {
-                                    m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
+                                    m_newTypes[i] = DateTimeType.LOCAL_DATE_TIME;
                                     dataColumnSpecCreator = new DataColumnSpecCreator(includes[i],
                                         DataType.getType(LocalDateTimeCell.class));
                                 }
@@ -299,7 +299,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
              * if the type of the new cells is determined by the user itself
              */
         } else {
-            DateTimeTypes type = DateTimeTypes.valueOf(m_selectedNewType);
+            DateTimeType type = DateTimeType.valueOf(m_selectedNewType);
             DataType newDataType = type.getDataType();
             for (int i = 0; i < includes.length; i++) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includes[i], newDataType);
@@ -317,7 +317,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (!m_hasValidatedConfiguration) {
             m_colSelect.loadDefaults(inSpecs[0]);
-            m_selectedNewType = DateTimeTypes.LOCAL_DATE.name();
+            m_selectedNewType = DateTimeType.LOCAL_DATE.name();
         }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0], null);
         if (columnRearranger == null) {

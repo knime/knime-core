@@ -83,8 +83,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.Granularity;
 import org.knime.time.util.DurationPeriodFormatUtils;
+import org.knime.time.util.Granularity;
 
 /**
  * The node dialog of the node which shifts date&time columns.

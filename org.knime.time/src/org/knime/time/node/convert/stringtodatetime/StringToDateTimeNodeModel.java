@@ -102,7 +102,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node model of the node which converts strings to the new date&time types.
@@ -129,7 +129,7 @@ final class StringToDateTimeNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_cancelOnFail = createCancelOnFailModel();
 
-    private String m_selectedType = DateTimeTypes.LOCAL_DATE_TIME.name();
+    private String m_selectedType = DateTimeType.LOCAL_DATE_TIME.name();
 
     private int m_failCounter;
 
@@ -262,13 +262,13 @@ final class StringToDateTimeNodeModel extends NodeModel {
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
-                    new DataColumnSpecCreator(includedCol, DateTimeTypes.valueOf(m_selectedType).getDataType());
+                    new DataColumnSpecCreator(includedCol, DateTimeType.valueOf(m_selectedType).getDataType());
                 final StringToTimeCellFactory cellFac =
                     new StringToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec).newColumn(
-                    includedCol + m_suffix.getStringValue(), DateTimeTypes.valueOf(m_selectedType).getDataType());
+                    includedCol + m_suffix.getStringValue(), DateTimeType.valueOf(m_selectedType).getDataType());
                 final StringToTimeCellFactory cellFac = new StringToTimeCellFactory(dataColSpec, includeIndeces[i++]);
                 rearranger.append(cellFac);
             }
@@ -313,14 +313,14 @@ final class StringToDateTimeNodeModel extends NodeModel {
                     for (int i = 0; i < includeIndeces.length; i++) {
                         if (isReplace) {
                             final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(
-                                includeList[i], DateTimeTypes.valueOf(m_selectedType).getDataType());
+                                includeList[i], DateTimeType.valueOf(m_selectedType).getDataType());
                             final StringToTimeCellFactory cellFac =
                                 new StringToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
                             datacells[i] = cellFac.getCell(row);
                         } else {
                             final DataColumnSpec dataColSpec =
                                 new UniqueNameGenerator(inSpec).newColumn(includeList[i] + m_suffix.getStringValue(),
-                                    DateTimeTypes.valueOf(m_selectedType).getDataType());
+                                    DateTimeType.valueOf(m_selectedType).getDataType());
                             final StringToTimeCellFactory cellFac =
                                 new StringToTimeCellFactory(dataColSpec, includeIndeces[i]);
                             datacells[i] = cellFac.getCell(row);
@@ -462,7 +462,7 @@ final class StringToDateTimeNodeModel extends NodeModel {
                 final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(),
                     LocaleUtils.toLocale(m_locale.getStringValue()));
 
-                switch (DateTimeTypes.valueOf(m_selectedType)) {
+                switch (DateTimeType.valueOf(m_selectedType)) {
                     case LOCAL_DATE: {
                         final LocalDate ld = LocalDate.parse(input, formatter);
                         return LocalDateCellFactory.create(ld);

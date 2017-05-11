@@ -46,7 +46,7 @@
  * History
  *   Oct 10, 2016 (simon): created
  */
-package org.knime.time.node.convert;
+package org.knime.time.util;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
@@ -55,20 +55,33 @@ import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 
 /**
- * An enumeration that contains all different Date&Time types.
+ * An enumeration that contains all different Date&Time types and holds its {@link DataType} and a representing name.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-public enum DateTimeTypes {
-        LOCAL_DATE("Date", LocalDateCellFactory.TYPE), LOCAL_TIME("Time", LocalTimeCellFactory.TYPE),
+public enum DateTimeType {
+        /**
+         * Contains only a date.
+         */
+        LOCAL_DATE("Date", LocalDateCellFactory.TYPE),
+        /**
+         * Contains only a time.
+         */
+        LOCAL_TIME("Time", LocalTimeCellFactory.TYPE),
+        /**
+         * Contains a date and a time.
+         */
         LOCAL_DATE_TIME("Date&time", LocalDateTimeCellFactory.TYPE),
+        /**
+         * Contains a date, a time and a time zone.
+         */
         ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
 
     private final String m_name;
 
     private final DataType m_dataType;
 
-    private DateTimeTypes(final String name, final DataType dataType) {
+    private DateTimeType(final String name, final DataType dataType) {
         m_name = name;
         m_dataType = dataType;
     }
@@ -81,6 +94,11 @@ public enum DateTimeTypes {
         return m_name;
     }
 
+    /**
+     * Returns the {@link DataType} of this enum constant.
+     *
+     * @return the representing {@link DataType}
+     */
     public DataType getDataType() {
         return m_dataType;
     }

@@ -87,7 +87,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.core.node.defaultnodesettings.SettingsModelLongBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
 
@@ -117,7 +117,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
     private final SettingsModelDateTime m_end =
         createEndModel(m_rowNrOptionSelection, m_durationOrEnd, m_endUseExecTime);
 
-    private DateTimeTypes m_selectedNewType = DateTimeTypes.LOCAL_DATE_TIME;
+    private DateTimeType m_selectedNewType = DateTimeType.LOCAL_DATE_TIME;
 
     /** @return the string model, used in both dialog and model. */
     static SettingsModelString createColumnNameModel() {
@@ -635,7 +635,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_columnName.loadSettingsFrom(settings);
-        m_selectedNewType = DateTimeTypes.valueOf(settings.getString("type"));
+        m_selectedNewType = DateTimeType.valueOf(settings.getString("type"));
         m_rowNrFixed.loadSettingsFrom(settings);
         m_start.loadSettingsFrom(settings);
         m_duration.loadSettingsFrom(settings);

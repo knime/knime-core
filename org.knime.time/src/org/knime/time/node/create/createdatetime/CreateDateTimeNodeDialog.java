@@ -80,11 +80,11 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 import org.knime.time.util.DialogComponentDateTimeSelection;
-import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 
 /**
  * The node dialog of the node which creates date and time cells.
@@ -96,7 +96,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
 
     final static String LABELS = "labels";
 
-    private final JComboBox<DateTimeTypes> m_typeCombobox;
+    private final JComboBox<DateTimeType> m_typeCombobox;
 
     private final DialogComponentString m_dialogCompColumnName;
 
@@ -121,7 +121,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
     private boolean m_updateWarningLabel = true;
 
     CreateDateTimeNodeDialog() {
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
+        m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
 
         m_dialogCompColumnName =
             new DialogComponentString(CreateDateTimeNodeModel.createColumnNameModel(), null, true, 15);
@@ -332,9 +332,9 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         m_typeCombobox.addActionListener(l -> {
             m_updateWarningLabel = false;
             // update date&time models
-            final boolean useDate = !m_typeCombobox.getSelectedItem().equals(DateTimeTypes.LOCAL_TIME);
-            final boolean useTime = !m_typeCombobox.getSelectedItem().equals(DateTimeTypes.LOCAL_DATE);
-            final boolean useZone = m_typeCombobox.getSelectedItem().equals(DateTimeTypes.ZONED_DATE_TIME);
+            final boolean useDate = !m_typeCombobox.getSelectedItem().equals(DateTimeType.LOCAL_TIME);
+            final boolean useTime = !m_typeCombobox.getSelectedItem().equals(DateTimeType.LOCAL_DATE);
+            final boolean useZone = m_typeCombobox.getSelectedItem().equals(DateTimeType.ZONED_DATE_TIME);
             modelStart.setUseDate(useDate);
             modelStart.setUseTime(useTime);
             modelStart.setUseZone(useZone);
@@ -357,7 +357,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         m_warningLabel.setText("");
         // === check period duration field ===
         if (m_dialogCompDuration.getModel().isEnabled() && m_updateWarningLabel) {
-            final DateTimeTypes selectedItem = (DateTimeTypes)m_typeCombobox.getSelectedItem();
+            final DateTimeType selectedItem = (DateTimeType)m_typeCombobox.getSelectedItem();
             Duration duration = null;
             Period period = null;
             if (((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue() == null) {
@@ -367,7 +367,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
             try {
                 duration = DurationPeriodFormatUtils
                     .parseDuration(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
-                if (selectedItem.equals(DateTimeTypes.LOCAL_DATE)) {
+                if (selectedItem.equals(DateTimeType.LOCAL_DATE)) {
                     m_warningLabel.setText("A duration cannot be applied to a local date.");
                     return;
                 }
@@ -375,7 +375,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                 try {
                     period = DurationPeriodFormatUtils
                         .parsePeriod(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
-                    if (selectedItem.equals(DateTimeTypes.LOCAL_TIME)) {
+                    if (selectedItem.equals(DateTimeType.LOCAL_TIME)) {
                         m_warningLabel.setText("A period cannot be applied to a local time.");
                         return;
                     }
@@ -402,13 +402,13 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                         ((SettingsModelDateTime)m_dialogCompStart.getModel()).getSelectedDateTime())
                     : ((SettingsModelDateTime)m_dialogCompEnd.getModel()).getSelectedDateTime();
 
-                if (!selectedItem.equals(DateTimeTypes.LOCAL_TIME)) {
+                if (!selectedItem.equals(DateTimeType.LOCAL_TIME)) {
                     final boolean isStartBeforeEnd;
                     final boolean isEqual;
-                    if (selectedItem.equals(DateTimeTypes.LOCAL_DATE)) {
+                    if (selectedItem.equals(DateTimeType.LOCAL_DATE)) {
                         isStartBeforeEnd = ((LocalDate)start).isBefore((LocalDate)end);
                         isEqual = ((LocalDate)start).isEqual((LocalDate)end);
-                    } else if (selectedItem.equals(DateTimeTypes.LOCAL_DATE_TIME)) {
+                    } else if (selectedItem.equals(DateTimeType.LOCAL_DATE_TIME)) {
                         isStartBeforeEnd = ((LocalDateTime)start).isBefore((LocalDateTime)end);
                         isEqual = ((LocalDateTime)start).isEqual((LocalDateTime)end);
                     } else {
@@ -449,7 +449,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         if (!StringUtils.isEmpty(text)) {
             throw new InvalidSettingsException(text);
         }
-        settings.addString("type", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
+        settings.addString("type", ((DateTimeType)m_typeCombobox.getModel().getSelectedItem()).name());
         m_dialogCompColumnName.saveSettingsTo(settings);
         m_dialogCompRowNrOptionSelection.saveSettingsTo(settings);
         m_dialogCompRowNrFixed.saveSettingsTo(settings);
@@ -468,7 +468,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
         m_typeCombobox
-            .setSelectedItem(DateTimeTypes.valueOf(settings.getString("type", DateTimeTypes.LOCAL_DATE_TIME.name())));
+            .setSelectedItem(DateTimeType.valueOf(settings.getString("type", DateTimeType.LOCAL_DATE_TIME.name())));
         m_dialogCompColumnName.loadSettingsFrom(settings, specs);
         m_dialogCompStart.loadSettingsFrom(settings, specs);
         m_dialogCompDuration.loadSettingsFrom(settings, specs);
