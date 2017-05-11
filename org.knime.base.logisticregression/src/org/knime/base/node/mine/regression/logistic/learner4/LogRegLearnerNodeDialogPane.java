@@ -566,7 +566,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         try {
             String str = m_initialLearningRateField.getText();
             double lr = Double.valueOf(str);
-            settings.setEpsilon(lr);
+            settings.setInitialLearningRate(lr);
         } catch (NumberFormatException nfe) {
             throw new InvalidSettingsException("Please provide a valid value for the initial learning rate.");
         }
