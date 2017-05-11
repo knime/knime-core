@@ -323,7 +323,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "December 20, 2016";
+        BUILD_DATE = "Nightly build";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle("org.knime.product");
         if (coreBundle != null) {
@@ -613,6 +613,16 @@ public final class KNIMEConstants {
         byte[] uid = new byte[8];
         rand.nextBytes(uid);
         return new String(Hex.encodeHex(uid));
+    }
+
+    /**
+     * Returns whether this is a nightly build or not.
+     *
+     * @return <code>true</code> if this is a nightly build, <code>false</code> otherwise
+     * @since 3.4
+     */
+    public static boolean isNightlyBuild() {
+        return BUILD_DATE.contains("Nightly");
     }
 
     /**

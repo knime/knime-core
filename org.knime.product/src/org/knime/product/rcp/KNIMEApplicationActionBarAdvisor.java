@@ -64,6 +64,7 @@ import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -84,6 +85,7 @@ import org.eclipse.ui.internal.registry.ActionSetRegistry;
 import org.eclipse.ui.internal.registry.IActionSetDescriptor;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.product.rcp.intro.IntroPageAction;
 import org.knime.workbench.explorer.view.actions.export.WorkflowExportApplicationAction;
 import org.knime.workbench.explorer.view.actions.imports.WorkflowImportApplicationAction;
@@ -511,4 +513,11 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         }
     }
 
+
+    @Override
+    protected void fillStatusLine(final IStatusLineManager statusLine) {
+        if (KNIMEConstants.isNightlyBuild()) {
+            statusLine.add(new NightlyBuildLabel());
+        }
+    }
 }
