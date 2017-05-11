@@ -292,7 +292,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = makeSettingsConstraints();
 
-        panel.add(new JLabel("Number of epochs"), c);
+        panel.add(new JLabel("Number of epochs:"), c);
         c.gridx++;
         panel.add(m_maxEpochSpinner, c);
         c.gridx = 0;
@@ -312,12 +312,12 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = makeSettingsConstraints();
 
-        panel.add(new JLabel("Prior"), c);
+        panel.add(new JLabel("Prior:"), c);
         c.gridx++;
         panel.add(m_priorComboBox, c);
         c.gridx = 0;
         c.gridy++;
-        panel.add(new JLabel("Variance"), c);
+        panel.add(new JLabel("Variance:"), c);
         c.gridx++;
         panel.add(m_priorVarianceSpinner, c);
 
@@ -340,18 +340,18 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = makeSettingsConstraints();
 
-        panel.add(new JLabel("Learning rate strategy"), c);
+        panel.add(new JLabel("Learning rate strategy:"), c);
         c.gridx++;
         panel.add(m_learningRateStrategyComboBox, c);
         c.gridx = 0;
         c.gridy++;
-        panel.add(new JLabel("Initial learning rate"), c);
+        panel.add(new JLabel("Initial learning rate:"), c);
         c.gridx++;
 //        panel.add(m_initialLearningRateSpinner, c);
         panel.add(m_initialLearningRateField, c);
         c.gridx = 0;
         c.gridy++;
-        panel.add(new JLabel("Decay rate"), c);
+        panel.add(new JLabel("Decay rate:"), c);
         c.gridx++;
         panel.add(m_learningRateDecaySpinner, c);
 
