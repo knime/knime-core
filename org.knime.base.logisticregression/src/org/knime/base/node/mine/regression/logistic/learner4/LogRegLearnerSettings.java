@@ -371,7 +371,7 @@ public class LogRegLearnerSettings {
         settings.addString(CFG_SOLVER, m_solver.name());
         settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
         // if the solver doesn't support laziness, we shouldn't store that the calculations
-        // should be performed laziness
+        // should be performed lazily
         settings.addBoolean(CFG_PERFORM_LAZY, m_solver.m_supportsLazy && m_performLazy);
         settings.addDouble(CFG_EPSILON, m_epsilon);
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
@@ -507,6 +507,19 @@ public class LogRegLearnerSettings {
      */
     public void setEpsilon(final double epsilon) {
         m_epsilon = epsilon;
+    }
+
+    /**
+     * Checks if <b>epsilon</b> is a valid value and throws an IllegalArgumentException if
+     * the value is invalid.
+     *
+     * @param epsilon value to check
+     * @throws IllegalArgumentException if <b>epsilon</b> is no valid value
+     */
+    public static void checkEpsilon(final double epsilon) throws IllegalArgumentException {
+        if (epsilon < 0) {
+            throw new IllegalArgumentException("Epsilon must be larger than 0");
+        }
     }
 
 
