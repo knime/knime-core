@@ -64,6 +64,9 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
@@ -77,6 +80,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
 import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
+import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferenceInitializer;
 
 /**
  * Class that manages the node recommendations. It represents the node recommendations in memory for quick retrieval and
@@ -113,6 +117,22 @@ public class NodeRecommendationManager {
     private final List<IUpdateListener> m_listeners = new ArrayList<>(1);
 
     private List<Map<String, List<NodeRecommendation>>> m_recommendations;
+
+
+    static {
+        IPreferenceChangeListener l = event -> {
+            if (WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER.equals(event.getKey())) {
+                try {
+                    INSTANCE.loadRecommendations();
+                } catch (Exception ex) {
+                    NodeLogger.getLogger(NodeRecommendationManager.class)
+                        .error("Can't load the requested node recommendations: " + ex.getMessage(), ex);
+                }
+            }
+        };
+        InstanceScope.INSTANCE.getNode("org.knime.workbench.workflowcoach").addPreferenceChangeListener(l);
+        DefaultScope.INSTANCE.getNode("org.knime.workbench.workflowcoach").addPreferenceChangeListener(l);
+    }
 
     private NodeRecommendationManager() {
         //try to load statistics if possible

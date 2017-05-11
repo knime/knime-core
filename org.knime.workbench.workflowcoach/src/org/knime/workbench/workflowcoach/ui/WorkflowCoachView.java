@@ -487,6 +487,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
 
         //enforce to change the viewer state to update the headers
         m_viewerState = null;
+        m_lastSelection = "";
         changeViewerStateTo(ViewerState.RECOMMENDATIONS);
 
         //get current selection from the workbench and update the recommendation list

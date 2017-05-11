@@ -67,7 +67,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
-import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
@@ -304,16 +303,6 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                 WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE);
         }
 
-        //try reloading the statistics
-        try {
-            NodeRecommendationManager.getInstance().loadRecommendations();
-        } catch (Exception e) {
-            setErrorMessage("Can't load the requested node recommendations: " + e.getMessage()
-                + ". Please see log for further detail.");
-            NodeLogger.getLogger(this.getClass())
-                .error("Can't load the requested node recommendations: " + e.getMessage(), e);
-            return false;
-        }
         return true;
     }
 
