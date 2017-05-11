@@ -118,11 +118,7 @@ public class ROCCalculator {
      */
     public ROCCalculator(final List<String> curves, final String classCol,
                         final int maxPoints, final String posClass) {
-        m_curves = curves;
-        m_classCol = classCol;
-        m_posClass = posClass;
-        m_maxPoints = maxPoints;
-        m_ignoreMissingValues = false;
+        this(curves, classCol, maxPoints, posClass, false);
     }
 
     /**
@@ -132,6 +128,7 @@ public class ROCCalculator {
      * @param maxPoints the maximum number of points to put into the calculated ROC curves
      * @param posClass the the positive class
      * @param ignoreMissingValues whether ignore missing values
+     * @since 3.4
      */
     public ROCCalculator(final List<String> curves, final String classCol,
                         final int maxPoints, final String posClass, final boolean ignoreMissingValues) {

@@ -113,11 +113,7 @@ public class LiftCalculator {
      */
     public LiftCalculator(final String responseColumn, final String probabilityColumn,
                             final String responseLabel, final double intervalWidth) {
-        m_responseColumn = responseColumn;
-        m_probabilityColumn = probabilityColumn;
-        m_responseLabel = responseLabel;
-        m_intervalWidth = intervalWidth;
-        m_ignoreMissingValues = false;
+        this(responseColumn, probabilityColumn, responseLabel, intervalWidth, false);
     }
 
     /**
@@ -127,6 +123,7 @@ public class LiftCalculator {
      * @param responseLabel the response label
      * @param intervalWidth the interval width
      * @param ignoreMissingValues whether ignore missing values
+     * @since 3.4
      */
     public LiftCalculator(final String responseColumn, final String probabilityColumn,
                             final String responseLabel, final double intervalWidth, final boolean ignoreMissingValues) {
