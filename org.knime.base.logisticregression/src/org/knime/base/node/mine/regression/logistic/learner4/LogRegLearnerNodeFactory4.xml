@@ -83,7 +83,8 @@
         Currently the following priors are supported:
         <ul>
         <li>
-        	<b>Uniform</b> This prior corresponds to no regularization at all and is the default.
+        	<b>Uniform</b> This prior corresponds to no regularization at all and is the default. It essentially means that all values
+        	are equally likely for the coefficients.
         </li>
         <li>
         	<b>Gauss</b> The weights are assumed to be normally distributed. This prior keeps the coefficients from becoming
