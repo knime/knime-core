@@ -67,10 +67,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.time.util.Granularity;
 
 /**
@@ -82,15 +81,13 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnNameSelection m_dialogCompColSelect;
 
-    private final DialogComponentButtonGroup m_dialogCompModSelect;
-
-    private final DialogComponentStringSelection m_dialogCompDurationFieldSelect;
-
-    private final DialogComponentStringSelection m_dialogCompPeriodFieldSelect;
-
     private final DialogComponentBoolean[] m_dialogCompsDurationFields;
 
     private final DialogComponentBoolean[] m_dialogCompsPeriodFields;
+
+    private final DialogComponentBoolean m_dialogCompSubSecond;
+
+    private final DialogComponentStringSelection m_dialogCompSubsecondUnits;
 
     /**
      * Creates a new dialog.
@@ -99,22 +96,10 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
     public ExtractDurationPeriodFieldsNodeDialog() {
         m_dialogCompColSelect =
             new DialogComponentColumnNameSelection(ExtractDurationPeriodFieldsNodeModel.createColSelectModel(),
-                "Duration or Period Column", 0, true, DurationValue.class, PeriodValue.class);
+                "Duration column", 0, true, DurationValue.class, PeriodValue.class);
 
-        final SettingsModelString modusSelectModel = ExtractDurationPeriodFieldsNodeModel.createModSelectModel();
-        m_dialogCompModSelect = new DialogComponentButtonGroup(modusSelectModel, true, null,
-            ExtractDurationPeriodFieldsNodeModel.MODUS_SINGLE, ExtractDurationPeriodFieldsNodeModel.MODUS_SEVERAL);
-
-        final String[] fieldsDuration = new String[]{Granularity.HOUR.toString(), Granularity.MINUTE.toString(),
-            Granularity.SECOND.toString(), Granularity.MILLISECOND.toString(), Granularity.NANOSECOND.toString()};
-        m_dialogCompDurationFieldSelect =
-            new DialogComponentStringSelection(ExtractDurationPeriodFieldsNodeModel.createDurationFieldSelectionModel(),
-                "Field:", fieldsDuration);
-
-        m_dialogCompPeriodFieldSelect =
-            new DialogComponentStringSelection(ExtractDurationPeriodFieldsNodeModel.createPeriodFieldSelectionModel(),
-                "Field:", new String[]{Granularity.YEAR.toString(), Granularity.MONTH.toString()});
-
+        final String[] fieldsDuration =
+            new String[]{Granularity.HOUR.toString(), Granularity.MINUTE.toString(), Granularity.SECOND.toString()};
         m_dialogCompsDurationFields = new DialogComponentBoolean[fieldsDuration.length];
         for (int i = 0; i < fieldsDuration.length; i++) {
             final String gran = fieldsDuration[i];
@@ -130,6 +115,16 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
             m_dialogCompsPeriodFields[i] =
                 new DialogComponentBoolean(ExtractDurationPeriodFieldsNodeModel.createFieldBooleanModel(gran), gran);
         }
+
+        final String[] subsecondUnits = new String[]{Granularity.MILLISECOND.toString(),
+            Granularity.MICROSECOND.toString(), Granularity.NANOSECOND.toString()};
+
+        final SettingsModelBoolean subSecondModel =
+            ExtractDurationPeriodFieldsNodeModel.createFieldBooleanModel("subsecond");
+        m_dialogCompSubSecond = new DialogComponentBoolean(subSecondModel, "Subseconds in");
+
+        m_dialogCompSubsecondUnits = new DialogComponentStringSelection(
+            ExtractDurationPeriodFieldsNodeModel.createSubsecondUnitsModel(subSecondModel), null, subsecondUnits);
 
         /*
          * create panel with gbc
@@ -158,43 +153,19 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
         panel.add(panelColSelect, gbc);
 
         /*
-         * add modus selection
+         * add field selection
          */
-        final JPanel panelFieldSelect = new JPanel(new GridBagLayout());
         gbc.gridy++;
         gbc.weighty = 1;
-        panel.add(panelFieldSelect, gbc);
-        panelFieldSelect.setBorder(BorderFactory.createTitledBorder("Field Selection"));
-        final GridBagConstraints gbcFieldSelect = new GridBagConstraints();
-        gbcFieldSelect.insets = new Insets(5, 5, 5, 5);
-        gbcFieldSelect.fill = GridBagConstraints.VERTICAL;
-        gbcFieldSelect.gridx = 0;
-        gbcFieldSelect.gridy = 0;
-        gbcFieldSelect.weighty = 1;
-        gbcFieldSelect.anchor = GridBagConstraints.WEST;
-
-        panelFieldSelect.add(m_dialogCompModSelect.getComponentPanel(), gbcFieldSelect);
-
         final JPanel switchingPanel = new JPanel(new CardLayout());
-        gbcFieldSelect.gridx++;
-        gbcFieldSelect.weightx = 1;
-        gbcFieldSelect.insets = new Insets(5, 40, 5, 5);
-        panelFieldSelect.add(switchingPanel, gbcFieldSelect);
-
+        panel.add(switchingPanel, gbc);
+        switchingPanel.setBorder(BorderFactory.createTitledBorder("Field Selection"));
         final GridBagConstraints gbcSwitchingPanels = new GridBagConstraints();
         gbcSwitchingPanels.fill = GridBagConstraints.VERTICAL;
         gbcSwitchingPanels.gridx = 0;
         gbcSwitchingPanels.gridy = 0;
-        gbcSwitchingPanels.weightx = 1;
+        gbcSwitchingPanels.weightx = 0;
         gbcSwitchingPanels.anchor = GridBagConstraints.WEST;
-        /*
-         * panel containing combobox of duration fields
-         */
-        final JPanel panelDurationCombo = new JPanel(new GridBagLayout());
-        gbcSwitchingPanels.weighty = 1;
-        panelDurationCombo.add(m_dialogCompDurationFieldSelect.getComponentPanel(), gbcSwitchingPanels);
-        switchingPanel.add(panelDurationCombo,
-            DurationCellFactory.TYPE.toString() + ExtractDurationPeriodFieldsNodeModel.MODUS_SINGLE);
         /*
          * panel containing checkboxes of duration fields
          */
@@ -202,23 +173,15 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
         gbcSwitchingPanels.gridy = 0;
         gbcSwitchingPanels.weighty = 0;
         for (final DialogComponentBoolean dc : m_dialogCompsDurationFields) {
-            if (dc == m_dialogCompsDurationFields[m_dialogCompsDurationFields.length - 1]) {
-                gbcSwitchingPanels.weighty = 1;
-            }
             panelDurationCheck.add(dc.getComponentPanel(), gbcSwitchingPanels);
             gbcSwitchingPanels.gridy++;
         }
-        switchingPanel.add(panelDurationCheck,
-            DurationCellFactory.TYPE.toString() + ExtractDurationPeriodFieldsNodeModel.MODUS_SEVERAL);
-        /*
-         * panel containing combobox of period fields
-         */
-        final JPanel panelPeriodCombo = new JPanel(new GridBagLayout());
-        gbcSwitchingPanels.gridy = 0;
+        panelDurationCheck.add(m_dialogCompSubSecond.getComponentPanel(), gbcSwitchingPanels);
+        gbcSwitchingPanels.gridx++;
+        gbcSwitchingPanels.weightx = 1;
         gbcSwitchingPanels.weighty = 1;
-        panelPeriodCombo.add(m_dialogCompPeriodFieldSelect.getComponentPanel(), gbcSwitchingPanels);
-        switchingPanel.add(panelPeriodCombo,
-            PeriodCellFactory.TYPE.toString() + ExtractDurationPeriodFieldsNodeModel.MODUS_SINGLE);
+        panelDurationCheck.add(m_dialogCompSubsecondUnits.getComponentPanel(), gbcSwitchingPanels);
+        switchingPanel.add(panelDurationCheck, DurationCellFactory.TYPE.toString());
         /*
          * panel containing checkboxes of period fields
          */
@@ -232,8 +195,7 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
             panelPeriodCheck.add(dc.getComponentPanel(), gbcSwitchingPanels);
             gbcSwitchingPanels.gridy++;
         }
-        switchingPanel.add(panelPeriodCheck,
-            PeriodCellFactory.TYPE.toString() + ExtractDurationPeriodFieldsNodeModel.MODUS_SEVERAL);
+        switchingPanel.add(panelPeriodCheck, PeriodCellFactory.TYPE.toString());
 
         /*
          * add tab
@@ -243,15 +205,10 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
         m_dialogCompColSelect.getModel().addChangeListener(l -> {
             if (m_dialogCompColSelect.getSelectedAsSpec() != null) {
                 ((CardLayout)switchingPanel.getLayout()).show(switchingPanel,
-                    m_dialogCompColSelect.getSelectedAsSpec().getType().toString() + modusSelectModel.getStringValue());
+                    m_dialogCompColSelect.getSelectedAsSpec().getType().toString());
             }
         });
-        modusSelectModel.addChangeListener(l -> {
-            if (m_dialogCompColSelect.getSelectedAsSpec() != null) {
-                ((CardLayout)switchingPanel.getLayout()).show(switchingPanel,
-                    m_dialogCompColSelect.getSelectedAsSpec().getType().toString() + modusSelectModel.getStringValue());
-            }
-        });
+
     }
 
     /**
@@ -260,15 +217,14 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_dialogCompColSelect.saveSettingsTo(settings);
-        m_dialogCompModSelect.saveSettingsTo(settings);
-        m_dialogCompDurationFieldSelect.saveSettingsTo(settings);
-        m_dialogCompPeriodFieldSelect.saveSettingsTo(settings);
         for (final DialogComponentBoolean dc : m_dialogCompsDurationFields) {
             dc.saveSettingsTo(settings);
         }
         for (final DialogComponentBoolean dc : m_dialogCompsPeriodFields) {
             dc.saveSettingsTo(settings);
         }
+        m_dialogCompSubSecond.saveSettingsTo(settings);
+        m_dialogCompSubsecondUnits.saveSettingsTo(settings);
     }
 
     /**
@@ -278,14 +234,13 @@ final class ExtractDurationPeriodFieldsNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
         m_dialogCompColSelect.loadSettingsFrom(settings, specs);
-        m_dialogCompModSelect.loadSettingsFrom(settings, specs);
-        m_dialogCompDurationFieldSelect.loadSettingsFrom(settings, specs);
-        m_dialogCompPeriodFieldSelect.loadSettingsFrom(settings, specs);
         for (final DialogComponentBoolean dc : m_dialogCompsDurationFields) {
             dc.loadSettingsFrom(settings, specs);
         }
         for (final DialogComponentBoolean dc : m_dialogCompsPeriodFields) {
             dc.loadSettingsFrom(settings, specs);
         }
+        m_dialogCompSubSecond.loadSettingsFrom(settings, specs);
+        m_dialogCompSubsecondUnits.loadSettingsFrom(settings, specs);
     }
 }

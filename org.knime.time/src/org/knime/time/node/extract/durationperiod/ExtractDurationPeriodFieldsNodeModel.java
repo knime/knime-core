@@ -58,7 +58,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -84,17 +83,7 @@ import org.knime.time.util.Granularity;
  */
 final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctionNodeModel {
 
-    static final String MODUS_SINGLE = "Single Field";
-
-    static final String MODUS_SEVERAL = "Several Fields";
-
     private final SettingsModelString m_colSelectModel = createColSelectModel();
-
-    private final SettingsModelString m_modusSelectModel = createModSelectModel();
-
-    private final SettingsModelString m_durationFieldSelectModel = createDurationFieldSelectionModel();
-
-    private final SettingsModelString m_periodFieldSelectModel = createPeriodFieldSelectionModel();
 
     private final SettingsModelBoolean m_hourModel = createFieldBooleanModel(Granularity.HOUR.toString());
 
@@ -102,9 +91,9 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
 
     private final SettingsModelBoolean m_secondModel = createFieldBooleanModel(Granularity.SECOND.toString());
 
-    private final SettingsModelBoolean m_milliModel = createFieldBooleanModel(Granularity.MILLISECOND.toString());
+    private final SettingsModelBoolean m_subSecondModel = createFieldBooleanModel("subsecond");
 
-    private final SettingsModelBoolean m_nanoModel = createFieldBooleanModel(Granularity.NANOSECOND.toString());
+    private final SettingsModelString m_subSecondUnitsModel = createSubsecondUnitsModel(m_subSecondModel);
 
     private final SettingsModelBoolean m_yearModel = createFieldBooleanModel(Granularity.YEAR.toString());
 
@@ -113,7 +102,7 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
     private final SettingsModelBoolean m_dayModel = createFieldBooleanModel(Granularity.DAY.toString());
 
     private final SettingsModelBoolean[] m_durModels =
-        new SettingsModelBoolean[]{m_hourModel, m_minuteModel, m_secondModel, m_milliModel, m_nanoModel};
+        new SettingsModelBoolean[]{m_hourModel, m_minuteModel, m_secondModel};
 
     private final SettingsModelBoolean[] m_perModels =
         new SettingsModelBoolean[]{m_yearModel, m_monthModel, m_dayModel};
@@ -123,24 +112,18 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
         return new SettingsModelString("col_select", null);
     }
 
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createModSelectModel() {
-        return new SettingsModelString("modus", MODUS_SINGLE);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createDurationFieldSelectionModel() {
-        return new SettingsModelString("duration_field_select", Granularity.HOUR.toString());
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createPeriodFieldSelectionModel() {
-        return new SettingsModelString("period_field_select", Granularity.YEAR.toString());
-    }
-
     /** @return the boolean model, used in both dialog and model. */
     static SettingsModelBoolean createFieldBooleanModel(final String key) {
         return new SettingsModelBoolean(key, false);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createSubsecondUnitsModel(final SettingsModelBoolean boolModel) {
+        final SettingsModelString settingsModelString =
+            new SettingsModelString("subsecond_units", Granularity.MILLISECOND.toString());
+        settingsModelString.setEnabled(false);
+        boolModel.addChangeListener(l -> settingsModelString.setEnabled(boolModel.getBooleanValue()));
+        return settingsModelString;
     }
 
     /**
@@ -153,30 +136,32 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
         if (m_colSelectModel.getStringValue() == null) {
             throw new InvalidSettingsException("Node must be configured!");
         }
+        if (spec.findColumnIndex(m_colSelectModel.getStringValue()) < 0) {
+            throw new InvalidSettingsException(
+                "Column '" + m_colSelectModel.getStringValue() + "' not found in the input table.");
+        }
 
         final boolean isDurationColumn =
             spec.getColumnSpec(m_colSelectModel.getStringValue()).getType().isCompatible(DurationValue.class);
         final List<DataColumnSpec> colSpecs = new ArrayList<>();
-        if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
-            colSpecs.add(
-                new UniqueNameGenerator(spec).newColumn((isDurationColumn ? m_durationFieldSelectModel.getStringValue()
-                    : m_periodFieldSelectModel.getStringValue()), LongCell.TYPE));
-        } else {
-            if (isDurationColumn) {
-                for (final SettingsModelBoolean model : m_durModels) {
-                    if (model.getBooleanValue()) {
-                        if (model.equals(m_hourModel)) {
-                            colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
-                        } else {
-                            colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), IntCell.TYPE));
-                        }
+        if (isDurationColumn) {
+            for (final SettingsModelBoolean model : m_durModels) {
+                if (model.getBooleanValue()) {
+                    if (model.equals(m_hourModel)) {
+                        colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
+                    } else {
+                        colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), IntCell.TYPE));
                     }
                 }
-            } else {
-                for (final SettingsModelBoolean model : m_perModels) {
-                    if (model.getBooleanValue()) {
-                        colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
-                    }
+            }
+            if (m_subSecondModel.getBooleanValue()) {
+                colSpecs
+                    .add(new UniqueNameGenerator(spec).newColumn(m_subSecondUnitsModel.getStringValue(), IntCell.TYPE));
+            }
+        } else {
+            for (final SettingsModelBoolean model : m_perModels) {
+                if (model.getBooleanValue()) {
+                    colSpecs.add(new UniqueNameGenerator(spec).newColumn(model.getConfigName(), LongCell.TYPE));
                 }
             }
         }
@@ -184,21 +169,11 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
         colSpecs.toArray(colSpecsArray);
         final CellFactory cellFac;
         if (isDurationColumn) {
-            if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
-                cellFac = new ExtractDurationSingleFieldCellFactory(
-                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
-            } else {
-                cellFac = new ExtractDurationSeveralFieldsCellFactory(
-                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
-            }
+            cellFac = new ExtractDurationFieldsCellFactory(spec.findColumnIndex(m_colSelectModel.getStringValue()),
+                colSpecsArray);
         } else {
-            if (m_modusSelectModel.getStringValue().equals(MODUS_SINGLE)) {
-                cellFac = new ExtractPeriodSingleFieldCellFactory(
-                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
-            } else {
-                cellFac = new ExtractPeriodSeveralFieldsCellFactory(
-                    spec.findColumnIndex(m_colSelectModel.getStringValue()), colSpecsArray);
-            }
+            cellFac = new ExtractPeriodFieldsCellFactory(spec.findColumnIndex(m_colSelectModel.getStringValue()),
+                colSpecsArray);
         }
         rearranger.append(cellFac);
         return rearranger;
@@ -210,14 +185,11 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelectModel.saveSettingsTo(settings);
-        m_modusSelectModel.saveSettingsTo(settings);
-        m_durationFieldSelectModel.saveSettingsTo(settings);
-        m_periodFieldSelectModel.saveSettingsTo(settings);
         m_hourModel.saveSettingsTo(settings);
         m_minuteModel.saveSettingsTo(settings);
         m_secondModel.saveSettingsTo(settings);
-        m_milliModel.saveSettingsTo(settings);
-        m_nanoModel.saveSettingsTo(settings);
+        m_subSecondModel.saveSettingsTo(settings);
+        m_subSecondUnitsModel.saveSettingsTo(settings);
         m_yearModel.saveSettingsTo(settings);
         m_monthModel.saveSettingsTo(settings);
         m_dayModel.saveSettingsTo(settings);
@@ -229,14 +201,11 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelectModel.validateSettings(settings);
-        m_modusSelectModel.validateSettings(settings);
-        m_durationFieldSelectModel.validateSettings(settings);
-        m_periodFieldSelectModel.validateSettings(settings);
         m_hourModel.validateSettings(settings);
         m_minuteModel.validateSettings(settings);
         m_secondModel.validateSettings(settings);
-        m_milliModel.validateSettings(settings);
-        m_nanoModel.validateSettings(settings);
+        m_subSecondModel.validateSettings(settings);
+        m_subSecondUnitsModel.validateSettings(settings);
         m_yearModel.validateSettings(settings);
         m_monthModel.validateSettings(settings);
         m_dayModel.validateSettings(settings);
@@ -248,89 +217,23 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelectModel.loadSettingsFrom(settings);
-        m_modusSelectModel.loadSettingsFrom(settings);
-        m_durationFieldSelectModel.loadSettingsFrom(settings);
-        m_periodFieldSelectModel.loadSettingsFrom(settings);
         m_hourModel.loadSettingsFrom(settings);
         m_minuteModel.loadSettingsFrom(settings);
         m_secondModel.loadSettingsFrom(settings);
-        m_milliModel.loadSettingsFrom(settings);
-        m_nanoModel.loadSettingsFrom(settings);
+        m_subSecondModel.loadSettingsFrom(settings);
+        m_subSecondUnitsModel.loadSettingsFrom(settings);
         m_yearModel.loadSettingsFrom(settings);
         m_monthModel.loadSettingsFrom(settings);
         m_dayModel.loadSettingsFrom(settings);
     }
 
     /**
-     * {@link AbstractCellFactory} for single mode and duration.
-     */
-    private final class ExtractDurationSingleFieldCellFactory extends AbstractCellFactory {
-        private final int m_colIdx;
-
-        public ExtractDurationSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
-            super(colSpecs);
-            m_colIdx = colIdx;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DataCell[] getCells(final DataRow row) {
-            final DataCell[] newCells = new DataCell[getColumnSpecs().length];
-            final DataCell cell = row.getCell(m_colIdx);
-            if (cell.isMissing()) {
-                Arrays.fill(newCells, cell);
-                return newCells;
-            }
-
-            final Duration duration = ((DurationValue)cell).getDuration();
-            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.HOUR.toString())) {
-                newCells[0] = LongCellFactory.create(duration.toHours());
-                return newCells;
-            }
-            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.MINUTE.toString())) {
-                newCells[0] = LongCellFactory.create(duration.toMinutes());
-                return newCells;
-            }
-            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.SECOND.toString())) {
-                // Because java.time.Duration stores only positive nanoseconds, one second needs to be
-                // added, if the duration is negative and nanoseconds != 0
-                final long seconds = duration.getSeconds();
-                newCells[0] = LongCellFactory.create((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds);
-                return newCells;
-            }
-            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.MILLISECOND.toString())) {
-                try {
-                    newCells[0] = LongCellFactory.create(duration.toMillis());
-                } catch (ArithmeticException e) {
-                    newCells[0] = new MissingCell(e.getMessage());
-                    setWarningMessage(
-                        "The duration in row '" + row.getKey() + "' was too big to convert to milliseconds!");
-                }
-                return newCells;
-            }
-            if (m_durationFieldSelectModel.getStringValue().equals(Granularity.NANOSECOND.toString())) {
-                try {
-                    newCells[0] = LongCellFactory.create(duration.toNanos());
-                } catch (ArithmeticException e) {
-                    newCells[0] = new MissingCell(e.getMessage());
-                    setWarningMessage(
-                        "The duration in row '" + row.getKey() + "' was too big to convert to nanoseconds!");
-                }
-                return newCells;
-            }
-            throw new IllegalStateException("Unexpected field: " + m_durationFieldSelectModel.getStringValue());
-        }
-    }
-
-    /**
      * {@link AbstractCellFactory} for several mode and duration.
      */
-    private final class ExtractDurationSeveralFieldsCellFactory extends AbstractCellFactory {
+    private final class ExtractDurationFieldsCellFactory extends AbstractCellFactory {
         private final int m_colIdx;
 
-        public ExtractDurationSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+        public ExtractDurationFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
             super(colSpecs);
             m_colIdx = colIdx;
         }
@@ -361,67 +264,41 @@ final class ExtractDurationPeriodFieldsNodeModel extends SimpleStreamableFunctio
                         final long seconds = duration.getSeconds() % 60;
                         newCells[i] = IntCellFactory
                             .create((int)((seconds < 0 && duration.getNano() > 0) ? (seconds + 1) : seconds));
-                    } else if (Granularity.MILLISECOND.toString().equals(model.getConfigName())) {
-                        int milli = duration.getNano() / 1_000_000;
-                        newCells[i] = IntCellFactory
-                            .create((duration.getSeconds() < 0 && milli > 0) ? (milli - 999) : milli);
-                    } else if (Granularity.NANOSECOND.toString().equals(model.getConfigName())) {
-                        final int nano = duration.getNano();
-                        newCells[i] = IntCellFactory
-                            .create((duration.getSeconds() < 0 && nano > 0) ? (nano - 1_000_000_000) : nano);
                     } else {
                         throw new IllegalStateException("Unexpected field: " + model.getConfigName());
                     }
                     i++;
                 }
             }
+            if (m_subSecondModel.getBooleanValue()) {
+                final String stringValue = m_subSecondUnitsModel.getStringValue();
+                if (Granularity.MILLISECOND.toString().equals(stringValue)) {
+                    newCells[i] = IntCellFactory.create(getNanos(duration) / 1_000_000);
+                } else if (Granularity.MICROSECOND.toString().equals(stringValue)) {
+                    newCells[i] = IntCellFactory.create(getNanos(duration) / 1000);
+                } else if (Granularity.NANOSECOND.toString().equals(stringValue)) {
+                    newCells[i] = IntCellFactory.create(getNanos(duration));
+                } else {
+                    throw new IllegalStateException("Unexpected field: " + stringValue);
+                }
+
+            }
             return newCells;
         }
     }
 
-    /**
-     * {@link AbstractCellFactory} for single mode and period.
-     */
-    private final class ExtractPeriodSingleFieldCellFactory extends AbstractCellFactory {
-        private final int m_colIdx;
-
-        public ExtractPeriodSingleFieldCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
-            super(colSpecs);
-            m_colIdx = colIdx;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DataCell[] getCells(final DataRow row) {
-            final DataCell[] newCells = new DataCell[getColumnSpecs().length];
-            final DataCell cell = row.getCell(m_colIdx);
-            if (cell.isMissing()) {
-                Arrays.fill(newCells, cell);
-                return newCells;
-            }
-
-            final Period period = ((PeriodValue)cell).getPeriod();
-            if (m_periodFieldSelectModel.getStringValue().equals(Granularity.YEAR.toString())) {
-                newCells[0] = LongCellFactory.create(period.toTotalMonths() / 12);
-                return newCells;
-            }
-            if (m_periodFieldSelectModel.getStringValue().equals(Granularity.MONTH.toString())) {
-                newCells[0] = LongCellFactory.create(period.toTotalMonths());
-                return newCells;
-            }
-            throw new IllegalStateException("Unexpected field: " + m_periodFieldSelectModel.getStringValue());
-        }
+    private int getNanos(final Duration duration) {
+        final int nano = duration.getNano();
+        return (duration.getSeconds() < 0 && nano > 0) ? (nano - 1_000_000_000) : nano;
     }
 
     /**
      * {@link AbstractCellFactory} for several mode and period.
      */
-    private final class ExtractPeriodSeveralFieldsCellFactory extends AbstractCellFactory {
+    private final class ExtractPeriodFieldsCellFactory extends AbstractCellFactory {
         private final int m_colIdx;
 
-        public ExtractPeriodSeveralFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
+        public ExtractPeriodFieldsCellFactory(final int colIdx, final DataColumnSpec... colSpecs) {
             super(colSpecs);
             m_colIdx = colIdx;
         }
