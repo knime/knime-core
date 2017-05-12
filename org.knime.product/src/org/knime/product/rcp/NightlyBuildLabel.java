@@ -54,6 +54,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -71,25 +73,37 @@ class NightlyBuildLabel extends ContributionItem {
     @Override
     public void fill(final Composite parent) {
         Label sep = new Label(parent, SWT.SEPARATOR);
-        Label label = new Label(parent, SWT.SHADOW_NONE);
-        label.setText("  You are using a nightly build!  ");
+        Composite outer = new Composite(parent, SWT.NONE);
+
+        GridLayout outerLayout = new GridLayout(1, false);
+        outerLayout.marginHeight = 0;
+        outerLayout.marginWidth = 0;
+        outer.setLayout(outerLayout);
+
+        Label label = new Label(outer, SWT.SHADOW_NONE);
+        label.setText("    You are using a nightly build!    ");
 
         Font initialFont = label.getFont();
         FontData[] fontData = initialFont.getFontData();
         for (int i = 0; i < fontData.length; i++) {
-            fontData[i].setHeight(18);
+            fontData[i].setHeight(13);
             fontData[i].setStyle(SWT.BOLD | SWT.ITALIC);
         }
         Font newFont = new Font(Display.getCurrent(), fontData);
         label.setFont(newFont);
         label.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
-        label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW));
+        outer.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW));
+
+        label.setToolTipText("If you encounter problems with this nightly build, please report them in our dedicated "
+            + "forum section for nightly builds!");
+        label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
         // compute the size of the label to get the width hint for the contribution
         Point preferredSize = label.computeSize(SWT.DEFAULT, SWT.DEFAULT);
         StatusLineLayoutData data = new StatusLineLayoutData();
         data.widthHint = preferredSize.x;
-        label.setLayoutData(data);
+        data.heightHint = preferredSize.y;
+        outer.setLayoutData(data);
 
         data = new StatusLineLayoutData();
         data.heightHint = preferredSize.y;
