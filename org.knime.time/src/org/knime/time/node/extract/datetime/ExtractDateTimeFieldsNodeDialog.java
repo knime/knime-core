@@ -129,8 +129,9 @@ final class ExtractDateTimeFieldsNodeDialog extends NodeDialogPane {
         final String[] subsecondUnits = new String[]{ExtractDateTimeFieldsNodeModel.MILLISECOND,
             ExtractDateTimeFieldsNodeModel.MICROSECOND, ExtractDateTimeFieldsNodeModel.NANOSECOND};
 
-        m_dialogCompSubsecondUnits = new DialogComponentStringSelection(
-            ExtractDateTimeFieldsNodeModel.createSubsecondUnitsModel(), null, subsecondUnits);
+        m_dialogCompSubsecondUnits =
+            new DialogComponentStringSelection(ExtractDateTimeFieldsNodeModel.createSubsecondUnitsModel(
+                (SettingsModelBoolean)m_dialogCompTimeFields[m_dialogCompTimeFields.length - 1].getModel()), null, subsecondUnits);
 
         final String[] fieldsTimeZone = new String[]{ExtractDateTimeFieldsNodeModel.TIME_ZONE_NAME,
             ExtractDateTimeFieldsNodeModel.TIME_ZONE_OFFSET};

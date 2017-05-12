@@ -131,8 +131,10 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
         return new SettingsModelBoolean(key, false);
     }
 
-    static SettingsModelString createSubsecondUnitsModel() {
-        return new SettingsModelString("subsecond_units", MILLISECOND);
+    static SettingsModelString createSubsecondUnitsModel(final SettingsModelBoolean subsecondsModelBoolean) {
+        final SettingsModelString subsecondsModelString = new SettingsModelString("subsecond_units", MILLISECOND);
+        subsecondsModelString.setEnabled(subsecondsModelBoolean.getBooleanValue());
+        return subsecondsModelString;
     }
 
     static SettingsModelString createLocaleModel() {
@@ -179,7 +181,7 @@ final class ExtractDateTimeFieldsNodeModel extends SimpleStreamableFunctionNodeM
 
     private final SettingsModelBoolean m_subsecondModel = createFieldBooleanModel(SUBSECOND);
 
-    private final SettingsModelString m_subsecondUnitsModel = createSubsecondUnitsModel();
+    private final SettingsModelString m_subsecondUnitsModel = createSubsecondUnitsModel(m_subsecondModel);
 
     private final SettingsModelBoolean m_timeZoneNameModel = createFieldBooleanModel(TIME_ZONE_NAME);
 
