@@ -60,11 +60,9 @@ import java.time.temporal.TemporalAmount;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public enum Granularity {
-    YEAR(ChronoUnit.YEARS), MONTH(ChronoUnit.MONTHS),
-    WEEK(ChronoUnit.WEEKS), DAY(ChronoUnit.DAYS),
-    HOUR(ChronoUnit.HOURS), MINUTE(ChronoUnit.MINUTES),
-    SECOND(ChronoUnit.SECONDS), MILLISECOND(ChronoUnit.MILLIS),
-    NANOSECOND(ChronoUnit.NANOS);
+        YEAR(ChronoUnit.YEARS), MONTH(ChronoUnit.MONTHS), WEEK(ChronoUnit.WEEKS), DAY(ChronoUnit.DAYS),
+        HOUR(ChronoUnit.HOURS), MINUTE(ChronoUnit.MINUTES), SECOND(ChronoUnit.SECONDS), MILLISECOND(ChronoUnit.MILLIS),
+        MICROSECOND(ChronoUnit.MICROS), NANOSECOND(ChronoUnit.NANOS);
 
     private final ChronoUnit m_chronoUnit;
 
@@ -146,6 +144,9 @@ public enum Granularity {
         }
         if (name.equals(MILLISECOND.name())) {
             return Duration.ofMillis(value);
+        }
+        if (name.equals(MICROSECOND.name())) {
+            return Duration.ofNanos(value * 1000);
         }
         if (name.equals(NANOSECOND.name())) {
             return Duration.ofNanos(value);
