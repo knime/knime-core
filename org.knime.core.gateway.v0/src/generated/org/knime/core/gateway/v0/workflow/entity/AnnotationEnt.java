@@ -46,6 +46,7 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
+import java.util.List;
 
 /**
  * A text annotation.
@@ -66,24 +67,9 @@ public interface AnnotationEnt extends GatewayEntity {
  	int getBackgroundColor();
  	
     /**
-     * @return The x coordinate.
+     * @return Position/Size of an annotation.
      */
- 	int getX();
- 	
-    /**
-     * @return The y coordinate.
-     */
- 	int getY();
- 	
-    /**
-     * @return The width.
-     */
- 	int getWidth();
- 	
-    /**
-     * @return The height.
-     */
- 	int getHeight();
+ 	BoundsEnt getBounds();
  	
     /**
      * @return The text alignment.
@@ -109,5 +95,10 @@ public interface AnnotationEnt extends GatewayEntity {
      * @return The version.
      */
  	int getVersion();
+ 	
+    /**
+     * @return Defines ranges of different styles within the annotation.
+     */
+ 	List<StyleRangeEnt> getStyleRanges();
  	
 }

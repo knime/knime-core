@@ -56,10 +56,17 @@ import java.util.Random;
 
 import org.junit.Test;
 import org.knime.core.gateway.entities.EntityBuilderManager;
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.StyleRangeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 
 /**
  *
@@ -81,30 +88,35 @@ public class AnnotationEntTest {
         AnnotationEntBuilder builder = EntityBuilderManager.builder(AnnotationEntBuilder.class);
 		builder.setText((String) valueList.get(0));
 		builder.setBackgroundColor((int) valueList.get(1));
-		builder.setX((int) valueList.get(2));
-		builder.setY((int) valueList.get(3));
-		builder.setWidth((int) valueList.get(4));
-		builder.setHeight((int) valueList.get(5));
-		builder.setTextAlignment((String) valueList.get(6));
-		builder.setBorderSize((int) valueList.get(7));
-		builder.setBorderColor((int) valueList.get(8));
-		builder.setDefaultFontSize((int) valueList.get(9));
-		builder.setVersion((int) valueList.get(10));
+		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(2)));
+		builder.setTextAlignment((String) valueList.get(3));
+		builder.setBorderSize((int) valueList.get(4));
+		builder.setBorderColor((int) valueList.get(5));
+		builder.setDefaultFontSize((int) valueList.get(6));
+		builder.setVersion((int) valueList.get(7));
+		List<StyleRangeEnt> list8 = new ArrayList<>();
+		List<Object> subList8 = (List<Object>) valueList.get(8);
+		for(int i = 0; i < subList8.size(); i++) {
+			list8.add(StyleRangeEntTest.createEnt((List<Object>) subList8.get(i)));
+		}
+		builder.setStyleRanges(list8);
         return builder.build();
     }
 
     public static void testEnt(final AnnotationEnt ent, final List<Object> valueList) {
 		assertEquals(ent.getText(), (String) valueList.get(0));
 		assertEquals(ent.getBackgroundColor(), (int) valueList.get(1));
-		assertEquals(ent.getX(), (int) valueList.get(2));
-		assertEquals(ent.getY(), (int) valueList.get(3));
-		assertEquals(ent.getWidth(), (int) valueList.get(4));
-		assertEquals(ent.getHeight(), (int) valueList.get(5));
-		assertEquals(ent.getTextAlignment(), (String) valueList.get(6));
-		assertEquals(ent.getBorderSize(), (int) valueList.get(7));
-		assertEquals(ent.getBorderColor(), (int) valueList.get(8));
-		assertEquals(ent.getDefaultFontSize(), (int) valueList.get(9));
-		assertEquals(ent.getVersion(), (int) valueList.get(10));
+		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(2));
+		assertEquals(ent.getTextAlignment(), (String) valueList.get(3));
+		assertEquals(ent.getBorderSize(), (int) valueList.get(4));
+		assertEquals(ent.getBorderColor(), (int) valueList.get(5));
+		assertEquals(ent.getDefaultFontSize(), (int) valueList.get(6));
+		assertEquals(ent.getVersion(), (int) valueList.get(7));
+		List<Object> subValueList8 = (List<Object>) valueList.get(8);
+		List<StyleRangeEnt> subList8 =  ent.getStyleRanges();
+		for(int i = 0; i < subList8.size(); i++) {
+			StyleRangeEntTest.testEnt(subList8.get(i), (List<Object>) subValueList8.get(i));
+		}
     }
 
     public static List<Object> createValueList() {
@@ -113,23 +125,25 @@ public class AnnotationEntTest {
 
  		valueList.add(-1154715079);
 
- 		valueList.add(-1155099828);
+ 		valueList.add(BoundsEntTest.createValueList());
 
- 		valueList.add(-1157023572);
+ 		valueList.add("5VLnL");
 
  		valueList.add(-1157408321);
 
  		valueList.add(-1156254074);
 
- 		valueList.add("J9O7q");
+ 		valueList.add(-1156638823);
 
  		valueList.add(-1158562568);
 
- 		valueList.add(-1158947317);
-
- 		valueList.add(-1157793070);
-
- 		valueList.add(-1158177819);
+ 		List<List<Object>> subList9 = new ArrayList<>();
+		subList9.add(StyleRangeEntTest.createValueList());
+		subList9.add(StyleRangeEntTest.createValueList());
+		subList9.add(StyleRangeEntTest.createValueList());
+		subList9.add(StyleRangeEntTest.createValueList());
+		subList9.add(StyleRangeEntTest.createValueList());
+ 		valueList.add(subList9);
 
         return valueList;
     }

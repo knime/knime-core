@@ -47,6 +47,7 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
@@ -77,27 +78,29 @@ import java.util.stream.Collectors;
 @JsonSubTypes({ 
   @Type(value = WorkflowAnnotationEntFromJson.class, name = "WorkflowAnnotationEnt")
 })
-public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
+public class WorkflowAnnotationEntFromJson extends AnnotationEntFromJson implements WorkflowAnnotationEnt {
 
 	private String m_Text;
+	private int m_BackgroundColor;
 	private BoundsEntFromJson m_Bounds;
-	private int m_BgColor;
+	private String m_TextAlignment;
 	private int m_BorderSize;
 	private int m_BorderColor;
-	private int m_FontSize;
-	private String m_Alignment;
+	private int m_DefaultFontSize;
+	private int m_Version;
 	private List<StyleRangeEntFromJson> m_StyleRanges;
 
 	@JsonCreator
 	private WorkflowAnnotationEntFromJson(
-	@JsonProperty("Text") String Text,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("BgColor") int BgColor,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("FontSize") int FontSize,	@JsonProperty("Alignment") String Alignment,	@JsonProperty("StyleRanges") List<StyleRangeEntFromJson> StyleRanges	) {
+	@JsonProperty("Text") String Text,	@JsonProperty("BackgroundColor") int BackgroundColor,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("TextAlignment") String TextAlignment,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("DefaultFontSize") int DefaultFontSize,	@JsonProperty("Version") int Version,	@JsonProperty("StyleRanges") List<StyleRangeEntFromJson> StyleRanges	) {
 		m_Text = Text;
+		m_BackgroundColor = BackgroundColor;
 		m_Bounds = Bounds;
-		m_BgColor = BgColor;
+		m_TextAlignment = TextAlignment;
 		m_BorderSize = BorderSize;
 		m_BorderColor = BorderColor;
-		m_FontSize = FontSize;
-		m_Alignment = Alignment;
+		m_DefaultFontSize = DefaultFontSize;
+		m_Version = Version;
 		m_StyleRanges = StyleRanges;
 	}
 	
@@ -113,14 +116,20 @@ public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
     }
     
 	@Override
+    public int getBackgroundColor() {
+        	return m_BackgroundColor;
+            
+    }
+    
+	@Override
     public BoundsEnt getBounds() {
             return (BoundsEnt) m_Bounds;
             
     }
     
 	@Override
-    public int getBgColor() {
-        	return m_BgColor;
+    public String getTextAlignment() {
+        	return m_TextAlignment;
             
     }
     
@@ -137,14 +146,14 @@ public class WorkflowAnnotationEntFromJson  implements WorkflowAnnotationEnt {
     }
     
 	@Override
-    public int getFontSize() {
-        	return m_FontSize;
+    public int getDefaultFontSize() {
+        	return m_DefaultFontSize;
             
     }
     
 	@Override
-    public String getAlignment() {
-        	return m_Alignment;
+    public int getVersion() {
+        	return m_Version;
             
     }
     

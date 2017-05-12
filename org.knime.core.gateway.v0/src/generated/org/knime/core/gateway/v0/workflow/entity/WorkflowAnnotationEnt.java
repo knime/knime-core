@@ -54,7 +54,7 @@ import java.util.List;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowAnnotationEnt extends GatewayEntity {
+public interface WorkflowAnnotationEnt extends GatewayEntity, AnnotationEnt  {
 
     /**
      * @return The text.
@@ -62,34 +62,39 @@ public interface WorkflowAnnotationEnt extends GatewayEntity {
  	String getText();
  	
     /**
+     * @return The background color.
+     */
+ 	int getBackgroundColor();
+ 	
+    /**
      * @return Position/Size of an annotation.
      */
  	BoundsEnt getBounds();
  	
     /**
-     * @return Background color.
+     * @return The text alignment.
      */
- 	int getBgColor();
+ 	String getTextAlignment();
  	
     /**
-     * @return Border thickness.
+     * @return The border width.
      */
  	int getBorderSize();
  	
     /**
-     * @return Border color.
+     * @return The border color.
      */
  	int getBorderColor();
  	
     /**
-     * @return The font fize.
+     * @return The default font size.
      */
- 	int getFontSize();
+ 	int getDefaultFontSize();
  	
     /**
-     * @return Text alignment.
+     * @return The version.
      */
- 	String getAlignment();
+ 	int getVersion();
  	
     /**
      * @return Defines ranges of different styles within the annotation.

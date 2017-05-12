@@ -46,8 +46,11 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -80,31 +83,27 @@ public class NodeAnnotationEntFromJson extends AnnotationEntFromJson implements 
 	private boolean m_IsDefault;
 	private String m_Text;
 	private int m_BackgroundColor;
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
+	private BoundsEntFromJson m_Bounds;
 	private String m_TextAlignment;
 	private int m_BorderSize;
 	private int m_BorderColor;
 	private int m_DefaultFontSize;
 	private int m_Version;
+	private List<StyleRangeEntFromJson> m_StyleRanges;
 
 	@JsonCreator
 	private NodeAnnotationEntFromJson(
-	@JsonProperty("IsDefault") boolean IsDefault,	@JsonProperty("Text") String Text,	@JsonProperty("BackgroundColor") int BackgroundColor,	@JsonProperty("X") int X,	@JsonProperty("Y") int Y,	@JsonProperty("Width") int Width,	@JsonProperty("Height") int Height,	@JsonProperty("TextAlignment") String TextAlignment,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("DefaultFontSize") int DefaultFontSize,	@JsonProperty("Version") int Version	) {
+	@JsonProperty("IsDefault") boolean IsDefault,	@JsonProperty("Text") String Text,	@JsonProperty("BackgroundColor") int BackgroundColor,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("TextAlignment") String TextAlignment,	@JsonProperty("BorderSize") int BorderSize,	@JsonProperty("BorderColor") int BorderColor,	@JsonProperty("DefaultFontSize") int DefaultFontSize,	@JsonProperty("Version") int Version,	@JsonProperty("StyleRanges") List<StyleRangeEntFromJson> StyleRanges	) {
 		m_IsDefault = IsDefault;
 		m_Text = Text;
 		m_BackgroundColor = BackgroundColor;
-		m_X = X;
-		m_Y = Y;
-		m_Width = Width;
-		m_Height = Height;
+		m_Bounds = Bounds;
 		m_TextAlignment = TextAlignment;
 		m_BorderSize = BorderSize;
 		m_BorderColor = BorderColor;
 		m_DefaultFontSize = DefaultFontSize;
 		m_Version = Version;
+		m_StyleRanges = StyleRanges;
 	}
 	
 	protected NodeAnnotationEntFromJson() {
@@ -131,26 +130,8 @@ public class NodeAnnotationEntFromJson extends AnnotationEntFromJson implements 
     }
     
 	@Override
-    public int getX() {
-        	return m_X;
-            
-    }
-    
-	@Override
-    public int getY() {
-        	return m_Y;
-            
-    }
-    
-	@Override
-    public int getWidth() {
-        	return m_Width;
-            
-    }
-    
-	@Override
-    public int getHeight() {
-        	return m_Height;
+    public BoundsEnt getBounds() {
+            return (BoundsEnt) m_Bounds;
             
     }
     
@@ -181,6 +162,12 @@ public class NodeAnnotationEntFromJson extends AnnotationEntFromJson implements 
 	@Override
     public int getVersion() {
         	return m_Version;
+            
+    }
+    
+	@Override
+    public List<StyleRangeEnt> getStyleRanges() {
+        	return m_StyleRanges.stream().map(l -> (StyleRangeEnt) l ).collect(Collectors.toList());
             
     }
     

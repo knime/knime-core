@@ -80,11 +80,11 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
     @Override
     public AnnotationData getData() {
         BoundsEnt bounds = m_anno.getBounds();
-        return AnnotationData.builder().setAlignment(TextAlignment.valueOf(m_anno.getAlignment()))
-            .setBgColor(m_anno.getBgColor()).setBorderColor(m_anno.getBorderColor())
-            .setBorderSize(m_anno.getBorderSize()).setDefaultFontSize(m_anno.getFontSize())
+        return AnnotationData.builder().setAlignment(TextAlignment.valueOf(m_anno.getTextAlignment()))
+            .setBgColor(m_anno.getBackgroundColor()).setBorderColor(m_anno.getBorderColor())
+            .setBorderSize(m_anno.getBorderSize()).setDefaultFontSize(m_anno.getDefaultFontSize())
             .setDimension(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight()).setText(m_anno.getText())
-            .build();
+            .setStyleRanges(getStyleRanges()).build();
     }
 
     /**
@@ -92,8 +92,7 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public void setData(final AnnotationData data) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -121,7 +120,7 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
                 }).toArray(StyleRange[]::new);
     }
 
-    private int getFontStyleIdx(final String fontStyle) {
+    static int getFontStyleIdx(final String fontStyle) {
         //indices from SWT-class
         if (fontStyle.equals("normal")) {
             return 0;
@@ -140,7 +139,7 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public int getBgColor() {
-        return m_anno.getBgColor();
+        return m_anno.getBackgroundColor();
     }
 
     /**
@@ -180,7 +179,7 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public TextAlignment getAlignment() {
-        return TextAlignment.valueOf(m_anno.getAlignment());
+        return TextAlignment.valueOf(m_anno.getTextAlignment());
     }
 
     /**
@@ -204,7 +203,7 @@ public class ClientProxyWorkflowAnnotation implements IWorkflowAnnotation {
      */
     @Override
     public int getDefaultFontSize() {
-        return m_anno.getFontSize();
+        return m_anno.getDefaultFontSize();
     }
 
     /**

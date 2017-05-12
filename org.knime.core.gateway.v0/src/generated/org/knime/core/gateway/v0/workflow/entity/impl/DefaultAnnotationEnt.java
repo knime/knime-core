@@ -46,10 +46,15 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
@@ -66,15 +71,13 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
 
 	private String m_Text;
 	private int m_BackgroundColor;
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
+	private BoundsEnt m_Bounds;
 	private String m_TextAlignment;
 	private int m_BorderSize;
 	private int m_BorderColor;
 	private int m_DefaultFontSize;
 	private int m_Version;
+	private List<StyleRangeEnt> m_StyleRanges;
 
     /**
      * @param builder
@@ -82,15 +85,13 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
     private DefaultAnnotationEnt(final DefaultAnnotationEntBuilder builder) {
 		m_Text = builder.m_Text;
 		m_BackgroundColor = builder.m_BackgroundColor;
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
+		m_Bounds = builder.m_Bounds;
 		m_TextAlignment = builder.m_TextAlignment;
 		m_BorderSize = builder.m_BorderSize;
 		m_BorderColor = builder.m_BorderColor;
 		m_DefaultFontSize = builder.m_DefaultFontSize;
 		m_Version = builder.m_Version;
+		m_StyleRanges = builder.m_StyleRanges;
     }
 
 	@Override
@@ -104,23 +105,8 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
     }
     
 	@Override
-    public int getX() {
-        return m_X;
-    }
-    
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
+    public BoundsEnt getBounds() {
+        return m_Bounds;
     }
     
 	@Override
@@ -148,6 +134,11 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
         return m_Version;
     }
     
+	@Override
+    public List<StyleRangeEnt> getStyleRanges() {
+        return m_StyleRanges;
+    }
+    
 
 	@Override
 	public String toString() {
@@ -165,15 +156,13 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
     
 		private String m_Text;
 		private int m_BackgroundColor;
-		private int m_X;
-		private int m_Y;
-		private int m_Width;
-		private int m_Height;
+		private BoundsEnt m_Bounds;
 		private String m_TextAlignment;
 		private int m_BorderSize;
 		private int m_BorderColor;
 		private int m_DefaultFontSize;
 		private int m_Version;
+		private List<StyleRangeEnt> m_StyleRanges;
 
         public AnnotationEnt build() {
             return new DefaultAnnotationEnt(this);
@@ -192,26 +181,8 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
         }
         
 		@Override
-        public AnnotationEntBuilder setX(final int X) {
-			m_X = X;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setY(final int Y) {
-			m_Y = Y;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setWidth(final int Width) {
-			m_Width = Width;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setHeight(final int Height) {
-			m_Height = Height;			
+        public AnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
+			m_Bounds = Bounds;			
             return this;
         }
         
@@ -242,6 +213,12 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
 		@Override
         public AnnotationEntBuilder setVersion(final int Version) {
 			m_Version = Version;			
+            return this;
+        }
+        
+		@Override
+        public AnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
+			m_StyleRanges = StyleRanges;			
             return this;
         }
         

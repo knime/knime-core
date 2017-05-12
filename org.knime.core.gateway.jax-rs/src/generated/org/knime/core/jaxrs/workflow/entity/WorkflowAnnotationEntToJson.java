@@ -47,6 +47,7 @@
 package org.knime.core.jaxrs.workflow.entity;
 
 import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
@@ -67,11 +68,12 @@ import java.util.HashMap;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public class WorkflowAnnotationEntToJson  implements WorkflowAnnotationEnt {
+public class WorkflowAnnotationEntToJson extends AnnotationEntToJson implements WorkflowAnnotationEnt {
 
 	private final WorkflowAnnotationEnt m_e;
 	
 	public WorkflowAnnotationEntToJson(final WorkflowAnnotationEnt e) {
+		super(e);
 		m_e = e;
 	}
 
@@ -80,14 +82,19 @@ public class WorkflowAnnotationEntToJson  implements WorkflowAnnotationEnt {
     	return m_e.getText();
     }
     
+	@JsonProperty("BackgroundColor")
+    public int getBackgroundColor() {
+    	return m_e.getBackgroundColor();
+    }
+    
 	@JsonProperty("Bounds")
     public BoundsEnt getBounds() {
         return BoundsEntToJson.wrap(m_e.getBounds());
     }
     
-	@JsonProperty("BgColor")
-    public int getBgColor() {
-    	return m_e.getBgColor();
+	@JsonProperty("TextAlignment")
+    public String getTextAlignment() {
+    	return m_e.getTextAlignment();
     }
     
 	@JsonProperty("BorderSize")
@@ -100,14 +107,14 @@ public class WorkflowAnnotationEntToJson  implements WorkflowAnnotationEnt {
     	return m_e.getBorderColor();
     }
     
-	@JsonProperty("FontSize")
-    public int getFontSize() {
-    	return m_e.getFontSize();
+	@JsonProperty("DefaultFontSize")
+    public int getDefaultFontSize() {
+    	return m_e.getDefaultFontSize();
     }
     
-	@JsonProperty("Alignment")
-    public String getAlignment() {
-    	return m_e.getAlignment();
+	@JsonProperty("Version")
+    public int getVersion() {
+    	return m_e.getVersion();
     }
     
 	@JsonProperty("StyleRanges")

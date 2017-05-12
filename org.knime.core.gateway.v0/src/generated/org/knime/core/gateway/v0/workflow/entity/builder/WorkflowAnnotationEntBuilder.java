@@ -47,6 +47,7 @@
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
 import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
@@ -65,40 +66,46 @@ public interface WorkflowAnnotationEntBuilder extends GatewayEntityBuilder<Workf
 	WorkflowAnnotationEntBuilder setText(String text);
 	
     /**
+     * @param backgroundColor The background color.
+     * @return <code>this</code>
+     */
+	WorkflowAnnotationEntBuilder setBackgroundColor(int backgroundColor);
+	
+    /**
      * @param bounds Position/Size of an annotation.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBounds(BoundsEnt bounds);
 	
     /**
-     * @param bgColor Background color.
+     * @param textAlignment The text alignment.
      * @return <code>this</code>
      */
-	WorkflowAnnotationEntBuilder setBgColor(int bgColor);
+	WorkflowAnnotationEntBuilder setTextAlignment(String textAlignment);
 	
     /**
-     * @param borderSize Border thickness.
+     * @param borderSize The border width.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBorderSize(int borderSize);
 	
     /**
-     * @param borderColor Border color.
+     * @param borderColor The border color.
      * @return <code>this</code>
      */
 	WorkflowAnnotationEntBuilder setBorderColor(int borderColor);
 	
     /**
-     * @param fontSize The font fize.
+     * @param defaultFontSize The default font size.
      * @return <code>this</code>
      */
-	WorkflowAnnotationEntBuilder setFontSize(int fontSize);
+	WorkflowAnnotationEntBuilder setDefaultFontSize(int defaultFontSize);
 	
     /**
-     * @param alignment Text alignment.
+     * @param version The version.
      * @return <code>this</code>
      */
-	WorkflowAnnotationEntBuilder setAlignment(String alignment);
+	WorkflowAnnotationEntBuilder setVersion(int version);
 	
     /**
      * @param styleRanges Defines ranges of different styles within the annotation.

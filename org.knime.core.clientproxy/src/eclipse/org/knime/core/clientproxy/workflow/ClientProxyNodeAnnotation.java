@@ -83,15 +83,16 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
     public NodeAnnotationData getData() {
         return NodeAnnotationData.builder()
         .setText(m_nodeAnnotation.getText())
-        .setX(m_nodeAnnotation.getX())
-        .setY(m_nodeAnnotation.getY())
+        .setX(m_nodeAnnotation.getBounds().getX())
+        .setY(m_nodeAnnotation.getBounds().getY())
         .setBgColor(m_nodeAnnotation.getBackgroundColor())
         .setBorderColor(m_nodeAnnotation.getBorderColor())
         .setBorderSize(m_nodeAnnotation.getBorderSize())
         .setDefaultFontSize(m_nodeAnnotation.getDefaultFontSize())
-        .setHeight(m_nodeAnnotation.getHeight())
-        .setWidth(m_nodeAnnotation.getWidth())
+        .setHeight(m_nodeAnnotation.getBounds().getHeight())
+        .setWidth(m_nodeAnnotation.getBounds().getWidth())
         .setAlignment(TextAlignment.valueOf(m_nodeAnnotation.getTextAlignment()))
+        .setStyleRanges(getStyleRanges())
         .setIsDefault(m_nodeAnnotation.getIsDefault()).build();
     }
 
@@ -116,8 +117,16 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public StyleRange[] getStyleRanges() {
-        //TODO
-        return null;
+        return m_nodeAnnotation.getStyleRanges().stream().map(sr -> {
+            return StyleRange.builder()
+                    .setStart(sr.getStart())
+                    .setLength(sr.getLength())
+                    .setFontName(sr.getFontName())
+                    .setFontSize(sr.getFontSize())
+                    .setFgColor(sr.getForegroundColor())
+                    .setFontStyle(ClientProxyWorkflowAnnotation.getFontStyleIdx(sr.getFontStyle()))
+                    .build();
+        }).toArray(StyleRange[]::new);
     }
 
     /**
@@ -133,7 +142,7 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public int getX() {
-        return m_nodeAnnotation.getX();
+        return m_nodeAnnotation.getBounds().getX();
     }
 
     /**
@@ -141,7 +150,7 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public int getY() {
-        return m_nodeAnnotation.getY();
+        return m_nodeAnnotation.getBounds().getY();
     }
 
     /**
@@ -149,7 +158,7 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public int getWidth() {
-        return m_nodeAnnotation.getWidth();
+        return m_nodeAnnotation.getBounds().getWidth();
     }
 
     /**
@@ -157,7 +166,7 @@ public class ClientProxyNodeAnnotation implements INodeAnnotation {
      */
     @Override
     public int getHeight() {
-        return m_nodeAnnotation.getHeight();
+        return m_nodeAnnotation.getBounds().getHeight();
     }
 
     /**

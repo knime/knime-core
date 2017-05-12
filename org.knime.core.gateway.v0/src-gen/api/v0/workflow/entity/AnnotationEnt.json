@@ -15,24 +15,9 @@
             "type" : "int"
         },
         {
-            "name" : "X",
-            "description" : "The x coordinate.",
-            "type" : "int"
-        },
-        {
-            "name" : "Y",
-            "description" : "The y coordinate.",
-            "type" : "int"
-        },
-        {
-            "name" : "Width",
-            "description" : "The width.",
-            "type" : "int"
-        },
-        {
-            "name" : "Height",
-            "description" : "The height.",
-            "type" : "int"
+            "name" : "Bounds",
+            "description" : "Position/Size of an annotation.",
+            "type" : "workflow.entity.BoundsEnt"
         },
         {
             "name" : "TextAlignment",
@@ -58,6 +43,11 @@
             "name" : "Version",
             "description" : "The version.",
             "type" : "int"
+        },
+        {
+        	"name" : "StyleRanges",
+        	"description" : "Defines ranges of different styles within the annotation.",
+        	"type" : "List<workflow.entity.StyleRangeEnt>"
         }
     ]
 }

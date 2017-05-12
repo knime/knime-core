@@ -179,11 +179,19 @@ public class EntityBuilderUtil {
 
     private static NodeAnnotationEnt buildNodeAnnotationEnt(final INodeContainer nc) {
         INodeAnnotation na = nc.getNodeAnnotation();
+        BoundsEnt bounds = builder(BoundsEntBuilder.class)
+                .setX(na.getX())
+                .setY(na.getY())
+                .setWidth(na.getWidth())
+                .setHeight(na.getHeight())
+                .build();
+        List<StyleRangeEnt> styleRanges =
+            Arrays.stream(na.getStyleRanges()).map(sr -> buildStyleRangeEnt(sr)).collect(Collectors.toList());
         return builder(NodeAnnotationEntBuilder.class).setBackgroundColor(na.getBgColor())
             .setBorderColor(na.getBorderColor()).setBorderSize(na.getBorderSize())
-            .setDefaultFontSize(na.getDefaultFontSize()).setHeight(na.getHeight()).setText(na.getText())
-            .setTextAlignment(na.getAlignment().toString()).setVersion(na.getVersion()).setWidth(na.getWidth())
-            .setX(na.getX()).setY(na.getY()).setIsDefault(na.getData().isDefault()).build();
+            .setDefaultFontSize(na.getDefaultFontSize()).setBounds(bounds).setText(na.getText())
+            .setTextAlignment(na.getAlignment().toString()).setVersion(na.getVersion())
+            .setIsDefault(na.getData().isDefault()).setStyleRanges(styleRanges).build();
     }
 
     private static Optional<JobManagerEnt> buildJobManagerEnt(final Optional<JobManagerUID> jobManagerUID) {
@@ -324,11 +332,11 @@ public class EntityBuilderUtil {
         List<StyleRangeEnt> styleRanges =
             Arrays.stream(wa.getStyleRanges()).map(sr -> buildStyleRangeEnt(sr)).collect(Collectors.toList());
         return builder(WorkflowAnnotationEntBuilder.class)
-                .setAlignment(wa.getAlignment().toString())
-                .setBgColor(wa.getBgColor())
+                .setTextAlignment(wa.getAlignment().toString())
+                .setBackgroundColor(wa.getBgColor())
                 .setBorderColor(wa.getBorderColor())
                 .setBorderSize(wa.getBorderSize())
-                .setFontSize(wa.getDefaultFontSize())
+                .setDefaultFontSize(wa.getDefaultFontSize())
                 .setBounds(bounds)
                 .setText(wa.getText())
                 .setStyleRanges(styleRanges)

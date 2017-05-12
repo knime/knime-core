@@ -46,8 +46,11 @@
  */
 package org.knime.core.jaxrs.workflow.entity;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -89,24 +92,9 @@ public class NodeAnnotationEntToJson extends AnnotationEntToJson implements Node
     	return m_e.getBackgroundColor();
     }
     
-	@JsonProperty("X")
-    public int getX() {
-    	return m_e.getX();
-    }
-    
-	@JsonProperty("Y")
-    public int getY() {
-    	return m_e.getY();
-    }
-    
-	@JsonProperty("Width")
-    public int getWidth() {
-    	return m_e.getWidth();
-    }
-    
-	@JsonProperty("Height")
-    public int getHeight() {
-    	return m_e.getHeight();
+	@JsonProperty("Bounds")
+    public BoundsEnt getBounds() {
+        return BoundsEntToJson.wrap(m_e.getBounds());
     }
     
 	@JsonProperty("TextAlignment")
@@ -132,6 +120,11 @@ public class NodeAnnotationEntToJson extends AnnotationEntToJson implements Node
 	@JsonProperty("Version")
     public int getVersion() {
     	return m_e.getVersion();
+    }
+    
+	@JsonProperty("StyleRanges")
+    public List<StyleRangeEnt> getStyleRanges() {
+    	return m_e.getStyleRanges().stream().map(l -> StyleRangeEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
 

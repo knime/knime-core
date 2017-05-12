@@ -46,8 +46,12 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.builder;
 
+import java.util.List;
 import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 
 /**
  * Builder for {@link AnnotationEnt}.
@@ -69,28 +73,10 @@ public interface AnnotationEntBuilder extends GatewayEntityBuilder<AnnotationEnt
 	AnnotationEntBuilder setBackgroundColor(int backgroundColor);
 	
     /**
-     * @param x The x coordinate.
+     * @param bounds Position/Size of an annotation.
      * @return <code>this</code>
      */
-	AnnotationEntBuilder setX(int x);
-	
-    /**
-     * @param y The y coordinate.
-     * @return <code>this</code>
-     */
-	AnnotationEntBuilder setY(int y);
-	
-    /**
-     * @param width The width.
-     * @return <code>this</code>
-     */
-	AnnotationEntBuilder setWidth(int width);
-	
-    /**
-     * @param height The height.
-     * @return <code>this</code>
-     */
-	AnnotationEntBuilder setHeight(int height);
+	AnnotationEntBuilder setBounds(BoundsEnt bounds);
 	
     /**
      * @param textAlignment The text alignment.
@@ -121,5 +107,11 @@ public interface AnnotationEntBuilder extends GatewayEntityBuilder<AnnotationEnt
      * @return <code>this</code>
      */
 	AnnotationEntBuilder setVersion(int version);
+	
+    /**
+     * @param styleRanges Defines ranges of different styles within the annotation.
+     * @return <code>this</code>
+     */
+	AnnotationEntBuilder setStyleRanges(List<StyleRangeEnt> styleRanges);
 	
 }
