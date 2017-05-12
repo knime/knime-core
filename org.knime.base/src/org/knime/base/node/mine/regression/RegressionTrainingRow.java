@@ -282,5 +282,6 @@ public class RegressionTrainingRow {
     public RealMatrix getParameter() {
         return m_parameter;
     }
+
 }
 

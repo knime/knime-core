@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            category-path="/labs"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerNodeFactory4">
+      </node>
+<!--      <node
+            after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
+            category-path="/analytics/mining/treeensemble"
+            factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
+            >
+      </node>-->
+   </extension>
+
+</plugin>
