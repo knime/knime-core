@@ -151,7 +151,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
                 + "First value is chosen as reference for dummy variables.");
 
-        m_lazyCalculationCheckBox = new JCheckBox("Perfom calculations lazily");
+        m_lazyCalculationCheckBox = new JCheckBox("Perform calculations lazily");
         m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_MAX_EPOCH, 1, Integer.MAX_VALUE, 1));
         m_epsilonField= new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
 //        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_INITIAL_LEARNING_RATE,
