@@ -4,8 +4,7 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/labs"
-            deprecated="false"
+            category-path="/analytics/statistics/regression"
             factory-class="org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerNodeFactory4">
       </node>
 <!--      <node
