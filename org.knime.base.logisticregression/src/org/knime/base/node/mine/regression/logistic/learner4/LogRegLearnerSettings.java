@@ -252,7 +252,7 @@ public class LogRegLearnerSettings {
     static final int DEFAULT_MAX_EPOCH = 100;
     static final double DEFAULT_EPSILON = 1e-5;
     static final LearningRateStrategies DEFAULT_LEARNINGRATE_STRATEGY = LearningRateStrategies.Fixed;
-    static final double DEFAULT_INITIAL_LEARNING_RATE = 1e-3;
+    static final double DEFAULT_INITIAL_LEARNING_RATE = 0.01;
     static final double DEFAULT_LEARNING_RATE_DECAY = 1;
     static final Prior DEFAULT_PRIOR = Prior.Uniform;
     static final double DEFAULT_PRIOR_VARIANCE = 0.1;
