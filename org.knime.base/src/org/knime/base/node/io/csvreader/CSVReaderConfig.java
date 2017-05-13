@@ -77,6 +77,7 @@ public final class CSVReaderConfig {
     private int m_skipFirstLinesCount;
     private String m_charSet;
     private Duration m_connectTimeout;
+    private boolean m_partialAnalysis;
 
 
     /**
@@ -94,6 +95,7 @@ public final class CSVReaderConfig {
         m_limitRowsCount = -1L;
         m_skipFirstLinesCount = -1;
         m_charSet = null; // uses default encoding
+        m_partialAnalysis = false;
     }
 
     /** Load settings, used in dialog (no errors).
@@ -116,6 +118,7 @@ public final class CSVReaderConfig {
         } catch (InvalidSettingsException ex) {
             m_connectTimeout = null; // use default value
         }
+        m_partialAnalysis = settings.getBoolean("partialAnalysis", m_partialAnalysis);
     }
 
     /** Load in model, fail if settings are invalid.
@@ -144,6 +147,7 @@ public final class CSVReaderConfig {
         } catch (InvalidSettingsException ex) {
             m_connectTimeout = null; // use default value
         }
+        m_partialAnalysis = settings.getBoolean("partialAnalysis", m_partialAnalysis);
     }
 
     /** Save configuration to argument.
@@ -166,6 +170,7 @@ public final class CSVReaderConfig {
         if (m_connectTimeout != null) {
             settings.addInt("connectTimeoutInSeconds", (int) (m_connectTimeout.toMillis() / 1000));
         }
+        settings.addBoolean("partialAnalysis", m_partialAnalysis);
     }
 
     /** @return the location */
@@ -289,4 +294,15 @@ public final class CSVReaderConfig {
     void setConnectTimeout(final Duration value){
         m_connectTimeout = value;
     }
+
+    /** @return whether only a partial analysis should be performed */
+    public boolean getPartialAnalysis(){
+        return m_partialAnalysis;
+    }
+
+    /** @param value the connect timeout to set or <code>null</code> to use default value. */
+    void setPartialAnalysis(final boolean value){
+        m_partialAnalysis = value;
+    }
+
 }
