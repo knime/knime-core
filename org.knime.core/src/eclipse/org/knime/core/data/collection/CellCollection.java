@@ -46,6 +46,9 @@
  */
 package org.knime.core.data.collection;
 
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
@@ -90,5 +93,13 @@ public interface CellCollection extends Iterable<DataCell> {
      * @return Whether the collection contains blob wrapper cells.
      */
     public boolean containsBlobWrapperCells();
+
+    /** Get a stream on all contained cells as defined by Iterable interface.
+     * @return a new non-parallel stream on the elements.
+     * @since 3.4
+     */
+    default Stream<DataCell> stream() {
+        return StreamSupport.stream(spliterator(), false);
+    }
 
 }
