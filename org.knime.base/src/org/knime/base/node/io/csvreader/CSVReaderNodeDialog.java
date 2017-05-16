@@ -133,6 +133,7 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         m_skipFirstLinesChecker.doClick();
         m_limitRowsChecker = new JCheckBox("Limit rows ");
         m_limitRowsSpinner = new JSpinner(new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 50));
+        m_partialAnalysisChecker = new JCheckBox("Limit analyzed rows");
         m_limitRowsChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -141,7 +142,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
-        m_partialAnalysisChecker = new JCheckBox("Limit analyzed rows");
         m_partialAnalysisChecker.doClick();
 
         addTab("Settings", initLayout());

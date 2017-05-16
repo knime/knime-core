@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.knime.base.node.io.filereader.FileAnalyzer;
+import org.knime.base.node.io.filereader.FileReaderExecutionMonitor;
 import org.knime.base.node.io.filereader.FileReaderNodeSettings;
 import org.knime.base.node.io.filereader.FileTable;
 import org.knime.core.data.DataTableSpec;
@@ -65,6 +66,9 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.tokenizer.SettingsStatus;
 
@@ -188,7 +192,27 @@ public class CSVReaderNodeModel extends NodeModel {
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");
-        settings = FileAnalyzer.analyze(settings, analyseExec);
+        if (m_config.getPartialAnalysis()) {
+            final FileReaderExecutionMonitor fileReaderExec = new FileReaderExecutionMonitor();
+            fileReaderExec.getProgressMonitor().addProgressListener(new NodeProgressListener() {
+
+                @Override
+                public void progressChanged(final NodeProgressEvent pe) {
+                    NodeProgress nodeProgress = pe.getNodeProgress();
+                    analyseExec.setProgress(nodeProgress.getProgress(), nodeProgress.getMessage());
+                    try {
+                        analyseExec.checkCanceled();
+                    } catch (CanceledExecutionException e) {
+                        fileReaderExec.setExecuteInterrupted();
+                    }
+                }
+            });
+            fileReaderExec.setShortCutLines((int)m_config.getLimitRowsCount());
+            fileReaderExec.setExecuteCanceled();
+            settings = FileAnalyzer.analyze(settings, fileReaderExec);
+        } else {
+            settings = FileAnalyzer.analyze(settings, analyseExec);
+        }
         SettingsStatus status = settings.getStatusOfSettings();
         if (status.getNumOfErrors() > 0) {
             throw new IllegalStateException(status.getErrorMessage(0));
