@@ -24,7 +24,7 @@
         </p>
 		</intro>
 		<tab name="CSV Reader">
-			<option name="Connection Timeout">
+			<option name="Custom connection timeout">
 			  Optional timeout in seconds for connections when reading remote files. When no value is provided, an
 			  application-wide default timeout will be used (usually 1s).
 			</option>

@@ -536,7 +536,7 @@ public final class FilesHistoryPanel extends JPanel {
 
         m_connectTimeoutSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE / 1000, 1));
         m_connectTimeoutSpinner.setEnabled(false);
-        m_userSetTimeoutCheckBox = new JCheckBox("Connect timeout [s]: ");
+        m_userSetTimeoutCheckBox = new JCheckBox("Custom connection timeout [s]: ");
         m_userSetTimeoutCheckBox
             .addActionListener(e -> m_connectTimeoutSpinner.setEnabled(m_userSetTimeoutCheckBox.isSelected()));
 
