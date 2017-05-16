@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/CellCollection.java" type="org.knime.core.data.collection.CellCollection">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.CellCollection"/>
+                <message_argument value="stream()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/AbstractNodeView.java" type="org.knime.core.node.AbstractNodeView">
         <filter id="338722907">
             <message_arguments>
