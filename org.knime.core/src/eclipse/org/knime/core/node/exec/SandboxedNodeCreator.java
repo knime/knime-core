@@ -229,6 +229,17 @@ public final class SandboxedNodeCreator {
         WorkflowManager tempWFM =
             m_rootWFM.createAndAddProject("Sandbox Exec on " + m_nc.getNameWithID(), creationHelper);
 
+        // Add the workflow variables
+        List<FlowVariable> workflowVariables = parent.getProjectWFM().getWorkflowVariables();
+        tempWFM.addWorkflowVariables(true, workflowVariables.toArray(new FlowVariable[workflowVariables.size()]));
+
+        //update credentials store of the workflow
+        CredentialsStore cs  = tempWFM.getCredentialsStore();
+        workflowVariables.stream()
+            .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
+            .filter(f -> !cs.contains(f.getName()))
+            .forEach(cs::addFromFlowVariable);
+
         final int inCnt = m_inData.length;
         // port object IDs in static port object map, one entry for
         // each connected input (no value for unconnected optional inputs)
@@ -255,7 +266,6 @@ public final class SandboxedNodeCreator {
                     portObjectRepositoryID, flowVars, m_copyDataIntoNewContext);
 
                 //update credentials store of the workflow
-                CredentialsStore cs  = tempWFM.getCredentialsStore();
                 flowVars.stream()
                     .filter(f -> f.getType().equals(FlowVariable.Type.CREDENTIALS))
                     .filter(f -> !cs.contains(f.getName()))
