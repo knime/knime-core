@@ -96,7 +96,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node model of the node which converts unix timestamps to the new date&time types.
@@ -117,7 +117,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
 
     private final SettingsModelString m_suffix = createSuffixModel(m_isReplaceOrAppend);
 
-    private String m_selectedType = DateTimeTypes.LOCAL_DATE_TIME.name();
+    private String m_selectedType = DateTimeType.LOCAL_DATE_TIME.name();
 
     private TimeUnit m_selectedUnit = TIMEUNITS[0];
 
@@ -233,13 +233,13 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         for (String includedCol : includeList) {
             if (isReplace) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
-                    new DataColumnSpecCreator(includedCol, DateTimeTypes.valueOf(m_selectedType).getDataType());
+                    new DataColumnSpecCreator(includedCol, DateTimeType.valueOf(m_selectedType).getDataType());
                 final TimestampToTimeCellFactory cellFac =
                     new TimestampToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
                 rearranger.replace(cellFac, includedCol);
             } else {
                 final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec).newColumn(
-                    includedCol + m_suffix.getStringValue(), DateTimeTypes.valueOf(m_selectedType).getDataType());
+                    includedCol + m_suffix.getStringValue(), DateTimeType.valueOf(m_selectedType).getDataType());
                 final TimestampToTimeCellFactory cellFac = new TimestampToTimeCellFactory(dataColSpec, includeIndeces[i++]);
                 rearranger.append(cellFac);
             }
@@ -284,14 +284,14 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
                     for (int i = 0; i < includeIndeces.length; i++) {
                         if (isReplace) {
                             final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(
-                                includeList[i], DateTimeTypes.valueOf(m_selectedType).getDataType());
+                                includeList[i], DateTimeType.valueOf(m_selectedType).getDataType());
                             final TimestampToTimeCellFactory cellFac =
                                 new TimestampToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
                             datacells[i] = cellFac.getCell(row);
                         } else {
                             final DataColumnSpec dataColSpec =
                                 new UniqueNameGenerator(inSpec).newColumn(includeList[i] + m_suffix.getStringValue(),
-                                    DateTimeTypes.valueOf(m_selectedType).getDataType());
+                                    DateTimeType.valueOf(m_selectedType).getDataType());
                             final TimestampToTimeCellFactory cellFac =
                                 new TimestampToTimeCellFactory(dataColSpec, includeIndeces[i]);
                             datacells[i] = cellFac.getCell(row);
@@ -353,8 +353,8 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         m_timezone.validateSettings(settings);
         final SettingsModelString timezoneClone = m_timezone.createCloneWithValidatedValue(settings);
         final String timezonestr = timezoneClone.getStringValue();
-        DateTimeTypes type = DateTimeTypes.valueOf(settings.getString("typeEnum"));
-        if(type == DateTimeTypes.ZONED_DATE_TIME && !validateTimezone(timezonestr))
+        DateTimeType type = DateTimeType.valueOf(settings.getString("typeEnum"));
+        if(type == DateTimeType.ZONED_DATE_TIME && !validateTimezone(timezonestr))
         {
             String msg = "Invalid timezone: " + m_timezone.getStringValue() + ".";
             throw new InvalidSettingsException(msg);
@@ -414,7 +414,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
                 throw new IllegalStateException("Unknown unit " + m_selectedUnit);
             }
 
-            switch (DateTimeTypes.valueOf(m_selectedType)) {
+            switch (DateTimeType .valueOf(m_selectedType)) {
                 case LOCAL_DATE: {
                     final LocalDate ld = LocalDate.from(instant.atZone(ZoneId.of("UTC")));
                     return LocalDateCellFactory.create(ld);

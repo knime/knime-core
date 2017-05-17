@@ -73,7 +73,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.time.node.convert.DateTimeTypes;
+import org.knime.time.util.DateTimeType;
 
 /**
  * The node dialog of the node which converts timestamps to the new date&time types.
@@ -92,7 +92,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
 
     private final JComboBox<TimeUnit> m_timeUnitCombobox;
 
-    private final JComboBox<DateTimeTypes> m_typeCombobox;
+    private final JComboBox<DateTimeType> m_typeCombobox;
 
     private final JLabel m_timezoneWarningLabel;
 
@@ -195,7 +195,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.weighty = 0;
         gbcTypeFormat.weightx = 0;
         gbcTypeFormat.anchor = GridBagConstraints.WEST;
-        m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
+        m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
         final JPanel panelTypeList = new JPanel(new FlowLayout());
         final JLabel labelType = new JLabel("New type: ");
         panelTypeList.add(labelType);
@@ -228,7 +228,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
 
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                setTimezoneInputEnableStatus((DateTimeTypes)e.getItem());
+                setTimezoneInputEnableStatus((DateTimeType)e.getItem());
             }
         });
         m_dialogCompTimezone.getModel().addChangeListener(e -> timezoneListener(m_timezoneModel.getStringValue()));
@@ -238,9 +238,9 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
      * Enable the timezoneinput only if the currently selected DateTimeType is "zoned DateAndTime"
      *  @param dt    the currently selected DateTimeType in the m_typeCombobox
      * */
-    private void setTimezoneInputEnableStatus(final DateTimeTypes dt)
+    private void setTimezoneInputEnableStatus(final DateTimeType dt)
     {
-        if(dt.equals(DateTimeTypes.ZONED_DATE_TIME)) {
+        if(dt.equals(DateTimeType.ZONED_DATE_TIME)) {
             m_dialogCompTimezone.getModel().setEnabled(true);
             timezoneListener(m_timezoneModel.getStringValue());
         } else {
@@ -298,7 +298,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
         m_dialogCompColFilter.saveSettingsTo(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
-        settings.addString("typeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
+        settings.addString("typeEnum", ((DateTimeType)m_typeCombobox.getModel().getSelectedItem()).name());
         settings.addString("unitEnum", (m_timeUnitCombobox.getModel().getSelectedItem()).toString());
         m_dialogCompTimezone.saveSettingsTo(settings);
     }
@@ -313,10 +313,10 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_typeCombobox.setSelectedItem(
-            DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
+            DateTimeType.valueOf(settings.getString("typeEnum", DateTimeType.LOCAL_DATE_TIME.name())));
         m_timeUnitCombobox.setSelectedItem(TimeUnit.valueOf(settings.getString("unitEnum", TimeUnit.MILLISECONDS.toString())));
         m_dialogCompTimezone.loadSettingsFrom(settings, specs);
-        setTimezoneInputEnableStatus((DateTimeTypes)m_typeCombobox.getSelectedItem());
+        setTimezoneInputEnableStatus((DateTimeType)m_typeCombobox.getSelectedItem());
     }
 
 }
