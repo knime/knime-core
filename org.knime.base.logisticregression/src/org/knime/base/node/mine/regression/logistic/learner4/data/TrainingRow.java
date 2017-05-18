@@ -79,5 +79,18 @@ public interface TrainingRow {
 
     public int[] getNonZeroIndices();
 
+    public FeatureIterator getFeatureIterator();
+
+    public interface FeatureIterator {
+
+        public boolean hasNext();
+
+        public boolean next();
+
+        public int getFeatureIndex();
+
+        public double getFeatureValue();
+
+    }
 
 }
