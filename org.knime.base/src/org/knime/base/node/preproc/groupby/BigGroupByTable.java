@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -90,6 +91,8 @@ public class BigGroupByTable extends GroupByTable {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(BigGroupByTable.class);
 
+    private LinkedHashMap<String, MutableLong> m_missingValuesMap;
+
     /**Constructor for class BigGroupByTable.
      * @param exec the <code>ExecutionContext</code>
      * @param inDataTable the table to aggregate
@@ -116,6 +119,7 @@ public class BigGroupByTable extends GroupByTable {
     throws CanceledExecutionException {
         super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
                 enableHilite, colNamePolicy, retainOrder);
+
     }
 
     /**Constructor for class BigGroupByTable.
@@ -150,6 +154,21 @@ public class BigGroupByTable extends GroupByTable {
     throws CanceledExecutionException {
         super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
                 sortInMemory, enableHilite, colNamePolicy, retainOrder);
+    }
+
+    /**
+     * Returns a map where for each column (by its name), which has missing values, the number of them is given
+     * @return the missingValuesMap
+     */
+    public Map<String, Long> getMissingValuesMap() {
+        LinkedHashMap<String, Long> resMap = new LinkedHashMap<>();
+        for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
+            Long count = entry.getValue().toLong();
+            if (count > 0) {
+                resMap.put(entry.getKey(), entry.getValue().toLong());
+            }
+        }
+        return resMap;
     }
 
     /**
@@ -207,6 +226,7 @@ public class BigGroupByTable extends GroupByTable {
         final Map<GroupKey, Pair<ColumnAggregator[], Set<RowKey>>> chunkMembers = new LinkedHashMap<>(3);
         boolean logUnusualCells = true;
         String groupLabel = "";
+        initMissingValuesMap();  // cannot put init to the constructor, as the super() constructor directly calls the current function
         for (final DataRow row : sortedTable) {
             //fetch the current group column values
             for (int i = 0, length = groupColIdx.length; i < length; i++) {
@@ -348,6 +368,7 @@ public class BigGroupByTable extends GroupByTable {
                     addSkippedGroup(colAggr.getOriginalColName(),
                             operator.getSkipMessage(), groupVals);
                 }
+                m_missingValuesMap.get(colAggr.getOriginalColName()).add(operator.getMissingValuesCount());
             }
             final DataRow newRow = new DefaultRow(rowKey, rowVals);
             dc.addRowToTable(newRow);
@@ -393,5 +414,13 @@ public class BigGroupByTable extends GroupByTable {
             }
         }
         return true;
+    }
+
+    private void initMissingValuesMap() {
+        m_missingValuesMap = new LinkedHashMap<>();
+        ColumnAggregator[] colAggregators = getColAggregators();
+        for (ColumnAggregator ca : colAggregators) {
+            m_missingValuesMap.put(ca.getOriginalColName(), new MutableLong(0L));
+        }
     }
 }

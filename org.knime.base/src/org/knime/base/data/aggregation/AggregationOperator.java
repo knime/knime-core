@@ -112,6 +112,8 @@ public abstract class AggregationOperator implements AggregationMethod {
     private final OperatorColumnSettings m_opColSettings;
     private final OperatorData m_operatorData;
 
+    private long m_missingValuesCount;  // we intentionally do not add it to equals and hashCode in order to not break anything
+
 
     /**Constructor for class AggregationOperator. Uses
      * {@link GlobalSettings#DEFAULT} and
@@ -136,6 +138,7 @@ public abstract class AggregationOperator implements AggregationMethod {
         m_globalSettings = globalSettings;
         m_opColSettings = opColSettings;
         m_operatorData = operatorData;
+        m_missingValuesCount = 0;
     }
 
     /**
@@ -264,6 +267,14 @@ public abstract class AggregationOperator implements AggregationMethod {
     }
 
     /**
+     * Returns how many missing values were during the aggregation
+     * @return the missingValuesCount
+     */
+    public long getMissingValuesCount() {
+        return m_missingValuesCount;
+    }
+
+    /**
      * @param cell the {@link DataCell} to consider during computing
      * @deprecated use the {@link #compute(DataRow, int[])} method instead
      */
@@ -307,6 +318,9 @@ public abstract class AggregationOperator implements AggregationMethod {
             }
             if (inclMissingCells() || !cell.isMissing()) {
                 m_skipped = computeInternal(row, cell);
+            }
+            if (cell.isMissing()) {
+                m_missingValuesCount++;
             }
         }
     }
@@ -425,6 +439,7 @@ public abstract class AggregationOperator implements AggregationMethod {
     public final void reset() {
         m_skipped = false;
         m_skipMsg = "";
+        m_missingValuesCount = 0;
         resetInternal();
     }
 
