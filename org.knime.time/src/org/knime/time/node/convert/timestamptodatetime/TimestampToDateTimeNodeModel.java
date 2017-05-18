@@ -121,7 +121,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
 
     private TimeUnit m_selectedUnit = TIMEUNITS[0];
 
-    private final SettingsModelString m_timezone = createTimezoneModel();
+    private ZoneId m_timeZone = ZoneId.systemDefault();
 
     private boolean m_hasValidatedConfiguration = false;
 
@@ -337,7 +337,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         m_suffix.saveSettingsTo(settings);
         settings.addString("typeEnum", m_selectedType);
         settings.addString("unitEnum", m_selectedUnit.toString());
-        m_timezone.saveSettingsTo(settings);
+        settings.addString("timezone", m_timeZone.toString());
     }
 
     /**
@@ -350,15 +350,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         m_suffix.validateSettings(settings);
         settings.getString("typeEnum");
         settings.getString("unitEnum");
-        m_timezone.validateSettings(settings);
-        final SettingsModelString timezoneClone = m_timezone.createCloneWithValidatedValue(settings);
-        final String timezonestr = timezoneClone.getStringValue();
-        DateTimeType type = DateTimeType.valueOf(settings.getString("typeEnum"));
-        if(type == DateTimeType.ZONED_DATE_TIME && !validateTimezone(timezonestr))
-        {
-            String msg = "Invalid timezone: " + m_timezone.getStringValue() + ".";
-            throw new InvalidSettingsException(msg);
-        }
+        settings.getString("timezone");
     }
 
     /**
@@ -371,7 +363,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
         m_selectedUnit = TimeUnit.valueOf(settings.getString("unitEnum"));
-        m_timezone.loadSettingsFrom(settings);
+        m_timeZone = ZoneId.of(settings.getString("timezone"));
         m_hasValidatedConfiguration = true;
     }
 
@@ -428,13 +420,8 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
                     return LocalDateTimeCellFactory.create(ldt);
                 }
                 case ZONED_DATE_TIME: {
-                    try {
-                        final ZoneId zone = ZoneId.of(m_timezone.getStringValue());
-                        final ZonedDateTime zdt = ZonedDateTime.from(instant.atZone(zone));
+                        final ZonedDateTime zdt = ZonedDateTime.from(instant.atZone(m_timeZone));
                         return ZonedDateTimeCellFactory.create(zdt);
-                    } catch(DateTimeException e) {
-                        throw new IllegalArgumentException("Invalid timezone format: " + m_timezone.getStringValue());
-                    }
                 }
                 default:
                     throw new IllegalStateException("Unhandled date&time type: " + m_selectedType);

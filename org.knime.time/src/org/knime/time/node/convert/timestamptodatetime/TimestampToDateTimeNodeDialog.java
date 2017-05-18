@@ -48,13 +48,14 @@
  */
 package org.knime.time.node.convert.timestamptodatetime;
 
-import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.time.ZoneId;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
@@ -62,6 +63,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -88,15 +90,11 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentString m_dialogCompSuffix;
 
-    private final DialogComponentString m_dialogCompTimezone;
+    private final JComboBox<String> m_zoneComboBox;
 
     private final JComboBox<TimeUnit> m_timeUnitCombobox;
 
     private final JComboBox<DateTimeType> m_typeCombobox;
-
-    private final JLabel m_timezoneWarningLabel;
-
-    private final SettingsModelString m_timezoneModel;
 
     /**
      * Setting up all DialogComponents.
@@ -111,9 +109,6 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
 
         final SettingsModelString suffixModel = TimestampToDateTimeNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
-
-        m_timezoneModel = TimestampToDateTimeNodeModel.createTimezoneModel();
-        m_dialogCompTimezone = new DialogComponentString(m_timezoneModel, "Timezone for Zoned Date&Time: ");
 
         /*
          * create panel with gbc
@@ -160,23 +155,12 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
          */
 
         gbc.gridy++;
-        final JPanel panelInput = new JPanel(new GridBagLayout());
+        final JPanel panelInput = new JPanel(new GridLayout(1,2));
         panelInput.setBorder(BorderFactory.createTitledBorder("Input column"));
-        final GridBagConstraints gbcInput = new GridBagConstraints();
-        // add label and combo box for type selection
-        gbcInput.insets = new Insets(0, 0, 0, 0);
-        gbcInput.fill = GridBagConstraints.VERTICAL;
-        gbcInput.gridx = 0;
-        gbcInput.gridy = 0;
-        gbcInput.weighty = 0;
-        gbcInput.weightx = 0;
-        gbcInput.anchor = GridBagConstraints.WEST;
         m_timeUnitCombobox = new JComboBox<TimeUnit>(TimestampToDateTimeNodeModel.TIMEUNITS);
-        final JPanel panelInputUnit = new JPanel(new FlowLayout());
         final JLabel labelInputUnit = new JLabel("Unit: ");
-        panelInputUnit.add(labelInputUnit);
-        panelInputUnit.add(m_timeUnitCombobox);
-        panelInput.add(panelInputUnit, gbcInput);
+        panelInput.add(labelInputUnit);
+        panelInput.add(m_timeUnitCombobox);
 
         panel.add(panelInput, gbc);
 
@@ -184,35 +168,21 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
          * add output format selection
          */
         gbc.gridy++;
-        final JPanel panelTypeFormat = new JPanel(new GridBagLayout());
+        final JPanel panelTypeFormat = new JPanel(new GridLayout(2,2));
         panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Output column"));
-        final GridBagConstraints gbcTypeFormat = new GridBagConstraints();
-        // add label and combo box for type selection
-        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
-        gbcTypeFormat.fill = GridBagConstraints.VERTICAL;
-        gbcTypeFormat.gridx = 0;
-        gbcTypeFormat.gridy = 0;
-        gbcTypeFormat.weighty = 0;
-        gbcTypeFormat.weightx = 0;
-        gbcTypeFormat.anchor = GridBagConstraints.WEST;
+        //Output type selection
         m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
-        final JPanel panelTypeList = new JPanel(new FlowLayout());
         final JLabel labelType = new JLabel("New type: ");
-        panelTypeList.add(labelType);
-        panelTypeList.add(m_typeCombobox);
-        panelTypeFormat.add(panelTypeList, gbcTypeFormat);
-        //Timezone input
-        gbcTypeFormat.gridy++;
-        panelTypeFormat.add(m_dialogCompTimezone.getComponentPanel(), gbcTypeFormat);
-        // add label for warning
-        m_timezoneWarningLabel = new JLabel();
-        gbcTypeFormat.gridx = 0;
-        gbcTypeFormat.gridy++;
-        gbcTypeFormat.weightx = 0;
-        gbcTypeFormat.gridwidth = 3;
-        gbcTypeFormat.anchor = GridBagConstraints.CENTER;
-        m_timezoneWarningLabel.setForeground(Color.RED);
-        panelTypeFormat.add(m_timezoneWarningLabel, gbcTypeFormat);
+        panelTypeFormat.add(labelType);
+        panelTypeFormat.add(m_typeCombobox);
+        //Timezone selection
+        final JLabel labelZoneInput = new JLabel("Timezone for Zoned Date&Time: ");
+        m_zoneComboBox = new JComboBox<String>();
+        for (final String id : new TreeSet<String>(ZoneId.getAvailableZoneIds())) {
+            m_zoneComboBox.addItem(StringUtils.abbreviateMiddle(id, "..", 29));
+        }
+        panelTypeFormat.add(labelZoneInput);
+        panelTypeFormat.add(m_zoneComboBox);
 
         panel.add(panelTypeFormat, gbc);
 
@@ -231,7 +201,6 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
                 setTimezoneInputEnableStatus((DateTimeType)e.getItem());
             }
         });
-        m_dialogCompTimezone.getModel().addChangeListener(e -> timezoneListener(m_timezoneModel.getStringValue()));
     }
 
     /**
@@ -241,53 +210,12 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
     private void setTimezoneInputEnableStatus(final DateTimeType dt)
     {
         if(dt.equals(DateTimeType.ZONED_DATE_TIME)) {
-            m_dialogCompTimezone.getModel().setEnabled(true);
-            timezoneListener(m_timezoneModel.getStringValue());
+            m_zoneComboBox.setEnabled(true);
+            //timezoneListener(m_timezoneModel.getStringValue());
         } else {
-            m_dialogCompTimezone.getModel().setEnabled(false);
-            setTimezoneWarningNull();
+            m_zoneComboBox.setEnabled(false);
+            //setTimezoneWarningNull();
         }
-    }
-
-    /**
-     * Is called when the input in the timezone edit changes. If the input is invalid show a warning message,
-     * otherwise hide the warning message.
-     * @param timezonestr   the current content of the m_dialogCompTimezone
-     */
-    private void timezoneListener(final String timezonestr)
-    {
-        if(TimestampToDateTimeNodeModel.validateTimezone(timezonestr))
-        {
-           setTimezoneWarningNull();
-        }else{
-           setTimezoneWarningMessage("The entered value does not represent a valid timezone!");
-        }
-    }
-
-    /**
-     * Hide the warning label indicating the validity of the current value in the m_dialogCompTimezone
-     * @return true
-     */
-    private boolean setTimezoneWarningNull() {
-        m_typeCombobox.setBorder(null);
-        m_dialogCompTimezone.setToolTipText(null);
-        m_typeCombobox.setToolTipText(null);
-        m_timezoneWarningLabel.setToolTipText(null);
-        m_timezoneWarningLabel.setText("");
-        return true;
-    }
-
-    /**
-     * Show the warning label indicating the nonvalidity of the current value in the m_dialogCompTimezone
-     * @return false
-     */
-    private boolean setTimezoneWarningMessage(final String message) {
-        m_dialogCompTimezone.setToolTipText(message);
-        m_typeCombobox.setToolTipText(message);
-        m_timezoneWarningLabel.setToolTipText(message);
-        m_timezoneWarningLabel.setText(message);
-        m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
-        return false;
     }
 
     /**
@@ -300,7 +228,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix.saveSettingsTo(settings);
         settings.addString("typeEnum", ((DateTimeType)m_typeCombobox.getModel().getSelectedItem()).name());
         settings.addString("unitEnum", (m_timeUnitCombobox.getModel().getSelectedItem()).toString());
-        m_dialogCompTimezone.saveSettingsTo(settings);
+        settings.addString("timezone", m_zoneComboBox.getSelectedItem().toString());
     }
 
     /**
@@ -315,7 +243,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
         m_typeCombobox.setSelectedItem(
             DateTimeType.valueOf(settings.getString("typeEnum", DateTimeType.LOCAL_DATE_TIME.name())));
         m_timeUnitCombobox.setSelectedItem(TimeUnit.valueOf(settings.getString("unitEnum", TimeUnit.MILLISECONDS.toString())));
-        m_dialogCompTimezone.loadSettingsFrom(settings, specs);
+        m_zoneComboBox.setSelectedItem(settings.getString("timezone", StringUtils.abbreviateMiddle(ZoneId.systemDefault().toString(), "..", 29)));
         setTimezoneInputEnableStatus((DateTimeType)m_typeCombobox.getSelectedItem());
     }
 
