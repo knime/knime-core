@@ -48,7 +48,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
  * Represents the parameter vector (also sometimes called beta) of a linear model.

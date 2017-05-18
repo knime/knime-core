@@ -48,8 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
-import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 
 /**
  * The multinomial loss or cross entropy.

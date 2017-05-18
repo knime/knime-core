@@ -46,7 +46,7 @@
  * History
  *   15.02.2017 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4;
+package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 /**
  * Provides information and data for the learning process.

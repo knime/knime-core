@@ -50,8 +50,8 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import java.util.Arrays;
 
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
  * Performs a line search for the optimal lipschitz constant at every iteration.

@@ -48,8 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
-import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 
 /**
  * Calculates the minimal lambda for which all coefficients are zero and starts the path there.

@@ -50,7 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import java.util.BitSet;
 
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 
 /**
  * Solves the elastic net problem:

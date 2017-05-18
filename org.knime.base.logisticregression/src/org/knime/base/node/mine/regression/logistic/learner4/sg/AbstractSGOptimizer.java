@@ -52,8 +52,8 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.core.node.CanceledExecutionException;
 
 /**

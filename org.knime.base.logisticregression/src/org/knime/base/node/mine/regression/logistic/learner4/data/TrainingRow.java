@@ -46,7 +46,7 @@
  * History
  *   15.02.2017 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.regression.logistic.learner4;
+package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 /**
  * Represents a single training row.
@@ -78,5 +78,6 @@ public interface TrainingRow {
     public int getNextNonZeroIndex(final int startIdx);
 
     public int[] getNonZeroIndices();
+
 
 }

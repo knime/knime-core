@@ -57,6 +57,8 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MaxPathStrategy;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression;
 import org.knime.base.node.mine.regression.logistic.learner4.glmnet.MultinomialRegression.ProblemFormulation;

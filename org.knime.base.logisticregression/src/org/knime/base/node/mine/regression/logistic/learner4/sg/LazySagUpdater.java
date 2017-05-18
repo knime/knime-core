@@ -51,7 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import java.util.Arrays;
 import java.util.BitSet;
 
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
 
 /**
