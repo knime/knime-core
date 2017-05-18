@@ -48,8 +48,6 @@
  */
 package org.knime.time.node.convert.timestamptodatetime;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -60,7 +58,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -68,32 +65,19 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
-import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowInput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.util.DateTimeType;
@@ -103,7 +87,7 @@ import org.knime.time.util.DateTimeType;
  *
  * @author Clemens von Schwerin, KNIME.com, Konstanz, Germany
  */
-final class TimestampToDateTimeNodeModel extends NodeModel {
+final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_APPEND = "Append selected columns";
 
@@ -128,14 +112,14 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
     static InputFilter<DataColumnSpec> filter = new InputFilter<DataColumnSpec>() {
         @Override
         public boolean include(final DataColumnSpec spec) {
-            return spec.getType().getPreferredValueClass() == LongValue.class || spec.getType().getPreferredValueClass() == IntValue.class;
+            return spec.getType().getPreferredValueClass() == LongValue.class
+                    || spec.getType().getPreferredValueClass() == IntValue.class;
         }
     };
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
-
         return new SettingsModelColumnFilter2("col_select", filter, 0);
     }
 
@@ -156,80 +140,34 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         return suffixModel;
     }
 
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createTimezoneModel()
-    {
-        return new SettingsModelString("timezone", "UTC");
-    }
-
     /**
      * Chech if timezonestr is a valid timezone descriptor.
      * @param timezonestr - the string to check
      * @return true - valid timezone descriptor, false - otherwise
      */
-    static boolean validateTimezone(final String timezonestr)
-    {
+    static boolean validateTimezone(final String timezonestr) {
         try {
             ZoneId.of(timezonestr);
             return true;
-        } catch (DateTimeException e)
-        {
+        } catch (DateTimeException e) {
             return false;
         }
-    }
-
-
-    /**
-     * Sets the column selections to only include columns having an applicable DataType (Long or Integer).
-     *
-     * @param tableSpec the corresponding spec
-     */
-    private void setDefaultColumnSelection(final DataTableSpec tableSpec) {
-        m_colSelect.loadDefaults(tableSpec, filter, true);
-    }
-
-    /**
-     * one in, one out
-     */
-    protected TimestampToDateTimeNodeModel() {
-        super(1, 1);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        if (!m_hasValidatedConfiguration) {
-            setDefaultColumnSelection(inSpecs[0]);
-            throw new InvalidSettingsException("Node must be configured!");
-        }
-        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{columnRearranger.createSpec()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-        throws Exception {
-        final ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
-        final BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
-        return new BufferedDataTable[]{out};
     }
 
     /**
      * @param inSpec table input spec
      * @return the CR describing the output
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) throws InvalidSettingsException {
+        CheckUtils.checkSetting(m_hasValidatedConfiguration, "Node must be configured!");
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndeces =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
         final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
+        UniqueNameGenerator uniqueNameGenerator = new UniqueNameGenerator(inSpec);
         for (String includedCol : includeList) {
             if (isReplace) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
@@ -238,93 +176,13 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
                     new TimestampToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
                 rearranger.replace(cellFac, includedCol);
             } else {
-                final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec).newColumn(
+                final DataColumnSpec dataColSpec = uniqueNameGenerator.newColumn(
                     includedCol + m_suffix.getStringValue(), DateTimeType.valueOf(m_selectedType).getDataType());
                 final TimestampToTimeCellFactory cellFac = new TimestampToTimeCellFactory(dataColSpec, includeIndeces[i++]);
                 rearranger.append(cellFac);
             }
         }
         return rearranger;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
-                throws Exception {
-                final RowInput in = (RowInput)inputs[0];
-                final RowOutput out = (RowOutput)outputs[0];
-                final DataTableSpec inSpec = in.getDataTableSpec();
-                final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
-                    .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
-
-                DataRow row;
-                while ((row = in.poll()) != null) {
-                    exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndeces.length];
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        if (isReplace) {
-                            final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(
-                                includeList[i], DateTimeType.valueOf(m_selectedType).getDataType());
-                            final TimestampToTimeCellFactory cellFac =
-                                new TimestampToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
-                        } else {
-                            final DataColumnSpec dataColSpec =
-                                new UniqueNameGenerator(inSpec).newColumn(includeList[i] + m_suffix.getStringValue(),
-                                    DateTimeType.valueOf(m_selectedType).getDataType());
-                            final TimestampToTimeCellFactory cellFac =
-                                new TimestampToTimeCellFactory(dataColSpec, includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
-                        }
-                    }
-                    if (isReplace) {
-                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
-                    } else {
-                        out.push(new AppendedColumnRow(row, datacells));
-                    }
-                }
-                in.close();
-                out.close();
-            }
-        };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
     }
 
     /**
@@ -406,7 +264,7 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
                 throw new IllegalStateException("Unknown unit " + m_selectedUnit);
             }
 
-            switch (DateTimeType .valueOf(m_selectedType)) {
+            switch (DateTimeType.valueOf(m_selectedType)) {
                 case LOCAL_DATE: {
                     final LocalDate ld = LocalDate.from(instant.atZone(ZoneId.of("UTC")));
                     return LocalDateCellFactory.create(ld);
@@ -429,11 +287,4 @@ final class TimestampToDateTimeNodeModel extends NodeModel {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-
-    }
 }

@@ -99,7 +99,7 @@ final class TimestampToDateTimeNodeDialog extends NodeDialogPane {
     /**
      * Setting up all DialogComponents.
      */
-    public TimestampToDateTimeNodeDialog() {
+    TimestampToDateTimeNodeDialog() {
         final SettingsModelColumnFilter2 colSelectModel = TimestampToDateTimeNodeModel.createColSelectModel();
         m_dialogCompColFilter = new DialogComponentColumnFilter2(colSelectModel, 0);
 
