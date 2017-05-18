@@ -50,7 +50,9 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import java.util.Arrays;
 
-import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
+import org.apache.commons.math3.util.MathUtils;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+
 
 /**
  * Simple implementation of a {@link ClassificationTrainingRow} for testing purposes.
@@ -60,6 +62,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrain
 class MockClassificationTrainingRow implements ClassificationTrainingRow {
 
     private final double[] m_data;
+    private final int[] m_nonZero;
     private final int m_id;
     private final int m_category;
 
@@ -67,9 +70,21 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
      *
      */
     public MockClassificationTrainingRow(final double[] features, final int id, final int category) {
-        m_data = features;
         m_id = id;
         m_category = category;
+        int[] nonZero = new int[features.length + 1];
+        int k = 1;
+        for (int i = 1; i < nonZero.length; i++) {
+            if (!MathUtils.equals(features[i - 1], 0)) {
+                nonZero[k++] = i;
+            }
+        }
+        m_nonZero = Arrays.copyOf(nonZero, k);
+        m_data = new double[m_nonZero.length];
+        for (int i = 1; i < m_nonZero.length; i++) {
+            m_data[i] = features[m_nonZero[i] - 1];
+        }
+        m_data[0] = 1;
     }
 
     /**
@@ -77,9 +92,18 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
      */
     @Override
     public double getFeature(final int idx) {
-        return idx == 0 ? 1.0 : m_data[idx - 1];
+//        return idx == 0.0 ? 1.0 : m_data[idx - 1];
+        int internalIdx = Arrays.binarySearch(m_nonZero, idx);
+        return internalIdx < 0.0 ? 0.0 : m_data[internalIdx];
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCategory() {
+        return m_category;
+    }
     /**
      * {@inheritDoc}
      */
@@ -92,40 +116,75 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
      * {@inheritDoc}
      */
     @Override
+    public String toString() {
+        return "[id: " + m_id + " cat: " + m_category + "]";
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int getNextNonZeroIndex(final int startIdx) {
         if (startIdx == 0) {
             return 0;
         }
         for (int i = startIdx - 1; i < m_data.length; i++) {
-            if (m_data[i] != 0.0) {
+            if (!MathUtils.equals(m_data[i], 0.0)) {
                 return i + 1;
             }
         }
         return -1;
     }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public int[] getNonZeroIndices() {
-        int[] nonZeros = new int[m_data.length + 1];
-        nonZeros[0] = 0;
-        int k = 1;
-        for (int i = 0; i < m_data.length; i++) {
-            if (m_data[i] != 0) {
-                nonZeros[k++] = i + 1;
-            }
-        }
-        return Arrays.copyOf(nonZeros, k);
+        return m_nonZero;
     }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getCategory() {
-        return m_category;
+    public FeatureIterator getFeatureIterator() {
+        return new FeatureIter();
+    }
+
+    private class FeatureIter implements FeatureIterator {
+
+        private int idx = -1;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return idx < m_data.length - 1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean next() {
+            return ++idx < m_data.length;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int getFeatureIndex() {
+            return m_nonZero[idx];
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public double getFeatureValue() {
+            return m_data[idx];
+        }
+
     }
 
 }

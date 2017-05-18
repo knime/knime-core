@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
 
 /**
@@ -90,12 +91,17 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
     @Override
     public double[] predict(final T row) {
         double[] prediction = new double[m_data.length];
-        for (int c = 0; c < m_data.length; c++) {
-            double p = 0.0;
-            for (int i = 0; i < m_data[c].length; i++) {
-                p += m_data[c][i] * row.getFeature(i);
+        FeatureIterator iter = row.getFeatureIterator();
+        while (iter.next()) {
+            int idx = iter.getFeatureIndex();
+            double val = iter.getFeatureValue();
+            for (int c = 0; c < m_data.length; c++) {
+//            double p = 0.0;
+//            for (int i = 0; i < m_data[c].length; i++) {
+//                p += m_data[c][i] * row.getFeature(i);
+//            }
+                prediction[c] += m_data[c][idx] * val;
             }
-            prediction[c] = p;
         }
         return prediction;
     }

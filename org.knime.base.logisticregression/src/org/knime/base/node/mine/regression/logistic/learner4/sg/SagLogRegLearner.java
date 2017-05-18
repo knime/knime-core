@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
@@ -327,26 +328,34 @@ public class SagLogRegLearner implements LogRegLearner {
         private final int[] m_nonZero;
 
         public ClassDataRow(final RegressionTrainingRow row, final int id) {
-            m_data = row.getParameter().getRow(0);
+//            m_data = row.getParameter().getRow(0);
+            RealMatrix data = row.getParameter();
             m_cat = (int)row.getTarget();
             m_id = id;
-            int[] nonZero = new int[m_data.length + 1];
+            int[] nonZero = new int[data.getColumnDimension() + 1];
 //            m_nonZero = new int[m_data.length + 1];
             nonZero[0] = 0; // intercept term is always 1
             int k = 1;
-            for (int i = 0; i < m_data.length; i++) {
-                if (!MathUtils.equals(m_data[i], 0)) {
-                    nonZero[k++] = i + 1;
+            for (int i = 1; i < nonZero.length; i++) {
+                if (!MathUtils.equals(data.getEntry(0, i - 1), 0)) {
+                    nonZero[k++] = i;
                 }
             }
             m_nonZero = Arrays.copyOf(nonZero, k);
+            m_data = new double[m_nonZero.length];
+            for (int i = 1; i < m_nonZero.length; i++) {
+                m_data[i] = data.getEntry(0, m_nonZero[i] - 1);
+            }
+            m_data[0] = 1;
         }
         /**
          * {@inheritDoc}
          */
         @Override
         public double getFeature(final int idx) {
-            return idx == 0.0 ? 1.0 : m_data[idx - 1];
+//            return idx == 0.0 ? 1.0 : m_data[idx - 1];
+            int internalIdx = Arrays.binarySearch(m_nonZero, idx);
+            return internalIdx < 0.0 ? 0.0 : m_data[internalIdx];
         }
 
         /**
@@ -393,6 +402,52 @@ public class SagLogRegLearner implements LogRegLearner {
         public int[] getNonZeroIndices() {
             return m_nonZero;
         }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public FeatureIterator getFeatureIterator() {
+            return new FeatureIter();
+        }
+
+        private class FeatureIter implements FeatureIterator {
+
+            private int idx = -1;
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean hasNext() {
+                return idx < m_data.length - 1;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean next() {
+                return ++idx < m_data.length;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public int getFeatureIndex() {
+                return m_nonZero[idx];
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public double getFeatureValue() {
+                return m_data[idx];
+            }
+
+        }
+
 
     }
 

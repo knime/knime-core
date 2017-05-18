@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+
 /**
  * Convenience RegularizationUpdater that resembles no update at all.
  *
@@ -61,7 +63,7 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<?> beta, final IndexCache indexCache, final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightVector<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
         // do nothing
     }
 

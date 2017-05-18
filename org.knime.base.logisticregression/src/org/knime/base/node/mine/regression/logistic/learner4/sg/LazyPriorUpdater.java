@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+
 /**
  *
  * @author Adrian Nembach, KNIME.com
@@ -74,13 +76,13 @@ class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegularizatio
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<?> beta, final IndexCache indexCache, final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightVector<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             double lastCummSum = m_cummulativeSum[iteration - 1];
             if (isClip()) {
-                beta.update((val, c, i) -> clippedLazyUpdate(val, lastVisited[i], lastCummSum), false, indexCache);
+                beta.update((val, c, i) -> clippedLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
             } else {
-                beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false, indexCache);
+                beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
             }
         }
     }

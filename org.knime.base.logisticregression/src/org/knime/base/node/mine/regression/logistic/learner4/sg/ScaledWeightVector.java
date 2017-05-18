@@ -50,6 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
 
 /**
@@ -103,13 +104,27 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
 //        }
 //        return prediction;
         double[] prediction = new double[m_data.length];
-        for (int c = 0; c < prediction.length; c++) {
-            double p = 0.0;
-            for (int i = 1; i < m_data[c].length; i++) {
-                p += m_data[c][i] * row.getFeature(i);
+        for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+            int idx = iter.getFeatureIndex();
+            double val = iter.getFeatureValue();
+            if (idx == 0) {
+                continue;
             }
-            prediction[c] = m_data[c][0] + m_scale * p;
-            assert Double.isFinite(prediction[c]) : "Linear model outputs infinity.";
+            for (int c = 0; c < prediction.length; c++) {
+                prediction[c] += val * m_data[c][idx];
+//            double p = 0.0;
+//            for (int i = 1; i < m_data[c].length; i++) {
+//                p += m_data[c][i] * row.getFeature(i);
+//            }
+//            prediction[c] = m_data[c][0] + m_scale * p;
+//            assert Double.isFinite(prediction[c]) : "Linear model outputs infinity.";
+            }
+        }
+        for (int c = 0; c < prediction.length; c++) {
+            // scale
+            prediction[c] *= m_scale;
+            // add intercept term
+            prediction[c] += m_data[c][0];
         }
         return prediction;
     }

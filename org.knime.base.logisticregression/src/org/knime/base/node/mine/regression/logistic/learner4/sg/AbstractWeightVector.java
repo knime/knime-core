@@ -51,7 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Abstract implementation of a WeightVector that implements the updating logic for the
@@ -74,10 +74,10 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
      */
     @Override
     public void update(final WeightVectorConsumer func,
-        final boolean includeIntercept, final IndexCache indexCache) {
+        final boolean includeIntercept, final TrainingRow row/*final IndexCache indexCache*/) {
         boolean updateIntercept = m_fitIntercept && includeIntercept;
-            for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
-                int i = iter.next();
+            for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                int i = iter.getFeatureIndex();
                 if (!updateIntercept && i == 0) {
                     continue;
                 }

@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  *
@@ -87,26 +87,35 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      */
     @Override
     public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize,
-        final int iteration, final IndexCache indexCache) {
-        int idx = x.getId();
-        if (!m_seen.get(idx)) {
-            m_seen.set(idx);
+        final int iteration/*, final IndexCache indexCache*/) {
+        int id = x.getId();
+        if (!m_seen.get(id)) {
+            m_seen.set(id);
             m_covered++;
         }
 
         // update gradient sum
-        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
-            int nonZero = iter.next();
+//        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
+//            int nonZero = iter.next();
+//            for (int c = 0; c < m_nCats; c++) {
+//                double newD = x.getFeature(nonZero) * (sig[c] - m_gradientMemory[c][idx]);
+//                assert Double.isFinite(newD);
+//                m_gradientSum[c][nonZero] += newD;
+//            }
+//        }
+        for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
+            int idx = iter.getFeatureIndex();
+            double val = iter.getFeatureValue();
             for (int c = 0; c < m_nCats; c++) {
-                double newD = x.getFeature(nonZero) * (sig[c] - m_gradientMemory[c][idx]);
+                double newD = val * (sig[c] - m_gradientMemory[c][id]);
                 assert Double.isFinite(newD);
-                m_gradientSum[c][nonZero] += newD;
+                m_gradientSum[c][idx] += newD;
             }
         }
 
         // update gradient memory
         for (int c = 0; c < m_nCats; c++) {
-            m_gradientMemory[c][idx] = sig[c];
+            m_gradientMemory[c][id] = sig[c];
         }
 
 
@@ -115,7 +124,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         double scale = beta.getScale();
         m_cummulativeSum[iteration] = prev + stepSize / (scale * m_covered);
         // the intersect is not scaled!
-        assert x.getFeature(0) == 1.0 : "The artificial intercept feature must always be 1!";
+//        assert x.getFeature(0) == 1.0 : "The artificial intercept feature must always be 1!";
         m_intersectStepSize = stepSize / m_covered;
     }
 
@@ -123,10 +132,10 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<T> beta, final T x, final IndexCache indexCache, final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightVector<T> beta, final T x, /*final IndexCache indexCache,*/ final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             int lastValid = iteration - 1;
-            beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, indexCache);
+            beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, x);
         }
 
 

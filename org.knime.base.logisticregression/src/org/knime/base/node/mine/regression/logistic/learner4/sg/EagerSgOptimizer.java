@@ -84,8 +84,8 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater, final int iteration,
-        final IndexCache indexCache) {
+    protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater, final int iteration
+        /*final IndexCache indexCache*/) {
         // nothing to prepare
 
     }
@@ -107,7 +107,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      */
     @Override
     protected void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta, final double stepSize,
-        final int iteration, final IndexCache indexCache) {
+        final int iteration/*, final IndexCache indexCache*/) {
         updater.update(x, gradient, beta, stepSize, iteration);
     }
 

@@ -48,13 +48,15 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface LazyRegularizationUpdater extends RegularizationUpdater {
 
-    void lazyUpdate(WeightVector<?> beta, IndexCache indexCache, int[] lastVisited, int iteration);
+    void lazyUpdate(WeightVector<?> beta, TrainingRow row, int[] lastVisited, int iteration);
 
     void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited);
 }

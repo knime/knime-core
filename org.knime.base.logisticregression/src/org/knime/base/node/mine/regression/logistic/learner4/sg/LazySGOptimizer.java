@@ -52,7 +52,7 @@ import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  *
@@ -85,8 +85,8 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
      */
     @Override
     protected void performUpdate(final T x, final U updater, final double[] gradient,
-        final WeightVector<T> beta, final double stepSize, final int iteration, final IndexCache indexCache) {
-        updater.update(x, gradient, beta, stepSize, iteration, indexCache);
+        final WeightVector<T> beta, final double stepSize, final int iteration/*, final IndexCache indexCache*/) {
+        updater.update(x, gradient, beta, stepSize, iteration/*, indexCache*/);
     }
 
     /**
@@ -103,13 +103,13 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
      */
     @Override
     protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater,
-        final int iteration, final IndexCache indexCache) {
+        final int iteration/*, final IndexCache indexCache*/) {
         // apply lazy updates
-        updater.lazyUpdate(beta, x, indexCache, m_lastVisited, iteration);
-        regUpdater.lazyUpdate(beta, indexCache, m_lastVisited, iteration);
+        updater.lazyUpdate(beta, x/*, indexCache,*/, m_lastVisited, iteration);
+        regUpdater.lazyUpdate(beta, x/*, indexCache*/, m_lastVisited, iteration);
         // update when present features were last visited
-        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
-            m_lastVisited[iter.next()] = iteration;
+        for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
+            m_lastVisited[iter.getFeatureIndex()] = iteration;
         }
     }
 

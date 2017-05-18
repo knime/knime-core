@@ -91,7 +91,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         final int nFets = data.getFeatureCount();
         final int nCats = data.getTargetDimension();
         final U updater = m_updaterFactory.create();
-        final IndexCache indexCache = createIndexCache(nFets);
+//        final IndexCache indexCache = createIndexCache(nFets);
 
         final WeightVector<T> beta = new SimpleWeightVector<>(nFets, nCats, true);
         int epoch = 0;
@@ -102,16 +102,16 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             for (int k = 0; k < nRows; k++) {
                 progress.checkCanceled();
                 T x = data.getRandomRow();
-                indexCache.prepareRow(x);
-                prepareIteration(beta, x, updater, m_regUpdater, k, indexCache);
-                double[] prediction = beta.predict(x, indexCache);
+//                indexCache.prepareRow(x);
+                prepareIteration(beta, x, updater, m_regUpdater, k/*, indexCache*/);
+                double[] prediction = beta.predict(x/*, indexCache*/);
                 double[] sig = m_loss.gradient(x, prediction);
                 double stepSize = m_lrStrategy.getCurrentLearningRate(x, prediction, sig);
 //                System.out.println("Stepsize: " + stepSize);
                 // beta is updated in two steps
                 m_regUpdater.update(beta, stepSize, k);
 //                updater.update(x, sig, beta, stepSize, k);
-                performUpdate(x, updater, sig, beta, stepSize, k, indexCache);
+                performUpdate(x, updater, sig, beta, stepSize, k/*, indexCache*/);
                 double scale = beta.getScale();
                 if (scale > 1e10 || scale < -1e10 || (scale > 0 && scale < 1e-10) || (scale < 0 && scale > -1e-10)) {
                     normalize(beta, updater, k);
@@ -154,14 +154,14 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);
 
     protected abstract void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater,
-        int iteration, final IndexCache indexCache);
+        int iteration/*, final IndexCache indexCache*/);
 
     protected abstract void postProcessEpoch(final WeightVector<T> beta, final U updater, final R regUpdater);
 
     protected abstract IndexCache createIndexCache(final int nFets);
 
     protected abstract void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta,
-        final double stepSize, final int iteration, final IndexCache indexCache);
+        final double stepSize, final int iteration/*, final IndexCache indexCache*/);
 
     protected TrainingData<T> getData() {
         return m_data;

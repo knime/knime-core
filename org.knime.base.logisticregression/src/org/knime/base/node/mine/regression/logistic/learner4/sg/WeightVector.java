@@ -67,7 +67,7 @@ interface WeightVector <T extends TrainingRow> {
 
     public void update(final WeightVectorConsumer func, final boolean includeIntercept, final int[] nonZeroIndices);
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept, final IndexCache indexCache);
+    public void update(final WeightVectorConsumer func, final boolean includeIntercept, final TrainingRow row);
 
     public void normalize();
 

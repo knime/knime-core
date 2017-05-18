@@ -51,6 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import java.util.BitSet;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  *
@@ -84,13 +85,25 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
             m_nCovered++;
         }
 
-        for (int c = 0; c < m_nCats; c++) {
-            // TODO exploit sparseness
-            for (int i = 0; i < m_nFets; i++) {
-                double newD = x.getFeature(i) * (sig[c] - m_gradientMemory[c][id]);
+//        for (int c = 0; c < m_nCats; c++) {
+//            // TODO exploit sparseness
+//            for (int i = 0; i < m_nFets; i++) {
+//                double newD = x.getFeature(i) * (sig[c] - m_gradientMemory[c][id]);
+//                assert Double.isFinite(newD);
+//                m_gradientSum[c][i] += newD;
+//            }
+//            m_gradientMemory[c][id] = sig[c];
+//        }
+        for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
+            int idx = iter.getFeatureIndex();
+            double val = iter.getFeatureValue();
+            for (int c = 0; c < m_nCats; c++) {
+                double newD = val * (sig[c] - m_gradientMemory[c][id]);
                 assert Double.isFinite(newD);
-                m_gradientSum[c][i] += newD;
+                m_gradientSum[c][idx] += newD;
             }
+        }
+        for (int c = 0; c < m_nCats; c++) {
             m_gradientMemory[c][id] = sig[c];
         }
         double scale = beta.getScale();
