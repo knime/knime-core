@@ -51,7 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import static org.junit.Assert.assertArrayEquals;
 
 import org.junit.Test;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.EagerSagUpdater.EagerSagUpdaterFactory;
 
 /**

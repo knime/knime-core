@@ -53,7 +53,7 @@ import static org.knime.base.node.mine.regression.logistic.learner4.sg.AbstractW
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
  * Contains unit tests for AnnealingLearningRateStrategy

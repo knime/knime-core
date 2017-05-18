@@ -52,7 +52,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
  * Contains unit tests for LazySagUpdater
@@ -76,7 +76,7 @@ public class LazySagUpdaterTest {
         int[] lastVisited = new int[3];
         double[] gradient = new double[]{1.0,-1.0};
         indexCache.prepareRow(mockRows[0]);
-        updater.update(mockRows[0], gradient, beta, 1.0, 0, indexCache);
+        updater.update(mockRows[0], gradient, beta, 1.0, 0);
         double[][] expectedBeta = new double[][]{
             {0.0, 0.0, 0.0},
             {0.0, 0.0, 0.0}
@@ -84,20 +84,20 @@ public class LazySagUpdaterTest {
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
         indexCache.prepareRow(mockRows[1]);
-        updater.lazyUpdate(beta, mockRows[1], indexCache, lastVisited, 1);
+        updater.lazyUpdate(beta, mockRows[1], lastVisited, 1);
         expectedBeta = new double[][]{
             {-1.0, 0.0, 0.0},
             {1.0, 0.0, 0.0}
         };
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
-        updater.update(mockRows[1], gradient, beta, 1.0, 1, indexCache);
+        updater.update(mockRows[1], gradient, beta, 1.0, 1);
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
         lastVisited[2] = 1;
         lastVisited[0] = 1;
         indexCache.prepareRow(mockRows[0]);
-        updater.lazyUpdate(beta, mockRows[0], indexCache, lastVisited, 2);
+        updater.lazyUpdate(beta, mockRows[0], lastVisited, 2);
         expectedBeta = new double[][]{
             {-2.0, 0.0, -0.5},
             {2.0, 0.0, 0.5}
@@ -105,13 +105,13 @@ public class LazySagUpdaterTest {
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
         gradient = new double[] {-1.0, 1.0};
-        updater.update(mockRows[0], gradient, beta, 2.0, 2, indexCache);
+        updater.update(mockRows[0], gradient, beta, 2.0, 2);
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
         lastVisited[1] = 2;
         lastVisited[0] = 2;
         indexCache.prepareRow(mockRows[2]);
-        updater.lazyUpdate(beta, mockRows[2], indexCache, lastVisited, 3);
+        updater.lazyUpdate(beta, mockRows[2], lastVisited, 3);
         expectedBeta = new double[][]{
             {-2.0, -1.0, 1.0},
             {2.0, 1.0, -1.0}
@@ -159,7 +159,7 @@ public class LazySagUpdaterTest {
             for (int k = 0; k < nRows; k++) {
                 MockClassificationTrainingRow row = rows[(int)(Math.random() * nRows)];
                 indexCache.prepareRow(row);
-                lazyUpdater.lazyUpdate(lazyBeta, row, indexCache, lastVisited, k);
+                lazyUpdater.lazyUpdate(lazyBeta, row, lastVisited, k);
                 for (int j = 0; j < nCats - 1; j++) {
                     gradient[j] = Math.random() * 4 - 2;
                 }
@@ -171,7 +171,7 @@ public class LazySagUpdaterTest {
                 // if feature is present, the lazy update must update beta correctly
                 checkPositional(lazyBeta.getWeightVector(), eagerBeta.getWeightVector(), columns2Check, EPSILON);
 //                double stepSize = Math.random();
-                lazyUpdater.update(row, gradient, lazyBeta, stepSize, k, indexCache);
+                lazyUpdater.update(row, gradient, lazyBeta, stepSize, k);
                 eagerUpdater.update(row, gradient, eagerBeta, stepSize, k);
             }
             lazyUpdater.resetJITSystem(lazyBeta, lastVisited);
@@ -225,12 +225,12 @@ public class LazySagUpdaterTest {
         IndexCache indexCache = new SuperLazyIndexCache();
         indexCache.prepareRow(mockRows[0]);
         double[] gradient = new double[] {1, 2};
-        updater.lazyUpdate(beta, mockRows[0], indexCache, lastVisited, 0);
-        updater.update(mockRows[0], gradient, beta, stepSize, 0, indexCache);
+        updater.lazyUpdate(beta, mockRows[0], lastVisited, 0);
+        updater.update(mockRows[0], gradient, beta, stepSize, 0);
 
         indexCache.prepareRow(mockRows[1]);
-        updater.lazyUpdate(beta, mockRows[1], indexCache, lastVisited, 1);
-        updater.update(mockRows[1], gradient, beta, stepSize, 1, indexCache);
+        updater.lazyUpdate(beta, mockRows[1], lastVisited, 1);
+        updater.update(mockRows[1], gradient, beta, stepSize, 1);
         lastVisited[0] = 1;
         lastVisited[1] = 1;
         updater.resetJITSystem(beta, lastVisited);

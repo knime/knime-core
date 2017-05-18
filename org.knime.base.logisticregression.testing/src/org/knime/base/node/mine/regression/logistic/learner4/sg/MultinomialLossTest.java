@@ -56,8 +56,8 @@ import static org.mockito.Mockito.when;
 import java.util.Iterator;
 
 import org.junit.Test;
-import org.knime.base.node.mine.regression.logistic.learner4.ClassificationTrainingRow;
-import org.knime.base.node.mine.regression.logistic.learner4.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 
 /**
  * Contains unit tests for the {@link MultinomialLoss}.
