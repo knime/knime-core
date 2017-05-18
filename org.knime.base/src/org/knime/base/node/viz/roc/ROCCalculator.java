@@ -179,10 +179,10 @@ public class ROCCalculator {
                 exec.checkCanceled();
                 DataCell realClass = row.getCell(classIndex);
                 if (realClass.isMissing() || row.getCell(scoreColIndex).isMissing()) {
-                    m_warningMessage = "Table contains missing values.";
                     if (m_ignoreMissingValues) {
-                        m_warningMessage = "Missing values were ignored according to the node settings.";
                         continue;
+                    } else {
+                        m_warningMessage = "Table contains missing values.";
                     }
                 }
                 if (realClass.toString().equals(m_posClass)) {

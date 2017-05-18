@@ -165,14 +165,14 @@ public class LiftCalculator {
         int rowIndex = 0;
         for (DataRow row : m_sorted) {
             if (row.getCell(predColIndex).isMissing() || row.getCell(probColInd).isMissing()) {
-                warning = "Table contains missing values.";
                 if (row.getCell(predColIndex).isMissing()) {
                     // miss. values in class column we always ignore
                     continue;
                 }
                 if (m_ignoreMissingValues) {
-                    warning = "Missing values were ignored according to the node settings.";
                     continue;
+                } else {
+                    warning = "Table contains missing values.";
                 }
             }
 
