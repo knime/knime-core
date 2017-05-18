@@ -65,6 +65,13 @@ public class Outlier {
         m_rowKey = rowKey;
     }
 
+    /**
+     * Deserialization constructor. Do not use.
+     */
+    public Outlier() {
+
+    }
+
     private double m_value;
     private String m_rowKey;
 

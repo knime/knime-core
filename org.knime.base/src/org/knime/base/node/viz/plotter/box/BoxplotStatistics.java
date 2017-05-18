@@ -96,6 +96,13 @@ public class BoxplotStatistics {
     }
 
     /**
+     * Deserialization constructor. Do not use.
+     */
+    public BoxplotStatistics() {
+
+    }
+
+    /**
      * @param min the min to set
      */
     public void setMin(final double min) {
