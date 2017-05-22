@@ -55,7 +55,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -79,16 +82,13 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.CredentialsStore;
-import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
@@ -440,46 +440,16 @@ public final class SandboxedNodeCreator {
      */
     private List<FlowVariable> getFlowVariablesOnPort(final int portIdx) {
         WorkflowManager wfm = m_nc.getParent();
-        assert wfm != null;
-        // Find the corresponding output port
-        ConnectionContainer connection = wfm.getIncomingConnectionFor(m_nc.getID(), portIdx);
-        NodeOutPort outPort = null;
-        while (connection != null && outPort == null) {
-            switch (connection.getType()) {
-                case STD:
-                    // It's an standard connection. We can just get the outport
-                    NodeContainer sourceNode = wfm.getNodeContainer(connection.getSource());
-                    outPort = sourceNode.getOutPort(connection.getSourcePort());
-                    break;
-                case WFMIN:
-                    // It's connected to an wfm inport (first node in a metanode).
-                    // We need to use the connection outside of the metanode.
-                    wfm = wfm.getParent();
-                    NodeContainer metanode = wfm.getNodeContainer(connection.getSource());
-                    connection = wfm.getIncomingConnectionFor(metanode.getID(), connection.getSourcePort());
-                    break;
-                default:
-                    // This shouldn't happen because we start with an inport.
-                    // But if it does we break the loop and we will have the case that outPort is null (see next if statement).
-                    connection = null;
-                    break;
-            }
+        Optional<Stream<FlowVariable>> nodeInputFlowVariables = wfm.getNodeInputFlowVariables(m_nc.getID(), portIdx);
+        if (nodeInputFlowVariables.isPresent()) {
+            List<FlowVariable> result = nodeInputFlowVariables.get()
+                    .filter(fv -> !fv.isGlobalConstant()).collect(Collectors.toList());
+            // getNodeInputFlowVariables returns top down, make sure iterations on list return oldest entry first
+            // (will be pushed onto node stack using an iterator)
+            Collections.reverse(result);
+            return result;
         }
-        // We couldn't find a corresponding outport, this shouldn't happen. We will use an empty array.
-        if (outPort == null) {
-            LOGGER.warn(
-                "Couldn't find the outport to the inport with the index " + portIdx + ". Using empty flow variables.");
-            return new ArrayList<FlowVariable>();
-        }
-        // Get the flow variables on the outport and filter them
-        List<FlowVariable> flowVars = new ArrayList<FlowVariable>();
-        final FlowObjectStack flowObjectStack = outPort.getFlowObjectStack();
-        final Collection<FlowVariable> flowVarsIn = flowObjectStack.getAvailableFlowVariables(Type.values()).values();
-        flowVarsIn.stream().filter(fv -> !fv.isGlobalConstant()).forEachOrdered(fv -> flowVars.add(fv));
-        // getAvailableFlowVariables returns top down, make sure iterations on list return oldest entry first
-        // (will be pushed onto node stack using an iterator)
-        Collections.reverse(flowVars);
-        return flowVars;
+        return Collections.emptyList();
     }
 
     /**

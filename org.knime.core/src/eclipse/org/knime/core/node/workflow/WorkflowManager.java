@@ -6138,6 +6138,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return result;
     }
 
+    /** Get a list of flow variables provided for the given node at the given input port.
+     * @param id The id of the node in question (must exist otherwise this method fails.)
+     * @param inputIndex The port of interest
+     * @return The flow variables the node receives from the argument input index, or an empty optional if not connected
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public Optional<Stream<FlowVariable>> getNodeInputFlowVariables(final NodeID id, final int inputIndex) {
+        try (WorkflowLock lock = lock()) {
+            NodeOutPort[] outPorts = assemblePredecessorOutPorts(id);
+            if (outPorts[inputIndex] != null) {
+                final NodeOutPort outPort = outPorts[inputIndex];
+                final FlowObjectStack flowObjectStack = outPort.getFlowObjectStack();
+                return Optional.of(flowObjectStack.getAvailableFlowVariables(
+                    FlowVariable.Type.values()).values().stream());
+            }
+            return Optional.empty();
+        }
+    }
+
+
     /** Fill array holding input data for a given node.
      * @param id the node
      * @param inData An empty array being filled by this method
