@@ -104,6 +104,7 @@ public class BoxplotCalculator {
 
     /**
      * @return the excludedDataCols
+     * @since 3.4
      */
     public String[] getExcludedDataCols() {
         return m_excludedDataCols;
@@ -111,6 +112,7 @@ public class BoxplotCalculator {
 
     /**
      * @return the numMissValPerCol
+     * @since 3.4
      */
     public LinkedHashMap<String, Long> getNumMissValPerCol() {
         return m_numMissValPerCol;
@@ -118,6 +120,7 @@ public class BoxplotCalculator {
 
     /**
      * @return the ignoredMissVals
+     * @since 3.4
      */
     public LinkedHashMap<String, LinkedHashMap<String, Long>> getIgnoredMissVals() {
         return m_ignoredMissVals;
@@ -125,6 +128,7 @@ public class BoxplotCalculator {
 
     /**
      * @return the excludedClasses
+     * @since 3.4
      */
     public LinkedHashMap<String, String[]> getExcludedClasses() {
         return excludedClasses;

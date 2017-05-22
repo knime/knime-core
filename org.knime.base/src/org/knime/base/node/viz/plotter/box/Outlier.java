@@ -67,6 +67,7 @@ public class Outlier {
 
     /**
      * Deserialization constructor. Do not use.
+     * @noreference This constructor is not intended to be referenced by clients.
      */
     public Outlier() {
 
