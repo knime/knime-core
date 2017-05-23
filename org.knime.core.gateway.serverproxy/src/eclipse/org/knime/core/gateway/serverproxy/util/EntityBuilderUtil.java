@@ -306,7 +306,8 @@ public class EntityBuilderUtil {
                 .setInPorts(buildNodeInPortEnts(wm)).setHasDialog(wm.hasDialog())
                 .setWorkflowIncomingPorts(buildWorkflowIncomingPortEnts(wm))
                 .setWorkflowOutgoingPorts(buildWorkflowOutgoingPortEnts(wm))
-                .setRootWorkflowID(rootWorkflowID).build();
+                .setRootWorkflowID(rootWorkflowID)
+                .setIsEncrypted(wm.isEncrypted()).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {

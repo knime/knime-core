@@ -14,6 +14,11 @@
             "name" : "WorkflowOutgoingPorts",
             "description" : "List of all outgoing workflow ports.",
             "type" : "List<workflow.entity.NodeInPortEnt>"
+        },
+        {
+        	"name" : "IsEncrypted",
+        	"description" : "Whether the referenced workflow is encrypted is required to be unlocked before it can be accessed.",
+        	"type" : "boolean"
         }
     ]
 }

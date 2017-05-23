@@ -73,6 +73,7 @@ public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
 
 	private List<NodeOutPortEnt> m_WorkflowIncomingPorts;
 	private List<NodeInPortEnt> m_WorkflowOutgoingPorts;
+	private boolean m_IsEncrypted;
 	private Optional<String> m_ParentNodeID;
 	private String m_RootWorkflowID;
 	private Optional<JobManagerEnt> m_JobManager;
@@ -94,6 +95,7 @@ public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
     private DefaultWorkflowNodeEnt(final DefaultWorkflowNodeEntBuilder builder) {
 		m_WorkflowIncomingPorts = builder.m_WorkflowIncomingPorts;
 		m_WorkflowOutgoingPorts = builder.m_WorkflowOutgoingPorts;
+		m_IsEncrypted = builder.m_IsEncrypted;
 		m_ParentNodeID = builder.m_ParentNodeID;
 		m_RootWorkflowID = builder.m_RootWorkflowID;
 		m_JobManager = builder.m_JobManager;
@@ -118,6 +120,11 @@ public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
 	@Override
     public List<NodeInPortEnt> getWorkflowOutgoingPorts() {
         return m_WorkflowOutgoingPorts;
+    }
+    
+	@Override
+    public boolean getIsEncrypted() {
+        return m_IsEncrypted;
     }
     
 	@Override
@@ -207,6 +214,7 @@ public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
     
 		private List<NodeOutPortEnt> m_WorkflowIncomingPorts;
 		private List<NodeInPortEnt> m_WorkflowOutgoingPorts;
+		private boolean m_IsEncrypted;
 		private Optional<String> m_ParentNodeID = Optional.empty();
 		private String m_RootWorkflowID;
 		private Optional<JobManagerEnt> m_JobManager = Optional.empty();
@@ -235,6 +243,12 @@ public class DefaultWorkflowNodeEnt implements WorkflowNodeEnt {
 		@Override
         public WorkflowNodeEntBuilder setWorkflowOutgoingPorts(final List<NodeInPortEnt> WorkflowOutgoingPorts) {
 			m_WorkflowOutgoingPorts = WorkflowOutgoingPorts;			
+            return this;
+        }
+        
+		@Override
+        public WorkflowNodeEntBuilder setIsEncrypted(final boolean IsEncrypted) {
+			m_IsEncrypted = IsEncrypted;			
             return this;
         }
         

@@ -68,6 +68,11 @@ public interface WorkflowNodeEnt extends GatewayEntity, NodeEnt  {
  	List<NodeInPortEnt> getWorkflowOutgoingPorts();
  	
     /**
+     * @return Whether the referenced workflow is encrypted is required to be unlocked before it can be accessed.
+     */
+ 	boolean getIsEncrypted();
+ 	
+    /**
      * @return The parent node id of the node or not present if it's the root node.
      */
  	Optional<String> getParentNodeID();

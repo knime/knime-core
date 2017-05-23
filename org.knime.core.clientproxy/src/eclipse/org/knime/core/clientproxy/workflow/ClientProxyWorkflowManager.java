@@ -834,7 +834,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isUnlocked() {
-        return false;
+        //unlocking not supported yet
+        return !isEncrypted();
     }
 
     /**
@@ -850,8 +851,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isEncrypted() {
-        //TODO
-        return false;
+        return m_workflowNodeEnt.getIsEncrypted();
     }
 
     /**

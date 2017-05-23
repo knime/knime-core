@@ -87,6 +87,7 @@ public class WorkflowNodeEntFromJson extends NodeEntFromJson implements Workflow
 
 	private List<NodeOutPortEntFromJson> m_WorkflowIncomingPorts;
 	private List<NodeInPortEntFromJson> m_WorkflowOutgoingPorts;
+	private boolean m_IsEncrypted;
 	private Optional<String> m_ParentNodeID;
 	private String m_RootWorkflowID;
 	private Optional<JobManagerEntFromJson> m_JobManager;
@@ -104,9 +105,10 @@ public class WorkflowNodeEntFromJson extends NodeEntFromJson implements Workflow
 
 	@JsonCreator
 	private WorkflowNodeEntFromJson(
-	@JsonProperty("WorkflowIncomingPorts") List<NodeOutPortEntFromJson> WorkflowIncomingPorts,	@JsonProperty("WorkflowOutgoingPorts") List<NodeInPortEntFromJson> WorkflowOutgoingPorts,	@JsonProperty("ParentNodeID") String ParentNodeID,	@JsonProperty("RootWorkflowID") String RootWorkflowID,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
+	@JsonProperty("WorkflowIncomingPorts") List<NodeOutPortEntFromJson> WorkflowIncomingPorts,	@JsonProperty("WorkflowOutgoingPorts") List<NodeInPortEntFromJson> WorkflowOutgoingPorts,	@JsonProperty("IsEncrypted") boolean IsEncrypted,	@JsonProperty("ParentNodeID") String ParentNodeID,	@JsonProperty("RootWorkflowID") String RootWorkflowID,	@JsonProperty("JobManager") JobManagerEntFromJson JobManager,	@JsonProperty("NodeMessage") NodeMessageEntFromJson NodeMessage,	@JsonProperty("InPorts") List<NodeInPortEntFromJson> InPorts,	@JsonProperty("OutPorts") List<NodeOutPortEntFromJson> OutPorts,	@JsonProperty("Name") String Name,	@JsonProperty("NodeID") String NodeID,	@JsonProperty("NodeType") String NodeType,	@JsonProperty("Bounds") BoundsEntFromJson Bounds,	@JsonProperty("IsDeletable") boolean IsDeletable,	@JsonProperty("NodeState") String NodeState,	@JsonProperty("HasDialog") boolean HasDialog,	@JsonProperty("NodeAnnotation") NodeAnnotationEntFromJson NodeAnnotation	) {
 		m_WorkflowIncomingPorts = WorkflowIncomingPorts;
 		m_WorkflowOutgoingPorts = WorkflowOutgoingPorts;
+		m_IsEncrypted = IsEncrypted;
 		m_ParentNodeID = Optional.ofNullable(ParentNodeID);
 		m_RootWorkflowID = RootWorkflowID;
 		m_JobManager = Optional.ofNullable(JobManager);
@@ -137,6 +139,12 @@ public class WorkflowNodeEntFromJson extends NodeEntFromJson implements Workflow
 	@Override
     public List<NodeInPortEnt> getWorkflowOutgoingPorts() {
         	return m_WorkflowOutgoingPorts.stream().map(l -> (NodeInPortEnt) l ).collect(Collectors.toList());
+            
+    }
+    
+	@Override
+    public boolean getIsEncrypted() {
+        	return m_IsEncrypted;
             
     }
     

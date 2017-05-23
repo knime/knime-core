@@ -107,6 +107,7 @@ import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.INodePort;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeMessageEvent;
@@ -133,7 +134,6 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.JobManagerUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -842,16 +842,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     public void openSubWorkflowEditor() {
         WorkflowCipherPrompt prompt = new GUIWorkflowCipherPrompt();
         Object obj = getModel();
-        WorkflowManager wm;
-        if (obj instanceof WorkflowManager) {
-            wm = (WorkflowManager)getModel();
-        } else if (obj instanceof SubNodeContainer) {
-            wm = ((SubNodeContainer)obj).getWorkflowManager();
+        IWorkflowManager wm;
+        if (obj instanceof IWorkflowManager) {
+            wm = (IWorkflowManager)getModel();
+        } else if (obj instanceof ISubNodeContainer) {
+            wm = ((ISubNodeContainer)obj).getWorkflowManager();
         } else {
             return;
         }
-        if (!wm.unlock(prompt)) {
-            return;
+
+        //if workflow manager is encrypted, try unlocking it
+        if (wm.isEncrypted()) {
+            if (!CastUtil.castWFM(wm).unlock(prompt)) {
+                return;
+            }
         }
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");

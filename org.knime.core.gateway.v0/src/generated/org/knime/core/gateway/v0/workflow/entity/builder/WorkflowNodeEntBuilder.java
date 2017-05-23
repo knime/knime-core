@@ -77,6 +77,12 @@ public interface WorkflowNodeEntBuilder extends GatewayEntityBuilder<WorkflowNod
 	WorkflowNodeEntBuilder setWorkflowOutgoingPorts(List<NodeInPortEnt> workflowOutgoingPorts);
 	
     /**
+     * @param isEncrypted Whether the referenced workflow is encrypted is required to be unlocked before it can be accessed.
+     * @return <code>this</code>
+     */
+	WorkflowNodeEntBuilder setIsEncrypted(boolean isEncrypted);
+	
+    /**
      * @param parentNodeID The parent node id of the node or not present if it's the root node.
      * @return <code>this</code>
      */

@@ -106,9 +106,16 @@ public class DefaultWorkflowService implements WorkflowService {
                     .getNodeContainer(NodeID.fromString(nodeID.get()));
                 assert metaNode instanceof IWorkflowManager;
                 IWorkflowManager wfm = (IWorkflowManager)metaNode;
+                if(wfm.isEncrypted()) {
+                    throw new IllegalStateException("Workflow is encrypted and cannot be accessed.");
+                }
                 return buildWorkflowEnt(wfm, rootWorkflowID);
             } else {
-                return buildWorkflowEnt(getWorkflowProjectForID(rootWorkflowID, m_root).openProject(), rootWorkflowID);
+                IWorkflowManager wfm = getWorkflowProjectForID(rootWorkflowID, m_root).openProject();
+                if(wfm.isEncrypted()) {
+                    throw new IllegalStateException("Workflow is encrypted and cannot be accessed.");
+                }
+                return buildWorkflowEnt(wfm, rootWorkflowID);
             }
         } catch (Exception ex) {
             // TODO better exception handling

@@ -92,6 +92,11 @@ public class WorkflowNodeEntToJson extends NodeEntToJson implements WorkflowNode
     	return m_e.getWorkflowOutgoingPorts().stream().map(l -> NodeInPortEntToJson.wrap(l)).collect(Collectors.toList());
     }
     
+	@JsonProperty("IsEncrypted")
+    public boolean getIsEncrypted() {
+    	return m_e.getIsEncrypted();
+    }
+    
 	@JsonIgnore
     public Optional<String> getParentNodeID() {
     	return m_e.getParentNodeID();

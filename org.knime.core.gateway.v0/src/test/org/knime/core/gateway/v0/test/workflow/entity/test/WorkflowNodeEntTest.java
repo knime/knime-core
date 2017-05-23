@@ -105,30 +105,31 @@ public class WorkflowNodeEntTest {
 			list1.add(NodeInPortEntTest.createEnt((List<Object>) subList1.get(i)));
 		}
 		builder.setWorkflowOutgoingPorts(list1);
-		builder.setParentNodeID((Optional<String>) valueList.get(2));
-		builder.setRootWorkflowID((String) valueList.get(3));
-		builder.setJobManager(Optional.of(JobManagerEntTest.createEnt((List<Object>) valueList.get(4))));
-		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(5)));
-		List<NodeInPortEnt> list6 = new ArrayList<>();
-		List<Object> subList6 = (List<Object>) valueList.get(6);
-		for(int i = 0; i < subList6.size(); i++) {
-			list6.add(NodeInPortEntTest.createEnt((List<Object>) subList6.get(i)));
-		}
-		builder.setInPorts(list6);
-		List<NodeOutPortEnt> list7 = new ArrayList<>();
+		builder.setIsEncrypted((boolean) valueList.get(2));
+		builder.setParentNodeID((Optional<String>) valueList.get(3));
+		builder.setRootWorkflowID((String) valueList.get(4));
+		builder.setJobManager(Optional.of(JobManagerEntTest.createEnt((List<Object>) valueList.get(5))));
+		builder.setNodeMessage(NodeMessageEntTest.createEnt((List<Object>) valueList.get(6)));
+		List<NodeInPortEnt> list7 = new ArrayList<>();
 		List<Object> subList7 = (List<Object>) valueList.get(7);
 		for(int i = 0; i < subList7.size(); i++) {
-			list7.add(NodeOutPortEntTest.createEnt((List<Object>) subList7.get(i)));
+			list7.add(NodeInPortEntTest.createEnt((List<Object>) subList7.get(i)));
 		}
-		builder.setOutPorts(list7);
-		builder.setName((String) valueList.get(8));
-		builder.setNodeID((String) valueList.get(9));
-		builder.setNodeType((String) valueList.get(10));
-		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(11)));
-		builder.setIsDeletable((boolean) valueList.get(12));
-		builder.setNodeState((String) valueList.get(13));
-		builder.setHasDialog((boolean) valueList.get(14));
-		builder.setNodeAnnotation(NodeAnnotationEntTest.createEnt((List<Object>) valueList.get(15)));
+		builder.setInPorts(list7);
+		List<NodeOutPortEnt> list8 = new ArrayList<>();
+		List<Object> subList8 = (List<Object>) valueList.get(8);
+		for(int i = 0; i < subList8.size(); i++) {
+			list8.add(NodeOutPortEntTest.createEnt((List<Object>) subList8.get(i)));
+		}
+		builder.setOutPorts(list8);
+		builder.setName((String) valueList.get(9));
+		builder.setNodeID((String) valueList.get(10));
+		builder.setNodeType((String) valueList.get(11));
+		builder.setBounds(BoundsEntTest.createEnt((List<Object>) valueList.get(12)));
+		builder.setIsDeletable((boolean) valueList.get(13));
+		builder.setNodeState((String) valueList.get(14));
+		builder.setHasDialog((boolean) valueList.get(15));
+		builder.setNodeAnnotation(NodeAnnotationEntTest.createEnt((List<Object>) valueList.get(16)));
         return builder.build();
     }
 
@@ -143,28 +144,29 @@ public class WorkflowNodeEntTest {
 		for(int i = 0; i < subList1.size(); i++) {
 			NodeInPortEntTest.testEnt(subList1.get(i), (List<Object>) subValueList1.get(i));
 		}
-		assertEquals(ent.getParentNodeID().get(),((Optional<String>) valueList.get(2)).get());
-		assertEquals(ent.getRootWorkflowID(), (String) valueList.get(3));
-		JobManagerEntTest.testEnt(ent.getJobManager().get(), (List<Object>) valueList.get(4));
-		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(5));
-		List<Object> subValueList6 = (List<Object>) valueList.get(6);
-		List<NodeInPortEnt> subList6 =  ent.getInPorts();
-		for(int i = 0; i < subList6.size(); i++) {
-			NodeInPortEntTest.testEnt(subList6.get(i), (List<Object>) subValueList6.get(i));
-		}
+		assertEquals(ent.getIsEncrypted(), (boolean) valueList.get(2));
+		assertEquals(ent.getParentNodeID().get(),((Optional<String>) valueList.get(3)).get());
+		assertEquals(ent.getRootWorkflowID(), (String) valueList.get(4));
+		JobManagerEntTest.testEnt(ent.getJobManager().get(), (List<Object>) valueList.get(5));
+		NodeMessageEntTest.testEnt(ent.getNodeMessage(), (List<Object>) valueList.get(6));
 		List<Object> subValueList7 = (List<Object>) valueList.get(7);
-		List<NodeOutPortEnt> subList7 =  ent.getOutPorts();
+		List<NodeInPortEnt> subList7 =  ent.getInPorts();
 		for(int i = 0; i < subList7.size(); i++) {
-			NodeOutPortEntTest.testEnt(subList7.get(i), (List<Object>) subValueList7.get(i));
+			NodeInPortEntTest.testEnt(subList7.get(i), (List<Object>) subValueList7.get(i));
 		}
-		assertEquals(ent.getName(), (String) valueList.get(8));
-		assertEquals(ent.getNodeID(), (String) valueList.get(9));
-		assertEquals(ent.getNodeType(), (String) valueList.get(10));
-		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(11));
-		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(12));
-		assertEquals(ent.getNodeState(), (String) valueList.get(13));
-		assertEquals(ent.getHasDialog(), (boolean) valueList.get(14));
-		NodeAnnotationEntTest.testEnt(ent.getNodeAnnotation(), (List<Object>) valueList.get(15));
+		List<Object> subValueList8 = (List<Object>) valueList.get(8);
+		List<NodeOutPortEnt> subList8 =  ent.getOutPorts();
+		for(int i = 0; i < subList8.size(); i++) {
+			NodeOutPortEntTest.testEnt(subList8.get(i), (List<Object>) subValueList8.get(i));
+		}
+		assertEquals(ent.getName(), (String) valueList.get(9));
+		assertEquals(ent.getNodeID(), (String) valueList.get(10));
+		assertEquals(ent.getNodeType(), (String) valueList.get(11));
+		BoundsEntTest.testEnt(ent.getBounds(), (List<Object>) valueList.get(12));
+		assertEquals(ent.getIsDeletable(), (boolean) valueList.get(13));
+		assertEquals(ent.getNodeState(), (String) valueList.get(14));
+		assertEquals(ent.getHasDialog(), (boolean) valueList.get(15));
+		NodeAnnotationEntTest.testEnt(ent.getNodeAnnotation(), (List<Object>) valueList.get(16));
     }
 
     public static List<Object> createValueList() {
@@ -185,41 +187,43 @@ public class WorkflowNodeEntTest {
 		subList2.add(NodeInPortEntTest.createValueList());
  		valueList.add(subList2);
 
-		valueList.add(Optional.of("OuJNz"));
+ 		valueList.add(true);
 
- 		valueList.add("5VLnL");
+		valueList.add(Optional.of("5VLnL"));
+
+ 		valueList.add("YJQGG");
 
 		valueList.add(JobManagerEntTest.createValueList());
 
  		valueList.add(NodeMessageEntTest.createValueList());
 
- 		List<List<Object>> subList7 = new ArrayList<>();
-		subList7.add(NodeInPortEntTest.createValueList());
-		subList7.add(NodeInPortEntTest.createValueList());
-		subList7.add(NodeInPortEntTest.createValueList());
-		subList7.add(NodeInPortEntTest.createValueList());
-		subList7.add(NodeInPortEntTest.createValueList());
- 		valueList.add(subList7);
-
  		List<List<Object>> subList8 = new ArrayList<>();
-		subList8.add(NodeOutPortEntTest.createValueList());
-		subList8.add(NodeOutPortEntTest.createValueList());
-		subList8.add(NodeOutPortEntTest.createValueList());
-		subList8.add(NodeOutPortEntTest.createValueList());
-		subList8.add(NodeOutPortEntTest.createValueList());
+		subList8.add(NodeInPortEntTest.createValueList());
+		subList8.add(NodeInPortEntTest.createValueList());
+		subList8.add(NodeInPortEntTest.createValueList());
+		subList8.add(NodeInPortEntTest.createValueList());
+		subList8.add(NodeInPortEntTest.createValueList());
  		valueList.add(subList8);
 
- 		valueList.add("fdY7G");
+ 		List<List<Object>> subList9 = new ArrayList<>();
+		subList9.add(NodeOutPortEntTest.createValueList());
+		subList9.add(NodeOutPortEntTest.createValueList());
+		subList9.add(NodeOutPortEntTest.createValueList());
+		subList9.add(NodeOutPortEntTest.createValueList());
+		subList9.add(NodeOutPortEntTest.createValueList());
+ 		valueList.add(subList9);
 
  		valueList.add("sXyEg");
 
  		valueList.add("2AUEB");
 
+ 		valueList.add("qG2lz");
+
  		valueList.add(BoundsEntTest.createValueList());
 
  		valueList.add(true);
 
- 		valueList.add("sUtIg");
+ 		valueList.add("cUZTo");
 
  		valueList.add(true);
 
