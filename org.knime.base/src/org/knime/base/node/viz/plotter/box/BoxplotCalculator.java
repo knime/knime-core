@@ -72,6 +72,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  *
  * @author Alexander Fillbrunn
@@ -134,10 +136,8 @@ public class BoxplotCalculator {
         return excludedClasses;
     }
 
-    /**
-     * Creates a new default instance of the boxplot calculator.
-     */
-    public BoxplotCalculator() {
+    @JsonCreator
+    private BoxplotCalculator() {
 
     }
 

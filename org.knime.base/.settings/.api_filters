@@ -191,6 +191,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/box/BoxplotCalculator.java" type="org.knime.base.node.viz.plotter.box.BoxplotCalculator">
+        <filter id="354463860">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.viz.plotter.box.BoxplotCalculator"/>
+                <message_argument value="BoxplotCalculator()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/viz/plotter/line/LinePlotterNodeFactory.java" type="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory">
         <filter id="1143996420">
             <message_arguments>
