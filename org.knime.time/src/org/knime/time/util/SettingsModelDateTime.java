@@ -53,6 +53,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.Optional;
 
@@ -470,15 +471,15 @@ public final class SettingsModelDateTime extends SettingsModel {
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
         if (m_useDate && m_useTime && m_useZone) {
-            settings.addString(m_configName, getZonedDateTime().toString());
+            settings.addString(m_configName, getZonedDateTime().format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         } else if (m_useDate && !m_useTime && !m_useZone) {
-            settings.addString(m_configName, getLocalDate().toString());
+            settings.addString(m_configName, getLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
         } else if (!m_useDate && m_useTime && !m_useZone) {
-            settings.addString(m_configName, getLocalTime().toString());
+            settings.addString(m_configName, getLocalTime().format(DateTimeFormatter.ISO_LOCAL_TIME));
         } else if (!m_useDate && !m_useTime && m_useZone) {
             settings.addString(m_configName, m_zone.toString());
         } else if (m_useDate && m_useTime && !m_useZone) {
-            settings.addString(m_configName, getLocalDateTime().toString());
+            settings.addString(m_configName, getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         } else {
             settings.addString(m_configName, null);
         }
