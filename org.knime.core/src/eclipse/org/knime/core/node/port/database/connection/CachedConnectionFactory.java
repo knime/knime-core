@@ -222,7 +222,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 @Override
                 public Connection call() throws Exception {
                     LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
-                    return createConnection(jdbcUrl, user, pass, kerberos, d);
+                    return createConnection(settings, jdbcUrl, user, pass, kerberos, d);
                 }
             };
             //TODO:this has to be more robust e.g. the thread should terminate when KNIME terminates and should be
@@ -281,6 +281,24 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             props.put("password", pass);
         }
         return props;
+    }
+
+    /**
+     * Overwrite this method if you need access to additional parameters in the {@link DatabaseConnectionSettings}
+     * object.
+     * @param settings the original {@link DatabaseConnectionSettings} with additional parameters if any are available
+     * @param jdbcUrl jdbc url
+     * @param user user name
+     * @param pass optional password
+     * @param useKerberos <code>true</code> if Kerberos should be used
+     * @param d the {@link Driver}
+     * @return the {@link Connection}
+     * @throws SQLException
+     * @since 3.4
+     */
+    protected Connection createConnection(final DatabaseConnectionSettings settings, final String jdbcUrl,
+        final String user, final String pass, final boolean useKerberos, final Driver d) throws SQLException {
+        return createConnection(jdbcUrl, user, pass, useKerberos, d);
     }
 
     /**
