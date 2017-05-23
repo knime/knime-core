@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.viz.plotter.box;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  *
  * @author Alexander Fillbrunn
@@ -66,10 +68,10 @@ public class Outlier {
     }
 
     /**
-     * Deserialization constructor. Do not use.
-     * @noreference This constructor is not intended to be referenced by clients.
+     * Deserialization constructor.
      */
-    public Outlier() {
+    @JsonCreator
+    private Outlier() {
 
     }
 

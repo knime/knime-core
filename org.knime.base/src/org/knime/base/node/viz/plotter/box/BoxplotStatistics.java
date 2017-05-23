@@ -50,6 +50,8 @@ package org.knime.base.node.viz.plotter.box;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 
 /**
  *
@@ -96,10 +98,10 @@ public class BoxplotStatistics {
     }
 
     /**
-     * Deserialization constructor. Do not use.
-     * @noreference This constructor is not intended to be referenced by clients.
+     * Deserialization constructor.
      */
-    public BoxplotStatistics() {
+    @JsonCreator
+    private BoxplotStatistics() {
 
     }
 
