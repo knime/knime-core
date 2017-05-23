@@ -48,8 +48,6 @@
  */
 package org.knime.time.node.convert.stringtodatetime;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -64,7 +62,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -72,7 +69,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
@@ -80,25 +76,14 @@ import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowInput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.UniqueNameGenerator;
@@ -109,7 +94,7 @@ import org.knime.time.util.DateTimeType;
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
-final class StringToDateTimeNodeModel extends NodeModel {
+final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
@@ -215,13 +200,6 @@ final class StringToDateTimeNodeModel extends NodeModel {
     }
 
     /**
-     * one in, one out
-     */
-    protected StringToDateTimeNodeModel() {
-        super(1, 1);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -230,8 +208,7 @@ final class StringToDateTimeNodeModel extends NodeModel {
             setDefaultColumnSelection(inSpecs[0]);
             throw new InvalidSettingsException("Node must be configured!");
         }
-        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{columnRearranger.createSpec()};
+        return super.configure(inSpecs);
     }
 
     /**
@@ -250,10 +227,10 @@ final class StringToDateTimeNodeModel extends NodeModel {
     }
 
     /**
-     * @param inSpec table input spec
-     * @return the CR describing the output
+     * {@inheritDoc}
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndeces =
@@ -274,86 +251,6 @@ final class StringToDateTimeNodeModel extends NodeModel {
             }
         }
         return rearranger;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
-                throws Exception {
-                final RowInput in = (RowInput)inputs[0];
-                final RowOutput out = (RowOutput)outputs[0];
-                final DataTableSpec inSpec = in.getDataTableSpec();
-                final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
-                    .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace = m_isReplaceOrAppend.getStringValue().equals(OPTION_REPLACE);
-
-                DataRow row;
-                while ((row = in.poll()) != null) {
-                    exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndeces.length];
-                    for (int i = 0; i < includeIndeces.length; i++) {
-                        if (isReplace) {
-                            final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(
-                                includeList[i], DateTimeType.valueOf(m_selectedType).getDataType());
-                            final StringToTimeCellFactory cellFac =
-                                new StringToTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
-                        } else {
-                            final DataColumnSpec dataColSpec =
-                                new UniqueNameGenerator(inSpec).newColumn(includeList[i] + m_suffix.getStringValue(),
-                                    DateTimeType.valueOf(m_selectedType).getDataType());
-                            final StringToTimeCellFactory cellFac =
-                                new StringToTimeCellFactory(dataColSpec, includeIndeces[i]);
-                            datacells[i] = cellFac.getCell(row);
-                        }
-                    }
-                    if (isReplace) {
-                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
-                    } else {
-                        out.push(new AppendedColumnRow(row, datacells));
-                    }
-                }
-                in.close();
-                out.close();
-            }
-        };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
-        // no internals
     }
 
     /**
