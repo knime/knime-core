@@ -119,7 +119,6 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
         super(new BorderLayout());
         m_controller = controller;
         m_metaCategories = metaCategories;
-        m_provider = provider;
 
         m_categories = new JComboBox<>();
         m_categoriesListener = new ActionListener() {
@@ -131,7 +130,6 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
             }
         };
         m_categories.addActionListener(m_categoriesListener);
-        updateCategories();
 
         m_templates = new JList<>(new DefaultListModel<T>());
         m_templates.setSelectionMode(
@@ -152,16 +150,6 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
         m_description.setEditorKit(kit);
         m_description.setEditable(false);
 
-        updateTemplatesList(TemplateProvider.ALL_CATEGORY);
-        m_provider.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                updateCategories();
-                updateTemplatesList(TemplateProvider.ALL_CATEGORY);
-            }
-        });
-
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         JPanel templatesPanel = new JPanel(new BorderLayout());
         templatesPanel.add(createTemplatesPanel(), BorderLayout.CENTER);
@@ -175,6 +163,26 @@ public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
         m_previewPane.add(m_previewPanel, CARD_PREVIEW);
         mainSplit.setBottomComponent(m_previewPane);
         add(mainSplit, BorderLayout.CENTER);
+
+        setTemplateProvider(provider); // requires that all GUI elements are initialized
+    }
+
+    /**
+     * Change template provider and regenerate category/template list.
+     * @param provider the {@link TemplateProvider} to use
+     */
+    public void setTemplateProvider(final TemplateProvider<T> provider) {
+        m_provider = provider;
+        m_provider.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                updateCategories();
+                updateTemplatesList(TemplateProvider.ALL_CATEGORY);
+            }
+        });
+        updateCategories();
+        updateTemplatesList(TemplateProvider.ALL_CATEGORY);
+        m_templates.setSelectedIndex(-1);
     }
 
     private void updateCategories() {
