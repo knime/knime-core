@@ -4,77 +4,83 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.newtoold.NewToOldTimeNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.convert.newtoold.NewToOldTimeNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.oldtonew.OldToNewTimeNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifytime.ModifyTimeNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifydate.ModifyDateNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodurationperiod.StringToDurationPeriodNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            after="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.filter.datetimebasedrowfilter.DateTimeBasedRowFilterNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.extract.durationperiod.ExtractDurationPeriodFieldsNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.calculate.datetimedifference.DateTimeDifferenceNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.extract.datetime.ExtractDateTimeFieldsNodeFactory">
       </node>
       <node
-            category-path="/preview/datetime"
+            category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.create.createdatetime.CreateDateTimeNodeFactory">
       </node>
