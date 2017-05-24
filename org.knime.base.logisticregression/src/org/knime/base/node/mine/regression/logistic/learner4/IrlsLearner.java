@@ -60,8 +60,9 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
-import org.knime.base.node.mine.regression.RegressionTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
@@ -129,24 +130,207 @@ final class IrlsLearner implements LogRegLearner {
         m_penaltyTerm = 0.0;
     }
 
+
     /**
-     * @param data The data table.
-     * @param exec The execution context used for reporting progress.
-     * @return An object which holds the results.
+     * Do an irls step. The result is stored in beta.
+     *
+     * @param data over trainings data.
+     * @param beta parameter vector
+     * @param rC regressors count
+     * @param tcC target category count
      * @throws CanceledExecutionException when method is cancelled
-     * @throws InvalidSettingsException When settings are inconsistent with the data
+     */
+    private void irlsRls(final TrainingData<ClassificationTrainingRow> data, final RealMatrix beta,
+        final int rC, final int tcC, final ExecutionMonitor exec)
+                throws CanceledExecutionException {
+        long rowCount = 0;
+        int dim = (rC + 1) * (tcC - 1);
+        RealMatrix xTwx = MatrixUtils.createRealMatrix(dim, dim);
+        RealMatrix xTyu = MatrixUtils.createRealMatrix(dim, 1);
+
+        RealMatrix x = MatrixUtils.createRealMatrix(1, rC + 1);
+        RealMatrix eBetaTx = MatrixUtils.createRealMatrix(1, tcC - 1);
+        RealMatrix pi = MatrixUtils.createRealMatrix(1, tcC - 1);
+        final long totalRowCount = data.getRowCount();
+        for(ClassificationTrainingRow row : data) {
+            rowCount++;
+            exec.checkCanceled();
+            exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
+//            x.setEntry(0, 0, 1);
+//
+//            x.setSubMatrix(row.getParameter().getData(), 0, 1);
+            fillXFromRow(x, row);
+
+            for (int k = 0; k < tcC - 1; k++) {
+                RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
+                            k * (rC + 1), (k + 1) * (rC + 1) - 1).transpose());
+                eBetaTx.setEntry(0, k, Math.exp(betaITx.getEntry(0, 0)));
+            }
+
+            double sumEBetaTx = 0;
+            for (int k = 0; k < tcC - 1; k++) {
+                sumEBetaTx += eBetaTx.getEntry(0, k);
+            }
+
+            for (int k = 0; k < tcC - 1; k++) {
+                double pik = eBetaTx.getEntry(0, k) / (1 + sumEBetaTx);
+                pi.setEntry(0, k, pik);
+            }
+
+            // fill the diagonal blocks of matrix xTwx (k = k')
+            for (int k = 0; k < tcC - 1; k++) {
+                for (int i = 0; i < rC + 1; i++) {
+                    for (int ii = i; ii < rC + 1; ii++) {
+                        int o = k * (rC + 1);
+                        double v = xTwx.getEntry(o + i, o + ii);
+                        double w = pi.getEntry(0, k) * (1 - pi.getEntry(0, k));
+                        v += x.getEntry(0, i) * w * x.getEntry(0, ii);
+                        xTwx.setEntry(o + i, o + ii, v);
+                        xTwx.setEntry(o + ii, o + i, v);
+                    }
+                }
+            }
+            // fill the rest of xTwx (k != k')
+            for (int k = 0; k < tcC - 1; k++) {
+                for (int kk = k + 1; kk < tcC - 1; kk++) {
+                    for (int i = 0; i < rC + 1; i++) {
+                        for (int ii = i; ii < rC + 1; ii++) {
+                            int o1 = k * (rC + 1);
+                            int o2 = kk * (rC + 1);
+                            double v = xTwx.getEntry(o1 + i, o2 + ii);
+                            double w = -pi.getEntry(0, k) * pi.getEntry(0, kk);
+                            v += x.getEntry(0, i) * w * x.getEntry(0, ii);
+                            xTwx.setEntry(o1 + i, o2 + ii, v);
+                            xTwx.setEntry(o1 + ii, o2 + i, v);
+                            xTwx.setEntry(o2 + ii, o1 + i, v);
+                            xTwx.setEntry(o2 + i, o1 + ii, v);
+                        }
+                    }
+                }
+            }
+
+            int g = row.getCategory();
+            // fill matrix xTyu
+            for (int k = 0; k < tcC - 1; k++) {
+                for (int i = 0; i < rC + 1; i++) {
+                    int o = k * (rC + 1);
+                    double v = xTyu.getEntry(o + i, 0);
+                    double y = k == g ? 1 : 0;
+                    v += (y - pi.getEntry(0, k)) * x.getEntry(0, i);
+                    xTyu.setEntry(o + i, 0, v);
+                }
+            }
+
+
+        }
+
+        if (m_penaltyTerm > 0.0) {
+            RealMatrix stdError = getStdErrorMatrix(xTwx);
+            // do not penalize the constant terms
+            for (int i = 0; i < tcC - 1; i++) {
+                stdError.setEntry(i * (rC + 1), i * (rC + 1), 0);
+            }
+            xTwx = xTwx.add(stdError.scalarMultiply(-0.00001));
+        }
+        exec.checkCanceled();
+        b = xTwx.multiply(beta.transpose()).add(xTyu);
+        A = xTwx;
+        if (rowCount < A.getColumnDimension()) {
+            throw new IllegalStateException("The dataset must have at least "
+                    + A.getColumnDimension() + " rows, but it has only "
+                    + rowCount + " rows. It is recommended to use a "
+                    + "larger dataset in order to increase accuracy.");
+        }
+        DecompositionSolver solver = new SingularValueDecomposition(A).getSolver();
+        RealMatrix betaNew = solver.solve(b);
+        beta.setSubMatrix(betaNew.transpose().getData(), 0, 0);
+    }
+
+    private RealMatrix getStdErrorMatrix(final RealMatrix xTwx) {
+        RealMatrix covMat = new QRDecomposition(xTwx).getSolver().getInverse().scalarMultiply(-1);
+        // the standard error estimate
+        RealMatrix stdErr = MatrixUtils.createRealMatrix(covMat.getColumnDimension(),
+                covMat.getRowDimension());
+        for (int i = 0; i < covMat.getRowDimension(); i++) {
+            stdErr.setEntry(i, i, sqrt(abs(covMat.getEntry(i, i))));
+        }
+        return stdErr;
+    }
+
+
+    /**
+     * Compute the likelihood at given beta.
+     *
+     * @param iter iterator over trainings data.
+     * @param beta parameter vector
+     * @param rC regressors count
+     * @param tcC target category count
+     * @throws CanceledExecutionException when method is cancelled
+     */
+    private double likelihood(final Iterator<ClassificationTrainingRow> iter,
+            final RealMatrix beta,
+            final int rC, final int tcC,
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        double loglike = 0;
+
+        RealMatrix x = MatrixUtils.createRealMatrix(1, rC + 1);
+        while (iter.hasNext()) {
+            exec.checkCanceled();
+            ClassificationTrainingRow row = iter.next();
+
+//            x.setEntry(0, 0, 1);
+//            x.setSubMatrix(row.getParameter().getData(), 0, 1);
+            fillXFromRow(x, row);
+
+            double sumEBetaTx = 0;
+            for (int i = 0; i < tcC - 1; i++) {
+                RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
+                        i * (rC + 1), (i + 1) * (rC + 1) - 1).transpose());
+                sumEBetaTx += Math.exp(betaITx.getEntry(0, 0));
+            }
+
+            int y = row.getCategory();
+            double yBetaTx = 0;
+            if (y < tcC - 1) {
+                yBetaTx = x.multiply(beta.getSubMatrix(0, 0,
+                            y * (rC + 1), (y + 1) * (rC + 1) - 1).transpose()
+                            ).getEntry(0, 0);
+            }
+            loglike += yBetaTx - Math.log(1 + sumEBetaTx);
+        }
+
+        return loglike;
+    }
+
+    private static void fillXFromRow(final RealMatrix x, final ClassificationTrainingRow row) {
+        for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+            x.setEntry(0, iter.getFeatureIndex(), iter.getFeatureValue());
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public LogRegLearnerResult learn(final RegressionTrainingData data,
-            final ExecutionMonitor exec) throws CanceledExecutionException, InvalidSettingsException {
+    public String getWarningMessage() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LogRegLearnerResult learn(final TrainingData<ClassificationTrainingRow> trainingData, final ExecutionMonitor exec)
+        throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
         int iter = 0;
         boolean converged = false;
 
-        final RegressionTrainingData trainingData = data;
         int targetIndex = m_tableSpec.findColumnIndex(m_outSpec.getTargetCols().get(0).getName());
-        final int tcC = trainingData.getDomainValues().get(targetIndex).size();
-        final int rC = trainingData.getRegressorCount();
+        final int tcC = trainingData.getTargetDimension() + 1;
+        final int rC = trainingData.getFeatureCount() - 1;
 
         final RealMatrix beta = MatrixUtils.createRealMatrix(1, (tcC - 1) * (rC + 1));
 //        final RealMatrix beta = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
@@ -249,183 +433,5 @@ final class IrlsLearner implements LogRegLearner {
             betaMat.setEntry(r, c, beta.getEntry(0, i));
         }
         return new LogRegLearnerResult(betaMat, covMat, iter, loglike);
-    }
-
-    /**
-     * Do an irls step. The result is stored in beta.
-     *
-     * @param data over trainings data.
-     * @param beta parameter vector
-     * @param rC regressors count
-     * @param tcC target category count
-     * @throws CanceledExecutionException when method is cancelled
-     */
-    private void irlsRls(final RegressionTrainingData data, final RealMatrix beta,
-        final int rC, final int tcC, final ExecutionMonitor exec)
-                throws CanceledExecutionException {
-        long rowCount = 0;
-        int dim = (rC + 1) * (tcC - 1);
-        RealMatrix xTwx = MatrixUtils.createRealMatrix(dim, dim);
-        RealMatrix xTyu = MatrixUtils.createRealMatrix(dim, 1);
-
-        RealMatrix x = MatrixUtils.createRealMatrix(1, rC + 1);
-        RealMatrix eBetaTx = MatrixUtils.createRealMatrix(1, tcC - 1);
-        RealMatrix pi = MatrixUtils.createRealMatrix(1, tcC - 1);
-        final long totalRowCount = data.getRowCount();
-        for(RegressionTrainingRow row : data) {
-            rowCount++;
-            exec.checkCanceled();
-            exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
-            x.setEntry(0, 0, 1);
-
-            x.setSubMatrix(row.getParameter().getData(), 0, 1);
-
-            for (int k = 0; k < tcC - 1; k++) {
-                RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
-                            k * (rC + 1), (k + 1) * (rC + 1) - 1).transpose());
-                eBetaTx.setEntry(0, k, Math.exp(betaITx.getEntry(0, 0)));
-            }
-
-            double sumEBetaTx = 0;
-            for (int k = 0; k < tcC - 1; k++) {
-                sumEBetaTx += eBetaTx.getEntry(0, k);
-            }
-
-            for (int k = 0; k < tcC - 1; k++) {
-                double pik = eBetaTx.getEntry(0, k) / (1 + sumEBetaTx);
-                pi.setEntry(0, k, pik);
-            }
-
-            // fill the diagonal blocks of matrix xTwx (k = k')
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int i = 0; i < rC + 1; i++) {
-                    for (int ii = i; ii < rC + 1; ii++) {
-                        int o = k * (rC + 1);
-                        double v = xTwx.getEntry(o + i, o + ii);
-                        double w = pi.getEntry(0, k) * (1 - pi.getEntry(0, k));
-                        v += x.getEntry(0, i) * w * x.getEntry(0, ii);
-                        xTwx.setEntry(o + i, o + ii, v);
-                        xTwx.setEntry(o + ii, o + i, v);
-                    }
-                }
-            }
-            // fill the rest of xTwx (k != k')
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int kk = k + 1; kk < tcC - 1; kk++) {
-                    for (int i = 0; i < rC + 1; i++) {
-                        for (int ii = i; ii < rC + 1; ii++) {
-                            int o1 = k * (rC + 1);
-                            int o2 = kk * (rC + 1);
-                            double v = xTwx.getEntry(o1 + i, o2 + ii);
-                            double w = -pi.getEntry(0, k) * pi.getEntry(0, kk);
-                            v += x.getEntry(0, i) * w * x.getEntry(0, ii);
-                            xTwx.setEntry(o1 + i, o2 + ii, v);
-                            xTwx.setEntry(o1 + ii, o2 + i, v);
-                            xTwx.setEntry(o2 + ii, o1 + i, v);
-                            xTwx.setEntry(o2 + i, o1 + ii, v);
-                        }
-                    }
-                }
-            }
-
-            int g = (int)row.getTarget();
-            // fill matrix xTyu
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int i = 0; i < rC + 1; i++) {
-                    int o = k * (rC + 1);
-                    double v = xTyu.getEntry(o + i, 0);
-                    double y = k == g ? 1 : 0;
-                    v += (y - pi.getEntry(0, k)) * x.getEntry(0, i);
-                    xTyu.setEntry(o + i, 0, v);
-                }
-            }
-
-
-        }
-
-        if (m_penaltyTerm > 0.0) {
-            RealMatrix stdError = getStdErrorMatrix(xTwx);
-            // do not penalize the constant terms
-            for (int i = 0; i < tcC - 1; i++) {
-                stdError.setEntry(i * (rC + 1), i * (rC + 1), 0);
-            }
-            xTwx = xTwx.add(stdError.scalarMultiply(-0.00001));
-        }
-        exec.checkCanceled();
-        b = xTwx.multiply(beta.transpose()).add(xTyu);
-        A = xTwx;
-        if (rowCount < A.getColumnDimension()) {
-            throw new IllegalStateException("The dataset must have at least "
-                    + A.getColumnDimension() + " rows, but it has only "
-                    + rowCount + " rows. It is recommended to use a "
-                    + "larger dataset in order to increase accuracy.");
-        }
-        DecompositionSolver solver = new SingularValueDecomposition(A).getSolver();
-        RealMatrix betaNew = solver.solve(b);
-        beta.setSubMatrix(betaNew.transpose().getData(), 0, 0);
-    }
-
-    private RealMatrix getStdErrorMatrix(final RealMatrix xTwx) {
-        RealMatrix covMat = new QRDecomposition(xTwx).getSolver().getInverse().scalarMultiply(-1);
-        // the standard error estimate
-        RealMatrix stdErr = MatrixUtils.createRealMatrix(covMat.getColumnDimension(),
-                covMat.getRowDimension());
-        for (int i = 0; i < covMat.getRowDimension(); i++) {
-            stdErr.setEntry(i, i, sqrt(abs(covMat.getEntry(i, i))));
-        }
-        return stdErr;
-    }
-
-    /**
-     * Compute the likelihood at given beta.
-     *
-     * @param iter iterator over trainings data.
-     * @param beta parameter vector
-     * @param rC regressors count
-     * @param tcC target category count
-     * @throws CanceledExecutionException when method is cancelled
-     */
-    private double likelihood(final Iterator<RegressionTrainingRow> iter,
-            final RealMatrix beta,
-            final int rC, final int tcC,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
-        double loglike = 0;
-
-        RealMatrix x = MatrixUtils.createRealMatrix(1, rC + 1);
-        while (iter.hasNext()) {
-            exec.checkCanceled();
-            RegressionTrainingRow row = iter.next();
-
-            x.setEntry(0, 0, 1);
-            x.setSubMatrix(row.getParameter().getData(), 0, 1);
-
-            double sumEBetaTx = 0;
-            for (int i = 0; i < tcC - 1; i++) {
-                RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
-                        i * (rC + 1), (i + 1) * (rC + 1) - 1).transpose());
-                sumEBetaTx += Math.exp(betaITx.getEntry(0, 0));
-            }
-
-            int y = (int)row.getTarget();
-            double yBetaTx = 0;
-            if (y < tcC - 1) {
-                yBetaTx = x.multiply(beta.getSubMatrix(0, 0,
-                            y * (rC + 1), (y + 1) * (rC + 1) - 1).transpose()
-                            ).getEntry(0, 0);
-            }
-            loglike += yBetaTx - Math.log(1 + sumEBetaTx);
-        }
-
-        return loglike;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getWarningMessage() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

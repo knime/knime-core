@@ -62,8 +62,12 @@ import java.util.Set;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
+import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.InMemoryData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.SparseClassificationTrainingRowBuilder;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRowBuilder;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.SagLogRegLearner;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -156,12 +160,14 @@ class LogRegCoordinator {
             recalcDomainForTargetAndLearningFields(trainingData, exec.createSubExecutionContext(calcDomainTime));
         checkConstantLearningFields(dataTable);
         exec.setMessage("Building logistic regression model");
-        RegressionTrainingData data = new RegressionTrainingData(dataTable, m_pmmlOutSpec, m_specialColumns, true,
-            m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
-
         ExecutionMonitor trainExec = exec.createSubProgress(1.0 - calcDomainTime);
-        LogRegLearnerResult result = learner.learn(data, trainExec);
-        LogisticRegressionContent content = createContentFromLearnerResult(result, data, trainingData.getDataTableSpec());
+        LogRegLearnerResult result;
+        TrainingRowBuilder<ClassificationTrainingRow> rowBuilder = new SparseClassificationTrainingRowBuilder(dataTable, m_pmmlOutSpec,
+            m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
+        TrainingData<ClassificationTrainingRow> data = new InMemoryData<ClassificationTrainingRow>(dataTable, null, rowBuilder);
+            result = learner.learn(data, trainExec);
+
+        LogisticRegressionContent content = createContentFromLearnerResult(result, rowBuilder, trainingData.getDataTableSpec());
 
         return content;
     }
@@ -266,23 +272,26 @@ class LogRegCoordinator {
         }
     }
 
-    private LogisticRegressionContent createContentFromLearnerResult(final LogRegLearnerResult result, final RegressionTrainingData data,
+    private LogisticRegressionContent createContentFromLearnerResult(final LogRegLearnerResult result, final TrainingRowBuilder<ClassificationTrainingRow> rowBuilder,
         final DataTableSpec tableSpec) {
         List<String> factorList = new ArrayList<String>();
         List<String> covariateList = new ArrayList<String>();
         Map<String, List<DataCell>> factorDomainValues =
             new HashMap<String, List<DataCell>>();
-        for (int i : data.getActiveCols()) {
+        Map<Integer, List<DataCell>> nominalDomainValues = rowBuilder.getNominalDomainValues();
+        Map<Integer, Integer> vectorLengths = rowBuilder.getVectorLengths();
+
+        for (int i : rowBuilder.getLearningColumns()) {
             DataColumnSpec columnSpec = tableSpec.getColumnSpec(i);
-            if (data.getIsNominal().get(i)) {
+            if (nominalDomainValues.containsKey(i)) {
                 String factor =
                     columnSpec.getName();
                 factorList.add(factor);
-                List<DataCell> values = data.getDomainValues().get(i);
+                List<DataCell> values = nominalDomainValues.get(i);
                 factorDomainValues.put(factor, values);
             } else {
                 if (columnSpec.getType().isCompatible(BitVectorValue.class) || columnSpec.getType().isCompatible(ByteVectorValue.class) ) {
-                    int length = data.getVectorLengths().getOrDefault(i, 0).intValue();
+                    int length = vectorLengths.getOrDefault(i, 0).intValue();
                     for (int j = 0; j < length; ++j) {
                         covariateList.add(columnSpec.getName() + "[" + j + "]");
                     }
@@ -293,12 +302,11 @@ class LogRegCoordinator {
             }
         }
 
-        final Map<? extends Integer, Integer> vectorIndexLengths = data.getVectorLengths();
-        final Map<String, Integer> vectorLengths = new LinkedHashMap<String, Integer>();
+        final Map<String, Integer> specialVectorLengths = new LinkedHashMap<String, Integer>();
         for (DataColumnSpec spec: m_specialColumns) {
             int colIndex = tableSpec.findColumnIndex(spec.getName());
             if (colIndex >= 0) {
-                vectorLengths.put(spec.getName(), vectorIndexLengths.get(colIndex));
+                specialVectorLengths.put(spec.getName(), vectorLengths.get(colIndex));
             }
         }
         RealMatrix beta = result.getBeta();
@@ -318,7 +326,7 @@ class LogRegCoordinator {
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_pmmlOutSpec,
-                    factorList, covariateList, vectorLengths,
+                    factorList, covariateList, specialVectorLengths,
                     m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
                     betaMat, result.getLogLike(), covMat, result.getIter());
         return content;

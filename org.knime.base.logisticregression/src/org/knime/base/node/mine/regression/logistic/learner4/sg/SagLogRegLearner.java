@@ -137,7 +137,7 @@ public class SagLogRegLearner implements LogRegLearner {
         assert settings.isPerformLazy() : "This method should only be called if a lazy updater is required.";
         int nRows = data.getRowCount();
         int nFets = data.getFeatureCount();
-        int betaDim = data.getTargetDimension() - 1;
+        int betaDim = data.getTargetDimension();
         switch (settings.getSolver()) {
             case IRLS:
                 throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
@@ -155,7 +155,7 @@ public class SagLogRegLearner implements LogRegLearner {
         assert !settings.isPerformLazy() : "This method should only be called if an eager updater is required.";
         int nRows = data.getRowCount();
         int nFets = data.getFeatureCount();
-        int betaDim = data.getTargetDimension() - 1;
+        int betaDim = data.getTargetDimension();
         switch (settings.getSolver()) {
             case IRLS:
                 throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
@@ -191,13 +191,12 @@ public class SagLogRegLearner implements LogRegLearner {
      * {@inheritDoc}
      */
     @Override
-    public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
+    public LogRegLearnerResult learn(final TrainingData<ClassificationTrainingRow> data, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        ClassData classData = new ClassData(data);
-        AbstractSGOptimizer sgOpt = createOptimizer(m_settings, classData);
+        AbstractSGOptimizer sgOpt = createOptimizer(m_settings, data);
 
         SimpleProgress progMon = new SimpleProgress(progressMonitor.getProgressMonitor());
-        return sgOpt.optimize(m_settings.getMaxEpoch(), classData, progMon);
+        return sgOpt.optimize(m_settings.getMaxEpoch(), data, progMon);
     }
 
     /**
