@@ -134,7 +134,7 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
 
     private static class DataTableIterator <T extends TrainingRow> implements Iterator<T> {
 
-        private AbstractTrainingRowBuilder<T> m_rowBuilder;
+        private TrainingRowBuilder<T> m_rowBuilder;
         private Iterator<DataRow> m_rowIterator;
         private int m_idCounter = 0;
 
@@ -143,7 +143,7 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
          * @param rowBuilder
          *
          */
-        public DataTableIterator(final Iterator<DataRow> rowIterator, final AbstractTrainingRowBuilder<T> rowBuilder) {
+        public DataTableIterator(final Iterator<DataRow> rowIterator, final TrainingRowBuilder<T> rowBuilder) {
             m_rowBuilder = rowBuilder;
             m_rowIterator = rowIterator;
         }

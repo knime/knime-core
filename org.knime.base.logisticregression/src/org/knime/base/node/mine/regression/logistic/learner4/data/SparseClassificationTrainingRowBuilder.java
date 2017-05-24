@@ -66,7 +66,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class SparseClassificationTrainingRowBuilder extends AbstractTrainingRowBuilder<SparseClassificationTrainingRow> {
+public final class SparseClassificationTrainingRowBuilder extends AbstractTrainingRowBuilder<ClassificationTrainingRow> {
 
     private final int m_targetIdx;
     private final List<DataCell> m_targetDomain;
@@ -114,7 +114,7 @@ final class SparseClassificationTrainingRowBuilder extends AbstractTrainingRowBu
      * {@inheritDoc}
      */
     @Override
-    protected SparseClassificationTrainingRow createTrainingRow(final DataRow row,final int[] nonZeroFeatures,
+    protected ClassificationTrainingRow createTrainingRow(final DataRow row,final int[] nonZeroFeatures,
         final float[] values, final int id) {
         DataCell targetCell = row.getCell(m_targetIdx);
         DataType type = targetCell.getType();
@@ -135,7 +135,7 @@ final class SparseClassificationTrainingRowBuilder extends AbstractTrainingRowBu
      * {@inheritDoc}
      */
     @Override
-    int getTargetDimension() {
+    public int getTargetDimension() {
         return m_targetDomain.size() - 1;
     }
 

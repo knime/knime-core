@@ -60,7 +60,7 @@ abstract class AbstractTrainingData <T extends TrainingRow> implements TrainingD
 
     private final int m_rowCount;
     private final Random m_randomGenerator;
-    private final AbstractTrainingRowBuilder<T> m_rowBuilder;
+    private final TrainingRowBuilder<T> m_rowBuilder;
 
     /**
      * @param data
@@ -68,7 +68,7 @@ abstract class AbstractTrainingData <T extends TrainingRow> implements TrainingD
      * @param rowBuilder
      *
      */
-    public AbstractTrainingData(final BufferedDataTable data, final Long seed, final AbstractTrainingRowBuilder<T> rowBuilder) {
+    public AbstractTrainingData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder) {
         if (data.size() > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("The data table contains too many rows.");
         }
@@ -107,7 +107,7 @@ abstract class AbstractTrainingData <T extends TrainingRow> implements TrainingD
         return m_rowBuilder.getTargetDimension();
     }
 
-    protected AbstractTrainingRowBuilder<T> getRowBuilder() {
+    protected TrainingRowBuilder<T> getRowBuilder() {
         return m_rowBuilder;
     }
 

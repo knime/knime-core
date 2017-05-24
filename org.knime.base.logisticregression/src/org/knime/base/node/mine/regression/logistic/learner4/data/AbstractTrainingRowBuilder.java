@@ -72,13 +72,16 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 /**
  *
  * This class is NOT thread-safe!
  *
  * @author Adrian Nembach, KNIME.com
  */
-abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
+abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements TrainingRowBuilder<T> {
     private final List<Integer> m_featureCellIndices;
     private final int m_featureCount;
     private final Map<Integer, Integer> m_vectorLengths;
@@ -86,7 +89,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
     // used as cache for the indices to avoid the overhead of creating arrays
     private final int[] m_nonZeroIndices;
     // same for the values
-    private final float[] m_nonZerovalues;
+    private final float[] m_nonZeroValues;
 
     /**
      * @param data
@@ -102,9 +105,10 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
         m_featureCellIndices = new ArrayList<>(learningCols.size());
         m_nominalDomainValues = new HashMap<>();
         m_vectorLengths = new HashMap<>();
-        int featureCount = 0;
+        // the intercept is added as artificial feature
+        int featureCount = 1;
         // for a one-hot encoded nominal feature only one value will effectively be non zero
-        int effectiveFeatureCount = 0;
+        int effectiveFeatureCount = 1;
         int visited = 0;
         DataTableSpec tableSpec = data.getDataTableSpec();
         for (DataColumnSpec colSpec : learningCols) {
@@ -134,14 +138,19 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                 featureCount++;
             }
         }
+        // plus one for the intercept
         m_featureCount = featureCount;
         m_nonZeroIndices = new int[effectiveFeatureCount];
-        m_nonZerovalues = new float[effectiveFeatureCount];
+        m_nonZeroValues = new float[effectiveFeatureCount];
     }
 
-    T build(final DataRow row, final int id) {
-        int nonZeroFeatures = 0;
-        int accumulatedIdx = 0;
+    @Override
+    public T build(final DataRow row, final int id) {
+        int nonZeroFeatures = 1;
+        int accumulatedIdx = 1;
+        // the intercept feature is always present
+        m_nonZeroIndices[0] = 0;
+        m_nonZeroValues[0] = 1.0F;
         for (int i = 0; i < m_featureCellIndices.size(); i++) {
             Integer cellIdx = m_featureCellIndices.get(i);
             DataCell cell = row.getCell(cellIdx);
@@ -155,7 +164,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                             + "Domain Calculator on the columns with nominal values.");
                 } else if (oneHotIdx > 0) {
                     m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + oneHotIdx - 1;
-                    m_nonZerovalues[nonZeroFeatures] = 1.0F;
+                    m_nonZeroValues[nonZeroFeatures] = 1.0F;
                     nonZeroFeatures++;
                 }
                 accumulatedIdx += nominalDomainValues.size() - 1;
@@ -164,13 +173,13 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                     BitVectorValue bv = (BitVectorValue)cell;
                     for (long s = bv.nextSetBit(0L); s >= 0; s = bv.nextSetBit(s + 1)) {
                         m_nonZeroIndices[nonZeroFeatures] = (int)(accumulatedIdx + s);
-                        m_nonZerovalues[nonZeroFeatures++] = 1.0F;
+                        m_nonZeroValues[nonZeroFeatures++] = 1.0F;
                     }
                 } else if (cellType.isCompatible(ByteVectorValue.class)) {
                     ByteVectorValue bv = (ByteVectorValue)cell;
                     for (long s = bv.nextCountIndex(0L); s >= 0; s = bv.nextCountIndex(s + 1)) {
                         m_nonZeroIndices[nonZeroFeatures] = (int)(accumulatedIdx + s);
-                        m_nonZerovalues[nonZeroFeatures++] = bv.get(s);
+                        m_nonZeroValues[nonZeroFeatures++] = bv.get(s);
                     }
                 } else if (cellType.isCompatible(DoubleVectorValue.class)) {
                     // DoubleVectorValue also implements CollectionDataValue but
@@ -181,7 +190,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                         float val = (float)dv.getValue(s);
                         if (!MathUtils.equals(val, 0.0)) {
                             m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
-                            m_nonZerovalues[nonZeroFeatures++] = val;
+                            m_nonZeroValues[nonZeroFeatures++] = val;
                         }
                     }
                 } else if (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class)) {
@@ -193,7 +202,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                         double val = dv.getDoubleValue();
                         if (!MathUtils.equals(val, 0.0)) {
                             m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
-                            m_nonZerovalues[nonZeroFeatures] = (float)val;
+                            m_nonZeroValues[nonZeroFeatures] = (float)val;
                         }
                         s++;
                     }
@@ -207,7 +216,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
                 double val = ((DoubleValue)cell).getDoubleValue();
                 if (!MathUtils.equals(val, 0.0)) {
                     m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx;
-                    m_nonZerovalues[nonZeroFeatures++] = (float)val;
+                    m_nonZeroValues[nonZeroFeatures++] = (float)val;
                 }
                 accumulatedIdx++;
             } else {
@@ -218,18 +227,41 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> {
             }
         }
         int[] nonZero = Arrays.copyOf(m_nonZeroIndices, nonZeroFeatures);
-        float[] values = Arrays.copyOf(m_nonZerovalues, nonZeroFeatures);
+        float[] values = Arrays.copyOf(m_nonZeroValues, nonZeroFeatures);
 
         return createTrainingRow(row, nonZero, values, id);
     }
 
     protected abstract T createTrainingRow(DataRow row, int[] nonZeroFeatures, float[] values, int id);
 
-    int getFeatureCount() {
+    @Override
+    public int getFeatureCount() {
         return m_featureCount;
     }
 
-    abstract int getTargetDimension();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Integer> getLearningColumns() {
+        return ImmutableList.copyOf(m_featureCellIndices);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<Integer, List<DataCell>> getNominalDomainValues() {
+        return ImmutableMap.copyOf(m_nominalDomainValues);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<Integer, Integer> getVectorLengths() {
+        return ImmutableMap.copyOf(m_vectorLengths);
+    }
 
     private static int getMaximalVectorLength(final BufferedDataTable data, final int colIdx) {
         long length = 0;

@@ -65,7 +65,7 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
     private final boolean m_fitIntercept;
 
     public AbstractWeightVector(final int nFets, final int nCats, final boolean fitIntercept) {
-        m_data = new double[nCats - 1][nFets];
+        m_data = new double[nCats][nFets];
         m_fitIntercept = fitIntercept;
     }
 

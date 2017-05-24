@@ -44,56 +44,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.05.2017 (Adrian Nembach): created
+ *   24.05.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.node.BufferedDataTable;
 
 /**
- * {@link TrainingData} implementation that holds all the data in memory.
+ * Builds a training row.
  *
  * @author Adrian Nembach, KNIME.com
  * @param <T>
  */
-public class InMemoryData <T extends TrainingRow> extends AbstractTrainingData<T> {
+public interface TrainingRowBuilder <T extends TrainingRow> {
 
-    private final List<T> m_rows;
+    public T build(DataRow row, int id);
 
-    /**
-     *
-     */
-    public InMemoryData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder) {
-        super(data, seed, rowBuilder);
-        int idCounter = 0;
-        m_rows = new ArrayList<T>(getRowCount());
-        for (DataRow row : data) {
-            T trainingRow = rowBuilder.build(row, idCounter++);
-            m_rows.add(trainingRow);
-        }
-    }
+    public int getFeatureCount();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Iterator<T> iterator() {
-        return m_rows.iterator();
-    }
+    public int getTargetDimension();
 
+    public Map<Integer, List<DataCell>> getNominalDomainValues();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public T getRandomRow() {
-        int randomIdx = getRandomDataGenerator().nextInt(m_rows.size());
-        return m_rows.get(randomIdx);
-    }
+    public List<Integer> getLearningColumns();
+
+    public Map<Integer, Integer> getVectorLengths();
 
 }
