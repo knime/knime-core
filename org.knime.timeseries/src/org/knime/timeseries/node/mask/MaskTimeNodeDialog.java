@@ -65,6 +65,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class MaskTimeNodeDialog extends DefaultNodeSettingsPane {
 
     private SettingsModelString m_newColName = MaskTimeNodeModel.createNewColumnNameModel();

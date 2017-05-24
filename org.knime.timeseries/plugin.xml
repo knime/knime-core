@@ -4,63 +4,63 @@
    <extension
          point="org.knime.workbench.repository.nodes">
        <node
-            category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"
-            />
+             category-path="/applications/timeseries"
+             deprecated="true"
+             factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"/>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"
-            />
+            deprecated="false"
+            factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"/>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.generator.DateGeneratorNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.generator.DateGeneratorNodeFactory">
       </node>
       <node
             after="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory"
-            >
+            deprecated="false"
+            factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.dateshift.DateShiftNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.dateshift.DateShiftNodeFactory">
       </node>
       <node deprecated="true"
             category-path="/applications/timeseries"

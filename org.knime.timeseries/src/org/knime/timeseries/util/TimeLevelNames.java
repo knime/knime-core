@@ -55,6 +55,7 @@ import java.util.List;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public abstract class TimeLevelNames {
     
     /**

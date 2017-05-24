@@ -54,6 +54,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Iris Adae, University Konstanz
  */
+@Deprecated
 public class DateShiftNodeFactory extends NodeFactory<DateShiftNodeModel> {
 
     /**

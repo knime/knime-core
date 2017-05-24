@@ -55,6 +55,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
+@Deprecated
 public class MovingAverageNodeFactory
     extends NodeFactory<MovingAverageNodeModel> {
 

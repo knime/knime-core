@@ -54,6 +54,7 @@ import org.knime.core.data.def.DoubleCell;
  *
  * @author Adae, University of Konstanz
  */
+@Deprecated
 public class DoubleExpMA extends MovingAverage {
 
     private ExponentialMA m_ema;

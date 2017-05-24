@@ -77,6 +77,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class DialogComponentTime extends DialogComponent {
 
     private JTextField m_hourUI;

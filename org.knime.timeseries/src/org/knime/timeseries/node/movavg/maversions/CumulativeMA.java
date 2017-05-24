@@ -56,6 +56,7 @@ import org.knime.core.data.def.DoubleCell;
  *
  * @author Adae, University of Konstanz
  */
+@Deprecated
 public class CumulativeMA extends MovingAverage {
 
     private double m_avg;

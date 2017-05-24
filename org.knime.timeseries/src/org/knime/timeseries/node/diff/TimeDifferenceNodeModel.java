@@ -78,6 +78,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * @author KNIME GmbH
  * @author Iris Adae, University of Konstanz
  */
+@Deprecated
 public class TimeDifferenceNodeModel extends NodeModel {
 
     // first date column

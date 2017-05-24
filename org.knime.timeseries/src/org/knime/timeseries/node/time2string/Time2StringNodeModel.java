@@ -77,6 +77,7 @@ import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class Time2StringNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(

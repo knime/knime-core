@@ -76,6 +76,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Fabian Dill, KNIME.com AG
  *
  */
+@Deprecated
 public class DialogComponentCalendar extends DialogComponent {
 
     private DialogComponentDate m_date;

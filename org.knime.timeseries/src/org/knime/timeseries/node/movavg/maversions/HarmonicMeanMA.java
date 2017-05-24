@@ -57,6 +57,7 @@ package org.knime.timeseries.node.movavg.maversions;
  *
  * @author Adae, University of Konstanz
  */
+@Deprecated
 public class HarmonicMeanMA extends SlidingWindowMovingAverage {
 
    private double m_dividor = 0;

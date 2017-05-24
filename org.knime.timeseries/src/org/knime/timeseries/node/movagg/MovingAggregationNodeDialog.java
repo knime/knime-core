@@ -88,6 +88,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  *  @since 2.10
  */
+@Deprecated
 public class MovingAggregationNodeDialog extends NodeDialogPane {
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel(null);

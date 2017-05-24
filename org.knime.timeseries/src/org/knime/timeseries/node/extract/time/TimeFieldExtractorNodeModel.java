@@ -79,6 +79,7 @@ import org.knime.timeseries.node.extract.SingleCellFactoryCompound;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class TimeFieldExtractorNodeModel extends NodeModel {
 
 

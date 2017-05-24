@@ -56,6 +56,7 @@ import org.knime.timeseries.util.TimeLevelNames;
  * @author Fabian Dill, KNIME GmbH
  *
  */
+@Deprecated
 public class Granularity {
     
     /** Millisecond. */

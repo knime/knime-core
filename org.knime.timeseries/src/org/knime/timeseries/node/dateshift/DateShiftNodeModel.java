@@ -69,6 +69,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Iris Adae, University Konstanz
  */
+@Deprecated
 public class DateShiftNodeModel extends NodeModel {
 
     private DateShiftConfigure m_confObj = new DateShiftConfigure();

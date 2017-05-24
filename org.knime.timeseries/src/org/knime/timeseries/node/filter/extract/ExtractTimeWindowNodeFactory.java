@@ -57,6 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author M. Berthold, University of Konstanz
  */
+@Deprecated
 public class ExtractTimeWindowNodeFactory
     extends NodeFactory<ExtractTimeWindowNodeModel> {
 

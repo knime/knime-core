@@ -75,6 +75,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  *
  * @author Rosaria Silipo
  */
+@Deprecated
 public class ExtractTimeWindowNodeModel extends NodeModel {
 
     private final SettingsModelString m_columnName

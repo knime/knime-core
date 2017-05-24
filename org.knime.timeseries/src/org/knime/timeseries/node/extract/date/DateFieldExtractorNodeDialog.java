@@ -58,6 +58,7 @@ import org.knime.timeseries.node.extract.AbstractFieldExtractorNodeDialog;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class DateFieldExtractorNodeDialog
     extends AbstractFieldExtractorNodeDialog {
 

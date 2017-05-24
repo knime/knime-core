@@ -54,7 +54,8 @@ import org.knime.core.node.NodeView;
  *
  * @author KNIME GmbH
  */
-public class TimeDifferenceNodeFactory 
+@Deprecated
+public class TimeDifferenceNodeFactory
     extends NodeFactory<TimeDifferenceNodeModel> {
 
     /**

@@ -56,7 +56,8 @@ import javax.swing.event.DocumentListener;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public abstract class AbstractValidateDocumentListener 
+@Deprecated
+public abstract class AbstractValidateDocumentListener
     implements DocumentListener {
 
     /**

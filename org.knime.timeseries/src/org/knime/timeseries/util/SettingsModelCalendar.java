@@ -66,6 +66,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Fabian Dill, KNIME.com AG
  *
  */
+@Deprecated
 public class SettingsModelCalendar extends SettingsModel {
     
     private static final String KEY_TIME = "time";

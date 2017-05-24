@@ -60,6 +60,7 @@ import org.knime.core.data.def.StringCell;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public abstract class AbstractTimeExtractorStringCellFactory extends
         AbstractTimeExtractorCellFactory {
 

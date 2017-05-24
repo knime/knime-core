@@ -72,6 +72,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
+@Deprecated
 public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
 
     private static final String CFG_COL1 = "column.lower";

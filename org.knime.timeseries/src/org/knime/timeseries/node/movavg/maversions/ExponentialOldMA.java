@@ -63,6 +63,7 @@ import org.knime.core.data.def.DoubleCell;
  *
  * @author Rosaria Silipo
  */
+@Deprecated
 public class ExponentialOldMA extends MovingAverage {
 
         private int m_winLength = -1;

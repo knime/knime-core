@@ -61,6 +61,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
+@Deprecated
 public class MovingAverageDialog extends DefaultNodeSettingsPane {
 
     /** Constructor adding four components. */

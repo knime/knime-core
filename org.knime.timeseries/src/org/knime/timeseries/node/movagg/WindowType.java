@@ -55,6 +55,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public enum WindowType implements ButtonGroupEnumInterface {
     /**Forward.*/
     FORWARD("Forward", "Looks window length rows forward from the current point."),

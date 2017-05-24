@@ -80,6 +80,7 @@ import org.knime.core.node.util.StringHistory;
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
+@Deprecated
 public class String2DateNodeModel extends
     SimpleStreamableFunctionWithInternalsNodeModel<SimpleStreamableOperatorInternals> {
 

@@ -57,6 +57,7 @@ import org.knime.core.data.def.IntCell;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public abstract class AbstractTimeExtractorIntCellFactory extends
         AbstractTimeExtractorCellFactory {
 

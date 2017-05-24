@@ -72,6 +72,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  *
  * @author Iris Adae, Universitaet Konstanz
  */
+@Deprecated
 public class DateShiftConfigure {
 
     // numerical column

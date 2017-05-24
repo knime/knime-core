@@ -80,6 +80,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class TimePresetNodeModel extends NodeModel {
     
     private static final NodeLogger LOGGER = NodeLogger.getLogger(

@@ -62,6 +62,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG
  */
+@Deprecated
 public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
 
 

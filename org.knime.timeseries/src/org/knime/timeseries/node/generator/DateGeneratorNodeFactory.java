@@ -55,7 +55,8 @@ import org.knime.core.node.NodeView;
  * @author Fabian Dill
  *
  */
-public class DateGeneratorNodeFactory 
+@Deprecated
+public class DateGeneratorNodeFactory
     extends NodeFactory<DateGeneratorNodeModel> {
 
     /**

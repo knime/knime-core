@@ -63,6 +63,7 @@ import org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeModel;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class SingleCellFactoryCompound {
     
     private final ColumnRearranger m_rearranger;

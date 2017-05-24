@@ -79,6 +79,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  *
  * @author Iris Adae, University Konstanz
  */
+@Deprecated
 public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
 
     /** the key for using the execution time. */

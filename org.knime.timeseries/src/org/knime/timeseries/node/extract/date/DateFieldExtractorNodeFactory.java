@@ -55,7 +55,8 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class DateFieldExtractorNodeFactory 
+@Deprecated
+public class DateFieldExtractorNodeFactory
     extends NodeFactory<DateFieldExtractorNodeModel> {
 
     /**

@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  *  @since 2.10
  */
+@Deprecated
 public class MovingAggregationNodeFactory extends NodeFactory<MovingAggregationNodeModel> {
 
     /**

@@ -54,6 +54,7 @@ import org.knime.core.data.def.DoubleCell;
  *
  * @author Adae, University of Konstanz
  */
+@Deprecated
 public abstract class SlidingWindowMovingAverage extends MovingAverage {
 
     /** the length of the window.*/

@@ -55,6 +55,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class TimePresetNodeFactory extends NodeFactory<TimePresetNodeModel> {
 
     /**

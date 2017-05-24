@@ -76,6 +76,7 @@ import org.knime.core.node.util.StringHistory;
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG
  */
+@Deprecated
 public class String2DateDialog extends DefaultNodeSettingsPane {
     
     /**

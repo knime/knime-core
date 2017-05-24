@@ -79,6 +79,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public class MaskTimeNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(

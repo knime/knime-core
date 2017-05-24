@@ -58,6 +58,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author M. Berthold, University of Konstanz
  */
+@Deprecated
 public class String2DateNodeFactory extends NodeFactory<String2DateNodeModel> {
 
     /**

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <knimeNode type="Manipulator" icon="moving_aggr.png" xmlns="http://knime.org/node/v2.10"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd" deprecated="true">
     <name>Moving Aggregation</name>
     <shortDescription>Adds a column with moving average values.</shortDescription>
     <fullDescription>

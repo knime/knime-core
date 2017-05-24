@@ -52,6 +52,7 @@ import org.knime.core.data.DataCell;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
+@Deprecated
 public abstract class MovingAverage {
 
     /** This method should take care of two task.

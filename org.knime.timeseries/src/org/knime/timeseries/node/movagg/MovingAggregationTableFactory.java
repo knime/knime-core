@@ -80,6 +80,7 @@ import org.knime.core.node.ExecutionMonitor;
  *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  *  @since 2.10
  */
+@Deprecated
 public class MovingAggregationTableFactory {
 
     private final int m_windowLength;

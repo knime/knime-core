@@ -50,6 +50,7 @@ package org.knime.timeseries.node.movavg.maversions;
  *
  * @author Adae, University of Konstanz
  */
+@Deprecated
 public class SimpleMA extends SlidingWindowMovingAverage {
 
 

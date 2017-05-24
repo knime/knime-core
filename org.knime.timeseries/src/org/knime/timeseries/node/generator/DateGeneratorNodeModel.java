@@ -76,6 +76,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  *
  */
+@Deprecated
 public class DateGeneratorNodeModel extends NodeModel {
 
     private final SettingsModelCalendar m_from = DateGeneratorNodeDialog.createStartingPointModel();

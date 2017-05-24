@@ -69,6 +69,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * @author Fabian Dill
  *
  */
+@Deprecated
 public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
 
 
