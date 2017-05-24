@@ -210,20 +210,6 @@ public class GlmNetLogRegLearner implements LogRegLearner {
          * {@inheritDoc}
          */
         @Override
-        public int getNextNonZeroIndex(final int startIdx) {
-            throw new UnsupportedOperationException();
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int[] getNonZeroIndices() {
-            throw new UnsupportedOperationException();
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
         public FeatureIterator getFeatureIterator() {
             throw new UnsupportedOperationException();
         }

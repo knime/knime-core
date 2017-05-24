@@ -50,7 +50,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
-import org.knime.base.node.mine.regression.logistic.learner4.sg.IndexCache.IndexIterator;
 
 /**
  * Simple implementation of a weight vector that directly stores and manipulates the weights.
@@ -126,20 +125,4 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         return prediction;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] predict(final T row, final IndexCache indexCache) {
-        double[] prediction = new double[m_data.length];
-        for (int c = 0; c < m_data.length; c++) {
-            double p = 0.0;
-            for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
-                int i = iter.next();
-                p += m_data[c][i] * row.getFeature(i);
-            }
-            prediction[c] = p;
-        }
-        return prediction;
-    }
 }

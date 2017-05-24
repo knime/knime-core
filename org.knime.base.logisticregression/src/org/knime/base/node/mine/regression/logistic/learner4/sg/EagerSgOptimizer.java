@@ -69,17 +69,6 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
     }
 
 
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected IndexCache createIndexCache(final int nFets) {
-        return new EagerIndexCache(nFets);
-    }
-
-
     /**
      * {@inheritDoc}
      */
@@ -89,8 +78,6 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
         // nothing to prepare
 
     }
-
-
 
 
     /**

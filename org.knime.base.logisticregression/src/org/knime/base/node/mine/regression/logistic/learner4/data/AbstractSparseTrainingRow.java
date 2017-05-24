@@ -90,28 +90,6 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
         return m_id;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNextNonZeroIndex(final int startIdx) {
-        int nonZeroIdx = Arrays.binarySearch(m_indices, startIdx);
-        if (nonZeroIdx >= 0) {
-            return m_indices[nonZeroIdx];
-        }
-        if (-nonZeroIdx == m_indices.length) {
-            return -1;
-        }
-        return m_indices[-nonZeroIdx];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int[] getNonZeroIndices() {
-        return m_indices;
-    }
 
     /**
      * {@inheritDoc}

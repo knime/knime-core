@@ -89,14 +89,6 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
         updater.update(x, gradient, beta, stepSize, iteration/*, indexCache*/);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected IndexCache createIndexCache(final int nFets) {
-        return new SuperLazyIndexCache();
-    }
-
 
     /**
      * {@inheritDoc}

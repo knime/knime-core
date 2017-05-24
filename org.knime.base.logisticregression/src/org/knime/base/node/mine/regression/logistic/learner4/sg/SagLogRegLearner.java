@@ -375,25 +375,6 @@ public class SagLogRegLearner implements LogRegLearner {
         /**
          * {@inheritDoc}
          */
-        @Override
-        public int getNextNonZeroIndex(final int startIdx) {
-            if (startIdx == 0) {
-                return 0;
-            }
-            for (int i = startIdx - 1; i < m_data.length; i++) {
-                if (!MathUtils.equals(m_data[i], 0.0)) {
-                    return i + 1;
-                }
-            }
-            return -1;
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int[] getNonZeroIndices() {
-            return m_nonZero;
-        }
         /**
          * {@inheritDoc}
          */

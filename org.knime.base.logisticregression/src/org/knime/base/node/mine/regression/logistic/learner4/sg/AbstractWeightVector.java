@@ -105,25 +105,6 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void update(final WeightVectorConsumer func,
-        final boolean includeIntercept, final int[] nonZeroIndices) {
-        int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
-        assert nonZeroIndices[0] == 0 : "The intercept term should always be 1.";
-        for (int c = 0; c < m_data.length; c++) {
-            for (int i = startIdx; i < m_data[c].length; i++) {
-                int idx = nonZeroIndices[i];
-                if (idx == -1) {
-                    break;
-                }
-                applyFunc(c, idx, func);
-            }
-        }
-
-    }
 
     /**
      * {@inheritDoc}

@@ -72,23 +72,38 @@ public interface TrainingRow {
     public int getId();
 
     /**
-     * @param startIdx
-     * @return
+     * @return a {@link FeatureIterator} that allows to efficiently traverse the contained features
      */
-    public int getNextNonZeroIndex(final int startIdx);
-
-    public int[] getNonZeroIndices();
-
     public FeatureIterator getFeatureIterator();
 
+    /**
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     public interface FeatureIterator {
 
+        /**
+         * Checks if there is another feature
+         *
+         * @return true if there is another feature
+         */
         public boolean hasNext();
 
+        /**
+         * Checks if there is another feature and moves to it if so.
+         *
+         * @return true if there was another feature
+         */
         public boolean next();
 
+        /**
+         * @return the index of the feature
+         */
         public int getFeatureIndex();
 
+        /**
+         * @return the value of the feature
+         */
         public double getFeatureValue();
 
     }

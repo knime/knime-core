@@ -158,8 +158,6 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
 
     protected abstract void postProcessEpoch(final WeightVector<T> beta, final U updater, final R regUpdater);
 
-    protected abstract IndexCache createIndexCache(final int nFets);
-
     protected abstract void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta,
         final double stepSize, final int iteration/*, final IndexCache indexCache*/);
 
