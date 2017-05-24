@@ -78,6 +78,12 @@
             deprecated="false"
             factory-class="org.knime.time.node.create.createdatetime.CreateDateTimeNodeFactory">
       </node>
+      <node
+            after="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory"
+            category-path="/applications/timeseries"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.durationtonumber.DurationToNumberNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
