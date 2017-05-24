@@ -49,7 +49,6 @@
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -85,14 +84,6 @@ public class InMemoryData <T extends TrainingRow> extends AbstractTrainingData<T
     @Override
     public Iterator<T> iterator() {
         return m_rows.iterator();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void permute() {
-        Collections.shuffle(m_rows, getRandomDataGenerator());
     }
 
 

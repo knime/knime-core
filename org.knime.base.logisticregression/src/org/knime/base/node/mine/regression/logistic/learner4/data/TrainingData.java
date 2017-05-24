@@ -71,11 +71,6 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
     public int getFeatureCount();
 
     /**
-     * Permute the ordering of the data.
-     */
-    public void permute();
-
-    /**
      * Returns the dimension of the target variable.
      * In case of classification data this would be the class count.
      *

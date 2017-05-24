@@ -49,7 +49,6 @@
 package org.knime.base.node.mine.regression.logistic.learner4;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -162,13 +161,6 @@ public class GlmNetLogRegLearner implements LogRegLearner {
             return m_catCount;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void permute() {
-            Collections.shuffle(m_rows);
-        }
 
         /**
          * {@inheritDoc}
@@ -226,6 +218,13 @@ public class GlmNetLogRegLearner implements LogRegLearner {
          */
         @Override
         public int[] getNonZeroIndices() {
+            throw new UnsupportedOperationException();
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public FeatureIterator getFeatureIterator() {
             throw new UnsupportedOperationException();
         }
 

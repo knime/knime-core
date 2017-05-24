@@ -87,14 +87,6 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
         m_sampleCounter = 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void permute() {
-        // TODO check if there is an easy shuffling method for BufferedDataTables
-
-    }
 
     /**
      * {@inheritDoc}

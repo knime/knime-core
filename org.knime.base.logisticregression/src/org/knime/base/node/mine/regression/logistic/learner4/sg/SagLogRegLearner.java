@@ -50,7 +50,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -301,13 +300,6 @@ public class SagLogRegLearner implements LogRegLearner {
             return m_catCount;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void permute() {
-            Collections.shuffle(m_rows);
-        }
 
         /**
          * {@inheritDoc}
