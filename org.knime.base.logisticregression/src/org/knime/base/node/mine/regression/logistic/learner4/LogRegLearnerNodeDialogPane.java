@@ -55,10 +55,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.EnumSet;
+import java.util.Random;
 
 import javax.swing.BorderFactory;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -124,6 +126,12 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
     private JComboBox<Prior> m_priorComboBox;
     private JSpinner m_priorVarianceSpinner;
+
+    private JCheckBox m_inMemoryCheckBox;
+    private JCheckBox m_useSeedCheckBox;
+    private JTextField m_seedField;
+    private JButton m_newSeedButton;
+
     private JLabel m_warningPanel;
 
     /**
@@ -165,7 +173,29 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_learningRateStrategyComboBox = new JComboBox<>(LearningRateStrategies.values());
         m_solverComboBox = new JComboBox<>(Solver.values());
 
+        m_inMemoryCheckBox = new JCheckBox("Hold data in memory");
+        m_useSeedCheckBox = new JCheckBox("Use seed");
+        m_seedField = new JTextField(NUMBER_INPUT_FIELD_COLS);
+        m_newSeedButton = new JButton("New");
+
         // register listeners
+        m_newSeedButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_seedField.setText(Long.toString(new Random().nextLong()));
+
+            }
+        });
+        m_useSeedCheckBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_seedField.setEnabled(m_useSeedCheckBox.isSelected());
+                m_newSeedButton.setEnabled(m_useSeedCheckBox.isSelected());
+            }
+        });
+
         m_solverComboBox.addItemListener(new ItemListener() {
 
             @Override
@@ -285,6 +315,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         priorPanel.setBorder(BorderFactory.createTitledBorder("Prior options"));
         panel.add(priorPanel, c);
 
+        c.gridy++;
+        JPanel dataHandlingPanel = createDataHandlingPanel();
+        dataHandlingPanel.setBorder(BorderFactory.createTitledBorder("Data handling options"));
+        panel.add(dataHandlingPanel, c);
+
         return panel;
     }
 
@@ -320,6 +355,24 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(new JLabel("Variance:"), c);
         c.gridx++;
         panel.add(m_priorVarianceSpinner, c);
+
+        return panel;
+    }
+
+    private JPanel createDataHandlingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = makeSettingsConstraints();
+        c.gridwidth = 3;
+        panel.add(m_inMemoryCheckBox, c);
+        c.gridy++;
+        panel.add(m_useSeedCheckBox, c);
+        c.gridy++;
+        c.gridwidth = 1;
+        panel.add(new JLabel("Seed:"), c);
+        c.gridx++;
+        panel.add(m_seedField, c);
+        c.gridx++;
+        panel.add(m_newSeedButton, c);
 
         return panel;
     }
@@ -523,7 +576,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         m_notSortTarget.setSelected(!settings.getSortTargetCategories());
         m_notSortIncludes.setSelected(!settings.getSortIncludesCategories());
-        m_solverComboBox.setSelectedItem(settings.getSolver());
+        Solver solver = settings.getSolver();
+        m_solverComboBox.setSelectedItem(solver);
+        if (solver == Solver.IRLS) {
+            setEnabledSGRelated(false);
+        }
         m_maxEpochSpinner.setValue(settings.getMaxEpoch());
         m_lazyCalculationCheckBox.setSelected(settings.isPerformLazy());
         double epsilon = settings.getEpsilon();
@@ -534,6 +591,13 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_initialLearningRateField.setText(Double.toString(settings.getInitialLearningRate()));
         m_priorComboBox.setSelectedItem(settings.getPrior());
         m_priorVarianceSpinner.setValue(settings.getPriorVariance());
+
+        m_inMemoryCheckBox.setSelected(settings.isInMemory());
+        Long seed = settings.getSeed();
+        if (m_useSeedCheckBox.isSelected() != (seed != null)) {
+            m_useSeedCheckBox.doClick();
+        }
+        m_seedField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
     }
 
     /**
@@ -572,6 +636,20 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         }
         settings.setPrior((Prior)m_priorComboBox.getSelectedItem());
         settings.setPriorVariance((double)m_priorVarianceSpinner.getValue());
+
+        settings.setInMemory(m_inMemoryCheckBox.isSelected());
+        Long seed;
+        if (m_useSeedCheckBox.isSelected()) {
+            final String seedText = m_seedField.getText();
+            try {
+                seed = Long.valueOf(seedText);
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Unable to parse seed \"" + seedText + "\"", e);
+            }
+        } else {
+            seed = null;
+        }
+        settings.setSeed(seed);
 
         settings.saveSettings(s);
     }

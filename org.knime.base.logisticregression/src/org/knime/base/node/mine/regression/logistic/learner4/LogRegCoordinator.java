@@ -64,6 +64,7 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.DataTableTrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.InMemoryData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.SparseClassificationTrainingRowBuilder;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
@@ -105,6 +106,8 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * @author Adrian Nembach, KNIME.com
  */
 class LogRegCoordinator {
+
+    private static final int CACHE_SIZE = 1000;
 
     private final LogRegLearnerSettings m_settings;
     private String m_warning;
@@ -164,8 +167,14 @@ class LogRegCoordinator {
         LogRegLearnerResult result;
         TrainingRowBuilder<ClassificationTrainingRow> rowBuilder = new SparseClassificationTrainingRowBuilder(dataTable, m_pmmlOutSpec,
             m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
-        TrainingData<ClassificationTrainingRow> data = new InMemoryData<ClassificationTrainingRow>(dataTable, null, rowBuilder);
-            result = learner.learn(data, trainExec);
+        TrainingData<ClassificationTrainingRow> data;
+        Long seed = m_settings.getSeed();
+        if (m_settings.isInMemory()) {
+            data = new InMemoryData<ClassificationTrainingRow>(dataTable, seed, rowBuilder);
+        } else {
+            data = new DataTableTrainingData<ClassificationTrainingRow>(trainingData, seed, rowBuilder, CACHE_SIZE);
+        }
+        result = learner.learn(data, trainExec);
 
         LogisticRegressionContent content = createContentFromLearnerResult(result, rowBuilder, trainingData.getDataTableSpec());
 

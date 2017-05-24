@@ -76,7 +76,7 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
      * @param cacheSize
      *
      */
-    public DataTableTrainingData(final BufferedDataTable data, final Long seed, final AbstractTrainingRowBuilder<T> rowBuilder,
+    public DataTableTrainingData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder,
         final int cacheSize) {
         super(data, seed, rowBuilder);
         m_data = data;

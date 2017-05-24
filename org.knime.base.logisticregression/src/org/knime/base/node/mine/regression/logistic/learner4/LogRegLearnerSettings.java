@@ -246,6 +246,8 @@ public class LogRegLearnerSettings {
     private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
     private static final String CFG_INITIAL_LEARNING_RATE = "initialLearningRate";
     private static final String CFG_LEARNING_RATE_DECAY = "learningRateDecay";
+    private static final String CFG_SEED = "seed";
+    private static final String CFG_IN_MEMORY = "inMemory";
 
     static final Solver DEFAULT_SOLVER = Solver.SAG;
     static final boolean DEFAULT_PERFORM_LAZY = false;
@@ -256,6 +258,7 @@ public class LogRegLearnerSettings {
     static final double DEFAULT_LEARNING_RATE_DECAY = 1;
     static final Prior DEFAULT_PRIOR = Prior.Uniform;
     static final double DEFAULT_PRIOR_VARIANCE = 0.1;
+    static final boolean DEFAULT_IN_MEMORY = true;
 
 
     private String m_targetColumn;
@@ -283,6 +286,26 @@ public class LogRegLearnerSettings {
     private Prior m_prior;
     private double m_priorVariance;
 
+    // data handling
+    private boolean m_inMemory;
+    private Long m_seed;
+
+    /**
+     * @return the seed
+     */
+    public Long getSeed() {
+        return m_seed;
+    }
+
+
+    /**
+     * @param seed the seed to set
+     */
+    public void setSeed(final Long seed) {
+        m_seed = seed;
+    }
+
+
     /**
      * Create default settings.
      */
@@ -300,6 +323,8 @@ public class LogRegLearnerSettings {
         m_learningRateDecay = DEFAULT_LEARNING_RATE_DECAY;
         m_prior = DEFAULT_PRIOR;
         m_priorVariance = DEFAULT_PRIOR_VARIANCE;
+        setInMemory(DEFAULT_IN_MEMORY);
+        m_seed = System.currentTimeMillis();
     }
 
 
@@ -328,6 +353,21 @@ public class LogRegLearnerSettings {
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE);
 
+        setInMemory(settings.getBoolean(CFG_IN_MEMORY));
+        String seedS = settings.getString(CFG_SEED);
+        Long seed;
+        if (seedS == null) {
+            seed = null;
+        } else {
+            try {
+                seed = Long.parseLong(seedS);
+            } catch (NumberFormatException nfe) {
+                throw new InvalidSettingsException("Unable to parse seed \"" + seedS + "\"", nfe);
+            }
+        }
+        m_seed = seed;
+
+
     }
 
     /**
@@ -355,6 +395,21 @@ public class LogRegLearnerSettings {
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, DEFAULT_PRIOR.name()));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, DEFAULT_PRIOR_VARIANCE);
 
+        setInMemory(settings.getBoolean(CFG_IN_MEMORY, DEFAULT_IN_MEMORY));
+        Long defSeed = System.currentTimeMillis();
+        String seedS = settings.getString(CFG_SEED, Long.toString(defSeed));
+        Long seed;
+        if (seedS == null) {
+            seed = null;
+        } else {
+            try {
+                seed = Long.parseLong(seedS);
+            } catch (NumberFormatException nfe) {
+                seed = m_seed;
+            }
+        }
+        m_seed = seed;
+
     }
 
     /**
@@ -379,6 +434,9 @@ public class LogRegLearnerSettings {
         settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
         settings.addDouble(CFG_LEARNING_RATE_DECAY, m_learningRateDecay);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
+        settings.addBoolean(CFG_IN_MEMORY, m_inMemory);
+        String seedS = m_seed.toString();
+        settings.addString(CFG_SEED, seedS);
     }
 
 
@@ -616,6 +674,22 @@ public class LogRegLearnerSettings {
      */
     public void setPerformLazy(final boolean performLazy) {
         m_performLazy = performLazy;
+    }
+
+
+    /**
+     * @return the inMemory
+     */
+    public boolean isInMemory() {
+        return m_inMemory;
+    }
+
+
+    /**
+     * @param inMemory the inMemory to set
+     */
+    public void setInMemory(final boolean inMemory) {
+        m_inMemory = inMemory;
     }
 }
 
