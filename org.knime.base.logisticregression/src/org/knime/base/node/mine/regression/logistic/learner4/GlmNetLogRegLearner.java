@@ -84,9 +84,8 @@ public class GlmNetLogRegLearner implements LogRegLearner {
      * {@inheritDoc}
      */
     @Override
-    public LogRegLearnerResult learn(final RegressionTrainingData data, final ExecutionMonitor progressMonitor)
+    public LogRegLearnerResult learn(final TrainingData<ClassificationTrainingRow> classData, final ExecutionMonitor progressMonitor)
         throws CanceledExecutionException, InvalidSettingsException {
-        ClassData classData = new ClassData(data);
         double alpha = 0.8;
         double lambda = 0.2;
         PathStrategy pathStrategy = /*new SingleLambdaPathStrategy(0.2)*/new MaxPathStrategy(lambda, alpha, 100, classData);
