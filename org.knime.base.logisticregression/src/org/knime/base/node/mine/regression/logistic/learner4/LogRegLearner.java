@@ -48,7 +48,6 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4;
 
-import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.core.node.CanceledExecutionException;
@@ -62,21 +61,6 @@ import org.knime.core.node.InvalidSettingsException;
  * @author Adrian Nembach, KNIME.com
  */
 public interface LogRegLearner {
-
-    /**
-     * Learns a logistic regression model from the provided data.
-     *
-     * To be removed once the IRLS learner can deal with {@link TrainingData}.
-     *
-     * @param data training data from which the model should be learned
-     * @param progressMonitor monitor that allows to report the progress of the training
-     * @return the content of the logistic regression model that is learned
-     * @throws InvalidSettingsException if the settings cause inconsistencies during training
-     * @throws CanceledExecutionException if the training is canceled while in progress
-     */
-    public LogRegLearnerResult learn(final RegressionTrainingData data,
-        ExecutionMonitor progressMonitor) throws CanceledExecutionException, InvalidSettingsException;
-
 
     /**
      * Learns a logistic regression model from the provided data.
