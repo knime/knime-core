@@ -61,6 +61,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.SingleInteractiveWebViewResult;
+import org.knime.js.core.JSCorePlugin;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WizardNodeView;
@@ -143,29 +144,14 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     static AbstractWizardNodeView getConfiguredWizardNodeView(final ViewableModel model) {
-        //TODO uncomment to make view interchangeable
-        //TODO get preference key
-        /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
         try {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IConfigurationElement[] configurationElements =
-                registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
-            for (IConfigurationElement element : configurationElements) {
-                if (viewID.equals(element.getAttribute("viewClass"))) {
-                    try {
-                        return (AbstractWizardNodeView)element.createExecutableExtension("viewClass");
-                    } catch (Throwable e) {
-                        LOGGER.error("Can't load view class for " + element.getAttribute("name")
-                            + ". Switching to default. - " + e.getMessage(), e);
-                    }
-                }
-            }
+            String classString = JSCorePlugin.getDefault().getPreferenceStore().getString(JSCorePlugin.P_VIEW_BROWSER);
+            //TODO: correct class loader?
+            return (AbstractWizardNodeView)Class.forName(classString).getConstructor(ViewableModel.class).newInstance(model);
         } catch (Throwable e) {
-            LOGGER.error(
-                "JS view set in preferences (" + viewID + ") can't be loaded. Switching to default. - "
-                    + e.getMessage(), e);
-        }*/
-        return new WizardNodeView(model);
+            LOGGER.error("Unable to instantiate chosen view browser, using default: " + e.getMessage(), e);
+            return new WizardNodeView(model);
+        }
     }
 
     @Override
