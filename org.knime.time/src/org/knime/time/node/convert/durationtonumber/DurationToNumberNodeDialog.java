@@ -89,7 +89,8 @@ final class DurationToNumberNodeDialog extends NodeDialogPane {
             "Duration column", 0, true, DurationValue.class);
 
         m_dialogCompDurationFieldSelect =
-            new DialogComponentStringSelection(DurationToNumberNodeModel.createDurationFieldSelectionModel(), "Field",
+            new DialogComponentStringSelection(DurationToNumberNodeModel.createDurationFieldSelectionModel(),
+                "Granularity",
                 new String[]{Granularity.HOUR.toString(), Granularity.MINUTE.toString(), Granularity.SECOND.toString(),
                     Granularity.MILLISECOND.toString(), Granularity.MICROSECOND.toString(),
                     Granularity.NANOSECOND.toString()});

@@ -5,19 +5,10 @@
 	<shortDescription>Converts duration cells to single duration fields.</shortDescription>
 	<fullDescription>
 		<intro>
-			Converts a duration to the selected field and appends the value
-			as a
-			long or double
-			column. Valid fields are hours, minutes, seconds,
-			nano-, micro- and milliseconds. If the output should be a long value,
-			the conversion result will be truncated, e.g. if the duration
-			<i>1 hour 30 minutes</i>
-			should be converted to hours, the exact output would be
-			<i>1.5 hours</i>
-			,
-			the truncated output
-			<i>1 hour</i>
-			.
+			Converts a duration to the selected field and appends the value as a long or double column. Valid fields
+			are hours, minutes, seconds, nano-, micro- and milliseconds. If the output should be a long value the
+			conversion result will be truncated, e.g. if the duration <i>1 hour 30 minutes</i> should be converted to
+			hours, the exact output is <i>1.5 hours</i> whereas the truncated output <i>1 hour</i>.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -25,12 +16,9 @@
 			</option>
 		</tab>
 		<tab name="Conversion Settings">
-			<option name="Field">
-				A granularity (hours, minutes, seconds,
-				nano-,
-				micro- or milliseconds) can be selected to which the
-				duration gets
-				converted.
+			<option name="Granularity">
+				A granularity (hours, minutes, seconds, nano-, micro- or milliseconds) can be selected to which the
+				duration gets converted.
 			</option>
 			<option name="Exact (double value)">
 				The output will be the exact calculation, e.g. the duration
@@ -61,8 +49,7 @@
 			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
-			Output table containing the converted
-			field as appended column (either long or double).
+			Output table containing the converted field as appended column (either long or double).
 		</outPort>
 	</ports>
 </knimeNode>
