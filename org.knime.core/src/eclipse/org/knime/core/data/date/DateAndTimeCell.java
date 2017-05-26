@@ -72,7 +72,9 @@ import org.knime.core.node.config.ConfigWO;
  * fields (hour, minute, seconds, and milliseconds).
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public class DateAndTimeCell extends DataCell
     implements DateAndTimeValue, BoundedValue, StringValue {
 

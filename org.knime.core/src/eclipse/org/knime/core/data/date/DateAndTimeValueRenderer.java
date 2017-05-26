@@ -58,10 +58,11 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  * Renders a {@link DateAndTimeValue}.
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
 @SuppressWarnings("serial")
+@Deprecated
 public class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
-
     private static final String DATE = "dd.MMM.yyyy";
     private static final String TIME = "HH:mm:ss";
     private static final String ISO_DATE = "yyyy-MM-dd";
@@ -330,5 +331,4 @@ public class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
         assert sdf != null;
         return sdf.format(value.getUTCCalendarClone().getTime());
     }
-
 }

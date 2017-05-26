@@ -58,7 +58,9 @@ import org.knime.core.data.ExtensibleUtilityFactory;
  * to the icon, the renderer and the comparator.
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public class DateAndTimeUtility extends ExtensibleUtilityFactory {
     /** Singleton icon to be used to display this cell type. */
     private static final Icon ICON = loadIcon(

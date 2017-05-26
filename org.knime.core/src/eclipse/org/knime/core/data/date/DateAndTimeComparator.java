@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.09.2009 (Fabian Dill): created
  */
@@ -54,11 +54,12 @@ import org.knime.core.data.DataValueComparator;
 
 /**
  * Compares to {@link DateAndTimeValue}s by comparing their UTC time.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 class DateAndTimeComparator extends DataValueComparator {
-
     /** {@inheritDoc} */
     @Override
     protected int compareDataValues(final DataValue v1, final DataValue v2) {
@@ -74,5 +75,4 @@ class DateAndTimeComparator extends DataValueComparator {
         }
         return c1.compareTo(c2);
     }
-
 }

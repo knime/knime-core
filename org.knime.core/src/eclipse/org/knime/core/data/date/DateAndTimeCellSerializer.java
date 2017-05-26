@@ -60,7 +60,9 @@ import org.knime.core.data.DataCellSerializer;
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  * @since 3.0
  * @noreference This class is not intended to be referenced by clients.
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public final class DateAndTimeCellSerializer implements DataCellSerializer<DateAndTimeCell> {
     /**
      * {@inheritDoc}

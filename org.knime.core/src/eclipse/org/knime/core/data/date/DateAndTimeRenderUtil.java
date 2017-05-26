@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   28.07.2009 (Fabian Dill): created
  */
@@ -49,19 +49,20 @@ package org.knime.core.data.date;
 
 /**
  * Utility class for rendering times and dates.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public final class DateAndTimeRenderUtil {
-    
     private DateAndTimeRenderUtil() {
         // utility class
     }
-    
+
     /**
-     * 
+     *
      * @param dateField day. month or year
-     * @return the date fields with a trailing "0" to be of two digits 
+     * @return the date fields with a trailing "0" to be of two digits
      */
     public static String getStringForDateField(final int dateField) {
         if (dateField < 10) {
@@ -69,5 +70,4 @@ public final class DateAndTimeRenderUtil {
         }
         return Integer.toString(dateField);
     }
-
 }

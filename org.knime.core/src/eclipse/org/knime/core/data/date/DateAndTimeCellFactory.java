@@ -68,7 +68,9 @@ import org.knime.core.data.DataType;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 3.0
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public final class DateAndTimeCellFactory implements FromSimpleString, FromComplexString, ConfigurableDataCellFactory {
     /**
      * The data type for the cells created by this factory.

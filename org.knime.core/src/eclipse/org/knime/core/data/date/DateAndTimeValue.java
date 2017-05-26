@@ -56,7 +56,9 @@ import org.knime.core.data.DataValue;
  * user's time zone and location. Times in KNIME are always UTC times!
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
+@Deprecated
 public interface DateAndTimeValue extends DataValue {
     /** Utility implementation for timestamp values. */
     DateAndTimeUtility UTILITY = new DateAndTimeUtility();
