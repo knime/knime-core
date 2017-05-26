@@ -99,7 +99,7 @@ public class MedianOperator extends AbstractMedianOperator {
      */
     public MedianOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super("Median Number (double)", false, DoubleValue.class, createCustomMeanMedianMethod(),
+        super("Median", false, DoubleValue.class, createCustomMeanMedianMethod(),
             globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
