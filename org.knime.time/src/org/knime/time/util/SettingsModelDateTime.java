@@ -55,7 +55,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
-import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -401,40 +400,34 @@ public final class SettingsModelDateTime extends SettingsModel {
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         final String string = settings.getString(m_configName);
 
-        final Optional<ZonedDateTime> asZonedDateTime = DateTimeUtils.asZonedDateTime(string);
-        final Optional<LocalDateTime> asLocalDateTime = DateTimeUtils.asLocalDateTime(string);
-        final Optional<LocalDate> asLocalDate = DateTimeUtils.asLocalDate(string);
-        final Optional<LocalTime> asLocalTime = DateTimeUtils.asLocalTime(string);
-        final Optional<ZoneId> asTimezone = DateTimeUtils.asTimezone(string);
-
         if (StringUtils.isEmpty(string) || string.equals("missing")) {
             // table row to variable returns "missing" for flow variables when the node isn't executed yet
             setZonedDateTime(ZonedDateTime.now().withNano(0));
             setUseDate(false);
             setUseTime(false);
             setUseZone(false);
-        } else if (asZonedDateTime.isPresent()) {
-            setZonedDateTime(asZonedDateTime.get());
+        } else if (DateTimeUtils.asZonedDateTime(string).isPresent()) {
+            setZonedDateTime(DateTimeUtils.asZonedDateTime(string).get());
             setUseDate(true);
             setUseTime(true);
             setUseZone(true);
-        } else if (asLocalDateTime.isPresent()) {
-            setZonedDateTime(ZonedDateTime.of(asLocalDateTime.get(), ZoneId.systemDefault()));
+        } else if (DateTimeUtils.asLocalDateTime(string).isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(DateTimeUtils.asLocalDateTime(string).get(), ZoneId.systemDefault()));
             setUseDate(true);
             setUseTime(true);
             setUseZone(false);
-        } else if (asLocalDate.isPresent()) {
-            setZonedDateTime(ZonedDateTime.of(asLocalDate.get(), LocalTime.now(), ZoneId.systemDefault()));
+        } else if (DateTimeUtils.asLocalDate(string).isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(DateTimeUtils.asLocalDate(string).get(), LocalTime.now(), ZoneId.systemDefault()));
             setUseDate(true);
             setUseTime(false);
             setUseZone(false);
-        } else if (asLocalTime.isPresent()) {
-            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), asLocalTime.get(), ZoneId.systemDefault()));
+        } else if (DateTimeUtils.asLocalTime(string).isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), DateTimeUtils.asLocalTime(string).get(), ZoneId.systemDefault()));
             setUseDate(false);
             setUseTime(true);
             setUseZone(false);
-        } else if (asTimezone.isPresent()) {
-            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), asTimezone.get()));
+        } else if (DateTimeUtils.asTimezone(string).isPresent()) {
+            setZonedDateTime(ZonedDateTime.of(LocalDate.now(), LocalTime.now(), DateTimeUtils.asTimezone(string).get()));
             setUseDate(false);
             setUseTime(false);
             setUseZone(true);
