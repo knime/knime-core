@@ -113,7 +113,7 @@ public class StringChecker extends AbstractDifferenceChecker<StringValue> {
     public Result check(final StringValue valueA, final StringValue valueB) {
         if (m_ignoreLinefeeds.getBooleanValue()) {
             BufferedReader rA = new BufferedReader(new StringReader(valueA.getStringValue()));
-            BufferedReader rB = new BufferedReader(new StringReader(valueA.getStringValue()));
+            BufferedReader rB = new BufferedReader(new StringReader(valueB.getStringValue()));
 
             String lineA, lineB;
             try {
