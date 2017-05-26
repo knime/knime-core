@@ -116,6 +116,34 @@
       </category>
    </extension>
    <extension
+         point="org.knime.workbench.repository.metanode">
+      <PersistedMetaNode
+            category-path="/applications/timeseries/meta"
+            description="Removes the seasonality from the selected time series.  This metanode selects one time series column, optionally one datetime column, and an interval lag. Then it performs x(t) – x(t-interval lag) to correct the seasonality.  Note: It does not find automatically the optimal interval lag. The interval lag has to be supplied by the user. (Optimal Interval Lag can be found via the linear correlation node, by knowledge, or by some specific formulas)."
+            icon="icons/category_time.png"
+            id="SeasonalityCorrection"
+            name="Seasonality Correction"
+            workflowDir="metanode_templates/Seasonality Correction/">
+      </PersistedMetaNode>
+      <PersistedMetaNode
+            category-path="/applications/timeseries/meta"
+            description="This node  selects a time series column, optionally a datetime column, and a lag. Then it trains a model (linear regression or neural network or whatever has a numerical output). The model can be changed (like in the cross-validation node)."
+            icon="icons/category_time.png"
+            id="Time-SeriesAuto-PredictionTraining"
+            name="Time-Series Auto-Prediction Training"
+            workflowDir="metanode_templates/Time Series Auto-Prediction Training/">
+      </PersistedMetaNode>
+      <PersistedMetaNode
+            after="Time-SeriesAuto-PredictionTraining"
+            category-path="/applications/timeseries/meta"
+            description="This metanode applies all previously selected variables (time series column, lag and datetime column) to the predictor node. Note that the predictor node has to be consistent with the training node ion the time series training metanode."
+            icon="icons/category_time.png"
+            id="Time-SeriesAuto-PredictionPredictor"
+            name="Time-Series Auto-Prediction Predictor"
+            workflowDir="metanode_templates/Time Series Auto-Prediction Predictor/">
+      </PersistedMetaNode>
+   </extension>   
+   <extension
          point="org.knime.core.DataValueRenderer">
       <dataValue
             valueClass="org.knime.core.data.time.localtime.LocalTimeValue">
