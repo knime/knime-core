@@ -181,7 +181,7 @@ public class CSVReaderNodeModel extends NodeModel {
         int skipFirstLinesCount = m_config.getSkipFirstLinesCount();
         settings.setSkipFirstLines(skipFirstLinesCount);
 
-        long limitRowsCount = m_config.getLimitRowsCount();
+        final long limitRowsCount = m_config.getLimitRowsCount();
         settings.setMaximumNumberOfRowsToRead(limitRowsCount);
 
         settings.setCharsetName(m_config.getCharSetName());
@@ -192,7 +192,7 @@ public class CSVReaderNodeModel extends NodeModel {
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");
-        if (m_config.getPartialAnalysis()) {
+        if (limitRowsCount > 0) {
             final FileReaderExecutionMonitor fileReaderExec = new FileReaderExecutionMonitor();
             fileReaderExec.getProgressMonitor().addProgressListener(new NodeProgressListener() {
 
@@ -207,7 +207,8 @@ public class CSVReaderNodeModel extends NodeModel {
                     }
                 }
             });
-            fileReaderExec.setShortCutLines((int)m_config.getLimitRowsCount());
+            fileReaderExec
+                .setShortCutLines(limitRowsCount < Integer.MAX_VALUE ? (int)limitRowsCount : Integer.MAX_VALUE);
             fileReaderExec.setExecuteCanceled();
             settings = FileAnalyzer.analyze(settings, fileReaderExec);
         } else {
