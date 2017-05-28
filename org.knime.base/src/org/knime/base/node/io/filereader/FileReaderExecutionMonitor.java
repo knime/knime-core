@@ -87,9 +87,8 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
     /**
      * Creates a new object with the specified {@link NodeProgressMonitor}.
      * @param progressMonitor the progress monitor to use.
-     * @since 3.4
      */
-    public FileReaderExecutionMonitor(final NodeProgressMonitor progressMonitor) {
+    FileReaderExecutionMonitor(final NodeProgressMonitor progressMonitor) {
         super(progressMonitor);
         m_parent = null;
     }

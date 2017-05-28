@@ -289,5 +289,4 @@ public final class CSVReaderConfig {
     void setConnectTimeout(final Duration value){
         m_connectTimeout = value;
     }
-
 }

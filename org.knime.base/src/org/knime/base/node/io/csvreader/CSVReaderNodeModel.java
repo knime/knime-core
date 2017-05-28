@@ -192,16 +192,18 @@ public class CSVReaderNodeModel extends NodeModel {
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");
-        if (limitRowsCount > 0) {
+        if (limitRowsCount >= 0) {
             final FileReaderExecutionMonitor fileReaderExec = new FileReaderExecutionMonitor();
             fileReaderExec.getProgressMonitor().addProgressListener(new NodeProgressListener() {
 
                 @Override
                 public void progressChanged(final NodeProgressEvent pe) {
-                    NodeProgress nodeProgress = pe.getNodeProgress();
-                    analyseExec.setProgress(nodeProgress.getProgress(), nodeProgress.getMessage());
                     try {
+                        //if the node was canceled, cancel (interrupt) the analysis
                         analyseExec.checkCanceled();
+                        //otherwise update the node progress
+                        NodeProgress nodeProgress = pe.getNodeProgress();
+                        analyseExec.setProgress(nodeProgress.getProgress(), nodeProgress.getMessage());
                     } catch (CanceledExecutionException e) {
                         fileReaderExec.setExecuteInterrupted();
                     }
