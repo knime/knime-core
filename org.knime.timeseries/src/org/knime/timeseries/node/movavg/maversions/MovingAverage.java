@@ -45,41 +45,30 @@
  */
 package org.knime.timeseries.node.movavg.maversions;
 
+import org.knime.core.data.DataCell;
+
 /**
- * calculates the mean of the given window.
+ * Implements Moving Average on a time series.
  *
- * @author Adae, University of Konstanz
+ * @author Iris Adae, University of Konstanz, Germany
  */
-@Deprecated
-public class SimpleMA extends SlidingWindowMovingAverage {
+public abstract class MovingAverage {
 
-
-    // the weight of each window
-    private double m_weight;
+    /** This method should take care of two task.
+     * First it should include the given value into the currently
+     * saved average. And return it.
+     *
+     * Additionally it should e.g. in the sliding window approach,
+     * remove no longer needed values.
+     *
+     * @param newValue the new value
+     * @return the current average as a DoubleCell
+     */
+    public abstract DataCell getMeanandUpdate(final double newValue);
 
     /**
-     * @param winLength the window length.
+     * @return the mean of the method
      */
-    public SimpleMA(final int winLength) {
-        super(winLength);
-        m_weight = 1.0 / winLength;
-    }
+    public abstract double getMean();
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double updateMean(final double d) {
-        return getMean() +  (d - getFirst()) * m_weight;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double updateMean(final double value,
-                                final int curWinSize) {
-        return getMean() + ((value - getMean()) / (curWinSize + 1));
-    }
 }

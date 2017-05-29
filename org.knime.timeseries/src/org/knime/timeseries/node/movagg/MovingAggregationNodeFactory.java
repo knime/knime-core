@@ -40,64 +40,62 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   14.04.2014 (koetter): created
  */
-package org.knime.timeseries.node.movavg.maversions;
+package org.knime.timeseries.node.movagg;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
-
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * TREMA = 3 * EMA(x,n) - 3 * EMA(EMA(x,n),n) + EMA(EMA(EMA(x,n),n),n).
- *
- * Triple exponential smoothing
- *
- * @author Adae, University of Konstanz
+ * {@link NodeFactory} implementation of the Moving Aggregation node.
+ *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ *  @since 2.10
  */
-@Deprecated
-public class TripleExponentialMA extends MovingAverage {
+public class MovingAggregationNodeFactory extends NodeFactory<MovingAggregationNodeModel> {
 
-    private ExponentialMA m_ema;
-    private ExponentialMA m_emaema;
-    private ExponentialMA m_emaemaema;
-
-    /**
-     *
-     * @param winsize the size of the window.
-     */
-    public TripleExponentialMA(final int winsize) {
-        m_ema = new ExponentialMA(winsize);
-        m_emaema = new ExponentialMA(winsize);
-        m_emaemaema = new ExponentialMA(winsize);
-    }
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getMeanandUpdate(final double newValue) {
-        DataCell dc = m_ema.getMeanandUpdate(newValue);
-        if (!dc.isMissing()) {
-            dc = m_emaema.getMeanandUpdate(m_ema.getMean());
-        }
-        if (!dc.isMissing()) {
-            dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
-        }
-        if (!dc.isMissing()) {
-            return new DoubleCell(getMean());
-        } else {
-            return DataType.getMissingCell();
-        }
+    public MovingAggregationNodeModel createNodeModel() {
+        return new MovingAggregationNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-   public double getMean() {
-        return 3 * m_ema.getMean() - 3 * m_emaema.getMean() + m_emaemaema.getMean();
+    protected int getNrNodeViews() {
+        return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<MovingAggregationNodeModel> createNodeView(final int viewIndex,
+        final MovingAggregationNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new MovingAggregationNodeDialog();
+    }
 }

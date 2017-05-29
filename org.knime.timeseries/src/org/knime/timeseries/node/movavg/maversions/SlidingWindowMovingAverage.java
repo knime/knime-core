@@ -46,41 +46,68 @@
 package org.knime.timeseries.node.movavg.maversions;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 
 /**
- * Represents the Cumulative MA which returns the total mean
- * till this moment.
- *
- * s_n = 1/n* (v_1 + ... +v_n)
+ * This is the base class for sliding window moving averages.
  *
  * @author Adae, University of Konstanz
  */
-@Deprecated
-public class CumulativeMA extends MovingAverage {
+public abstract class SlidingWindowMovingAverage extends MovingAverage {
 
-    private double m_avg;
-    private double m_counter;
+    /** the length of the window.*/
+    private int m_winLength;
+
+    /** the values taken into account in the current window. */
+    private final double[] m_values;
+
+    private int m_indexOldestValue = 0;
+    private int m_indexNewestValue = 0;
+
+    private double m_avg = 0.0;
+    /** the number of values in the window. can be less than the needed in
+     * the beginning. */
+    private int m_nrofValues = 0;
 
     /**
+     * Constructor. Builds MA array with specified number of items.
      *
+     * @param winLength
+     *            MA window length
      */
-    public CumulativeMA() {
-        m_avg = 0;
-        m_counter = 0;
+    public SlidingWindowMovingAverage(final int winLength) {
+        m_winLength = winLength;
+        m_values = new double[m_winLength];
     }
-    
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     public DataCell getMeanandUpdate(final double newValue) {
-        if (m_counter == 0) {
-            m_avg = newValue;
-        } else {
-            m_avg += ((newValue - m_avg) / (m_counter + 1));
+        if (m_nrofValues != m_winLength) {
+            m_avg = updateMean(newValue, m_nrofValues);
+            m_values[m_indexNewestValue] = newValue;
+            m_indexNewestValue++;
+
+            m_nrofValues++;
+
+            if (m_nrofValues != m_winLength) {
+                return DataType.getMissingCell();
+            }
+            return new DoubleCell(m_avg);
         }
-        m_counter++;
+        m_avg = updateMean(newValue);
+
+        m_indexNewestValue = m_indexOldestValue;
+        m_values[m_indexNewestValue] = newValue;
+        m_indexOldestValue++;
+        if (m_indexOldestValue >= m_winLength) {
+            m_indexOldestValue = 0;
+        }
+
         return new DoubleCell(m_avg);
     }
 
@@ -88,8 +115,51 @@ public class CumulativeMA extends MovingAverage {
      * {@inheritDoc}
      */
     @Override
-    public double getMean() {
+   public double getMean() {
         return m_avg;
+    }
+
+    /**
+     * @return the value currently the first in the list (so its the
+     * next to be deleted).
+     */
+    protected double getFirst() {
+        return m_values[m_indexOldestValue];
+    }
+
+    /**
+     * @return the value currently the last in the list (so its the last
+     * which got in).
+     */
+    protected double getLast() {
+        return m_values[m_indexNewestValue];
+    }
+
+    /**This method is updating the currently saved mean, based on
+     * the new value coming in.
+     * @param value the new incoming value.
+     * @return the updated average.
+     */
+    protected abstract double updateMean(final double value);
+
+    /** This method is updating the currently saved mean, based on
+     * the new value coming in, if the window is not already full.
+     * to handle, the underfull window, the windowsize is given.
+     *
+     * @param value the new value in the window.
+     * @param curWinSize the current number of values in the window
+     *(before this new one was inserted)
+     * @return the average of the columns so far.
+     */
+    protected abstract double updateMean(final double value,
+            final int curWinSize);
+
+
+    /**
+     * @return the winLength
+     */
+    public int getWinLength() {
+        return m_winLength;
     }
 
 }

@@ -84,7 +84,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  *  @since 2.10
  */
-@Deprecated
 public class MovingAggregationNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MovingAggregationNodeModel.class);

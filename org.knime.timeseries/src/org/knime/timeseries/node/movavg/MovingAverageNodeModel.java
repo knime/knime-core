@@ -83,7 +83,6 @@ import org.knime.timeseries.util.SlidingWindow;
  * @author Rosaria Silipo, Knime.com Zurich, Switzerland
  * @author Iris Adae, University of Konstanz, Germany
  */
-@Deprecated
 public class MovingAverageNodeModel extends NodeModel {
 
     private MovingAverage[] m_mas;

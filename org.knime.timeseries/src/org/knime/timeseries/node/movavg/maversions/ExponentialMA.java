@@ -40,63 +40,64 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   14.04.2014 (koetter): created
  */
-package org.knime.timeseries.node.movagg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
 
 /**
- * {@link NodeFactory} implementation of the Moving Aggregation node.
- *  @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- *  @since 2.10
+ *  calculates an exponential smoothing of the time series.
+ *  the mean therefore is calculated using
+ *
+ *  s_n = alpha * x_n + (1-alpha) * s_n-1
+ *
+ *  we use the windowsize k as initialization and for the alpha value
+ *
+ * alpha = 2(k+1)
+ *
+ * @author Adae, University of Konstanz
  */
-@Deprecated
-public class MovingAggregationNodeFactory extends NodeFactory<MovingAggregationNodeModel> {
+public class ExponentialMA extends MovingAverage {
+
+    private final double m_alpha;
+    private double m_avg = 0;
+    private boolean m_isInit;
 
     /**
-     * {@inheritDoc}
+     * @param winLength the length of the window.
      */
-    @Override
-    public MovingAggregationNodeModel createNodeModel() {
-        return new MovingAggregationNodeModel();
+    public ExponentialMA(final int winLength) {
+        m_isInit = false;
+        m_alpha = 2.0 / (winLength + 1);
+
+        m_avg = 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected int getNrNodeViews() {
-        return 0;
+    public DataCell getMeanandUpdate(final double newValue) {
+
+        // in the first step, the average is set to the value
+        if (!m_isInit) {
+            m_avg = newValue;
+            m_isInit = true;
+        } else {
+            m_avg = m_alpha * newValue + m_avg * (1 - m_alpha);
+        }
+        return new DoubleCell(m_avg);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<MovingAggregationNodeModel> createNodeView(final int viewIndex,
-        final MovingAggregationNodeModel nodeModel) {
-        return null;
+   public double getMean() {
+        return m_avg;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAggregationNodeDialog();
-    }
 }

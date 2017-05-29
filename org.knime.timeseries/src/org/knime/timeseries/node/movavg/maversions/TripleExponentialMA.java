@@ -46,51 +46,49 @@
 package org.knime.timeseries.node.movavg.maversions;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 
+
 /**
- *  calculates an exponential smoothing of the time series.
- *  the mean therefore is calculated using
+ * TREMA = 3 * EMA(x,n) - 3 * EMA(EMA(x,n),n) + EMA(EMA(EMA(x,n),n),n).
  *
- *  s_n = alpha * x_n + (1-alpha) * s_n-1
- *
- *  we use the windowsize k as initialization and for the alpha value
- *
- * alpha = 2(k+1)
+ * Triple exponential smoothing
  *
  * @author Adae, University of Konstanz
  */
-@Deprecated
-public class ExponentialMA extends MovingAverage {
+public class TripleExponentialMA extends MovingAverage {
 
-    private final double m_alpha;
-    private double m_avg = 0;
-    private boolean m_isInit;
+    private ExponentialMA m_ema;
+    private ExponentialMA m_emaema;
+    private ExponentialMA m_emaemaema;
 
     /**
-     * @param winLength the length of the window.
+     *
+     * @param winsize the size of the window.
      */
-    public ExponentialMA(final int winLength) {
-        m_isInit = false;
-        m_alpha = 2.0 / (winLength + 1);
-
-        m_avg = 0;
+    public TripleExponentialMA(final int winsize) {
+        m_ema = new ExponentialMA(winsize);
+        m_emaema = new ExponentialMA(winsize);
+        m_emaemaema = new ExponentialMA(winsize);
     }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public DataCell getMeanandUpdate(final double newValue) {
-
-        // in the first step, the average is set to the value
-        if (!m_isInit) {
-            m_avg = newValue;
-            m_isInit = true;
-        } else {
-            m_avg = m_alpha * newValue + m_avg * (1 - m_alpha);
+        DataCell dc = m_ema.getMeanandUpdate(newValue);
+        if (!dc.isMissing()) {
+            dc = m_emaema.getMeanandUpdate(m_ema.getMean());
         }
-        return new DoubleCell(m_avg);
+        if (!dc.isMissing()) {
+            dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
+        }
+        if (!dc.isMissing()) {
+            return new DoubleCell(getMean());
+        } else {
+            return DataType.getMissingCell();
+        }
     }
 
     /**
@@ -98,7 +96,7 @@ public class ExponentialMA extends MovingAverage {
      */
     @Override
    public double getMean() {
-        return m_avg;
+        return 3 * m_ema.getMean() - 3 * m_emaema.getMean() + m_emaemaema.getMean();
     }
 
 }

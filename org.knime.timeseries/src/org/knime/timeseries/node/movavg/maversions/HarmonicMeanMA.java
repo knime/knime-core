@@ -45,50 +45,53 @@
  */
 package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.DoubleCell;
-
 /**
- * 2 * EMA(x,n) - EMA(EMA(x,n),n).
- * Double exponential smoothing.
+ * the mean is calculated using.
+ *
+ * n / divisor
+ *
+ * where the divisior = sum{1...n} 1/x_n
+ *
+ * based on the division it  only uses strictly positive values.
+ *
  *
  * @author Adae, University of Konstanz
  */
-@Deprecated
-public class DoubleExpMA extends MovingAverage {
+public class HarmonicMeanMA extends SlidingWindowMovingAverage {
 
-    private ExponentialMA m_ema;
-    private ExponentialMA m_emaema;
+   private double m_dividor = 0;
 
     /**
-     * @param winsize the size ofthe window.
-     *
+     * @param winLength the length of the window
      */
-    public DoubleExpMA(final int winsize) {
-        m_ema = new ExponentialMA(winsize);
-        m_emaema = new ExponentialMA(winsize);
+    public HarmonicMeanMA(final int winLength) {
+        super(winLength);
+        m_dividor = 0;
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getMeanandUpdate(final double newValue) {
-        DataCell dc = m_ema.getMeanandUpdate(newValue);
-        if (!dc.isMissing()) {
-            dc = m_emaema.getMeanandUpdate(m_ema.getMean());
-            if (!dc.isMissing()) {
-               return new DoubleCell(getMean());
-            }
+    protected double updateMean(final double value) {
+        if (getFirst() > 0) {
+            m_dividor -= (1.0 / getFirst());
         }
-        return dc;
+        if (value > 0) {
+            m_dividor += (1.0 / value);
+        }
+        return getWinLength() / m_dividor;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-   public double getMean() {
-        return  2 * m_ema.getMean() - m_emaema.getMean();
+    protected double updateMean(final double value, final int curWinSize) {
+        if (value > 0) {
+            m_dividor += (1.0 / value);
+        }
+        return curWinSize / m_dividor;
     }
 
 }

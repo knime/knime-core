@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,82 +40,54 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   05.07.2014 (koetter): created
  */
-package org.knime.timeseries.node.movagg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.util.ButtonGroupEnumInterface;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
 
 /**
- * Enumeration of window types in time series analysis.
+ * 2 * EMA(x,n) - EMA(EMA(x,n),n).
+ * Double exponential smoothing.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Adae, University of Konstanz
  */
-@Deprecated
-public enum WindowType implements ButtonGroupEnumInterface {
-    /**Forward.*/
-    FORWARD("Forward", "Looks window length rows forward from the current point."),
-    /**Central.*/
-    CENTER("Central", "Looks half the window length backward from the current point and half forward."),
-    /**Backward.*/
-    BACKWARD("Backward", "Looks window length rows back from the current point.");
+public class DoubleExpMA extends MovingAverage {
 
-    private final String m_name;
-    private final String m_description;
+    private ExponentialMA m_ema;
+    private ExponentialMA m_emaema;
 
-    private WindowType(final String name, final String description) {
-        m_name = name;
-        m_description = description;
+    /**
+     * @param winsize the size ofthe window.
+     *
+     */
+    public DoubleExpMA(final int winsize) {
+        m_ema = new ExponentialMA(winsize);
+        m_emaema = new ExponentialMA(winsize);
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataCell getMeanandUpdate(final double newValue) {
+        DataCell dc = m_ema.getMeanandUpdate(newValue);
+        if (!dc.isMissing()) {
+            dc = m_emaema.getMeanandUpdate(m_ema.getMean());
+            if (!dc.isMissing()) {
+               return new DoubleCell(getMean());
+            }
+        }
+        return dc;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return m_name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getActionCommand() {
-        return name();
-    }
-
-    /**
-     * @param actionCommand to get the type for
-     * @return the {@link WindowType} for the given action command
-     */
-    public static WindowType getType(final String actionCommand) {
-        return WindowType.valueOf(actionCommand);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTip() {
-        return m_description;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isDefault() {
-        return getDefault().equals(this);
-    }
-
-    /**
-     * @return the default {@link WindowType} to use
-     */
-    public static WindowType getDefault() {
-        return BACKWARD;
+   public double getMean() {
+        return  2 * m_ema.getMean() - m_emaema.getMean();
     }
 
 }

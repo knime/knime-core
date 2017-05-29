@@ -43,61 +43,52 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg;
+package org.knime.timeseries.node.movavg.maversions;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
 
 /**
- * This factory creates all necessary objects for the Moving Average
- * node.
+ * Represents the Cumulative MA which returns the total mean
+ * till this moment.
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * s_n = 1/n* (v_1 + ... +v_n)
+ *
+ * @author Adae, University of Konstanz
  */
-@Deprecated
-public class MovingAverageNodeFactory
-    extends NodeFactory<MovingAverageNodeModel> {
+public class CumulativeMA extends MovingAverage {
+
+    private double m_avg;
+    private double m_counter;
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MovingAverageDialog();
+    public CumulativeMA() {
+        m_avg = 0;
+        m_counter = 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MovingAverageNodeModel createNodeModel() {
-        return new MovingAverageNodeModel();
+    public DataCell getMeanandUpdate(final double newValue) {
+        if (m_counter == 0) {
+            m_avg = newValue;
+        } else {
+            m_avg += ((newValue - m_avg) / (m_counter + 1));
+        }
+        m_counter++;
+        return new DoubleCell(m_avg);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<MovingAverageNodeModel> createNodeView(
-            final int viewIndex, final MovingAverageNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    public double getMean() {
+        return m_avg;
     }
 
 }

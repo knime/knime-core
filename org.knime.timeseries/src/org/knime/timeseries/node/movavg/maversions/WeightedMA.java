@@ -56,7 +56,6 @@ import org.knime.timeseries.util.SlidingWindow;
  *
  * @author Adae, University of Konstanz
  */
-@Deprecated
 public class WeightedMA extends MovingAverage {
 
     private SlidingWindow<Double> m_window;

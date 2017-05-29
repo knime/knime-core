@@ -43,56 +43,60 @@
  * ------------------------------------------------------------------------
  *
  */
-package org.knime.timeseries.node.movavg.maversions;
+package org.knime.timeseries.node.movavg;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * the mean is calculated using.
+ * This factory creates all necessary objects for the Moving Average
+ * node.
  *
- * n / divisor
- *
- * where the divisior = sum{1...n} 1/x_n
- *
- * based on the division it  only uses strictly positive values.
- *
- *
- * @author Adae, University of Konstanz
+ * @author Iris Adae, University of Konstanz, Germany
  */
-@Deprecated
-public class HarmonicMeanMA extends SlidingWindowMovingAverage {
-
-   private double m_dividor = 0;
+public class MovingAverageNodeFactory
+    extends NodeFactory<MovingAverageNodeModel> {
 
     /**
-     * @param winLength the length of the window
+     * {@inheritDoc}
      */
-    public HarmonicMeanMA(final int winLength) {
-        super(winLength);
-        m_dividor = 0;
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new MovingAverageDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected double updateMean(final double value) {
-        if (getFirst() > 0) {
-            m_dividor -= (1.0 / getFirst());
-        }
-        if (value > 0) {
-            m_dividor += (1.0 / value);
-        }
-        return getWinLength() / m_dividor;
+    public MovingAverageNodeModel createNodeModel() {
+        return new MovingAverageNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected double updateMean(final double value, final int curWinSize) {
-        if (value > 0) {
-            m_dividor += (1.0 / value);
-        }
-        return curWinSize / m_dividor;
+    public NodeView<MovingAverageNodeModel> createNodeView(
+            final int viewIndex, final MovingAverageNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
     }
 
 }

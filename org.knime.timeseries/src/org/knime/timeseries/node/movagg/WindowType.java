@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,36 +41,81 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   05.07.2014 (koetter): created
  */
-package org.knime.timeseries.node.movavg.maversions;
+package org.knime.timeseries.node.movagg;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
- * Implements Moving Average on a time series.
+ * Enumeration of window types in time series analysis.
  *
- * @author Iris Adae, University of Konstanz, Germany
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  */
-@Deprecated
-public abstract class MovingAverage {
+public enum WindowType implements ButtonGroupEnumInterface {
+    /**Forward.*/
+    FORWARD("Forward", "Looks window length rows forward from the current point."),
+    /**Central.*/
+    CENTER("Central", "Looks half the window length backward from the current point and half forward."),
+    /**Backward.*/
+    BACKWARD("Backward", "Looks window length rows back from the current point.");
 
-    /** This method should take care of two task.
-     * First it should include the given value into the currently
-     * saved average. And return it.
-     *
-     * Additionally it should e.g. in the sliding window approach,
-     * remove no longer needed values.
-     *
-     * @param newValue the new value
-     * @return the current average as a DoubleCell
-     */
-    public abstract DataCell getMeanandUpdate(final double newValue);
-    
+    private final String m_name;
+    private final String m_description;
+
+    private WindowType(final String name, final String description) {
+        m_name = name;
+        m_description = description;
+    }
+
     /**
-     * @return the mean of the method
+     * {@inheritDoc}
      */
-    public abstract double getMean();
+    @Override
+    public String getText() {
+        return m_name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getActionCommand() {
+        return name();
+    }
+
+    /**
+     * @param actionCommand to get the type for
+     * @return the {@link WindowType} for the given action command
+     */
+    public static WindowType getType(final String actionCommand) {
+        return WindowType.valueOf(actionCommand);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTip() {
+        return m_description;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDefault() {
+        return getDefault().equals(this);
+    }
+
+    /**
+     * @return the default {@link WindowType} to use
+     */
+    public static WindowType getDefault() {
+        return BACKWARD;
+    }
 
 }

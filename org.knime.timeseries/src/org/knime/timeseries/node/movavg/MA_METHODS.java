@@ -74,7 +74,6 @@ import org.knime.timeseries.node.movavg.maversions.WeightedMA;
  *
  * @author Iris Adae, University of Konstanz, Germany
  */
-@Deprecated
 public enum MA_METHODS {
 
      /** no weight function. Backward*/
