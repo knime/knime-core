@@ -514,6 +514,9 @@ public abstract class WebResourceController {
             try {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
                 wizardNode.loadViewValue(newViewValue, useAsDefault);
+                if (useAsDefault) {
+                    subNodeNC.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true).saveNodeSettingsToDefault();
+                }
             } catch (Exception e) {
                 LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
             }
