@@ -55,7 +55,6 @@ import java.util.LinkedList;
  * @author Adae, University of Konstanz
  * @param <T> the object stored in the window.
  */
-@Deprecated
 public class SlidingWindow<T extends Object> {
 
     private final int m_size;
