@@ -45,6 +45,9 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -144,14 +147,22 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     static AbstractWizardNodeView getConfiguredWizardNodeView(final ViewableModel model) {
+
+        String classString = JSCorePlugin.getDefault().getPreferenceStore().getString(JSCorePlugin.P_VIEW_BROWSER);
         try {
-            String classString = JSCorePlugin.getDefault().getPreferenceStore().getString(JSCorePlugin.P_VIEW_BROWSER);
-            //TODO: correct class loader?
-            return (AbstractWizardNodeView)Class.forName(classString).getConstructor(ViewableModel.class).newInstance(model);
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IConfigurationElement[] configurationElements =
+                registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
+            for (IConfigurationElement element : configurationElements) {
+                if (classString.equals(element.getAttribute("viewClass"))) {
+                    Class<?> viewClass = Platform.getBundle(element.getDeclaringExtension().getContributor().getName()).loadClass(element.getAttribute("viewClass"));
+                    return (AbstractWizardNodeView)viewClass.getConstructor(ViewableModel.class).newInstance(model);
+                }
+            }
         } catch (Throwable e) {
-            LOGGER.error("Unable to instantiate chosen view browser, using default: " + e.getMessage(), e);
-            return new WizardNodeView(model);
+            LOGGER.error("JS view set in preferences (" + classString + ") can't be loaded. Switching to default. - " + e.getMessage(), e);
         }
+        return new WizardNodeView(model);
     }
 
     @Override
