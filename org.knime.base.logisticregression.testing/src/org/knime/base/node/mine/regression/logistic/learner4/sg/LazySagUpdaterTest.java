@@ -72,10 +72,8 @@ public class LazySagUpdaterTest {
             new MockClassificationTrainingRow(new double[]{2, 2}, 2, 0),
         };
         LazySagUpdater<TrainingRow> updater = (new LazySagUpdater.LazySagUpdaterFactory<>(3, 3, 2)).create();
-        SuperLazyIndexCache indexCache = new SuperLazyIndexCache();
         int[] lastVisited = new int[3];
         double[] gradient = new double[]{1.0,-1.0};
-        indexCache.prepareRow(mockRows[0]);
         updater.update(mockRows[0], gradient, beta, 1.0, 0);
         double[][] expectedBeta = new double[][]{
             {0.0, 0.0, 0.0},
@@ -83,7 +81,6 @@ public class LazySagUpdaterTest {
         };
         assertArrayEquals(expectedBeta, beta.getWeightVector());
 
-        indexCache.prepareRow(mockRows[1]);
         updater.lazyUpdate(beta, mockRows[1], lastVisited, 1);
         expectedBeta = new double[][]{
             {-1.0, 0.0, 0.0},
@@ -96,7 +93,6 @@ public class LazySagUpdaterTest {
 
         lastVisited[2] = 1;
         lastVisited[0] = 1;
-        indexCache.prepareRow(mockRows[0]);
         updater.lazyUpdate(beta, mockRows[0], lastVisited, 2);
         expectedBeta = new double[][]{
             {-2.0, 0.0, -0.5},
@@ -110,7 +106,6 @@ public class LazySagUpdaterTest {
 
         lastVisited[1] = 2;
         lastVisited[0] = 2;
-        indexCache.prepareRow(mockRows[2]);
         updater.lazyUpdate(beta, mockRows[2], lastVisited, 3);
         expectedBeta = new double[][]{
             {-2.0, -1.0, 1.0},
@@ -154,11 +149,9 @@ public class LazySagUpdaterTest {
         double[] gradient = new double[nCats - 1];
         int[] lastVisited = new int[nFeatures];
         double stepSize = 1;
-        IndexCache indexCache = new SuperLazyIndexCache();
         for (int e = 0; e < nEpochs; e++) {
             for (int k = 0; k < nRows; k++) {
                 MockClassificationTrainingRow row = rows[(int)(Math.random() * nRows)];
-                indexCache.prepareRow(row);
                 lazyUpdater.lazyUpdate(lazyBeta, row, lastVisited, k);
                 for (int j = 0; j < nCats - 1; j++) {
                     gradient[j] = Math.random() * 4 - 2;
@@ -222,13 +215,10 @@ public class LazySagUpdaterTest {
         int[] lastVisited = new int[3];
         LazySagUpdater<TrainingRow> updater = new LazySagUpdater.LazySagUpdaterFactory<>(2, 3, 2).create();
         double stepSize = 1.0;
-        IndexCache indexCache = new SuperLazyIndexCache();
-        indexCache.prepareRow(mockRows[0]);
         double[] gradient = new double[] {1, 2};
         updater.lazyUpdate(beta, mockRows[0], lastVisited, 0);
         updater.update(mockRows[0], gradient, beta, stepSize, 0);
 
-        indexCache.prepareRow(mockRows[1]);
         updater.lazyUpdate(beta, mockRows[1], lastVisited, 1);
         updater.update(mockRows[1], gradient, beta, stepSize, 1);
         lastVisited[0] = 1;

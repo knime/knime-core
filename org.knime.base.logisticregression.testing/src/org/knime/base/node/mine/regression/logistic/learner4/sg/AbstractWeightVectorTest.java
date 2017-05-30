@@ -92,7 +92,6 @@ public abstract class AbstractWeightVectorTest {
         int[] nonZeroIndices = new int[] {0, 2, -1};
         // set all entries to zero
         vec.update((v, c, i) -> 0, true);
-        vec.update((v, c, i) -> 1.0, opFitIntercept, nonZeroIndices);
         beta = vec.getWeightVector();
         double expectedIntercept = opFitIntercept && vecFitIntercept ? 1.0 : 0.0;
         double[][] expected = new double[][] {
@@ -101,9 +100,7 @@ public abstract class AbstractWeightVectorTest {
             {expectedIntercept, 0.0, 1.0}};
         assertArrayEquals(expected, beta);
 
-        IndexCache indexCache = new SuperLazyIndexCache();
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{0, 1}, 0, 0);
-        indexCache.prepareRow(row);
         vec.update((v, c, i) -> 0, true);
         vec.update((v, c, i) -> 1.0, opFitIntercept, row);
         beta = vec.getWeightVector();
@@ -131,13 +128,7 @@ public abstract class AbstractWeightVectorTest {
     private void predictAndCompare(
         final MockClassificationTrainingRow row, final double[] expected,
         final WeightVector<MockClassificationTrainingRow> vec) throws Exception{
-        IndexCache indexCache = new SuperLazyIndexCache();
         double[] prediction = vec.predict(row);
-        assertArrayEquals(expected, prediction, EPSILON);
-        prediction = vec.predict(row, row.getNonZeroIndices());
-        assertArrayEquals(expected, prediction, EPSILON);
-        indexCache.prepareRow(row);
-        prediction = vec.predict(row, indexCache);
         assertArrayEquals(expected, prediction, EPSILON);
     }
 
