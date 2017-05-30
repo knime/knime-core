@@ -312,12 +312,12 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         c.gridy++;
         JPanel priorPanel = createPriorPanel();
-        priorPanel.setBorder(BorderFactory.createTitledBorder("Prior options"));
+        priorPanel.setBorder(BorderFactory.createTitledBorder("Regularization"));
         panel.add(priorPanel, c);
 
         c.gridy++;
         JPanel dataHandlingPanel = createDataHandlingPanel();
-        dataHandlingPanel.setBorder(BorderFactory.createTitledBorder("Data handling options"));
+        dataHandlingPanel.setBorder(BorderFactory.createTitledBorder("Data handling"));
         panel.add(dataHandlingPanel, c);
 
         return panel;

@@ -56,7 +56,7 @@
         </li>
         </ul>
 
-        <h4>Learning Rate Strategy</h4>
+        <h4>Learning Rate/Step Size Strategy</h4>
         Only relevant for the SAG and SGD solvers.
         The learning rate strategy provides the learning rates for the gradient descent.
         When selecting a learning rate strategy and initial learning rate keep in mind that there is always a trade off
@@ -91,12 +91,12 @@
         	are equally likely for the coefficients.
         </li>
         <li>
-        	<b>Gauss</b> The weights are assumed to be normally distributed. This prior keeps the coefficients from becoming
+        	<b>Gauss</b> The coefficients are assumed to be normally distributed. This prior keeps the coefficients from becoming
         	too large but does not force them to be zero. Using this prior is equivalent to using ridge regression (L2) with
         	a lambda of 1/prior_variance. 
         </li>
         <li>
-        	<b>Laplace</b> The weights are assumed to follow a Laplace or double exponential distribution. It tends to produce
+        	<b>Laplace</b> The coefficients are assumed to follow a Laplace or double exponential distribution. It tends to produce
         	sparse solutions by forcing unimportant coefficients to be zero. It is therefore related to the LASSO (also known as
         	L1 regularization).
         </li>
@@ -165,8 +165,8 @@
         </option>
         <option name="Perform calculations lazily">
         	If selected, the optimization is performed lazily i.e. the coefficients are only updated
-        	if there corresponding feature is actually present in the current sample. Usually faster than the normal version especially for sparse
-        	date (that is data where for the most rows the most values are zero). Currently only supported by the SAG solver.
+        	if their corresponding feature is actually present in the current sample. Usually faster than the normal version especially for sparse
+        	data (that is data where for the most rows the most values are zero). Currently only supported by the SAG solver.
         </option>
         <option name="Learning rate strategy">
         	The strategy provides the learning rates for the optimization process. Only important for the SAG and SGD solvers. For more information
@@ -184,7 +184,17 @@
         	The prior distribution for the coefficients. See the paragraph on regularization above for more details.
         </option>
         <option name="Variance">
-        	The variance of the prior distribution. A larger variance corresponds to a smaller regularization.
+        	The variance of the prior distribution. A larger variance corresponds to a less regularization.
+        </option>
+        <option name="Hold data in memory">
+        	If selected, the data is read into an internal data structure which results into a tremendous speed up.
+        	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG or SGD solver.
+        </option>
+        <option name="Use seed">
+        	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG or SGD solver.
+        </option>
+        <option name="Seed">
+        	The static seed to use. A click on the "New" button generates a new seed.
         </option>
         </tab>
         	
