@@ -105,24 +105,4 @@ class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         return prediction;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] predict(final T row, final int[] nonZeroIndices) {
-        double[] prediction = new double[m_data.length];
-        for (int c = 0; c < m_data.length; c++) {
-            double p = 0.0;
-            for (int i = 0; i < nonZeroIndices.length; i++) {
-                int idx = nonZeroIndices[i];
-                if (idx == -1) {
-                    break;
-                }
-                p += m_data[c][idx] * row.getFeature(idx);
-            }
-            prediction[c] = p;
-        }
-        return prediction;
-    }
-
 }

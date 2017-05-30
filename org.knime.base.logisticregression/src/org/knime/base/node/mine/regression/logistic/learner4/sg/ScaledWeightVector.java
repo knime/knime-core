@@ -128,23 +128,6 @@ class ScaledWeightVector <T extends TrainingRow> extends AbstractWeightVector<T>
         return prediction;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] predict(final T row, final int[] nonZeroIndices) {
-        double[] prediction = new double[m_data.length];
-        for (int c = 0; c < prediction.length; c++) {
-            double p = 0.0;
-            for (int i = 1; i < nonZeroIndices.length; i++) {
-                int idx = nonZeroIndices[i];
-                p += m_data[c][idx] * row.getFeature(idx);
-            }
-            prediction[c] = m_data[c][0] + m_scale * p;
-        }
-        return prediction;
-    }
-
 
     /**
      * {@inheritDoc}

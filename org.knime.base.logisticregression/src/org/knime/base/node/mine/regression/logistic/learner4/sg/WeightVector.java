@@ -73,7 +73,7 @@ interface WeightVector <T extends TrainingRow> {
 
     public double[] predict(final T row);
 
-    public double[] predict(final T row, final int[] nonZeroIndices);
+//    public double[] predict(final T row, final int[] nonZeroIndices);
 
     public double getScale();
 
