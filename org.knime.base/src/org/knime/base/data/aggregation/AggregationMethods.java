@@ -390,6 +390,10 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.AndElementCountOperator(
             GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+
+        //methods changed in KNIME version 3.4
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.MedianOperator(GlobalSettings.DEFAULT,
+            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
     }
 
     /**
