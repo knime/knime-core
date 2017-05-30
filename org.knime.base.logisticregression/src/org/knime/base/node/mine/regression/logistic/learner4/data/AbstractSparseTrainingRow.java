@@ -79,7 +79,7 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
         if (i < 0) {
             return -1.0;
         }
-        return m_values[m_indices[i]];
+        return m_values[i];
     }
 
     /**
