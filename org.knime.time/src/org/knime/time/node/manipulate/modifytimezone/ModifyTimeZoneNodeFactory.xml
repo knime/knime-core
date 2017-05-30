@@ -34,10 +34,10 @@
 				columns.
 			</option>
 		</tab>
-		<tab name="Action Selection">
+		<tab name="Time Zone Selection">
 			<option name="Set time zone">
 				Adds a time zone to local date&amp;time columns
-				or changed the time zone in zoned date&amp;time
+				or changes the time zone in zoned date&amp;time
 				columns (without adjusting the time!).
 			</option>
 			<option name="Shift time zone">
