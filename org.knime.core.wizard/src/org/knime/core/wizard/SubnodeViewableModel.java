@@ -399,12 +399,14 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
          * {@inheritDoc}
          */
         @Override
-        public String createInitJSViewMethodCall(final JSONWebNodePage viewRepresentation, final SubnodeViewValue viewValue) {
-            String jsonViewRepresentation = getViewRepresentationJSONString(viewRepresentation);
+        public String createInitJSViewMethodCall(final boolean parseArguments, final JSONWebNodePage viewRepresentation, final SubnodeViewValue viewValue) {
             StringBuilder builder = new StringBuilder();
-            String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
-            String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
-            builder.append(repParseCall);
+            if (parseArguments) {
+                String jsonViewRepresentation = getViewRepresentationJSONString(viewRepresentation);
+                String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
+                String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
+                builder.append(repParseCall);
+            }
             String initMethod = getWebTemplate().getInitMethodName();
             String initCall = getNamespacePrefix() + initMethod + "(parsedRepresentation, null, null, " + isDebug() + ");";
             builder.append(initCall);

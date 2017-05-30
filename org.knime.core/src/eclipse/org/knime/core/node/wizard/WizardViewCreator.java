@@ -49,6 +49,7 @@
 package org.knime.core.node.wizard;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
@@ -80,6 +81,20 @@ public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebVi
             throws IOException;
 
     /**
+     * Creates the JavaScript code to initialize the view implementation with the respective view representation and
+     * value objects.
+     *
+     * @param parseArguments true, if a script to parse the given representation and value is supposed to be included.
+     *            If false, representation and value can be given as null and need to be parsed before the resulting
+     *            init call with the variables 'parsedRepresentation' and 'parsedValue' present, if applicable.
+     * @param viewRepresentation The view representation.
+     * @param viewValue The view value.
+     * @return The JavaScript code to initialize the view.
+     * @since 3.4
+     */
+    public String createInitJSViewMethodCall(final boolean parseArguments, final REP viewRepresentation, final VAL viewValue);
+
+    /**
      * Creates the JavaScript code to initialize the view implementation with the respective
      * view representation and value objects.
      *
@@ -87,7 +102,27 @@ public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebVi
      * @param viewValue The view value.
      * @return The JavaScript code to initialize the view.
      */
-    public String createInitJSViewMethodCall(final REP viewRepresentation, final VAL viewValue);
+    public default String createInitJSViewMethodCall(final REP viewRepresentation, final VAL viewValue) {
+        return createInitJSViewMethodCall(true, viewRepresentation, viewValue);
+    }
+
+    /**
+     * Serializes a given view representation into a JSON string
+     * @param viewRepresentation the representation to serialize
+     * @return the serialized JSON string
+     * @throws IllegalArgumentException on serialization error
+     * @since 3.4
+     */
+    public String getViewRepresentationJSONString(final REP viewRepresentation);
+
+    /**
+     * Serializes a given view value into a JSON string
+     * @param viewValue the value to serialize
+     * @return the serialized JSON string
+     * @throws IllegalArgumentException on serialization error
+     * @since 3.4
+     */
+    public String getViewValueJSONString(final VAL viewValue);
 
     /**
      * @return The namespace prefix for all method calls of the respective view implementation.
@@ -108,5 +143,12 @@ public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebVi
      * @return The resulting JavaScript as string.
      */
     public String wrapInTryCatch(final String jsCode);
+
+    /**
+     * Returns the current location where web resources are held.
+     * @return the location, may be null
+     * @since 3.4
+     */
+    public Path getCurrentLocation();
 
 }

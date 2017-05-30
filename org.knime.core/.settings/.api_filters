@@ -128,6 +128,32 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardViewCreator.java" type="org.knime.core.node.wizard.WizardViewCreator">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
+                <message_argument value="createInitJSViewMethodCall(boolean, REP, VAL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
+                <message_argument value="getCurrentLocation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
+                <message_argument value="getViewRepresentationJSONString(REP)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardViewCreator"/>
+                <message_argument value="getViewValueJSONString(VAL)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController">
         <filter id="338792546">
             <message_arguments>
