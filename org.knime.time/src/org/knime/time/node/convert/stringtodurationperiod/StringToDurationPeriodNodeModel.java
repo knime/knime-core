@@ -51,7 +51,6 @@ package org.knime.time.node.convert.stringtodurationperiod;
 import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -216,7 +215,12 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         throws Exception {
         final BufferedDataTable in = inData[0];
         if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
-            detectTypes(new DataTableRowInput(in), null);
+            DataTableRowInput rowInput = new DataTableRowInput(in);
+            try {
+                detectTypes(rowInput);
+            } finally {
+                rowInput.close();
+            }
             // no more rows to look at, guess that column is Period, if it was not detected
             for (int i = 0; i < m_detectedTypes.length; i++) {
                 if (m_detectedTypes[i] == null) {
@@ -233,7 +237,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
-    private void detectTypes(final RowInput rowInput, final DataRow firstRow) throws InterruptedException {
+    private void detectTypes(final RowInput rowInput) throws InterruptedException {
         final DataTableSpec spec = rowInput.getDataTableSpec();
         final String[] includes = m_colSelect.applyTo(spec).getIncludes();
         if (m_detectedTypes == null) {
@@ -247,19 +251,12 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         }
 
         if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
-            final List<DataRow> rows = new ArrayList<>();
-            if (firstRow != null) {
-                rows.add(firstRow);
-            }
             DataRow row;
             while ((row = rowInput.poll()) != null) {
-                rows.add(row);
-            }
-            for (final DataRow dataRow : rows) {
                 boolean isCellMissing = false;
                 for (int i = 0; i < includes.length; i++) {
                     if (m_detectedTypes[i] == null) {
-                        final DataCell cell = dataRow.getCell(spec.findColumnIndex(includes[i]));
+                        final DataCell cell = row.getCell(spec.findColumnIndex(includes[i]));
                         if (cell.isMissing()) {
                             isCellMissing = true;
                         } else {
@@ -529,7 +526,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
                     final Config config = m_internals.getConfig();
 
                     // detect types
-                    detectTypes(rowInput, row);
+                    detectTypes(new OneRowAdditionalRowInput(rowInput, row));
                     for (int i = 0; i < m_detectedTypes.length; i++) {
                         config.addDataType("detected_type" + i, m_detectedTypes[i]);
                     }
@@ -649,5 +646,50 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // nothing to do
+    }
+
+    private static final class OneRowAdditionalRowInput extends RowInput {
+
+        private final RowInput m_rowInput;
+        private final DataRow m_row;
+        private boolean m_taken;
+
+        /**
+         * @param rowInput the {@link RowInput}
+         * @param row the {@link DataRow} behind
+         */
+        public OneRowAdditionalRowInput(final RowInput rowInput, final DataRow row) {
+            m_rowInput = rowInput;
+            m_row = row;
+            m_taken = false;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataTableSpec getDataTableSpec() {
+            return m_rowInput.getDataTableSpec();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataRow poll() throws InterruptedException {
+            if (!m_taken) {
+                m_taken = true;
+                return m_row;
+            }
+            return m_rowInput.poll();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() {
+            m_rowInput.close();
+        }
+
     }
 }
