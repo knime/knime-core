@@ -53,6 +53,7 @@ import java.util.Iterator;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 
 /**
@@ -76,8 +77,8 @@ abstract class AbstractLogisticRegression {
         for (ClassificationTrainingRow x : data) {
             double y = x.getCategory() == 0 ? 1 : 0;
             double z = beta[0];
-            for (int i = 1; i < beta.length; i++) {
-                z += x.getFeature(i - 1) * beta[i];
+            for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
+                z += iter.getFeatureValue() * beta[iter.getFeatureIndex()];
             }
             sumLogLikelihood += y * z - Math.log(1 + Math.exp(z));
         }
@@ -99,8 +100,8 @@ abstract class AbstractLogisticRegression {
         for (ClassificationTrainingRow row : data) {
             for (int c = 0; c < ncat; c++) {
                 double y = row.getCategory() == c ? zMatch : zNoMatch;
-                for (int j = 0; j < nfet; j++) {
-                    dotProducts[c][j] +=  row.getFeature(j) * y;
+                for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                    dotProducts[c][iter.getFeatureIndex()] +=  iter.getFeatureValue() * y;
                 }
             }
         }

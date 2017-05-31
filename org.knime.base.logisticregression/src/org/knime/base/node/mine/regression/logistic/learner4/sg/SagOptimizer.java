@@ -50,6 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Optimizer based on the stochastic average gradient method.
@@ -102,14 +103,14 @@ public class SagOptimizer <T extends TrainingRow> {
                 double[] sig = m_loss.gradient(row, prediction);
 
                 int id = row.getId();
-                for (int c = 0; c < nCats - 1; c++) {
                     // TODO exploit sparseness
-                    for (int i = 0; i < nFets; i++) {
-                        double newD = row.getFeature(i) * (sig[c] - g[c][id]);
+                for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                    for (int c = 0; c < nCats - 1; c++) {
+                        double newD = iter.getFeatureValue() * (sig[c] - g[c][id]);
                         assert Double.isFinite(newD);
-                        d[c][i] += newD;
+                        d[c][iter.getFeatureIndex()] += newD;
+                        g[c][id] = sig[c];
                     }
-                    g[c][id] = sig[c];
                 }
 
 

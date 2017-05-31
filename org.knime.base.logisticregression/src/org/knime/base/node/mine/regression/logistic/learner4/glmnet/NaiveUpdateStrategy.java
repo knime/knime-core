@@ -52,6 +52,7 @@ import java.util.Iterator;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Naive update strategy that stores the residual for all rows and updates them if a beta changes.
@@ -79,6 +80,18 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
         m_featureCache = new double[m_residuals.length];
     }
 
+    private static double getFeature(final TrainingRow row, final int featureIndex) {
+        for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+            if (iter.getFeatureIndex() == featureIndex) {
+                return iter.getFeatureValue();
+            } else if (iter.getFeatureIndex() > featureIndex) {
+                return 0.0;
+            }
+        }
+        // can not be reached
+        return 0.0;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -90,7 +103,7 @@ class NaiveUpdateStrategy<T extends TrainingRow> implements UpdateStrategy {
         final Iterator<T> iterator = m_data.iterator();
         for (int rn = 0; iterator.hasNext(); rn++) {
             TrainingRow row = iterator.next();
-            double x = row.getFeature(feature);
+            double x = getFeature(row, feature);
             m_featureCache[rn] = x;
             double wx = m_weights.getWeightFor(rn) * x;
             residualSum += wx * m_residuals[rn];

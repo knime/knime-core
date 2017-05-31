@@ -48,8 +48,6 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
-import java.util.Arrays;
-
 /**
  * Abstract implementation of a sparse {@link TrainingRow}.
  * Stores only the non zero values and their indices in the row.
@@ -67,19 +65,6 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
         m_values = values;
         m_indices = indices;
         m_id = id;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getFeature(final int idx) {
-        int i = Arrays.binarySearch(m_indices, idx);
-        if (i < 0) {
-            return -1.0;
-        }
-        return m_values[i];
     }
 
     /**

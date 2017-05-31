@@ -183,13 +183,6 @@ public class GlmNetLogRegLearner implements LogRegLearner {
             m_cat = (int)row.getTarget();
             m_id = id;
         }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public double getFeature(final int idx) {
-            return idx == 0.0 ? 1.0 : m_data[idx - 1];
-        }
 
         /**
          * {@inheritDoc}

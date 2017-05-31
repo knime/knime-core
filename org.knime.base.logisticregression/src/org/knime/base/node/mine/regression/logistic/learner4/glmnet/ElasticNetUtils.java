@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.glmnet;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Utility class that provides static methods needed by the elastic net.
@@ -105,8 +106,8 @@ final class ElasticNetUtils {
 
     static double calculateResponse(final TrainingRow x, final double[] beta) {
         double response = 0.0;
-        for (int i = 0; i < beta.length; i++) {
-            response += x.getFeature(i) * beta[i];
+        for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
+            response += iter.getFeatureValue() * beta[iter.getFeatureIndex()];
         }
         return response;
     }

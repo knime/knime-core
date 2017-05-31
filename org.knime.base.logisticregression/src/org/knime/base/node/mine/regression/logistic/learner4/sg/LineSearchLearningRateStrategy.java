@@ -52,6 +52,7 @@ import java.util.Arrays;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Performs a line search for the optimal lipschitz constant at every iteration.
@@ -178,8 +179,10 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     private double calculateSquaredNorm(final T row) {
         double norm = 0.0;
         // row.getFeature(0) returns always a 1 for the intercept term
-        for (int i = 1; i < m_nFets; i++) {
-            double fet = row.getFeature(i);
+        FeatureIterator iter = row.getFeatureIterator();
+        iter.next();
+        while (iter.next()) {
+            double fet = iter.getFeatureValue();
             norm += fet * fet;
         }
         return norm;
