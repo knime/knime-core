@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import java.util.Optional;
+
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
@@ -70,6 +72,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     private final LearningRateStrategy<T> m_lrStrategy;
     private final StoppingCriterion<T> m_stoppingCriterion;
     private final TrainingData<T> m_data;
+    private String m_warning = null;
 
     /**
      *
@@ -124,6 +127,9 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
                 break;
             }
         }
+        if (epoch == maxEpoch) {
+            m_warning = "The algorithm did not reach convergence. Setting the epoch limit higher might result in a better model.";
+        }
         double lossSum = totalLoss(beta);
         RealMatrix betaMat = MatrixUtils.createRealMatrix(beta.getWeightVector());
         RealMatrix covMat;
@@ -163,6 +169,15 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
 
     protected TrainingData<T> getData() {
         return m_data;
+    }
+
+    /**
+     * Returns an {@link Optional} that can contain a warning message.
+     *
+     * @return an {@link Optional} possibly containing a warning message
+     */
+    Optional<String> getWarning() {
+        return Optional.ofNullable(m_warning);
     }
 
 }
