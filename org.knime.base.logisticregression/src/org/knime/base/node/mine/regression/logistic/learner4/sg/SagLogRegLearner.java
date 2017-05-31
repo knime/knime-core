@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import java.util.Optional;
+
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings;
@@ -68,6 +70,7 @@ import org.knime.core.node.NodeProgressMonitor;
 public class SagLogRegLearner implements LogRegLearner {
 
     private LogRegLearnerSettings m_settings;
+    private String m_warning;
 
     /**
      *
@@ -187,7 +190,12 @@ public class SagLogRegLearner implements LogRegLearner {
         AbstractSGOptimizer sgOpt = createOptimizer(m_settings, data);
 
         SimpleProgress progMon = new SimpleProgress(progressMonitor.getProgressMonitor());
-        return sgOpt.optimize(m_settings.getMaxEpoch(), data, progMon);
+        LogRegLearnerResult result = sgOpt.optimize(m_settings.getMaxEpoch(), data, progMon);
+        Optional<String> warning = sgOpt.getWarning();
+        if (warning.isPresent()) {
+            m_warning = warning.get();
+        }
+        return result;
     }
 
     /**
@@ -195,8 +203,7 @@ public class SagLogRegLearner implements LogRegLearner {
      */
     @Override
     public String getWarningMessage() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_warning;
     }
 
     private class SimpleProgress implements Progress {
@@ -204,6 +211,7 @@ public class SagLogRegLearner implements LogRegLearner {
         private final NodeProgressMonitor m_progMon;
 
         /**
+         * @param progMon a {@link NodeProgressMonitor} for example a execution context
          *
          */
         public SimpleProgress(final NodeProgressMonitor progMon) {

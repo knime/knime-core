@@ -178,6 +178,11 @@ class LogRegCoordinator {
 
         LogisticRegressionContent content = createContentFromLearnerResult(result, rowBuilder, trainingData.getDataTableSpec());
 
+        if (learner.getWarningMessage() != null) {
+            StringBuilder sb = new StringBuilder(m_warning == null ? "" : m_warning).append("\n");
+            sb.append(learner.getWarningMessage());
+            m_warning = sb.toString();
+        }
         return content;
     }
 
