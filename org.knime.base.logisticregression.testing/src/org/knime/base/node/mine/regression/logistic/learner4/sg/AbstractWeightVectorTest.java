@@ -102,7 +102,7 @@ public abstract class AbstractWeightVectorTest {
 
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{0, 1}, 0, 0);
         vec.update((v, c, i) -> 0, true);
-        vec.update((v, c, i) -> 1.0, opFitIntercept, row);
+        vec.update((v, c, i, f) -> 1.0, opFitIntercept, row);
         beta = vec.getWeightVector();
         assertArrayEquals(expected, beta);
     }

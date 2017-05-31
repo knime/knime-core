@@ -91,16 +91,6 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
      * {@inheritDoc}
      */
     @Override
-    public double getFeature(final int idx) {
-//        return idx == 0.0 ? 1.0 : m_data[idx - 1];
-        int internalIdx = Arrays.binarySearch(m_nonZero, idx);
-        return internalIdx < 0.0 ? 0.0 : m_data[internalIdx];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public int getCategory() {
         return m_category;
     }

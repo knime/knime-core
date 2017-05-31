@@ -53,6 +53,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * Contains unit tests for LazySagUpdater
@@ -156,10 +157,8 @@ public class LazySagUpdaterTest {
                 for (int j = 0; j < nCats - 1; j++) {
                     gradient[j] = Math.random() * 4 - 2;
                 }
-                for (int j = 0; j < nFeatures; j++) {
-                    if (row.getFeature(j) != 0.0) {
-                        lastVisited[j] = k;
-                    }
+                for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                    lastVisited[iter.getFeatureIndex()] = k;
                 }
                 // if feature is present, the lazy update must update beta correctly
                 checkPositional(lazyBeta.getWeightVector(), eagerBeta.getWeightVector(), columns2Check, EPSILON);
