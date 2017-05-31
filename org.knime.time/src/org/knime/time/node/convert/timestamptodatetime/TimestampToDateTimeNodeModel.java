@@ -109,7 +109,7 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
 
     private boolean m_hasValidatedConfiguration = false;
 
-    static InputFilter<DataColumnSpec> filter = new InputFilter<DataColumnSpec>() {
+    private static final InputFilter<DataColumnSpec> INPUT_FILTER = new InputFilter<DataColumnSpec>() {
         @Override
         public boolean include(final DataColumnSpec spec) {
             return spec.getType().getPreferredValueClass() == LongValue.class
@@ -120,7 +120,7 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", filter, 0);
+        return new SettingsModelColumnFilter2("col_select", INPUT_FILTER, 0);
     }
 
     /** @return the string model, used in both dialog and model. */
