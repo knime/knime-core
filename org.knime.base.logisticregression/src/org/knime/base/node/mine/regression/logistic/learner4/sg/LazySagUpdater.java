@@ -135,7 +135,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
     public void lazyUpdate(final WeightVector<T> beta, final T x, /*final IndexCache indexCache,*/ final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             int lastValid = iteration - 1;
-            beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, x);
+            beta.update((val, c, i, f) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, x);
         }
 
 

@@ -67,7 +67,7 @@ class EagerSgdUpdater<T extends TrainingRow> implements EagerUpdater<T> {
      */
     @Override
     public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize, final int iteration) {
-        beta.update((val,c, i) -> val - stepSize * x.getFeature(i) * sig[c] , true);
+        beta.update((val,c, i, f) -> val - stepSize * f * sig[c] , true, x);
     }
 
     static class EagerSgdUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, EagerUpdater<T>> {

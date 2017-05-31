@@ -63,9 +63,9 @@ interface WeightVector <T extends TrainingRow> {
 
 //    public void update(double alpha, double[][] d, int nCovered);
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept);
+    public void update(final WeightVectorConsumer1 func, final boolean includeIntercept);
 
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept, final TrainingRow row);
+    public void update(final WeightVectorConsumer2 func, final boolean includeIntercept, final TrainingRow row);
 
     public void normalize();
 
@@ -77,8 +77,12 @@ interface WeightVector <T extends TrainingRow> {
 
     public double getScale();
 
-    interface WeightVectorConsumer {
+    interface WeightVectorConsumer1 {
         public double calculate(double val, int c, int i);
+    }
+
+    interface WeightVectorConsumer2 {
+        public double calculate(double betaValue, int category, int featureIdx, double featureValue);
     }
 
 }

@@ -80,9 +80,9 @@ class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegularizatio
         if (iteration > 0) {
             double lastCummSum = m_cummulativeSum[iteration - 1];
             if (isClip()) {
-                beta.update((val, c, i) -> clippedLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
+                beta.update((val, c, i, f) -> clippedLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
             } else {
-                beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
+                beta.update((val, c, i, f) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false, row);
             }
         }
     }

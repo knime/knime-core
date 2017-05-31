@@ -73,29 +73,36 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
      * {@inheritDoc}
      */
     @Override
-    public void update(final WeightVectorConsumer func,
+    public void update(final WeightVectorConsumer2 func,
         final boolean includeIntercept, final TrainingRow row/*final IndexCache indexCache*/) {
         boolean updateIntercept = m_fitIntercept && includeIntercept;
             for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
                 int i = iter.getFeatureIndex();
+                double featureValue = iter.getFeatureValue();
                 if (!updateIntercept && i == 0) {
                     continue;
                 }
                 for (int c = 0; c < m_data.length; c++) {
-                    applyFunc(c, i, func);
+                    applyFunc(c, i, featureValue, func);
             }
         }
     }
 
-    private void applyFunc(final int c, final int i, final WeightVectorConsumer func) {
+    private void applyFunc(final int c, final int i, final WeightVectorConsumer1 func) {
         double val = func.calculate(m_data[c][i], c, i);
+        assert Double.isFinite(val);
+        m_data[c][i] = val;
+    }
+
+    private void applyFunc(final int c, final int i, final double featureValue, final WeightVectorConsumer2 func) {
+        double val = func.calculate(m_data[c][i], c, i, featureValue);
         assert Double.isFinite(val);
         m_data[c][i] = val;
     }
 
 
     @Override
-    public void update(final WeightVectorConsumer func, final boolean includeIntercept) {
+    public void update(final WeightVectorConsumer1 func, final boolean includeIntercept) {
         // if we decided to not fit the intercept at all, we never touch the intercept weight
         int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
         for (int c = 0; c < m_data.length; c++) {
