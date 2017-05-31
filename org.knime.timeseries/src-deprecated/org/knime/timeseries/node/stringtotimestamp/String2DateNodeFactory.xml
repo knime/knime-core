@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="string2date.png" deprecated="true">
-    <name>String to Date/Time</name>
+<knimeNode type="Manipulator" icon="string2date.png" deprecated="false">
+    <name>String to Date/Time (legacy)</name>
     <shortDescription>
         Parses date and/or time strings into date/time cells.
     </shortDescription>

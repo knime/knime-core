@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="time2string.png" deprecated="true">
-    <name>Time to String</name>
+<knimeNode type="Manipulator" icon="time2string.png" deprecated="false">
+    <name>Time to String (legacy)</name>
     <shortDescription>Converts a timestamp column into a column holding strings.</shortDescription>
     <fullDescription>
         <intro>

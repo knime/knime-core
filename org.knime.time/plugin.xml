@@ -47,7 +47,7 @@
             factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
       </node>
       <node
-            after="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory"
+            after="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory"
             category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory">
@@ -91,6 +91,7 @@
             factory-class="org.knime.time.node.convert.durationtonumber.DurationToNumberNodeFactory">
       </node>
       <node
+            after="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory"
             category-path="/applications/timeseries"
             deprecated="false"
             factory-class="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory">
@@ -98,26 +99,19 @@
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
-         <category
-               description="KNIME Preview nodes -- part of future KNIME releases"
-               icon="icons/preview.png"
-               level-id="preview"
-               name="Preview"
-               path="/">
-      </category>
       <category
             description="Time Series Utilities"
             icon="icons/category_time.png"
-            level-id="datetime"
-            name="Date &amp; Time"
-            path="/preview"/>
+            level-id="timeseries"
+            name="Time Series"
+            path="/applications"/>
       <category
             description="Meta Nodes for time series analysis"
             icon="icons/metanode.png"
             level-id="meta"
             locked="true"
             name="Meta Nodes"
-            path="/preview/datetime">
+            path="/applications/timeseries">
       </category>
    </extension>
    <extension

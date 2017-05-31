@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="masktime.png" deprecated="true">
-    <name>Mask Date/Time</name>
+<knimeNode type="Manipulator" icon="masktime.png" deprecated="false">
+    <name>Mask Date/Time (legacy)</name>
     <shortDescription>Masks (removes) date or time fields from existing date/time.
     </shortDescription>
     <fullDescription>

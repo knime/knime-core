@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="date_field_extractor.png" deprecated="true">
-    <name>Date Field Extractor</name>
+<knimeNode type="Manipulator" icon="date_field_extractor.png" deprecated="false">
+    <name>Date Field Extractor (legacy)</name>
     <shortDescription>Extracts date fields from a date/time and appends the 
         values as integer columns.
     </shortDescription>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode  type="Source" icon="time_generator.png" deprecated="true">
-    <name>Time Generator</name>
+<knimeNode  type="Source" icon="time_generator.png" deprecated="false">
+    <name>Time Generator (legacy)</name>
     
     <shortDescription>
         Generates time values
