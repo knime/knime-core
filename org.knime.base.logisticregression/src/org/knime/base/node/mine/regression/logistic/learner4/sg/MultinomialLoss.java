@@ -50,6 +50,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
+import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
  * The multinomial loss or cross entropy.
@@ -99,38 +100,32 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
         final int nFets = data.getFeatureCount();
         final int matDim = nBetaVecs * nFets;
         double[][] hessian = new double[matDim][matDim];
+
         for (ClassificationTrainingRow x : data) {
             double[] prediction = beta.predict(x);
             // happens in place!
             transform2Probabilites(x, prediction);
-            // hold one weight at a time fixed
-            for (int i = 0; i < matDim; i++) {
-                // category of the fixed weight
-                int iCat = i / nFets;
-                // feature of the fixed weight
-                int iFet = i % nFets;
-                // value of the feature for current row
-                double iFetVal = x.getFeature(iFet);
-                for (int cat = 0; cat < nBetaVecs; cat++) {
-                    for (int fet = 0; fet < nFets; fet++) {
-                        // value of feature for other weight
-                        double fetVal = x.getFeature(fet);
-                        double h = iFetVal * fetVal * prediction[iCat];
-                        if (iCat == cat) {
-                            // update if weight applies to same class
-                            h *= (1.0 - prediction[cat]);
-                        } else {
-                            // update if weight applies to different class
-                            h *= prediction[cat];
+            for (FeatureIterator outer = x.getFeatureIterator(); outer.next();) {
+                int outerIdx = outer.getFeatureIndex();
+                double outerVal = outer.getFeatureValue();
+                for (FeatureIterator inner = x.getFeatureIterator(); inner.next();) {
+                    int innerIdx = inner.getFeatureIndex();
+                    double innerVal = inner.getFeatureValue();
+                    for (int outerCat = 0; outerCat < nBetaVecs; outerCat++) {
+                        for (int innerCat = 0; innerCat < nBetaVecs; innerCat++) {
+                            double classFactor;
+                            if (outerCat == innerCat) {
+                                classFactor = prediction[outerCat] * (1 - prediction[outerCat]);
+                            } else {
+                                classFactor = prediction[outerCat] * prediction[innerCat];
+                            }
+                            double h = outerVal * innerVal * classFactor;
+                            hessian[outerIdx + outerCat * nFets][innerIdx + innerCat * nFets] += h;
                         }
-                        // sum second derivatives over all rows
-                        int c = cat * nFets + fet;
-                        hessian[i][c] += h;
                     }
                 }
             }
         }
-
 
         return hessian;
     }
