@@ -57,6 +57,7 @@ import java.util.Map;
 
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -113,10 +114,16 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         DataTableSpec tableSpec = data.getDataTableSpec();
         for (DataColumnSpec colSpec : learningCols) {
             int colIdx = tableSpec.findColumnIndex(colSpec.getName());
+            DataColumnSpec tableColSpec = tableSpec.getColumnSpec(colIdx);
             m_featureCellIndices.add(colIdx);
-            DataType cellType = colSpec.getType();
+            DataType cellType = tableColSpec.getType();
             if (cellType.isCompatible(NominalValue.class)) {
                 List<DataCell> valueList = new ArrayList<DataCell>();
+                DataColumnDomain domain = colSpec.getDomain();
+                if (domain.getValues() == null) {
+                    throw new IllegalStateException("The domain of the string column \"" + colSpec.getName() + "\" contains no possible"
+                        + " values. Please use a Domain Calculator to calculate those values.");
+                }
                 valueList.addAll(colSpec.getDomain().getValues());
                 if (sortFactorsCategories) {
                     Collections.sort(valueList, cellType.getComparator());

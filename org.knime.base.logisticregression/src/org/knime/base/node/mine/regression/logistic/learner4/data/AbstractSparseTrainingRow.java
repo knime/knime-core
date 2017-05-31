@@ -90,6 +90,14 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
         return m_id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "[id=" + m_id + "; numNonZero=" + m_indices.length + "]";
+    }
+
 
     /**
      * {@inheritDoc}
