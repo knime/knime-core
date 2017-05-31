@@ -222,7 +222,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         gbcTypeFormat.gridx++;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
         // add label and combo box for locale selection
-        gbcTypeFormat.insets = new Insets(0, 0, 0, 0);
+        gbcTypeFormat.insets = new Insets(0, 2, 0, 0);
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy++;
         panelTypeFormat.add(m_dialogCompLocale.getComponentPanel(), gbcTypeFormat);

@@ -75,7 +75,7 @@ public enum DateTimeType {
         /**
          * Contains a date, a time and a time zone.
          */
-        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
+        ZONED_DATE_TIME("Date&time with zone", ZonedDateTimeCellFactory.TYPE);
 
     private final String m_name;
 

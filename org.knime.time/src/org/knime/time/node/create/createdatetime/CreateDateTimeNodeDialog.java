@@ -82,9 +82,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.time.util.DateTimeType;
 import org.knime.time.util.DialogComponentDateTimeSelection;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
-import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
 
 /**
  * The node dialog of the node which creates date and time cells.
@@ -124,7 +124,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
 
         m_dialogCompColumnName =
-            new DialogComponentString(CreateDateTimeNodeModel.createColumnNameModel(), null, true, 15);
+            new DialogComponentString(CreateDateTimeNodeModel.createColumnNameModel(), null, true, 17);
 
         final SettingsModelString rowNrOptionSelectionModel = CreateDateTimeNodeModel.createRowNrOptionSelectionModel();
         m_dialogCompRowNrOptionSelection =
@@ -184,7 +184,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
         gbcOutput.gridx++;
         gbcOutput.weightx = 1;
         gbcOutput.insets = new Insets(5, 17, 5, 5);
-        gbcOutput.ipadx = 15;
+        gbcOutput.ipadx = 13;
         panelOutput.add(m_typeCombobox, gbcOutput);
         gbcOutput.ipadx = 0;
         gbcOutput.insets = new Insets(5, 5, 5, 5);
