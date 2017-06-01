@@ -54,6 +54,7 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -71,6 +72,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -294,6 +296,18 @@ final class CrossJoinerNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_rightColumnNameSuffix.validateSettings(settings);
+        SettingsModel createCloneWithValidatedValue = m_rightColumnNameSuffix.createCloneWithValidatedValue(settings);
+        if(StringUtils.isBlank(((SettingsModelString)createCloneWithValidatedValue).getStringValue())) {
+            throw new InvalidSettingsException("Empty values for suffix are not allowed!");
+        }
+        SettingsModel validatedNameLeft = m_nameLeft.createCloneWithValidatedValue(settings);
+        if(StringUtils.isBlank(((SettingsModelString)validatedNameLeft).getStringValue())) {
+            throw new InvalidSettingsException("Empty values for column name(top) are not allowed!");
+        }
+        SettingsModel validatedNameRight = m_nameRight.createCloneWithValidatedValue(settings);
+        if(StringUtils.isBlank(((SettingsModelString)validatedNameRight).getStringValue())) {
+            throw new InvalidSettingsException("Empty values for column name(bottom) are not allowed!");
+        }
         // new since 2.9.1
         if (settings.containsKey(createCacheSizeSettingsModel().getKey())) {
             // one in, all in
