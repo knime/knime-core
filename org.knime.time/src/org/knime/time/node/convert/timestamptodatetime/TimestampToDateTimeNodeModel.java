@@ -48,7 +48,6 @@
  */
 package org.knime.time.node.convert.timestamptodatetime;
 
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -93,7 +92,8 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    static final TimeUnit[] TIMEUNITS = { TimeUnit.MILLISECONDS, TimeUnit.MICROSECONDS, TimeUnit.NANOSECONDS };
+    static final TimeUnit[] TIMEUNITS = { TimeUnit.SECONDS, TimeUnit.MILLISECONDS,
+        TimeUnit.MICROSECONDS, TimeUnit.NANOSECONDS };
 
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
@@ -118,7 +118,6 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
     };
 
     /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
         return new SettingsModelColumnFilter2("col_select", INPUT_FILTER, 0);
     }
@@ -138,20 +137,6 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
             e -> suffixModel.setEnabled(replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)));
         suffixModel.setEnabled(false);
         return suffixModel;
-    }
-
-    /**
-     * Chech if timezonestr is a valid timezone descriptor.
-     * @param timezonestr - the string to check
-     * @return true - valid timezone descriptor, false - otherwise
-     */
-    static boolean validateTimezone(final String timezonestr) {
-        try {
-            ZoneId.of(timezonestr);
-            return true;
-        } catch (DateTimeException e) {
-            return false;
-        }
     }
 
     /**
@@ -254,7 +239,9 @@ final class TimestampToDateTimeNodeModel extends SimpleStreamableFunctionNodeMod
             input = ((LongValue)cell).getLongValue();
 
             Instant instant;
-            if(m_selectedUnit == TimeUnit.MILLISECONDS) {
+            if(m_selectedUnit == TimeUnit.SECONDS) {
+                instant = Instant.ofEpochSecond(input);
+            } else if(m_selectedUnit == TimeUnit.MILLISECONDS) {
                 instant = Instant.ofEpochSecond(input / 1000L, (input % 1000L) * (1000L * 1000L));
             } else if(m_selectedUnit == TimeUnit.MICROSECONDS) {
                 instant = Instant.ofEpochSecond(input / (1000L * 1000L), (input % (1000L * 1000L)) * 1000L);
