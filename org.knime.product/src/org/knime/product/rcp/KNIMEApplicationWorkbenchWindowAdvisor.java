@@ -69,6 +69,7 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.ide.IDEInternalPreferences;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.util.EclipseUtil;
@@ -244,6 +245,9 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         }
         if (title == null) {
             title = "KNIME";
+        }
+        if (KNIMEConstants.isNightlyBuild()) {
+            title = title.concat(" (Nightly Build)");
         }
 
         String[] cmdLineArgs = Platform.getCommandLineArgs();
