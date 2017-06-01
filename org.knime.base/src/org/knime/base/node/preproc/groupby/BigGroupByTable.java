@@ -46,6 +46,7 @@
 package org.knime.base.node.preproc.groupby;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -91,7 +92,7 @@ public class BigGroupByTable extends GroupByTable {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(BigGroupByTable.class);
 
-    private LinkedHashMap<String, MutableLong> m_missingValuesMap;
+    private Map<String, MutableLong> m_missingValuesMap;
 
     /**Constructor for class BigGroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -159,9 +160,10 @@ public class BigGroupByTable extends GroupByTable {
     /**
      * Returns a map where for each column (by its name), which has missing values, the number of them is given
      * @return the missingValuesMap
+     * @since 3.4
      */
     public Map<String, Long> getMissingValuesMap() {
-        LinkedHashMap<String, Long> resMap = new LinkedHashMap<>();
+        Map<String, Long> resMap = new HashMap<>();
         for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
             Long count = entry.getValue().toLong();
             if (count > 0) {

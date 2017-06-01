@@ -267,11 +267,12 @@ public abstract class AggregationOperator implements AggregationMethod {
     }
 
     /**
-     * Returns how many missing values were during the aggregation
+     * Returns how many missing values were during the aggregation. If the operator was skipped, the method returns 0.
      * @return the missingValuesCount
+     * @since 3.4
      */
     public long getMissingValuesCount() {
-        return m_missingValuesCount;
+        return m_skipped ? 0 : m_missingValuesCount;
     }
 
     /**
