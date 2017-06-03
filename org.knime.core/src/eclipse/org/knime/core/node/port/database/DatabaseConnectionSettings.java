@@ -470,17 +470,7 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_jdbcUrl);
         if (m_credName == null) {
             settings.addString("user", m_user);
-            try {
-                if (m_pass == null) {
-                    settings.addString("password", null);
-                } else {
-                    settings.addString("password", KnimeEncryption.encrypt(
-                            m_pass.toCharArray()));
-                }
-            } catch (Throwable t) {
-                LOGGER.error("Could not encrypt password, reason: "
-                        + t.getMessage(), t);
-            }
+            settings.addPassword("password", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", m_pass);
         } else {
             settings.addString("credential_name", m_credName);
         }
@@ -590,12 +580,17 @@ public class DatabaseConnectionSettings {
             // user and password
             user = settings.getString("user");
             try {
-                String pw = settings.getString("password", "");
-                if (pw != null) {
-                    password = KnimeEncryption.decrypt(pw);
+                password = settings.getPassword("password", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO");
+            } catch (Exception ex) {
+                //password handling prior KNIME 3.4
+                try {
+                    String pw = settings.getString("password", "");
+                    if (pw != null) {
+                        password = KnimeEncryption.decrypt(pw);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Password could not be decrypted, reason: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                LOGGER.error("Password could not be decrypted, reason: " + e.getMessage());
             }
         }
         final String dbIdentifier = settings.getString("databaseIdentifier", null);
