@@ -42,7 +42,7 @@
 			</option>
 			<option name="Duration">
 				Calculates the difference and outputs it as duration or period. If the difference between two dates is
-				calculated, a period column will be the output, otherwise a duration column. This implies that of the
+				calculated, a period column will be the output, otherwise a duration column. This implies that if the
 				difference between local or zoned date&amp;time columns is calculated, differences of years, months,
 				or days will be converted to hours.
 			</option>
