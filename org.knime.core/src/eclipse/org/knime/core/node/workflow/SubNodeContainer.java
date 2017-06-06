@@ -2116,7 +2116,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         directory.mkdir();
         workflowDirRef.lock();
-        try {
+        try (WorkflowLock lock = lock()) {
             WorkflowCopyContent cnt = new WorkflowCopyContent();
             cnt.setNodeIDs(getID());
             synchronized (m_nodeMutex) {
@@ -2124,23 +2124,25 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             }
             NodeID cID = cnt.getNodeIDs()[0];
             copy = ((SubNodeContainer)tempParent.getNodeContainer(cID));
-            SingleNodeContainerSettings sncSettings = copy.getSingleNodeContainerSettings().clone();
-            sncSettings.setModelSettings(new NodeSettings("empty model"));
-            sncSettings.setVariablesSettings(new NodeSettings("empty variables setting"));
-            NodeSettings newSettings = new NodeSettings("new settings");
-            sncSettings.save(newSettings);
-            copy.loadSettings(newSettings);
-            MetaNodeTemplateInformation template =
-                    MetaNodeTemplateInformation.createNewTemplate(SubNodeContainer.class);
-            synchronized (copy.m_nodeMutex) {
-                copy.setTemplateInformation(template);
-                copy.setName(null);
-                NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
-                templateSettings.saveToXML(new FileOutputStream(
-                    new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
-                FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec, new WorkflowSaveHelper(true, false));
+            try (WorkflowLock copyLock = copy.lock()) {
+                SingleNodeContainerSettings sncSettings = copy.getSingleNodeContainerSettings().clone();
+                sncSettings.setModelSettings(new NodeSettings("empty model"));
+                sncSettings.setVariablesSettings(new NodeSettings("empty variables setting"));
+                NodeSettings newSettings = new NodeSettings("new settings");
+                sncSettings.save(newSettings);
+                copy.loadSettings(newSettings);
+                MetaNodeTemplateInformation template =
+                        MetaNodeTemplateInformation.createNewTemplate(SubNodeContainer.class);
+                synchronized (copy.m_nodeMutex) {
+                    copy.setTemplateInformation(template);
+                    copy.setName(null);
+                    NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
+                    templateSettings.saveToXML(new FileOutputStream(
+                        new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
+                    FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec, new WorkflowSaveHelper(true, false));
+                }
+                return template;
             }
-            return template;
         } finally {
             if (copy != null) {
                 tempParent.removeNode(copy.getID());
