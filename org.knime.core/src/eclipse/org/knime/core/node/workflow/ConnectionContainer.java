@@ -78,6 +78,7 @@ public class ConnectionContainer implements IConnectionContainer{
 
 
     private final ConnectionType m_type;
+    private boolean m_isFlowVariablePortConnection;
 
     /** Creates new connection.
      *
@@ -86,9 +87,11 @@ public class ConnectionContainer implements IConnectionContainer{
      * @param dest destination node
      * @param destPort port of destination node
      * @param type of connection
+     * @param isFlowVariablePortConnection whether it's a connection between two flow variable ports
      */
-    public ConnectionContainer(final NodeID src, final int srcPort,
-            final NodeID dest, final int destPort, final ConnectionType type) {
+    public ConnectionContainer(final NodeID src, final int srcPort, final NodeID dest, final int destPort,
+        final ConnectionType type, final boolean isFlowVariablePortConnection) {
+        m_isFlowVariablePortConnection = isFlowVariablePortConnection;
         CheckUtils.checkArgument(srcPort >= 0 && destPort >= 0,
                 "Port index must not be < 0: %d", Math.min(srcPort, destPort));
         m_source = CheckUtils.checkArgumentNotNull(src);
@@ -149,6 +152,14 @@ public class ConnectionContainer implements IConnectionContainer{
     @Override
     public boolean isDeletable() {
         return m_isDeletable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isFlowVariablePortConnection() {
+        return m_isFlowVariablePortConnection;
     }
 
     /**

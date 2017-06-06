@@ -1259,8 +1259,8 @@ class Workflow {
                 if (mpi.getOldIndex() == destPort) {
                     hasBeenFound = true;
                     if (mpi.getNewIndex() != destPort || includeUnchanged) {
-                        ConnectionContainer newConn = new ConnectionContainer(cc.getSource(),
-                                cc.getSourcePort(), metaNodeID, mpi.getNewIndex(), cc.getType());
+                        ConnectionContainer newConn = new ConnectionContainer(cc.getSource(), cc.getSourcePort(),
+                            metaNodeID, mpi.getNewIndex(), cc.getType(), cc.isFlowVariablePortConnection());
                         newConn.setUIInfo(cc.getUIInfo());
                         result.add(new Pair<ConnectionContainer, ConnectionContainer>(cc, newConn));
                     }
@@ -1296,8 +1296,8 @@ class Workflow {
                 if (mpi.getOldIndex() == sourcePort) {
                     hasBeenFound = true;
                     if (mpi.getNewIndex() != sourcePort || includeUnchanged) {
-                        ConnectionContainer newConn = new ConnectionContainer(metaNodeID,
-                                mpi.getNewIndex(), cc.getDest(), cc.getDestPort(), cc.getType());
+                        ConnectionContainer newConn = new ConnectionContainer(metaNodeID, mpi.getNewIndex(),
+                            cc.getDest(), cc.getDestPort(), cc.getType(), cc.isFlowVariablePortConnection());
                         newConn.setUIInfo(cc.getUIInfo());
                         result.add(new Pair<ConnectionContainer, ConnectionContainer>(cc, newConn));
                     }

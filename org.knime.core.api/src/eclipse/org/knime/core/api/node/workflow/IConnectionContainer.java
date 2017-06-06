@@ -102,6 +102,11 @@ public interface IConnectionContainer extends ConnectionProgressListener{
     boolean isDeletable();
 
     /**
+     * @return whether the connection connects two flow variable ports
+     */
+    boolean isFlowVariablePortConnection();
+
+    /**
      * @return type of the connection
      */
     ConnectionType getType();

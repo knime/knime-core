@@ -68,13 +68,8 @@ import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.INodeOutPort;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
@@ -121,40 +116,40 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         return null;
     }
 
-    /**
-     * Returns the node with the corresponding id. If the passed wfm is null, it
-     * traverses the hierarchy to find it. If the wfm is passed, it must contain
-     * the node - or be the node itself (that happens in metanodes and outgoing
-     * connectinos).
-     *
-     *
-     * @param wfm if not null, the node is taken from there
-     * @param node id of the node to return
-     * @return the node with the specified id.
-     */
-    private INodeContainer getNode(final IWorkflowManager wfm, final NodeID node) {
-        if (wfm != null) {
-            if (wfm.getID().equals(node)) {
-                return wfm;
-            } else {
-                return wfm.getNodeContainer(node);
-            }
-        }
-
-        // follow the hierarchy
-        NodeID prefix = node.getPrefix();
-        if (prefix.equals(NodeID.ROOTID)) {
-            //TODO -> don't use the WorkflowManager root to manage workflow projects (see https://knime-com.atlassian.net/projects/AP/issues/AP-6511)
-            return WorkflowManager.ROOT.getNodeContainer(node);
-        } else {
-            INodeContainer nc = getNode(null, prefix);
-            if (!(nc instanceof IWorkflowManager)) {
-                return null;
-            }
-            IWorkflowManager parent = (IWorkflowManager)nc;
-            return parent.getNodeContainer(node);
-        }
-    }
+//    /**
+//     * Returns the node with the corresponding id. If the passed wfm is null, it
+//     * traverses the hierarchy to find it. If the wfm is passed, it must contain
+//     * the node - or be the node itself (that happens in metanodes and outgoing
+//     * connectinos).
+//     *
+//     *
+//     * @param wfm if not null, the node is taken from there
+//     * @param node id of the node to return
+//     * @return the node with the specified id.
+//     */
+//    private INodeContainer getNode(final IWorkflowManager wfm, final NodeID node) {
+//        if (wfm != null) {
+//            if (wfm.getID().equals(node)) {
+//                return wfm;
+//            } else {
+//                return wfm.getNodeContainer(node);
+//            }
+//        }
+//
+//        // follow the hierarchy
+//        NodeID prefix = node.getPrefix();
+//        if (prefix.equals(NodeID.ROOTID)) {
+//            //TODO -> don't use the WorkflowManager root to manage workflow projects (see https://knime-com.atlassian.net/projects/AP/issues/AP-6511)
+//            return WorkflowManager.ROOT.getNodeContainer(node);
+//        } else {
+//            INodeContainer nc = getNode(null, prefix);
+//            if (!(nc instanceof IWorkflowManager)) {
+//                return null;
+//            }
+//            IWorkflowManager parent = (IWorkflowManager)nc;
+//            return parent.getNodeContainer(node);
+//        }
+//    }
 
     /** {@inheritDoc} */
     @Override
@@ -219,33 +214,33 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         conn.setLineWidth(getCurrentEditorSettings().getConnectionLineWidth());
 
         // make flow variable port connections look red.
-        if (isFlowVariablePortConnection()) {
+        if (getModel().isFlowVariablePortConnection()) {
             conn.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
         return conn;
     }
 
-    private boolean isFlowVariablePortConnection() {
-        IConnectionContainer connCon = getModel();
-        INodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
-        if (node != null) {
-            INodeOutPort srcPort;
-            if (isIncomingConnection(connCon)) {
-                // then this is a workflow port
-                srcPort =
-                        ((IWorkflowManager)node).getWorkflowIncomingPort(connCon
-                                .getSourcePort());
-            } else {
-                srcPort = node.getOutPort(connCon.getSourcePort());
-            }
-            if (srcPort != null
-                    && PortTypeUtil.getPortType(srcPort.getPortTypeUID())
-                            .equals(FlowVariablePortObject.TYPE)) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    private boolean isFlowVariablePortConnection() {
+//        IConnectionContainer connCon = getModel();
+//        INodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
+//        if (node != null) {
+//            INodeOutPort srcPort;
+//            if (isIncomingConnection(connCon)) {
+//                // then this is a workflow port
+//                srcPort =
+//                        ((IWorkflowManager)node).getWorkflowIncomingPort(connCon
+//                                .getSourcePort());
+//            } else {
+//                srcPort = node.getOutPort(connCon.getSourcePort());
+//            }
+//            if (srcPort != null
+//                    && PortTypeUtil.getPortType(srcPort.getPortTypeUID())
+//                            .equals(FlowVariablePortObject.TYPE)) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     /**
      * Returns true, if the connection is a connection from a metanode incoming
@@ -284,7 +279,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         // make flow variable port connections look red.
         CurvedPolylineConnection fig = (CurvedPolylineConnection)getFigure();
-        if (isFlowVariablePortConnection()) {
+        if (getModel().isFlowVariablePortConnection()) {
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
 

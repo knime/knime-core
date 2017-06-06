@@ -1031,19 +1031,28 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             // cleaned up - now add new connection
             sourceNC = m_workflow.getNode(source);
             destNC = m_workflow.getNode(dest);
+            boolean isFlowVariablePortConnection = false;
             // determine type of new connection:
             if ((sourceNC == null) && (destNC == null)) {
                 newConnType = ConnectionType.WFMTHROUGH;
             } else if (sourceNC == null) {
                 newConnType = ConnectionType.WFMIN;
+                isFlowVariablePortConnection =
+                    destNC.getInPort(destPort).getPortType().equals(FlowVariablePortObject.TYPE);
             } else if (destNC == null) {
                 newConnType = ConnectionType.WFMOUT;
+                isFlowVariablePortConnection =
+                    sourceNC.getOutPort(sourcePort).getPortType().equals(FlowVariablePortObject.TYPE);
             } else {
                 newConnType = ConnectionType.STD;
+                isFlowVariablePortConnection =
+                    sourceNC.getOutPort(sourcePort).getPortType().equals(FlowVariablePortObject.TYPE);
             }
             // create new connection
-            newConn = new ConnectionContainer(source, sourcePort, dest, destPort, newConnType);
+            newConn =
+                new ConnectionContainer(source, sourcePort, dest, destPort, newConnType, isFlowVariablePortConnection);
             m_workflow.addConnection(newConn);
+
             // handle special cases with port reference chains (WFM border
             // crossing connections:
             if ((source.equals(getID())) && (dest.equals(getID()))) {
@@ -1706,9 +1715,9 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn =
-                    new ConnectionContainer(snc.getVirtualInNodeID(), p.getSecond().getSourcePort(), p.getSecond()
-                        .getDest(), p.getSecond().getDestPort(), p.getSecond().getType());
+                ConnectionContainer newConn = new ConnectionContainer(snc.getVirtualInNodeID(),
+                    p.getSecond().getSourcePort(), p.getSecond().getDest(), p.getSecond().getDestPort(),
+                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
                 subFlow.addConnection(newConn);
                 snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
@@ -1760,9 +1769,9 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn =
-                    new ConnectionContainer(p.getSecond().getSource(), p.getSecond().getSourcePort(),
-                        snc.getVirtualOutNodeID(), p.getSecond().getDestPort(), p.getSecond().getType());
+                ConnectionContainer newConn = new ConnectionContainer(p.getSecond().getSource(),
+                    p.getSecond().getSourcePort(), snc.getVirtualOutNodeID(), p.getSecond().getDestPort(),
+                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
                 subFlow.addConnection(newConn);
                 snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
