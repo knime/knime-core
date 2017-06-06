@@ -5,14 +5,14 @@
 	<shortDescription>Shifts a date or time according to a period, duration
 		or granularity.</shortDescription>
 	<fullDescription>
-		<intro> The node shifts a date or time with a defined period, duration
+		<intro> The node shifts a date or time with a defined duration
 			or granularity. The user can select the Date&amp;Time columns to
 			shift and the shift value.
 			The shift value can be achieved by using
-			either a period/duration column
+			either a duration column
 			or a numerical column, however, it is
 			also possible to enter
-			a constant shift value (either period/duration
+			a constant shift value (either duration
 			or numerical combined
 			with a granularity).
 			If the shift value is

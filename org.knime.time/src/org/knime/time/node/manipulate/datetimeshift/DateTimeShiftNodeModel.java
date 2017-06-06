@@ -99,14 +99,6 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    static final String OPTION_PERIOD_COLUMN = "Period/Duration Column";
-
-    static final String OPTION_PERIOD_VALUE = "Period/Duration Value";
-
-    static final String OPTION_NUMERICAL_COLUMN = "Numerical Column";
-
-    static final String OPTION_NUMERICAL_VALUE = "Numerical Value";
-
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendModel();
@@ -153,7 +145,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** @return the string model, used in both dialog and model. */
     public static SettingsModelString createPeriodSelectionModel() {
-        return new SettingsModelString("period_selection", OPTION_PERIOD_COLUMN);
+        return new SettingsModelString("period_selection", DurationMode.Column.name());
     }
 
     /**
@@ -163,7 +155,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
     public static SettingsModelString createPeriodColSelectModel(final SettingsModelString periodSelectionModel) {
         final SettingsModelString model = new SettingsModelString("period_col_select", "");
         periodSelectionModel.addChangeListener(l -> model.setEnabled(
-            periodSelectionModel.getStringValue().equals(OPTION_PERIOD_COLUMN) && periodSelectionModel.isEnabled()));
+            periodSelectionModel.getStringValue().equals(DurationMode.Column.name()) && periodSelectionModel.isEnabled()));
         return model;
     }
 
@@ -174,14 +166,14 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
     public static SettingsModelString createPeriodValueModel(final SettingsModelString periodSelectionModel) {
         final SettingsModelString model = new SettingsModelString("period_value", "");
         periodSelectionModel.addChangeListener(l -> model.setEnabled(
-            periodSelectionModel.getStringValue().equals(OPTION_PERIOD_VALUE) && periodSelectionModel.isEnabled()));
+            periodSelectionModel.getStringValue().equals(DurationMode.Value.name()) && periodSelectionModel.isEnabled()));
         model.setEnabled(false);
         return model;
     }
 
     /** @return the string model, used in both dialog and model. */
     public static SettingsModelString createNumericalSelectionModel() {
-        final SettingsModelString model = new SettingsModelString("numerical_selection", OPTION_NUMERICAL_COLUMN);
+        final SettingsModelString model = new SettingsModelString("numerical_selection", NumericalMode.Column.name());
         model.setEnabled(false);
         return model;
     }
@@ -193,7 +185,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
     public static SettingsModelString createNumericalColSelectModel(final SettingsModelString numericalSelectionModel) {
         final SettingsModelString model = new SettingsModelString("numerical_col_select", "");
         numericalSelectionModel.addChangeListener(
-            l -> model.setEnabled(numericalSelectionModel.getStringValue().equals(OPTION_NUMERICAL_COLUMN)
+            l -> model.setEnabled(numericalSelectionModel.getStringValue().equals(NumericalMode.Column.name())
                 && numericalSelectionModel.isEnabled()));
         model.setEnabled(false);
         return model;
@@ -206,7 +198,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
     public static SettingsModelInteger createNumericalValueModel(final SettingsModelString numericalSelectionModel) {
         final SettingsModelInteger model = new SettingsModelInteger("numerical_value", 1);
         numericalSelectionModel.addChangeListener(
-            l -> model.setEnabled(numericalSelectionModel.getStringValue().equals(OPTION_NUMERICAL_VALUE)
+            l -> model.setEnabled(numericalSelectionModel.getStringValue().equals(NumericalMode.Value.name())
                 && numericalSelectionModel.isEnabled()));
         model.setEnabled(false);
         return model;
@@ -228,7 +220,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
             throw new InvalidSettingsException("No configuration available!");
         }
         if (m_periodSelection.isEnabled()) {
-            if (m_periodSelection.getStringValue().equals(OPTION_PERIOD_COLUMN)) {
+            if (m_periodSelection.getStringValue().equals(DurationMode.Column.name())) {
                 final String periodColName = m_periodColSelect.getStringValue();
                 if (inSpecs[0].findColumnIndex(periodColName) < 0) {
                     throw new InvalidSettingsException("Column " + periodColName + " not found in input table!");
@@ -239,7 +231,7 @@ final class DateTimeShiftNodeModel extends SimpleStreamableFunctionNodeModel {
                 }
             }
         } else {
-            if (m_numericalSelection.getStringValue().equals(OPTION_NUMERICAL_COLUMN)) {
+            if (m_numericalSelection.getStringValue().equals(NumericalMode.Column.name())) {
                 final String numericalColName = m_numericalColSelect.getStringValue();
                 if (inSpecs[0].findColumnIndex(numericalColName) < 0) {
                     throw new InvalidSettingsException("Column " + numericalColName + " not found in input table!");

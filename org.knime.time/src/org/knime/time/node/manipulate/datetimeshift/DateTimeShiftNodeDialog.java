@@ -139,8 +139,8 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
         m_periodSelectionModel = DateTimeShiftNodeModel.createPeriodSelectionModel();
-        m_dialogCompPeriodSelection = new DialogComponentButtonGroup(m_periodSelectionModel, true, null,
-            DateTimeShiftNodeModel.OPTION_PERIOD_COLUMN, DateTimeShiftNodeModel.OPTION_PERIOD_VALUE);
+        m_dialogCompPeriodSelection =
+            new DialogComponentButtonGroup(m_periodSelectionModel, null, true, DurationMode.values());
 
         m_dialogCompPeriodOrDurationColSelection = new DialogComponentColumnNameSelection(
             DateTimeShiftNodeModel.createPeriodColSelectModel(m_periodSelectionModel), "", 0, false, PeriodValue.class,
@@ -150,8 +150,8 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
             DateTimeShiftNodeModel.createPeriodValueModel(m_periodSelectionModel), "", false, 30);
 
         m_numericalSelectionModel = DateTimeShiftNodeModel.createNumericalSelectionModel();
-        m_dialogCompNumericalSelection = new DialogComponentButtonGroup(m_numericalSelectionModel, true, null,
-            DateTimeShiftNodeModel.OPTION_NUMERICAL_COLUMN, DateTimeShiftNodeModel.OPTION_NUMERICAL_VALUE);
+        m_dialogCompNumericalSelection =
+            new DialogComponentButtonGroup(m_numericalSelectionModel, null, true, NumericalMode.values());
 
         m_dialogCompNumericalColSelection = new DialogComponentColumnNameSelection(
             DateTimeShiftNodeModel.createNumericalColSelectModel(m_numericalSelectionModel), "", 0, false,
@@ -162,7 +162,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
 
         final SettingsModelString granularityModel = DateTimeShiftNodeModel.createNumericalGranularityModel();
         m_dialogCompNumericalGranularity =
-            new DialogComponentStringSelection(granularityModel, "Granularity:", Granularity.strings());
+            new DialogComponentStringSelection(granularityModel, "Granularity", Granularity.strings());
 
         /*
          * create panel with gbc
@@ -218,7 +218,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         gbcPeriodOrNumerical.gridy = 0;
         gbcPeriodOrNumerical.weighty = 0;
         gbcPeriodOrNumerical.anchor = GridBagConstraints.WEST;
-        m_periodRadioButton = new JRadioButton("Use Period/Duration");
+        m_periodRadioButton = new JRadioButton("Use Duration");
         m_periodRadioButton.setSelected(true);
         panelPeriodOrNumerical.add(m_periodRadioButton, gbcPeriodOrNumerical);
 
@@ -254,6 +254,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         // add warning label for period/duration
         final JLabel warningLabelPeriod = new JLabel();
         warningLabelPeriod.setForeground(Color.RED);
+        warningLabelPeriod.setPreferredSize(new Dimension(500, new JLabel(" ").getPreferredSize().height));
         gbcPeriodSelection.gridx = 0;
         gbcPeriodSelection.gridy++;
         gbcPeriodSelection.gridwidth = 2;
@@ -314,6 +315,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         // add warning label for numerical
         final JLabel warningLabelNumerical = new JLabel();
         warningLabelNumerical.setForeground(Color.RED);
+        warningLabelNumerical.setPreferredSize(new Dimension(500, new JLabel(" ").getPreferredSize().height));
         gbcNumericalSelection.gridx = 0;
         gbcNumericalSelection.gridy++;
         gbcNumericalSelection.gridwidth = 2;
@@ -378,7 +380,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         // if duration/period column/value is selected
         if (m_periodSelectionModel.isEnabled()) {
             // if column shall be used
-            if (m_periodSelectionModel.getStringValue().equals(DateTimeShiftNodeModel.OPTION_PERIOD_COLUMN)) {
+            if (m_periodSelectionModel.getStringValue().equals(DurationMode.Column.name())) {
                 // if no column is selected
                 if (m_dialogCompPeriodOrDurationColSelection.getSelectedAsSpec() == null) {
                     return "A column must be selected!";
@@ -388,7 +390,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                         .isCompatible(PeriodValue.class)) {
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
-                                return "A Period cannot be applied on a LocalTime!";
+                                return "A date-based duration cannot be applied on a time!";
                             }
                         }
                     }
@@ -396,7 +398,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                     else {
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
-                                return "A Duration cannot be applied on a LocalDate!";
+                                return "A time-based duration cannot be applied on a date!";
                             }
                         }
                     }
@@ -411,7 +413,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                         ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                     for (final String include : includes) {
                         if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
-                            return "A Period cannot be applied on a LocalTime!";
+                            return "A date-based duration cannot be applied on a time!";
                         }
                     }
                 } catch (DateTimeParseException e) {
@@ -421,12 +423,12 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
                             ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                         for (final String include : includes) {
                             if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
-                                return "A Duration cannot be applied on a LocalDate!";
+                                return "A time-based duration cannot be applied on a date!";
                             }
                         }
                     } catch (DateTimeParseException e2) {
                         // if a neither a period nor a duration is written
-                        return "Value does not represent a period or duration!";
+                        return "Value does not represent a duration!";
                     }
                 }
             }
@@ -445,7 +447,7 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
         // if numerical column/value is selected
         if (m_numericalSelectionModel.isEnabled()) {
             // if column shall be used and no column is selected
-            if (m_numericalSelectionModel.getStringValue().equals(DateTimeShiftNodeModel.OPTION_NUMERICAL_COLUMN)) {
+            if (m_numericalSelectionModel.getStringValue().equals(NumericalMode.Column.name())) {
                 if (m_dialogCompNumericalColSelection.getSelectedAsSpec() == null) {
                     return "A column must be selected!";
                 }
@@ -456,13 +458,13 @@ final class DateTimeShiftNodeDialog extends NodeDialogPane {
             if (!Granularity.fromString(granularity).isPartOfDate()) {
                 for (final String include : includes) {
                     if (m_spec.getColumnSpec(include).getType().isCompatible(LocalDateValue.class)) {
-                        return granularity + " can not be applied on a LocalDate!";
+                        return granularity + " can not be applied on a date!";
                     }
                 }
             } else {
                 for (final String include : includes) {
                     if (m_spec.getColumnSpec(include).getType().isCompatible(LocalTimeValue.class)) {
-                        return granularity + " can not be applied on a LocalTime!";
+                        return granularity + " can not be applied on a time!";
                     }
                 }
             }
