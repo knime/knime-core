@@ -166,19 +166,17 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         m_dialogCompStartInclusive = new DialogComponentBoolean(startInclusiveModel, "Inclusive");
 
         final SettingsModelBoolean startAlwaysNowModel = DateTimeBasedRowFilterNodeModel.createStartAlwaysNowModel();
-        m_dialogCompStartAlwaysNow = new DialogComponentBoolean(startAlwaysNowModel, "Use Execution Time");
+        m_dialogCompStartAlwaysNow = new DialogComponentBoolean(startAlwaysNowModel, "Use execution date&ime");
 
         final SettingsModelString endSelectionModel = DateTimeBasedRowFilterNodeModel.createEndSelectionModel();
-        m_dialogCompEndSelection = new DialogComponentButtonGroup(endSelectionModel, true, null,
-            DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME,
-            DateTimeBasedRowFilterNodeModel.END_OPTION_PERIOD_DURATION,
-            DateTimeBasedRowFilterNodeModel.END_OPTION_NUMERICAL);
+        m_dialogCompEndSelection = new DialogComponentButtonGroup(endSelectionModel, null, true,
+            EndMode.values());
 
         final SettingsModelBoolean endInclusiveModel = DateTimeBasedRowFilterNodeModel.createEndInclusiveModel();
         m_dialogCompEndInclusive = new DialogComponentBoolean(endInclusiveModel, "Inclusive");
 
         final SettingsModelBoolean endAlwaysNowModel = DateTimeBasedRowFilterNodeModel.createEndAlwaysNowModel();
-        m_dialogCompEndAlwaysNow = new DialogComponentBoolean(endAlwaysNowModel, "Use Execution Time");
+        m_dialogCompEndAlwaysNow = new DialogComponentBoolean(endAlwaysNowModel, "Use execution date&time");
 
         /*
          * create panel with gbc
@@ -310,7 +308,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         gbcEndSwitch.anchor = GridBagConstraints.WEST;
         // create panel for end date&time option
         final JPanel panelEndDateTimeOption = new JPanel(new GridBagLayout());
-        panelSwitchEndSettings.add(panelEndDateTimeOption, DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME);
+        panelSwitchEndSettings.add(panelEndDateTimeOption, EndMode.DateTime.name());
         gbcEndSwitch.gridx = 0;
         gbcEndSwitch.gridy = 0;
         gbcEndSwitch.gridheight = 2;
@@ -334,14 +332,14 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         gbcEndSwitch.gridy = 0;
         final JPanel panelEndPeriodDurationOption = new JPanel(new GridBagLayout());
         panelSwitchEndSettings.add(panelEndPeriodDurationOption,
-            DateTimeBasedRowFilterNodeModel.END_OPTION_PERIOD_DURATION);
+            EndMode.Duration.name());
         panelEndPeriodDurationOption.add(m_dialogCompPeriodOrDurationValue.getComponentPanel(), gbcEndSwitch);
 
         // create panel for numerical and granularity option
         gbcEndSwitch.gridx = 0;
         gbcEndSwitch.gridy = 0;
         final JPanel panelEndNumericalOption = new JPanel(new GridBagLayout());
-        panelSwitchEndSettings.add(panelEndNumericalOption, DateTimeBasedRowFilterNodeModel.END_OPTION_NUMERICAL);
+        panelSwitchEndSettings.add(panelEndNumericalOption, EndMode.Numerical.name());
         panelEndNumericalOption.add(m_dialogCompNumericalValue.getComponentPanel(), gbcEndSwitch);
         gbcEndSwitch.gridy++;
         gbcEndSwitch.insets = new Insets(0, 7, 0, 0);
@@ -406,13 +404,13 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
             updateEnableStatusOfDateTimeComponents(startDateTimeModel, endDateTimeModel);
 
             if (!startBooleanModel.getBooleanValue()) {
-                endSelectionModel.setStringValue(DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME);
+                endSelectionModel.setStringValue(EndMode.DateTime.name());
             }
-            m_dialogCompEndSelection.getButton(DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME)
+            m_dialogCompEndSelection.getButton(EndMode.DateTime.name())
                 .setSelected(endBooleanModel.getBooleanValue());
-            m_dialogCompEndSelection.getButton(DateTimeBasedRowFilterNodeModel.END_OPTION_PERIOD_DURATION)
+            m_dialogCompEndSelection.getButton(EndMode.Duration.name())
                 .setEnabled(startBooleanModel.getBooleanValue() && endBooleanModel.getBooleanValue());
-            m_dialogCompEndSelection.getButton(DateTimeBasedRowFilterNodeModel.END_OPTION_NUMERICAL)
+            m_dialogCompEndSelection.getButton(EndMode.Numerical.name())
                 .setEnabled(startBooleanModel.getBooleanValue() && endBooleanModel.getBooleanValue());
             updateWarningLabel();
         });
@@ -460,7 +458,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         try {
             if (((SettingsModelBoolean)m_dialogCompEndBoolean.getModel()).getBooleanValue()
                 && ((SettingsModelString)m_dialogCompEndSelection.getModel()).getStringValue()
-                    .equals(DateTimeBasedRowFilterNodeModel.END_OPTION_PERIOD_DURATION)) {
+                    .equals(EndMode.Duration.name())) {
                 checkPeriodOrDuration();
             } else {
                 ((JComponent)m_dialogCompPeriodOrDurationValue.getComponentPanel().getComponent(1))
@@ -468,7 +466,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
             }
             if (((SettingsModelBoolean)m_dialogCompEndBoolean.getModel()).getBooleanValue()
                 && ((SettingsModelString)m_dialogCompEndSelection.getModel()).getStringValue()
-                    .equals(DateTimeBasedRowFilterNodeModel.END_OPTION_NUMERICAL)) {
+                    .equals(EndMode.Numerical.name())) {
                 checkGranularity();
             }
             checkStartAndEnd();
@@ -486,17 +484,17 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
             DurationPeriodFormatUtils
                 .parsePeriod(((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
             if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
-                warning = "A period cannot be applied on a LocalTime column!";
+                warning = "A date-based duration cannot be applied on a time!";
             }
         } catch (DateTimeParseException e) {
             try {
                 DurationPeriodFormatUtils.parseDuration(
                     ((SettingsModelString)m_dialogCompPeriodOrDurationValue.getModel()).getStringValue());
                 if (m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
-                    warning = "A duration cannot be applied on a LocalDate column!";
+                    warning = "A time-based duration cannot be applied on a date!";
                 }
             } catch (DateTimeParseException e2) {
-                warning = "Value does not represent a period or duration!";
+                warning = "Value does not represent a duration!";
             }
         }
         if (!warning.equals("")) {
@@ -520,12 +518,12 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         if (periodOrDuration instanceof Period
             && m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalTimeValue.class)) {
             warning = ((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue()
-                + " cannot be applied on a LocalTime column!";
+                + " cannot be applied on a time!";
         }
         if (periodOrDuration instanceof Duration
             && m_dialogCompColSelection.getSelectedAsSpec().getType().isCompatible(LocalDateValue.class)) {
             warning = ((SettingsModelString)m_dialogCompNumericalGranularity.getModel()).getStringValue()
-                + " cannot be applied on a LocalDate column!";
+                + " cannot be applied on a date!";
         }
 
         if (!warning.equals("")) {
@@ -543,7 +541,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
     private void checkStartAndEnd() {
         if (m_dialogCompStartDateTime.getModel().isEnabled() && m_dialogCompEndDateTime.getModel().isEnabled()
             && ((SettingsModelString)m_dialogCompEndSelection.getModel()).getStringValue()
-                .equals(DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME)) {
+                .equals(EndMode.DateTime.name())) {
             boolean isStartAfterEnd = false;
             final DataType dataType = m_dialogCompColSelection.getSelectedAsSpec().getType();
             if (dataType.isCompatible(LocalDateValue.class)) {
@@ -613,7 +611,7 @@ final class DateTimeBasedRowFilterNodeDialog extends NodeDialogPane {
         m_dialogCompColSelection.loadSettingsFrom(settings, specs);
         if (((SettingsModelString)m_dialogCompEndSelection.getModel()).getStringValue() == null) {
             ((SettingsModelString)m_dialogCompEndSelection.getModel())
-                .setStringValue(DateTimeBasedRowFilterNodeModel.END_OPTION_DATE_TIME);
+                .setStringValue(EndMode.DateTime.name());
         }
         updateWarningLabel();
     }

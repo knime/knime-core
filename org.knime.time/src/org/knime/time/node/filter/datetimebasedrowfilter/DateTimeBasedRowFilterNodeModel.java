@@ -100,12 +100,6 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
 
     static final String FORMAT_HISTORY_KEY = "time_based_row_filter_formats";
 
-    static final String END_OPTION_DATE_TIME = "Date&Time";
-
-    static final String END_OPTION_PERIOD_DURATION = "Period/Duration";
-
-    static final String END_OPTION_NUMERICAL = "Numerical";
-
     static final String WARNING_MESSAGE_START_AFTER_END =
         "Start date is after end date! Node created an empty data table.";
 
@@ -301,12 +295,12 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         }
         // return true if date is before start and after end, but only if ending point is defined by a period or granularity
         if (localDate.isBefore(startDate) && localDate.isAfter(endDate)
-            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            && !m_endSelection.getStringValue().equals(EndMode.DateTime.name())) {
             return true;
         }
 
         // this can be true, if the start or end date is defined by execution time
-        if (startDate.isAfter(endDate) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+        if (startDate.isAfter(endDate) && m_endSelection.getStringValue().equals(EndMode.DateTime.name())
             && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
             setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
         }
@@ -359,12 +353,12 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         }
         // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
         if (localTime.isBefore(startTime) && localTime.isAfter(endTime)
-            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            && !m_endSelection.getStringValue().equals(EndMode.DateTime.name())) {
             return true;
         }
 
         // this can be true, if the start or end date is defined by execution time
-        if (startTime.isAfter(endTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+        if (startTime.isAfter(endTime) && m_endSelection.getStringValue().equals(EndMode.DateTime.name())
             && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
             setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
         }
@@ -420,12 +414,12 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         }
         // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
         if (localDateTime.isBefore(startDateTime) && localDateTime.isAfter(endDateTime)
-            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            && !m_endSelection.getStringValue().equals(EndMode.DateTime.name())) {
             return true;
         }
 
         // this can be true, if the start or end date is defined by execution time
-        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(EndMode.DateTime.name())
             && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
             setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
         }
@@ -480,12 +474,12 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
         }
         // return true if time is before start and after end, but only if ending point is defined by a duration or granularity
         if (zonedDateTime.isBefore(startDateTime) && zonedDateTime.isAfter(endDateTime)
-            && !m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)) {
+            && !m_endSelection.getStringValue().equals(EndMode.DateTime.name())) {
             return true;
         }
 
         // this can be true, if the start or end date is defined by execution time
-        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(END_OPTION_DATE_TIME)
+        if (startDateTime.isAfter(endDateTime) && m_endSelection.getStringValue().equals(EndMode.DateTime.name())
             && (getWarningMessage() == null || getWarningMessage().isEmpty())) {
             setWarningMessage(WARNING_MESSAGE_START_AFTER_END);
         }
@@ -503,14 +497,14 @@ final class DateTimeBasedRowFilterNodeModel extends NodeModel {
     private Temporal calculateEndDateTime(final Temporal startDateTime, final Temporal endDateTime)
         throws ArithmeticException, DateTimeException {
         Temporal end = endDateTime;
-        if (m_endSelection.getStringValue().equals(END_OPTION_PERIOD_DURATION)) {
+        if (m_endSelection.getStringValue().equals(EndMode.Duration.name())) {
             try {
                 end = startDateTime.plus(DurationPeriodFormatUtils.parsePeriod(m_periodValueModel.getStringValue()));
             } catch (DateTimeException e1) {
                 end = startDateTime.plus(DurationPeriodFormatUtils.parseDuration(m_periodValueModel.getStringValue()));
             }
         }
-        if (m_endSelection.getStringValue().equals(END_OPTION_NUMERICAL)) {
+        if (m_endSelection.getStringValue().equals(EndMode.Numerical.name())) {
             final TemporalAmount amount = Granularity.fromString(m_granularityModel.getStringValue())
                 .getPeriodOrDuration(m_numericalValueModel.getIntValue());
             end = startDateTime.plus(amount);
