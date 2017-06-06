@@ -148,9 +148,8 @@ final class StringToDurationPeriodNodeDialog extends NodeDialogPane {
         panel.add(panelReplace, gbc);
 
         gbc.gridy++;
-        gbc.weighty = 1;
         final JPanel panelDurOrPer = new JPanel(new GridBagLayout());
-        panelDurOrPer.setBorder(BorderFactory.createTitledBorder("Duration/Period Selection"));
+        panelDurOrPer.setBorder(BorderFactory.createTitledBorder("Type Selection"));
         final GridBagConstraints gbcDurOrPer = new GridBagConstraints();
         gbcDurOrPer.fill = GridBagConstraints.VERTICAL;
         gbcDurOrPer.gridx = 0;

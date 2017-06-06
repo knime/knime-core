@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="stringtoduration.png">
-	<name>String to Duration/Period</name>
+	<name>String to Duration</name>
 	<shortDescription>Converts a string to a duration or period.</shortDescription>
 	<fullDescription>
 		<intro>
@@ -30,7 +30,7 @@
 				The selected columns will be replaced by the new columns.
 			</option>
 		</tab>
-		<tab name="Duration/Period Selection">
+		<tab name="Type Selection">
 			<option name="Automatically detect type">
 				It will be automatically detected, whether a duration or period shall be parsed. The type will be
 				determined based on the first cell in each column which can be successfully parsed.
