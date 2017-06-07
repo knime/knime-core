@@ -7612,7 +7612,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             default:
                 message.append("with ").append(result.getType());
         }
-        LOGGER.debug(message.toString());        return result;
+        LOGGER.debug(message.toString());
+        return result;
     }
 
     /** Implementation of {@link #load(FileWorkflowPersistor, ExecutionMonitor, boolean)}.
