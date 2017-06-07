@@ -97,27 +97,6 @@ public interface RSWorkflowService extends WorkflowService {
 		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
 
 	@Override
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/workflow")
-    public void updateWorkflow(
-		@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class) final WorkflowEnt wf);
-
-	@Override
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-    @Path("/workflowids")
-    public List<String> getWorkflowIDs(
-		@QueryParam("workflowGroupID") final String workflowGroupID);
-
-	@Override
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-    @Path("/workflowgroupids")
-    public List<String> getWorkflowGroupIDs(
-		@QueryParam("workflowGroupID") final String workflowGroupID);
-
-	@Override
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
     @Path("/allworkflows")

@@ -281,13 +281,18 @@ public class EntityBuilderUtil {
             .setNodeMessage(buildNodeMessageEnt(nc)).setNodeType(nc.getType().toString())
             .setBounds(buildBoundsEnt(nc.getUIInformation())).setIsDeletable(nc.isDeletable())
             .setNodeState(nc.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(nc))
-            .setParentNodeID(Optional.ofNullable(nc.getParent()).map(p -> p.getID().toString()))
+            .setParentNodeID(nc.getParent() == WorkflowManager.ROOT ? Optional.empty() : Optional.of(nc.getParent().getID().toString()))
             .setRootWorkflowID(rootWorkflowID)
             .setJobManager(buildJobManagerEnt(nc.getJobManagerUID())).setNodeAnnotation(buildNodeAnnotationEnt(nc))
             .setInPorts(buildNodeInPortEnts(nc)).setHasDialog(nc.hasDialog())
             .setNodeFactoryID(nodeFactoryIDBuilder.build()).build();
     }
 
+    /**
+     * @param wm
+     * @param rootWorkflowID
+     * @return
+     */
     public static WorkflowNodeEnt buildWorkflowNodeEnt(final IWorkflowManager wm, final String rootWorkflowID) {
         Optional<JobManagerUID> jobManagerUID;
         if (wm.getParent() == WorkflowManager.ROOT) {
@@ -320,7 +325,7 @@ public class EntityBuilderUtil {
         List<XYEnt> bendpoints = Collections.emptyList();
         return builder(ConnectionEntBuilder.class).setDest(cc.getDest().toString()).setDestPort(cc.getDestPort())
             .setSource(cc.getSource().toString()).setSourcePort(cc.getSourcePort()).setIsDeleteable(cc.isDeletable())
-            .setType(cc.getType().toString()).setBendPoints(bendpoints).build();
+            .setType(cc.getType().toString()).setBendPoints(bendpoints).setIsFlowVariablePortConnection(cc.isFlowVariablePortConnection()).build();
     }
 
     private static WorkflowAnnotationEnt buildWorkflowAnnotationEnt(final IWorkflowAnnotation wa) {

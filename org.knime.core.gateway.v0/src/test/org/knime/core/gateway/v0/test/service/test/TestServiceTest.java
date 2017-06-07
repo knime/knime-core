@@ -62,6 +62,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -77,11 +79,13 @@ import org.mockito.Mockito;
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public class TestServiceTest {
 
-    TestService m_serviceMock;
+    private TestService m_serviceMock;
+    private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(TestService.class);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
@@ -100,7 +104,7 @@ public class TestServiceTest {
 		Mockito.when(m_serviceMock.updateTest(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		TestEnt methodRes = service(TestService.class).updateTest(id);
+		TestEnt methodRes = service(TestService.class, m_serviceConfig).updateTest(id);
 
 		//compare results
         TestEntTest.testEnt(methodRes, values);
@@ -139,7 +143,7 @@ public class TestServiceTest {
 		Mockito.when(m_serviceMock.updateTestList(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		List<TestEnt> methodRes = service(TestService.class).updateTestList(list);
+		List<TestEnt> methodRes = service(TestService.class, m_serviceConfig).updateTestList(list);
 
 		//compare results
         for (int i = 0; i < methodRes.size(); i++) {
@@ -165,7 +169,7 @@ public class TestServiceTest {
 		Mockito.when(m_serviceMock.updatePrimitives(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		double methodRes = service(TestService.class).updatePrimitives(s, stringlist);
+		double methodRes = service(TestService.class, m_serviceConfig).updatePrimitives(s, stringlist);
 
 		//compare results
 		assertEquals(res, methodRes);

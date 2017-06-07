@@ -85,24 +85,6 @@ public class RSWrapperWorkflowService implements RSWorkflowService {
 		final Optional<String> nodeID)   {
 		return m_service.getNode(rootWorkflowID, nodeID);
     }
-				
-	@Override
- 	public void updateWorkflow(
-		final WorkflowEnt wf)   {
-		m_service.updateWorkflow(wf);
-    }
-				
-	@Override
- 	public List<String> getWorkflowIDs(
-		final String workflowGroupID)   {
-		return m_service.getWorkflowIDs(workflowGroupID);
-    }
-				
-	@Override
- 	public List<String> getWorkflowGroupIDs(
-		final String workflowGroupID)   {
-		return m_service.getWorkflowGroupIDs(workflowGroupID);
-    }
 	
 	@Override
  	public List<String> getAllWorkflows(

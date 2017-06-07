@@ -48,24 +48,22 @@
  */
 package org.knime.core.clientproxy.workflow.project;
 
-import static org.knime.core.gateway.services.ServiceManager.service;
-
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.ProjectTreeNode;
 import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
-import org.knime.core.clientproxy.util.ObjectCache;
-import org.knime.core.clientproxy.workflow.ClientProxyWorkflowManager;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -88,18 +86,30 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
      */
     @Override
     public ProjectTreeNode getProjectTree() {
-        return new MyProjectTreeNode("root");
+        return new MyProjectTreeNode(KNIMEPath.getWorkspaceDirPath().toPath());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasProjectTreeChanged() {
+        return false;
     }
 
     private class MyProjectTreeNode implements ProjectTreeNode {
 
-        private String m_nodeID;
+        private Path m_path;
+
+        private List<ProjectTreeNode> m_children = null;
+
+        private List<WorkflowProject> m_wfChildren = null;
 
         /**
-         * @param nodeID
+         *
          */
-        public MyProjectTreeNode(final String nodeID) {
-            m_nodeID = nodeID;
+        public MyProjectTreeNode(final Path path) {
+            m_path = path;
         }
 
         /**
@@ -107,7 +117,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public String getName() {
-            return m_nodeID;
+            return m_path.getFileName().toString();
         }
 
         /**
@@ -115,7 +125,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public String getID() {
-            return m_nodeID;
+            return m_path.toString();
         }
 
         /**
@@ -123,8 +133,8 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public List<ProjectTreeNode> getChildren() {
-            return service(WorkflowService.class).getWorkflowGroupIDs(m_nodeID).stream()
-                .map(id -> new MyProjectTreeNode(id)).collect(Collectors.toList());
+            resolveChildren();
+            return m_children;
         }
 
         /**
@@ -132,25 +142,42 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public List<WorkflowProject> getChildrenProjects() {
-            return service(WorkflowService.class).getWorkflowIDs(m_nodeID).stream().map(id -> new MyWorkflowProject(id))
-                .collect(Collectors.toList());
+            resolveChildren();
+            return m_wfChildren;
+        }
+
+        private void resolveChildren() {
+            if (m_children == null) {
+                //not resolved, yet
+                m_children = new ArrayList<ProjectTreeNode>();
+                m_wfChildren = new ArrayList<WorkflowProject>();
+                try {
+                    Files.list(m_path).forEach((p) -> {
+                        if (Files.isDirectory(p)) {
+                            if (Files.exists(p.resolve("workflow.knime"))) {
+                                m_wfChildren.add(new MyWorkflowProject(p));
+                            } else {
+                                m_children.add(new MyProjectTreeNode(p));
+                            }
+                        }
+                    });
+                } catch (IOException ex) {
+                    // TODO better exception handling
+                    throw new RuntimeException(ex);
+                }
+            }
         }
     }
 
     private class MyWorkflowProject implements WorkflowProject {
 
-        private WorkflowNodeEnt m_workflowNodeEnt;
-
-        private String m_workflowID;
-
-        private IWorkflowManager m_cachedWFM;
+        private Path m_path;
 
         /**
          *
          */
-        public MyWorkflowProject(final String workflowID) {
-            m_workflowID = workflowID;
-            m_workflowNodeEnt = (WorkflowNodeEnt) service(WorkflowService.class).getNode(workflowID, Optional.empty());
+        public MyWorkflowProject(final Path path) {
+            m_path = path;
         }
 
         /**
@@ -158,7 +185,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public String getName() {
-            return m_workflowNodeEnt.getName();
+            return m_path.getFileName().toString();
         }
 
         /**
@@ -166,7 +193,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public String getID() {
-            return m_workflowID;
+            return m_path.toString();
         }
 
         /**
@@ -174,7 +201,7 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
          */
         @Override
         public WorkflowProjectType getType() {
-            return WorkflowProjectType.REMOTE;
+            return WorkflowProjectType.LOCAL;
         }
 
         /**
@@ -189,15 +216,8 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
         @Override
         public IWorkflowManager openProject() throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
-            if (m_cachedWFM == null) {
-                m_cachedWFM = new ClientProxyWorkflowManager(m_workflowNodeEnt, new ObjectCache());
-            }
-            return m_cachedWFM;
-        }
-
-        @Override
-        public Optional<IWorkflowManager> getProject() {
-            return Optional.ofNullable(m_cachedWFM);
+            return org.knime.core.node.workflow.WorkflowManager
+                .loadProject(m_path.toFile(), new ExecutionMonitor(), new WorkflowLoadHelper()).getWorkflowManager();
         }
 
     }

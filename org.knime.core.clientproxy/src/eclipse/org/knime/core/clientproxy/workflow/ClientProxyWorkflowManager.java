@@ -89,6 +89,7 @@ import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.clientproxy.util.ClientProxyUtil;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.services.ServiceManager;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
@@ -118,8 +119,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     /**
      * @param workflowNodeEnt
      */
-    public ClientProxyWorkflowManager(final WorkflowNodeEnt workflowNodeEnt, final ObjectCache objCache) {
-        super(workflowNodeEnt, objCache);
+    public ClientProxyWorkflowManager(final WorkflowNodeEnt workflowNodeEnt, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
+        super(workflowNodeEnt, objCache, serviceConfig);
         m_workflowNodeEnt = workflowNodeEnt;
         m_objCache = objCache;
     }
@@ -128,7 +129,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         if(m_workflowEnt == null) {
             Optional<String> nodeID = m_workflowNodeEnt.getParentNodeID().isPresent()
                 ? Optional.of(m_workflowNodeEnt.getNodeID()) : Optional.empty();
-            m_workflowEnt = ServiceManager.service(WorkflowService.class)
+            m_workflowEnt = ServiceManager.service(WorkflowService.class, m_serviceConfig)
                 .getWorkflow(m_workflowNodeEnt.getRootWorkflowID(), nodeID);
         }
         return m_workflowEnt;
@@ -214,8 +215,8 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isProject() {
-        //TODO
-        return true;
+        //if the workflow has no parent it is very likely a workflow project and not a metanode
+        return getParent() == null;
     }
 
     /**
@@ -717,7 +718,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         Collection<NodeEnt> nodes = getWorkflow().getNodes().values();
         //return exactly the same node container instance for the same node entity
         return nodes.stream()
-            .map(n -> ClientProxyUtil.getNodeContainer(n, Optional.of(getWorkflow()), n.getNodeID(), m_objCache))
+            .map(n -> ClientProxyUtil.getNodeContainer(n, Optional.of(getWorkflow()), n.getNodeID(), m_objCache, m_serviceConfig))
             .collect(Collectors.toList());
     }
 
@@ -742,7 +743,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
         //TODO e.g. put the node entities into a hash map for quicker access
         final NodeEnt nodeEnt = getWorkflow().getNodes().get(id.toString());
         //return exactly the same node container instance for the same node entity
-        return ClientProxyUtil.getNodeContainer(nodeEnt, Optional.of(getWorkflow()), id.toString(), m_objCache);
+        return ClientProxyUtil.getNodeContainer(nodeEnt, Optional.of(getWorkflow()), id.toString(), m_objCache, m_serviceConfig);
     }
 
 

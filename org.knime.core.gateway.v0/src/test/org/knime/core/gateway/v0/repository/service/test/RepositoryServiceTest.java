@@ -62,6 +62,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -77,11 +79,13 @@ import org.mockito.Mockito;
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public class RepositoryServiceTest {
 
-    RepositoryService m_serviceMock;
+    private RepositoryService m_serviceMock;
+    private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(RepositoryService.class);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
@@ -113,7 +117,7 @@ public class RepositoryServiceTest {
 		Mockito.when(m_serviceMock.getNodeRepository()).thenReturn(res);
 
 		//call method
-		List<RepoCategoryEnt> methodRes = service(RepositoryService.class).getNodeRepository();
+		List<RepoCategoryEnt> methodRes = service(RepositoryService.class, m_serviceConfig).getNodeRepository();
 
 		//compare results
         for (int i = 0; i < methodRes.size(); i++) {
@@ -133,7 +137,7 @@ public class RepositoryServiceTest {
 		Mockito.when(m_serviceMock.getNodeDescription(Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		String methodRes = service(RepositoryService.class).getNodeDescription(nodeTypeID);
+		String methodRes = service(RepositoryService.class, m_serviceConfig).getNodeDescription(nodeTypeID);
 
 		//compare results
 		assertEquals(res, methodRes);

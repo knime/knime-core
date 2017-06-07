@@ -57,6 +57,7 @@ import org.apache.log4j.Logger;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.util.ExtPointUtils;
+import org.knime.core.util.Pair;
 
 /**
  * Manages services (i.e. {@link GatewayService}s) and gives access to service interface implementations.
@@ -70,8 +71,7 @@ public class ServiceManager {
     private static ServiceFactory SERVICE_FACTORY;
 
     /* SERVICES SINGLEON INSTANCES */
-    private static Map<Class<? extends GatewayService>, GatewayService> SERVICES =
-        new HashMap<Class<? extends GatewayService>, GatewayService>();
+    private static Map<Pair<Class<? extends GatewayService>, ServiceConfig>, GatewayService> SERVICES = new HashMap<>();
 
     private ServiceManager() {
         //private 'utility' class
@@ -86,14 +86,15 @@ public class ServiceManager {
      * @param serviceInterface the service interface the implementation is requested for
      * @return an implementation of the requested service interface (it returns the same instance with every method call)
      */
-    public static <S extends GatewayService> S service(final Class<S> serviceInterface) {
-        S service = (S)SERVICES.get(serviceInterface);
+    public static <S extends GatewayService> S service(final Class<S> serviceInterface, final ServiceConfig serviceConfig) {
+        Pair<Class<? extends GatewayService>, ServiceConfig> pair = Pair.create(serviceInterface, serviceConfig);
+        S service = (S)SERVICES.get(pair);
         if (service == null) {
             if (SERVICE_FACTORY == null) {
                 SERVICE_FACTORY = createServiceFactory();
             }
-            service = SERVICE_FACTORY.createService(serviceInterface);
-            SERVICES.put(serviceInterface, service);
+            service = SERVICE_FACTORY.createService(serviceInterface, serviceConfig);
+            SERVICES.put(pair, service);
         }
         return service;
     }

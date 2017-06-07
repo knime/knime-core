@@ -53,9 +53,12 @@ import java.util.List;
 
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.knime.core.gateway.ObjectSpecUtil;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.knime.core.gateway.services.ServiceFactory;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 import org.knime.core.jaxrs.providers.OptionalParamConverter;
+import org.knime.core.jaxrs.providers.exception.NoSuchElementExceptionMapper;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONDeserializer;
 import org.knime.core.jaxrs.providers.json.EntityCollectionJSONSerializer;
 import org.knime.core.jaxrs.providers.json.EntityJSONDeserializer;
@@ -66,17 +69,20 @@ import org.knime.core.jaxrs.providers.json.MapJSONDeserializer;
  * Provides service implementations that communicate with the respective RESTful service interface (see also the
  * JettyRestServer in the ...gateway.jax-rs.serverproxy plugin).
  *
- * TODO: allow the port number to be set from the outside somehow
+ * TODO: allow the host and port number to be set from the outside somehow
  *
  * @author Martin Horn, University of Konstanz
  */
 public class RSClientServiceFactory implements ServiceFactory {
 
+    //TODO get the rest adress from somewhere else!
+    private static final String GATEWAY_PATH = "knime/rest/v4/gateway/";
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public <S extends GatewayService> S createService(final Class<S> serviceInterface) {
+    public <S extends GatewayService> S createService(final Class<S> serviceInterface, final ServiceConfig serviceConfig) {
         try {
             String name = ObjectSpecUtil.extractNameFromClass(serviceInterface, "api");
             String namespace = ObjectSpecUtil.extractNamespaceFromClass(serviceInterface, "api");
@@ -86,8 +92,15 @@ public class RSClientServiceFactory implements ServiceFactory {
             Class<?> rsServiceInterface = Class.forName(fullyQualifiedName);
             List<Object> providers = Arrays.asList(new EntityJSONSerializer(), new EntityJSONDeserializer(),
                 new EntityCollectionJSONSerializer(), new EntityCollectionJSONDeserializer(),
-                new MapJSONDeserializer(), new OptionalParamConverter());
-            return (S)JAXRSClientFactory.create("http://localhost:3000/", rsServiceInterface, providers);
+                new MapJSONDeserializer(), new OptionalParamConverter(), new NoSuchElementExceptionMapper());
+            if(serviceConfig instanceof ServerServiceConfig) {
+                ServerServiceConfig serverServiceConfig = (ServerServiceConfig) serviceConfig;
+                return (S)JAXRSClientFactory.create(
+                    "http://" + serverServiceConfig.getHost() + ":" + serverServiceConfig.getPort() + "/" + GATEWAY_PATH,
+                    rsServiceInterface, providers);
+            } else {
+                throw new IllegalStateException("No server service config given!");
+            }
         } catch (ClassNotFoundException ex) {
             throw new RuntimeException(ex);
         }

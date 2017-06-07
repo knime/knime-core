@@ -50,6 +50,7 @@ package org.knime.core.clientproxy.workflow;
 
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
@@ -67,8 +68,8 @@ public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer imp
     /**
      * @param node
      */
-    public ClientProxySingleNodeContainer(final NodeEnt node, final ObjectCache objCache) {
-        super(node, objCache);
+    public ClientProxySingleNodeContainer(final NodeEnt node, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
+        super(node, objCache, serviceConfig);
         m_node = node;
     }
 

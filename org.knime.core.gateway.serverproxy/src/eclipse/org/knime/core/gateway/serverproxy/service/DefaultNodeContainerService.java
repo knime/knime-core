@@ -67,12 +67,14 @@ public class DefaultNodeContainerService implements NodeContainerService {
     /** {@inheritDoc} */
     @Override
     public String getNodeSettingsJSON(final String workflowID, final String nodeID) {
-        WorkflowProject workflowProject = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID);
-        if (workflowProject == null) {
-            throw new RuntimeException("Workflow not known: " + workflowID);
+        //TODO cache worklfow and throw exception if not found
+        WorkflowProject workflowProject = WorkflowProjectManager.getInstance().getWorkflowProject(workflowID).get();
+        IWorkflowManager manager;
+        try {
+            manager = workflowProject.openProject();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-        IWorkflowManager manager = workflowProject.getProject().orElseThrow(
-            () -> new RuntimeException("Workflow not open: " + workflowID));
         INodeContainer nodeContainer = manager.getNodeContainer(NodeID.fromString(nodeID));
         ConfigBaseRO settings = nodeContainer.getNodeSettings();
         return JSONConfig.toJSONString(settings, WriterConfig.PRETTY);

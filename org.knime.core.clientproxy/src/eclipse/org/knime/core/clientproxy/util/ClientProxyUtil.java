@@ -61,6 +61,7 @@ import org.knime.core.clientproxy.workflow.ClientProxyWorkflowAnnotation;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowInPort;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowManager;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowOutPort;
+import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -90,14 +91,15 @@ public class ClientProxyUtil {
      * @param rootWorkflowID
      * @param nodeID
      * @param objCache the cache that allows one to re-use class instances
+     * @param serviceConfig
      * @return the {@link ClientProxyWorkflowManager} - either the cached one or newly created
      */
     public static ClientProxyWorkflowManager getWorkflowManager(final String rootWorkflowID,
-        final Optional<String> nodeID, final ObjectCache objCache) {
+        final Optional<String> nodeID, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
         return objCache.getOrCreate(rootWorkflowID, we -> {
-            NodeEnt node = service(WorkflowService.class).getNode(rootWorkflowID, nodeID);
+            NodeEnt node = service(WorkflowService.class, serviceConfig).getNode(rootWorkflowID, nodeID);
             assert node instanceof WorkflowNodeEnt;
-            return new ClientProxyWorkflowManager((WorkflowNodeEnt)node, objCache);
+            return new ClientProxyWorkflowManager((WorkflowNodeEnt)node, objCache, serviceConfig);
         });
     }
 
@@ -108,17 +110,18 @@ public class ClientProxyUtil {
      * @param key a unique key representing the node entity to ensure that the very same object instance is returned for
      *            the same key
      * @param objCache the cache that allows one to re-use class instances
+     * @param serviceConfig
      * @return the {@link ClientProxyNodeContainer} - either the cached one or newly created
      */
     public static ClientProxyNodeContainer getNodeContainer(final NodeEnt nodeEnt,
-        final Optional<WorkflowEnt> workflowEnt, final Object key, final ObjectCache objCache) {
+        final Optional<WorkflowEnt> workflowEnt, final Object key, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
         //return exactly the same node container instance for the same node entity
         return objCache.getOrCreate(key, k -> {
             if (nodeEnt instanceof NativeNodeEnt) {
-                return new ClientProxySingleNodeContainer(nodeEnt, objCache);
+                return new ClientProxySingleNodeContainer(nodeEnt, objCache, serviceConfig);
             }
             if (nodeEnt instanceof WorkflowNodeEnt) {
-                return new ClientProxyWorkflowManager((WorkflowNodeEnt)nodeEnt, objCache);
+                return new ClientProxyWorkflowManager((WorkflowNodeEnt)nodeEnt, objCache, serviceConfig);
             }
             throw new IllegalStateException("Node entity type " + nodeEnt.getClass().getName() + " not supported.");
         }, ClientProxyNodeContainer.class);

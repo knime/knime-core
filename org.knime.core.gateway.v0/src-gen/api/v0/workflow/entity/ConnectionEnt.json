@@ -30,6 +30,11 @@
             "type" : "boolean"
         },
         {
+            "name" : "IsFlowVariablePortConnection",
+            "description" : "Whether it's a connection between two flow variable ports.",
+            "type" : "boolean"
+        },
+        {
             "name" : "BendPoints",
             "description" : "The list of handles/bend points.",
             "type" : "List<workflow.entity.XYEnt>"

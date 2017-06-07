@@ -61,6 +61,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -76,11 +78,13 @@ import org.mockito.Mockito;
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public class ExecutionServiceTest {
 
-    ExecutionService m_serviceMock;
+    private ExecutionService m_serviceMock;
+    private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(ExecutionService.class);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
@@ -99,7 +103,7 @@ public class ExecutionServiceTest {
 		Mockito.when(m_serviceMock.getCanExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		boolean methodRes = service(ExecutionService.class).getCanExecuteUpToHere(workflowID, nodeID);
+		boolean methodRes = service(ExecutionService.class, m_serviceConfig).getCanExecuteUpToHere(workflowID, nodeID);
 
 		//compare results
 		assertEquals(res, methodRes);
@@ -119,7 +123,7 @@ public class ExecutionServiceTest {
 		Mockito.when(m_serviceMock.setExecuteUpToHere(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		WorkflowEnt methodRes = service(ExecutionService.class).setExecuteUpToHere(workflowID, nodeID);
+		WorkflowEnt methodRes = service(ExecutionService.class, m_serviceConfig).setExecuteUpToHere(workflowID, nodeID);
 
 		//compare results
         WorkflowEntTest.testEnt(methodRes, values);

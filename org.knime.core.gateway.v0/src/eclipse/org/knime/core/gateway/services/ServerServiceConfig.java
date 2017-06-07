@@ -43,66 +43,80 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jun 2, 2017 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
+package org.knime.core.gateway.services;
 
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.services.ServiceConfig;
 
 /**
- * Builder for {@link ConnectionEnt}.
+ * {@link ServiceConfig}-implementation to configure services that communicate with a server specified by a host name
+ * and a port.
+ *
  * @author Martin Horn, University of Konstanz
  */
-// AUTO-GENERATED CODE; DO NOT MODIFY
-public interface ConnectionEntBuilder extends GatewayEntityBuilder<ConnectionEnt> {
+public class ServerServiceConfig implements ServiceConfig {
+
+    private String m_host;
+
+    private int m_port;
 
     /**
-     * @param dest The destination node
-     * @return <code>this</code>
+     * @param host
+     * @param port
      */
-	ConnectionEntBuilder setDest(String dest);
-	
+    public ServerServiceConfig(final String host, final int port) {
+        m_host = host;
+        m_port = port;
+
+    }
+
     /**
-     * @param destPort The destination port, starting at 0
-     * @return <code>this</code>
+     * @return the host name
      */
-	ConnectionEntBuilder setDestPort(int destPort);
-	
+    public String getHost() {
+        return m_host;
+    }
+
     /**
-     * @param source The source node.
-     * @return <code>this</code>
+     * @return the host's port
      */
-	ConnectionEntBuilder setSource(String source);
-	
-    /**
-     * @param sourcePort The source port, starting at 0.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setSourcePort(int sourcePort);
-	
-    /**
-     * @param isDeleteable Whether the connection can currently be deleted.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setIsDeleteable(boolean isDeleteable);
-	
-    /**
-     * @param isFlowVariablePortConnection Whether it's a connection between two flow variable ports.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setIsFlowVariablePortConnection(boolean isFlowVariablePortConnection);
-	
-    /**
-     * @param bendPoints The list of handles/bend points.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setBendPoints(List<XYEnt> bendPoints);
-	
-    /**
-     * @param type The type of the connection (standard, workflow input / output / through).
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setType(String type);
-	
+    public int getPort() {
+        return m_port;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_host.hashCode();
+        result = prime * result + m_port;
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ServerServiceConfig other = (ServerServiceConfig)obj;
+        if (m_host == null) {
+            if (other.m_host != null) {
+                return false;
+            }
+        } else if (!m_host.equals(other.m_host)) {
+            return false;
+        } else if (m_port != other.m_port) {
+            return false;
+        }
+        return true;
+    }
+
 }

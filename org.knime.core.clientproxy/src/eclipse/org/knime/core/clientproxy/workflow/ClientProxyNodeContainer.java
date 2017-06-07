@@ -73,6 +73,7 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.clientproxy.util.ClientProxyUtil;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
@@ -114,17 +115,20 @@ public class ClientProxyNodeContainer implements INodeContainer {
     private final CopyOnWriteArraySet<NodePropertyChangedListener> m_nodePropertyChangedListeners =
         new CopyOnWriteArraySet<NodePropertyChangedListener>();
 
+    protected ServerServiceConfig m_serviceConfig;
+
 
     /**
      * If the underlying entity is a node.
      *
      * @param node
      * @param objCache
-     * @param parentNode the parent node, never <code>null</code>
+     * @param serviceConfig
      */
-    public ClientProxyNodeContainer(final NodeEnt node, final ObjectCache objCache) {
+    public ClientProxyNodeContainer(final NodeEnt node, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
         m_node = node;
         m_objCache = objCache;
+        m_serviceConfig = serviceConfig;
     }
 
     /**
@@ -151,7 +155,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
                 parentNodeID = s;
             }
             return ClientProxyUtil.getWorkflowManager(m_node.getRootWorkflowID(), Optional.ofNullable(parentNodeID),
-                m_objCache);
+                m_objCache, m_serviceConfig);
         }).orElse(null);
     }
 
@@ -361,7 +365,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
     /** {@inheritDoc} */
     @Override
     public ConfigBaseRO getNodeSettings() {
-        String json = service(NodeContainerService.class).getNodeSettingsJSON(m_node.getRootWorkflowID(), m_node.getNodeID());
+        String json = service(NodeContainerService.class, m_serviceConfig).getNodeSettingsJSON(m_node.getRootWorkflowID(), m_node.getNodeID());
         try {
             return JSONConfig.readJSON(new NodeSettings("settings"), new StringReader(json));
         } catch (IOException ex) {

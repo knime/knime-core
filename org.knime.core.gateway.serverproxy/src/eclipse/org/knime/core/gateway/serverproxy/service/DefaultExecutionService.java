@@ -68,7 +68,8 @@ public class DefaultExecutionService implements ExecutionService {
     @Override
     public boolean getCanExecuteUpToHere(final String workflowID, final String nodeID) {
         try {
-            return WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID).openProject()
+            //TODO cache workflow and throw exception if not found
+            return WorkflowProjectManager.getInstance().getWorkflowProject(workflowID).get().openProject()
                 .canExecuteNode(NodeID.fromString(nodeID));
         } catch (Exception ex) {
             // TODO better exception handling
@@ -82,7 +83,8 @@ public class DefaultExecutionService implements ExecutionService {
     @Override
     public WorkflowEnt setExecuteUpToHere(final String workflowID, final String nodeID) {
         try {
-            IWorkflowManager wfm = WorkflowProjectManager.getWorkflowProjectsMap().get(workflowID).openProject();
+            //TODO cache workflow and throw exception if not found
+            IWorkflowManager wfm = WorkflowProjectManager.getInstance().getWorkflowProject(workflowID).get().openProject();
             wfm.executeUpToHere(NodeID.fromString(nodeID));
             //TODO only update the downstream nodes, or better: the ones that changed its status
             return buildWorkflowEnt(wfm, workflowID);

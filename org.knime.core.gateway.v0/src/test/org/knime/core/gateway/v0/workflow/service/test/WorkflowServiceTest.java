@@ -65,6 +65,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -80,11 +82,13 @@ import org.mockito.Mockito;
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public class WorkflowServiceTest {
 
-    WorkflowService m_serviceMock;
+    private WorkflowService m_serviceMock;
+    private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(WorkflowService.class);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
@@ -104,7 +108,7 @@ public class WorkflowServiceTest {
 		Mockito.when(m_serviceMock.getWorkflow(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		WorkflowEnt methodRes = service(WorkflowService.class).getWorkflow(rootWorkflowID, nodeID);
+		WorkflowEnt methodRes = service(WorkflowService.class, m_serviceConfig).getWorkflow(rootWorkflowID, nodeID);
 
 		//compare results
         WorkflowEntTest.testEnt(methodRes, values);
@@ -124,69 +128,10 @@ public class WorkflowServiceTest {
 		Mockito.when(m_serviceMock.getNode(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		NodeEnt methodRes = service(WorkflowService.class).getNode(rootWorkflowID, nodeID);
+		NodeEnt methodRes = service(WorkflowService.class, m_serviceConfig).getNode(rootWorkflowID, nodeID);
 
 		//compare results
         NodeEntTest.testEnt(methodRes, values);
-    }
-
-    @Test
-    public void test_updateWorkflow() {
-		//create parameter values
-		WorkflowEnt wf = WorkflowEntTest.createEnt(WorkflowEntTest.createValueList());
- 
-		//returns void - just call the method
-		service(WorkflowService.class).updateWorkflow(wf);
-    }
-
-    @Test
-    public void test_getWorkflowIDs() {
-		//create parameter values
-		String workflowGroupID = "CGvxL";
- 
-		//create return value   
-		List<String> res = new ArrayList<>(5);
-        res.add("lzCuG");
-        res.add("5KrGg");
-        res.add("OuJNz");
-        res.add("5VLnL");
-        res.add("YJQGG");
-
-		//mock return value
-		Mockito.when(m_serviceMock.getWorkflowIDs(Matchers.anyVararg())).thenReturn(res);
-
-		//call method
-		List<String> methodRes = service(WorkflowService.class).getWorkflowIDs(workflowGroupID);
-
-		//compare results
-		for (int i = 0; i < methodRes.size(); i++) {
-			assertEquals(res.get(i), methodRes.get(i));
-        }
-    }
-
-    @Test
-    public void test_getWorkflowGroupIDs() {
-		//create parameter values
-		String workflowGroupID = "CGvxL";
- 
-		//create return value   
-		List<String> res = new ArrayList<>(5);
-        res.add("lzCuG");
-        res.add("5KrGg");
-        res.add("OuJNz");
-        res.add("5VLnL");
-        res.add("YJQGG");
-
-		//mock return value
-		Mockito.when(m_serviceMock.getWorkflowGroupIDs(Matchers.anyVararg())).thenReturn(res);
-
-		//call method
-		List<String> methodRes = service(WorkflowService.class).getWorkflowGroupIDs(workflowGroupID);
-
-		//compare results
-		for (int i = 0; i < methodRes.size(); i++) {
-			assertEquals(res.get(i), methodRes.get(i));
-        }
     }
 
     @Test
@@ -204,7 +149,7 @@ public class WorkflowServiceTest {
 		Mockito.when(m_serviceMock.getAllWorkflows()).thenReturn(res);
 
 		//call method
-		List<String> methodRes = service(WorkflowService.class).getAllWorkflows();
+		List<String> methodRes = service(WorkflowService.class, m_serviceConfig).getAllWorkflows();
 
 		//compare results
 		for (int i = 0; i < methodRes.size(); i++) {

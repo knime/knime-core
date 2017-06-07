@@ -58,9 +58,13 @@ public interface WorkflowProjectFactory {
     static final String EXT_POINT_ATTR = "WorkflowProjectFactory";
 
     /**
-     * TODO
-     *
      * @return the root of the project tree
      */
     ProjectTreeNode getProjectTree();
+
+    /**
+     * @return <code>true</code> if the project tree has changed - the {@link #getProjectTree()}-method will return the
+     *         new project tree
+     */
+    boolean hasProjectTreeChanged();
 }

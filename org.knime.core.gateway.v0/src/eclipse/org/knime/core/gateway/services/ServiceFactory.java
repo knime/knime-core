@@ -52,8 +52,8 @@ import org.knime.core.gateway.server.KnimeGatewayServer;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
 
 /**
- * Interface to be implemented by plugins that make use of the service factory extension point.
- * Delivers concrete implementations for given service interfaces (see also {@link ServiceManager}).
+ * Interface to be implemented by plugins that make use of the service factory extension point. Delivers concrete
+ * implementations for given service interfaces (see also {@link ServiceManager}).
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -80,11 +80,11 @@ public interface ServiceFactory {
      * Creates an instance for the demanded server interface. The returned implementation very likely represents a
      * client that communicates with the respective server (see {@link KnimeGatewayServer}).
      *
-     * TODO: possibly more parameters are required in order to instantiate a new service (e.g. port number)
-     *
-     * @param serviceInterface
-     * @return a new instance of the service interface
+     * @param serviceInterface the service to create
+     * @param serviceConfig a configuration object with more parameters required for service creation
+     * @return a new instance of the service interface or <code>null</code> if the service cannot be created (e.g.
+     *         because a service config object that cannot be handled)
      */
-    <S extends GatewayService> S createService(Class<S> serviceInterface);
+    <S extends GatewayService> S createService(Class<S> serviceInterface, ServiceConfig serviceConfig);
 
 }

@@ -85,13 +85,14 @@ public class ConnectionEntTest {
 		builder.setSource((String) valueList.get(2));
 		builder.setSourcePort((int) valueList.get(3));
 		builder.setIsDeleteable((boolean) valueList.get(4));
-		List<XYEnt> list5 = new ArrayList<>();
-		List<Object> subList5 = (List<Object>) valueList.get(5);
-		for(int i = 0; i < subList5.size(); i++) {
-			list5.add(XYEntTest.createEnt((List<Object>) subList5.get(i)));
+		builder.setIsFlowVariablePortConnection((boolean) valueList.get(5));
+		List<XYEnt> list6 = new ArrayList<>();
+		List<Object> subList6 = (List<Object>) valueList.get(6);
+		for(int i = 0; i < subList6.size(); i++) {
+			list6.add(XYEntTest.createEnt((List<Object>) subList6.get(i)));
 		}
-		builder.setBendPoints(list5);
-		builder.setType((String) valueList.get(6));
+		builder.setBendPoints(list6);
+		builder.setType((String) valueList.get(7));
         return builder.build();
     }
 
@@ -101,12 +102,13 @@ public class ConnectionEntTest {
 		assertEquals(ent.getSource(), (String) valueList.get(2));
 		assertEquals(ent.getSourcePort(), (int) valueList.get(3));
 		assertEquals(ent.getIsDeleteable(), (boolean) valueList.get(4));
-		List<Object> subValueList5 = (List<Object>) valueList.get(5);
-		List<XYEnt> subList5 =  ent.getBendPoints();
-		for(int i = 0; i < subList5.size(); i++) {
-			XYEntTest.testEnt(subList5.get(i), (List<Object>) subValueList5.get(i));
+		assertEquals(ent.getIsFlowVariablePortConnection(), (boolean) valueList.get(5));
+		List<Object> subValueList6 = (List<Object>) valueList.get(6);
+		List<XYEnt> subList6 =  ent.getBendPoints();
+		for(int i = 0; i < subList6.size(); i++) {
+			XYEntTest.testEnt(subList6.get(i), (List<Object>) subValueList6.get(i));
 		}
-		assertEquals(ent.getType(), (String) valueList.get(6));
+		assertEquals(ent.getType(), (String) valueList.get(7));
     }
 
     public static List<Object> createValueList() {
@@ -121,15 +123,17 @@ public class ConnectionEntTest {
 
  		valueList.add(true);
 
- 		List<List<Object>> subList6 = new ArrayList<>();
-		subList6.add(XYEntTest.createValueList());
-		subList6.add(XYEntTest.createValueList());
-		subList6.add(XYEntTest.createValueList());
-		subList6.add(XYEntTest.createValueList());
-		subList6.add(XYEntTest.createValueList());
- 		valueList.add(subList6);
+ 		valueList.add(true);
 
- 		valueList.add("J9O7q");
+ 		List<List<Object>> subList7 = new ArrayList<>();
+		subList7.add(XYEntTest.createValueList());
+		subList7.add(XYEntTest.createValueList());
+		subList7.add(XYEntTest.createValueList());
+		subList7.add(XYEntTest.createValueList());
+		subList7.add(XYEntTest.createValueList());
+ 		valueList.add(subList7);
+
+ 		valueList.add("0qjmL");
 
         return valueList;
     }

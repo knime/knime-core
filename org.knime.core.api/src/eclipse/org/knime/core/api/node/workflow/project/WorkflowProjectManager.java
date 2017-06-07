@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -61,39 +62,56 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.util.HostUtils;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
- * Manages workflow project in a tree. The project tree (and therewith the workflow projects) are loaded from the
+ * Manages workflow projects in a tree. The project tree (and therewith the workflow projects) are loaded from the
  * respective extension point.
  *
- * TODO Eventually e.g. the org.knime.workbench.ui.navigator.KnimeResourceContentProvider (or the knime executors) should
- * make use of this, too.
+ * TODO Eventually e.g. the org.knime.workbench.ui.navigator.KnimeResourceContentProvider (or the knime executors)
+ * should make use of this, too.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowProjectManager {
+public final class WorkflowProjectManager {
 
-    private static final Logger LOGGER = Logger.getLogger(HostUtils.class);
+    private static final Logger LOGGER = Logger.getLogger(WorkflowProjectManager.class);
 
-    private static final List<WorkflowProjectFactory> FACTORIES =
+    private final List<WorkflowProjectFactory> FACTORIES =
         collectExecutableExtensions(WorkflowProjectFactory.EXT_POINT_ID, WorkflowProjectFactory.EXT_POINT_ATTR);
 
     /**
      * The root of all workflow projects, no matter from what source
      */
-    private static ProjectTreeNode ROOT = null;
+    private ProjectTreeNode ROOT = null;
 
-    private static Map<String, WorkflowProject> m_workflowMap;
+    private Map<String, WorkflowProject> m_workflowProjectMap;
+
+    /**
+     * Maps of already opened/loaded workflow projects.
+     */
+    private Map<String, IWorkflowManager> m_cachedWorkflowsMap = new HashMap<String, IWorkflowManager>();
+
+    /**
+     * singleton instance
+     */
+    private static WorkflowProjectManager INSTANCE = new WorkflowProjectManager();
 
     private WorkflowProjectManager() {
-        //static utility class
+        //singleton pattern
+    }
+
+    /**
+     * @return the singleton instance of the workflow project manager
+     */
+    public static WorkflowProjectManager getInstance() {
+        return INSTANCE;
     }
 
     /**
      * @return the root project tree node
      */
-    public static ProjectTreeNode getProjectTree() {
+    public ProjectTreeNode getProjectTree() {
         if (ROOT == null) {
             ROOT = new ProjectTreeNode() {
 
@@ -127,35 +145,85 @@ public class WorkflowProjectManager {
     /**
      * @return all workflow projects in the workflow project tree (see {@link #getProjectTree()})
      */
-    public static List<WorkflowProject> getWorkflowProjects() {
+    public List<WorkflowProject> getWorkflowProjects() {
         List<WorkflowProject> projects = new ArrayList<WorkflowProject>();
         getWorkflowProjects(getProjectTree(), projects);
         return Collections.unmodifiableList(projects);
     }
 
     /**
-     *TODO: ensure unique keys for mapping.
+     * @param workflowProjectID
+     * @return the workflow project for the given id or an empty optional if doesn't exist
+     */
+    public Optional<WorkflowProject> getWorkflowProject(final String workflowProjectID) {
+        return Optional.ofNullable(getWorkflowProjectsMap().get(workflowProjectID));
+    }
+
+    /**
+     * Opens and caches the workflow with the given workflow project ID. If the workflow has already been opened, it
+     * will be returned instead.
+     *
+     * @param workflowProjectID
+     * @return the opened workflow or an empty optional if there is no workflow project with the given id
+     * @throws Exception
+     */
+    public Optional<IWorkflowManager> openAndCacheWorkflow(final String workflowProjectID) throws Exception {
+        IWorkflowManager iwfm = getCachedWorkflow(workflowProjectID).orElse(null);
+        if (iwfm == null) {
+            WorkflowProject wp = getWorkflowProject(workflowProjectID).orElse(null);
+            if (wp == null) {
+                return Optional.empty();
+            }
+            iwfm = wp.openProject();
+            cacheWorkflow(workflowProjectID, iwfm);
+        }
+        return Optional.of(iwfm);
+    }
+
+    /**
+     * @param workflowProjectID
+     * @return the cached workflow or an empty optional if none has been found for the given workflow project ID.
+     */
+    private Optional<IWorkflowManager> getCachedWorkflow(final String workflowProjectID) {
+        return Optional.ofNullable(m_cachedWorkflowsMap.get(workflowProjectID));
+    }
+
+    /**
+     * Caches the given workflow manager and therewith makes it available to other plugins etc. (e.g. the
+     * ConnectionContainerEditPart-class in the org.knime.workbench.editor-plugin)
+     *
+     * @param wfm
+     */
+    private void cacheWorkflow(final String workflowProjectID, final IWorkflowManager wfm) {
+        m_cachedWorkflowsMap.put( workflowProjectID, wfm);
+    }
+
+    /**
+     * TODO: ensure unique keys for mapping.
      *
      * @return a map from the workflow name to the respective workflow project
      *
      */
-    public static Map<String, WorkflowProject> getWorkflowProjectsMap() {
-        if (m_workflowMap == null) {
-            m_workflowMap = new HashMap<String, WorkflowProject>();
-            WorkflowProjectManager.getWorkflowProjects().stream().forEach((wp) -> {
-                m_workflowMap.put(wp.getID(), wp);
+    private Map<String, WorkflowProject> getWorkflowProjectsMap() {
+        if (FACTORIES.stream().anyMatch(wpf -> wpf.hasProjectTreeChanged())) {
+            //if any workflow project factory requires an update, re-create the workflow map
+            m_workflowProjectMap = null;
+        }
+        if (m_workflowProjectMap == null) {
+            m_workflowProjectMap = new HashMap<String, WorkflowProject>();
+            WorkflowProjectManager.getInstance().getWorkflowProjects().stream().forEach((wp) -> {
+                m_workflowProjectMap.put(wp.getID(), wp);
             });
         }
-        return Collections.unmodifiableMap(m_workflowMap);
+        return Collections.unmodifiableMap(m_workflowProjectMap);
     }
 
-    private static void getWorkflowProjects(final ProjectTreeNode n, final List<WorkflowProject> l) {
+    private void getWorkflowProjects(final ProjectTreeNode n, final List<WorkflowProject> l) {
         l.addAll(n.getChildrenProjects());
-        for(ProjectTreeNode c : n.getChildren()) {
+        for (ProjectTreeNode c : n.getChildren()) {
             getWorkflowProjects(c, l);
         }
     }
-
 
     /**
      * COPIED from ExtPointUtils in org.knime.core.
@@ -167,7 +235,7 @@ public class WorkflowProjectManager {
      * @param extPointAttr the extension point attributes of the class to get the instances for
      * @return the list of all instances for the class-extension point attribute
      */
-    private static <C> List<C> collectExecutableExtensions(final String extPointID, final String extPointAttr) {
+    private <C> List<C> collectExecutableExtensions(final String extPointID, final String extPointAttr) {
 
         List<C> instances = new ArrayList<C>();
 

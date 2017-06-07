@@ -48,12 +48,15 @@
  */
 package org.knime.core.gateway;
 
+import org.knime.core.gateway.server.KnimeGatewayServer;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
 import org.knime.core.util.IEarlyStartup;
 
 /**
+ * Only for testing purposes - can be added as extension point in order to locally start
+ * all available {@link KnimeGatewayServer}s.
  *
- * @author hornm
+ * @author Martin Horn, University of Konstanz
  */
 public class GatewayServerEarlyStartup implements IEarlyStartup {
 

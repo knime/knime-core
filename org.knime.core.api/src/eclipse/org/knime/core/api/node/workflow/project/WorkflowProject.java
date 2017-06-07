@@ -48,8 +48,6 @@
  */
 package org.knime.core.api.node.workflow.project;
 
-import java.util.Optional;
-
 import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
@@ -80,12 +78,12 @@ public interface WorkflowProject {
     WorkflowProjectType getType();
 
     /**
-     * @return opens the the actual workflow represented by this project
+     * Opens/loads the actual workflow represented by this workflow project.
+     * If the workflow has already been opened before it will be opened/loaded again.
+     *
+     * @return the newly loaded workflow
      * @throws Exception if something got wrong while loading the project
      */
     IWorkflowManager openProject() throws Exception;
-
-    /** @return the workflow if it is open, otherwise an empty optional. */
-    Optional<IWorkflowManager> getProject();
 
 }

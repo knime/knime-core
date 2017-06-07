@@ -61,6 +61,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.gateway.server.KnimeGatewayServerManager;
+import org.knime.core.gateway.services.ServerServiceConfig;
+import org.knime.core.gateway.services.ServiceConfig;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
@@ -76,11 +78,13 @@ import org.mockito.Mockito;
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public class ${name}Test {
 
-    ${name} m_serviceMock;
+    private ${name} m_serviceMock;
+    private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(${name}.class);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);
@@ -149,7 +153,7 @@ public class ${name}Test {
 
 ##CALL
 		//call method
-		${rettype.toString()} methodRes = service(${name}.class).$method.getName()(#foreach($param in $method.getParameters())$param.getName()#if($foreach.hasNext), #end#end);
+		${rettype.toString()} methodRes = service(${name}.class, m_serviceConfig).$method.getName()(#foreach($param in $method.getParameters())$param.getName()#if($foreach.hasNext), #end#end);
 
 ##COMPARE
 		//compare results

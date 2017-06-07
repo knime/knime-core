@@ -83,17 +83,19 @@ public class ConnectionEntFromJson  implements ConnectionEnt {
 	private String m_Source;
 	private int m_SourcePort;
 	private boolean m_IsDeleteable;
+	private boolean m_IsFlowVariablePortConnection;
 	private List<XYEntFromJson> m_BendPoints;
 	private String m_Type;
 
 	@JsonCreator
 	private ConnectionEntFromJson(
-	@JsonProperty("Dest") String Dest,	@JsonProperty("DestPort") int DestPort,	@JsonProperty("Source") String Source,	@JsonProperty("SourcePort") int SourcePort,	@JsonProperty("IsDeleteable") boolean IsDeleteable,	@JsonProperty("BendPoints") List<XYEntFromJson> BendPoints,	@JsonProperty("Type") String Type	) {
+	@JsonProperty("Dest") String Dest,	@JsonProperty("DestPort") int DestPort,	@JsonProperty("Source") String Source,	@JsonProperty("SourcePort") int SourcePort,	@JsonProperty("IsDeleteable") boolean IsDeleteable,	@JsonProperty("IsFlowVariablePortConnection") boolean IsFlowVariablePortConnection,	@JsonProperty("BendPoints") List<XYEntFromJson> BendPoints,	@JsonProperty("Type") String Type	) {
 		m_Dest = Dest;
 		m_DestPort = DestPort;
 		m_Source = Source;
 		m_SourcePort = SourcePort;
 		m_IsDeleteable = IsDeleteable;
+		m_IsFlowVariablePortConnection = IsFlowVariablePortConnection;
 		m_BendPoints = BendPoints;
 		m_Type = Type;
 	}
@@ -130,6 +132,12 @@ public class ConnectionEntFromJson  implements ConnectionEnt {
 	@Override
     public boolean getIsDeleteable() {
         	return m_IsDeleteable;
+            
+    }
+    
+	@Override
+    public boolean getIsFlowVariablePortConnection() {
+        	return m_IsFlowVariablePortConnection;
             
     }
     

@@ -142,6 +142,14 @@ public class ClientProxyConnectionContainer implements IConnectionContainer {
      * {@inheritDoc}
      */
     @Override
+    public boolean isFlowVariablePortConnection() {
+        return m_connection.getIsFlowVariablePortConnection();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ConnectionType getType() {
         return ConnectionType.valueOf(m_connection.getType());
     }

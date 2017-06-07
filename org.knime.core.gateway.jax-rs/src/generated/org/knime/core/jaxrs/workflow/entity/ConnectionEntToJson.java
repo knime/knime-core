@@ -99,6 +99,11 @@ public class ConnectionEntToJson  implements ConnectionEnt {
     	return m_e.getIsDeleteable();
     }
     
+	@JsonProperty("IsFlowVariablePortConnection")
+    public boolean getIsFlowVariablePortConnection() {
+    	return m_e.getIsFlowVariablePortConnection();
+    }
+    
 	@JsonProperty("BendPoints")
     public List<XYEnt> getBendPoints() {
     	return m_e.getBendPoints().stream().map(l -> XYEntToJson.wrap(l)).collect(Collectors.toList());

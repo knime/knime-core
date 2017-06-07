@@ -43,66 +43,20 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jun 2, 2017 (hornm): created
  */
-package org.knime.core.gateway.v0.workflow.entity.builder;
-
-import java.util.List;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+package org.knime.core.gateway.services;
 
 /**
- * Builder for {@link ConnectionEnt}.
+ * Configuration object that will be passed to the {@link ServiceFactory#createService(Class, ServiceConfig)}-method in
+ * order to configure the service creation (e.g. passing a host and port).
+ *
+ * Subclasses must implement the {@link #hashCode()} (and therewith the {@link #equals(Object)}) methods!
+ *
+ *
  * @author Martin Horn, University of Konstanz
  */
-// AUTO-GENERATED CODE; DO NOT MODIFY
-public interface ConnectionEntBuilder extends GatewayEntityBuilder<ConnectionEnt> {
+public interface ServiceConfig {
 
-    /**
-     * @param dest The destination node
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setDest(String dest);
-	
-    /**
-     * @param destPort The destination port, starting at 0
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setDestPort(int destPort);
-	
-    /**
-     * @param source The source node.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setSource(String source);
-	
-    /**
-     * @param sourcePort The source port, starting at 0.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setSourcePort(int sourcePort);
-	
-    /**
-     * @param isDeleteable Whether the connection can currently be deleted.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setIsDeleteable(boolean isDeleteable);
-	
-    /**
-     * @param isFlowVariablePortConnection Whether it's a connection between two flow variable ports.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setIsFlowVariablePortConnection(boolean isFlowVariablePortConnection);
-	
-    /**
-     * @param bendPoints The list of handles/bend points.
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setBendPoints(List<XYEnt> bendPoints);
-	
-    /**
-     * @param type The type of the connection (standard, workflow input / output / through).
-     * @return <code>this</code>
-     */
-	ConnectionEntBuilder setType(String type);
-	
 }

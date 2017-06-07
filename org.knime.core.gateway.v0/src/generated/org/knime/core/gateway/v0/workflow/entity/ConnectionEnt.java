@@ -82,6 +82,11 @@ public interface ConnectionEnt extends GatewayEntity {
  	boolean getIsDeleteable();
  	
     /**
+     * @return Whether it's a connection between two flow variable ports.
+     */
+ 	boolean getIsFlowVariablePortConnection();
+ 	
+    /**
      * @return The list of handles/bend points.
      */
  	List<XYEnt> getBendPoints();

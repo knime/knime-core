@@ -69,6 +69,7 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 	private String m_Source;
 	private int m_SourcePort;
 	private boolean m_IsDeleteable;
+	private boolean m_IsFlowVariablePortConnection;
 	private List<XYEnt> m_BendPoints;
 	private String m_Type;
 
@@ -81,6 +82,7 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 		m_Source = builder.m_Source;
 		m_SourcePort = builder.m_SourcePort;
 		m_IsDeleteable = builder.m_IsDeleteable;
+		m_IsFlowVariablePortConnection = builder.m_IsFlowVariablePortConnection;
 		m_BendPoints = builder.m_BendPoints;
 		m_Type = builder.m_Type;
     }
@@ -108,6 +110,11 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 	@Override
     public boolean getIsDeleteable() {
         return m_IsDeleteable;
+    }
+    
+	@Override
+    public boolean getIsFlowVariablePortConnection() {
+        return m_IsFlowVariablePortConnection;
     }
     
 	@Override
@@ -140,6 +147,7 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 		private String m_Source;
 		private int m_SourcePort;
 		private boolean m_IsDeleteable;
+		private boolean m_IsFlowVariablePortConnection;
 		private List<XYEnt> m_BendPoints;
 		private String m_Type;
 
@@ -174,6 +182,12 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 		@Override
         public ConnectionEntBuilder setIsDeleteable(final boolean IsDeleteable) {
 			m_IsDeleteable = IsDeleteable;			
+            return this;
+        }
+        
+		@Override
+        public ConnectionEntBuilder setIsFlowVariablePortConnection(final boolean IsFlowVariablePortConnection) {
+			m_IsFlowVariablePortConnection = IsFlowVariablePortConnection;			
             return this;
         }
         

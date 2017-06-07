@@ -47,55 +47,6 @@
             ]
         },
         {
-            "name" : "Workflow",
-            "operation" : "update",
-            "description" : "Trigger an update of the given workflow (@Martin, what's that mean?)",
-            "result" : {
-                "type" : "void"
-            },
-            "params" : [
-                {
-                    "description" : "The workflow to be updated",
-                    "name" : "wf",
-                    "type" : "workflow.entity.WorkflowEnt"
-                }
-            ]
-        },
-        {
-            "name" : "WorkflowIDs",
-            "operation" : "get",
-            "description" : "Get a list of IDs for all known workflows within the given workflow group",
-            "result" : {
-                "description" : "list of workflow ids",
-                "type" : "List<String>"
-            },
-            "params" : [
-            	{
-                    "description" : "The ID of the workflow group or 'root'",
-                    "name" : "workflowGroupID",
-                    "type" : "String"
-                }
-            
-            ]
-        },
-        {
-            "name" : "WorkflowGroupIDs",
-            "operation" : "get",
-            "description" : "Get a list of IDs for all known workflow groups within the given workflow group",
-            "result" : {
-                "description" : "list of workflow group ids",
-                "type" : "List<String>"
-            },
-            "params" : [
-            	{
-                    "description" : "The ID of the workflow group or 'root'",
-                    "name" : "workflowGroupID",
-                    "type" : "String"
-                }
-            
-            ]
-        },
-        {
             "name" : "AllWorkflows",
             "operation" : "get",
             "description" : "Get a list of IDs for all known workflows",
