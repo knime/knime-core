@@ -470,7 +470,10 @@ public class DatabaseConnectionSettings {
         settings.addString("database", m_jdbcUrl);
         if (m_credName == null) {
             settings.addString("user", m_user);
-            settings.addPassword("password", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", m_pass);
+            //always save the password encrypted...
+            settings.addPassword("passwordEncrypted", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", m_pass);
+            ///... and set the password to null to indicate for the loadConection method that the password is saved encrypted (introduced with KNIME 3.4)
+            settings.addString("password", null);
         } else {
             settings.addString("credential_name", m_credName);
         }
@@ -579,18 +582,16 @@ public class DatabaseConnectionSettings {
         } else {
             // user and password
             user = settings.getString("user");
-            try {
-                password = settings.getPassword("password", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO");
-            } catch (Exception ex) {
-                //password handling prior KNIME 3.4
+            final String pw = settings.getString("password", null);
+            if (pw != null) {
+                //these settings where either created prior KNIME 3.4 or flow variables are used to set the password
                 try {
-                    String pw = settings.getString("password", "");
-                    if (pw != null) {
-                        password = KnimeEncryption.decrypt(pw);
-                    }
+                    password = KnimeEncryption.decrypt(pw);
                 } catch (Exception e) {
                     LOGGER.error("Password could not be decrypted, reason: " + e.getMessage());
                 }
+            } else {
+                password = settings.getPassword("passwordEncrypted", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", "");
             }
         }
         final String dbIdentifier = settings.getString("databaseIdentifier", null);
