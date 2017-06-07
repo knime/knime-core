@@ -102,6 +102,8 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
     private final JSpinner m_limitRowsSpinner;
     private final JCheckBox m_skipFirstLinesChecker;
     private final JSpinner m_skipFirstLinesSpinner;
+    private final JCheckBox m_limitAnalysisChecker;
+    private final JSpinner m_limitAnalysisSpinner;
     private final CharsetNamePanel m_encodingPanel;
 
 
@@ -139,11 +141,62 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
+        m_limitAnalysisChecker = new JCheckBox("Scan limit (number of lines) ");
+        m_limitAnalysisSpinner = new JSpinner(new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 50));
+        m_limitAnalysisChecker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_limitAnalysisSpinner.setEnabled(m_limitAnalysisChecker.isSelected());
+            }
+        });
+        m_limitAnalysisChecker.doClick();
 
         addTab("Settings", initLayout());
 
+        addTab("Limit Rows", getLimitRowsPanel());
+
         m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
         addTab("Encoding", m_encodingPanel);
+    }
+
+    /**
+     * @param limitRowsTab
+     * @return
+     */
+    private JPanel getLimitRowsPanel() {
+        JPanel optionsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        gbc.weightx = 0;
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        optionsPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        optionsPanel.add(getInFlowLayout(m_limitAnalysisChecker), gbc);
+        gbc.gridx += 1;
+        optionsPanel.add(getInFlowLayout(m_limitAnalysisSpinner), gbc);
+
+        //empty panel to eat up extra space
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
+
+        return panel;
     }
 
     private JPanel initLayout() {
@@ -186,17 +239,6 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy += 1;
         optionsPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy += 1;
-        optionsPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
-        gbc.gridx += 1;
-        optionsPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        optionsPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
-        gbc.gridx += 1;
-        optionsPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
 
         //empty panel to eat up extra space
         gbc.gridy += 1;
@@ -253,6 +295,14 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             m_limitRowsChecker.setSelected(false);
             m_limitRowsSpinner.setValue(50);
         }
+        int limitAnalysisCount = config.getLimitAnalysisCount();
+        if (limitAnalysisCount >= 0) { // 0 is allowed -- will only read header
+            m_limitAnalysisChecker.setSelected(true);
+            m_limitAnalysisSpinner.setValue(limitAnalysisCount);
+        } else {
+            m_limitAnalysisChecker.setSelected(false);
+            m_limitAnalysisSpinner.setValue(50);
+        }
         m_encodingPanel.loadSettings(getEncodingSettings(config));
     }
 
@@ -280,6 +330,8 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setSkipFirstLinesCount(skiptFirstLines);
         int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
         config.setLimitRowsCount(limitRows);
+        int limitAnalysis = (Integer)(m_limitAnalysisChecker.isSelected() ? m_limitAnalysisSpinner.getValue() : -1);
+        config.setLimitAnalysisCount(limitAnalysis);
         FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());

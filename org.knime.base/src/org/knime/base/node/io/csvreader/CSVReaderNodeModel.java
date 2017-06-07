@@ -189,10 +189,11 @@ public class CSVReaderNodeModel extends NodeModel {
 
         settings.setConnectTimeout(m_config.getConnectTimeout());
 
+        final int limitAnalysisCount = m_config.getLimitAnalysisCount();
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");
-        if (limitRowsCount >= 0) {
+        if (limitAnalysisCount >= 0) {
             final FileReaderExecutionMonitor fileReaderExec = new FileReaderExecutionMonitor();
             fileReaderExec.getProgressMonitor().addProgressListener(new NodeProgressListener() {
 
@@ -209,8 +210,7 @@ public class CSVReaderNodeModel extends NodeModel {
                     }
                 }
             });
-            fileReaderExec
-                .setShortCutLines(limitRowsCount < Integer.MAX_VALUE ? (int)limitRowsCount : Integer.MAX_VALUE);
+            fileReaderExec.setShortCutLines(limitAnalysisCount);
             fileReaderExec.setExecuteCanceled();
             settings = FileAnalyzer.analyze(settings, fileReaderExec);
         } else {

@@ -74,6 +74,7 @@ public final class CSVReaderConfig {
     private String m_commentStart;
     private boolean m_supportShortLines;
     private long m_limitRowsCount;
+    private int m_limitAnalysisCount;
     private int m_skipFirstLinesCount;
     private String m_charSet;
     private Duration m_connectTimeout;
@@ -92,6 +93,7 @@ public final class CSVReaderConfig {
         m_hasColHeader = true;
         m_supportShortLines = false;
         m_limitRowsCount = -1L;
+        m_limitAnalysisCount = -1;
         m_skipFirstLinesCount = -1;
         m_charSet = null; // uses default encoding
     }
@@ -116,6 +118,7 @@ public final class CSVReaderConfig {
         } catch (InvalidSettingsException ex) {
             m_connectTimeout = null; // use default value
         }
+        m_limitAnalysisCount = settings.getInt("limitAnalysisCount", m_limitAnalysisCount);
     }
 
     /** Load in model, fail if settings are invalid.
@@ -144,6 +147,7 @@ public final class CSVReaderConfig {
         } catch (InvalidSettingsException ex) {
             m_connectTimeout = null; // use default value
         }
+        m_limitAnalysisCount = settings.getInt("limitAnalysisCount", m_limitAnalysisCount);
     }
 
     /** Save configuration to argument.
@@ -166,6 +170,7 @@ public final class CSVReaderConfig {
         if (m_connectTimeout != null) {
             settings.addInt("connectTimeoutInSeconds", (int) (m_connectTimeout.toMillis() / 1000));
         }
+        settings.addInt("limitAnalysisCount", m_limitAnalysisCount);
     }
 
     /** @return the location */
@@ -288,5 +293,15 @@ public final class CSVReaderConfig {
     /** @param value the connect timeout to set or <code>null</code> to use default value. */
     void setConnectTimeout(final Duration value){
         m_connectTimeout = value;
+    }
+
+    /** @return the limitAnalysisCount (smaller 0 if unlimited). */
+    public int getLimitAnalysisCount() {
+        return m_limitAnalysisCount;
+    }
+
+    /** @param value the limitAnalysisCount to set (smaller 0 if unlimited). */
+    void setLimitAnalysisCount(final int value) {
+        m_limitAnalysisCount = value;
     }
 }
