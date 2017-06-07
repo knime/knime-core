@@ -2,10 +2,18 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.knime.core.api.node.workflow.project.WorkflowProjectFactory">
-      <WorkflowProjectFactory
-            WorkflowProjectFactory="org.knime.core.clientproxy.workflow.project.ClientProxyWorkflowProjectFactory">
-      </WorkflowProjectFactory>
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="false"
+            id="org.knime.workbench.explorer.view"
+            objectClass="org.knime.workbench.explorer.view.ContentObject">
+         <action
+               class="org.knime.core.clientproxy.ui.OpenRemoteWorkflowAction"
+               enablesFor="+"
+               id="org.knime.core.clientproxy.openRemoteAction"
+               label="Open Remotely">
+         </action>
+      </objectContribution>
    </extension>
 
 </plugin>
