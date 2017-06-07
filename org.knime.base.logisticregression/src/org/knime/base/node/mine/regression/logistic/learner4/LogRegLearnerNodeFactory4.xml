@@ -184,11 +184,12 @@
         	The prior distribution for the coefficients. See the paragraph on regularization above for more details.
         </option>
         <option name="Variance">
-        	The variance of the prior distribution. A larger variance corresponds to a less regularization.
+        	The variance of the prior distribution. A larger variance corresponds to less regularization.
         </option>
         <option name="Hold data in memory">
         	If selected, the data is read into an internal data structure which results into a tremendous speed up.
-        	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG or SGD solver.
+        	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG or SGD solver
+        	as their convergence rate highly depends on random access to individual samples.
         </option>
         <option name="Use seed">
         	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG or SGD solver.
