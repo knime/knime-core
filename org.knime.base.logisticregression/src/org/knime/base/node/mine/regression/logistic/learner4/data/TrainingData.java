@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
+import org.knime.core.node.CanceledExecutionException;
+
 /**
  * Provides information and data for the learning process.
  *
@@ -78,5 +80,5 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
      */
     public int getTargetDimension();
 
-    public T getRandomRow();
+    public T getRandomRow() throws CanceledExecutionException;
 }

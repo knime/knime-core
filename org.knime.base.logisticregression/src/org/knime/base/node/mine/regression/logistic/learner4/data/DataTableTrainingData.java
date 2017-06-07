@@ -49,11 +49,23 @@
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 
 /**
  *
@@ -62,38 +74,57 @@ import org.knime.core.node.BufferedDataTable;
  */
 public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrainingData<T> {
 
-    private final BufferedDataTable m_data;
+    private static final boolean[] SORT_ASCENDING = new boolean[]{true};
+
+    private BufferedDataTable m_data;
     private final List<T> m_cachedRows;
     private final int m_cacheSize;
     private Iterator<DataRow> m_rowIterator;
-    private int m_idCounter;
     private int m_sampleCounter;
+    private final int m_idColIdx;
+    private final int m_shuffleColIdx;
+    private final DataColumnSpec m_shuffleColSpec;
+    private final ExecutionContext m_exec;
 
     /**
      * @param data
      * @param seed
      * @param rowBuilder
      * @param cacheSize
+     * @throws CanceledExecutionException
      *
      */
     public DataTableTrainingData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder,
-        final int cacheSize) {
+        final int cacheSize, final ExecutionContext exec) throws CanceledExecutionException {
         super(data, seed, rowBuilder);
-        m_data = data;
+        DataTableSpec tableSpec = data.getDataTableSpec();
+        ColumnRearranger colre = new ColumnRearranger(tableSpec);
+        String idColName = DataTableSpec.getUniqueColumnName(tableSpec, "id");
+        String shuffleColName = DataTableSpec.getUniqueColumnName(tableSpec, "shuffle");
+        DataColumnSpec idSpec = new DataColumnSpecCreator(idColName, IntCell.TYPE).createSpec();
+        m_shuffleColSpec = new DataColumnSpecCreator(shuffleColName, IntCell.TYPE).createSpec();
+        colre.append(new IdAppendFactory(idSpec));
+        // use table's current ordering for first epoch
+        colre.append(new IdAppendFactory(m_shuffleColSpec));
+        m_data = exec.createColumnRearrangeTable(data, colre, exec.createSubProgress(0.0));
+        DataTableSpec newTableSpec = m_data.getDataTableSpec();
+        m_idColIdx = newTableSpec.findColumnIndex(idColName);
+        m_shuffleColIdx = newTableSpec.findColumnIndex(shuffleColName);
         m_cacheSize = cacheSize;
         m_cachedRows = new ArrayList<>(m_cacheSize);
-        m_rowIterator = data.iterator();
-        m_idCounter = 0;
+        m_rowIterator = m_data.iterator();
         m_sampleCounter = 0;
+        m_exec = exec;
     }
 
 
     /**
      * {@inheritDoc}
+     * @throws CanceledExecutionException
      */
     @Override
-    public T getRandomRow() {
-        if (m_sampleCounter >= m_cacheSize) {
+    public T getRandomRow() throws CanceledExecutionException {
+        if (m_sampleCounter >= m_cacheSize || m_cachedRows.isEmpty()) {
             refillCache();
             m_sampleCounter = 0;
         }
@@ -114,22 +145,41 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
         return m_cachedRows.get(randomIdx);
     }
 
-    private void refillCache() {
+    private void refillCache() throws CanceledExecutionException {
         m_cachedRows.clear();
         for (int i = 0; i < m_cacheSize; i++) {
             addRowToCache();
         }
     }
 
-    private void addRowToCache() {
+    private void addRowToCache() throws CanceledExecutionException {
         if (m_rowIterator.hasNext()) {
-            T row = getRowBuilder().build(m_rowIterator.next(), m_idCounter++);
+            DataRow tableRow = m_rowIterator.next();
+            T row = getRowBuilder().build(tableRow, getId(tableRow));
             m_cachedRows.add(row);
         } else {
+            // shuffle data
+//            shuffle();
+            // start again from the beginning
             m_rowIterator = m_data.iterator();
-            m_idCounter = 0;
             addRowToCache();
         }
+    }
+
+    private int getId(final DataRow row) {
+        return ((IntCell)row.getCell(m_idColIdx)).getIntValue();
+    }
+
+    private void shuffle() throws CanceledExecutionException {
+        int nrRows = (int)m_data.size();
+        Random random = getRandomDataGenerator();
+        // create shuffle column
+        ColumnRearranger colre = new ColumnRearranger(m_data.getDataTableSpec());
+        colre.replace(new RandomNumberAppendFactory(random.nextLong(), nrRows, m_shuffleColSpec), m_shuffleColIdx);
+        m_data = m_exec.createColumnRearrangeTable(m_data, colre, m_exec.createSubProgress(0.0));
+        // sort by shuffle column
+        BufferedDataTableSorter sorter = new BufferedDataTableSorter(m_data, Collections.singleton(m_shuffleColSpec.getName()), SORT_ASCENDING);
+        m_data = sorter.sort(m_exec.createSubExecutionContext(0.0));
     }
 
     private static class DataTableIterator <T extends TrainingRow> implements Iterator<T> {
@@ -162,6 +212,72 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
         @Override
         public T next() {
             return m_rowBuilder.build(m_rowIterator.next(), m_idCounter++);
+        }
+    }
+
+    private static class IdAppendFactory extends SingleCellFactory {
+
+        private int m_idCounter = 0;
+
+        /**
+         * @param newColSpec
+         */
+        public IdAppendFactory(final DataColumnSpec newColSpec) {
+            super(newColSpec);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            return new IntCell(m_idCounter++);
+        }
+
+    }
+
+    private static final class RandomNumberAppendFactory extends SingleCellFactory {
+
+        /** Shuffled row number array. */
+        private int[] m_shuffle;
+
+        /** Position in array. */
+        private int m_pos = 0;
+
+        /** Constructor. */
+        private RandomNumberAppendFactory(final Long seed,
+            final int rowCount, final DataColumnSpec appendSpec) {
+            super(appendSpec);
+            Random random;
+            if (seed != null) {
+                random = new Random(seed.longValue());
+            } else {
+                random = new Random();
+            }
+            int nrRows = rowCount;
+
+            // initialize
+            m_shuffle = new int[nrRows];
+            for (int i = 0; i < nrRows; i++) {
+                m_shuffle[i] = i;
+            }
+
+            // let's shuffle
+            for (int i = 0; i < m_shuffle.length; i++) {
+                int r = random.nextInt(i + 1);
+                int swap = m_shuffle[r];
+                m_shuffle[r] = m_shuffle[i];
+                m_shuffle[i] = swap;
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            assert (m_pos <= m_shuffle.length);
+            DataCell nextRandomNumberCell = new IntCell(m_shuffle[m_pos]);
+            m_pos++;
+            return nextRandomNumberCell;
         }
     }
 

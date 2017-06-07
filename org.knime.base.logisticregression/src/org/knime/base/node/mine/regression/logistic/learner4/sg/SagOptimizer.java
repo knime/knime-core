@@ -51,6 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
+import org.knime.core.node.CanceledExecutionException;
 
 /**
  * Optimizer based on the stochastic average gradient method.
@@ -79,8 +80,9 @@ public class SagOptimizer <T extends TrainingRow> {
      * @param maxEpoch the maximum number of iterations
      * @param lambda the degree of regularization
      * @return a matrix of weights for a linear model
+     * @throws CanceledExecutionException
      */
-    public double[][] optimize(final TrainingData<T> data, final int maxEpoch, final double lambda, final boolean fitIntercept) {
+    public double[][] optimize(final TrainingData<T> data, final int maxEpoch, final double lambda, final boolean fitIntercept) throws CanceledExecutionException {
         final int nRows = data.getRowCount();
         final int nFets = data.getFeatureCount();
         final int nCats = data.getTargetDimension();
