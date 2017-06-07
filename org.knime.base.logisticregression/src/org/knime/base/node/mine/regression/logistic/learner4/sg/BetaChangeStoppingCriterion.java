@@ -70,7 +70,7 @@ class BetaChangeStoppingCriterion <T extends TrainingRow> implements StoppingCri
         m_nCats = nCats;
         m_nFets = nFets;
         m_epsilon = epsilon;
-        m_oldBeta = new double[nCats - 1][nFets];
+        m_oldBeta = new double[nCats][nFets];
     }
 
     /**
@@ -81,7 +81,7 @@ class BetaChangeStoppingCriterion <T extends TrainingRow> implements StoppingCri
         double absMaxVal = Double.NEGATIVE_INFINITY;
         double absMaxChange = Double.NEGATIVE_INFINITY;
         double[][] betaMat = beta.getWeightVector();
-        for (int c = 0; c < m_nCats - 1; c++) {
+        for (int c = 0; c < m_nCats; c++) {
             for (int i = 0; i < m_nFets; i++) {
                 double val = betaMat[c][i];
                 double absVal = Math.abs(val);
