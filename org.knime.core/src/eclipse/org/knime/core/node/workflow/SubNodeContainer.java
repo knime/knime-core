@@ -125,6 +125,7 @@ import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
@@ -1592,6 +1593,14 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         if (workflowPersistor.isDirtyAfterLoad() || m_wfm.isDirty()) {
             setDirty();
         }
+        InternalNodeContainerState loadState = nodePersistor.getMetaPersistor().getState();
+        if (!m_wfm.getInternalState().equals(loadState)) {
+            // can happen for workflows that were exported without data
+            String warning = "State has changed from " + loadState + " to " + m_wfm.getInternalState();
+            setInternalState(m_wfm.getInternalState());
+            loadResult.addError(warning, loadResult.getType() == LoadResultEntryType.DataLoadError);
+        }
+
         NodeSettingsRO modelSettings = subNodePersistor.getSNCSettings().getModelSettings();
         if (modelSettings != null) {
             try {
