@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -104,6 +105,11 @@ public class WorkflowEntToJson  implements WorkflowEnt {
 	@JsonProperty("WorkflowAnnotations")
     public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
     	return m_e.getWorkflowAnnotations().stream().map(l -> WorkflowAnnotationEntToJson.wrap(l)).collect(Collectors.toList());
+    }
+    
+	@JsonProperty("WorkflowUIInfo")
+    public WorkflowUIInfoEnt getWorkflowUIInfo() {
+        return WorkflowUIInfoEntToJson.wrap(m_e.getWorkflowUIInfo());
     }
     
 

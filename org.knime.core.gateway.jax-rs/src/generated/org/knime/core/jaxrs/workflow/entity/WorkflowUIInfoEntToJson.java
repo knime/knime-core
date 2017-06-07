@@ -44,47 +44,83 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.jaxrs.workflow.entity;
 
-import java.util.List;
-import java.util.Map;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
+
+import java.util.stream.Collectors;
+import java.util.HashMap;
+
 
 /**
- * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
+ * Wrapper class for the {@link WorkflowUIInfoEnt} interface with Json-annotated getter-methods.
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity {
+public class WorkflowUIInfoEntToJson  implements WorkflowUIInfoEnt {
 
-    /**
-     * @return The node map.
-     */
- 	Map<String, NodeEnt> getNodes();
- 	
-    /**
-     * @return The list of connections.
-     */
- 	List<ConnectionEnt> getConnections();
- 	
-    /**
-     * @return The inputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaInPortInfos();
- 	
-    /**
-     * @return The outputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaOutPortInfos();
- 	
-    /**
-     * @return List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
- 	
-    /**
-     * @return Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	WorkflowUIInfoEnt getWorkflowUIInfo();
- 	
+	private final WorkflowUIInfoEnt m_e;
+	
+	public WorkflowUIInfoEntToJson(final WorkflowUIInfoEnt e) {
+		m_e = e;
+	}
+
+	@JsonProperty("GridX")
+    public int getGridX() {
+    	return m_e.getGridX();
+    }
+    
+	@JsonProperty("GridY")
+    public int getGridY() {
+    	return m_e.getGridY();
+    }
+    
+	@JsonProperty("SnapToGrid")
+    public boolean getSnapToGrid() {
+    	return m_e.getSnapToGrid();
+    }
+    
+	@JsonProperty("ShowGrid")
+    public boolean getShowGrid() {
+    	return m_e.getShowGrid();
+    }
+    
+	@JsonProperty("ZoomLevel")
+    public double getZoomLevel() {
+    	return m_e.getZoomLevel();
+    }
+    
+	@JsonProperty("HasCurvedConnection")
+    public boolean getHasCurvedConnection() {
+    	return m_e.getHasCurvedConnection();
+    }
+    
+	@JsonProperty("ConnectionLineWidtdh")
+    public int getConnectionLineWidtdh() {
+    	return m_e.getConnectionLineWidtdh();
+    }
+    
+
+
+	@Override
+	public String toString() {
+	    return m_e.toString();
+	}
+	
+	@JsonProperty("EntityType")
+	public String getEntityType() {
+		return "WorkflowUIInfoEnt";
+	}
+	
+	public static WorkflowUIInfoEnt wrap(WorkflowUIInfoEnt e) {
+	    return new WorkflowUIInfoEntToJson(e);
+	}
+
 }

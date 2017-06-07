@@ -63,11 +63,13 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.MetaPortInfoEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
 
 /**
  *
@@ -117,6 +119,7 @@ public class WorkflowEntTest {
 			list4.add(WorkflowAnnotationEntTest.createEnt((List<Object>) subList4.get(i)));
 		}
 		builder.setWorkflowAnnotations(list4);
+		builder.setWorkflowUIInfo(WorkflowUIInfoEntTest.createEnt((List<Object>) valueList.get(5)));
         return builder.build();
     }
 
@@ -146,6 +149,7 @@ public class WorkflowEntTest {
 		for(int i = 0; i < subList4.size(); i++) {
 			WorkflowAnnotationEntTest.testEnt(subList4.get(i), (List<Object>) subValueList4.get(i));
 		}
+		WorkflowUIInfoEntTest.testEnt(ent.getWorkflowUIInfo(), (List<Object>) valueList.get(5));
     }
 
     public static List<Object> createValueList() {
@@ -189,6 +193,8 @@ public class WorkflowEntTest {
 		subList5.add(WorkflowAnnotationEntTest.createValueList());
 		subList5.add(WorkflowAnnotationEntTest.createValueList());
  		valueList.add(subList5);
+
+ 		valueList.add(WorkflowUIInfoEntTest.createValueList());
 
         return valueList;
     }

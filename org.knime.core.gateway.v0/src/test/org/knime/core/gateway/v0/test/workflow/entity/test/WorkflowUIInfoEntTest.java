@@ -44,47 +44,76 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.test.workflow.entity.test;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+
+import org.junit.Test;
+import org.knime.core.gateway.entities.EntityBuilderManager;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
 
 /**
- * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity {
+public class WorkflowUIInfoEntTest {
 
-    /**
-     * @return The node map.
-     */
- 	Map<String, NodeEnt> getNodes();
- 	
-    /**
-     * @return The list of connections.
-     */
- 	List<ConnectionEnt> getConnections();
- 	
-    /**
-     * @return The inputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaInPortInfos();
- 	
-    /**
-     * @return The outputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaOutPortInfos();
- 	
-    /**
-     * @return List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
- 	
-    /**
-     * @return Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	WorkflowUIInfoEnt getWorkflowUIInfo();
- 	
+    private static Random RAND = new Random();
+
+    @Test
+    public void test() {
+        List<Object> valueList = createValueList();
+        WorkflowUIInfoEnt ent = createEnt(valueList);
+        testEnt(ent, valueList);
+    }
+
+    public static WorkflowUIInfoEnt createEnt(final List<Object> valueList) {
+        WorkflowUIInfoEntBuilder builder = EntityBuilderManager.builder(WorkflowUIInfoEntBuilder.class);
+		builder.setGridX((int) valueList.get(0));
+		builder.setGridY((int) valueList.get(1));
+		builder.setSnapToGrid((boolean) valueList.get(2));
+		builder.setShowGrid((boolean) valueList.get(3));
+		builder.setZoomLevel((double) valueList.get(4));
+		builder.setHasCurvedConnection((boolean) valueList.get(5));
+		builder.setConnectionLineWidtdh((int) valueList.get(6));
+        return builder.build();
+    }
+
+    public static void testEnt(final WorkflowUIInfoEnt ent, final List<Object> valueList) {
+		assertEquals(ent.getGridX(), (int) valueList.get(0));
+		assertEquals(ent.getGridY(), (int) valueList.get(1));
+		assertEquals(ent.getSnapToGrid(), (boolean) valueList.get(2));
+		assertEquals(ent.getShowGrid(), (boolean) valueList.get(3));
+		assertEquals(ent.getZoomLevel(), (double) valueList.get(4));
+		assertEquals(ent.getHasCurvedConnection(), (boolean) valueList.get(5));
+		assertEquals(ent.getConnectionLineWidtdh(), (int) valueList.get(6));
+    }
+
+    public static List<Object> createValueList() {
+        List<Object> valueList = new ArrayList<Object>();
+ 		valueList.add(-1155869325);
+
+ 		valueList.add(-1154715079);
+
+ 		valueList.add(true);
+
+ 		valueList.add(true);
+
+ 		valueList.add(0.730519863614471);
+
+ 		valueList.add(true);
+
+ 		valueList.add(-1156638823);
+
+        return valueList;
+    }
+
 }

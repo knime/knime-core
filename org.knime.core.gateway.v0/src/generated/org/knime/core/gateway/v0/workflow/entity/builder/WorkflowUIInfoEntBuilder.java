@@ -44,47 +44,57 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.gateway.v0.workflow.entity.builder;
 
-import java.util.List;
-import java.util.Map;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 
 /**
- * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
- *
+ * Builder for {@link WorkflowUIInfoEnt}.
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity {
+public interface WorkflowUIInfoEntBuilder extends GatewayEntityBuilder<WorkflowUIInfoEnt> {
 
     /**
-     * @return The node map.
+     * @param gridX Grid size in X direction.
+     * @return <code>this</code>
      */
- 	Map<String, NodeEnt> getNodes();
- 	
+	WorkflowUIInfoEntBuilder setGridX(int gridX);
+	
     /**
-     * @return The list of connections.
+     * @param gridY Grid size in Y direction.
+     * @return <code>this</code>
      */
- 	List<ConnectionEnt> getConnections();
- 	
+	WorkflowUIInfoEntBuilder setGridY(int gridY);
+	
     /**
-     * @return The inputs of a metanode (if this workflow is one).
+     * @param snapToGrid Whether to snap to the grid.
+     * @return <code>this</code>
      */
- 	List<MetaPortInfoEnt> getMetaInPortInfos();
- 	
+	WorkflowUIInfoEntBuilder setSnapToGrid(boolean snapToGrid);
+	
     /**
-     * @return The outputs of a metanode (if this workflow is one).
+     * @param showGrid Whether to show the grid lines.
+     * @return <code>this</code>
      */
- 	List<MetaPortInfoEnt> getMetaOutPortInfos();
- 	
+	WorkflowUIInfoEntBuilder setShowGrid(boolean showGrid);
+	
     /**
-     * @return List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
+     * @param zoomLevel Workflows zoom level, i.e. its magnification.
+     * @return <code>this</code>
      */
- 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
- 	
+	WorkflowUIInfoEntBuilder setZoomLevel(double zoomLevel);
+	
     /**
-     * @return Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
+     * @param hasCurvedConnection Whether connections are rendered as curves.
+     * @return <code>this</code>
      */
- 	WorkflowUIInfoEnt getWorkflowUIInfo();
- 	
+	WorkflowUIInfoEntBuilder setHasCurvedConnection(boolean hasCurvedConnection);
+	
+    /**
+     * @param connectionLineWidtdh Width of the line connection two nodes.
+     * @return <code>this</code>
+     */
+	WorkflowUIInfoEntBuilder setConnectionLineWidtdh(int connectionLineWidtdh);
+	
 }

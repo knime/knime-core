@@ -46,45 +46,48 @@
  */
 package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.List;
-import java.util.Map;
 
 /**
- * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
+ * Contains workflow UI-related properties such as grid settings, connection appearance etc.
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity {
+public interface WorkflowUIInfoEnt extends GatewayEntity {
 
     /**
-     * @return The node map.
+     * @return Grid size in X direction.
      */
- 	Map<String, NodeEnt> getNodes();
+ 	int getGridX();
  	
     /**
-     * @return The list of connections.
+     * @return Grid size in Y direction.
      */
- 	List<ConnectionEnt> getConnections();
+ 	int getGridY();
  	
     /**
-     * @return The inputs of a metanode (if this workflow is one).
+     * @return Whether to snap to the grid.
      */
- 	List<MetaPortInfoEnt> getMetaInPortInfos();
+ 	boolean getSnapToGrid();
  	
     /**
-     * @return The outputs of a metanode (if this workflow is one).
+     * @return Whether to show the grid lines.
      */
- 	List<MetaPortInfoEnt> getMetaOutPortInfos();
+ 	boolean getShowGrid();
  	
     /**
-     * @return List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
+     * @return Workflows zoom level, i.e. its magnification.
      */
- 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
+ 	double getZoomLevel();
  	
     /**
-     * @return Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
+     * @return Whether connections are rendered as curves.
      */
- 	WorkflowUIInfoEnt getWorkflowUIInfo();
+ 	boolean getHasCurvedConnection();
+ 	
+    /**
+     * @return Width of the line connection two nodes.
+     */
+ 	int getConnectionLineWidtdh();
  	
 }

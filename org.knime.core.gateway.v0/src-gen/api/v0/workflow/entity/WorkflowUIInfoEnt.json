@@ -1,0 +1,44 @@
+{
+    "type" : "entity",
+    "name" : "WorkflowUIInfoEnt",
+    "description" : "Contains workflow UI-related properties such as grid settings, connection appearance etc.",
+    "namespace" : "workflow.entity",
+    "parents" : [],
+    "fields" : [
+    	{
+            "name" : "GridX",
+            "description" : "Grid size in X direction.",
+            "type" : "int"
+        },
+        {
+            "name" : "GridY",
+            "description" : "Grid size in Y direction.",
+            "type" : "int"
+        },
+        {
+            "name" : "SnapToGrid",
+            "description" : "Whether to snap to the grid.",
+            "type" : "boolean"
+        },
+        {
+            "name" : "ShowGrid",
+            "description" : "Whether to show the grid lines.",
+            "type" : "boolean"
+        },
+        {
+        	"name" : "ZoomLevel",
+        	"description" : "Workflows zoom level, i.e. its magnification.",
+        	"type" : "double"
+        },
+        {
+        	"name" : "HasCurvedConnection",
+        	"description" : "Whether connections are rendered as curves.",
+        	"type" : "boolean"
+        },
+        {
+        	"name" : "ConnectionLineWidtdh",
+        	"description" : "Width of the line connection two nodes.",
+        	"type" : "int"
+        }
+    ]
+}

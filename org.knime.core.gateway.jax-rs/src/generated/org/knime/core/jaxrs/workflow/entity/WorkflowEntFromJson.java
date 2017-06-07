@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -87,15 +88,17 @@ public class WorkflowEntFromJson  implements WorkflowEnt {
 	private List<MetaPortInfoEntFromJson> m_MetaInPortInfos;
 	private List<MetaPortInfoEntFromJson> m_MetaOutPortInfos;
 	private List<WorkflowAnnotationEntFromJson> m_WorkflowAnnotations;
+	private WorkflowUIInfoEntFromJson m_WorkflowUIInfo;
 
 	@JsonCreator
 	private WorkflowEntFromJson(
-	@JsonProperty("Nodes") Map<String, NodeEntFromJson> Nodes,	@JsonProperty("Connections") List<ConnectionEntFromJson> Connections,	@JsonProperty("MetaInPortInfos") List<MetaPortInfoEntFromJson> MetaInPortInfos,	@JsonProperty("MetaOutPortInfos") List<MetaPortInfoEntFromJson> MetaOutPortInfos,	@JsonProperty("WorkflowAnnotations") List<WorkflowAnnotationEntFromJson> WorkflowAnnotations	) {
+	@JsonProperty("Nodes") Map<String, NodeEntFromJson> Nodes,	@JsonProperty("Connections") List<ConnectionEntFromJson> Connections,	@JsonProperty("MetaInPortInfos") List<MetaPortInfoEntFromJson> MetaInPortInfos,	@JsonProperty("MetaOutPortInfos") List<MetaPortInfoEntFromJson> MetaOutPortInfos,	@JsonProperty("WorkflowAnnotations") List<WorkflowAnnotationEntFromJson> WorkflowAnnotations,	@JsonProperty("WorkflowUIInfo") WorkflowUIInfoEntFromJson WorkflowUIInfo	) {
 		m_Nodes = Nodes;
 		m_Connections = Connections;
 		m_MetaInPortInfos = MetaInPortInfos;
 		m_MetaOutPortInfos = MetaOutPortInfos;
 		m_WorkflowAnnotations = WorkflowAnnotations;
+		m_WorkflowUIInfo = WorkflowUIInfo;
 	}
 	
 	protected WorkflowEntFromJson() {
@@ -133,6 +136,12 @@ public class WorkflowEntFromJson  implements WorkflowEnt {
 	@Override
     public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
         	return m_WorkflowAnnotations.stream().map(l -> (WorkflowAnnotationEnt) l ).collect(Collectors.toList());
+            
+    }
+    
+	@Override
+    public WorkflowUIInfoEnt getWorkflowUIInfo() {
+            return (WorkflowUIInfoEnt) m_WorkflowUIInfo;
             
     }
     

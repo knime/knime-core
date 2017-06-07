@@ -97,6 +97,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -949,8 +950,15 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public EditorUIInformation getEditorUIInformation() {
-        //TODO
-        return EditorUIInformation.builder().build();
+        WorkflowUIInfoEnt uiEnt = getWorkflow().getWorkflowUIInfo();
+        return EditorUIInformation.builder()
+                .setGridX(uiEnt.getGridX())
+                .setGridY(uiEnt.getGridY())
+                .setShowGrid(uiEnt.getShowGrid())
+                .setSnapToGrid(uiEnt.getSnapToGrid())
+                .setZoomLevel(uiEnt.getZoomLevel())
+                .setHasCurvedConnections(uiEnt.getHasCurvedConnection())
+                .setConnectionLineWidth(uiEnt.getConnectionLineWidtdh()).build();
     }
 
     /**

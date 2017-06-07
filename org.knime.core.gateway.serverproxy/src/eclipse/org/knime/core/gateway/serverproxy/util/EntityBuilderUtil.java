@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.api.node.workflow.EditorUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
@@ -86,6 +87,7 @@ import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
@@ -102,6 +104,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.StyleRangeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -393,7 +396,20 @@ public class EntityBuilderUtil {
             .setMetaInPortInfos(buildMetaInPortInfoEnts(wfm))
             .setMetaOutPortInfos(buildMetaOutPortInfoEnts(wfm))
             .setWorkflowAnnotations(wfm.getWorkflowAnnotations().stream().map(wa -> buildWorkflowAnnotationEnt(wa)).collect(Collectors.toList()))
+            .setWorkflowUIInfo(buildWorkflowUIInfoEnt(wfm.getEditorUIInformation()))
             .build();
+    }
+
+    private static WorkflowUIInfoEnt buildWorkflowUIInfoEnt(final EditorUIInformation editorUIInfo) {
+        return builder(WorkflowUIInfoEntBuilder.class)
+                .setGridX(editorUIInfo.getGridX())
+                .setGridY(editorUIInfo.getGridY())
+                .setSnapToGrid(editorUIInfo.getSnapToGrid())
+                .setShowGrid(editorUIInfo.getShowGrid())
+                .setZoomLevel(editorUIInfo.getZoomLevel())
+                .setHasCurvedConnection(editorUIInfo.getHasCurvedConnections())
+                .setConnectionLineWidtdh(editorUIInfo.getConnectionLineWidth())
+                .build();
     }
 
 }

@@ -53,6 +53,7 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
 
 /**
  * Builder for {@link WorkflowEnt}.
@@ -86,9 +87,15 @@ public interface WorkflowEntBuilder extends GatewayEntityBuilder<WorkflowEnt> {
 	WorkflowEntBuilder setMetaOutPortInfos(List<MetaPortInfoEnt> metaOutPortInfos);
 	
     /**
-     * @param workflowAnnotations List of all workflow annotations.
+     * @param workflowAnnotations List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
      * @return <code>this</code>
      */
 	WorkflowEntBuilder setWorkflowAnnotations(List<WorkflowAnnotationEnt> workflowAnnotations);
+	
+    /**
+     * @param workflowUIInfo Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
+     * @return <code>this</code>
+     */
+	WorkflowEntBuilder setWorkflowUIInfo(WorkflowUIInfoEnt workflowUIInfo);
 	
 }

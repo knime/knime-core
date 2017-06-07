@@ -46,15 +46,8 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import java.util.List;
-import java.util.Map;
-import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
-import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
@@ -62,60 +55,67 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default implementation of the WorkflowEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the WorkflowUIInfoEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultWorkflowEnt implements WorkflowEnt {
+public class DefaultWorkflowUIInfoEnt implements WorkflowUIInfoEnt {
 
-	private Map<String, NodeEnt> m_Nodes;
-	private List<ConnectionEnt> m_Connections;
-	private List<MetaPortInfoEnt> m_MetaInPortInfos;
-	private List<MetaPortInfoEnt> m_MetaOutPortInfos;
-	private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
-	private WorkflowUIInfoEnt m_WorkflowUIInfo;
+	private int m_GridX;
+	private int m_GridY;
+	private boolean m_SnapToGrid;
+	private boolean m_ShowGrid;
+	private double m_ZoomLevel;
+	private boolean m_HasCurvedConnection;
+	private int m_ConnectionLineWidtdh;
 
     /**
      * @param builder
      */
-    private DefaultWorkflowEnt(final DefaultWorkflowEntBuilder builder) {
-		m_Nodes = builder.m_Nodes;
-		m_Connections = builder.m_Connections;
-		m_MetaInPortInfos = builder.m_MetaInPortInfos;
-		m_MetaOutPortInfos = builder.m_MetaOutPortInfos;
-		m_WorkflowAnnotations = builder.m_WorkflowAnnotations;
-		m_WorkflowUIInfo = builder.m_WorkflowUIInfo;
+    private DefaultWorkflowUIInfoEnt(final DefaultWorkflowUIInfoEntBuilder builder) {
+		m_GridX = builder.m_GridX;
+		m_GridY = builder.m_GridY;
+		m_SnapToGrid = builder.m_SnapToGrid;
+		m_ShowGrid = builder.m_ShowGrid;
+		m_ZoomLevel = builder.m_ZoomLevel;
+		m_HasCurvedConnection = builder.m_HasCurvedConnection;
+		m_ConnectionLineWidtdh = builder.m_ConnectionLineWidtdh;
     }
 
 	@Override
-    public Map<String, NodeEnt> getNodes() {
-        return m_Nodes;
+    public int getGridX() {
+        return m_GridX;
     }
     
 	@Override
-    public List<ConnectionEnt> getConnections() {
-        return m_Connections;
+    public int getGridY() {
+        return m_GridY;
     }
     
 	@Override
-    public List<MetaPortInfoEnt> getMetaInPortInfos() {
-        return m_MetaInPortInfos;
+    public boolean getSnapToGrid() {
+        return m_SnapToGrid;
     }
     
 	@Override
-    public List<MetaPortInfoEnt> getMetaOutPortInfos() {
-        return m_MetaOutPortInfos;
+    public boolean getShowGrid() {
+        return m_ShowGrid;
     }
     
 	@Override
-    public List<WorkflowAnnotationEnt> getWorkflowAnnotations() {
-        return m_WorkflowAnnotations;
+    public double getZoomLevel() {
+        return m_ZoomLevel;
     }
     
 	@Override
-    public WorkflowUIInfoEnt getWorkflowUIInfo() {
-        return m_WorkflowUIInfo;
+    public boolean getHasCurvedConnection() {
+        return m_HasCurvedConnection;
+    }
+    
+	@Override
+    public int getConnectionLineWidtdh() {
+        return m_ConnectionLineWidtdh;
     }
     
 
@@ -124,59 +124,66 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 	    return ToStringBuilder.reflectionToString(this);
 	}
 
-	public static DefaultWorkflowEntBuilder builder() {
-		return new DefaultWorkflowEntBuilder();
+	public static DefaultWorkflowUIInfoEntBuilder builder() {
+		return new DefaultWorkflowUIInfoEntBuilder();
 	}
 	
 	/**
-	* Default implementation of the WorkflowEntBuilder-interface.
+	* Default implementation of the WorkflowUIInfoEntBuilder-interface.
 	*/
-	public static class DefaultWorkflowEntBuilder implements WorkflowEntBuilder {
+	public static class DefaultWorkflowUIInfoEntBuilder implements WorkflowUIInfoEntBuilder {
     
-		private Map<String, NodeEnt> m_Nodes;
-		private List<ConnectionEnt> m_Connections;
-		private List<MetaPortInfoEnt> m_MetaInPortInfos;
-		private List<MetaPortInfoEnt> m_MetaOutPortInfos;
-		private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
-		private WorkflowUIInfoEnt m_WorkflowUIInfo;
+		private int m_GridX;
+		private int m_GridY;
+		private boolean m_SnapToGrid;
+		private boolean m_ShowGrid;
+		private double m_ZoomLevel;
+		private boolean m_HasCurvedConnection;
+		private int m_ConnectionLineWidtdh;
 
-        public WorkflowEnt build() {
-            return new DefaultWorkflowEnt(this);
+        public WorkflowUIInfoEnt build() {
+            return new DefaultWorkflowUIInfoEnt(this);
         }
 
 		@Override
-        public WorkflowEntBuilder setNodes(final Map<String, NodeEnt> Nodes) {
-			m_Nodes = Nodes;			
+        public WorkflowUIInfoEntBuilder setGridX(final int GridX) {
+			m_GridX = GridX;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
-			m_Connections = Connections;			
+        public WorkflowUIInfoEntBuilder setGridY(final int GridY) {
+			m_GridY = GridY;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setMetaInPortInfos(final List<MetaPortInfoEnt> MetaInPortInfos) {
-			m_MetaInPortInfos = MetaInPortInfos;			
+        public WorkflowUIInfoEntBuilder setSnapToGrid(final boolean SnapToGrid) {
+			m_SnapToGrid = SnapToGrid;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setMetaOutPortInfos(final List<MetaPortInfoEnt> MetaOutPortInfos) {
-			m_MetaOutPortInfos = MetaOutPortInfos;			
+        public WorkflowUIInfoEntBuilder setShowGrid(final boolean ShowGrid) {
+			m_ShowGrid = ShowGrid;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setWorkflowAnnotations(final List<WorkflowAnnotationEnt> WorkflowAnnotations) {
-			m_WorkflowAnnotations = WorkflowAnnotations;			
+        public WorkflowUIInfoEntBuilder setZoomLevel(final double ZoomLevel) {
+			m_ZoomLevel = ZoomLevel;			
             return this;
         }
         
 		@Override
-        public WorkflowEntBuilder setWorkflowUIInfo(final WorkflowUIInfoEnt WorkflowUIInfo) {
-			m_WorkflowUIInfo = WorkflowUIInfo;			
+        public WorkflowUIInfoEntBuilder setHasCurvedConnection(final boolean HasCurvedConnection) {
+			m_HasCurvedConnection = HasCurvedConnection;			
+            return this;
+        }
+        
+		@Override
+        public WorkflowUIInfoEntBuilder setConnectionLineWidtdh(final int ConnectionLineWidtdh) {
+			m_ConnectionLineWidtdh = ConnectionLineWidtdh;			
             return this;
         }
         

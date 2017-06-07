@@ -44,47 +44,104 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity;
+package org.knime.core.jaxrs.workflow.entity;
 
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * A complete workflow. TODO alternative name maybe WorkflowContentEnt if MetaNodeEnt is renamed to WorkflowEnt
+ * Implementation of the {@link WorkflowUIInfoEnt} interface that can be deserialized from a json object (json-annotated constructor).
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface WorkflowEnt extends GatewayEntity {
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "EntityType")
+@JsonSubTypes({ 
+  @Type(value = WorkflowUIInfoEntFromJson.class, name = "WorkflowUIInfoEnt")
+})
+public class WorkflowUIInfoEntFromJson  implements WorkflowUIInfoEnt {
 
-    /**
-     * @return The node map.
-     */
- 	Map<String, NodeEnt> getNodes();
- 	
-    /**
-     * @return The list of connections.
-     */
- 	List<ConnectionEnt> getConnections();
- 	
-    /**
-     * @return The inputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaInPortInfos();
- 	
-    /**
-     * @return The outputs of a metanode (if this workflow is one).
-     */
- 	List<MetaPortInfoEnt> getMetaOutPortInfos();
- 	
-    /**
-     * @return List of all workflow annotations. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	List<WorkflowAnnotationEnt> getWorkflowAnnotations();
- 	
-    /**
-     * @return Additional workflow UI information such as grid settings, connection appearance etc. TODO could be moved to an extra UI service in order to not polute the WorkflowEnt too much and separate UI logics.
-     */
- 	WorkflowUIInfoEnt getWorkflowUIInfo();
- 	
+	private int m_GridX;
+	private int m_GridY;
+	private boolean m_SnapToGrid;
+	private boolean m_ShowGrid;
+	private double m_ZoomLevel;
+	private boolean m_HasCurvedConnection;
+	private int m_ConnectionLineWidtdh;
+
+	@JsonCreator
+	private WorkflowUIInfoEntFromJson(
+	@JsonProperty("GridX") int GridX,	@JsonProperty("GridY") int GridY,	@JsonProperty("SnapToGrid") boolean SnapToGrid,	@JsonProperty("ShowGrid") boolean ShowGrid,	@JsonProperty("ZoomLevel") double ZoomLevel,	@JsonProperty("HasCurvedConnection") boolean HasCurvedConnection,	@JsonProperty("ConnectionLineWidtdh") int ConnectionLineWidtdh	) {
+		m_GridX = GridX;
+		m_GridY = GridY;
+		m_SnapToGrid = SnapToGrid;
+		m_ShowGrid = ShowGrid;
+		m_ZoomLevel = ZoomLevel;
+		m_HasCurvedConnection = HasCurvedConnection;
+		m_ConnectionLineWidtdh = ConnectionLineWidtdh;
+	}
+	
+	protected WorkflowUIInfoEntFromJson() {
+		//just a dummy constructor for subclasses
+	}
+
+
+	@Override
+    public int getGridX() {
+        	return m_GridX;
+            
+    }
+    
+	@Override
+    public int getGridY() {
+        	return m_GridY;
+            
+    }
+    
+	@Override
+    public boolean getSnapToGrid() {
+        	return m_SnapToGrid;
+            
+    }
+    
+	@Override
+    public boolean getShowGrid() {
+        	return m_ShowGrid;
+            
+    }
+    
+	@Override
+    public double getZoomLevel() {
+        	return m_ZoomLevel;
+            
+    }
+    
+	@Override
+    public boolean getHasCurvedConnection() {
+        	return m_HasCurvedConnection;
+            
+    }
+    
+	@Override
+    public int getConnectionLineWidtdh() {
+        	return m_ConnectionLineWidtdh;
+            
+    }
+    
+
 }
