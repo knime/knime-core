@@ -159,7 +159,7 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
             m_cachedRows.add(row);
         } else {
             // shuffle data
-//            shuffle();
+            shuffle();
             // start again from the beginning
             m_rowIterator = m_data.iterator();
             addRowToCache();
