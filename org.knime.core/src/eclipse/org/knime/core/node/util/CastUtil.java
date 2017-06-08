@@ -50,8 +50,10 @@ package org.knime.core.node.util;
 
 import java.util.Optional;
 
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -71,7 +73,30 @@ public class CastUtil {
         //utility class
     }
 
+
     /**
+     * Shortcut for <code>cast(interface, NodeContainer.class)</code>.
+     *
+     * @param theInterface
+     * @return the {@link NodeContainer} implementation
+     */
+    public static final NodeContainer castNC(final INodeContainer theInterface) {
+        return cast(theInterface, NodeContainer.class);
+    }
+
+    /**
+     * Shortcut for <code>castOptional(interface, NodeContainer.class)</code>.
+     *
+     * @param theInterface
+     * @return the {@link NodeContainer} implementation
+     */
+    public static final Optional<NodeContainer> castNCOptional(final INodeContainer theInterface) {
+        return castOptional(theInterface, NodeContainer.class);
+    }
+
+    /**
+     * Shortcut for <code>cast(interface, WorkflowManager.class)</code>.
+     *
      * @param theInterface
      * @return the {@link WorkflowManager} implementation
      */
@@ -80,6 +105,8 @@ public class CastUtil {
     }
 
     /**
+     * Shortcut for <code>castOptional(interface, WorkflowManager.class)</code>.
+     *
      * @param theInterface
      * @return the {@link WorkflowManager} implementation
      */

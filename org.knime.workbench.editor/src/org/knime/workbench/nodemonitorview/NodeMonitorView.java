@@ -50,6 +50,7 @@ package org.knime.workbench.nodemonitorview;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,16 +83,15 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
-import org.knime.core.node.config.base.ConfigEntries;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -123,7 +123,7 @@ public class NodeMonitorView extends ViewPart
 
     private IStructuredSelection m_lastSelection;
     private IStructuredSelection m_lastSelectionWhilePinned;
-    private NodeContainer m_lastNode;
+    private INodeContainer m_lastNode;
     private boolean m_pinned = false;
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS }
@@ -288,7 +288,7 @@ public class NodeMonitorView extends ViewPart
                 ISelection sel = event.getSelection();
                 try {
                     int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                    updateDataTable(m_lastNode, newIndex);
+                    updateDataTable(CastUtil.castNC(m_lastNode), newIndex);
                 } catch (NumberFormatException nfe) {
                     // ignore.
                 }
@@ -318,7 +318,7 @@ public class NodeMonitorView extends ViewPart
      */
     @Override
     public void dispose() {
-        NodeContainer cont = m_lastNode;
+        INodeContainer cont = m_lastNode;
         if (cont != null) {
             cont.removeNodeStateChangeListener(this);
             m_lastNode = null;
@@ -367,21 +367,25 @@ public class NodeMonitorView extends ViewPart
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            NodeContainer nc = CastUtil.cast(((NodeContainerEditPart)sel).getNodeContainer(), NodeContainer.class);
+            INodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
             updateNodeContainerInfo(nc);
         } else {
             // unsupported selection
-            m_title.setText("");
-            m_state.setText("no info for '" + sel.getClass().getSimpleName() + "'.");
-            m_table.removeAll();
+            unsupportedSelection(sel);
         }
+    }
+
+    private void unsupportedSelection(final Object selectedObject) {
+        m_title.setText("");
+        m_state.setText("no info for '" + selectedObject.getClass().getSimpleName() + "'.");
+        m_table.removeAll();
     }
 
     /* Update all visuals with information regarding new NodeContainer.
      * Also de-register previous node and register with the new one if
      * the underlying NC changed.
      */
-    private void updateNodeContainerInfo(final NodeContainer nc) {
+    private void updateNodeContainerInfo(final INodeContainer nc) {
         if (nc == null) {
             return;
         }
@@ -396,9 +400,15 @@ public class NodeMonitorView extends ViewPart
         }
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getNodeContainerState().toString());
+        Optional<NodeContainer> castNC;
         switch (m_choice) {
         case VARS:
-            updateVariableTable(nc);
+            castNC = CastUtil.castNCOptional(nc);
+            if(castNC.isPresent()) {
+                updateVariableTable(castNC.get());
+            } else {
+                unsupportedSelection(nc);
+            }
             break;
         case SETTINGS:
         case ALLSETTINGS:
@@ -418,13 +428,29 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().removeAll();
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
-            updateDataTable(nc, 0);
+
+            castNC = CastUtil.castNCOptional(nc);
+            if(castNC.isPresent()) {
+                updateDataTable(castNC.get(), 0);
+            } else {
+                unsupportedSelection(nc);
+            }
             break;
         case TIMER:
-            updateTimerTable(nc);
+            castNC = CastUtil.castNCOptional(nc);
+            if(castNC.isPresent()) {
+                updateTimerTable(castNC.get());
+            } else {
+                unsupportedSelection(nc);
+            }
             break;
         case GRAPHANNOTATIONS:
-            updateGraphAnnotationTable(nc);
+            castNC = CastUtil.castNCOptional(nc);
+            if(castNC.isPresent()) {
+                updateGraphAnnotationTable(castNC.get());
+            } else {
+                unsupportedSelection(nc);
+            }
             break;
         default:
              throw new AssertionError("Unhandled switch case: " + m_choice);
@@ -577,17 +603,12 @@ public class NodeMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final NodeContainer nc,
+    private void updateSettingsTable(final INodeContainer nc,
                                      final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Node Configuration");
         // retrieve settings
-        NodeSettings settings = new NodeSettings("");
-        try {
-            nc.getParent().saveNodeSettings(nc.getID(), settings);
-        } catch (InvalidSettingsException ise) {
-            // never happens.
-        }
+        ConfigBaseRO settings = nc.getNodeSettings();
         // and put them into the table
         m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
@@ -627,26 +648,32 @@ public class NodeMonitorView extends ViewPart
             item3.setText(1, nnc.getNodeAndBundleInformation().getBundleVersion().map(v -> v.toString()).orElse("?"));
         }
         // add settings to table
-        Stack<Pair<Iterator<String>, ConfigBase>> stack = new Stack<Pair<Iterator<String>, ConfigBase>>();
+        Stack<Pair<Iterator<String>, ConfigBaseRO>> stack = new Stack<Pair<Iterator<String>, ConfigBaseRO>>();
         Iterator<String> it = settings.keySet().iterator();
         if (it.hasNext()) {
-            stack.push(new Pair<Iterator<String>, ConfigBase>(it, settings));
+            stack.push(new Pair<Iterator<String>, ConfigBaseRO>(it, settings));
         }
         while (!stack.isEmpty()) {
             String key = stack.peek().getFirst().next();
             int depth = stack.size();
             boolean noexpertskip = (depth <= 1);
-            AbstractConfigEntry ace = stack.peek().getSecond().getEntry(key);
+            ConfigBaseRO second = stack.peek().getSecond();
+            ConfigBaseRO confBase = null;
+            try {
+                confBase = second.getConfigBase(key);
+            } catch (InvalidSettingsException e) {
+                //nothing to do here - then it's just null as handled below
+            }
             if (!stack.peek().getFirst().hasNext()) {
                 stack.pop();
             }
-            if (ace.getType().equals(ConfigEntries.config)) {
+            if (confBase != null) {
                 // it's another Config entry, push on stack!
-                String val = ace.toStringValue();
+                String val = confBase.toString();
                 if ((!val.endsWith("_Internals")) || showAll) {
-                    Iterator<String> it2 = ((ConfigBase)ace).iterator();
+                    Iterator<String> it2 = confBase.iterator();
                     if (it2.hasNext()) {
-                        stack.push(new Pair<Iterator<String>, ConfigBase>(it2, (ConfigBase)ace));
+                        stack.push(new Pair<Iterator<String>, ConfigBaseRO>(it2, confBase));
                     }
                 } else {
                    noexpertskip = true;
@@ -654,7 +681,17 @@ public class NodeMonitorView extends ViewPart
             }
             // in both cases, we report its value
             if ((!noexpertskip) || showAll) {
-                String value = ace.toStringValue();
+                //TODO little problem here: there is no way to turn the entry for a specific key in the config base into a string!
+                //Hence, we check for a implementation that allows to do that as workaround.
+                //Yet, it would be better to add, e.g., a #toStringValue(String key) method to the ConfigRO interface ...
+                //However, so far there isn't any other implementation than ConfigBase anyway ...
+                String value;
+                if(second instanceof ConfigBase) {
+                    value = ((ConfigBase)second).getEntry(key).toStringValue();
+                } else {
+                    throw new IllegalStateException(
+                        "Sub type \"" + second.getClass() + "\" of ConfigBaseRO not supported.");
+                }
                 TableItem item = new TableItem(m_table, SWT.NONE);
                 char[] indent = new char[depth - 1];
                 Arrays.fill(indent, '_');
