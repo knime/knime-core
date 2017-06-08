@@ -107,8 +107,6 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  */
 class LogRegCoordinator {
 
-    private static final int CACHE_SIZE = 2000;
-
     private final LogRegLearnerSettings m_settings;
     private String m_warning;
     private PMMLPortObjectSpec m_pmmlOutSpec;
@@ -172,7 +170,8 @@ class LogRegCoordinator {
         if (m_settings.isInMemory()) {
             data = new InMemoryData<ClassificationTrainingRow>(dataTable, seed, rowBuilder);
         } else {
-            data = new DataTableTrainingData<ClassificationTrainingRow>(trainingData, seed, rowBuilder, CACHE_SIZE, exec.createSilentSubExecutionContext(0.0));
+            data = new DataTableTrainingData<ClassificationTrainingRow>(trainingData, seed,
+                    rowBuilder, m_settings.getChunkSize(), exec.createSilentSubExecutionContext(0.0));
         }
         result = learner.learn(data, trainExec);
 

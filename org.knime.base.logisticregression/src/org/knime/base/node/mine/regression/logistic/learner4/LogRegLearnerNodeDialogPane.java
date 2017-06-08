@@ -131,6 +131,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JCheckBox m_useSeedCheckBox;
     private JTextField m_seedField;
     private JButton m_newSeedButton;
+    private JSpinner m_chunkSizeSpinner;
 
     private JLabel m_warningPanel;
 
@@ -177,6 +178,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_useSeedCheckBox = new JCheckBox("Use seed");
         m_seedField = new JTextField(NUMBER_INPUT_FIELD_COLS);
         m_newSeedButton = new JButton("New");
+        m_chunkSizeSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_CHUNK_SIZE, 1, Integer.MAX_VALUE, 1000));
 
         // register listeners
         m_newSeedButton.addActionListener(new ActionListener() {
@@ -222,6 +224,14 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
                 enforceLRSCompatibilities(selected);
             }
 
+        });
+
+        m_inMemoryCheckBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_chunkSizeSpinner.setEnabled(m_inMemoryCheckBox.isSelected());
+            }
         });
 
         // create tabs
@@ -365,6 +375,13 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridwidth = 3;
         panel.add(m_inMemoryCheckBox, c);
         c.gridy++;
+        c.gridwidth = 1;
+        panel.add(new JLabel("Chunk size:"), c);
+        c.gridx++;
+        panel.add(m_chunkSizeSpinner, c);
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 3;
         panel.add(m_useSeedCheckBox, c);
         c.gridy++;
         c.gridwidth = 1;
@@ -598,6 +615,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             m_useSeedCheckBox.doClick();
         }
         m_seedField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
+        m_chunkSizeSpinner.setValue(settings.getChunkSize());
+        m_chunkSizeSpinner.setEnabled(settings.isInMemory());
     }
 
     /**
@@ -650,6 +669,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             seed = null;
         }
         settings.setSeed(seed);
+
+        settings.setChunkSize((int)m_chunkSizeSpinner.getValue());
 
         settings.saveSettings(s);
     }

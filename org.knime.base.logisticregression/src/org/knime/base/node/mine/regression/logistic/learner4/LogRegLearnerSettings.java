@@ -248,6 +248,7 @@ public class LogRegLearnerSettings {
     private static final String CFG_LEARNING_RATE_DECAY = "learningRateDecay";
     private static final String CFG_SEED = "seed";
     private static final String CFG_IN_MEMORY = "inMemory";
+    private static final String CFG_CHUNK_SIZE = "chunkSize";
 
     static final Solver DEFAULT_SOLVER = Solver.SAG;
     static final boolean DEFAULT_PERFORM_LAZY = false;
@@ -259,6 +260,7 @@ public class LogRegLearnerSettings {
     static final Prior DEFAULT_PRIOR = Prior.Uniform;
     static final double DEFAULT_PRIOR_VARIANCE = 0.1;
     static final boolean DEFAULT_IN_MEMORY = true;
+    static final int DEFAULT_CHUNK_SIZE = 10000;
 
 
     private String m_targetColumn;
@@ -289,21 +291,7 @@ public class LogRegLearnerSettings {
     // data handling
     private boolean m_inMemory;
     private Long m_seed;
-
-    /**
-     * @return the seed
-     */
-    public Long getSeed() {
-        return m_seed;
-    }
-
-
-    /**
-     * @param seed the seed to set
-     */
-    public void setSeed(final Long seed) {
-        m_seed = seed;
-    }
+    private int m_chunkSize;
 
 
     /**
@@ -325,6 +313,7 @@ public class LogRegLearnerSettings {
         m_priorVariance = DEFAULT_PRIOR_VARIANCE;
         setInMemory(DEFAULT_IN_MEMORY);
         m_seed = System.currentTimeMillis();
+        m_chunkSize = DEFAULT_CHUNK_SIZE;
     }
 
 
@@ -366,6 +355,8 @@ public class LogRegLearnerSettings {
             }
         }
         m_seed = seed;
+
+        m_chunkSize = settings.getInt(CFG_CHUNK_SIZE);
 
 
     }
@@ -410,6 +401,8 @@ public class LogRegLearnerSettings {
         }
         m_seed = seed;
 
+        m_chunkSize = settings.getInt(CFG_CHUNK_SIZE, DEFAULT_CHUNK_SIZE);
+
     }
 
     /**
@@ -437,6 +430,7 @@ public class LogRegLearnerSettings {
         settings.addBoolean(CFG_IN_MEMORY, m_inMemory);
         String seedS = m_seed.toString();
         settings.addString(CFG_SEED, seedS);
+        settings.addInt(CFG_CHUNK_SIZE, m_chunkSize);
     }
 
 
@@ -690,6 +684,37 @@ public class LogRegLearnerSettings {
      */
     public void setInMemory(final boolean inMemory) {
         m_inMemory = inMemory;
+    }
+
+    /**
+     * @return the seed
+     */
+    public Long getSeed() {
+        return m_seed;
+    }
+
+
+    /**
+     * @param seed the seed to set
+     */
+    public void setSeed(final Long seed) {
+        m_seed = seed;
+    }
+
+
+    /**
+     * @return the chunkSize
+     */
+    public int getChunkSize() {
+        return m_chunkSize;
+    }
+
+
+    /**
+     * @param chunkSize the chunkSize to set
+     */
+    public void setChunkSize(final int chunkSize) {
+        m_chunkSize = chunkSize;
     }
 }
 

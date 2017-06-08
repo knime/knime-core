@@ -191,6 +191,10 @@
         	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG or SGD solver
         	as their convergence rate highly depends on random access to individual samples.
         </option>
+        <option name="Chunk size">
+        	If the data is not held completely in memory, the node reads chunks of data into memory to emulate random access for the SAG and SGD solver.
+        	This parameter specifies how large those chunks should be.
+        </option>
         <option name="Use seed">
         	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG or SGD solver.
         </option>
