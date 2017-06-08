@@ -82,8 +82,7 @@ public interface WorkflowProject {
      * If the workflow has already been opened before it will be opened/loaded again.
      *
      * @return the newly loaded workflow
-     * @throws Exception if something got wrong while loading the project
      */
-    IWorkflowManager openProject() throws Exception;
+    IWorkflowManager openProject();
 
 }

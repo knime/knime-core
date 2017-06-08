@@ -165,9 +165,8 @@ public final class WorkflowProjectManager {
      *
      * @param workflowProjectID
      * @return the opened workflow or an empty optional if there is no workflow project with the given id
-     * @throws Exception
      */
-    public Optional<IWorkflowManager> openAndCacheWorkflow(final String workflowProjectID) throws Exception {
+    public Optional<IWorkflowManager> openAndCacheWorkflow(final String workflowProjectID) {
         IWorkflowManager iwfm = getCachedWorkflow(workflowProjectID).orElse(null);
         if (iwfm == null) {
             WorkflowProject wp = getWorkflowProject(workflowProjectID).orElse(null);

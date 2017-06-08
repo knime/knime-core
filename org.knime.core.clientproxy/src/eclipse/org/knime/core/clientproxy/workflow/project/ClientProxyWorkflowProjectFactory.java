@@ -206,18 +206,17 @@ public class ClientProxyWorkflowProjectFactory implements WorkflowProjectFactory
 
         /**
          * {@inheritDoc}
-         *
-         * @throws LockFailedException
-         * @throws UnsupportedWorkflowVersionException
-         * @throws CanceledExecutionException
-         * @throws InvalidSettingsException
-         * @throws IOException
          */
         @Override
-        public IWorkflowManager openProject() throws IOException, InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException, LockFailedException {
-            return org.knime.core.node.workflow.WorkflowManager
-                .loadProject(m_path.toFile(), new ExecutionMonitor(), new WorkflowLoadHelper()).getWorkflowManager();
+        public IWorkflowManager openProject() {
+            try {
+                return org.knime.core.node.workflow.WorkflowManager
+                    .loadProject(m_path.toFile(), new ExecutionMonitor(), new WorkflowLoadHelper()).getWorkflowManager();
+            } catch (IOException | InvalidSettingsException | CanceledExecutionException
+                    | UnsupportedWorkflowVersionException | LockFailedException ex) {
+                // TODO better exception handling here
+                throw new RuntimeException(ex);
+            }
         }
 
     }
