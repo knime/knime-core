@@ -74,7 +74,7 @@ public class DefaultNodeService implements NodeService {
     public String getNodeSettingsJSON(final String rootWorkflowID, final String nodeID) {
         IWorkflowManager wfm = WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID).orElseThrow(
             () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."));
-        INodeContainer nodeContainer = wfm.getNodeContainer(NodeID.fromString(nodeID));
+        INodeContainer nodeContainer = wfm.findNodeContainer(NodeID.fromString(nodeID));
         ConfigBaseRO settings = nodeContainer.getNodeSettings();
         return JSONConfig.toJSONString(settings, WriterConfig.PRETTY);
     }
@@ -89,7 +89,7 @@ public class DefaultNodeService implements NodeService {
             INodeContainer node = WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID)
                 .orElseThrow(
                     () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."))
-                .getNodeContainer(NodeID.fromString(nodeID.get()));
+                .findNodeContainer(NodeID.fromString(nodeID.get()));
             return buildNodeEnt(node, rootWorkflowID);
         } else {
             return buildNodeEnt(

@@ -78,7 +78,7 @@ public class DefaultWorkflowService implements WorkflowService {
             INodeContainer metaNode = WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID)
                 .orElseThrow(
                     () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."))
-                .getNodeContainer(NodeID.fromString(nodeID.get()));
+                .findNodeContainer(NodeID.fromString(nodeID.get()));
             assert metaNode instanceof IWorkflowManager;
             IWorkflowManager wfm = (IWorkflowManager)metaNode;
             if (wfm.isEncrypted()) {
