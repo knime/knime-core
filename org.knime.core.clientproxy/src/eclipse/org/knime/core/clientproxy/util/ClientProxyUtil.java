@@ -70,7 +70,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
 
 /**
  * Collection of utility methods helping to create the client-proxy classes (e.g. {@link ClientProxyWorkflowManager}) from
@@ -97,7 +97,7 @@ public class ClientProxyUtil {
     public static ClientProxyWorkflowManager getWorkflowManager(final String rootWorkflowID,
         final Optional<String> nodeID, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
         return objCache.getOrCreate(rootWorkflowID, we -> {
-            NodeEnt node = service(WorkflowService.class, serviceConfig).getNode(rootWorkflowID, nodeID);
+            NodeEnt node = service(NodeService.class, serviceConfig).getNode(rootWorkflowID, nodeID);
             assert node instanceof WorkflowNodeEnt;
             return new ClientProxyWorkflowManager((WorkflowNodeEnt)node, objCache, serviceConfig);
         });

@@ -46,11 +46,8 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
-import org.knime.core.jaxrs.workflow.entity.NodeEntFromJson;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntToJson;
 import java.util.List;
-import org.knime.core.jaxrs.workflow.entity.NodeEntToJson;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.jaxrs.workflow.entity.WorkflowEntFromJson;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
@@ -86,14 +83,6 @@ public interface RSWorkflowService extends WorkflowService {
 	@IOClasses(in=WorkflowEntFromJson.class, out=WorkflowEntToJson.class)
     @Path("/workflow")
     public WorkflowEnt getWorkflow(
-		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
-
-	@Override
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@IOClasses(in=NodeEntFromJson.class, out=NodeEntToJson.class)
-    @Path("/node")
-    public NodeEnt getNode(
 		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
 
 	@Override

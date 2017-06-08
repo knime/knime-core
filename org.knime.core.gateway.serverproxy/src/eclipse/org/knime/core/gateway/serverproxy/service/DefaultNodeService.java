@@ -48,11 +48,16 @@
  */
 package org.knime.core.gateway.serverproxy.service;
 
+import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildNodeEnt;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.project.WorkflowProject;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
-import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.JSONConfig;
 import org.knime.core.node.config.base.JSONConfig.WriterConfig;
@@ -62,22 +67,36 @@ import org.knime.core.node.workflow.NodeID;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultNodeContainerService implements NodeContainerService {
+public class DefaultNodeService implements NodeService {
 
     /** {@inheritDoc} */
     @Override
-    public String getNodeSettingsJSON(final String workflowID, final String nodeID) {
-        //TODO cache worklfow and throw exception if not found
-        WorkflowProject workflowProject = WorkflowProjectManager.getInstance().getWorkflowProject(workflowID).get();
-        IWorkflowManager manager;
-        try {
-            manager = workflowProject.openProject();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        INodeContainer nodeContainer = manager.getNodeContainer(NodeID.fromString(nodeID));
+    public String getNodeSettingsJSON(final String rootWorkflowID, final String nodeID) {
+        IWorkflowManager wfm = WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID).orElseThrow(
+            () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."));
+        INodeContainer nodeContainer = wfm.getNodeContainer(NodeID.fromString(nodeID));
         ConfigBaseRO settings = nodeContainer.getNodeSettings();
         return JSONConfig.toJSONString(settings, WriterConfig.PRETTY);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeEnt getNode(final String rootWorkflowID, final Optional<String> nodeID) {
+        //get the right IWorkflowManager for the given id and create a WorkflowEnt from it
+        if (nodeID.isPresent()) {
+            INodeContainer node = WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID)
+                .orElseThrow(
+                    () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."))
+                .getNodeContainer(NodeID.fromString(nodeID.get()));
+            return buildNodeEnt(node, rootWorkflowID);
+        } else {
+            return buildNodeEnt(
+                WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID).orElseThrow(
+                    () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found.")),
+                rootWorkflowID);
+        }
     }
 
 }

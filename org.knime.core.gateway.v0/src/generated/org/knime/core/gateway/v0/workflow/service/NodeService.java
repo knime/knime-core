@@ -46,6 +46,8 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import java.util.Optional;
 
 /**
  * Defines service methods to query details on an individual node or metanode.
@@ -53,15 +55,24 @@ package org.knime.core.gateway.v0.workflow.service;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface NodeContainerService extends GatewayService {
+public interface NodeService extends GatewayService {
 
     /**
      * Get the settings tree for a given node in a JSON structure.
-     * @param workflowID The id of the workflow the node is in.
+     * @param rootWorkflowID The id of the workflow the node is in.
      * @param nodeID The id of the node itself.
-     * @return BERND
+     * @return the node settings as json structure
      * 
      */ 
-	String getNodeSettingsJSON(final String workflowID, final String nodeID);
+	String getNodeSettingsJSON(final String rootWorkflowID, final String nodeID);
+	
+    /**
+     * Get the node entity for a given root workflow and node ID.
+     * @param rootWorkflowID The identifier as per #getAllWorkflows of the root workflow
+     * @param nodeID The node ID requested. If not present the root workflow node will be returned.
+     * @return the node entity
+     * 
+     */ 
+	NodeEnt getNode(final String rootWorkflowID, final Optional<String> nodeID);
 	
 }

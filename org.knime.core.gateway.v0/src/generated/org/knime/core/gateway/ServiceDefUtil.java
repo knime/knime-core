@@ -66,9 +66,9 @@ public class ServiceDefUtil {
         List<Pair<String, String>> list = new ArrayList<>();
         list.add(Pair.of("TestService", "test.service"));
         list.add(Pair.of("RepositoryService", "repository.service"));
+        list.add(Pair.of("NodeService", "workflow.service"));
         list.add(Pair.of("ExecutionService", "workflow.service"));
         list.add(Pair.of("WorkflowService", "workflow.service"));
-        list.add(Pair.of("NodeContainerService", "workflow.service"));
         SERVICE_DEFS = Collections.unmodifiableList(list);
     }
 

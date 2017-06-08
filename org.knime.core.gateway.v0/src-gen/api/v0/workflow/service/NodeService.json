@@ -1,0 +1,50 @@
+{
+    "type" : "service",
+    "name" : "NodeService",
+    "description" : "Defines service methods to query details on an individual node or metanode.",
+    "namespace" : "workflow.service",
+    "methods" : [
+        {
+            "name" : "NodeSettingsJSON",
+            "operation" : "get",
+            "description" : "Get the settings tree for a given node in a JSON structure.",
+            "result" : {
+                "description" : "the node settings as json structure",
+                "type" : "String"
+            },
+            "params" : [
+                {
+                    "description" : "The id of the workflow the node is in.",
+                    "name" : "rootWorkflowID",
+                    "type" : "String"
+                },
+                {
+                    "description" : "The id of the node itself.",
+                    "name" : "nodeID",
+                    "type" : "String"
+                }
+            ]
+        },
+        {
+            "name" : "Node",
+            "operation" : "get",
+            "description" : "Get the node entity for a given root workflow and node ID.",
+            "result" : {
+                "description" : "the node entity",
+                "type" : "workflow.entity.NodeEnt"
+            },
+            "params" : [
+                {
+                    "description" : "The identifier as per #getAllWorkflows of the root workflow",
+                    "name" : "rootWorkflowID",
+                    "type" : "String"
+                },
+                {
+                    "description" : "The node ID requested. If not present the root workflow node will be returned.",
+                    "name" : "nodeID",
+                    "type" : "Optional<String>"
+                }
+            ]
+        }
+    ]
+}

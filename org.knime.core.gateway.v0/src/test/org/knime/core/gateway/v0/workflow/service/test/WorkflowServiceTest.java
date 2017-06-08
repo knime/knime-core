@@ -51,8 +51,6 @@ import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
-import org.knime.core.gateway.v0.test.workflow.entity.test.NodeEntTest;
-import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
@@ -112,26 +110,6 @@ public class WorkflowServiceTest {
 
 		//compare results
         WorkflowEntTest.testEnt(methodRes, values);
-    }
-
-    @Test
-    public void test_getNode() {
-		//create parameter values
-		String rootWorkflowID = "CGvxL";
-		Optional<String> nodeID = Optional.of("CGvxL");
- 
-		//create return value   
-		List<Object> values = NodeEntTest.createValueList();
-        NodeEnt res = NodeEntTest.createEnt(values);
-
-		//mock return value
-		Mockito.when(m_serviceMock.getNode(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
-
-		//call method
-		NodeEnt methodRes = service(WorkflowService.class, m_serviceConfig).getNode(rootWorkflowID, nodeID);
-
-		//compare results
-        NodeEntTest.testEnt(methodRes, values);
     }
 
     @Test

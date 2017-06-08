@@ -50,7 +50,10 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
-import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
+import org.knime.core.gateway.v0.test.workflow.entity.test.NodeEntTest;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
+import java.util.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,14 +77,14 @@ import org.mockito.Mockito;
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public class NodeContainerServiceTest {
+public class NodeServiceTest {
 
-    private NodeContainerService m_serviceMock;
+    private NodeService m_serviceMock;
     private ServiceConfig m_serviceConfig;
 
     @Before
     public void setup() throws Exception {
-        m_serviceMock = mock(NodeContainerService.class);
+        m_serviceMock = mock(NodeService.class);
         m_serviceConfig = new ServerServiceConfig("localhost", 3000);
 
         //spin-up the server with the mocked service
@@ -91,7 +94,7 @@ public class NodeContainerServiceTest {
     @Test
     public void test_getNodeSettingsJSON() {
 		//create parameter values
-		String workflowID = "CGvxL";
+		String rootWorkflowID = "CGvxL";
 		String nodeID = "CGvxL";
  
 		//create return value   
@@ -101,10 +104,30 @@ public class NodeContainerServiceTest {
 		Mockito.when(m_serviceMock.getNodeSettingsJSON(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
 
 		//call method
-		String methodRes = service(NodeContainerService.class, m_serviceConfig).getNodeSettingsJSON(workflowID, nodeID);
+		String methodRes = service(NodeService.class, m_serviceConfig).getNodeSettingsJSON(rootWorkflowID, nodeID);
 
 		//compare results
 		assertEquals(res, methodRes);
+    }
+
+    @Test
+    public void test_getNode() {
+		//create parameter values
+		String rootWorkflowID = "CGvxL";
+		Optional<String> nodeID = Optional.of("CGvxL");
+ 
+		//create return value   
+		List<Object> values = NodeEntTest.createValueList();
+        NodeEnt res = NodeEntTest.createEnt(values);
+
+		//mock return value
+		Mockito.when(m_serviceMock.getNode(Matchers.anyVararg(), Matchers.anyVararg())).thenReturn(res);
+
+		//call method
+		NodeEnt methodRes = service(NodeService.class, m_serviceConfig).getNode(rootWorkflowID, nodeID);
+
+		//compare results
+        NodeEntTest.testEnt(methodRes, values);
     }
 
  

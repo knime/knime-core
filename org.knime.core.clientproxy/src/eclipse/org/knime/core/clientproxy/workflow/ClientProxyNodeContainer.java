@@ -79,7 +79,7 @@ import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
-import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -359,13 +359,21 @@ public class ClientProxyNodeContainer implements INodeContainer {
             public boolean isConfigured() {
                 return state.equals("CONFIGURED");
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String toString() {
+                return state;
+            }
         };
     }
 
     /** {@inheritDoc} */
     @Override
     public ConfigBaseRO getNodeSettings() {
-        String json = service(NodeContainerService.class, m_serviceConfig).getNodeSettingsJSON(m_node.getRootWorkflowID(), m_node.getNodeID());
+        String json = service(NodeService.class, m_serviceConfig).getNodeSettingsJSON(m_node.getRootWorkflowID(), m_node.getNodeID());
         try {
             return JSONConfig.readJSON(new NodeSettings("settings"), new StringReader(json));
         } catch (IOException ex) {

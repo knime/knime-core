@@ -46,33 +46,49 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
+import org.knime.core.jaxrs.workflow.entity.NodeEntFromJson;
+import org.knime.core.jaxrs.workflow.entity.NodeEntToJson;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
+import java.util.Optional;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import org.knime.core.jaxrs.IOClasses;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
- * RESTful service implementation of the {@link RSNodeContainerService}-rest calls (i.e. rest resources) that delegates the calls
- * to the wrapped service.
+ * JAX-RS annotated interface for {@link NodeService}.
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public class RSWrapperNodeContainerService implements RSNodeContainerService {
+@Path("/NodeService")
+public interface RSNodeService extends NodeService {
 
-    private NodeContainerService m_service;
-    
-    public RSWrapperNodeContainerService(NodeContainerService service) {
-    	m_service = service;
-    }
 
-				
 	@Override
- 	public String getNodeSettingsJSON(
-		final String workflowID,
-		final String nodeID)   {
-		return m_service.getNodeSettingsJSON(workflowID, nodeID);
-    }
+	@GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/nodesettingsjson")
+    public String getNodeSettingsJSON(
+		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@QueryParam("nodeID") final String nodeID);
+
+	@Override
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@IOClasses(in=NodeEntFromJson.class, out=NodeEntToJson.class)
+    @Path("/node")
+    public NodeEnt getNode(
+		@QueryParam("rootWorkflowID") final String rootWorkflowID,		@DefaultValue(value="") @QueryParam("nodeID") final Optional<String> nodeID);
 
 }

@@ -46,37 +46,42 @@
  */
 package org.knime.core.jaxrs.workflow.service;
 
-import org.knime.core.gateway.v0.workflow.service.NodeContainerService;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
-import org.knime.core.jaxrs.IOClasses;
+import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
+import org.knime.core.gateway.v0.workflow.service.NodeService;
+import java.util.Optional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
- * JAX-RS annotated interface for {@link NodeContainerService}.
+ * RESTful service implementation of the {@link RSNodeService}-rest calls (i.e. rest resources) that delegates the calls
+ * to the wrapped service.
  *
  * @author Martin Horn, University of Konstanz
  */
 // AUTO-GENERATED CODE; DO NOT MODIFY
-@Path("/NodeContainerService")
-public interface RSNodeContainerService extends NodeContainerService {
+public class RSWrapperNodeService implements RSNodeService {
 
+    private NodeService m_service;
+    
+    public RSWrapperNodeService(NodeService service) {
+    	m_service = service;
+    }
 
+				
 	@Override
-	@GET
-    @Produces(MediaType.TEXT_PLAIN)
-    @Path("/nodesettingsjson")
-    public String getNodeSettingsJSON(
-		@QueryParam("workflowID") final String workflowID,		@QueryParam("nodeID") final String nodeID);
+ 	public String getNodeSettingsJSON(
+		final String rootWorkflowID,
+		final String nodeID)   {
+		return m_service.getNodeSettingsJSON(rootWorkflowID, nodeID);
+    }
+				
+	@Override
+ 	public NodeEnt getNode(
+		final String rootWorkflowID,
+		final Optional<String> nodeID)   {
+		return m_service.getNode(rootWorkflowID, nodeID);
+    }
 
 }
