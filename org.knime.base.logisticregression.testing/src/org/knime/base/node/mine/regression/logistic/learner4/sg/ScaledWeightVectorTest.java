@@ -66,7 +66,7 @@ public class ScaledWeightVectorTest extends AbstractWeightVectorTest {
      */
     @Override
     protected ScaledWeightVector<MockClassificationTrainingRow> createTestVec(final boolean fitIntercept, final int nRows, final int nCols) {
-        ScaledWeightVector<MockClassificationTrainingRow> vec = new ScaledWeightVector<>(nCols, nRows + 1, fitIntercept);
+        ScaledWeightVector<MockClassificationTrainingRow> vec = new ScaledWeightVector<>(nCols, nRows, fitIntercept);
         double[][] data = vec.m_data;
         assertEquals(data.length, nRows);
         for (int i = 0; i < data.length; i++) {

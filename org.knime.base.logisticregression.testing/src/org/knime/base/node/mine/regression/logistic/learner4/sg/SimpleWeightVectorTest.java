@@ -62,7 +62,7 @@ public class SimpleWeightVectorTest extends AbstractWeightVectorTest {
     @Override
     protected SimpleWeightVector<MockClassificationTrainingRow> createTestVec(
         final boolean fitIntercept, final int nRows, final int nCols) {
-        SimpleWeightVector<MockClassificationTrainingRow> vec = new SimpleWeightVector<>(nCols, nRows + 1, fitIntercept);
+        SimpleWeightVector<MockClassificationTrainingRow> vec = new SimpleWeightVector<>(nCols, nRows, fitIntercept);
         double[][] data = vec.m_data;
         assertEquals(data.length, nRows);
         for (int i = 0; i < data.length; i++) {

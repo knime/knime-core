@@ -66,7 +66,7 @@ public class LazySagUpdaterTest {
 
     @Test
     public void testLazyUpdate() throws Exception {
-        WeightVector<TrainingRow> beta = new SimpleWeightVector<TrainingRow>(3, 3, true);
+        WeightVector<TrainingRow> beta = new SimpleWeightVector<TrainingRow>(3, 2, true);
         MockClassificationTrainingRow[] mockRows = new MockClassificationTrainingRow[]{
             new MockClassificationTrainingRow(new double[]{0, 1}, 0, 0),
             new MockClassificationTrainingRow(new double[]{1, 0}, 1, 1),
@@ -130,8 +130,8 @@ public class LazySagUpdaterTest {
     private void lazyVsEager(final int nRows, final int nFeatures, final int nCats, final int nEpochs, final double fractionZeros) throws Exception{
         LazySagUpdater<MockClassificationTrainingRow> lazyUpdater = new LazySagUpdater.LazySagUpdaterFactory<MockClassificationTrainingRow>(nRows, nFeatures, nCats - 1).create();
         EagerSagUpdater<MockClassificationTrainingRow> eagerUpdater = new EagerSagUpdater.EagerSagUpdaterFactory<MockClassificationTrainingRow>(nRows, nFeatures, nCats - 1).create();
-        SimpleWeightVector<MockClassificationTrainingRow> eagerBeta = new SimpleWeightVector<>(nFeatures, nCats, true);
-        SimpleWeightVector<MockClassificationTrainingRow> lazyBeta = new SimpleWeightVector<>(nFeatures, nCats, true);
+        SimpleWeightVector<MockClassificationTrainingRow> eagerBeta = new SimpleWeightVector<>(nFeatures, nCats - 1, true);
+        SimpleWeightVector<MockClassificationTrainingRow> lazyBeta = new SimpleWeightVector<>(nFeatures, nCats - 1, true);
         MockClassificationTrainingRow[] rows = new MockClassificationTrainingRow[nRows];
         boolean[] columns2Check = new boolean[nFeatures];
         for (int i = 0; i < nRows; i++) {
@@ -210,7 +210,7 @@ public class LazySagUpdaterTest {
         MockClassificationTrainingRow[] mockRows = new MockClassificationTrainingRow[]{
             new MockClassificationTrainingRow(new double[]{0, 1}, 0, 0),
             new MockClassificationTrainingRow(new double[]{1, 0}, 1, 1)};
-        SimpleWeightVector<TrainingRow> beta = new SimpleWeightVector<>(3, 3, true);
+        SimpleWeightVector<TrainingRow> beta = new SimpleWeightVector<>(3, 2, true);
         int[] lastVisited = new int[3];
         LazySagUpdater<TrainingRow> updater = new LazySagUpdater.LazySagUpdaterFactory<>(2, 3, 2).create();
         double stepSize = 1.0;

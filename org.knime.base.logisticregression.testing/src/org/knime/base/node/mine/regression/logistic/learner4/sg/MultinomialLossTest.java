@@ -132,7 +132,7 @@ public class MultinomialLossTest {
         final MultinomialLoss lossFunc = MultinomialLoss.INSTANCE;
         // the multinomial loss only requires the row to get to the target value
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{2, 3}, 0, 0);
-        final WeightVector<ClassificationTrainingRow> beta = new SimpleWeightVector<ClassificationTrainingRow>(3, 3, true);
+        final WeightVector<ClassificationTrainingRow> beta = new SimpleWeightVector<ClassificationTrainingRow>(3, 2, true);
         // [0 1 2; 1 2 3]
         beta.update((v, c, i) -> c + i, true);
         Iterator<ClassificationTrainingRow> mockIterator = mock(Iterator.class);
@@ -141,7 +141,7 @@ public class MultinomialLossTest {
         TrainingData<ClassificationTrainingRow> mockData = mock(TrainingData.class);
         when(mockData.iterator()).thenReturn(mockIterator);
         when(mockData.getFeatureCount()).thenReturn(3);
-        when(mockData.getTargetDimension()).thenReturn(3);
+        when(mockData.getTargetDimension()).thenReturn(2);
 
         double[][] hessian = lossFunc.hessian(mockData, beta);
         double p1 = Math.exp(8) / (1 + Math.exp(8) + Math.exp(14));
@@ -150,12 +150,12 @@ public class MultinomialLossTest {
         double p2_ = p2 * (1 - p2);
         double p1p2 = p1 * p2;
         double[][] expected = new double[][]{
-            {p1_, 2*p1_, 3*p1_, p1p2, 2*p1p2, 3*p1p2},
-            {2*p1_, 4*p1_, 6*p1_, 2*p1p2, 4*p1p2, 6*p1p2},
-            {3*p1_, 6*p1_, 9*p1_, 3*p1p2, 6*p1p2, 9*p1p2},
-            {p1p2, 2*p1p2, 3*p1p2, p2_, 2*p2_, 3*p2_},
-            {2*p1p2, 4*p1p2, 6*p1p2, 2*p2_, 4*p2_, 6*p2_},
-            {3*p1p2, 6*p1p2, 9*p1p2, 3*p2_, 6*p2_, 9*p2_},
+            {p1_, 2*p1_, 3*p1_, -p1p2, -2*p1p2, -3*p1p2},
+            {2*p1_, 4*p1_, 6*p1_, -2*p1p2, -4*p1p2, -6*p1p2},
+            {3*p1_, 6*p1_, 9*p1_, -3*p1p2, -6*p1p2, -9*p1p2},
+            {-p1p2, -2*p1p2, -3*p1p2, p2_, 2*p2_, 3*p2_},
+            {-2*p1p2, -4*p1p2, -6*p1p2, 2*p2_, 4*p2_, 6*p2_},
+            {-3*p1p2, -6*p1p2, -9*p1p2, 3*p2_, 6*p2_, 9*p2_},
         };
         for (int i = 0; i < expected.length; i++) {
             assertArrayEquals(expected[i], hessian[i], EPSILON);

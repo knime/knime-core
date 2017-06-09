@@ -101,7 +101,6 @@ class AnnealingLearningRateStrategy <T extends TrainingRow> implements LearningR
     @Override
     public void startNewEpoch(final int epoch) {
         m_currentLearningRate = m_initialLearningRate / (1 + epoch / m_annealingRate);
-        System.out.println("Step size: " + m_currentLearningRate + " in epoch " + epoch);
     }
 
 }

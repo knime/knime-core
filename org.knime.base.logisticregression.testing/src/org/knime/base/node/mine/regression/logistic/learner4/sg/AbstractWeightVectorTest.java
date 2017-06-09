@@ -89,21 +89,24 @@ public abstract class AbstractWeightVectorTest {
             }
         }
 
-        int[] nonZeroIndices = new int[] {0, 2, -1};
         // set all entries to zero
         vec.update((v, c, i) -> 0, true);
         beta = vec.getWeightVector();
         double expectedIntercept = opFitIntercept && vecFitIntercept ? 1.0 : 0.0;
         double[][] expected = new double[][] {
-            {expectedIntercept, 0.0, 1.0},
-            {expectedIntercept, 0.0, 1.0},
-            {expectedIntercept, 0.0, 1.0}};
+            {0.0, 0.0, 0.0},
+            {0.0, 0.0, 0.0},
+            {0.0, 0.0, 0.0}};
         assertArrayEquals(expected, beta);
 
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{0, 1}, 0, 0);
         vec.update((v, c, i) -> 0, true);
         vec.update((v, c, i, f) -> 1.0, opFitIntercept, row);
         beta = vec.getWeightVector();
+        expected = new double[][] {
+            {expectedIntercept, 0.0, 1.0},
+            {expectedIntercept, 0.0, 1.0},
+            {expectedIntercept, 0.0, 1.0}};
         assertArrayEquals(expected, beta);
     }
 
