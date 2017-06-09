@@ -230,7 +230,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                m_chunkSizeSpinner.setEnabled(m_inMemoryCheckBox.isSelected());
+                m_chunkSizeSpinner.setEnabled(!m_inMemoryCheckBox.isSelected());
             }
         });
 
@@ -616,7 +616,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         }
         m_seedField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
         m_chunkSizeSpinner.setValue(settings.getChunkSize());
-        m_chunkSizeSpinner.setEnabled(settings.isInMemory());
+        m_chunkSizeSpinner.setEnabled(!settings.isInMemory());
     }
 
     /**
