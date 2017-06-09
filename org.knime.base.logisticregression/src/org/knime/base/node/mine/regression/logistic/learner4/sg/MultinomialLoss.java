@@ -120,7 +120,6 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
                                 classFactor = -prediction[outerCat] * prediction[innerCat];
                             }
                             double h = outerVal * innerVal * classFactor;
-                            // TODO check if this indexing is correct, I suspect the error is introduced here
                             hessian[outerIdx + outerCat * nFets][innerIdx + innerCat * nFets] += h;
                         }
                     }
