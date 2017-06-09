@@ -110,7 +110,12 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
         DataTableSpec newTableSpec = m_data.getDataTableSpec();
         m_idColIdx = newTableSpec.findColumnIndex(idColName);
         m_shuffleColIdx = newTableSpec.findColumnIndex(shuffleColName);
-        m_cacheSize = cacheSize;
+        if (cacheSize < data.size()) {
+            m_cacheSize = cacheSize;
+        } else {
+            // the cache can at most hold the whole table
+            m_cacheSize = (int)data.size();
+        }
         m_cachedRows = new ArrayList<>(m_cacheSize);
         m_rowIterator = m_data.iterator();
         m_sampleCounter = 0;
