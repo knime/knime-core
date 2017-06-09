@@ -51,6 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import java.util.Optional;
 
 import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
@@ -153,8 +154,9 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
 
     private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
         final double[][] hessian = m_loss.hessian(m_data, beta);
-        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian).scalarMultiply(-1);
-        return MatrixUtils.inverse(observedInformation);
+        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian);
+        RealMatrix covMat = new QRDecomposition(observedInformation).getSolver().getInverse().scalarMultiply(-1);
+        return covMat;
     }
 
     protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);

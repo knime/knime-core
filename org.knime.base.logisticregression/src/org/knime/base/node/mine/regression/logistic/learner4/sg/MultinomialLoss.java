@@ -117,9 +117,10 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
                             if (outerCat == innerCat) {
                                 classFactor = prediction[outerCat] * (1 - prediction[outerCat]);
                             } else {
-                                classFactor = prediction[outerCat] * prediction[innerCat];
+                                classFactor = -prediction[outerCat] * prediction[innerCat];
                             }
                             double h = outerVal * innerVal * classFactor;
+                            // TODO check if this indexing is correct, I suspect the error is introduced here
                             hessian[outerIdx + outerCat * nFets][innerIdx + innerCat * nFets] += h;
                         }
                     }
