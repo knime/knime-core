@@ -317,7 +317,22 @@ public final class SandboxedNodeCreator {
             // save workflow in the local job dir
             if (m_localWorkflowDir != null) {
                 tempWFM.save(m_localWorkflowDir, exec, true);
-                deepCopyFilesInWorkflowDir(m_nc, tempWFM);
+                if (m_nc instanceof WorkflowManager) {
+                    // copy the workflow data and drop folder
+                    copyFilesInNodeContainerDir(((WorkflowManager) m_nc).getProjectWFM(), tempWFM);
+                    if (((WorkflowManager) m_nc).isProject()) {
+                        // If m_nc is the project we only have to copy the data and drop folders
+                        // of the children because the folders of this node already have been copied
+                        callDeepCopyOnChildren(m_nc, targetNode);
+                    } else {
+                        deepCopyFilesInWorkflowDir(m_nc, tempWFM);
+                    }
+                } else {
+                    // copy the workflow data and drop folder
+                    copyFilesInNodeContainerDir(m_nc.getParent().getProjectWFM(), tempWFM);
+                    // copy all the data and drop folder of the nodes inside m_nc (could be a wrapped metanode)
+                    deepCopyFilesInWorkflowDir(m_nc, tempWFM);
+                }
             }
             return new SandboxedNode(tempWFM, targetNodeID);
         } finally {
@@ -335,6 +350,19 @@ public final class SandboxedNodeCreator {
     private static void deepCopyFilesInWorkflowDir(final NodeContainer source, final WorkflowManager targetParent) {
         NodeContainer target = targetParent.getNodeContainer(
             targetParent.getID().createChild(source.getID().getIndex()));
+        // Copy the files from the source to the target node
+        copyFilesInNodeContainerDir(source, target);
+        // Call deep copy on the children of the target node
+        callDeepCopyOnChildren(source, target);
+    }
+
+    /**
+     * Copies data and drop folders contained in the directory of the source node container to the directory
+     * of the target node container. Doesn't call itself recursively.
+     * @param source Source node
+     * @param target Target node
+     */
+    private static void copyFilesInNodeContainerDir(final NodeContainer source, final NodeContainer target) {
         ReferencedFile sourceDirRef = source.getNodeContainerDirectory();
         ReferencedFile targetDirRef = target.getNodeContainerDirectory();
         if (sourceDirRef == null) {
@@ -358,6 +386,17 @@ public final class SandboxedNodeCreator {
                 }
             }
         }
+    }
+
+    /**
+     * Calls {@link SandboxedNodeCreator#deepCopyFilesInWorkflowDir(NodeContainer, WorkflowManager)} on all
+     * children of the target node container. If the target node container isn't a {@link WorkflowManager} or
+     * {@link SubNodeContainer} it does nothing.
+     * @param source Source node
+     * @param target Target node on whose children {@link SandboxedNodeCreator#deepCopyFilesInWorkflowDir(NodeContainer, WorkflowManager)}
+     * should be called.
+     */
+    private static void callDeepCopyOnChildren(final NodeContainer source, final NodeContainer target) {
         Collection<NodeContainer> childrenList = Collections.emptyList();
         WorkflowManager childTargetParent = null;
         if (source instanceof WorkflowManager) {
