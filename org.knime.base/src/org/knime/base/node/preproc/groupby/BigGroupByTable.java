@@ -164,10 +164,12 @@ public class BigGroupByTable extends GroupByTable {
      */
     public Map<String, Long> getMissingValuesMap() {
         Map<String, Long> resMap = new HashMap<>();
-        for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
-            Long count = entry.getValue().toLong();
-            if (count > 0) {
-                resMap.put(entry.getKey(), entry.getValue().toLong());
+        if (m_missingValuesMap != null) {
+            for (Entry<String, MutableLong> entry : m_missingValuesMap.entrySet()) {
+                Long count = entry.getValue().toLong();
+                if (count > 0) {
+                    resMap.put(entry.getKey(), entry.getValue().toLong());
+                }
             }
         }
         return resMap;
@@ -419,7 +421,7 @@ public class BigGroupByTable extends GroupByTable {
     }
 
     private void initMissingValuesMap() {
-        m_missingValuesMap = new LinkedHashMap<>();
+        m_missingValuesMap = new HashMap<>();
         ColumnAggregator[] colAggregators = getColAggregators();
         for (ColumnAggregator ca : colAggregators) {
             m_missingValuesMap.put(ca.getOriginalColName(), new MutableLong(0L));
