@@ -4,7 +4,7 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/analytics/statistics/regression"
+            category-path="/analytics/mining/logreg"
             factory-class="org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerNodeFactory4">
       </node>
 <!--      <node
@@ -13,6 +13,16 @@
             factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
             >
       </node>-->
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            icon="icons/missing.gif"
+            level-id="logreg"
+            locked="true"
+            name="Logistic Regression"
+            path="/analytics/mining/">
+      </category>
    </extension>
 
 </plugin>
