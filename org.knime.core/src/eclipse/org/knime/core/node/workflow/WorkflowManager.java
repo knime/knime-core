@@ -4748,11 +4748,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void resetSubnodeForViewUpdate(final NodeID id, final BiConsumer<SubNodeContainer, NodeContainer> stateCheck) {
         assert isLockedByCurrentThread();
         SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
+        CheckUtils.checkState(canResetNode(id), "Can't reset wrapped metanode%s",
+            hasSuccessorInProgress(id) ? " - some downstream nodes are still executing" : "");
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             NodeID dest = cc.getDest();
             NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
             stateCheck.accept(snc, destNC); // for wizard execution: downstream nodes must not be executed
         }
+        resetSuccessors(id);
         invokeResetOnSingleNodeContainer(snc);
     }
 
