@@ -9,7 +9,7 @@
              deprecated="false"
              factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"/>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/smoothing"
             deprecated="false"
             factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"/>
       <node
@@ -56,7 +56,7 @@
             factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/smoothing"
             deprecated="false"
             factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory">
       </node>

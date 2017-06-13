@@ -5,94 +5,94 @@
          point="org.knime.workbench.repository.nodes">
       <node
             after="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.newtoold.NewToOldTimeNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.newtoold.NewToOldTimeNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform "
             deprecated="false"
             factory-class="org.knime.time.node.convert.oldtonew.OldToNewTimeNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifytime.ModifyTimeNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifydate.ModifyDateNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodurationperiod.StringToDurationPeriodNodeFactory">
       </node>
       <node
             after="org.knime.time.node.manipulate.datetimeshift.DateTimeShiftNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.filter.datetimebasedrowfilter.DateTimeBasedRowFilterNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.extract.durationperiod.ExtractDurationPeriodFieldsNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.calculate.datetimedifference.DateTimeDifferenceNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.extract.datetime.ExtractDateTimeFieldsNodeFactory">
       </node>
       <node
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/manipulate"
             deprecated="false"
             factory-class="org.knime.time.node.create.createdatetime.CreateDateTimeNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.durationperiodtostring.DurationPeriodToStringNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.durationtonumber.DurationToNumberNodeFactory">
       </node>
       <node
             after="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory"
-            category-path="/applications/timeseries"
+            category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory">
       </node>
@@ -111,6 +111,29 @@
             level-id="meta"
             locked="true"
             name="Meta Nodes"
+            path="/applications/timeseries">
+      </category>
+      <category
+            after="manipulate"
+            icon="icons/missing.gif"
+            level-id="transform"
+            locked="true"
+            name="Transform"
+            path="/applications/timeseries">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="manipulate"
+            locked="true"
+            name="Manipulate"
+            path="/applications/timeseries">
+      </category>
+      <category
+            after="transform"
+            icon="icons/missing.gif"
+            level-id="smoothing"
+            locked="true"
+            name="Smoothing"
             path="/applications/timeseries">
       </category>
    </extension>
