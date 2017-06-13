@@ -87,10 +87,11 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
- * An abstract utility class received from the workflow manager that allows defining wizard execution or generating combined views on subnodes.
- * Used for example for the 2nd generation wizard execution based on SubNodes.
+ * An abstract utility class received from the workflow manager that allows defining wizard execution or generating
+ * combined views on subnodes. Used for example for the 2nd generation wizard execution based on SubNodes.
  *
- * <p>Do not use, no public API.
+ * <p>
+ * Do not use, no public API.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
@@ -101,27 +102,41 @@ public abstract class WebResourceController {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceController.class);
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
+
     private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
+
     private static final String ID_IMPL_BUNDLE = "implementationBundleID";
+
     private static final String ID_IMPORT_RES = "importResource";
+
     private static final String ID_DEPENDENCY = "webDependency";
 
     private static final String ATTR_JS_ID = "javascriptComponentID";
+
     private static final String ATTR_NAMESPACE = "namespace";
+
     private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
+
     private static final String ATTR_PATH = "relativePath";
+
     private static final String ATTR_TYPE = "type";
+
     private static final String ATTR_INIT_METHOD_NAME = "init-method-name";
+
     private static final String ATTR_VALIDATE_METHOD_NAME = "validate-method-name";
+
     private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
+
     private static final String ATTR_SETVALIDATIONERROR_METHOD_NAME = "setValidationError-method-name";
 
     private static final String ID_WEB_RESOURCE = "webResource";
 
     private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
+
     private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
 
     private static final String DEFAULT_DEPENDENCY = "knimeService_1.0";
+
     private static final Set<WebResourceLocator> DEFAULT_RES =
         getResourcesFromExtension(getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, DEFAULT_DEPENDENCY));
 
@@ -158,7 +173,7 @@ public abstract class WebResourceController {
         for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
             String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
             IConfigurationElement dependencyExtension =
-                    getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
+                getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
             if (dependencyExtension == null) {
                 LOGGER.error("Web ressource dependency could not be found: " + dependencyID
                     + ". This is most likely an implementation error.");
@@ -173,8 +188,8 @@ public abstract class WebResourceController {
         String validateMethodName = jsComponentExtension.getAttribute(ATTR_VALIDATE_METHOD_NAME);
         String valueMethodName = jsComponentExtension.getAttribute(ATTR_GETCOMPONENTVALUE_METHOD_NAME);
         String setValidationErrorMethodName = jsComponentExtension.getAttribute(ATTR_SETVALIDATIONERROR_METHOD_NAME);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]),
-            namespace, initMethodName, validateMethodName, valueMethodName, setValidationErrorMethodName);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace, initMethodName,
+            validateMethodName, valueMethodName, setValidationErrorMethodName);
     }
 
     private static WebTemplate getEmptyWebTemplate() {
@@ -197,7 +212,7 @@ public abstract class WebResourceController {
 
     private static Map<String, String> getWebResources(final IConfigurationElement resConfig) {
         Map<String, String> resMap = new HashMap<String, String>();
-        for (IConfigurationElement resElement: resConfig.getChildren(ID_WEB_RESOURCE)) {
+        for (IConfigurationElement resElement : resConfig.getChildren(ID_WEB_RESOURCE)) {
             resMap.put(resElement.getAttribute(ATTR_RELATIVE_PATH_TARGET),
                 resElement.getAttribute(ATTR_RELATIVE_PATH_SOURCE));
         }
@@ -290,8 +305,10 @@ public abstract class WebResourceController {
         }
     }*/
 
-    /** Temporary workaround to check if the argument workflow contains sub nodes and hence can be used
-     * with the {@link WizardNode} execution.
+    /**
+     * Temporary workaround to check if the argument workflow contains sub nodes and hence can be used with the
+     * {@link WizardNode} execution.
+     *
      * @param manager To check, not null.
      * @return That property.
      */
@@ -307,7 +324,9 @@ public abstract class WebResourceController {
         }
     }
 
-    /** Created from workflow.
+    /**
+     * Created from workflow.
+     *
      * @param manager ...
      */
     WebResourceController(final WorkflowManager manager) {
@@ -316,6 +335,7 @@ public abstract class WebResourceController {
 
     /**
      * Checks different criteria to determine if a combined page view is available for a given subnode.
+     *
      * @param subnodeId the {@link NodeID} of the subnode to check
      * @return true, if a view on the subnode is available, false otherwise
      * @since 3.4
@@ -348,6 +368,7 @@ public abstract class WebResourceController {
 
     /**
      * Crates the wizard page for a given node id. Throws exception if no wizard page available.
+     *
      * @param subnodeID the node id for the subnode to retrieve the wizard page for
      * @return The wizard page for the given node id
      */
@@ -360,8 +381,8 @@ public abstract class WebResourceController {
         final WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
 
-//        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
-//        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
+        //        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
+        //        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> executedWizardNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
@@ -394,7 +415,8 @@ public abstract class WebResourceController {
         for (HiLiteHandler initialHandler : initialHiliteHandlerSet) {
             getHiLiteTranslators(initialHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
         }
-        List<HiLiteTranslator> translatorList = knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
+        List<HiLiteTranslator> translatorList =
+            knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
         return new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
     }
@@ -410,10 +432,12 @@ public abstract class WebResourceController {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         return subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER).entrySet().stream()
             .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
-            .collect(Collectors.toMap(e -> NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e-> e.getValue().getViewValue()));
+            .collect(Collectors.toMap(e -> NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()),
+                e -> e.getValue().getViewValue()));
     }
 
-    private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+    private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers,
+        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
         if (handler == null || !knownHiLiteHandlers.add(handler)) {
             return;
         }
@@ -431,7 +455,8 @@ public abstract class WebResourceController {
         }
     }
 
-    private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+    private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers,
+        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
         getHiLiteTranslators(translator.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
         if (translator.getToHiLiteHandlers() != null) {
             for (HiLiteHandler toHiLiteHandler : translator.getToHiLiteHandlers()) {
@@ -440,7 +465,8 @@ public abstract class WebResourceController {
         }
     }
 
-    private void followHiLiteManager(final HiLiteManager manager, final Set<HiLiteHandler> knownHiLiteHandlers, final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
+    private void followHiLiteManager(final HiLiteManager manager, final Set<HiLiteHandler> knownHiLiteHandlers,
+        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
         getHiLiteTranslators(manager.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
         if (manager.getToHiLiteHandlers() != null) {
             for (HiLiteHandler toHiLiteHandler : manager.getToHiLiteHandlers()) {
@@ -449,11 +475,14 @@ public abstract class WebResourceController {
         }
     }
 
-    /** Parameterizes {@link InputNode}s in the workflow (URL parameters).
+    /**
+     * Parameterizes {@link InputNode}s in the workflow (URL parameters).
+     *
      * @param input non-null input
      * @throws InvalidSettingsException if wfm chokes
      * @see WorkflowManager#setInputNodes(Map)
-     * @since 3.2 */
+     * @since 3.2
+     */
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
         final WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
@@ -469,14 +498,17 @@ public abstract class WebResourceController {
 
     /**
      * Tries to load a map of view values to all appropriate views contained in a given subnode.
+     *
      * @param viewContentMap the values to load
      * @param subnodeID the id fo the subnode containing the appropriate view nodes
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
-     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
+     *            settings), false otherwise (apply temporarily)
      * @return Null or empty map if validation succeeds, map of errors otherwise
      */
-    @SuppressWarnings({"rawtypes", "unchecked" })
-    protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap, final NodeID subnodeID, final boolean validate, final boolean useAsDefault) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap,
+        final NodeID subnodeID, final boolean validate, final boolean useAsDefault) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for loading values into wizard page");
             return null;
@@ -489,7 +521,8 @@ public abstract class WebResourceController {
         Map<NodeID, WizardNode> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
 
         if (validate) {
-            Map<String, ValidationError> validationResult = validateViewValuesInternal(viewContentMap, subnodeID, wizardNodeSet);
+            Map<String, ValidationError> validationResult =
+                validateViewValuesInternal(viewContentMap, subnodeID, wizardNodeSet);
             if (!validationResult.isEmpty()) {
                 return validationResult;
             }
@@ -497,9 +530,10 @@ public abstract class WebResourceController {
 
         // validation succeeded, reset subnode and apply
         if (!subNodeNC.getInternalState().isExecuted()) { // this used to be an error but see SRV-745
-            LOGGER.warnWithFormat("Wrapped metanode (%s) not fully executed on appyling new values -- "
+            LOGGER.warnWithFormat(
+                "Wrapped metanode (%s) not fully executed on appyling new values -- "
                     + "consider to change wrapped metanode layout to have self-contained executable units",
-                    subNodeNC.getNameWithID());
+                subNodeNC.getNameWithID());
         }
         manager.resetSubnodeForViewUpdate(subnodeID, createStateChecker());
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
@@ -515,7 +549,8 @@ public abstract class WebResourceController {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
                 wizardNode.loadViewValue(newViewValue, useAsDefault);
                 if (useAsDefault) {
-                    subNodeNC.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true).saveNodeSettingsToDefault();
+                    subNodeNC.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true)
+                        .saveNodeSettingsToDefault();
                 }
             } catch (Exception e) {
                 LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
@@ -529,13 +564,15 @@ public abstract class WebResourceController {
 
     /**
      * Validates a given set of serialized view values for a given subnode.
+     *
      * @param viewValues the values to validate
      * @param subnodeID the id of the subnode containing the appropriate view nodes
      * @param wizardNodeSet the set of view nodes that the view values correspond to.
      * @return Null or empty map if validation succeeds, map of errors otherwise
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    protected Map<String, ValidationError> validateViewValuesInternal(final Map<String, String> viewValues, final NodeID subnodeID, final Map<NodeID, WizardNode> wizardNodeSet) {
+    protected Map<String, ValidationError> validateViewValuesInternal(final Map<String, String> viewValues,
+        final NodeID subnodeID, final Map<NodeID, WizardNode> wizardNodeSet) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for validating view values of wizard page");
             return null;
@@ -547,10 +584,11 @@ public abstract class WebResourceController {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             CheckUtils.checkState(id.hasPrefix(subnodeID), "The wizard page content for ID %s (suffix %s) "
-                        + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), subnodeID);
+                + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), subnodeID);
             WizardNode wizardNode = wizardNodeSet.get(id);
-            CheckUtils.checkState(wizardNode != null, "No wizard node with ID %s in Wrapped Metanode, valid IDs are: "
-                        + "%s", id, ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
+            CheckUtils.checkState(wizardNode != null,
+                "No wizard node with ID %s in Wrapped Metanode, valid IDs are: " + "%s", id,
+                ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
             @SuppressWarnings("null")
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
@@ -577,6 +615,7 @@ public abstract class WebResourceController {
 
     /**
      * Queries a subnode and returns all appropriate view nodes contained within.
+     *
      * @param subnodeID the subnode id, not null
      * @return a map of view nodes
      */
@@ -593,7 +632,9 @@ public abstract class WebResourceController {
         return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
     }
 
-    /** Composes the NodeID of a subnode.
+    /**
+     * Composes the NodeID of a subnode.
+     *
      * @param subnodeIDSuffix ...
      * @return new NodeID(m_manager.getID(), subnodeIDSuffix);
      */
@@ -603,25 +644,33 @@ public abstract class WebResourceController {
 
     /**
      * Checks if the associated workflow manager has been discarded.
+     *
      * @throws IllegalArgumentException if workflow manager is discarded
      */
     protected void checkDiscard() {
         CheckUtils.checkArgument(m_manager != null, "%s has been disconnected from workflow",
-                WebResourceController.class.getSimpleName());
+            WebResourceController.class.getSimpleName());
     }
 
     /** Sets manager to null. Called when new wizard is created on top of workflow. */
     void discard() {
     }
 
-    /** Result value of {@link WizardExecutionController#getCurrentWizardPage()} and {@link SinglePageWebResourceController#getWizardPage()}. */
+    /**
+     * Result value of {@link WizardExecutionController#getCurrentWizardPage()} and
+     * {@link SinglePageWebResourceController#getWizardPage()}.
+     */
     public static final class WizardPageContent {
 
         private final NodeIDSuffix m_pageNodeID;
+
         @SuppressWarnings("rawtypes")
         private final Map<NodeIDSuffix, WizardNode> m_pageMap;
+
         private final String m_layoutInfo;
+
         private final List<HiLiteTranslator> m_hiLiteTranslators;
+
         private final List<HiLiteManager> m_hiliteManagers;
 
         /**
@@ -631,7 +680,8 @@ public abstract class WebResourceController {
          */
         @SuppressWarnings("rawtypes")
         WizardPageContent(final NodeIDSuffix pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
-            final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators, final List<HiLiteManager> hiLiteManagers) {
+            final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators,
+            final List<HiLiteManager> hiLiteManagers) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
             m_layoutInfo = layoutInfo;
