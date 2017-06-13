@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="timestamptotime.png" type="Manipulator">
-	<name>Timestamp to Date&amp;Time</name>
+	<name>UNIX Timestamp to Date&amp;Time</name>
 	<shortDescription>
 		Parses date and/or time strings into Date&amp;Time
 		cells.
@@ -9,10 +9,10 @@
 	<fullDescription>
 		<intro>
 			Parses the integer or long values in the selected columns and converts them into
-			Date&amp;Time cells. The inputs should be unix timestamps either in milli-, micro- or
+			Date&amp;Time cells. The inputs should be unix timestamps either in seconds, milli-, micro- or
 			nanoseconds since the epoch (1.1.1970).
 			<br />
-			You may choose between local and zoned date and time formats and if necessary add
+			For the output you may choose between local and zoned date and time formats and if necessary add
 			the timezone.
 		</intro>
 		<tab name="Column Selection">
