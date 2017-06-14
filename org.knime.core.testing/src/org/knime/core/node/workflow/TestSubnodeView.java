@@ -56,7 +56,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.DataRow;
@@ -72,6 +76,7 @@ import org.knime.core.wizard.SubnodeViewableModel;
 import org.knime.core.wizard.SubnodeViewableModel.CollectionValidationError;
 import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
+import org.knime.testing.node.blocking.BlockingRepository;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -86,11 +91,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class TestSubnodeView extends WorkflowTestCase {
 
+    private static final String LOCK_ID = "lock_node_7";
+
     private SinglePageManager m_spm;
     private NodeID m_subnodeID;
     private NodeIDSuffix m_stringInputID;
     private NodeIDSuffix m_tableViewID;
-    private NodeID m_cacheID;
+    private NodeID m_blockID;
 
     private static final String DEFAULT_URL = "https://www.knime.com/";
     private static final String CHANGED_URL = "http://knime.org/";
@@ -101,12 +108,20 @@ public class TestSubnodeView extends WorkflowTestCase {
      */
     @Before
     public void setUp() throws Exception {
+        BlockingRepository.put(LOCK_ID, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
         m_subnodeID = new NodeID(baseID, 6);
         m_stringInputID = NodeID.NodeIDSuffix.create(baseID, new NodeID(new NodeID(m_subnodeID, 0), 4));
         m_tableViewID = NodeID.NodeIDSuffix.create(baseID, new NodeID(new NodeID(m_subnodeID, 0), 3));
-        m_cacheID = new NodeID(baseID, 7);
+        m_blockID = new NodeID(baseID, 7);
         m_spm = SinglePageManager.of(getManager());
+    }
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+        BlockingRepository.remove(LOCK_ID);
     }
 
     /**
@@ -236,6 +251,52 @@ public class TestSubnodeView extends WorkflowTestCase {
         validateReexecutionResult();
     }
 
+    /**
+     * Tests if downstream nodes get reset as part of a re-execute of the subnode
+     * @throws Exception
+     */
+    @Test
+    public void testResetDownstreamNodes() throws Exception {
+        initialExecute();
+        executeAllAndWait();
+        // change URL in string input
+        Map<String, String> valueMap = changeStringInputTo(CHANGED_URL, buildValueMap());
+        selectRowInTable(valueMap);
+
+        try (WorkflowLock lock = getManager().lock()) {
+            m_spm.applyValidatedValuesAndReexecute(valueMap, m_subnodeID, false);
+        }
+        waitWhileNodeInExecution(m_subnodeID);
+        checkState(m_subnodeID, InternalNodeContainerState.EXECUTED);
+        checkState(m_blockID, InternalNodeContainerState.CONFIGURED);
+    }
+
+    /**
+     * Tests if downstream nodes get reset as part of a re-execute of the subnode
+     * @throws Exception
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testApplyNewValueWhileDownstreamIsExecuting() throws Exception {
+        initialExecute();
+        ReentrantLock blockLock = BlockingRepository.get(LOCK_ID);
+        blockLock.lock();
+        try {
+            getManager().executeUpToHere(m_blockID);
+            NodeContainer blockNC = getManager().getNodeContainer(m_blockID);
+            Assert.assertThat("Blocking node 7 should be executing",
+                blockNC.getNodeContainerState().isExecutionInProgress(), CoreMatchers.is(Boolean.TRUE));
+            // change URL in string input
+            Map<String, String> valueMap = changeStringInputTo(CHANGED_URL, buildValueMap());
+            selectRowInTable(valueMap);
+            try (WorkflowLock lock = getManager().lock()) {
+                m_spm.applyValidatedValuesAndReexecute(valueMap, m_subnodeID, false);
+            }
+            Assert.fail("Shouldn't be able to apply values while downstream nodes are executing");
+        } finally {
+            blockLock.unlock();
+        }
+    }
+
     private void selectRowInTable(final Map<String, String> valueMap) throws IOException, JsonProcessingException {
         // select one value in table
         String tableValueString = valueMap.get(m_tableViewID.toString());
@@ -311,7 +372,7 @@ public class TestSubnodeView extends WorkflowTestCase {
         }
 
         // check flow variable created from string input
-        NodeContainer cacheContainer = getManager().getNodeContainer(m_cacheID);
+        NodeContainer cacheContainer = getManager().getNodeContainer(m_blockID);
         FlowVariable var = cacheContainer.getFlowObjectStack().getAvailableFlowVariables().get("string-input");
         assertNotNull("Flow variable 'string input' should exist", var);
         assertEquals("Flow variable should contain new string value", CHANGED_URL, var.getStringValue());

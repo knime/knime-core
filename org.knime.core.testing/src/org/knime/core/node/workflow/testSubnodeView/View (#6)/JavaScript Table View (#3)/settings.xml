@@ -80,7 +80,7 @@
 <entry key="globalZonedDateTimeFormat" type="xstring" value="ddd MMM DD YYYY HH:mm:ss"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="state" type="xstring" value="IDLE"/>
 <entry key="factory" type="xstring" value="org.knime.js.base.node.viz.pagedTable.PagedTableViewNodeFactory"/>
 <entry key="node-name" type="xstring" value="JavaScript Table View"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME JavaScript Base Views"/>

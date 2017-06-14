@@ -181,7 +181,7 @@
 <entry key="generateImage" type="xboolean" value="false"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="state" type="xstring" value="IDLE"/>
 <entry key="factory" type="xstring" value="org.knime.dynamic.js.v30.DynamicJSNodeFactory"/>
 <entry key="node-name" type="xstring" value="JavaScript Parallel Coordinates Plot"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME Dynamically Created JavaScript Nodes"/>
