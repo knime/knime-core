@@ -27,6 +27,38 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/logistic/learner3/LogRegLearner.java" type="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearner">
+        <filter comment="Deprecate old logistic regression node" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearner"/>
+                <message_argument value="org.knime.base_3.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/logistic/learner3/LogRegLearnerNodeDialogPane.java" type="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeDialogPane">
+        <filter comment="Deprecate old logistic regression node" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeDialogPane"/>
+                <message_argument value="org.knime.base_3.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/logistic/learner3/LogRegLearnerNodeFactory3.java" type="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3">
+        <filter comment="Deprecate old logistic regression node" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"/>
+                <message_argument value="org.knime.base_3.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/logistic/learner3/LogRegLearnerNodeModel.java" type="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeModel">
+        <filter comment="Deprecate old logistic regression node" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeModel"/>
+                <message_argument value="org.knime.base_3.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/preproc/double2int/DoubleToIntNodeDialog.java" type="org.knime.base.node.preproc.double2int.DoubleToIntNodeDialog">
         <filter id="305365105">
             <message_arguments>

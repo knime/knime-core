@@ -1786,7 +1786,7 @@
       </node>
       <node
             category-path="/analytics/statistics/regression"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"
             >
       </node>
