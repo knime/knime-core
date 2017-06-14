@@ -61,6 +61,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
@@ -74,11 +77,14 @@ import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
+import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
+import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.ContentObject;
 
 import com.knime.enterprise.client.filesystem.KnimeRemoteWorkflowInMem;
+import com.knime.explorer.server.ExplorerServerContentProvider;
 import com.knime.explorer.server.ServerExplorerFileInfo;
 import com.knime.explorer.server.ServerExplorerFileStore;
 
@@ -100,9 +106,21 @@ public class OpenRemoteWorkflowAction implements IObjectActionDelegate {
             assert nativeFilestore instanceof KnimeRemoteWorkflowInMem;
             KnimeRemoteWorkflowInMem krwim = (KnimeRemoteWorkflowInMem) nativeFilestore;
             UUID jobID = krwim.getExecID().getJobID();
-            URI uri = krwim.toURI();
-            IWorkflowManager wfm = ClientProxyUtil.getWorkflowManager(jobID.toString(), Optional.empty(), new ObjectCache(), new ServerServiceConfig(uri.getHost(), uri.getPort()));
-            openEditor(wfm, fs);
+            AbstractContentProvider contentProvider = ExplorerMountTable.getMountedContent().get(fs.getMountID());
+            assert contentProvider instanceof ExplorerServerContentProvider;
+            Optional<URI> uri = ((ExplorerServerContentProvider)contentProvider).getRESTAddress();
+            if (uri.isPresent()) {
+                IWorkflowManager wfm =
+                    ClientProxyUtil.getWorkflowManager(jobID.toString(), Optional.empty(), new ObjectCache(),
+                        new ServerServiceConfig(uri.get().getHost(), uri.get().getPort(), uri.get().getPath()));
+                openEditor(wfm, fs);
+            } else {
+                MessageBox box = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ICON_WARNING | SWT.OK);
+                box.setMessage("KNIME server doesn't provide a REST interface.");
+                box.setText("KNIME server doesn't provide a REST interface.");
+                box.open();
+                LOGGER.error("KNIME server doesn't provide a REST interface.");
+            }
         });
     }
 

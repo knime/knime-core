@@ -84,7 +84,7 @@ public class ExecutionServiceTest {
     @Before
     public void setup() throws Exception {
         m_serviceMock = mock(ExecutionService.class);
-        m_serviceConfig = new ServerServiceConfig("localhost", 3000);
+        m_serviceConfig = new ServerServiceConfig("localhost", 3000, "");
 
         //spin-up the server with the mocked service
         KnimeGatewayServerManager.startAllForTesting(3000, m_serviceMock);

@@ -76,7 +76,7 @@ import org.knime.core.jaxrs.providers.json.MapJSONDeserializer;
 public class RSClientServiceFactory implements ServiceFactory {
 
     //TODO get the rest adress from somewhere else!
-    private static final String GATEWAY_PATH = "knime/rest/v4/gateway/";
+    private static final String GATEWAY_PATH = "v4/gateway/";
 
     /**
      * {@inheritDoc}
@@ -95,9 +95,8 @@ public class RSClientServiceFactory implements ServiceFactory {
                 new MapJSONDeserializer(), new OptionalParamConverter(), new NoSuchElementExceptionMapper());
             if(serviceConfig instanceof ServerServiceConfig) {
                 ServerServiceConfig serverServiceConfig = (ServerServiceConfig) serviceConfig;
-                return (S)JAXRSClientFactory.create(
-                    "http://" + serverServiceConfig.getHost() + ":" + serverServiceConfig.getPort() + "/" + GATEWAY_PATH,
-                    rsServiceInterface, providers);
+                String url = "http://" + serverServiceConfig.getHost() + ":" + serverServiceConfig.getPort() + serverServiceConfig.getPath() + "/" + GATEWAY_PATH;
+                return (S)JAXRSClientFactory.create(url, rsServiceInterface, providers);
             } else {
                 throw new IllegalStateException("No server service config given!");
             }

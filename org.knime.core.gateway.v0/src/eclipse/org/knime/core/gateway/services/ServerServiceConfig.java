@@ -48,8 +48,6 @@
  */
 package org.knime.core.gateway.services;
 
-import org.knime.core.gateway.services.ServiceConfig;
-
 /**
  * {@link ServiceConfig}-implementation to configure services that communicate with a server specified by a host name
  * and a port.
@@ -62,13 +60,16 @@ public class ServerServiceConfig implements ServiceConfig {
 
     private int m_port;
 
+    private String m_path;
+
     /**
      * @param host
      * @param port
      */
-    public ServerServiceConfig(final String host, final int port) {
+    public ServerServiceConfig(final String host, final int port, final String path) {
         m_host = host;
         m_port = port;
+        m_path = path;
 
     }
 
@@ -84,6 +85,13 @@ public class ServerServiceConfig implements ServiceConfig {
      */
     public int getPort() {
         return m_port;
+    }
+
+    /**
+     * @return the server path
+     */
+    public String getPath() {
+        return m_path;
     }
 
     @Override
