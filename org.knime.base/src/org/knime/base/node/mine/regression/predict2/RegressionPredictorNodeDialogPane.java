@@ -73,8 +73,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * Dialog for the regression predictor.
  *
  * @author Heiko Hofer
+ * @since 3.4
  */
-final class RegressionPredictorNodeDialogPane
+public final class RegressionPredictorNodeDialogPane
         extends NodeDialogPane {
     private JCheckBox m_includeProbs;
     private JCheckBox m_hasCustomPredictionName;
