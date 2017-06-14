@@ -27,20 +27,24 @@
         during the learning process.
       </option>
       <option name="Attribute Selection">
-        <p>Select the attributes to use learn the model. Two variants are possible.</p>
-        <p>
-          <i>Fingerprint attribute</i> uses the different bit/byte positions in the selected bit/byte vector as learning 
-          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes or 1024 long byte
-          vector is expanded to the corresponding number of numeric attributes). All vectors in the selected column must
-          have the same length. 
-        </p>
-        <p>
-          <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a
-          &lt;= fashion; nominal columns can currently be split by creating child nodes for each of the values or by 
-          calculating binary splits that use sets of nominal values (the method is described in Section 8.8 
-          of "Classification and Regression Trees" by Breiman et al. (1984)). 
-        </p>
-      </option>
+		<p>Select the attributes on which the model should be learned. You can choose from two modes.
+		</p>
+		<p>
+			<i>Fingerprint attribute</i>
+			Uses a fingerprint/vector (bit, byte and double are possible) column to learn the model by treating
+			each entry of the vector as separate attribute (e.g. a bit vector of length 1024 is expanded into 1024 binary attributes).
+			The node requires all vectors to be of the same length.
+		</p>
+		<p>
+			<i>Column attributes</i>
+			Uses ordinary columns in your table (e.g. String, Double, Integer, etc.) as attributes to learn the model on.
+			The dialog allows to select the columns manually (by moving them to the right panel) or via a wildcard/regex selection
+			(all columns whose names match the wildcard/regex are used for learning).
+			In case of manual selection, the behavior for new columns (i.e. that are not available at the time you configure the node)
+			can be specified as either <i>Enforce exclusion</i> (new columns are excluded and therefore not used for learning) or 
+			<i>Enforce inclusion</i> (new columns are included and therefore used for learning).
+		</p>
+	</option>
       <option name="Ignore columns without domain information">
         If selected, nominal columns with no domain information are ignored (as they likely have too many possible
         values anyway). 
