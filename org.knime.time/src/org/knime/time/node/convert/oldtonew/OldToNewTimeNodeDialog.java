@@ -49,8 +49,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Set;
@@ -117,11 +115,10 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
         m_typeCombobox = new JComboBox<DateTimeType>(DateTimeType.values());
 
-        final SettingsModelBoolean zoneModelBool =
-            OldToNewTimeNodeModel.createZoneModelBool(typeModelBool, m_typeCombobox);
+        final SettingsModelBoolean zoneModelBool = OldToNewTimeNodeModel.createZoneModelBool();
         m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone, if possible");
 
-        final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel(zoneModelBool);
+        final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel();
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
@@ -223,17 +220,21 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         /*
          * Change and action listeners
          */
+        typeModelBool.addChangeListener(e -> {
+            m_typeCombobox.setEnabled(!typeModelBool.getBooleanValue());
+            zoneModelBool.setEnabled(typeModelBool.getBooleanValue());
+        });
 
-        m_typeCombobox.addActionListener(new ActionListener() {
+        zoneModelBool.addChangeListener(e -> {
+            zoneSelectModel.setEnabled((zoneModelBool.getBooleanValue() && zoneModelBool.isEnabled())
+                || (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeType.ZONED_DATE_TIME)
+                    && !zoneModelBool.isEnabled()));
+        });
 
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeType.ZONED_DATE_TIME)) {
-                    zoneSelectModel.setEnabled(true);
-                } else {
-                    zoneSelectModel.setEnabled(false);
-                }
-            }
+        m_typeCombobox.addActionListener(e -> {
+            zoneSelectModel.setEnabled((zoneModelBool.getBooleanValue() && zoneModelBool.isEnabled())
+                || (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeType.ZONED_DATE_TIME)
+                    && !zoneModelBool.isEnabled()));
         });
     }
 
