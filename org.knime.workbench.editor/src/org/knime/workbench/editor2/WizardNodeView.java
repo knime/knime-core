@@ -53,6 +53,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressEvent;
@@ -442,7 +443,9 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
 
                 return true;
             } catch (Exception e) {
-                LOGGER.error("Could not set error message or trigger re-execution: " + e.getMessage(), e);
+                String msg = "Could not apply new values: " + e.getMessage();
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Applying new values", msg);
+                LOGGER.error(msg, e);
                 return false;
             }
         } else {
