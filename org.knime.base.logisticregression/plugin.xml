@@ -7,6 +7,11 @@
             category-path="/analytics/mining/logreg"
             factory-class="org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerNodeFactory4">
       </node>
+      <node
+            category-path="/analytics/mining/logreg"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.logistic.predictor.LogisticRegressionPredictorNodeFactory">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
