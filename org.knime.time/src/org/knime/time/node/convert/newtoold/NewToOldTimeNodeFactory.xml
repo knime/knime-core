@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
-<knimeNode icon="date_time.png" type="Manipulator">
+<knimeNode icon="new_to_old.png" type="Manipulator">
 	<name>Date&amp;Time to legacy Date&amp;Time</name>
 	<shortDescription>
 		Converts new Date&amp;Time to old.
