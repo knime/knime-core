@@ -221,11 +221,15 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
                 "Node needs to be in executed state to apply new view values.");
             m_isReexecuteInProgress.set(true);
             try (WorkflowLock lock = m_container.getParent().lock()) {
-                m_value = value;
                 m_spm.applyValidatedValuesAndReexecute(value.getViewValues(), m_container.getID(), useAsDefault);
+                m_value = value;
             } finally {
                 m_isReexecuteInProgress.set(false);
-                if (!m_container.getNodeContainerState().isExecutionInProgress()) {
+                NodeContainerState state = m_container.getNodeContainerState();
+                if (state.isExecuted()) {
+                    // the framework refused to reset the node (because there are downstream nodes still executing);
+                    // ignore it.
+                } else if (!m_container.getNodeContainerState().isExecutionInProgress()) {
                     // this happens if after the reset the execution can't be triggered, e.g. because #configure of
                     // a node rejects the current settings -> #onNodeStateChange has been called as part of the reset
                     // but was ignored due to the m_isReexecuteInProgress = true.
