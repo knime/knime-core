@@ -51,10 +51,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -69,7 +66,6 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -251,9 +247,6 @@ public class DatabaseConnectionSettings {
     // this is to fix bug #4066 and not exposed to the user
     private boolean m_rowIdsStartWithZero;
 
-    //Introduce in KNIME 3.4 to allow db connectors to pass additional parameters to the back end
-    private final Map<String, String> m_additionalParameter = new HashMap<>();
-
     //Introduced in KNIME 3.4 to know with which version the settings object has been created
     private Version m_knimeVersion = CURRENT_VERSION;
 
@@ -359,7 +352,6 @@ public class DatabaseConnectionSettings {
         m_retrieveMetadataInConfigure = conn.m_retrieveMetadataInConfigure;
         m_dbIdentifier = conn.getDatabaseIdentifier();
         m_kerberos = conn.useKerberos();
-        m_additionalParameter.putAll(conn.m_additionalParameter);
         m_knimeVersion = conn.m_knimeVersion;
     }
 
@@ -486,33 +478,7 @@ public class DatabaseConnectionSettings {
         settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
         settings.addString("databaseIdentifier", m_dbIdentifier);
         settings.addBoolean("kerberos", m_kerberos);
-        saveMap(settings, "additionalParameter", m_additionalParameter);
         settings.addString("knimeVersion", m_knimeVersion.toString());
-    }
-
-    private static void saveMap(final ConfigWO settings, final String key, final Map<String,String> map) {
-        final ConfigBase base = settings.addConfigBase(key);
-        int i = 0;
-        for (Entry<String, String> entry :map.entrySet()) {
-            ConfigBase e = base.addConfigBase(String.valueOf(i++));
-            e.addString("K", entry.getKey());
-            e.addString("V", entry.getValue());
-        }
-    }
-
-    private static void loadMap(final ConfigRO settings, final String key, final Map<String,String> map)
-            throws InvalidSettingsException {
-        if (!settings.containsKey(key)) {
-            return;
-        }
-        final ConfigBase base = settings.getConfigBase(key);
-        final int size = base.getChildCount();
-        for (int i = 0; i < size; i++) {
-            ConfigBase e = base.getConfigBase(String.valueOf(i++));
-            final String k = e.getString("K");
-            final String v = e.getString("V");
-            map.put(k, v);
-        }
     }
 
     /**
@@ -595,8 +561,6 @@ public class DatabaseConnectionSettings {
             }
         }
         final String dbIdentifier = settings.getString("databaseIdentifier", null);
-        final Map<String, String> additionalParameters = new HashMap<>();
-        loadMap(settings, "additionalParameter", additionalParameters);
         // write settings or skip it
         if (write) {
             m_driver = driver;
@@ -623,7 +587,6 @@ public class DatabaseConnectionSettings {
             m_rowIdsStartWithZero = rowIdsStartWithZero;
             m_dbIdentifier = dbIdentifier;
             m_kerberos = kerberos;
-            m_additionalParameter.putAll(additionalParameters);
             m_knimeVersion = knimeVersion;
             DATABASE_URLS.add(m_jdbcUrl);
             return changed;
@@ -1046,28 +1009,6 @@ public class DatabaseConnectionSettings {
             throw new IllegalArgumentException("Invalid JDBC URL in settings: " + jdbcUrl);
         }
         return parts[1];
-    }
-
-    /**
-     * Method to add an additional parameter to this class which will be stored along the other settings.
-     * Use the {@link #getParameter(String)} to retrieve the value.
-     * @param key the unique key of the additional parameter
-     * @param value the value that should be stored for the given key
-     * @since 3.4
-     */
-    public void putParameter(final String key, final String value) {
-        m_additionalParameter.put(key, value);
-    }
-
-    /**
-     * Method to get an additional parameter that was added along the other settings using the
-     * {@link #putParameter(String, String)} method.
-     * @param key the unique key of the additional parameter
-     * @return the parameter for the key or <code>null</code> if the key does not exist
-     * @since 3.4
-     */
-    public String getParameter(final String key) {
-        return m_additionalParameter.get(key);
     }
 
     /**
