@@ -4351,7 +4351,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     void mimicRemotePreExecute() {
         try (WorkflowLock lock = lock()) {
-            for (NodeContainer nc : m_workflow.getNodeValues()) {
+            for (NodeID ncID : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
+                NodeContainer nc = getNodeContainer(ncID);
+                // this will also set a (possibly invalid) stack for each single node container;
+                // the values on the stack my not be up-to-date as some nodes may not be configured;
+                // other stack objects (loop context) will be correct as that is done by the framework and they
+                // are needed for creating file store handlers.
+                if (nc instanceof SingleNodeContainer) {
+                    NodeOutPort[] predecessorOutPorts = assemblePredecessorOutPorts(ncID);
+                    FlowObjectStack[] sos = Arrays.stream(predecessorOutPorts)
+                            .map(p -> p != null ? p.getFlowObjectStack() : null)
+                            .toArray(FlowObjectStack[]::new);
+                    createAndSetFlowObjectStackFor((SingleNodeContainer) nc, sos);
+                }
                 nc.mimicRemotePreExecute();
             }
             // do not propagate -- this method is called from parent
@@ -4420,11 +4432,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
         try (WorkflowLock lock = lock()) {
             if (getInternalState().isExecutionInProgress()) {
-                for (NodeContainer nc : m_workflow.getNodeValues()) {
-                    nc.mimicRemotePreExecute();
-                }
-                // method is called from parent, don't propagate state changes
-                lock.queueCheckForNodeStateChangeNotification(false);
+                mimicRemotePreExecute();
                 return true;
             } else {
                 // node may not be executinInProgress when previously queued
