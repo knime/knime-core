@@ -129,7 +129,7 @@ public class UpdateJob extends Job {
         Exception exception = null;
         for (UpdatableNodeTripleProvider ntp : m_providers) {
             try {
-                ntp.upate();
+                ntp.update();
             } catch (Exception e) {
                 if (exception == null) {
                     exception = e;
