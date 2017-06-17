@@ -48,6 +48,8 @@
 package org.knime.core.node.workflow.execresult;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -57,6 +59,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+import org.knime.core.node.workflow.FlowVariable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -74,6 +77,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
     private PortObjectSpec[] m_portObjectSpecs;
     private String m_warningMessage;
     private boolean m_needsResetAfterLoad;
+    private List<FlowVariable> m_flowVariables;
 
 
     /**
@@ -159,6 +163,17 @@ public class NodeExecutionResult implements NodeContentPersistor {
         return m_portObjects[outportIndex].getSummary();
     }
 
+    /**
+     * @return A list of saved flow variables that where pushed by the node
+     * (or an empty object if the persistor doesn't save the result.)
+     * @since 3.5
+     */
+    @JsonIgnore
+    public Optional<List<FlowVariable>> getFlowVariables() {
+        return Optional.ofNullable(m_flowVariables);
+    }
+
+
     /** {@inheritDoc} */
     @Override
     @JsonProperty("warningMsg")
@@ -228,6 +243,16 @@ public class NodeExecutionResult implements NodeContentPersistor {
         m_portObjectSpecs = portObjectSpecs;
     }
 
+    /**
+     * Saves flow variables that where pushed by the node.
+     *
+     * @param flowVariables A ordered list of flow variables.
+     * @since 3.5 */
+    public void setFlowVariables(final List<FlowVariable> flowVariables) {
+        m_flowVariables = flowVariables;
+    }
+
+
     /** {@inheritDoc}
      * @since 2.6*/
     @Override
@@ -281,4 +306,5 @@ public class NodeExecutionResult implements NodeContentPersistor {
         toReturn.setWarningMessage(warningMessage);
         return toReturn;
     }
+
 }

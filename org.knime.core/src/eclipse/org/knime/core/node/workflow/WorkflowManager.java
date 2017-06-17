@@ -7508,6 +7508,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 exec.setMessage(nc.getNameWithID());
                 ExecutionMonitor subExec = exec.createSubProgress(1.0 / count);
+                // Propagagte the flow variables
+                if (nc instanceof SingleNodeContainer) {
+                    NodeOutPort[] predecessorOutPorts = assemblePredecessorOutPorts(id);
+                    FlowObjectStack[] sos = Arrays.stream(predecessorOutPorts)
+                            .map(p -> p != null ? p.getFlowObjectStack() : null)
+                            .toArray(FlowObjectStack[]::new);
+                    createAndSetFlowObjectStackFor((SingleNodeContainer) nc, sos);
+                }
                 nc.loadExecutionResult(exResult, subExec, loadResult);
                 subExec.setProgress(1.0);
             }
