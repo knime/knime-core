@@ -69,6 +69,6 @@ interface NativeNodeContainerPersistor extends SingleNodeContainerPersistor {
      *         copy&amp;paste).
      * @since 2.10
      */
-        NodeAndBundleInformation getNodeAndBundleInformation();
+    NodeAndBundleInformation getNodeAndBundleInformation();
 
 }

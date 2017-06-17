@@ -550,6 +550,20 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return b.toString();
     }
 
+    /**
+     * Clones the argument but unsets the owner. This method is here with public scope to not further pollute the
+     * class FlowObject (which happens to be API as per
+     * {@link org.knime.core.node.NodeModel#getAvailableFlowVariables()}.
+     * @param toClone The object to clone, not null
+     * @return A copy of the argument without the owner node set
+     * @since 3.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends FlowObject> T cloneUnsetOwner(final T toClone) {
+        return (T)toClone.cloneAndUnsetOwner();
+    }
+
     private static final Pair<String, Type> getVariableDefinition(
             final String propKey) {
         String varName;

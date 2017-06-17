@@ -59,10 +59,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
@@ -353,6 +355,15 @@ public final class Node implements NodeModelWarningListener {
         }
         result.setPortObjects(pos);
         result.setPortObjectSpecs(poSpecs);
+
+        // Add the outgoing flow variables to the execution result
+        FlowObjectStack outgoingStack = m_model.getOutgoingFlowObjectStack();
+
+        List<FlowVariable> nodeFlowVars = outgoingStack.getAvailableFlowVariables().values()
+            .stream().filter(f -> f.getScope().equals(FlowVariable.Scope.Flow)).collect(Collectors.toList());
+        Collections.reverse(nodeFlowVars); // the bottom most element should remain at the bottom of the stack
+
+        result.setFlowVariables(nodeFlowVars);
         return result;
     }
 
@@ -503,7 +514,24 @@ public final class Node implements NodeModelWarningListener {
                 }
             }
         }
+
     }
+
+    /** Loads execution result from remote execution (e.g. cluster execution). Implementation calls
+     * {@link #loadDataAndInternals(NodeContentPersistor, ExecutionMonitor, LoadResult)} and also loads flow variables.
+     * @param result To load from.
+     * @param exec For progress.
+     * @param loadResult to add errors and warnings to (if any)
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void loadExecutionResult(final NodeExecutionResult result, final ExecutionMonitor exec,
+        final LoadResult loadResult) {
+        loadDataAndInternals(result, exec, loadResult);
+        // Push saved flow variables, if present, onto outgoing stack (unsetting owner)
+        result.getFlowVariables().ifPresent(l -> l.stream()
+            .map(f -> FlowObjectStack.cloneUnsetOwner(f)).forEach(f -> m_model.pushFlowVariable(f)));
+    }
+
 
 //    /** Calls {@link NodeFactory#createNodeConfiguration(ConfigRegistry)} and
 //     * returns it.

@@ -841,15 +841,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
                         + execResult.getClass().getSimpleName());
             }
             super.loadExecutionResult(execResult, exec, loadResult);
-            NativeNodeContainerExecutionResult sncExecResult =
-                (NativeNodeContainerExecutionResult)execResult;
-            NodeExecutionResult nodeExecResult =
-                sncExecResult.getNodeExecutionResult();
+            NativeNodeContainerExecutionResult sncExecResult = (NativeNodeContainerExecutionResult)execResult;
+            NodeExecutionResult nodeExecResult = sncExecResult.getNodeExecutionResult();
             boolean success = sncExecResult.isSuccess();
             if (success) {
                 NodeContext.pushContext(this);
                 try {
-                    m_node.loadDataAndInternals(nodeExecResult, new ExecutionMonitor(), loadResult);
+                    m_node.loadExecutionResult(nodeExecResult, new ExecutionMonitor(), loadResult);
                 } finally {
                     NodeContext.removeLastContext();
                 }
