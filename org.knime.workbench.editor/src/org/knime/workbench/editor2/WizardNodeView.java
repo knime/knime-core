@@ -48,9 +48,7 @@ package org.knime.workbench.editor2;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.nio.charset.Charset;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -403,115 +401,21 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
         }
     }
 
-    private boolean applyTriggered(final boolean useAsDefault) {
-        if (!m_viewSet || !checkSettingsChanged()) {
-            return true;
-        }
-        boolean valid = true;
-        WizardViewCreator<REP, VAL> creator = getViewCreator();
-        WebTemplate template = creator.getWebTemplate();
-        String validateMethod = template.getValidateMethodName();
-        if (validateMethod != null && !validateMethod.isEmpty()) {
-            String evalCode =
-                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + validateMethod
-                    + "());");
-            String jsonString = (String)m_browser.evaluate(evalCode);
-            valid = Boolean.parseBoolean(jsonString);
-        }
-        if (valid) {
-            String pullMethod = template.getPullViewContentMethodName();
-            String evalCode =
-                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
-            String jsonString = (String)m_browser.evaluate(evalCode);
-            try {
-                VAL viewValue = getModel().createEmptyViewValue();
-                viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-                setLastRetrievedValue(viewValue);
-                ValidationError error = getModel().validateViewValue(viewValue);
-                if (error != null) {
-                    String showErrorMethod = template.getSetValidationErrorMethodName();
-                    String escapedError = error.getError().replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
-                    String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "('" + escapedError + "');");
-                    m_browser.execute(showErrorCall);
-                    return false;
-                }
-                if (getModel() instanceof NodeModel) {
-                    triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
-                } else {
-                    getModel().loadViewValue(viewValue, useAsDefault);
-                }
-
-                return true;
-            } catch (Exception e) {
-                String msg = "Could not apply new values: " + e.getMessage();
-                MessageDialog.openError(Display.getDefault().getActiveShell(), "Applying new values", msg);
-                LOGGER.error(msg, e);
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    private boolean checkSettingsChanged() {
-        if (!m_viewSet) {
-            return false;
-        }
-        WizardViewCreator<REP, VAL> creator = getViewCreator();
-        WebTemplate template = creator.getWebTemplate();
-        String pullMethod = template.getPullViewContentMethodName();
-        String ns = creator.getNamespacePrefix();
-        String jsonString = null;
-        if (ns != null && !ns.isEmpty() && pullMethod != null && !pullMethod.isEmpty()) {
-            String evalCode =
-                    creator.wrapInTryCatch("if (typeof " + ns.substring(0, ns.length()-1) + " != 'undefined') { return JSON.stringify(" + ns + pullMethod + "());}");
-            jsonString = (String)m_browser.evaluate(evalCode);
-        }
-        if (jsonString == null) {
-            // no view value present in view
-            return false;
-        }
-        try {
-            VAL viewValue = getModel().createEmptyViewValue();
-            viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-            VAL currentViewValue = getModel().getViewValue();
-            if (currentViewValue != null) {
-                return !currentViewValue.equals(viewValue);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Could not create view value for comparison: " + e.getMessage(), e);
-        }
-        return false;
-    }
-
-    private boolean showCloseDialog() {
-        String title = "View settings changed";
-        String message = "View settings have changed. Please choose one of the following options:";
-        return showApplyOptionsDialog(true, title, message);
-    }
-
-    private boolean showApplyDialog() {
-        String title = "Apply view settings";
-        String message = "Please choose one of the following options:";
-        return showApplyOptionsDialog(false, title, message);
-    }
-
-
-    private boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title, final String message) {
+     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title, final String message) {
         ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
         dialog.setTitle(title);
         dialog.setMessage(message);
         dialog.setSize(60, showDiscardOption ? 14 : 11);
         RadioItem discardOption =
-            new RadioItem("Discard Changes", null, "Discards any changes made and closes the view.");
-        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
-            "Applies the current view settings to the node" + (showDiscardOption ? ", closes the view" : "")
-            + " and triggers a re-execute of the node. This option will not override the default node settings "
-            + "set in the dialog. Changes will be lost when the node is reset.");
-        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
-            "Applies the current view settings as the new default node settings" + (showDiscardOption ? ", closes the view" : "")
-            + " and triggers a re-execute of the node. This option will override the settings set in the node dialog "
-            + "and changes made will remain applied after a node reset.");
+            new RadioItem(DISCARD_LABEL, null, DISCARD_DESCRIPTION);
+        RadioItem applyOption = new RadioItem(APPLY_LABEL, null,
+            String.format(APPLY_DESCRIPTION_FORMAT, showDiscardOption ? ", closes the view" : ""));
+        RadioItem newDefaultOption = new RadioItem(APPLY_DEFAULT_LABEL, null,
+            String.format(APPLY_DEFAULT_DESCRIPTION_FORMAT, showDiscardOption ? ", closes the view" : ""));
         if (showDiscardOption) {
             dialog.setElements(new RadioItem[]{discardOption, applyOption, newDefaultOption});
             dialog.setInitialSelectedElement(discardOption);
@@ -531,5 +435,62 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
             return applyTriggered(true);
         }
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean viewInteractionPossible() {
+        return m_viewSet;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean validateCurrentValueInView() {
+        boolean valid = true;
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        WebTemplate template = creator.getWebTemplate();
+        String validateMethod = template.getValidateMethodName();
+        if (validateMethod != null && !validateMethod.isEmpty()) {
+            String evalCode = creator
+                .wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + validateMethod + "());");
+            String jsonString = (String)m_browser.evaluate(evalCode);
+            valid = Boolean.parseBoolean(jsonString);
+        }
+        return valid;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String retrieveCurrentValueFromView() {
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        WebTemplate template = creator.getWebTemplate();
+        String pullMethod = template.getPullViewContentMethodName();
+        String ns = creator.getNamespacePrefix();
+        String jsonString = null;
+        if (ns != null && !ns.isEmpty() && pullMethod != null && !pullMethod.isEmpty()) {
+            String evalCode = creator.wrapInTryCatch("if (typeof " + ns.substring(0, ns.length() - 1)
+                + " != 'undefined') { return JSON.stringify(" + ns + pullMethod + "());}");
+            jsonString = (String)m_browser.evaluate(evalCode);
+        }
+        return jsonString;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void showValidationErrorInView(final String error) {
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        WebTemplate template = creator.getWebTemplate();
+        String showErrorMethod = template.getSetValidationErrorMethodName();
+        String escapedError = error.replace("\\", "\\\\").replace("'", "\\'").replace("\n", " ");
+        String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "('" + escapedError + "');");
+        m_browser.execute(showErrorCall);
     }
 }

@@ -48,7 +48,9 @@
  */
 package org.knime.core.node.wizard;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -62,9 +64,11 @@ import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
 import org.knime.core.node.interactive.ReexecutionCallback;
+import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -86,6 +90,29 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     private final InteractiveViewDelegate<VAL> m_delegate;
 
     private AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
+
+    /** Label for discard option.
+     * @since 3.4 */
+    protected final static String DISCARD_LABEL = "Discard Changes";
+    /** Description text for discard option.
+     * @since 3.4 */
+    protected final static String DISCARD_DESCRIPTION = "Discards any changes made and closes the view.";
+    /** Label for apply temporarily option.
+     * @since 3.4 */
+    protected final static String APPLY_LABEL = "Apply settings temporarily";
+    /** Description text template for apply temporarily option.
+     * @since 3.4 */
+    protected final static String APPLY_DESCRIPTION_FORMAT = "Applies the current view settings to the node%s"
+            + " and triggers a re-execute of the node. This option will not override the default node settings "
+            + "set in the dialog. Changes will be lost when the node is reset.";
+    /** Label for apply as new default option.
+     * @since 3.4*/
+    protected final static String APPLY_DEFAULT_LABEL = "Apply settings as new default";
+    /** Description text template for apply as new default option.
+     * @since 3.4 */
+    protected final static String APPLY_DEFAULT_DESCRIPTION_FORMAT = "Applies the current view settings as the new default node settings%s"
+            + " and triggers a re-execute of the node. This option will override the settings set in the node dialog "
+            + "and changes made will remain applied after a node reset.";
 
     /**
      * @param nodeModel
@@ -186,6 +213,131 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     protected void setLastRetrievedValue(final VAL lastRetrievedValue) {
         m_lastRetrievedValue.set(lastRetrievedValue);
     }
+
+    /**
+     * @param useAsDefault true if changed values are supposed to be applied as new node default, false otherwise
+     * @return true if apply was successful, false otherwise
+     * @since 3.4
+     */
+    protected boolean applyTriggered(final boolean useAsDefault) {
+        if (!viewInteractionPossible() || !checkSettingsChanged()) {
+            return true;
+        }
+        boolean valid = validateCurrentValueInView();
+        if (valid) {
+            String jsonString = retrieveCurrentValueFromView();
+            try {
+                VAL viewValue = getModel().createEmptyViewValue();
+                viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+                setLastRetrievedValue(viewValue);
+                ValidationError error = getModel().validateViewValue(viewValue);
+                if (error != null) {
+                    showValidationErrorInView(error.getError());
+                    return false;
+                }
+                if (getModel() instanceof NodeModel) {
+                    triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
+                } else {
+                    getModel().loadViewValue(viewValue, useAsDefault);
+                }
+
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Could not set error message or trigger re-execution: " + e.getMessage(), e);
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Check if the view value represented in the currently open view has changed from the view value represented in the node model.
+     *
+     * @return true if the settings have changed, false otherwise or if status cannot be determined
+     * @since 3.4
+     */
+    protected boolean checkSettingsChanged() {
+        if (!viewInteractionPossible()) {
+            return false;
+        }
+        String jsonString = retrieveCurrentValueFromView();
+        if (jsonString == null) {
+         // no view value present in view
+            return false;
+        }
+        try {
+            VAL viewValue = getModel().createEmptyViewValue();
+            viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+            VAL currentViewValue = getModel().getViewValue();
+            if (currentViewValue != null) {
+                return !currentViewValue.equals(viewValue);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Could not create view value for comparison: " + e.getMessage(), e);
+        }
+        return false;
+    }
+
+    /**
+     * Query if an interaction with the concrete view is possible.
+     * @return true, if interaction is possible, false otherwise
+     * @since 3.4
+     */
+    protected abstract boolean viewInteractionPossible();
+
+    /**
+     * Execute JavaScript code in view to determine if the current settings validate.
+     * @return true, if validation succeeds, false otherwise
+     * @since 3.4
+     */
+    protected abstract boolean validateCurrentValueInView();
+
+    /**
+     * Execute JavaScript code in view to retrieve the current view settings.
+     * @return the JSON serialized view value string
+     * @since 3.4
+     */
+    protected abstract String retrieveCurrentValueFromView();
+
+    /**
+     * Execute JavaScript code in view to display a validation error.
+     * @param error the errror to display
+     * @since 3.4
+     */
+    protected abstract void showValidationErrorInView(String error);
+
+    /**
+     * Called when a close dialog is supposed to be shown with options on how to deal with changed settings in the view.
+     * @return true, if discard is chosen or a subsequent apply was successful, false otherwise
+     * @since 3.4
+     */
+    protected boolean showCloseDialog() {
+        String title = "View settings changed";
+        String message = "View settings have changed. Please choose one of the following options:";
+        return showApplyOptionsDialog(true, title, message);
+    }
+
+    /**
+     * Called when an apply dialog (temporary or default apply) is supposed to be shown.
+     * @return true, if a subsequent apply was successful, false otherwise
+     * @since 3.4
+     */
+    protected boolean showApplyDialog() {
+        String title = "Apply view settings";
+        String message = "Please choose one of the following options:";
+        return showApplyOptionsDialog(false, title, message);
+    }
+
+    /**
+     * Displays a dialog to ask user how to handle settings changed in view.
+     * @param showDiscardOption true, if discard option is to be displayed, false otherwise
+     * @param title the title of the dialog
+     * @param message the message of the dialog
+     * @return true, if discard is chosen or a subsequent apply was successful, false otherwise
+     * @since 3.4
+     */
+    protected abstract boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title, final String message);
 
     /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.

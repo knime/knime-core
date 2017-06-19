@@ -101,6 +101,36 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="retrieveCurrentValueFromView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="showApplyOptionsDialog(boolean, String, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="showValidationErrorInView(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="validateCurrentValueInView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="viewInteractionPossible()"/>
+            </message_arguments>
+        </filter>
         <filter id="338722907">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
