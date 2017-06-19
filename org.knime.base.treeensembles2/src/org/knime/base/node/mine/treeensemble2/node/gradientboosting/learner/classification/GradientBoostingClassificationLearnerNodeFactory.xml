@@ -37,6 +37,18 @@
 				for missing values to go to by testing each possible direction and
 				selecting the one yielding the best result (i.e. largest gain).
 			</p>
+			
+			<h4>
+				Sampling
+			</h4>
+			<p>
+				This node allows to perform row sampling (bagging) and attribute
+				sampling (attribute bagging)
+				similar to the random forest and tree ensemble nodes.
+				If sampling is used this is usually referred to as <i>Stochastic Gradient
+				Boosted Trees</i>.
+				The respective settings can be found in the <i>Advanced Options</i> tab.
+			</p>	
 		</intro>
 		<tab name="Options">
 			<option name="Target Column">
@@ -109,6 +121,7 @@
 				</ul>
 			</option>
 			<option name="Data Sampling (Rows)">
+				Sampling the rows is also known as bagging, a very popular ensemble learning strategy.
 				The sampling of the data rows for each individual
 				tree: If disabled
 				each tree learner gets the full data set,
@@ -125,33 +138,41 @@
 				called out-of-bag (see below).
 			</option>
 			<option name="Attribute Sampling (Columns)">
-				Defines the sampling of attributes to learn an
-				individual tree. This can
-				either be a function based on the
-				number of
-				attributes (linear fraction or square root) or some absolute
-				value.
-				The latter can be used in
-				conjunction with flow variables to inject
-				some other value derived from the
-				number of attributes (e.g. Breiman
-				suggests to start with the square root of number of attributes but
-				also try
-				to double/half that number).
+				Attribute sampling is also called random subspace method or attribute bagging.
+				Its most famous application are random forests but it can also be used for gradient boosted trees.
+				This option specifies the sample size:
+				<p>
+					<i>All columns (no sampling)</i>
+					Each sample consists of all columns which corresponds to no sampling at all.
+				</p>
+				<p>
+					<i>Sample (square root)</i>
+					Use the square root of the total number of attributes as sample size.
+					This method is typically used in random forests.
+				</p>
+				<p>
+					<i>Sample (linear fraction)</i>
+					Use the specified linear fraction of the total number of attributes as sample size.
+					A linear fraction of 0.5 corresponds to using 50% of all attributes.
+				</p>
+				<p>
+					<i>Sample (absolute value)</i>
+					Use the specified number as sample size.
+				</p>
 			</option>
 			<option name="Attribute Selection">
+				In this context attribute selection refers to the scale at which attributes are sampled
+				(per tree vs. per tree node). Note that this only takes effect if attribute sampling is enabled.
 				<p>
 					<i>Use same set of attributes for each tree</i>
-					describes that the attributes are sampled once for each tree
-					and
-					this sample is then used to construct the tree.
+					With this option the attributes are sampled per tree. That means that we draw an attribute sample
+					and use it to learn an individual tree so every node of this tree sees the same attributes.
 				</p>
 				<p>
 					<i>Use different set of attributes for each tree node</i>
-					samples a different set of candidate attributes in
-					each of the tree
-					nodes from which the optimal one is chosen to perform
-					the split.
+					This strategy draws a new attribute sample per tree node.
+					Random forests typically use this strategy to make the trees more diverse.
+					(Note that diversity is not important for gradient boosted trees so the effect won't be as large)
 				</p>
 			</option>
 			<option name="Use static random seed">
