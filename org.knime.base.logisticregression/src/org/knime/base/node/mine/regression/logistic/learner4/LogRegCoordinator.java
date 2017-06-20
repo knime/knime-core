@@ -151,7 +151,7 @@ class LogRegCoordinator {
         LogRegLearner learner;
         if (m_settings.getSolver() == Solver.IRLS) {
             learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
-                m_settings.getMaxEpoch(), m_settings.getEpsilon());
+                m_settings.getMaxEpoch(), m_settings.getEpsilon(), m_settings.isCalcCovMatrix());
         } else {
             learner = new SagLogRegLearner(m_settings);
         }
@@ -335,12 +335,7 @@ class LogRegCoordinator {
                 betaMat.setEntry(0, i * cols + j, beta.getEntry(i, j));
             }
         }
-        RealMatrix covMat;
-        if (result.hasCovariateMatrix()) {
-            covMat = result.getCovariateMatrix();
-        } else {
-            covMat = MatrixUtils.createRealMatrix(beta.getColumnDimension() , beta.getColumnDimension());
-        }
+        RealMatrix covMat = result.getCovariateMatrix();
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_pmmlOutSpec,
