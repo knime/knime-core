@@ -54,6 +54,19 @@
 						"2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>
+				If there is e.g. a time column which has both times with and without
+				milliseconds, optional parts in the format can be specified with
+				square brackets.
+				<b>Examples:</b>
+				<ul>
+					<li>"HH:mm:ss[.SSS]" parses times like "12:08:56.123" and
+						"12:08:56"
+					</li>
+					<li>"yyyy-MM-dd'T'HH:mm[:ss[.SSS]]" parses dates like
+						"2001-07-04T12:08:56.235", "2001-07-04T12:08:56" and
+						"2001-07-04T12:08"
+					</li>
+				</ul>
 				<b>Supported placeholders in the pattern are:</b>
 				<ul>
 					<li>G: era</li>

@@ -145,7 +145,7 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createFormatModel() {
-        return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
+        return new SettingsModelString("date_format", "yyyy-MM-dd'T'HH:mm[:ss[.SSS]]");
     }
 
     /** @return the string select model, used in both dialog and model. */
@@ -164,17 +164,20 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
     static Collection<String> createPredefinedFormats() {
         // unique values
         Set<String> formats = new LinkedHashSet<String>();
+        formats.add("yyyy-MM-dd'T'HH:mm[:ss[.SSS]]");
         formats.add("yyyy-MM-dd;HH:mm:ss.S");
         formats.add("dd.MM.yyyy;HH:mm:ss.S");
         formats.add("yyyy-MM-dd HH:mm:ss.S");
         formats.add("dd.MM.yyyy HH:mm:ss.S");
         formats.add("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formats.add("yyyy-MM-dd'T'HH:mm[:ss[.SSS]]VV['['zzzz']']");
         formats.add("yyyy-MM-dd;HH:mm:ssVV");
         formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV");
         formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'");
+        formats.add("yyyy-MM-dd");
         formats.add("yyyy/dd/MM");
         formats.add("dd.MM.yyyy");
-        formats.add("yyyy-MM-dd");
+        formats.add("HH:mm[:ss[.SSS]]");
         formats.add("HH:mm:ss");
         // check also the StringHistory....
         String[] userFormats = StringHistory.getInstance(StringToDateTimeNodeModel.FORMAT_HISTORY_KEY).getHistory();
