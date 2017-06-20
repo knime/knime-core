@@ -172,10 +172,10 @@ public class SagLogRegLearner implements LogRegLearner {
         if (settings.isPerformLazy()) {
             UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory = createLazyUpdater(settings, data);
             return new LazySGOptimizer<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>, LazyRegularizationUpdater>(
-                    data, loss, updaterFactory, (LazyRegularizationUpdater)regUpdater, lrs, stoppingCriterion);
+                    data, loss, updaterFactory, (LazyRegularizationUpdater)regUpdater, lrs, stoppingCriterion, m_settings.isCalcCovMatrix());
         } else {
             UpdaterFactory<ClassificationTrainingRow, EagerUpdater<ClassificationTrainingRow>> updaterFactory = createEagerUpdater(settings, data);
-            return new EagerSgOptimizer<>(data, loss, updaterFactory, regUpdater, lrs, stoppingCriterion);
+            return new EagerSgOptimizer<>(data, loss, updaterFactory, regUpdater, lrs, stoppingCriterion, m_settings.isCalcCovMatrix());
 
         }
 

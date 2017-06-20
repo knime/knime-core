@@ -73,6 +73,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     private final LearningRateStrategy<T> m_lrStrategy;
     private final StoppingCriterion<T> m_stoppingCriterion;
     private final TrainingData<T> m_data;
+    private final boolean m_calcCovMatrix;
     private String m_warning = null;
 
     /**
@@ -80,13 +81,14 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
      */
     public AbstractSGOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory,
         final R prior, final LearningRateStrategy<T> learningRateStrategy,
-        final StoppingCriterion<T> stoppingCriterion) {
+        final StoppingCriterion<T> stoppingCriterion, final boolean calcCovMatrix) {
         m_loss = loss;
         m_regUpdater = prior;
         m_lrStrategy = learningRateStrategy;
         m_updaterFactory = updaterFactory;
         m_stoppingCriterion = stoppingCriterion;
         m_data = data;
+        m_calcCovMatrix = calcCovMatrix;
     }
 
     public LogRegLearnerResult optimize(final int maxEpoch, final TrainingData<T> data, final Progress progress) throws CanceledExecutionException {
@@ -128,16 +130,25 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
                 break;
             }
         }
+        StringBuilder warnBuilder = new StringBuilder();
         if (epoch == maxEpoch) {
-            m_warning = "The algorithm did not reach convergence. Setting the epoch limit higher might result in a better model.";
+            warnBuilder.append("The algorithm did not reach convergence. "
+                + "Setting the epoch limit higher might result in a better model.");
         }
         double lossSum = totalLoss(beta);
         RealMatrix betaMat = MatrixUtils.createRealMatrix(beta.getWeightVector());
-        RealMatrix covMat;
-        try {
-            covMat = calculateCovariateMatrix(beta);
-        } catch (SingularMatrixException e) {
-            covMat = null;
+        RealMatrix covMat = null;
+        if (m_calcCovMatrix) {
+            try {
+                covMat = calculateCovariateMatrix(beta);
+            } catch (SingularMatrixException e) {
+                if (warnBuilder.length() > 0) {
+                    warnBuilder.append("\n");
+                }
+                warnBuilder.append("The covariance matrix could not be calculated because the"
+                    + " observed fisher information matrix was singular.");
+                covMat = null;
+            }
         }
 
         return new LogRegLearnerResult(betaMat, covMat, epoch + 1, lossSum);

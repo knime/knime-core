@@ -64,8 +64,8 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * @param learningRateStrategy
      */
     public EagerSgOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory, final R prior,
-        final LearningRateStrategy<T> learningRateStrategy, final StoppingCriterion<T> stoppingCriterion) {
-        super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion);
+        final LearningRateStrategy<T> learningRateStrategy, final StoppingCriterion<T> stoppingCriterion, final boolean calcCovMatrix) {
+        super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion, calcCovMatrix);
     }
 
 
