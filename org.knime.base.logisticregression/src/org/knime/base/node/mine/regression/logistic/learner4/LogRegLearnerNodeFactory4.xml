@@ -168,6 +168,12 @@
         	if their corresponding feature is actually present in the current sample. Usually faster than the normal version especially for sparse
         	data (that is data where for the most rows the most values are zero). Currently only supported by the SAG solver.
         </option>
+        <option name="Calculate statistics for coefficients">
+        	If selected, the node calculates the standard errors, z-score and P>|z| values for the coefficients.
+        	Note that those are affected by regularization in case of the Gauss prior.
+        	Calculating those statistics is expensive if the model is learned on many features and can be responsible for a significant part of
+        	the node runtime.
+        </option>
         <option name="Learning rate strategy">
         	The strategy provides the learning rates for the optimization process. Only important for the SAG and SGD solvers. For more information
         	see the paragraph on learning rate strategies above.
