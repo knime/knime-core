@@ -116,6 +116,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JComboBox<Solver> m_solverComboBox;
     private JCheckBox m_lazyCalculationCheckBox;
     private JSpinner m_maxEpochSpinner;
+    private JCheckBox m_calcCovMatrixCheckBox;
 //    private JSpinner m_epsilonSpinner;
     private JTextField m_epsilonField;
 
@@ -161,6 +162,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
                 + "First value is chosen as reference for dummy variables.");
 
         m_lazyCalculationCheckBox = new JCheckBox("Perform calculations lazily");
+        m_calcCovMatrixCheckBox = new JCheckBox("Calculate statistics for coefficients");
         m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_MAX_EPOCH, 1, Integer.MAX_VALUE, 1));
         m_epsilonField= new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
 //        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_INITIAL_LEARNING_RATE,
@@ -349,6 +351,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridy++;
         c.gridwidth = 2;
         panel.add(m_lazyCalculationCheckBox, c);
+        c.gridy++;
+        panel.add(m_calcCovMatrixCheckBox, c);
 
         return panel;
     }
@@ -600,6 +604,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         }
         m_maxEpochSpinner.setValue(settings.getMaxEpoch());
         m_lazyCalculationCheckBox.setSelected(settings.isPerformLazy());
+        m_calcCovMatrixCheckBox.setSelected(settings.isCalcCovMatrix());
         double epsilon = settings.getEpsilon();
         m_epsilonField.setText(Double.toString(epsilon));
         m_learningRateStrategyComboBox.setSelectedItem(settings.getLearningRateStrategy());
@@ -636,6 +641,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         settings.setSolver((Solver)m_solverComboBox.getSelectedItem());
         settings.setMaxEpoch((int)m_maxEpochSpinner.getValue());
         settings.setPerformLazy(m_lazyCalculationCheckBox.isSelected());
+        settings.setCalcCovMatrix(m_calcCovMatrixCheckBox.isSelected());
         try {
             String str = m_epsilonField.getText();
             double epsilon = Double.valueOf(str);
