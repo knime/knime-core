@@ -164,8 +164,9 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     }
 
     private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
-        final double[][] hessian = m_loss.hessian(m_data, beta);
-        RealMatrix observedInformation = MatrixUtils.createRealMatrix(hessian);
+        final RealMatrix llHessian = MatrixUtils.createRealMatrix(m_loss.hessian(m_data, beta));
+        final RealMatrix priorHessian = m_regUpdater.hessian(beta);
+        RealMatrix observedInformation = llHessian.add(priorHessian);
         RealMatrix covMat = new QRDecomposition(observedInformation).getSolver().getInverse().scalarMultiply(-1);
         return covMat;
     }
