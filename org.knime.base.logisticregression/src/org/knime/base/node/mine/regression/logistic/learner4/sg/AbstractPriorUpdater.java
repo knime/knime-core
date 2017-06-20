@@ -48,11 +48,14 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-abstract class AbstractPriorUpdater {
+abstract class AbstractPriorUpdater implements RegularizationUpdater {
 
     private final boolean m_clip;
     private final Prior m_prior;
@@ -87,4 +90,25 @@ abstract class AbstractPriorUpdater {
     protected int getNRows() {
         return m_nRows;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RealMatrix hessian(final WeightVector<?> beta) {
+        int nVar = beta.getNVariables();
+        int dim = nVar * beta.getNVectors();
+        double val = m_prior.hessianDiagonalValue();
+        double[] diag = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            // intercept term is not regularized
+            if (i % nVar == 0) {
+                diag[i] = 0.0;
+            } else {
+                diag[i] = val;
+            }
+        }
+        return MatrixUtils.createRealDiagonalMatrix(diag);
+    }
+
 }

@@ -71,4 +71,13 @@ final class LaplacePrior implements Prior {
         return m_factor * Math.signum(betaValue);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double hessianDiagonalValue() {
+        // the hessian of the laplace prior is the zero matrix
+        return 0;
+    }
+
 }

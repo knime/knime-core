@@ -55,4 +55,6 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 interface Prior {
 
     public double calculate(final double betaValue);
+
+    public double hessianDiagonalValue();
 }

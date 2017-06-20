@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.apache.commons.math3.linear.RealMatrix;
+
 /**
  *
  * @author Adrian Nembach, KNIME.com
@@ -55,5 +57,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 interface RegularizationUpdater {
 
     public void update(WeightVector<?> beta, final double stepSize, final int iteration);
+
+    public RealMatrix hessian(WeightVector<?> beta);
 
 }

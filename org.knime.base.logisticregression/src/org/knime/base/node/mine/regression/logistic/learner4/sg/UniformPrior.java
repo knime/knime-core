@@ -65,4 +65,12 @@ enum UniformPrior implements Prior {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double hessianDiagonalValue() {
+        return 0;
+    }
+
 }

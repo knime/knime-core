@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
@@ -81,6 +83,15 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
     @Override
     public void update(final WeightVector<?> beta, final double stepSize, final int iteration) {
         // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RealMatrix hessian(final WeightVector<?> beta) {
+        int dim = beta.getNVariables() * beta.getNVectors();
+        return MatrixUtils.createRealMatrix(dim, dim);
     }
 
 }

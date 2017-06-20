@@ -71,4 +71,12 @@ class GaussPrior implements Prior {
         return betaValue * m_factor;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double hessianDiagonalValue() {
+        return m_factor;
+    }
+
 }

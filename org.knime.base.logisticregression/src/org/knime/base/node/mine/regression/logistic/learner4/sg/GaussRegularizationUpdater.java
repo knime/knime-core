@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
@@ -84,6 +86,24 @@ class GaussRegularizationUpdater implements LazyRegularizationUpdater {
     @Override
     public void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited) {
         // nothing to reset
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RealMatrix hessian(final WeightVector<?> beta) {
+        int nVar = beta.getNVariables();
+        int dim = nVar * beta.getNVectors();
+        double[] diag = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            if (i % nVar == 0) {
+                diag[i] = 0;
+            } else {
+                diag[i] = m_lambda;
+            }
+        }
+        return MatrixUtils.createRealDiagonalMatrix(diag);
     }
 
 }
