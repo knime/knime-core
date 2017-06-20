@@ -77,6 +77,18 @@ interface WeightVector <T extends TrainingRow> {
 
     public double getScale();
 
+    /**
+     * Returns the number of variables on which this object operates.
+     * @return the number of variables
+     */
+    public int getNVariables();
+
+    /**
+     * Returns the number of vectors (models).
+     * @return the number of vectors (models)
+     */
+    public int getNVectors();
+
     interface WeightVectorConsumer1 {
         public double calculate(double val, int c, int i);
     }

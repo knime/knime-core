@@ -121,6 +121,22 @@ abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVec
         return m_data;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNVariables() {
+        return m_data[0].length;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNVectors() {
+        return m_data.length;
+    }
+
 
     @Override
     public String toString() {
