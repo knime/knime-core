@@ -249,6 +249,7 @@ public class LogRegLearnerSettings {
     private static final String CFG_SEED = "seed";
     private static final String CFG_IN_MEMORY = "inMemory";
     private static final String CFG_CHUNK_SIZE = "chunkSize";
+    private static final String CFG_CALC_COVMATRIX = "calcCovMatrix";
 
     static final Solver DEFAULT_SOLVER = Solver.SAG;
     static final boolean DEFAULT_PERFORM_LAZY = false;
@@ -261,6 +262,7 @@ public class LogRegLearnerSettings {
     static final double DEFAULT_PRIOR_VARIANCE = 0.1;
     static final boolean DEFAULT_IN_MEMORY = true;
     static final int DEFAULT_CHUNK_SIZE = 10000;
+    static final boolean DEFAULT_CALC_COVMATRIX = true;
 
 
     private String m_targetColumn;
@@ -280,6 +282,7 @@ public class LogRegLearnerSettings {
     private int m_maxEpoch;
     private boolean m_performLazy;
     private double m_epsilon;
+    private boolean m_calcCovMatrix;
     // learning rate strategy and relevant parameters
     private LearningRateStrategies m_learningRateStrategy;
     private double m_initialLearningRate;
@@ -314,6 +317,7 @@ public class LogRegLearnerSettings {
         setInMemory(DEFAULT_IN_MEMORY);
         m_seed = System.currentTimeMillis();
         m_chunkSize = DEFAULT_CHUNK_SIZE;
+        m_calcCovMatrix = DEFAULT_CALC_COVMATRIX;
     }
 
 
@@ -357,6 +361,8 @@ public class LogRegLearnerSettings {
         m_seed = seed;
 
         m_chunkSize = settings.getInt(CFG_CHUNK_SIZE);
+
+        m_calcCovMatrix = settings.getBoolean(CFG_CALC_COVMATRIX);
 
 
     }
@@ -403,6 +409,8 @@ public class LogRegLearnerSettings {
 
         m_chunkSize = settings.getInt(CFG_CHUNK_SIZE, DEFAULT_CHUNK_SIZE);
 
+        m_calcCovMatrix = settings.getBoolean(CFG_CALC_COVMATRIX, DEFAULT_CALC_COVMATRIX);
+
     }
 
     /**
@@ -431,6 +439,8 @@ public class LogRegLearnerSettings {
         String seedS = m_seed.toString();
         settings.addString(CFG_SEED, seedS);
         settings.addInt(CFG_CHUNK_SIZE, m_chunkSize);
+
+        settings.addBoolean(CFG_CALC_COVMATRIX, m_calcCovMatrix);
     }
 
 
@@ -715,6 +725,22 @@ public class LogRegLearnerSettings {
      */
     public void setChunkSize(final int chunkSize) {
         m_chunkSize = chunkSize;
+    }
+
+
+    /**
+     * @return the calcCovMatrix
+     */
+    public boolean isCalcCovMatrix() {
+        return m_calcCovMatrix;
+    }
+
+
+    /**
+     * @param calcCovMatrix the calcCovMatrix to set
+     */
+    public void setCalcCovMatrix(final boolean calcCovMatrix) {
+        m_calcCovMatrix = calcCovMatrix;
     }
 }
 
