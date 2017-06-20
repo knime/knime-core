@@ -94,6 +94,7 @@ final class IrlsLearner implements LogRegLearner {
     private RealMatrix A;
     private RealMatrix b;
     private double m_penaltyTerm;
+    private final boolean m_calcCovMatrix;
 
     private static final String FAILING_MSG = "The logistic regression model cannot be computed. "
             + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
@@ -108,7 +109,7 @@ final class IrlsLearner implements LogRegLearner {
      */
     IrlsLearner(final PMMLPortObjectSpec spec,
         final DataTableSpec tableSpec) {
-        this(spec, tableSpec, 30, 1e-14);
+        this(spec, tableSpec, 30, 1e-14, true);
     }
 
     /**
@@ -122,12 +123,14 @@ final class IrlsLearner implements LogRegLearner {
      */
     IrlsLearner(final PMMLPortObjectSpec spec,
             final DataTableSpec tableSpec,
-            final int maxIter, final double eps) {
+            final int maxIter, final double eps,
+            final boolean calcCovMatrix) {
         m_outSpec = spec;
         m_tableSpec = tableSpec;
         m_maxIter = maxIter;
         m_eps = eps;
         m_penaltyTerm = 0.0;
+        m_calcCovMatrix = calcCovMatrix;
     }
 
 
@@ -425,7 +428,10 @@ final class IrlsLearner implements LogRegLearner {
                     + DoubleFormat.formatDouble(loglike) + ". Processing iteration " +  (iter + 1) + ".");
         }
         // The covariance matrix
-        RealMatrix covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
+        RealMatrix covMat = null;
+        if (m_calcCovMatrix) {
+            covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
+        }
         RealMatrix betaMat = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
         for (int i = 0; i < beta.getColumnDimension(); i++) {
             int r = i / (rC + 1);
