@@ -99,6 +99,7 @@ import org.knime.core.node.util.CheckUtils;
  */
 final class LogisticRegressionContent {
     private final PMMLPortObjectSpec m_outSpec;
+    private final DataTableSpec m_tableSpec;
 
     private final List<String> m_factorList;
     private final Map<String, List<DataCell>> m_factorDomainValues;
@@ -137,6 +138,7 @@ final class LogisticRegressionContent {
      */
     LogisticRegressionContent(
         final PMMLPortObjectSpec outSpec,
+        final DataTableSpec tableSpec,
         final List<String> factorList,
         final List<String> covariateList,
         final DataCell targetReferenceCategory,
@@ -144,7 +146,7 @@ final class LogisticRegressionContent {
         final boolean sortFactorsCategories,
         final RealMatrix beta, final double loglike,
         final RealMatrix covMat, final int iter) {
-        this(outSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
+        this(outSpec, tableSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
             sortFactorsCategories, beta, loglike, covMat, iter);
     }
 
@@ -164,6 +166,7 @@ final class LogisticRegressionContent {
      */
     LogisticRegressionContent(
             final PMMLPortObjectSpec outSpec,
+            final DataTableSpec tableSpec,
             final List<String> factorList,
             final List<String> covariateList,
             final Map<? extends String, ? extends Integer> vectorLengths,
@@ -174,6 +177,7 @@ final class LogisticRegressionContent {
             final RealMatrix covMat, final int iter) {
         m_iter = iter;
         m_outSpec = outSpec;
+        m_tableSpec = tableSpec;
         m_factorList = factorList;
         m_vectorLengths.putAll(vectorLengths);
         m_factorDomainValues = new HashMap<String, List<DataCell>>();
@@ -636,6 +640,7 @@ final class LogisticRegressionContent {
     private static final String CFG_COVARIATES = "covariates";
     private static final String CFG_COEFFICIENTS = "coefficients";
     private static final String CFG_COVARIANCE_MATRIX = "covariance_matrix";
+    private static final String CFG_COVMAT_PRESENT = "covMatPresent";
     private static final String CFG_LOG_LIKELIHOOD = "likelihood";
     private static final String CFG_ITER = "iteration";
     private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
@@ -668,19 +673,27 @@ final class LogisticRegressionContent {
         String[] covariates = parContent.getStringArray(CFG_COVARIATES);
         double[] coeff = parContent.getDoubleArray(CFG_COEFFICIENTS);
         double likelihood = parContent.getDouble(CFG_LOG_LIKELIHOOD);
-        double[] covMat = parContent.getDoubleArray(CFG_COVARIANCE_MATRIX);
+        RealMatrix covMat = null;
+        DataTableSpec coeffStatsTableSpec;
+        if (parContent.getBoolean(CFG_COVMAT_PRESENT)) {
+            covMat = toMatrix(parContent.getDoubleArray(CFG_COVARIANCE_MATRIX), coeff.length);
+            coeffStatsTableSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(true);
+        } else {
+            coeffStatsTableSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(false);
+        }
         int iter = parContent.getInt(CFG_ITER);
         // introduced in 2.9
         DataCell targetReferenceCategory = parContent.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
         boolean sortTargetCategories = parContent.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
         boolean sortFactorsCategories = parContent.getBoolean(CFG_SORT_FACTORS_CATEGORIES, true);
         return new LogisticRegressionContent(pmmlSpec,
+                coeffStatsTableSpec,
                 Arrays.asList(factors), Arrays.asList(covariates),
                 vectorLengthMap,
                 targetReferenceCategory,
                 sortTargetCategories, sortFactorsCategories,
                 toMatrix(coeff, coeff.length), likelihood,
-                toMatrix(covMat, coeff.length), iter);
+                covMat, iter);
 
 
     }
@@ -710,8 +723,14 @@ final class LogisticRegressionContent {
             m_vectorLengths.entrySet().stream().mapToInt(e -> e.getValue().intValue()).toArray());
         parContent.addStringArray(CFG_COVARIATES,
                 m_covariateList.toArray(new String[0]));
-        parContent.addDoubleArray(CFG_COVARIANCE_MATRIX,
+        if (m_covMat == null) {
+            parContent.addBoolean(CFG_COVMAT_PRESENT, false);
+        } else {
+            parContent.addBoolean(CFG_COVMAT_PRESENT, true);
+            parContent.addDoubleArray(CFG_COVARIANCE_MATRIX,
                 toArray(m_covMat));
+        }
+
         parContent.addDoubleArray(CFG_COEFFICIENTS, toArray(m_beta));
         parContent.addDouble(CFG_LOG_LIKELIHOOD, m_loglike);
         parContent.addInt(CFG_ITER, m_iter);
@@ -719,6 +738,7 @@ final class LogisticRegressionContent {
         parContent.addDataCell(CFG_TARGET_REFERENCE_CATEGORY, m_targetReferenceCategory);
         parContent.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
         parContent.addBoolean(CFG_SORT_FACTORS_CATEGORIES, m_sortFactorsCategories);
+
     }
 
     private static double[] toArray(final RealMatrix matrix) {

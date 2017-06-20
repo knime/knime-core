@@ -77,6 +77,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DomainCreatorColumnSelection;
 import org.knime.core.data.DoubleValue;
@@ -118,10 +119,29 @@ class LogRegCoordinator {
     }
 
     PortObjectSpec[] getOutputSpecs() {
-        DataTableSpec tableOutSpec = new DataTableSpec("Coefficients and Statistics",
-            new String[]{"Logit", "Variable", "Coeff.", "Std. Err.", "z-score", "P>|z|"}, new DataType[]{
-                StringCell.TYPE, StringCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE});
+        DataTableSpec tableOutSpec = createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix());
         return new PortObjectSpec[]{m_pmmlOutSpec, tableOutSpec};
+    }
+
+    static DataTableSpec createCoeffStatisticsTableSpec(final boolean covMatPresent) {
+        DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator();
+        tableSpecCreator.addColumns(new DataColumnSpec[] {
+            new DataColumnSpecCreator("Logit", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Variable", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec()
+        });
+
+        if (!covMatPresent) {
+            tableSpecCreator.setName("Coefficients");
+        } else {
+            tableSpecCreator.setName("Coefficients and Statistics");
+            tableSpecCreator.addColumns(new DataColumnSpec[] {
+                new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
+            });
+        }
+        return tableSpecCreator.createSpec();
     }
 
     /**
@@ -339,9 +359,10 @@ class LogRegCoordinator {
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_pmmlOutSpec,
-                    factorList, covariateList, specialVectorLengths,
-                    m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
-                    betaMat, result.getLogLike(), covMat, result.getIter());
+                createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix()),
+                factorList, covariateList, specialVectorLengths,
+                m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
+                betaMat, result.getLogLike(), covMat, result.getIter());
         return content;
 
     }
