@@ -72,8 +72,9 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.base.node.mine.regression.pmmlgreg.VectorHandling;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -456,39 +457,56 @@ final class LogisticRegressionContent {
      */
     public BufferedDataTable createTablePortObject(
             final ExecutionContext exec) {
-        DataTableSpec tableOutSpec = new DataTableSpec(
-                "Coefficients and Statistics", new String[] {
-                "Logit", "Variable", "Coeff.", "Std. Err.", "z-score"
-                , "P>|z|"},
-                new DataType[] {StringCell.TYPE, StringCell.TYPE,
-                DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE
-                , DoubleCell.TYPE});
-        BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
+        DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator();
+        tableSpecCreator.addColumns(new DataColumnSpec[] {
+            new DataColumnSpecCreator("Logit", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Variable", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec()
+        });
+
         if (m_covMat == null) {
-            dc.close();
-            return dc.getTable();
+            tableSpecCreator.setName("Coefficients");
+        } else {
+            tableSpecCreator.setName("Coefficients and Statistics");
+            tableSpecCreator.addColumns(new DataColumnSpec[] {
+                new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
+            });
         }
+
+        DataTableSpec tableOutSpec = tableSpecCreator.createSpec();
+        BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
         List<DataCell> logits = this.getLogits();
         List<String> parameters = this.getParameters();
         int c = 0;
         for (DataCell logit : logits) {
             Map<String, Double> coefficients =
                     this.getCoefficients(logit);
-            Map<String, Double> stdErrs =
-                    this.getStandardErrors(logit);
-            Map<String, Double> zScores =
-                    this.getZScores(logit);
-            Map<String, Double> pValues =
-                    this.getPValues(logit);
+            Map<String, Double> stdErrs;
+            Map<String, Double> zScores;
+            Map<String, Double> pValues;
+            if (m_covMat == null) {
+                HashMap<String, Double> emptyMap = new HashMap<>();
+                stdErrs = emptyMap;
+                zScores = emptyMap;
+                pValues = emptyMap;
+            } else {
+                stdErrs = this.getStandardErrors(logit);
+                zScores = this.getZScores(logit);
+                pValues = this.getPValues(logit);
+            }
 
             for (String parameter : parameters) {
                 List<DataCell> cells = new ArrayList<DataCell>();
                 cells.add(new StringCell(logit.toString()));
                 cells.add(new StringCell(parameter));
                 cells.add(new DoubleCell(coefficients.get(parameter)));
-                cells.add(new DoubleCell(stdErrs.get(parameter)));
-                cells.add(new DoubleCell(zScores.get(parameter)));
-                cells.add(new DoubleCell(pValues.get(parameter)));
+                if (m_covMat != null) {
+                    cells.add(new DoubleCell(stdErrs.get(parameter)));
+                    cells.add(new DoubleCell(zScores.get(parameter)));
+                    cells.add(new DoubleCell(pValues.get(parameter)));
+                }
                 c++;
                 dc.addRowToTable(new DefaultRow("Row" + c, cells));
             }
@@ -496,9 +514,11 @@ final class LogisticRegressionContent {
             cells.add(new StringCell(logit.toString()));
             cells.add(new StringCell("Constant"));
             cells.add(new DoubleCell(this.getIntercept(logit)));
-            cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
-            cells.add(new DoubleCell(this.getInterceptZScore(logit)));
-            cells.add(new DoubleCell(this.getInterceptPValue(logit)));
+            if (m_covMat != null) {
+                cells.add(new DoubleCell(this.getInterceptStdErr(logit)));
+                cells.add(new DoubleCell(this.getInterceptZScore(logit)));
+                cells.add(new DoubleCell(this.getInterceptPValue(logit)));
+            }
             c++;
             dc.addRowToTable(new DefaultRow("Row" + c, cells));
         }
