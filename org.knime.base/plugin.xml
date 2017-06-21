@@ -721,7 +721,7 @@
        <node
              category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
-             after="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"/> 
+             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"/> 
 	    <node
 	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
