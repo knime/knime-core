@@ -21,12 +21,15 @@
             for an overview about the topic.
             
         <h4>Important Note on Normalization</h4>
-        The solvers work best with z-score normalized data.
+        The SAG and SGD solvers work best with z-score normalized data.
         That means that the columns are normalized to have zero mean and a standard deviation of one.
         This can be achieved by using a normalizer node before learning.
         If you have very sparse data (lots of zero values), this normalization will destroy the sparsity.
         In this case it is recommended to only normalize the dense features to exploit the sparsity during
         the calculations (SAG solver with lazy calculation).
+        Note, however, that the normalization will lead to different coefficients and statistics of those (standard error, z-score, etc.).
+        Hence if you want to use the learner for statistics (obtaining the mentioned statistics) rather than machine learning (obtaining a classifier),
+        you should carefully consider if normalization makes sense for your task at hand.
             
             <br />
             
@@ -75,8 +78,7 @@
         	This strategy is currently only supported by the SGD solver.
 		</li>        
 		<li>
-			<b>Line Search</b> This experimental strategy performs a line search for the Lipschitz constant and uses the
-			estimate to calculate the optimal learning rate. It is only supported by the SAG solver.
+			<b>Line Search</b> Experimental learning rate strategy that tries to find the optimal learning rate for the SAG solver.
 		</li>
         </ul>
         
@@ -135,6 +137,9 @@
             if the domain of the target column is not available. In this case the node determines the domain values right 
             before computing the logistic regression model and chooses the last domain value as the targets reference 
             category.<br />
+            The reference category is the category for which the probability is obtained as 1 minus the sum of all other probabilities.
+            In a two class scenario this is usually the class for which you don't explicitly want to model the probability.
+            <br />
             By default the target domain values are sorted lexicographically in the output, but you can enforce the 
             order of the target column domain to be preserved by checking the box.
             <br />
@@ -199,7 +204,9 @@
         </option>
         <option name="Chunk size">
         	If the data is not held completely in memory, the node reads chunks of data into memory to emulate random access for the SAG and SGD solver.
-        	This parameter specifies how large those chunks should be.
+        	This parameter specifies how large those chunks should be. The chunk size directly affects the convergence rate of the SAG and SGD solver,
+        	as those work best with complete random access and a larger chunk size will better approximate that. This especially means that the solver
+        	may need many epochs to converge if the chunk size is chosen too small.
         </option>
         <option name="Use seed">
         	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG or SGD solver.
