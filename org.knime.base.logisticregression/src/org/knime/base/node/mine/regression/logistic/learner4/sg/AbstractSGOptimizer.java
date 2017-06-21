@@ -151,7 +151,9 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
         }
 
-        return new LogRegLearnerResult(betaMat, covMat, epoch, lossSum);
+        // -lossSum because we minimize the negative loglikelihood but one is usually more interested in the likelihood
+        // in a maximum likelihood sense
+        return new LogRegLearnerResult(betaMat, covMat, epoch, -lossSum);
     }
 
     private double totalLoss(final WeightVector<T> beta) {
