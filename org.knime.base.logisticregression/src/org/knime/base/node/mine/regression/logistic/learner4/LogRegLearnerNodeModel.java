@@ -98,9 +98,9 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     /** The learned regression model. */
     private LogisticRegressionContent m_content;
 
-    /** Inits a new node model, it will have 1 data input, 1 model and 1 data output. */
+    /** Inits a new node model, it will have 1 data input, 1 model and 2 data output. */
     public LogRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE, BufferedDataTable.TYPE});
         m_settings = new LogRegLearnerSettings();
     }
 
@@ -147,7 +147,8 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         PMMLGeneralRegressionTranslator trans =
             new PMMLGeneralRegressionTranslator(m_content.createGeneralRegressionContent());
         outPMMLPort.addModelTranslater(trans);
-        return new PortObject[]{outPMMLPort, m_content.createCoeffStatisticsTablePortObject(exec)};
+        return new PortObject[]{outPMMLPort, m_content.createCoeffStatisticsTablePortObject(exec),
+            m_content.createModelStatisticsTable(exec)};
     }
 
     /** {@inheritDoc} */

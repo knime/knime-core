@@ -72,11 +72,12 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.base.node.mine.regression.pmmlgreg.VectorHandling;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -99,7 +100,6 @@ import org.knime.core.node.util.CheckUtils;
  */
 final class LogisticRegressionContent {
     private final PMMLPortObjectSpec m_outSpec;
-    private final DataTableSpec m_tableSpec;
 
     private final List<String> m_factorList;
     private final Map<String, List<DataCell>> m_factorDomainValues;
@@ -146,7 +146,7 @@ final class LogisticRegressionContent {
         final boolean sortFactorsCategories,
         final RealMatrix beta, final double loglike,
         final RealMatrix covMat, final int iter) {
-        this(outSpec, tableSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
+        this(outSpec, factorList, covariateList, Collections.emptyMap(), targetReferenceCategory, sortTargetCategories,
             sortFactorsCategories, beta, loglike, covMat, iter);
     }
 
@@ -166,7 +166,6 @@ final class LogisticRegressionContent {
      */
     LogisticRegressionContent(
             final PMMLPortObjectSpec outSpec,
-            final DataTableSpec tableSpec,
             final List<String> factorList,
             final List<String> covariateList,
             final Map<? extends String, ? extends Integer> vectorLengths,
@@ -177,7 +176,6 @@ final class LogisticRegressionContent {
             final RealMatrix covMat, final int iter) {
         m_iter = iter;
         m_outSpec = outSpec;
-        m_tableSpec = tableSpec;
         m_factorList = factorList;
         m_vectorLengths.putAll(vectorLengths);
         m_factorDomainValues = new HashMap<String, List<DataCell>>();
@@ -459,27 +457,10 @@ final class LogisticRegressionContent {
      * @param exec The execution context
      * @return a port object
      */
-    public BufferedDataTable createTablePortObject(
+    public BufferedDataTable createCoeffStatisticsTablePortObject(
             final ExecutionContext exec) {
-        DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator();
-        tableSpecCreator.addColumns(new DataColumnSpec[] {
-            new DataColumnSpecCreator("Logit", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Variable", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Coeff.", DoubleCell.TYPE).createSpec()
-        });
 
-        if (m_covMat == null) {
-            tableSpecCreator.setName("Coefficients");
-        } else {
-            tableSpecCreator.setName("Coefficients and Statistics");
-            tableSpecCreator.addColumns(new DataColumnSpec[] {
-                new DataColumnSpecCreator("Std. Err.", DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("z-score", DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("P>|z|", DoubleCell.TYPE).createSpec()
-            });
-        }
-
-        DataTableSpec tableOutSpec = tableSpecCreator.createSpec();
+        DataTableSpec tableOutSpec = LogRegCoordinator.createCoeffStatisticsTableSpec(m_covMat != null);
         BufferedDataContainer dc = exec.createDataContainer(tableOutSpec);
         List<DataCell> logits = this.getLogits();
         List<String> parameters = this.getParameters();
@@ -528,6 +509,26 @@ final class LogisticRegressionContent {
         }
         dc.close();
         return dc.getTable();
+    }
+
+    BufferedDataTable createModelStatisticsTable(final ExecutionContext exec) {
+        BufferedDataContainer container = exec.createDataContainer(createModelStatisticsTableSpec());
+        DataCell[] cells = new DataCell[] {
+            new IntCell(m_iter), new DoubleCell(m_loglike)
+        };
+        DataRow row = new DefaultRow("Row0", cells);
+        container.addRowToTable(row);
+        container.close();
+        return container.getTable();
+    }
+
+    static DataTableSpec createModelStatisticsTableSpec() {
+        DataTableSpec spec = new DataTableSpec("Model Statistics", new String[] {
+            "Iterations", "LogLikelihood"
+        }, new DataType[] {
+            IntCell.TYPE, DoubleCell.TYPE
+        });
+        return spec;
     }
 
     /**
@@ -687,7 +688,6 @@ final class LogisticRegressionContent {
         boolean sortTargetCategories = parContent.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
         boolean sortFactorsCategories = parContent.getBoolean(CFG_SORT_FACTORS_CATEGORIES, true);
         return new LogisticRegressionContent(pmmlSpec,
-                coeffStatsTableSpec,
                 Arrays.asList(factors), Arrays.asList(covariates),
                 vectorLengthMap,
                 targetReferenceCategory,

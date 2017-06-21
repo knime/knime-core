@@ -213,7 +213,8 @@
     <ports>
         <inPort index="0" name="Input data">Table on which to perform regression. The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.</inPort>
         <outPort index="0" name="Model for Predictor">Model to connect to a predictor node.</outPort>
-        <outPort index="1" name="Coefficients and Statistics">Coefficients and statistics of the logistic regression model.</outPort>
+        <outPort index="1" name="Coefficients and Statistics">Coefficients and statistics (if calculated) of the logistic regression model.</outPort>
+        <outPort index="2" name="Model and Learning Properties">Global learning and model properties like the number of iterations until convergence.</outPort>
 	</ports>
 	<!-- 
 	<views>

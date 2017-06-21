@@ -151,7 +151,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
         }
 
-        return new LogRegLearnerResult(betaMat, covMat, epoch + 1, lossSum);
+        return new LogRegLearnerResult(betaMat, covMat, epoch, lossSum);
     }
 
     private double totalLoss(final WeightVector<T> beta) {

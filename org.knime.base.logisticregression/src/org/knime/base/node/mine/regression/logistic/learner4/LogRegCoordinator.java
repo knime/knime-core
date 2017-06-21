@@ -119,8 +119,9 @@ class LogRegCoordinator {
     }
 
     PortObjectSpec[] getOutputSpecs() {
-        DataTableSpec tableOutSpec = createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix());
-        return new PortObjectSpec[]{m_pmmlOutSpec, tableOutSpec};
+        DataTableSpec coeffTableOutSpec = createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix());
+        DataTableSpec modelStatsTableOutSpec = LogisticRegressionContent.createModelStatisticsTableSpec();
+        return new PortObjectSpec[]{m_pmmlOutSpec, coeffTableOutSpec, modelStatsTableOutSpec};
     }
 
     static DataTableSpec createCoeffStatisticsTableSpec(final boolean covMatPresent) {
@@ -359,7 +360,6 @@ class LogRegCoordinator {
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_pmmlOutSpec,
-                createCoeffStatisticsTableSpec(m_settings.isCalcCovMatrix()),
                 factorList, covariateList, specialVectorLengths,
                 m_settings.getTargetReferenceCategory(), m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories(),
                 betaMat, result.getLogLike(), covMat, result.getIter());
