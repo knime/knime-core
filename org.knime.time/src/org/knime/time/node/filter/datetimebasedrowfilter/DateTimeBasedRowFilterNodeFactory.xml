@@ -9,8 +9,8 @@
 		<intro>
 			Extracts all rows where the time value of the selected column
 			lies within a given time window from the input. The time window is
-			specified by a start and either an end date (and time), a period or
-			duration or a numerical value combined with a granularity.
+			specified by a start and either an end date (and time), a duration 
+			or a numerical value combined with a granularity.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Date&amp;Time Column">
@@ -56,24 +56,37 @@
 				filter.
 			</option>
 			<option name="End: Duration">
-				Select to insert a format string (defined by either the ISO-8601
-				representation (see
-				<a
-					href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
-				or
-				<a
-					href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
-				for details), the short letter representation (e.g. '2y 3M 1d';
-				<b>Period:</b>
-				y: years, M: months, d: days;
-				<b>Duration:</b>
-				H: hours, m: minutes, s: seconds)
-				or the long word representation (e.g. '2 years 3 months 1 day') to use
-				as filter range. All rows which are included in this range,
-				will be in the output. A negative duration defines a range
-				reaching back to the past.
-				<br />
-				<b>Examples for ISO-8601 (Period):</b>
+				Select to insert a format string  to use
+                as filter range. All rows which are included in this range,
+                will be in the output. A negative duration defines a range
+                reaching back to the past.
+                The inserted string can be either in
+                <br />
+                <b>1.</b>
+                the ISO-8601 representation (see
+                <a
+                    href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">date-based duration format</a>
+                or
+                <a
+                    href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">time-based duration format</a>
+                for details), examples below,
+                <br />
+                <b>2.</b>
+                the short letter representation (e.g. '2y 3M 1d')
+                <br />
+                <u>Date-based duration:</u>
+                y: years, M: months, d: days
+                <br />
+                <u>Time-based duration:</u>
+                H: hours, m: minutes, s: seconds
+                <br />
+                or
+                <br />
+                <b>3.</b>
+                the long word representation (e.g. '2 years 3 months 1 day').
+                <br />
+                <br />
+				<b>Examples for ISO-8601 (date-based duration):</b>
 				<ul>
 					<li>"P2Y" parses as "+2 years"
 					</li>
@@ -82,7 +95,7 @@
 					<li>"P1Y2M3W4D" parses as "1 year, 2 months, 3 weeks and 4 days"
 					</li>
 				</ul>
-				<b>Examples for ISO-8601 (Duration)::</b>
+				<b>Examples for ISO-8601 (time-based duration)::</b>
 				<ul>
 					<li>"PT15M" parses as "+15 minutes"
 					</li>

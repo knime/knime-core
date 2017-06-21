@@ -166,7 +166,7 @@ public final class DurationPeriodFormatUtils {
         String s = text;
         // check for correct ISO usage
         if (s.startsWith("P") && !s.startsWith("PT")) {
-            throw new DateTimeParseException("A leading 'P' indicates a period, not a duration.", s, 0);
+            throw new DateTimeParseException("A leading 'P' indicates a date-based duration, not a time-based duration.", s, 0);
         }
 
         // replace words with ISO letters
@@ -183,7 +183,7 @@ public final class DurationPeriodFormatUtils {
             final int idx = StringUtils.indexOf(s, "M");
             if (idx >= 0) {
                 throw new DateTimeParseException(
-                    "'M' stands for months and cannot be parsed as part of a duration. Use 'm' for minutes instead.", s,
+                    "'M' stands for months and cannot be parsed as part of a time-based duration. Use 'm' for minutes instead.", s,
                     idx);
             }
             s = "PT" + s;
@@ -207,7 +207,7 @@ public final class DurationPeriodFormatUtils {
         String s = text;
         // check for correct ISO usage
         if (s.startsWith("PT")) {
-            throw new DateTimeParseException("A leading 'PT' indicates a duration, not a period.", s, 0);
+            throw new DateTimeParseException("A leading 'PT' indicates a time-based duration, not a date-based duration.", s, 0);
         }
 
         // replace words with ISO letters
@@ -226,8 +226,8 @@ public final class DurationPeriodFormatUtils {
             final int idx = StringUtils.indexOf(s, "m");
             if (idx >= 0) {
                 throw new DateTimeParseException(
-                    "'m' stands for minutes and cannot be parsed as part of a period. Use 'M' for months instead.", s,
-                    idx);
+                    "'m' stands for minutes and cannot be parsed as part of a date-based duration. Use 'M' for months instead.",
+                    s, idx);
             }
             s = "P" + s;
         }

@@ -2,11 +2,11 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="durationtostring.png">
 	<name>Duration to String</name>
-	<shortDescription>Converts a duration or period to a string.</shortDescription>
+	<shortDescription>Converts a duration to a string.</shortDescription>
 	<fullDescription>
 		<intro>
-			Converts duration or period cells to string cells. The string
-			representation of these periods or durations can be either the
+			Converts duration cells to string cells. The string
+			representation of these durations can be either the
 			ISO-8601, a short (using letters), or a long (using words)
 			representation.
 		</intro>
@@ -27,14 +27,14 @@
 		</tab>
 		<tab name="Format Selection">
 			<option name="ISO-8601 representation">
-				The durations or periods will be formatted using the ISO-8601 representation, e.g. 'P2Y3M5D'.
+				The durations will be formatted using the ISO-8601 representation, e.g. 'P2Y3M5D'.
 			</option>
 			<option name="Long representation">
-				The durations or periods will be formatted using words to represent, e.g. '2 years 3 months 5 days'.
+				The durations will be formatted using words to represent, e.g. '2 years 3 months 5 days'.
 			</option>
 			<option name="Short representation">
-				The durations or periods will be formatted using letters to represent,
-				e.g. '2y 3M 5d' (<b>Period:</b> y: years, M: months, d: days; <b>Duration:</b> H: hours, m: minutes, s: seconds).
+				The durations will be formatted using letters to represent,
+				e.g. '2y 3M 5d' (<b>Date-based duration:</b> y: years, M: months, d: days; <b>Time-based duration:</b> H: hours, m: minutes, s: seconds).
 			</option>
 		</tab>
 	</fullDescription>

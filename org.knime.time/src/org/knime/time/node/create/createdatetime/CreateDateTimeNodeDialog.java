@@ -368,7 +368,7 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                 duration = DurationPeriodFormatUtils
                     .parseDuration(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
                 if (selectedItem.equals(DateTimeType.LOCAL_DATE)) {
-                    m_warningLabel.setText("A duration cannot be applied to a local date.");
+                    m_warningLabel.setText("A time-based duration cannot be applied to a local date.");
                     return;
                 }
             } catch (DateTimeParseException e1) {
@@ -376,11 +376,11 @@ final class CreateDateTimeNodeDialog extends NodeDialogPane {
                     period = DurationPeriodFormatUtils
                         .parsePeriod(((SettingsModelString)m_dialogCompDuration.getModel()).getStringValue());
                     if (selectedItem.equals(DateTimeType.LOCAL_TIME)) {
-                        m_warningLabel.setText("A period cannot be applied to a local time.");
+                        m_warningLabel.setText("A date-based duration cannot be applied to a local time.");
                         return;
                     }
                 } catch (DateTimeParseException e2) {
-                    m_warningLabel.setText("Value does not represent a period or duration.");
+                    m_warningLabel.setText("Value does not represent a duration.");
                     return;
                 }
             }

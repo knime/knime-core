@@ -9,9 +9,9 @@
 			date&amp;time. There are three creation modes: Either a number of rows, a starting point, and an
 			ending point is selected (the steps in between will be calculated),
 			<b>or</b> a number of rows, a starting
-			point and a duration is selected (the duration defines the steps between each row),
-			<b>or</b> a starting point, an ending point and a duration is selected (the number of rows corresponds to
-			how often the duration fits between start and end).
+			point and an interval is selected (the interval defines the steps between each row),
+			<b>or</b> a starting point, an ending point and an interval is selected (the number of rows corresponds to
+			how often the interval fits between start and end).
 		</intro>
 		<tab name="Output Settings">
 			<option name="Output type">
@@ -28,15 +28,15 @@
 				<ul>
 					<li>selecting a start and end date&amp;time with equal steps between each row
 					</li>
-					<li>or selecting a start date&amp;time and a duration (i.e. size of steps between each row). The
+					<li>or selecting a start date&amp;time and an interval (i.e. size of steps between each row). The
 					    ending point depends on the selected number of rows.
 					</li>
 				</ul>
 			</option>
 			<option name="Number of rows: Variable">
-				A variable number of rows will be created. A start and end date&amp;time and a duration (i.e. size of
+				A variable number of rows will be created. A start and end date&amp;time and an interval (i.e. size of
 				steps between each row) must be selected. As many rows as possible will be created. The last created
-				row will contain a date&amp;time value which is before/equal the selected end (if the duration is
+				row will contain a date&amp;time value which is before/equal the selected end (if the interval is
 				positive, otherwise after/equal).
 			</option>
 		</tab>
@@ -49,25 +49,25 @@
 	     </tab>
 		 <tab name="Ending Point">
 			<option name="Interval">
-				Either a duration (time based) or period (date based) can be chosen. It describes the size of the steps
+				Either a time-based or a date-based duration can be chosen. It describes the size of the steps
 				between each created row. The inserted string can be either in
 				<br />
 				<b>1.</b>
 				the ISO-8601 representation (see
 				<a
-					href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">period format</a>
+					href="http://docs.oracle.com/javase/8/docs/api/java/time/Period.html#parse-java.lang.CharSequence-">date-based duration format</a>
 				or
 				<a
-					href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">duration format</a>
+					href="https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-">time-based duration format</a>
 				for details), examples below,
 				<br />
 				<b>2.</b>
 				the short letter representation (e.g. '2y 3M 1d')
 				<br />
-				<u>Period:</u>
+				<u>Date-based duration:</u>
 				y: years, M: months, d: days
 				<br />
-				<u>Duration:</u>
+				<u>Time-based duration:</u>
 				H: hours, m: minutes, s: seconds
 				<br />
 				or
@@ -76,7 +76,7 @@
 				the long word representation (e.g. '2 years 3 months 1 day').
 				<br />
 				<br />
-				<b>Examples for ISO-8601 (Period):</b>
+				<b>Examples for ISO-8601 (date-based duration):</b>
 				<ul>
 					<li>"P2Y" parses as "+2 years"
 					</li>
@@ -85,7 +85,7 @@
 					<li>"P1Y2M3W4D" parses as "1 year, 2 months, 3 weeks and 4 days"
 					</li>
 				</ul>
-				<b>Examples for ISO-8601 (Duration):</b>
+				<b>Examples for ISO-8601 (time-based duration):</b>
 				<ul>
 					<li>"PT15M" parses as "+15 minutes"
 					</li>

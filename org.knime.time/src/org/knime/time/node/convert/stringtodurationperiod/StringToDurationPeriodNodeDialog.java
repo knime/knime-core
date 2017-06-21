@@ -99,10 +99,8 @@ final class StringToDurationPeriodNodeDialog extends NodeDialogPane {
         final SettingsModelString suffixModel = StringToDurationPeriodNodeModel.createSuffixModel(replaceOrAppendModel);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        m_dialogCompDurationOrPeriod =
-            new DialogComponentButtonGroup(StringToDurationPeriodNodeModel.createTypeSelection(), true,
-                null, StringToDurationPeriodNodeModel.OPTION_AUTOMATIC, StringToDurationPeriodNodeModel.OPTION_DURATION,
-                StringToDurationPeriodNodeModel.OPTION_PERIOD);
+        m_dialogCompDurationOrPeriod = new DialogComponentButtonGroup(
+            StringToDurationPeriodNodeModel.createTypeSelection(), null, true, OutputType.values());
 
         final SettingsModelBoolean cancelOnFailModel = StringToDurationPeriodNodeModel.createCancelOnFailModel();
         m_dialogCompCancelOnFail = new DialogComponentBoolean(cancelOnFailModel, "Fail on error");

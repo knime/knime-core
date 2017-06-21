@@ -112,12 +112,6 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    static final String OPTION_AUTOMATIC = "Automatically detect type";
-
-    static final String OPTION_DURATION = "Create Duration";
-
-    static final String OPTION_PERIOD = "Create Period";
-
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
@@ -159,7 +153,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
 
     /** @return the string model, used in both dialog and model. */
     public static SettingsModelString createTypeSelection() {
-        return new SettingsModelString("duration_or_period", OPTION_AUTOMATIC);
+        return new SettingsModelString("duration_or_period", OutputType.Automatic.name());
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -192,15 +186,15 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         }
         final List<String> includeList =
             new LinkedList<String>(Arrays.asList(m_colSelect.applyTo(inSpecs[0]).getIncludes()));
-        if (m_type.getStringValue().equals(OPTION_DURATION)) {
+        if (m_type.getStringValue().equals(OutputType.Duration.name())) {
             m_detectedTypes = new DataType[includeList.size()];
             Arrays.fill(m_detectedTypes, DurationCellFactory.TYPE);
         }
-        if (m_type.getStringValue().equals(OPTION_PERIOD)) {
+        if (m_type.getStringValue().equals(OutputType.Period.name())) {
             m_detectedTypes = new DataType[includeList.size()];
             Arrays.fill(m_detectedTypes, PeriodCellFactory.TYPE);
         }
-        if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
+        if (m_type.getStringValue().equals(OutputType.Automatic.name())) {
             return new DataTableSpec[]{null};
         }
         final DataTableSpec in = inSpecs[0];
@@ -214,7 +208,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
         final BufferedDataTable in = inData[0];
-        if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
+        if (m_type.getStringValue().equals(OutputType.Automatic.name())) {
             DataTableRowInput rowInput = new DataTableRowInput(in);
             try {
                 detectTypes(rowInput);
@@ -243,14 +237,14 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
         if (m_detectedTypes == null) {
             m_detectedTypes = new DataType[includes.length];
         }
-        if (m_type.getStringValue().equals(OPTION_DURATION)) {
+        if (m_type.getStringValue().equals(OutputType.Duration.name())) {
             Arrays.fill(m_detectedTypes, DurationCellFactory.TYPE);
         }
-        if (m_type.getStringValue().equals(OPTION_PERIOD)) {
+        if (m_type.getStringValue().equals(OutputType.Period.name())) {
             Arrays.fill(m_detectedTypes, PeriodCellFactory.TYPE);
         }
 
-        if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
+        if (m_type.getStringValue().equals(OutputType.Automatic.name())) {
             DataRow row;
             while ((row = rowInput.poll()) != null) {
                 boolean isCellMissing = false;
@@ -384,7 +378,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
                 } catch (DateTimeParseException e) {
                     if (m_cancelOnFail.getBooleanValue()) {
                         throw new IllegalArgumentException(
-                            "Failed to parse duration in row '" + row.getKey() + "': " + e.getMessage());
+                            "Failed to parse time-based duration in row '" + row.getKey() + "': " + e.getMessage());
                     }
                     m_failCounter++;
                     return new MissingCell(e.getMessage());
@@ -396,7 +390,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
                 } catch (DateTimeParseException e) {
                     if (m_cancelOnFail.getBooleanValue()) {
                         throw new IllegalArgumentException(
-                            "Failed to parse period in row '" + row.getKey() + "': " + e.getMessage());
+                            "Failed to parse date-based duration in row '" + row.getKey() + "': " + e.getMessage());
                     }
                     m_failCounter++;
                     return new MissingCell(e.getMessage());
@@ -475,7 +469,7 @@ final class StringToDurationPeriodNodeModel extends NodeModel {
     @Override
     public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_type.getStringValue().equals(OPTION_AUTOMATIC)) {
+        if (m_type.getStringValue().equals(OutputType.Automatic.name())) {
             final SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)internals;
             final Config config = simpleInternals.getConfig();
             final DataColumnSpec[] colSpecs = new DataColumnSpec[config.getInt("sizeRow")];

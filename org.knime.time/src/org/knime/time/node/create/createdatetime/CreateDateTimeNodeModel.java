@@ -250,7 +250,7 @@ final class CreateDateTimeNodeModel extends NodeModel {
                     durationOrPeriod = DurationPeriodFormatUtils.parsePeriod(m_duration.getStringValue());
                 } catch (DateTimeParseException ex2) {
                     throw new InvalidSettingsException(
-                        "'" + m_duration.getStringValue() + "' could not be parsed as duration or period!");
+                        "'" + m_duration.getStringValue() + "' could not be parsed as duration!");
                 }
             }
         }

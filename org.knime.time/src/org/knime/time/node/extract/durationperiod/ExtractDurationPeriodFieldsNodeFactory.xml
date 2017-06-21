@@ -2,12 +2,12 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="extractduration.png">
 	<name>Extract Duration Fields</name>
-	<shortDescription>Extracts duration or period fields from duration or period cells.</shortDescription>
+	<shortDescription>Extracts duration fields from duration cells.</shortDescription>
 	<fullDescription>
 		<intro>
-			Extracts the selected fields from a duration or period column and appends the values as integer or long
-			columns. Valid fields are hours, minutes, seconds, milli- micro- and nanoseconds for a duration
-			and years, months and days for a period.
+			Extracts the selected fields from a duration column and appends the values as integer or long
+			columns. Valid fields are hours, minutes, seconds, milli- micro- and nanoseconds for a time-based duration
+			and years, months and days for a date-based duration.
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
@@ -16,7 +16,7 @@
 		</tab>
 		<tab name="Field Selection">
 			<option name="Select Fields">
-				Several fields can be selected to extract. The duration or period gets broken down in its individual
+				Several fields can be selected to extract. The duration gets broken down in its individual
 				parts, e.g. from a duration holding 2 hours, 30 minutes, and 15 seconds the node extracts (depending
 				on the selection) three new columns containing 2 hours, 30 minutes, and 15 seconds, respectively.
 			</option>
