@@ -59,6 +59,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.report.ReportingConstants;
 
 /**
  * Runnable that creates an autosave backup copy of the workflow. The workflow itself is not touched.
@@ -97,8 +98,8 @@ class AutosaveRunnable extends AbstractSaveRunnable {
         ReferencedFile oldWorkflowPathRef = wfm.getWorkingDir();
         File oldWorkflowPath = oldWorkflowPathRef == null ? null : oldWorkflowPathRef.getFile();
         if (oldWorkflowPath != null) {
-            File reportDesignFile = new File(oldWorkflowPath, "default_report.rptdesign");
-            File reportConfigFile = new File(oldWorkflowPath, "default_report.rptconfig");
+            File reportDesignFile = new File(oldWorkflowPath, ReportingConstants.KNIME_REPORT_FILE);
+            File reportConfigFile = new File(oldWorkflowPath, ReportingConstants.KNIME_REPORT_CONFIG_FILE);
             if (reportDesignFile.isFile()) {
                 FileUtil.copy(reportDesignFile, new File(m_autosaveDir, reportDesignFile.getName()));
             }
