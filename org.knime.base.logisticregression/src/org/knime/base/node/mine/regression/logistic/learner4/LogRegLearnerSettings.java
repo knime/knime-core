@@ -54,6 +54,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -364,6 +365,8 @@ public class LogRegLearnerSettings {
 
         m_calcCovMatrix = settings.getBoolean(CFG_CALC_COVMATRIX);
 
+        validate();
+
 
     }
 
@@ -441,6 +444,21 @@ public class LogRegLearnerSettings {
         settings.addInt(CFG_CHUNK_SIZE, m_chunkSize);
 
         settings.addBoolean(CFG_CALC_COVMATRIX, m_calcCovMatrix);
+    }
+
+    /**
+     * Checks if the provided settings make sense.
+     * E.g. that the maxEpochs or variance of the prior is larger than 0.
+     *
+     * @throws InvalidSettingsException if the settings are not valid
+     */
+    public void validate() throws InvalidSettingsException {
+        CheckUtils.checkSetting(m_maxEpoch > 0, "The number of epochs has to be larger than 0 but was %d.", m_maxEpoch);
+        CheckUtils.checkSetting(m_priorVariance > 0, "The variance for the prior must be larger than 0 but was %g.", m_priorVariance);
+        CheckUtils.checkSetting(m_epsilon >= 0, "Epsilon must be positive but was %g.", m_epsilon);
+        CheckUtils.checkSetting(m_initialLearningRate > 0, "The initial learning rate must be larger than 0 but was %g.", m_initialLearningRate);
+        CheckUtils.checkSetting(m_chunkSize > 0, "The chunk size must be larger than 0 but was %d", m_chunkSize);
+
     }
 
 

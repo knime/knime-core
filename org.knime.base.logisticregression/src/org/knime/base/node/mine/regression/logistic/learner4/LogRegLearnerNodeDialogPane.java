@@ -678,6 +678,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         settings.setChunkSize((int)m_chunkSizeSpinner.getValue());
 
+        settings.validate();
+
         settings.saveSettings(s);
     }
 }

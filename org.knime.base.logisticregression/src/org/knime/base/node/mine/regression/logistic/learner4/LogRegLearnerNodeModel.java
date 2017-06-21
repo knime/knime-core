@@ -117,7 +117,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-//        LogRegLearner.validateSettings(settings);
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -147,7 +147,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         PMMLGeneralRegressionTranslator trans =
             new PMMLGeneralRegressionTranslator(m_content.createGeneralRegressionContent());
         outPMMLPort.addModelTranslater(trans);
-        return new PortObject[]{outPMMLPort, m_content.createTablePortObject(exec)};
+        return new PortObject[]{outPMMLPort, m_content.createCoeffStatisticsTablePortObject(exec)};
     }
 
     /** {@inheritDoc} */
