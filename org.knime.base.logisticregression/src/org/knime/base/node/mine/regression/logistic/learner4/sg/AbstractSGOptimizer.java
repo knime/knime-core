@@ -131,7 +131,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
         }
         StringBuilder warnBuilder = new StringBuilder();
-        if (epoch == maxEpoch) {
+        if (epoch >= maxEpoch) {
             warnBuilder.append("The algorithm did not reach convergence. "
                 + "Setting the epoch limit higher might result in a better model.");
         }
@@ -150,6 +150,8 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
                 covMat = null;
             }
         }
+
+        m_warning = warnBuilder.toString();
 
         // -lossSum because we minimize the negative loglikelihood but one is usually more interested in the likelihood
         // in a maximum likelihood sense
