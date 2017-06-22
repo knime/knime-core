@@ -306,8 +306,15 @@ final class IrlsLearner implements LogRegLearner {
     }
 
     private static void fillXFromRow(final RealMatrix x, final ClassificationTrainingRow row) {
-        for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
-            x.setEntry(0, iter.getFeatureIndex(), iter.getFeatureValue());
+        FeatureIterator iter = row.getFeatureIterator();
+        boolean hasNext = iter.next();
+        for (int i = 0; i < x.getColumnDimension(); i++) {
+            double val = 0.0;
+            if (hasNext && iter.getFeatureIndex() == i) {
+                val = iter.getFeatureValue();
+                hasNext = iter.next();
+            }
+            x.setEntry(0, i, val);
         }
     }
 
@@ -382,7 +389,7 @@ final class IrlsLearner implements LogRegLearner {
             while ((Double.isInfinite(loglike) || Double.isNaN(loglike)
                     || loglike < loglikeOld) && iter > 0) {
                 converged = true;
-                for (int k = 0; k < beta.getRowDimension(); k++) {
+                for (int k = 0; k < beta.getColumnDimension(); k++) {
                     if (abs(beta.getEntry(0, k) - betaOld.getEntry(0, k)) > m_eps
                             * abs(betaOld.getEntry(0, k))) {
                         converged = false;
