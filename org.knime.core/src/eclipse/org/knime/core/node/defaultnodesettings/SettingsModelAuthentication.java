@@ -53,6 +53,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
  * Model representing credentials, either username/password or a selected credentials variable.
@@ -369,10 +370,46 @@ public final class SettingsModelAuthentication extends SettingsModel {
     }
 
     /**
+     * Helper method that returns the user name from the {@link CredentialsProvider} if {@link #useCredential()}
+     * returns <code>true</code> otherwise it returns the value of the user name field.
+     * @param cp the {@link CredentialsProvider} to use
+     * @return the user name
+     * @since 3.4
+     */
+    public String getUserName(final CredentialsProvider cp) {
+        if (useCredential()) {
+            final String credential = getCredential();
+            if (StringUtils.isBlank(credential)) {
+                return null;
+            }
+            return cp.get(credential).getLogin();
+        }
+        return getUsername();
+    }
+
+    /**
      * @return password.
      */
     public String getPassword() {
         return m_password;
+    }
+
+    /**
+     * Helper method that returns the password from the {@link CredentialsProvider} if {@link #useCredential()}
+     * returns <code>true</code> otherwise it returns the value of the password field.
+     * @param cp the {@link CredentialsProvider} to use
+     * @return the password
+     * @since 3.4
+     */
+    public String getPassword(final CredentialsProvider cp) {
+        if (useCredential()) {
+            final String credential = getCredential();
+            if (StringUtils.isBlank(credential)) {
+                return null;
+            }
+            return cp.get(getCredential()).getPassword();
+        }
+        return getPassword();
     }
 
     /**
