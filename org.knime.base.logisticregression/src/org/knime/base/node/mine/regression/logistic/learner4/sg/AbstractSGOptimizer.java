@@ -132,7 +132,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         }
         StringBuilder warnBuilder = new StringBuilder();
         if (epoch >= maxEpoch) {
-            warnBuilder.append("The algorithm did not reach convergence. "
+            warnBuilder.append("The algorithm did not reach convergence after the specified number of epochs. "
                 + "Setting the epoch limit higher might result in a better model.");
         }
         double lossSum = totalLoss(beta);

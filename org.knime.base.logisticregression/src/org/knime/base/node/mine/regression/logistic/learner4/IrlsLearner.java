@@ -59,6 +59,7 @@ import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
@@ -95,6 +96,8 @@ final class IrlsLearner implements LogRegLearner {
     private RealMatrix b;
     private double m_penaltyTerm;
     private final boolean m_calcCovMatrix;
+
+    private String m_warning;
 
     private static final String FAILING_MSG = "The logistic regression model cannot be computed. "
             + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
@@ -339,7 +342,6 @@ final class IrlsLearner implements LogRegLearner {
         int iter = 0;
         boolean converged = false;
 
-        int targetIndex = m_tableSpec.findColumnIndex(m_outSpec.getTargetCols().get(0).getName());
         final int tcC = trainingData.getTargetDimension() + 1;
         final int rC = trainingData.getFeatureCount() - 1;
 
@@ -421,13 +423,13 @@ final class IrlsLearner implements LogRegLearner {
             LOGGER.debug("#Iterations: " + iter);
             LOGGER.debug("Log Likelihood: " + loglike);
             StringBuilder betaBuilder = new StringBuilder();
-            for (int i = 0; i < beta.getRowDimension() - 1; i++) {
-                betaBuilder.append(Double.toString(beta.getEntry(i, 0)));
+            for (int i = 0; i < beta.getColumnDimension() - 1; i++) {
+                betaBuilder.append(Double.toString(beta.getEntry(0, i)));
                 betaBuilder.append(", ");
             }
-            if (beta.getRowDimension() > 0) {
-              betaBuilder.append(Double.toString(beta.getEntry(
-                      beta.getRowDimension() - 1, 0)));
+            if (beta.getColumnDimension() > 0) {
+              betaBuilder.append(Double.toString(beta.getEntry(0,
+                      beta.getColumnDimension() - 1)));
             }
             LOGGER.debug("beta: " + betaBuilder.toString());
 
@@ -435,10 +437,23 @@ final class IrlsLearner implements LogRegLearner {
             exec.setMessage("Iterative optimization. #Iterations: " + iter + " | Log-likelihood: "
                     + DoubleFormat.formatDouble(loglike) + ". Processing iteration " +  (iter + 1) + ".");
         }
+        StringBuilder warnBuilder = new StringBuilder();
+        if (iter >= m_maxIter) {
+            warnBuilder.append("The algorithm did not reach convergence after the specified number of epochs. "
+                    + "Setting the epoch limit higher might result in a better model.");
+        }
         // The covariance matrix
         RealMatrix covMat = null;
         if (m_calcCovMatrix) {
-            covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
+            try {
+                covMat = new QRDecomposition(A).getSolver().getInverse().scalarMultiply(-1);
+            } catch (SingularMatrixException sme) {
+                if (warnBuilder.length() > 0) {
+                    warnBuilder.append("\n");
+                }
+                warnBuilder.append("The covariance matrix could not be calculated because the"
+                    + " observed fisher information matrix was singular.");
+            }
         }
         RealMatrix betaMat = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
         for (int i = 0; i < beta.getColumnDimension(); i++) {
@@ -446,6 +461,7 @@ final class IrlsLearner implements LogRegLearner {
             int c = i % (rC + 1);
             betaMat.setEntry(r, c, beta.getEntry(0, i));
         }
+        m_warning = warnBuilder.length() > 0 ? warnBuilder.toString() : null;
         return new LogRegLearnerResult(betaMat, covMat, iter, loglike);
     }
 }
