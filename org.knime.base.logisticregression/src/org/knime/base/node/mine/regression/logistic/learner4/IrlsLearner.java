@@ -151,76 +151,77 @@ final class IrlsLearner implements LogRegLearner {
         RealMatrix xTwx = MatrixUtils.createRealMatrix(dim, dim);
         RealMatrix xTyu = MatrixUtils.createRealMatrix(dim, 1);
 
-        RealMatrix x = MatrixUtils.createRealMatrix(1, rC + 1);
-        RealMatrix eBetaTx = MatrixUtils.createRealMatrix(1, tcC - 1);
-        RealMatrix pi = MatrixUtils.createRealMatrix(1, tcC - 1);
+        double[] eBetaTx = new double[tcC - 1];
+        double[] pi = new double[tcC - 1];
         final long totalRowCount = data.getRowCount();
         for(ClassificationTrainingRow row : data) {
             rowCount++;
             exec.checkCanceled();
             exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
-//            x.setEntry(0, 0, 1);
-//
-//            x.setSubMatrix(row.getParameter().getData(), 0, 1);
-            fillXFromRow(x, row);
 
             for (int k = 0; k < tcC - 1; k++) {
-                RealMatrix betaITx = x.multiply(beta.getSubMatrix(0, 0,
-                            k * (rC + 1), (k + 1) * (rC + 1) - 1).transpose());
-                eBetaTx.setEntry(0, k, Math.exp(betaITx.getEntry(0, 0)));
+                double z = 0.0;
+                for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                    double featureVal = iter.getFeatureValue();
+                    int featureIdx = iter.getFeatureIndex();
+                    z += featureVal * beta.getEntry(0, k * (rC + 1) + featureIdx);
+                }
+                eBetaTx[k] = Math.exp(z);
             }
 
             double sumEBetaTx = 0;
             for (int k = 0; k < tcC - 1; k++) {
-                sumEBetaTx += eBetaTx.getEntry(0, k);
+                sumEBetaTx += eBetaTx[k];
             }
 
             for (int k = 0; k < tcC - 1; k++) {
-                double pik = eBetaTx.getEntry(0, k) / (1 + sumEBetaTx);
-                pi.setEntry(0, k, pik);
+                double pik = eBetaTx[k] / (1 + sumEBetaTx);
+                pi[k] = pik;
             }
 
-            // fill the diagonal blocks of matrix xTwx (k = k')
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int i = 0; i < rC + 1; i++) {
-                    for (int ii = i; ii < rC + 1; ii++) {
-                        int o = k * (rC + 1);
-                        double v = xTwx.getEntry(o + i, o + ii);
-                        double w = pi.getEntry(0, k) * (1 - pi.getEntry(0, k));
-                        v += x.getEntry(0, i) * w * x.getEntry(0, ii);
-                        xTwx.setEntry(o + i, o + ii, v);
-                        xTwx.setEntry(o + ii, o + i, v);
-                    }
-                }
-            }
-            // fill the rest of xTwx (k != k')
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int kk = k + 1; kk < tcC - 1; kk++) {
-                    for (int i = 0; i < rC + 1; i++) {
-                        for (int ii = i; ii < rC + 1; ii++) {
+            // fill xTwx (aka the hessian of the loglikelihood)
+            for (FeatureIterator outer = row.getFeatureIterator(); outer.next();) {
+                int i = outer.getFeatureIndex();
+                double outerVal = outer.getFeatureValue();
+                for (FeatureIterator inner = outer.spawn(); inner.next();) {
+                    int ii = inner.getFeatureIndex();
+                    double innerVal = inner.getFeatureValue();
+                    for (int k = 0; k < tcC - 1; k++) {
+                        for (int kk = k; kk < tcC - 1; kk++) {
                             int o1 = k * (rC + 1);
                             int o2 = kk * (rC + 1);
                             double v = xTwx.getEntry(o1 + i, o2 + ii);
-                            double w = -pi.getEntry(0, k) * pi.getEntry(0, kk);
-                            v += x.getEntry(0, i) * w * x.getEntry(0, ii);
+                            if (k == kk) {
+                                double w = pi[k] * (1 - pi[k]);
+                                v += outerVal * w * innerVal;
+                                assert o1 == o2;
+                            } else {
+                                double w = -pi[k] * pi[kk];
+                                v += outerVal * w * innerVal;
+                            }
                             xTwx.setEntry(o1 + i, o2 + ii, v);
                             xTwx.setEntry(o1 + ii, o2 + i, v);
-                            xTwx.setEntry(o2 + ii, o1 + i, v);
-                            xTwx.setEntry(o2 + i, o1 + ii, v);
+                            if (k != kk) {
+                                xTwx.setEntry(o2 + ii, o1 + i, v);
+                                xTwx.setEntry(o2 + i, o1 + ii, v);
+                            }
                         }
                     }
                 }
             }
 
+
             int g = row.getCategory();
             // fill matrix xTyu
-            for (int k = 0; k < tcC - 1; k++) {
-                for (int i = 0; i < rC + 1; i++) {
+            for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+                int idx = iter.getFeatureIndex();
+                double val = iter.getFeatureValue();
+                for (int k = 0; k < tcC - 1; k++) {
                     int o = k * (rC + 1);
-                    double v = xTyu.getEntry(o + i, 0);
+                    double v = xTyu.getEntry(o + idx, 0);
                     double y = k == g ? 1 : 0;
-                    v += (y - pi.getEntry(0, k)) * x.getEntry(0, i);
-                    xTyu.setEntry(o + i, 0, v);
+                    v += (y - pi[k]) * val;
+                    xTyu.setEntry(o + idx, 0, v);
                 }
             }
 
