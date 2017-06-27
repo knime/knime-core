@@ -108,19 +108,26 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
             for (FeatureIterator outer = x.getFeatureIterator(); outer.next();) {
                 int outerIdx = outer.getFeatureIndex();
                 double outerVal = outer.getFeatureValue();
-                for (FeatureIterator inner = x.getFeatureIterator(); inner.next();) {
+                for (FeatureIterator inner = outer.spawn(); inner.next();) {
                     int innerIdx = inner.getFeatureIndex();
                     double innerVal = inner.getFeatureValue();
                     for (int outerCat = 0; outerCat < nBetaVecs; outerCat++) {
-                        for (int innerCat = 0; innerCat < nBetaVecs; innerCat++) {
+                        int oc = outerCat * nFets;
+                        for (int innerCat = outerCat; innerCat < nBetaVecs; innerCat++) {
+                            int ic = innerCat * nFets;
                             double classFactor;
                             if (outerCat == innerCat) {
                                 classFactor = prediction[outerCat] * (1 - prediction[outerCat]);
                             } else {
                                 classFactor = -prediction[outerCat] * prediction[innerCat];
                             }
-                            double h = outerVal * innerVal * classFactor;
-                            hessian[outerIdx + outerCat * nFets][innerIdx + innerCat * nFets] += h;
+                            double h = hessian[oc + outerIdx][ic + innerIdx] + outerVal * innerVal * classFactor;
+                            hessian[oc + outerIdx][ic + innerIdx] = h;
+                            hessian[oc + innerIdx][ic + outerIdx] = h;
+                            if (outerCat != innerCat) {
+                                hessian[ic + innerIdx][oc + outerIdx] = h;
+                                hessian[ic + outerIdx][oc + innerIdx] = h;
+                            }
                         }
                     }
                 }
