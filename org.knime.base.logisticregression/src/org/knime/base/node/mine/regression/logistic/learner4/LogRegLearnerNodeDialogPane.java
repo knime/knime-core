@@ -146,13 +146,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         final ColumnSelectionPanel columnSelectionPanel =
             new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0), NominalValue.class);
         m_selectionPanel = columnSelectionPanel;
-        m_selectionPanel.addActionListener(new ActionListener() {
 
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                updateTargetCategories((DataCell)m_targetReferenceCategory.getSelectedItem());
-            }
-        });
         m_warningPanel = new JLabel();
         m_targetReferenceCategory = new JComboBox<>();
         m_filterPanel = new DataColumnSpecFilterPanel(false);
@@ -183,6 +177,14 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_chunkSizeSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_CHUNK_SIZE, 1, Integer.MAX_VALUE, 1000));
 
         // register listeners
+        m_selectionPanel.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                updateTargetCategories((DataCell)m_targetReferenceCategory.getSelectedItem());
+                updateFilterPanel();
+            }
+        });
         m_newSeedButton.addActionListener(new ActionListener() {
 
             @Override
@@ -241,6 +243,12 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         addTab("Settings", settingsPanel);
         JPanel advancedSettingsPanel = createAdvancedSettingsPanel();
         addTab("Advanced", advancedSettingsPanel);
+    }
+
+    private void updateFilterPanel() {
+        DataColumnSpec targetSpec = m_selectionPanel.getSelectedColumnAsSpec();
+        m_filterPanel.resetHiding();
+        m_filterPanel.hideNames(targetSpec);
     }
 
     private void enforcePriorCompatibilities(final Prior prior) {
