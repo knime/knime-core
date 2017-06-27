@@ -95,6 +95,13 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
     private class SparseFeatureIterator implements FeatureIterator {
 
         private int m_idx = -1;
+
+        public SparseFeatureIterator() { }
+
+        private SparseFeatureIterator(final int startIdx) {
+            m_idx = startIdx;
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -125,6 +132,14 @@ abstract class AbstractSparseTrainingRow implements TrainingRow {
         @Override
         public double getFeatureValue() {
             return m_values[m_idx];
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public FeatureIterator spawn() {
+            return new SparseFeatureIterator(m_idx - 1);
         }
 
     }

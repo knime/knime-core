@@ -98,6 +98,14 @@ public interface TrainingRow {
          */
         public double getFeatureValue();
 
+        /**
+         * Creates another FeatureIterator for the same row that starts such that its first returned feature is
+         * the one which the creating instance was pointing to at the point of creation of the spawn.
+         *
+         * @return a copy of this FeatureIterator
+         */
+        public FeatureIterator spawn();
+
     }
 
 }

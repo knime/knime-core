@@ -122,6 +122,12 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
 
         private int idx = -1;
 
+        private FeatureIter() { }
+
+        private FeatureIter(final int startIdx) {
+            idx = startIdx;
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -152,6 +158,14 @@ class MockClassificationTrainingRow implements ClassificationTrainingRow {
         @Override
         public double getFeatureValue() {
             return m_data[idx];
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public FeatureIterator spawn() {
+            return new FeatureIter(idx - 1);
         }
 
     }
