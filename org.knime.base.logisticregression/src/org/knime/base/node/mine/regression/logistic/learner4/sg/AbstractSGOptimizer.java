@@ -151,7 +151,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
         }
 
-        m_warning = warnBuilder.toString();
+        m_warning = warnBuilder.length() > 0 ? warnBuilder.toString() : null;
 
         // -lossSum because we minimize the negative loglikelihood but one is usually more interested in the likelihood
         // in a maximum likelihood sense
