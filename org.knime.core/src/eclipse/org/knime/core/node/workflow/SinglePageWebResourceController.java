@@ -49,8 +49,8 @@
 package org.knime.core.node.workflow;
 
 import java.util.Map;
-import java.util.function.BiConsumer;
 
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -136,10 +136,22 @@ public class SinglePageWebResourceController extends WebResourceController {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
-    BiConsumer<SubNodeContainer, NodeContainer> createStateChecker() {
-        return (snc, nc) -> {/* no checks done here */};
+    boolean isResetDownstreamNodesWhenApplyingViewValue() {
+        return true;
+    }
+
+    @Override
+    void stateCheckDownstreamNodesWhenApplyingViewValues(final SubNodeContainer snc, final NodeContainer downstreamNC) {
+        // no check needed, done in #stateCheckWhenApplyingViewValues
+    }
+
+    @Override
+    void stateCheckWhenApplyingViewValues(final SubNodeContainer snc) {
+        NodeID id = snc.getID();
+        WorkflowManager parent = snc.getParent();
+        CheckUtils.checkState(parent.canResetNode(id), "Can't reset wrapped metanode%s",
+            parent.hasSuccessorInProgress(id) ? " - some downstream nodes are still executing" : "");
     }
 
     /**

@@ -97,7 +97,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -4551,7 +4550,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID id of node
      * @return true if at least one successors is currently in progress.
      */
-    private boolean hasSuccessorInProgress(final NodeID nodeID) {
+    boolean hasSuccessorInProgress(final NodeID nodeID) {
         assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasSuccessorInProgress(nodeID);
@@ -4749,21 +4748,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * reset the node but not propagate any new configuration. Usually the workflow (metanode) will be
      * fully executed when this method is called but it's not asserted (see also SRV-745).
      * @param id The subnode id
-     * @param stateCheck A callback that allows individual implementations to check states of downstream nodes
+     * @param controller TODO
      * @throws IllegalArgumentException If subnode does not exist
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
-    void resetSubnodeForViewUpdate(final NodeID id, final BiConsumer<SubNodeContainer, NodeContainer> stateCheck) {
+    void resetSubnodeForViewUpdate(final NodeID id, final WebResourceController controller) {
         assert isLockedByCurrentThread();
         SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-        CheckUtils.checkState(canResetNode(id), "Can't reset wrapped metanode%s",
-            hasSuccessorInProgress(id) ? " - some downstream nodes are still executing" : "");
+        controller.stateCheckWhenApplyingViewValues(snc);
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             NodeID dest = cc.getDest();
             NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
-            stateCheck.accept(snc, destNC); // for wizard execution: downstream nodes must not be executed
+
+            // for wizard execution: downstream nodes must not be executed
+            controller.stateCheckDownstreamNodesWhenApplyingViewValues(snc, destNC);
         }
-        resetSuccessors(id);
+        if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
+            resetSuccessors(id);
+        }
         invokeResetOnSingleNodeContainer(snc);
     }
 

@@ -51,7 +51,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -331,16 +330,21 @@ public final class WizardExecutionController extends WebResourceController imple
         settings.addIntArray("promptedSubnodeIDs", promptedSubnodeIDs);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    BiConsumer<SubNodeContainer, NodeContainer> createStateChecker() {
-        return (snc, nc) -> {
-            final InternalNodeContainerState destNCState = nc.getInternalState();
-            CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
-                + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), nc);
-        };
+    boolean isResetDownstreamNodesWhenApplyingViewValue() {
+        return false;
+    }
+
+    @Override
+    void stateCheckWhenApplyingViewValues(final SubNodeContainer snc) {
+        // the node should be executed but possibly one of the view nodes fails so it's not. We accept any.
+    }
+
+    @Override
+    void stateCheckDownstreamNodesWhenApplyingViewValues(final SubNodeContainer snc, final NodeContainer downstreamNC) {
+        final InternalNodeContainerState destNCState = downstreamNC.getInternalState();
+        CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
+                + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), downstreamNC);
     }
 
 }

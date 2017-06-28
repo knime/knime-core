@@ -59,7 +59,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -536,7 +535,7 @@ public abstract class WebResourceController {
                     + "consider to change wrapped metanode layout to have self-contained executable units",
                 subNodeNC.getNameWithID());
         }
-        manager.resetSubnodeForViewUpdate(subnodeID, createStateChecker());
+        manager.resetSubnodeForViewUpdate(subnodeID, this);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
@@ -561,7 +560,23 @@ public abstract class WebResourceController {
         return Collections.emptyMap();
     }
 
-    abstract BiConsumer<SubNodeContainer, NodeContainer> createStateChecker();
+    /** Before applying view values the subnode needs to possibly reset downstream nodes. For the wizard execution
+     * downstream nodes should be executing (state = executing), whereas for single page mode/wrapped metanode view
+     * none of the downstream nodes should be executing.
+     * @param subNCId The id of the subnode container.
+     * @throws IllegalStateException If state isn't correct.
+     */
+    abstract void stateCheckWhenApplyingViewValues(final SubNodeContainer snc);
+
+    /** Similiar to {@link #stateCheckWhenApplyingViewValues(SubNodeContainer)} this will test the state of the
+     * downstream nodes when applying new view values. For wizard execution downstream nodes must be in the
+     * {@link NodeContainerState#isHalted() halted} state.
+     * @throws IllegalStateException If state isn't correct.
+     */
+    abstract void stateCheckDownstreamNodesWhenApplyingViewValues(SubNodeContainer snc, NodeContainer downstreamNC);
+
+    /** @return for wizard execution the downstream nodes are not reset when applying the view value on a subnode. */
+    abstract boolean isResetDownstreamNodesWhenApplyingViewValue();
 
     /**
      * Validates a given set of serialized view values for a given subnode.
