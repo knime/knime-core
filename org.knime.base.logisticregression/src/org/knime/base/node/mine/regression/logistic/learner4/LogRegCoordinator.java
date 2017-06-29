@@ -62,6 +62,7 @@ import java.util.Set;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Prior;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.DataTableTrainingData;
@@ -164,11 +165,10 @@ class LogRegCoordinator {
      * @throws CanceledExecutionException if the training is canceled
      */
     LogisticRegressionContent learn(final BufferedDataTable trainingData, final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
-
-//        LogRegLearner learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
-//        Collections.emptyList(), m_settings.getTargetReferenceCategory(),
-//            m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
-//        LogRegLearner learner = new GlmNetLogRegLearner();
+        CheckUtils.checkArgument(trainingData.size() > 0,
+                "The input table is empty. Please provide data to learn on.");
+        CheckUtils.checkArgument(trainingData.size() <= Integer.MAX_VALUE,
+                "The input table contains too many rows.");
         LogRegLearner learner;
         if (m_settings.getSolver() == Solver.IRLS) {
             learner = new IrlsLearner(m_pmmlOutSpec, trainingData.getDataTableSpec(),
@@ -194,21 +194,49 @@ class LogRegCoordinator {
             data = new DataTableTrainingData<ClassificationTrainingRow>(trainingData, seed,
                     rowBuilder, m_settings.getChunkSize(), exec.createSilentSubExecutionContext(0.0));
         }
+        checkShapeCompatibility(data);
         result = learner.learn(data, trainExec);
 
         LogisticRegressionContent content = createContentFromLearnerResult(result, rowBuilder, trainingData.getDataTableSpec());
 
-        if (learner.getWarningMessage() != null) {
-            StringBuilder sb;
-            if (m_warning == null) {
-                sb = new StringBuilder();
-            } else {
-                sb = new StringBuilder(m_warning).append("\n");
-            }
-            sb.append(learner.getWarningMessage());
-            m_warning = sb.toString();
-        }
+        addToWarning(learner.getWarningMessage());
         return content;
+    }
+
+    private void addToWarning(final String warningMsg) {
+        if (warningMsg == null) {
+            return;
+        }
+        StringBuilder sb;
+        if (m_warning == null) {
+            sb = new StringBuilder();
+        } else {
+            sb = new StringBuilder(m_warning).append("\n");
+        }
+        sb.append(warningMsg);
+        m_warning = sb.toString();
+    }
+
+    private void checkShapeCompatibility(final TrainingData data) throws InvalidSettingsException {
+        boolean moreFeaturesThanRows = data.getFeatureCount() > data.getRowCount();
+        if (moreFeaturesThanRows) {
+            switch (m_settings.getSolver()) {
+                case IRLS:
+                    throw new IllegalArgumentException("The data contains more features than rows."
+                        + " The IRLS solver can't deal with this shape, please use the SAG solver with"
+                        + " regularization instead.");
+                case SAG:
+                    // the missing break is on purpose because it affects both solvers
+                case SGD:
+                    if (m_settings.getPrior() == Prior.Uniform) {
+                        addToWarning("The data contains more features than rows. In this case it is recommended to"
+                            + " use an informative prior (other than Uniform).");
+                    }
+                    break;
+                default:
+                    throw new InvalidSettingsException("The provided solver is unknown.");
+            }
+        }
     }
 
     /** Initialize instance and check if settings are consistent. */
