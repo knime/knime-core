@@ -226,8 +226,6 @@ class LogRegCoordinator {
                         + " The IRLS solver can't deal with this shape, please use the SAG solver with"
                         + " regularization instead.");
                 case SAG:
-                    // the missing break is on purpose because it affects both solvers
-                case SGD:
                     if (m_settings.getPrior() == Prior.Uniform) {
                         addToWarning("The data contains more features than rows. In this case it is recommended to"
                             + " use an informative prior (other than Uniform).");

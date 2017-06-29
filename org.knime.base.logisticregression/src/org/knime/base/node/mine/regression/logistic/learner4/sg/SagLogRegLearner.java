@@ -83,13 +83,6 @@ public class SagLogRegLearner implements LogRegLearner {
         final LogRegLearnerSettings settings, final boolean isSag,
         final TrainingData<ClassificationTrainingRow> data, final Loss<ClassificationTrainingRow> loss) throws InvalidSettingsException {
         switch (settings.getLearningRateStrategy()) {
-            case Annealing:
-                if (isSag) {
-                    throw new InvalidSettingsException("Stochastic average gradient does not support the annealing"
-                        + " learning rate strategy.");
-                }
-                return new AnnealingLearningRateStrategy<>(
-                        settings.getLearningRateDecay(), settings.getInitialLearningRate());
             case Fixed:
                 return new FixedLearningRateStrategy<>(settings.getInitialLearningRate());
             case LineSearch:
@@ -137,8 +130,6 @@ public class SagLogRegLearner implements LogRegLearner {
                 throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
             case SAG:
                     return new LazySagUpdater.LazySagUpdaterFactory<ClassificationTrainingRow>(nRows, nFets, betaDim);
-            case SGD:
-                    throw new IllegalStateException("Currently is no lazy implementation for stochastic gradient descent available.");
             default:
                 throw new IllegalArgumentException("The solver \"" + settings.getSolver() + "\" is unknown.");
         }
@@ -155,8 +146,6 @@ public class SagLogRegLearner implements LogRegLearner {
                 throw new IllegalStateException("IRLS as solver in SG Framework detected. This indicates a coding error in the settings propagation.");
             case SAG:
                 return new EagerSagUpdater.EagerSagUpdaterFactory<>(nRows, nFets, betaDim);
-            case SGD:
-                return new EagerSgdUpdater.EagerSgdUpdaterFactory<>();
             default:
                 throw new IllegalArgumentException("The solver \"" + settings.getSolver() + "\" is unknown.");
         }

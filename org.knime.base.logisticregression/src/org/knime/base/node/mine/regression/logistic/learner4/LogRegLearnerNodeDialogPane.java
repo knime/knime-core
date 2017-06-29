@@ -123,7 +123,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JComboBox<LearningRateStrategies> m_learningRateStrategyComboBox;
 //    private JSpinner m_initialLearningRateSpinner;
     private JTextField m_initialLearningRateField;
-    private JSpinner m_learningRateDecaySpinner;
 
     private JComboBox<Prior> m_priorComboBox;
     private JSpinner m_priorVarianceSpinner;
@@ -162,8 +161,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 //        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_INITIAL_LEARNING_RATE,
 //            Double.MIN_VALUE, 1e3, 1e-3));
         m_initialLearningRateField = new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
-        m_learningRateDecaySpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_LEARNING_RATE_DECAY,
-            Double.MIN_VALUE, 1e3, 1e-3));
         m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_PRIOR_VARIANCE,
             Double.MIN_VALUE, 1e3, 0.1));
         m_priorComboBox = new JComboBox<>(Prior.values());
@@ -256,7 +253,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     }
 
     private void enforceLRSCompatibilities(final LearningRateStrategies lrs) {
-        m_learningRateDecaySpinner.setEnabled(lrs.hasDecayRate());
 //        m_initialLearningRateSpinner.setEnabled(lrs.hasInitialValue());
         m_initialLearningRateField.setEnabled(lrs.hasInitialValue());
     }
@@ -303,7 +299,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private void setEnabledSGRelated(final boolean enable) {
         m_lazyCalculationCheckBox.setEnabled(enable);
         m_learningRateStrategyComboBox.setEnabled(enable);
-        m_learningRateDecaySpinner.setEnabled(enable);
 //        m_initialLearningRateSpinner.setEnabled(enable);
         m_initialLearningRateField.setEnabled(enable);
         m_priorComboBox.setEnabled(enable);
@@ -440,15 +435,10 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(m_learningRateStrategyComboBox, c);
         c.gridx = 0;
         c.gridy++;
-        panel.add(new JLabel("Initial learning rate:"), c);
+        panel.add(new JLabel("Step size:"), c);
         c.gridx++;
 //        panel.add(m_initialLearningRateSpinner, c);
         panel.add(m_initialLearningRateField, c);
-        c.gridx = 0;
-        c.gridy++;
-        panel.add(new JLabel("Decay rate:"), c);
-        c.gridx++;
-        panel.add(m_learningRateDecaySpinner, c);
 
         return panel;
     }
@@ -629,8 +619,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         double epsilon = settings.getEpsilon();
         m_epsilonField.setText(Double.toString(epsilon));
         m_learningRateStrategyComboBox.setSelectedItem(settings.getLearningRateStrategy());
-        m_learningRateDecaySpinner.setValue(settings.getLearningRateDecay());
-//        m_initialLearningRateSpinner.setValue(settings.getInitialLearningRate());
         m_initialLearningRateField.setText(Double.toString(settings.getInitialLearningRate()));
         m_priorComboBox.setSelectedItem(settings.getPrior());
         m_priorVarianceSpinner.setValue(settings.getPriorVariance());
@@ -671,8 +659,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             throw new InvalidSettingsException("Please provide a valid value for epsilon.");
         }
         settings.setLearningRateStrategy((LearningRateStrategies)m_learningRateStrategyComboBox.getSelectedItem());
-        settings.setLearningRateDecay((double)m_learningRateDecaySpinner.getValue());
-//        settings.setInitialLearningRate((double)m_initialLearningRateSpinner.getValue());
         try {
             String str = m_initialLearningRateField.getText();
             double lr = Double.valueOf(str);

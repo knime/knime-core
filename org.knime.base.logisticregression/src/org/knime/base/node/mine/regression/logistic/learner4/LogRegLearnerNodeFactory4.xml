@@ -21,7 +21,7 @@
             for an overview about the topic.
             
         <h4>Important Note on Normalization</h4>
-        The SAG and SGD solvers work best with z-score normalized data.
+        The SAG solver works best with z-score normalized data.
         That means that the columns are normalized to have zero mean and a standard deviation of one.
         This can be achieved by using a normalizer node before learning.
         If you have very sparse data (lots of zero values), this normalization will destroy the sparsity.
@@ -52,15 +52,10 @@
         	The default learning rate of 0.01 was selected because it often works well but ultimately the optimal learning rate always
         	depends on the data and should be treated as a hyperparameter.
         </li>
-        <li>
-        	<b>Stochastic gradient descent (SGD)</b> This solver implements vanilla stochastic gradient descent. Similar to the stochastic
-        	average gradient algorithm above, it can deal with large tables of varying shape but it tends to be much slower.
-        	It also allows to add regularization but usually requires a much smaller learning rate than the SAG algorithm to perform well.
-        </li>
         </ul>
 
         <h4>Learning Rate/Step Size Strategy</h4>
-        Only relevant for the SAG and SGD solvers.
+        Only relevant for the SAG solver.
         The learning rate strategy provides the learning rates for the gradient descent.
         When selecting a learning rate strategy and initial learning rate keep in mind that there is always a trade off
         between the size of the learning rate and the number of epochs that are required to converge to a solution.
@@ -68,22 +63,16 @@
         it might skip over the optimal solution and diverge in the worst case.
         <ul>
         <li>
-        	<b>Fixed</b> The initial learning rate is used for the complete training. Works well for the SAG solver but SGD is
-        	not guaranteed to converge with this strategy. Note that the SAG solver generally works well with bigger learning
-        	rates while the SGD solver requires small learning rates in order to perform well.
+        	<b>Fixed</b> The provided step size is used for the complete training. This strategy works well for the SAG solver,
+        	even if relatively large learning rates are used.
         </li>
-        <li>
-        	<b>Annealing</b> Reduces the learning rate after each epoch. The mathematical form is
-        	a = a_0 / (1 + k/t) where a_0 is the initial learning rate, k is the decay rate and t is the current epoch.
-        	This strategy is currently only supported by the SGD solver.
-		</li>        
 		<li>
 			<b>Line Search</b> Experimental learning rate strategy that tries to find the optimal learning rate for the SAG solver.
 		</li>
         </ul>
         
         <h4>Regularization</h4>
-        The SAG and SGD solvers optimize the problem using <a href="https://en.wikipedia.org/wiki/Maximum_a_posteriori_estimation">
+        The SAG solver optimizes the problem using <a href="https://en.wikipedia.org/wiki/Maximum_a_posteriori_estimation">
         maximum a posteriori estimation</a> which allows to specify a prior distribution for the coefficients of the resulting model.
         This form of regularization is the Bayesian version of other regularization approaches such as Ridge or LASSO.
         Currently the following priors are supported:
@@ -142,13 +131,16 @@
             The reference category is the category for which the probability is obtained as 1 minus the sum of all other probabilities.
             In a two class scenario this is usually the class for which you don't explicitly want to model the probability.
         </option>
-        <option name="User order from column domain">
+        <option name="User order from target column domain">
             By default the target domain values are sorted lexicographically in the output, but you can enforce the 
             order of the target column domain to be preserved by checking the box.
             <br />
             Note, if a target reference column is selected in the dropdown, the checkbox will have no influence on the
             coefficients of the model except that the output representation (e.g. order of rows in the coefficient table)
             may vary.
+        </option>
+        <option name="Solver">
+			Select the solver to use. Either <i>Iteratively reweighted least squares</i> or <i>Stochastic average gradient</i>.
         </option>
         <option name="Feature selection">
             Specify the independent columns that should be included in the regression model. 
@@ -185,16 +177,11 @@
         	the training is stopped.
         </option>
         <option name="Learning rate strategy">
-        	The strategy provides the learning rates for the optimization process. Only important for the SAG and SGD solvers. For more information
+        	The strategy provides the learning rates for the optimization process. Only important for the SAG solver. For more information
         	see the paragraph on learning rate strategies above.
         </option>
-        <option name="Initial learning rate">
-        	The learning rate to start with. Note that the default of 0.01 is selected to work well with the SAG solver.
-        	The SGD solver usually requires a learning rate that is an order of magnitude smaller (if you use a fixed learning
-        	rate strategy).
-        </option>
-        <option name="Decay rate">
-        	The decay rate used by the annealing learning rate strategy.
+        <option name="Step size">
+        	The step size (learning rate) to use in case of the <i>fixed</i> learning rate strategy.
         </option>
         <option name="Prior">
         	The prior distribution for the coefficients. See the paragraph on regularization above for more details.
@@ -204,17 +191,17 @@
         </option>
         <option name="Hold data in memory">
         	If selected, the data is read into an internal data structure which results into a tremendous speed up.
-        	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG or SGD solver
+        	It is highly recommended to use this option if you have enough main memory available especially if you use the SAG solver
         	as their convergence rate highly depends on random access to individual samples.
         </option>
         <option name="Chunk size">
-        	If the data is not held completely in memory, the node reads chunks of data into memory to emulate random access for the SAG and SGD solver.
-        	This parameter specifies how large those chunks should be. The chunk size directly affects the convergence rate of the SAG and SGD solver,
+        	If the data is not held completely in memory, the node reads chunks of data into memory to emulate random access for the SAG solver.
+        	This parameter specifies how large those chunks should be. The chunk size directly affects the convergence rate of the SAG solver,
         	as those work best with complete random access and a larger chunk size will better approximate that. This especially means that the solver
         	may need many epochs to converge if the chunk size is chosen too small.
         </option>
         <option name="Use seed">
-        	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG or SGD solver.
+        	Check if you want to use a static seed. Recommended for reproducible results if you use the SAG solver.
         </option>
         <option name="Seed">
         	The static seed to use. A click on the "New" button generates a new seed.

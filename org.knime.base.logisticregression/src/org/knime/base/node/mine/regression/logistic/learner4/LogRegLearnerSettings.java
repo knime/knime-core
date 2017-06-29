@@ -87,12 +87,6 @@ public class LogRegLearnerSettings {
          * corresponds to a single double/float for each row) and it requires real random drawing of samples.
          */
         SAG("Stochastic average gradient", true, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.LineSearch),
-            EnumSet.allOf(Prior.class)),
-        /**
-         * Vanilla stochastic gradient descent. Converges slower than SAG but doesn't require to store any data.
-         * Also supports regularization.
-         */
-        SGD("Stochastic gradient descent", false, EnumSet.of(LearningRateStrategies.Fixed, LearningRateStrategies.Annealing),
             EnumSet.allOf(Prior.class));
 
         private final boolean m_supportsLazy;
@@ -197,23 +191,17 @@ public class LogRegLearnerSettings {
         /**
          * Uses the initial learning rate for the whole training.
          */
-        Fixed(true, false),
-        /**
-         * Anneals the learning rate after each epoch.
-         */
-        Annealing(true, true),
+        Fixed(true),
         /**
          * Performs a line search for the Lipschitz constant and uses the estimate
          * to calculate the optimal learning rate. Can only be used with the SAG algorithm.
          */
-        LineSearch(false, false);
+        LineSearch(false);
 
         private final boolean m_hasInitialValue;
-        private final boolean m_hasDecayRate;
 
-        private LearningRateStrategies(final boolean hasInitialValue, final boolean hasDecayRate) {
+        private LearningRateStrategies(final boolean hasInitialValue) {
             m_hasInitialValue = hasInitialValue;
-            m_hasDecayRate = hasDecayRate;
         }
 
         /**
@@ -224,13 +212,6 @@ public class LogRegLearnerSettings {
             return m_hasInitialValue;
         }
 
-        /**
-         * Indicates whether the strategy requires a decay rate.
-         * @return true if the strategy requires a decay rate
-         */
-        public boolean hasDecayRate() {
-            return m_hasDecayRate;
-        }
     }
 
 
