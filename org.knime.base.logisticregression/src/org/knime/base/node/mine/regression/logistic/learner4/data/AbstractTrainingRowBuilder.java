@@ -52,8 +52,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.math3.util.MathUtils;
 import org.knime.core.data.DataCell;
@@ -105,13 +107,27 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         final List<DataColumnSpec> learningCols = new ArrayList<>(pmmlSpec.getLearningCols());
         m_featureCellIndices = new ArrayList<>(learningCols.size());
         m_nominalDomainValues = new HashMap<>();
-        m_vectorLengths = new HashMap<>();
         // the intercept is added as artificial feature
         int featureCount = 1;
         // for a one-hot encoded nominal feature only one value will effectively be non zero
         int effectiveFeatureCount = 1;
         int visited = 0;
         DataTableSpec tableSpec = data.getDataTableSpec();
+        List<Integer> learnIndices = new ArrayList<>(learningCols.size());
+        Set<Integer> vectorIndices = new HashSet<>();
+        for (DataColumnSpec colSpec : learningCols) {
+            Integer colIdx = tableSpec.findColumnIndex(colSpec.getName());
+            learnIndices.add(colIdx);
+            DataColumnSpec tableColSpec = tableSpec.getColumnSpec(colIdx);
+            DataType cellType = tableColSpec.getType();
+            // add vector columns
+            if (cellType.isCompatible(BitVectorValue.class) || cellType.isCompatible(ByteVectorValue.class)
+                    || cellType.isCompatible(DoubleVectorValue.class)
+                    || (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class))) {
+                vectorIndices.add(colIdx);
+            }
+        }
+        m_vectorLengths = analyze(data, learnIndices, vectorIndices);
         for (DataColumnSpec colSpec : learningCols) {
             int colIdx = tableSpec.findColumnIndex(colSpec.getName());
             DataColumnSpec tableColSpec = tableSpec.getColumnSpec(colIdx);
@@ -131,12 +147,8 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
                 m_nominalDomainValues.put(colIdx, valueList);
                 featureCount += Math.max(0, valueList.size() - 1);
                 effectiveFeatureCount++;
-            } else if (cellType.isCompatible(BitVectorValue.class) || cellType.isCompatible(ByteVectorValue.class)
-                    || cellType.isCompatible(DoubleVectorValue.class)
-                    || (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class))) {
-                    final int maxLength = getMaximalVectorLength(data, colIdx);
-                    CheckUtils.checkArgument(maxLength > 0 && maxLength <= Integer.MAX_VALUE, "For column " + colSpec + " the maximal length for the values is wrong: " + maxLength);
-                    m_vectorLengths.put(colIdx, maxLength);
+            } else if (vectorIndices.contains(colIdx)) {
+                    int maxLength = m_vectorLengths.get(colIdx);
                     CheckUtils.checkState(featureCount + maxLength <= Integer.MAX_VALUE, "Too many values in " + colSpec.getName());
                     featureCount += maxLength;
                     effectiveFeatureCount += maxLength;
@@ -149,6 +161,66 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         m_featureCount = featureCount;
         m_nonZeroIndices = new int[effectiveFeatureCount];
         m_nonZeroValues = new float[effectiveFeatureCount];
+    }
+
+    /**
+     * Checks if the data contains missing values and if all vectors of the same column have the
+     * same length (provided there are vector columns).
+     * @param data the table to learn from
+     * @param learnIndices the indices of the learn columns
+     * @param the indices of vector columns
+     * @throws IllegalStateException if the table contains missing values or vectors of the same column have
+     * differing lengths
+     */
+    private Map<Integer, Integer> analyze(final BufferedDataTable data, final List<Integer> learnIndices, final Set<Integer> vectorIndices) throws IllegalArgumentException {
+        DataTableSpec tableSpec = data.getDataTableSpec();
+        Map<Integer, Integer> maxVectorLengths = new HashMap<>();
+        for (Integer vecIdx : vectorIndices) {
+            maxVectorLengths.put(vecIdx, 0);
+        }
+        for (DataRow row : data) {
+            for (Integer idx : learnIndices) {
+                DataCell cell = row.getCell(idx);
+                // check for missing values
+                CheckUtils.checkArgument(!cell.isMissing(), "The column %s contains missing values.",
+                    tableSpec.getColumnSpec(idx).toString());
+                if (vectorIndices.contains(idx)) {
+                    // update vector lengths
+                    Integer oldLength = maxVectorLengths.get(idx);
+                    long newLength = getVectorLength(cell);
+                    if (oldLength < newLength) {
+                        CheckUtils.checkArgument(newLength <= Integer.MAX_VALUE,
+                                "The maximal vector length of column %s exceeds the maximal supported vector length.",
+                                tableSpec.getColumnSpec(idx));
+                        maxVectorLengths.put(idx, (int)newLength);
+                    }
+                }
+            }
+        }
+
+        return maxVectorLengths;
+    }
+
+    private static long getVectorLength(final DataCell vectorCell) {
+        DataType cellType = vectorCell.getType();
+        long vectorLength = 0;
+        if (cellType.isCompatible(BitVectorValue.class)) {
+            BitVectorValue bv = (BitVectorValue)vectorCell;
+            vectorLength = bv.length();
+        } else if (cellType.isCompatible(ByteVectorValue.class)) {
+            ByteVectorValue bv = (ByteVectorValue)vectorCell;
+            vectorLength = bv.length();
+        } else if (cellType.isCompatible(DoubleVectorValue.class)) {
+            DoubleVectorValue dv = (DoubleVectorValue)vectorCell;
+            vectorLength = dv.getLength();
+        } else if (vectorCell instanceof ListDataValue) {
+            ListDataValue ldv = (ListDataValue)vectorCell;
+            vectorLength = ldv.size();
+        } else {
+            throw new IllegalStateException("The provided cell is of unknown vector type \"" +
+                    vectorCell.getType() + "\".");
+        }
+        return vectorLength;
     }
 
     @Override
