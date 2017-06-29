@@ -253,7 +253,7 @@ public class LogRegLearnerSettings {
     private static final String CFG_CALC_COVMATRIX = "calcCovMatrix";
 
     static final Solver DEFAULT_SOLVER = Solver.SAG;
-    static final boolean DEFAULT_PERFORM_LAZY = false;
+    static final boolean DEFAULT_PERFORM_LAZY = true;
     static final int DEFAULT_MAX_EPOCH = 100;
     static final double DEFAULT_EPSILON = 1e-5;
     static final LearningRateStrategies DEFAULT_LEARNINGRATE_STRATEGY = LearningRateStrategies.Fixed;

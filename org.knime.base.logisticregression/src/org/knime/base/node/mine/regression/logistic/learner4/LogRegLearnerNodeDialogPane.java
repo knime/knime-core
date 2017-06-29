@@ -155,7 +155,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
                 + "First value is chosen as reference for dummy variables.");
 
-        m_lazyCalculationCheckBox = new JCheckBox("Perform calculations lazily");
+        m_lazyCalculationCheckBox = new JCheckBox("Perform calculations lazily (more memory expensive but often faster)");
         m_calcCovMatrixCheckBox = new JCheckBox("Calculate statistics for coefficients");
         m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_MAX_EPOCH, 1, Integer.MAX_VALUE, 1));
         m_epsilonField= new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
@@ -326,8 +326,15 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(solverOptionsPanel, c);
 
         c.gridy++;
+
+        JPanel terminationConditionsPanel = createTerminationConditionsPanel();
+        terminationConditionsPanel.setBorder(BorderFactory.createTitledBorder("Termination Conditions"));
+        panel.add(terminationConditionsPanel, c);
+
+        c.gridy++;
+
         JPanel learningRateStrategyPanel = createLearningRateStrategyPanel();
-        learningRateStrategyPanel.setBorder(BorderFactory.createTitledBorder("Learning rate strategy"));
+        learningRateStrategyPanel.setBorder(BorderFactory.createTitledBorder("Learning rate / step size"));
         panel.add(learningRateStrategyPanel, c);
 
         c.gridy++;
@@ -343,11 +350,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         return panel;
     }
 
-    private JPanel createSolverOptionsPanel() {
+    private JPanel createTerminationConditionsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = makeSettingsConstraints();
 
-        panel.add(new JLabel("Number of epochs:"), c);
+        panel.add(new JLabel("Maximal number of epochs:"), c);
         c.gridx++;
         panel.add(m_maxEpochSpinner, c);
         c.gridx = 0;
@@ -355,8 +362,14 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         panel.add(new JLabel("Epsilon:"), c);
         c.gridx++;
         panel.add(m_epsilonField, c);
-        c.gridx = 0;
-        c.gridy++;
+
+        return panel;
+    }
+
+    private JPanel createSolverOptionsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = makeSettingsConstraints();
+
         c.gridwidth = 2;
         panel.add(m_lazyCalculationCheckBox, c);
         c.gridy++;
@@ -465,7 +478,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.fill = GridBagConstraints.BOTH;
 
         JPanel southPanel = createIncludesPanel();
-        southPanel.setBorder(BorderFactory.createTitledBorder("Values"));
+        southPanel.setBorder(BorderFactory.createTitledBorder("Feature selection"));
 //        panel.add(southPanel, BorderLayout.SOUTH);
         panel.add(southPanel, c);
         return panel;
@@ -488,7 +501,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = makeSettingsConstraints();
 
-        p.add(new JLabel("Target Column:"), c);
+        p.add(new JLabel("Target column:"), c);
 
         c.gridx++;
 
@@ -496,7 +509,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy++;
-        p.add(new JLabel("Reference Category:"), c);
+        p.add(new JLabel("Reference category:"), c);
 
         c.gridx++;
         p.add(m_targetReferenceCategory, c);

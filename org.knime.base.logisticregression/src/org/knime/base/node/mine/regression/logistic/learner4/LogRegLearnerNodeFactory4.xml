@@ -132,14 +132,17 @@
         </ul>
 		</intro>
 		<tab name="Settings">
-        <option name="Target">
+        <option name="Target column">
             Select the target column. Only columns with nominal data are allowed. The reference category is empty
             if the domain of the target column is not available. In this case the node determines the domain values right 
             before computing the logistic regression model and chooses the last domain value as the targets reference 
-            category.<br />
+            category.
+		</option>
+		<option name="Reference category">
             The reference category is the category for which the probability is obtained as 1 minus the sum of all other probabilities.
             In a two class scenario this is usually the class for which you don't explicitly want to model the probability.
-            <br />
+        </option>
+        <option name="User order from column domain">
             By default the target domain values are sorted lexicographically in the output, but you can enforce the 
             order of the target column domain to be preserved by checking the box.
             <br />
@@ -147,9 +150,11 @@
             coefficients of the model except that the output representation (e.g. order of rows in the coefficient table)
             may vary.
         </option>
-        <option name="Values">
+        <option name="Feature selection">
             Specify the independent columns that should be included in the regression model. 
-            Numeric and nominal data can be included.<br />
+            Numeric and nominal data can be included.
+        </option>
+        <option name="Use order from column domain">
             By default the domain values (categories) of nominal valued columns are sorted lexicographically, 
             but you can check that the order from the column domain is used. Please note that the first
             category is used as a reference when creating the 
@@ -158,16 +163,6 @@
         </option>
         </tab>
         <tab name="Advanced">
-        <option name="Number of epochs">
-        	Here you can specify the number of learning epochs you want to perform. That is the number of times you want
-        	to iterate over the full table. This value determines to a large extend how long learning will take. A too small
-        	number can result into a bad model and the learning is stopped early if convergence is detected therefore it is recommended
-        	to use a relatively large value.
-        </option>
-        <option name="Epsilon">
-        	This value is used to determine whether the model converged. If the relative change of all coefficients is smaller than epsilon,
-        	the training is stopped.
-        </option>
         <option name="Perform calculations lazily">
         	If selected, the optimization is performed lazily i.e. the coefficients are only updated
         	if their corresponding feature is actually present in the current sample. Usually faster than the normal version especially for sparse
@@ -178,6 +173,16 @@
         	Note that those are affected by regularization in case of the Gauss prior.
         	Calculating those statistics is expensive if the model is learned on many features and can be responsible for a significant part of
         	the node runtime.
+        </option>
+        <option name="Maximal number of epochs">
+        	Here you can specify the maximal number of learning epochs you want to perform. That is the number of times you want
+        	to iterate over the full table. This value determines to a large extend how long learning will take.
+        	The solver will stop early if it reaches convergence therefore it is recommended to set a relatively high value for this parameter
+        	in order to give the solver enough time to find a good solution.
+        </option>
+        <option name="Epsilon">
+        	This value is used to determine whether the model converged. If the relative change of all coefficients is smaller than epsilon,
+        	the training is stopped.
         </option>
         <option name="Learning rate strategy">
         	The strategy provides the learning rates for the optimization process. Only important for the SAG and SGD solvers. For more information
