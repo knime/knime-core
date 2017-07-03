@@ -2924,41 +2924,44 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert !nc.getID().equals(this.getID());
         assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
+            // allow NNC to update states etc
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
             nc.getNodeTimer().startExec();
-            // allow NNC to update states etc
-            if (nc instanceof NativeNodeContainer) {
-                NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                FlowObjectStack flowObjectStack = nnc.getFlowObjectStack();
+            if (nc instanceof SingleNodeContainer) {
+                FlowObjectStack flowObjectStack = nc.getFlowObjectStack();
                 FlowLoopContext slc = flowObjectStack.peek(FlowLoopContext.class);
                 if (slc instanceof RestoredFlowLoopContext) {
                     throw new IllegalFlowObjectStackException(
-                            "Can't continue loop as the workflow was "
-                            + "restored with the loop being partially "
-                            + "executed. Reset loop start and execute "
-                            + "entire loop again.");
+                        "Can't continue loop as the workflow was "
+                                + "restored with the loop being partially "
+                                + "executed. Reset loop start and execute "
+                                + "entire loop again.");
                 }
-                if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
-                    // if this is an END to a loop, make sure it knows its head
-                    if (slc == null) {
-                        LOGGER.debug("Incoming flow object stack for " + nnc.getNameWithID() + ":\n"
-                                + flowObjectStack.toDeepString());
-                        throw new IllegalFlowObjectStackException("Encountered loop-end without corresponding head!");
-                    }
-                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
-                    if (headNode == null) {
-                        throw new IllegalFlowObjectStackException("Loop start and end nodes are not in the"
-                                  + " same workflow");
-                    }
-                    assert ((NativeNodeContainer)headNode).getNode()
-                              .getNodeModel().equals(nnc.getNode().getLoopStartNode());
-                } else if (nnc.isModelCompatibleTo(LoopStartNode.class)) {
-                    nnc.getNode().getOutgoingFlowObjectStack().push(new InnerFlowLoopContext());
+                if (nc instanceof NativeNodeContainer) {
+                    NativeNodeContainer nnc = (NativeNodeContainer)nc;
+                    if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                        // if this is an END to a loop, make sure it knows its head
+                        if (slc == null) {
+                            LOGGER.debug("Incoming flow object stack for " + nnc.getNameWithID() + ":\n"
+                                    + flowObjectStack.toDeepString());
+                            throw new IllegalFlowObjectStackException("Encountered loop-end without corresponding head!");
+                        }
+                        NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                        if (headNode == null) {
+                            throw new IllegalFlowObjectStackException("Loop start and end nodes are not in the"
+                                    + " same workflow");
+                        }
+                        assert ((NativeNodeContainer)headNode).getNode()
+                        .getNodeModel().equals(nnc.getNode().getLoopStartNode());
+                    } else if (nnc.isModelCompatibleTo(LoopStartNode.class)) {
+                        nnc.getNode().getOutgoingFlowObjectStack().push(new InnerFlowLoopContext());
 //                    nnc.getNode().getFlowObjectStack().push(new InnerFlowLoopContext());
-                } else {
-                    // or not if it's any other type of node
-                    nnc.getNode().setLoopStartNode(null);
+                    } else {
+                        // or not if it's any other type of node
+                        nnc.getNode().setLoopStartNode(null);
+                    }
                 }
+
             }
             nc.performStateTransitionEXECUTING();
             lock.queueCheckForNodeStateChangeNotification(true);
