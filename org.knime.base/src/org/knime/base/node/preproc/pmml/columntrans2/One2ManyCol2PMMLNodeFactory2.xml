@@ -24,10 +24,7 @@
 		The dialog of the node allows you only to select columns with 
 		nominal values. If no column name appears in the dialog but your 
 		input table contains nominal columns, you could use the DomainCalculator
-		node and connect its output to this node.<br/>
-		If the optional PMML inport is connected and contains preprocessing
-		operations in the TransformationDictionary the conversion operations
-		of this node are appended. 
+		node and connect its output to this node.
 		</intro>
 			<option name="Columns">
 				Select the nominal columns that should be included in the

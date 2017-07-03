@@ -22,10 +22,7 @@
 			the values of the cluster prototypes.<br />
 			Additionally, it is possible to induce a noise cluster, to detect noise
 			in the dataset, based on the approach from R. N. Dave: 'Characterization
-			and detection of noise in clustering'.<br />
-			If the optional PMML inport is connected and contains 
-            preprocessing operations in the TransformationDictionary those are 
-            added to the learned model.
+			and detection of noise in clustering'.
 		</p>
 	</intro>
 	<option name="Number of clusters">

@@ -14,11 +14,7 @@
             
             See article in wikipedia about 
             <a href="http://en.wikipedia.org/wiki/Linear_regression">linear regression</a>
-            for an overview about the topic.
-            <br/>
-            If the optional PMML inport is connected and contains 
-    		preprocessing operations in the TransformationDictionary those are 
-    		added to the learned model.
+            for an overview about the topic.            
 		</intro>
         <option name="Target">
             To select the target column. Only columns with numeric data are allowed.

@@ -9,11 +9,7 @@
         <intro>
             This node performs polynomial regression on the input data and computes the coefficients that minimize the
             squared error. The user must choose one column as target (dependent variable) and a number of independent variables. By
-            default, polynomials with degree 2 are computed, which can be changed in the dialog.
-            <br />
-            If the optional PMML inport is connected and contains 
-    		preprocessing operations in the TransformationDictionary those are 
-    		added to the learned model.
+            default, polynomials with degree 2 are computed, which can be changed in the dialog.            
         </intro>
         <tab name="Regression settings">
             <option name="Target column">The column that contains the dependent "target" variable.</option>

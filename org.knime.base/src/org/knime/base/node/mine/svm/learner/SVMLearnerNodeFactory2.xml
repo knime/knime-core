@@ -24,11 +24,6 @@
 	Improvements to Platt's SMO Algorithm for SVM Classifier Design</a>, by
 		S. S. Keerthi et. al.
 	</p>
-	<p>
-	If the optional PMML inport is connected and contains 
-    preprocessing operations in the TransformationDictionary those are 
-    added to the learned model.
-    </p>
 	</intro>
 	<option name="Class column">
 	Choose the column that contains the nominal target variable.

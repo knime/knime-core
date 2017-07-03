@@ -15,10 +15,7 @@
 	    that the ranges are defined in descending order and that interval 
 	    borders are consistent. In addition, each column is either replaced with
 	    the binned, string-type column, or a new binned, string-type column 
-	    is appended.<br />
-	    If the optional PMML inport is connected and contains preprocessing
-        operations in the TransformationDictionary the conversion operations
-        of this node are appended.
+	    is appended.
 		</intro>
 		
 		<option name="Select Column: ">
