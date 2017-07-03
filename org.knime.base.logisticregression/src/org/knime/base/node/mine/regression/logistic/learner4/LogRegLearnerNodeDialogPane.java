@@ -323,7 +323,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridy++;
 
         JPanel terminationConditionsPanel = createTerminationConditionsPanel();
-        terminationConditionsPanel.setBorder(BorderFactory.createTitledBorder("Termination Conditions"));
+        terminationConditionsPanel.setBorder(BorderFactory.createTitledBorder("Termination conditions"));
         panel.add(terminationConditionsPanel, c);
 
         c.gridy++;
