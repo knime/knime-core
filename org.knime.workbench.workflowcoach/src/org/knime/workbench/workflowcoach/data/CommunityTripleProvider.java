@@ -94,7 +94,7 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
      * Creates a new provider that fetched recommendation from the KNIME web page.
      */
     public CommunityTripleProvider() {
-        super("http://www.knime.org/files/nodeguide/community_recommendations.json", "community_recommendations.json");
+        super("http://update.knime.org/community_recommendations.json", "community_recommendations.json");
     }
 
     /**
