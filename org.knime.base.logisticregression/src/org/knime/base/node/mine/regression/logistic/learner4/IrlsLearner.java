@@ -65,7 +65,6 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.Classification
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 import org.knime.base.node.util.DoubleFormat;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -84,10 +83,6 @@ import org.knime.core.util.ThreadPool;
 final class IrlsLearner implements LogRegLearner {
     /** Logger to print debug info to. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(IrlsLearner.class);
-
-    private final PMMLPortObjectSpec m_outSpec;
-
-    private final DataTableSpec m_tableSpec;
 
     private final int m_maxIter;
 
@@ -110,9 +105,8 @@ final class IrlsLearner implements LogRegLearner {
      * @param sortTargetCategories true when target categories should be sorted
      * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      */
-    IrlsLearner(final PMMLPortObjectSpec spec,
-        final DataTableSpec tableSpec) {
-        this(spec, tableSpec, 30, 1e-14, true);
+    IrlsLearner() {
+        this(30, 1e-14, true);
     }
 
     /**
@@ -124,12 +118,8 @@ final class IrlsLearner implements LogRegLearner {
      * @param maxIter the maximum number of iterations
      * @param eps threshold used to identify convergence
      */
-    IrlsLearner(final PMMLPortObjectSpec spec,
-            final DataTableSpec tableSpec,
-            final int maxIter, final double eps,
+    IrlsLearner(final int maxIter, final double eps,
             final boolean calcCovMatrix) {
-        m_outSpec = spec;
-        m_tableSpec = tableSpec;
         m_maxIter = maxIter;
         m_eps = eps;
         m_penaltyTerm = 0.0;
@@ -328,8 +318,7 @@ final class IrlsLearner implements LogRegLearner {
      */
     @Override
     public String getWarningMessage() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_warning;
     }
 
     /**
