@@ -153,10 +153,10 @@
             name="Statistics"
             path="/analytics"/>
        <category
-            icon="icons/16x16/regression.png"
+            icon="icons/missing.gif"
             level-id="regression"
-            name="Regression"
-            path="/analytics/statistics"/>
+            name="Linear/Polynomial Regression"
+            path="/analytics/mining"/>
       <category
             after="clustering"
             icon="icons/missing.gif"
@@ -705,21 +705,21 @@
             category-path="/analytics/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
        <node
-             category-path="/analytics/statistics/regression"
+             category-path="/analytics/mining/regression"
              deprecated="true"
              factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
              after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
-             category-path="/analytics/statistics/regression"
+             category-path="/analytics/mining/regression"
              deprecated="true"
              factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
        <node
              after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
-             category-path="/analytics/statistics/regression"
+             category-path="/analytics/mining/regression"
              deprecated="true"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
        <node
-             category-path="/analytics/statistics/regression"
+             category-path="/analytics/mining/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
              after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"/> 
 	    <node
@@ -1766,26 +1766,26 @@
             >
       </node>
       <node
-            category-path="/analytics/statistics/regression"
+            category-path="/analytics/mining/regression"
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
             >
       </node>
       <node
             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
-            category-path="/analytics/statistics/regression"
+            category-path="/analytics/mining/regression"
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"
             >
       </node>
       <node
-            category-path="/analytics/statistics/regression"
+            category-path="/analytics/mining/regression"
             deprecated="true"
             factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2"
             >
       </node>
       <node
-            category-path="/analytics/statistics/regression"
+            category-path="/analytics/mining/regression"
             deprecated="true"
             factory-class="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"
             >
