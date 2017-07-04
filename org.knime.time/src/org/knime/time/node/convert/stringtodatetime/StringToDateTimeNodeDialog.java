@@ -359,12 +359,15 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * method for change/action listener of type and date combo boxes.
      */
     private boolean formatListener(final String format) {
+        // the regex finds all expressions in not quoted square brackets, i.e. removes all optional fields of the format
+        final String formatNoOptionalFields =
+            format.replaceAll("((?<!\\')\\[|\\[(?!\\'))(.*)((?<!\\')\\]|\\](?!\\'))", "");
         switch ((DateTimeType)m_typeCombobox.getSelectedItem()) {
             case LOCAL_DATE: {
                 try {
                     final LocalDate now1 = LocalDate.now();
                     final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
-                    LocalDate.parse(now1.format(formatter1), formatter1);
+                    LocalDate.parse(now1.format(DateTimeFormatter.ofPattern(formatNoOptionalFields)), formatter1);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
                     return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_DATE.toString()
@@ -377,7 +380,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                 try {
                     final LocalTime now2 = LocalTime.now();
                     final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
-                    LocalTime.parse(now2.format(formatter2), formatter2);
+                    LocalTime.parse(now2.format(DateTimeFormatter.ofPattern(formatNoOptionalFields)), formatter2);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
                     return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_TIME.toString()
@@ -389,9 +392,8 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
             case LOCAL_DATE_TIME: {
                 try {
                     final LocalDateTime now3 = LocalDateTime.now();
-                    final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
-                    final String format2 = now3.format(formatter3);
-                    LocalDateTime.parse(format2, formatter3);
+                    LocalDateTime.parse(now3.format(DateTimeFormatter.ofPattern(formatNoOptionalFields)),
+                        DateTimeFormatter.ofPattern(format));
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
                     return setTypeFormatWarningMessage(exception, DateTimeType.LOCAL_DATE_TIME.toString()
@@ -404,7 +406,7 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                 try {
                     final ZonedDateTime now4 = ZonedDateTime.now();
                     final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);
-                    ZonedDateTime.parse(now4.format(formatter4), formatter4);
+                    ZonedDateTime.parse(now4.format(DateTimeFormatter.ofPattern(formatNoOptionalFields)), formatter4);
                     return setTypeFormatWarningNull();
                 } catch (DateTimeException exception) {
                     return setTypeFormatWarningMessage(exception,
