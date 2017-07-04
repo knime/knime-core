@@ -429,6 +429,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         spinner.setSelection(initialValue);
         GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
         gridData.widthHint = 50;
+        if (Platform.OS_LINUX.equals(Platform.getOS())) {
+            gridData.widthHint = 100;
+        }
         spinner.setLayoutData(gridData);
         return spinner;
     }

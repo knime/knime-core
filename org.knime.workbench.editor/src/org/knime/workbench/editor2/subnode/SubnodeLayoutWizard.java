@@ -89,7 +89,7 @@ public class SubnodeLayoutWizard extends Wizard {
     @SuppressWarnings("rawtypes")
     @Override
     public void addPages() {
-        setWindowTitle("Layout Wrapped Metanode Wizard");
+        setWindowTitle("Wrapped Metanode Layout");
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
