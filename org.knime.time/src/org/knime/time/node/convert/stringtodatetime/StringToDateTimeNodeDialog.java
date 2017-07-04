@@ -279,21 +279,6 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         m_typeCombobox.addActionListener(e -> formatListener(m_formatModel.getStringValue()));
         m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener(m_formatModel.getStringValue()));
         colSelectModel.addChangeListener(e -> updatePreview(colSelectModel));
-        m_typeCombobox.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                final Collection<String> formats = StringToDateTimeNodeModel.createPredefinedFormats();
-                if (!formatListener(m_formatModel.getStringValue())) {
-                    for (final String format : formats) {
-                        if (formatListener(format)) {
-                            m_formatModel.setStringValue(format);
-                            break;
-                        }
-                    }
-                }
-            }
-        });
         guessButton.addActionListener(e -> guessFormat(m_preview));
     }
 
