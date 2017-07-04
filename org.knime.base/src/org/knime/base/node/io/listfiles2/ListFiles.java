@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.regex.Matcher;
@@ -185,6 +186,12 @@ public class ListFiles {
      * @return True if satisfies the file else False
      */
     private boolean satisfiesFilter(final URL url) {
+        String decodedPath;
+        try {
+            decodedPath = URLDecoder.decode(url.getPath(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            decodedPath = url.getPath();
+        }
         switch (m_settings.getFilter()) {
         case None:
             return true;
@@ -192,7 +199,7 @@ public class ListFiles {
             if (m_settings.isCaseSensitive()) {
                 // check if one of the extensions matches
                 for (String ext : m_extensions) {
-                    if (url.getPath().endsWith(ext)) {
+                    if (decodedPath.endsWith(ext)) {
                         return true;
                     }
                 }
@@ -209,7 +216,7 @@ public class ListFiles {
         case RegExp:
             // no break;
         case Wildcards:
-            Matcher matcher = m_regExpPattern.matcher(FilenameUtils.getName(url.getPath()));
+            Matcher matcher = m_regExpPattern.matcher(FilenameUtils.getName(decodedPath));
             return matcher.matches();
         default:
             return false;
