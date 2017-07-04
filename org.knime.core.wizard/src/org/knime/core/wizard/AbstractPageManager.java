@@ -191,8 +191,10 @@ public abstract class AbstractPageManager {
     private void setNodeIDInContent(final JSONLayoutContent content, final NodeIDSuffix pageID) {
         if (content instanceof JSONLayoutRow) {
             for (JSONLayoutColumn col : ((JSONLayoutRow)content).getColumns()) {
-                for (JSONLayoutContent subContent : col.getContent()) {
-                    setNodeIDInContent(subContent, pageID);
+                if (col != null && col.getContent() != null) {
+                    for (JSONLayoutContent subContent : col.getContent()) {
+                        setNodeIDInContent(subContent, pageID);
+                    }
                 }
             }
         } else if (content instanceof JSONLayoutViewContent) {
