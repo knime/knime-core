@@ -126,7 +126,6 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             }
             postProcessEpoch(beta, updater, m_regUpdater);
             if (m_stoppingCriterion.checkConvergence(beta)) {
-                System.out.println("Convergence reached after " + (epoch + 1) + " epochs.");
                 break;
             }
         }
