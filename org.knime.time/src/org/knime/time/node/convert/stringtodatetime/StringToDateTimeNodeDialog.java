@@ -49,12 +49,11 @@
 package org.knime.time.node.convert.stringtodatetime;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -245,8 +244,10 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
         gbcTypeFormat.gridy++;
         gbcTypeFormat.weightx = 0;
         gbcTypeFormat.gridwidth = 3;
-        gbcTypeFormat.anchor = GridBagConstraints.CENTER;
+        gbcTypeFormat.anchor = GridBagConstraints.WEST;
+        gbcTypeFormat.insets = new Insets(5, 5, 5, 5);
         m_typeFormatWarningLabel.setForeground(Color.RED);
+        m_typeFormatWarningLabel.setPreferredSize(new Dimension(700, new JLabel(" ").getPreferredSize().height));
         panelTypeFormat.add(m_typeFormatWarningLabel, gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
 
@@ -290,31 +291,32 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
                 ZonedDateTime.parse(preview, formatter);
                 m_typeCombobox.setSelectedItem(DateTimeType.ZONED_DATE_TIME);
                 m_formatModel.setStringValue(format);
-                break;
+                return;
             } catch (DateTimeException e) {
             }
             try {
                 LocalDateTime.parse(preview, formatter);
                 m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_DATE_TIME);
                 m_formatModel.setStringValue(format);
-                break;
+                return;
             } catch (DateTimeException e) {
             }
             try {
                 LocalDate.parse(preview, formatter);
                 m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_DATE);
                 m_formatModel.setStringValue(format);
-                break;
+                return;
             } catch (DateTimeException e) {
             }
             try {
                 LocalTime.parse(preview, formatter);
                 m_typeCombobox.setSelectedItem(DateTimeType.LOCAL_TIME);
                 m_formatModel.setStringValue(format);
-                break;
+                return;
             } catch (DateTimeException e) {
             }
         }
+        m_typeFormatWarningLabel.setText("No suitable format found!");
     }
 
     /**
