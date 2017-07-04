@@ -18,8 +18,10 @@
 		</tab>
 		<tab name="Calculate difference to">
 			<option name="second column">
-				Calculates the difference between the chosen second column and the first column. The first column will
-				be subtracted from the second column (<i>second column - first column</i>).
+				Calculates the difference between the selected second column and the first column. Differences can only
+				be calculated between columns of the same type. Using the <i>Modify Time</i>, <i>Modify Date</i>, and
+				<i>Modify Time Zone</i>	nodes you can adjust the date&amp;time formats beforehand. The first column
+				will be subtracted from the second column (<i>second column - first column</i>).
 			</option>
 			<option name="execution date&amp;time">
 				Calculates the difference between the execution date&amp;time and the chosen first column. The first

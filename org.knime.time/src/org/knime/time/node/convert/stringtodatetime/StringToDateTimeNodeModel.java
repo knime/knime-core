@@ -165,7 +165,7 @@ final class StringToDateTimeNodeModel extends SimpleStreamableFunctionNodeModel 
         // unique values
         Set<String> formats = new LinkedHashSet<String>();
         formats.add("yyyy-MM-dd'T'HH:mm[:ss[.SSS]]");
-        formats.add("yyyy-MM-dd;HH:mm:ss.S");
+        formats.add("yyyy-MM-dd;HH:mm:ss[.SSS][.SS][.S]");
         formats.add("dd.MM.yyyy;HH:mm:ss.S");
         formats.add("yyyy-MM-dd HH:mm:ss.S");
         formats.add("dd.MM.yyyy HH:mm:ss.S");

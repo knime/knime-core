@@ -122,8 +122,10 @@
 				column to simplify format selection.
 			</option>
 			<option name="Guess data type and format">
-				If pressed the data type and the format are guessed based on the
-				content of the first cell.
+				If pressed the data type and the format are
+				guessed based on the
+				content of the first cell. If none of the
+				formats in the list is suitable, type and format will not change.
 			</option>
 		</tab>
 		<tab name="Abort Execution">
