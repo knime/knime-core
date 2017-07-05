@@ -226,8 +226,7 @@ public class LogRegLearnerSettings {
     private static final String CFG_PRIOR = "prior";
     private static final String CFG_PRIOR_VARIANCE = "priorVariance";
     private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
-    private static final String CFG_INITIAL_LEARNING_RATE = "initialLearningRate";
-    private static final String CFG_LEARNING_RATE_DECAY = "learningRateDecay";
+    private static final String CFG_INITIAL_LEARNING_RATE = "stepSize";
     private static final String CFG_SEED = "seed";
     private static final String CFG_IN_MEMORY = "inMemory";
     private static final String CFG_CHUNK_SIZE = "chunkSize";
@@ -268,7 +267,6 @@ public class LogRegLearnerSettings {
     // learning rate strategy and relevant parameters
     private LearningRateStrategies m_learningRateStrategy;
     private double m_initialLearningRate;
-    private double m_learningRateDecay;
     // prior and relevant parameters
     private Prior m_prior;
     private double m_priorVariance;
@@ -293,7 +291,6 @@ public class LogRegLearnerSettings {
         m_epsilon = DEFAULT_EPSILON;
         m_learningRateStrategy = DEFAULT_LEARNINGRATE_STRATEGY;
         m_initialLearningRate = DEFAULT_INITIAL_LEARNING_RATE;
-        m_learningRateDecay = DEFAULT_LEARNING_RATE_DECAY;
         m_prior = DEFAULT_PRIOR;
         m_priorVariance = DEFAULT_PRIOR_VARIANCE;
         setInMemory(DEFAULT_IN_MEMORY);
@@ -324,7 +321,6 @@ public class LogRegLearnerSettings {
         m_epsilon = settings.getDouble(CFG_EPSILON);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(CFG_LEARNING_RATE_STRATEGY));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE);
-        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY);
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE);
 
@@ -372,7 +368,6 @@ public class LogRegLearnerSettings {
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
             CFG_LEARNING_RATE_STRATEGY, DEFAULT_LEARNINGRATE_STRATEGY.name()));
         m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, DEFAULT_INITIAL_LEARNING_RATE);
-        m_learningRateDecay = settings.getDouble(CFG_LEARNING_RATE_DECAY, DEFAULT_LEARNING_RATE_DECAY);
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, DEFAULT_PRIOR.name()));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, DEFAULT_PRIOR_VARIANCE);
 
@@ -417,7 +412,6 @@ public class LogRegLearnerSettings {
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
         settings.addString(CFG_PRIOR, m_prior.name());
         settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
-        settings.addDouble(CFG_LEARNING_RATE_DECAY, m_learningRateDecay);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
         settings.addBoolean(CFG_IN_MEMORY, m_inMemory);
         String seedS = m_seed.toString();
@@ -613,22 +607,6 @@ public class LogRegLearnerSettings {
      */
     public void setInitialLearningRate(final double initialLearningRate) {
         m_initialLearningRate = initialLearningRate;
-    }
-
-
-    /**
-     * @return the learningRateDecay
-     */
-    public double getLearningRateDecay() {
-        return m_learningRateDecay;
-    }
-
-
-    /**
-     * @param learningRateDecay the learningRateDecay to set
-     */
-    public void setLearningRateDecay(final double learningRateDecay) {
-        m_learningRateDecay = learningRateDecay;
     }
 
 
