@@ -607,7 +607,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         updateTargetCategories(settings.getTargetReferenceCategory());
 
         m_notSortTarget.setSelected(settings.getUseTargetDomainOrder());
-        m_notSortIncludes.setSelected(!settings.getUseFeatureDomainOrder());
+        m_notSortIncludes.setSelected(settings.getUseFeatureDomainOrder());
         Solver solver = settings.getSolver();
         m_solverComboBox.setSelectedItem(solver);
         if (solver == Solver.IRLS) {

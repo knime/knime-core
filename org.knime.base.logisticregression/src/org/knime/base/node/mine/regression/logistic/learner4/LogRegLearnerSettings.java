@@ -358,8 +358,8 @@ public class LogRegLearnerSettings {
         m_targetColumn = settings.getString(CFG_TARGET, null);
         m_includedColumns.loadConfigurationInDialog(settings, inputTableSpec);
         m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
-        m_useTargetDomainOrder = settings.getBoolean(CFG_USE_ORDER_TARGET_DOMAIN, true);
-        m_useFeatureDomainOrder = settings.getBoolean(CFG_USE_ORDER_FEATURE_DOMAIN, true);
+        m_useTargetDomainOrder = settings.getBoolean(CFG_USE_ORDER_TARGET_DOMAIN, false);
+        m_useFeatureDomainOrder = settings.getBoolean(CFG_USE_ORDER_FEATURE_DOMAIN, false);
         String solverString = settings.getString(CFG_SOLVER, DEFAULT_SOLVER.name());
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, DEFAULT_MAX_EPOCH);
