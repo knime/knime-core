@@ -216,9 +216,9 @@ public class LogRegLearnerSettings {
 
 
     private static final String CFG_TARGET = "target";
-    private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
-    private static final String CFG_SORT_TARGET_CATEGORIES = "sort_target_categories";
-    private static final String CFG_SORT_INCLUDES_CATEGORIES = "sort_includes_categories";
+    private static final String CFG_TARGET_REFERENCE_CATEGORY = "targetReferenceCategory";
+    private static final String CFG_USE_ORDER_TARGET_DOMAIN = "useOrderFromTargetDomain";
+    private static final String CFG_USE_ORDER_FEATURE_DOMAIN = "useOrderFromFeatureDomain";
     private static final String CFG_SOLVER = "solver";
     private static final String CFG_MAX_EPOCH = "maxEpoch";
     private static final String CFG_PERFORM_LAZY = "performLazy";
@@ -226,11 +226,11 @@ public class LogRegLearnerSettings {
     private static final String CFG_PRIOR = "prior";
     private static final String CFG_PRIOR_VARIANCE = "priorVariance";
     private static final String CFG_LEARNING_RATE_STRATEGY = "learningRateStrategy";
-    private static final String CFG_INITIAL_LEARNING_RATE = "stepSize";
+    private static final String CFG_STEP_SIZE = "stepSize";
     private static final String CFG_SEED = "seed";
     private static final String CFG_IN_MEMORY = "inMemory";
     private static final String CFG_CHUNK_SIZE = "chunkSize";
-    private static final String CFG_CALC_COVMATRIX = "calcCovMatrix";
+    private static final String CFG_CALC_COVMATRIX = "calcCoefficientStatistics";
 
     static final Solver DEFAULT_SOLVER = Solver.SAG;
     static final boolean DEFAULT_PERFORM_LAZY = true;
@@ -253,10 +253,10 @@ public class LogRegLearnerSettings {
 
     /** The target reference category, if not set it is the last category. */
     private DataCell m_targetReferenceCategory;
-    /** True when target categories should be sorted. */
-    private boolean m_sortTargetCategories;
-    /** True when categories of nominal data in the include list should be sorted. */
-    private boolean m_sortIncludesCategories;
+    /** True when the order target from the target domain should be used. */
+    private boolean m_useTargetDomainOrder;
+    /** True when categories of nominal data in the include list should be ordered according to their domain ordering. */
+    private boolean m_useFeatureDomainOrder;
 
     // solver and relevant parameters
     private Solver m_solver;
@@ -283,8 +283,8 @@ public class LogRegLearnerSettings {
     public LogRegLearnerSettings() {
         m_targetColumn = null;
         m_targetReferenceCategory = null;
-        m_sortTargetCategories = true;
-        m_sortIncludesCategories = true;
+        m_useTargetDomainOrder = true;
+        m_useFeatureDomainOrder = true;
         m_solver = DEFAULT_SOLVER;
         m_maxEpoch = DEFAULT_MAX_EPOCH;
         m_performLazy = DEFAULT_PERFORM_LAZY;
@@ -311,8 +311,8 @@ public class LogRegLearnerSettings {
         m_targetColumn = settings.getString(CFG_TARGET);
         m_includedColumns.loadConfigurationInModel(settings);
         m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY);
-        m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES);
-        m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES);
+        m_useTargetDomainOrder = settings.getBoolean(CFG_USE_ORDER_TARGET_DOMAIN);
+        m_useFeatureDomainOrder = settings.getBoolean(CFG_USE_ORDER_FEATURE_DOMAIN);
 
         String solverString = settings.getString(CFG_SOLVER);
         m_solver = Solver.valueOf(solverString);
@@ -320,7 +320,7 @@ public class LogRegLearnerSettings {
         m_performLazy = settings.getBoolean(CFG_PERFORM_LAZY);
         m_epsilon = settings.getDouble(CFG_EPSILON);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(CFG_LEARNING_RATE_STRATEGY));
-        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE);
+        m_initialLearningRate = settings.getDouble(CFG_STEP_SIZE);
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE);
 
@@ -358,8 +358,8 @@ public class LogRegLearnerSettings {
         m_targetColumn = settings.getString(CFG_TARGET, null);
         m_includedColumns.loadConfigurationInDialog(settings, inputTableSpec);
         m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
-        m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
-        m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES, true);
+        m_useTargetDomainOrder = settings.getBoolean(CFG_USE_ORDER_TARGET_DOMAIN, true);
+        m_useFeatureDomainOrder = settings.getBoolean(CFG_USE_ORDER_FEATURE_DOMAIN, true);
         String solverString = settings.getString(CFG_SOLVER, DEFAULT_SOLVER.name());
         m_solver = Solver.valueOf(solverString);
         m_maxEpoch = settings.getInt(CFG_MAX_EPOCH, DEFAULT_MAX_EPOCH);
@@ -367,7 +367,7 @@ public class LogRegLearnerSettings {
         m_epsilon = settings.getDouble(CFG_EPSILON, DEFAULT_EPSILON);
         m_learningRateStrategy = LearningRateStrategies.valueOf(settings.getString(
             CFG_LEARNING_RATE_STRATEGY, DEFAULT_LEARNINGRATE_STRATEGY.name()));
-        m_initialLearningRate = settings.getDouble(CFG_INITIAL_LEARNING_RATE, DEFAULT_INITIAL_LEARNING_RATE);
+        m_initialLearningRate = settings.getDouble(CFG_STEP_SIZE, DEFAULT_INITIAL_LEARNING_RATE);
         m_prior = Prior.valueOf(settings.getString(CFG_PRIOR, DEFAULT_PRIOR.name()));
         m_priorVariance = settings.getDouble(CFG_PRIOR_VARIANCE, DEFAULT_PRIOR_VARIANCE);
 
@@ -401,8 +401,8 @@ public class LogRegLearnerSettings {
         settings.addString(CFG_TARGET, m_targetColumn);
         m_includedColumns.saveConfiguration(settings);
         settings.addDataCell(CFG_TARGET_REFERENCE_CATEGORY, m_targetReferenceCategory);
-        settings.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
-        settings.addBoolean(CFG_SORT_INCLUDES_CATEGORIES, m_sortIncludesCategories);
+        settings.addBoolean(CFG_USE_ORDER_TARGET_DOMAIN, m_useTargetDomainOrder);
+        settings.addBoolean(CFG_USE_ORDER_FEATURE_DOMAIN, m_useFeatureDomainOrder);
         settings.addString(CFG_SOLVER, m_solver.name());
         settings.addInt(CFG_MAX_EPOCH, m_maxEpoch);
         // if the solver doesn't support laziness, we shouldn't store that the calculations
@@ -411,7 +411,7 @@ public class LogRegLearnerSettings {
         settings.addDouble(CFG_EPSILON, m_epsilon);
         settings.addString(CFG_LEARNING_RATE_STRATEGY, m_learningRateStrategy.name());
         settings.addString(CFG_PRIOR, m_prior.name());
-        settings.addDouble(CFG_INITIAL_LEARNING_RATE, m_initialLearningRate);
+        settings.addDouble(CFG_STEP_SIZE, m_initialLearningRate);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
         settings.addBoolean(CFG_IN_MEMORY, m_inMemory);
         String seedS = m_seed.toString();
@@ -475,15 +475,21 @@ public class LogRegLearnerSettings {
      * @return the sortTargetCategories
      */
     public boolean getSortTargetCategories() {
-        return m_sortTargetCategories;
+        return !m_useTargetDomainOrder;
     }
 
+    /**
+     * @return true if the order from the target domain should be used
+     */
+    public boolean getUseTargetDomainOrder() {
+        return m_useTargetDomainOrder;
+    }
 
     /**
-     * @param sortTargetCategories the sortTargetCategories to set
+     * @param useTargetDomainOrder whether the order from the target domain should be used
      */
-    public void setSortTargetCategories(final boolean sortTargetCategories) {
-        m_sortTargetCategories = sortTargetCategories;
+    public void setUseTargetDomainOrder(final boolean useTargetDomainOrder) {
+        m_useTargetDomainOrder = useTargetDomainOrder;
     }
 
 
@@ -491,7 +497,21 @@ public class LogRegLearnerSettings {
      * @return the sortIncludesCategories
      */
     public boolean getSortIncludesCategories() {
-        return m_sortIncludesCategories;
+        return !m_useFeatureDomainOrder;
+    }
+
+    /**
+     * @return true if the order from the column domain should be used for nominal features
+     */
+    public boolean getUseFeatureDomainOrder() {
+        return m_useFeatureDomainOrder;
+    }
+
+    /**
+     * @param useFeatureDomainOrder whether the order from the column domain should be used for nominal features
+     */
+    public void setUseFeatureDomainOrder(final boolean useFeatureDomainOrder) {
+        m_useFeatureDomainOrder = useFeatureDomainOrder;
     }
 
 
@@ -499,7 +519,7 @@ public class LogRegLearnerSettings {
      * @param sortIncludesCategories the sortIncludesCategories to set
      */
     public void setSortIncludesCategories(final boolean sortIncludesCategories) {
-        m_sortIncludesCategories = sortIncludesCategories;
+        m_useFeatureDomainOrder = sortIncludesCategories;
     }
 
     /**
@@ -608,6 +628,7 @@ public class LogRegLearnerSettings {
     public void setInitialLearningRate(final double initialLearningRate) {
         m_initialLearningRate = initialLearningRate;
     }
+
 
 
     /**

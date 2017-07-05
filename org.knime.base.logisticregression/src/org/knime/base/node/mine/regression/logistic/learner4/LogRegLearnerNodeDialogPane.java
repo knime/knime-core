@@ -606,8 +606,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         updateTargetCategories(settings.getTargetReferenceCategory());
 
-        m_notSortTarget.setSelected(!settings.getSortTargetCategories());
-        m_notSortIncludes.setSelected(!settings.getSortIncludesCategories());
+        m_notSortTarget.setSelected(settings.getUseTargetDomainOrder());
+        m_notSortIncludes.setSelected(!settings.getUseFeatureDomainOrder());
         Solver solver = settings.getSolver();
         m_solverComboBox.setSelectedItem(solver);
         if (solver == Solver.IRLS) {
@@ -645,8 +645,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         settings.setIncludedColumns(config);
         settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
         settings.setTargetReferenceCategory((DataCell)m_targetReferenceCategory.getSelectedItem());
-        settings.setSortTargetCategories(!m_notSortTarget.isSelected());
-        settings.setSortIncludesCategories(!m_notSortIncludes.isSelected());
+        settings.setUseTargetDomainOrder(m_notSortTarget.isSelected());
+        settings.setUseFeatureDomainOrder(m_notSortIncludes.isSelected());
         settings.setSolver((Solver)m_solverComboBox.getSelectedItem());
         settings.setMaxEpoch((int)m_maxEpochSpinner.getValue());
         settings.setPerformLazy(m_lazyCalculationCheckBox.isSelected());
