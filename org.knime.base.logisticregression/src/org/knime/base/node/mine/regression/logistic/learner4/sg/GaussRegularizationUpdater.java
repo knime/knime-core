@@ -60,8 +60,8 @@ class GaussRegularizationUpdater implements LazyRegularizationUpdater {
 
     private final double m_lambda;
 
-    GaussRegularizationUpdater(final double variance) {
-        m_lambda = 1.0 / variance;
+    GaussRegularizationUpdater(final double variance, final int rowCount) {
+        m_lambda = 1.0 / (variance * rowCount);
     }
 
     /**

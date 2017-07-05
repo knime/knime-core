@@ -104,6 +104,7 @@ public class SagLogRegLearner implements LogRegLearner {
             case Gauss:
                 prior = new GaussPrior(settings.getPriorVariance());
                 break;
+//                return new GaussRegularizationUpdater(settings.getPriorVariance(), data.getRowCount());
             case Laplace:
                 prior = new LaplacePrior(settings.getPriorVariance());
                 break;
