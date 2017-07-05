@@ -283,8 +283,8 @@ public class LogRegLearnerSettings {
     public LogRegLearnerSettings() {
         m_targetColumn = null;
         m_targetReferenceCategory = null;
-        m_useTargetDomainOrder = true;
-        m_useFeatureDomainOrder = true;
+        m_useTargetDomainOrder = false;
+        m_useFeatureDomainOrder = false;
         m_solver = DEFAULT_SOLVER;
         m_maxEpoch = DEFAULT_MAX_EPOCH;
         m_performLazy = DEFAULT_PERFORM_LAZY;
