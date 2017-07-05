@@ -143,6 +143,9 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                         m_overwritePolicyAbortButton.setEnabled(m_isLocalDestination);
                         m_overwritePolicyAppendButton.setEnabled(m_isLocalDestination);
                         m_overwritePolicyOverwriteButton.setEnabled(m_isLocalDestination);
+                        if (!m_isLocalDestination) {
+                            m_overwritePolicyOverwriteButton.setSelected(true);
+                        }
                         checkCheckerState();
                     } catch (IOException | URISyntaxException | InvalidPathException ex) {
                         // ignore

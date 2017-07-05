@@ -273,6 +273,8 @@ public class CSVWriterNodeModel extends NodeModel {
                 tempOut = Files.newOutputStream(localPath);
             }
         } else {
+            CheckUtils.checkState(m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Append,
+                url + " points to a remote file but append to remote files is not possible!");
             urlConnection = FileUtil.openOutputConnection(url, "PUT");
             tempOut = urlConnection.getOutputStream();
             appendToFile = false;
