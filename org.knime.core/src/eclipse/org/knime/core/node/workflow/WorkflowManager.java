@@ -7856,7 +7856,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 needsReset = true;
                 subResult.addError("Predecessor ports have no data", true);
             }
-            if (needsReset && cont instanceof NativeNodeContainer && cont.isResetable()) {
+            if (needsReset && cont instanceof SingleNodeContainer && cont.isResetable()) {
                 // we don't care for successors because they are not loaded yet
                 invokeResetOnSingleNodeContainer((SingleNodeContainer)cont);
                 isExecuted = false;
