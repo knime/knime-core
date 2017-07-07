@@ -220,9 +220,17 @@ public class CSVReaderNodeModel extends NodeModel {
         if (status.getNumOfErrors() > 0) {
             throw new IllegalStateException(status.getErrorMessage(0));
         }
-
+        final DataTableSpec tableSpec = settings.createDataTableSpec();
+        if (tableSpec == null) {
+            final SettingsStatus status2 = settings.getStatusOfSettings(true, null);
+            if (status2.getNumOfErrors() > 0) {
+                throw new IllegalStateException(status2.getErrorMessage(0));
+            } else {
+                throw new IllegalStateException("Unknown error during file analysis.");
+            }
+        }
         exec.setMessage("Buffering file");
-        return  new FileTable(settings.createDataTableSpec(), settings, readExec);
+        return new FileTable(tableSpec, settings, readExec);
     }
 
     /** {@inheritDoc} */
