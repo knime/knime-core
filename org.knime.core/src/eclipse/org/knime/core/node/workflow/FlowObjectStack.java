@@ -54,6 +54,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Vector;
 
 import org.knime.core.internal.KNIMEPath;
@@ -271,14 +272,26 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @see java.util.Stack#peek()
      */
     public <T extends FlowObject> T peek(final Class<T> type) {
+        return peekOptional(type).orElse(null);
+    }
+
+    /**
+     * @return The top-most element on the stack that complies with the given
+     * class argument or an empty Optional if no such element is found.
+     * @param <T> The class type of the context object
+     * @param type The desired FlowObject class
+     * @see java.util.Stack#peek()
+     * @since 3.4
+     */
+    public <T extends FlowObject> Optional<T> peekOptional(final Class<T> type) {
         synchronized (m_stack) {
             for (int i = m_stack.size() - 1; i >= 0; i--) {
                 FlowObject e = m_stack.get(i);
                 if (type.isInstance(e)) {
-                    return type.cast(e);
+                    return Optional.of(type.cast(e));
                 }
             }
-            return null;
+            return Optional.empty();
         }
     }
 

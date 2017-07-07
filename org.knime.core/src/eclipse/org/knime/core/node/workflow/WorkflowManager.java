@@ -2930,12 +2930,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (nc instanceof SingleNodeContainer) {
                 FlowObjectStack flowObjectStack = nc.getFlowObjectStack();
                 FlowLoopContext slc = flowObjectStack.peek(FlowLoopContext.class);
-                if (slc instanceof RestoredFlowLoopContext) {
+
+                // if the node is in a subnode the subnode may be part of restored loop, see AP-7585
+                FlowLoopContext subnodeOuterFlowLoopContext =
+                        flowObjectStack.peekOptional(FlowSubnodeScopeContext.class)
+                        .map(s -> s.getOuterFlowLoopContext()).orElse(null);
+
+                if (slc instanceof RestoredFlowLoopContext
+                        || subnodeOuterFlowLoopContext instanceof RestoredFlowLoopContext) {
                     throw new IllegalFlowObjectStackException(
-                        "Can't continue loop as the workflow was "
-                                + "restored with the loop being partially "
-                                + "executed. Reset loop start and execute "
-                                + "entire loop again.");
+                        "Can't continue loop as the workflow was restored with the loop being partially "
+                            + "executed. Reset loop start and execute entire loop again.");
                 }
                 if (nc instanceof NativeNodeContainer) {
                     NativeNodeContainer nnc = (NativeNodeContainer)nc;
