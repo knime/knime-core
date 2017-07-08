@@ -49,6 +49,7 @@ package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
@@ -106,6 +107,14 @@ class WorkflowCloseTest extends WorkflowTest {
 
         List<NodeContainer> openWorkflows = new ArrayList<NodeContainer>(WorkflowManager.ROOT.getNodeContainers());
         openWorkflows.removeAll(context.getAlreadyOpenWorkflows());
+        for (Iterator<NodeContainer> it = openWorkflows.iterator(); it.hasNext();) {
+            WorkflowManager wfm = (WorkflowManager)it.next();
+            if (wfm.getNodeContainers().isEmpty()) {
+                // remove unknown childs that are empty; these are usually container for job managers
+                // (cluster exec, sandbox node creator, ..)
+                it.remove();
+            }
+        }
         if (openWorkflows.size() > 0) {
             result.addFailure(test, new AssertionFailedError(openWorkflows.size()
                     + " dangling workflows detected: " + openWorkflows));
