@@ -4,7 +4,6 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            after="org.knime.time.node.manipulate.modifytimezone.ModifyTimeZoneNodeFactory"
             category-path="/applications/timeseries/transform"
             deprecated="false"
             factory-class="org.knime.time.node.convert.newtoold.NewToOldTimeNodeFactory">

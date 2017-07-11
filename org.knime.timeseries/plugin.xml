@@ -50,7 +50,6 @@
             factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
       </node>
       <node
-            after="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"
             category-path="/applications/timeseries/timeseries_legacy"
             deprecated="false"
             factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
