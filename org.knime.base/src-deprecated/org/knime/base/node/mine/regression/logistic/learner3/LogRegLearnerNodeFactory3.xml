@@ -2,7 +2,7 @@
 <knimeNode icon="./logistic_regression_learn.png" type="Learner"
     xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
-    <name>Logistic Regression Learner (Legacy)</name>
+    <name>Logistic Regression Learner</name>
     <shortDescription>Performs a multinomial logistic regression.</shortDescription>
     <fullDescription>
         <intro>
