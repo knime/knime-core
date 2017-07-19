@@ -419,7 +419,7 @@
 <rect height="491.79999" id="rect1389" style="fill:none" width="729.90002" x="-219.60001" y="50"/>
 <text font-size="20" id="text799" style="font-size:20px;fill:#7d7d7d;font-family:Calibri-Bold" transform="translate(330.7646,50.8442)"/>
 <text font-size="20" id="KNIME-Version" style="font-size:20px;text-align:end;text-anchor:end;fill:#7d7d7d;font-family:Calibri-Bold" x="443.19031" y="44.8442">
-<tspan id="tspan408" style="text-align:end;text-anchor:end">Version 3.4.0</tspan>
+<tspan id="tspan408" style="text-align:end;text-anchor:end">Version 3.5.0</tspan>
 </text>
 <text font-size="20" id="text803" style="font-size:20px;fill:#7d7d7d;font-family:Calibri-Bold" transform="translate(431.9344,50.8442)"/>
 <text font-size="12" id="text805" style="font-size:12px;font-family:Calibri" transform="translate(330.7644,66.9167)"/>

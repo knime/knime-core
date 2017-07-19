@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Unit-Tests for org.knime.base.treeensembles2
 Bundle-SymbolicName: org.knime.base.treeensembles2.testing;singleton:=true
-Bundle-Version: 3.4.0.qualifier
+Bundle-Version: 3.5.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Fragment-Host: org.knime.base.treeensembles2;bundle-version="2.11.0.qualifier"
 Require-Bundle: org.junit;bundle-version="[4.8.1,5.0.0)",
