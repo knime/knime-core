@@ -526,7 +526,6 @@ public class FileAnalyzerTest extends TestCase {
 
     } // initTempFile()
 
-
     /**
      * Testcase for bug AP-4163.
      *
@@ -550,5 +549,53 @@ public class FileAnalyzerTest extends TestCase {
             analSettings.getColumnProperties().get(0).getColumnSpec().getType(), is(DoubleCell.TYPE));
         assertThat("Unexpected guessed type for string (date) column",
             analSettings.getColumnProperties().get(1).getColumnSpec().getType(), is(StringCell.TYPE));
+    }
+
+    /**
+     * Testcase for regression AP-7645.
+     *
+     * Checks that all kinds of numbers are correctly parsed as doubles.
+     *
+     * @throws Exception if an errors occurs
+     */
+    public void testNumbersWithThousandseparator() throws Exception {
+        String withThousandSeparator = "1\n-1\n1\n1,123,456\n-1,123,456\n+1,123,456\n" +
+                "1.0\n+1.0\n-1.0\n1,123,456.789\n-1,123,456.789\n+1,123,456.789\n" +
+                ".5\n-.5\n+.5\n" +
+                "1.\n-1.\n+1.\n1,123,456.\n-1,123,456.\n+1,123,456.\n" +
+                "2e2\n-2e2\n+2e2\n" +
+                ".05e2\n-.05e2\n+.05e2\n" +
+                "2.e2\n-2.e2\n+2.e2\n" +
+                "2.05e2\n-2.05e2\n+2.05e2\n" +
+                "1,123,456e2\n-1,123,456e2\n+1,123,456e2\n" +
+                "1,123,456.e2\n-1,123,456.e2\n+1,123,456.e2\n" +
+                "1,123,456.789e2\n-1,123,456.789e2\n+1,123,456.789e2\n" +
+                "2f\n-2f\n+2f\n2.f\n-2.f\n+2.f\n" +
+                "0.2f\n-0.2f\n+0.2f\n.2f\n-.2f\n+.2f\n" +
+                "1,123,456f\n-1,123,456f\n+1,123,456f\n" +
+                "1,123,456.f\n-1,123,456.f\n+1,123,456f\n" +
+                "1,123,456.05f\n-1,123,456.05f\n+1,123,456.05f\n" +
+                "2d\n-2d\n+2d\n2.d\n-2.d\n+2d\n" +
+                "0.2d\n-0.2d\n+0.2d\n.2d\n-.2d\n+.2d\n" +
+                "1,123,456d\n-1,123,456d\n+1,123,456d\n" +
+                "1,123,456.d\n-1,123,456.d\n+1,123,456.d\n" +
+                "1,123,456.05d\n-1,123,456.05d\n+1,123,456.05d\n" +
+                "1,123,456.05e-2f\n-1,123,456.05e2f\n1,123,456.05e+2f" +
+                "1,123,456.05e-2d\n-1,123,456.05e2d\n1,123,456.05e+2d";
+        URL separatorDoc = initTempFile(withThousandSeparator);
+
+        FileReaderNodeSettings settings = new FileReaderNodeSettings();
+        settings.setFileHasRowHeadersUserSet(true);
+        settings.setFileHasRowHeaders(false);
+        settings.setFileHasColumnHeadersUserSet(true);
+        settings.setFileHasColumnHeaders(false);
+        settings.setDecimalSeparator('.');
+        settings.setThousandsSeparator(',');
+        settings.setDataFileLocationAndUpdateTableName(separatorDoc);
+        FileReaderNodeSettings analSettings = FileAnalyzer.analyze(settings, null);
+
+        assertThat("Unexpected number of columns detected", analSettings.getColumnProperties().size(), is(1));
+        assertThat("Unexpected guessed type for double column",
+            analSettings.getColumnProperties().get(0).getColumnSpec().getType(), is(DoubleCell.TYPE));
     }
 }
