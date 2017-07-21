@@ -4,15 +4,15 @@
 #
 # state and name are not needed for "remove"
 #
-http://update.knime.org/analytics-platform/3.3,remove
-http://update.knime.org/store/3.3,remove
-http://update.knime.org/partner/3.3,remove
-http://update.knime.org/community-contributions/trusted/3.3,remove
-http://update.knime.org/community-contributions/3.3,remove
-http://tech.knime.org/update/community-contributions/trusted/3.3,remove
-http://tech.knime.org/update/community-contributions/3.3,remove
-http://update.knime.org/analytics-platform/3.4,add,enabled,KNIME Analytics Platform Update Site
-http://update.knime.org/store/3.4,add,enabled,KNIME Store Update Site
-http://update.knime.org/partner/3.4,add,disabled,KNIME Partner Update Site
-http://update.knime.org/community-contributions/trusted/3.4,add,enabled,Trusted Community Contributions
-http://update.knime.org/community-contributions/3.4,add,disabled,Stable Community Contributions
+http://update.knime.org/analytics-platform/3.4,remove
+http://update.knime.org/store/3.4,remove
+http://update.knime.org/partner/3.4,remove
+http://update.knime.org/community-contributions/trusted/3.4,remove
+http://update.knime.org/community-contributions/3.4,remove
+http://tech.knime.org/update/community-contributions/trusted/3.4,remove
+http://tech.knime.org/update/community-contributions/3.4,remove
+http://update.knime.org/analytics-platform/3.5,add,enabled,KNIME Analytics Platform Update Site
+http://update.knime.org/store/3.5,add,enabled,KNIME Store Update Site
+http://update.knime.org/partner/3.5,add,disabled,KNIME Partner Update Site
+http://update.knime.org/community-contributions/trusted/3.5,add,enabled,Trusted Community Contributions
+http://update.knime.org/community-contributions/3.5,add,disabled,Stable Community Contributions
