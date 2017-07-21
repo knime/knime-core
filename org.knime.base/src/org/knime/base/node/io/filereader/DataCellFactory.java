@@ -50,6 +50,7 @@ package org.knime.base.node.io.filereader;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.knime.core.data.ConfigurableDataCellFactory;
@@ -74,6 +75,7 @@ public class DataCellFactory {
     private char m_thousandsSeparator = '\0';
 
     private String m_thousandsRegExpr;
+    private Pattern m_thousandPattern;
 
     private String m_lastErrorMessage;
 
@@ -126,6 +128,7 @@ public class DataCellFactory {
                     + "thousands separator can't be the same character.");
         }
         m_decimalSeparator = decSep;
+        setNumberPattern();
     }
 
     /**
@@ -183,6 +186,16 @@ public class DataCellFactory {
         } else {
             m_thousandsRegExpr = null;
         }
+        setNumberPattern();
+    }
+
+
+    /**
+     * Sets the regex pattern to detect numbers.
+     */
+    private void setNumberPattern() {
+        m_thousandPattern = Pattern.compile("(?i)[+-]?\\d{0,3}(?:" +
+                m_thousandsRegExpr + "\\d{3})*(?:" + m_decimalSeparator + "\\d*)?(?:e[+-]?\\d+)?[fd]?");
     }
 
     /**
@@ -296,7 +309,8 @@ public class DataCellFactory {
             // cells
             // remove thousands grouping
             if (m_thousandsRegExpr != null) {
-                if (data.matches("\\d{1,3}(" + m_thousandsRegExpr + "\\d{3})*(" + m_decimalSeparator + "\\d+)?")) {
+                Matcher thousandMatcher = m_thousandPattern.matcher(data);
+                if (thousandMatcher.matches()) {
                     //Only continue processing if input is a valid number (wrong thousands separators are targeted to identify dates
                     data = data.replaceAll(m_thousandsRegExpr, "");
                 } else {
