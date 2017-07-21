@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="3.3.2.qualifier"
+      version="3.3.3.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -734,7 +734,7 @@ propagated with or for interoperation with KNIME.
       <import feature="org.eclipse.platform" version="4.4.2" match="greaterOrEqual"/>
       <import feature="org.eclipse.rcp" version="4.4.2" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.10.0" match="greaterOrEqual"/>
-      <import plugin="org.knime.workbench.explorer.view" version="7.3.1" match="greaterOrEqual"/>
+      <import plugin="org.knime.workbench.explorer.view" version="7.3.2" match="greaterOrEqual"/>
    </requires>
 
    <plugin
