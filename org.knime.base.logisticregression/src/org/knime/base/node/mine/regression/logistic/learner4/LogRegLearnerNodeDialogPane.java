@@ -194,8 +194,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                m_seedField.setEnabled(m_useSeedCheckBox.isSelected());
-                m_newSeedButton.setEnabled(m_useSeedCheckBox.isSelected());
+                toggleSeedComponents();
             }
         });
 
@@ -240,6 +239,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         addTab("Settings", settingsPanel);
         JPanel advancedSettingsPanel = createAdvancedSettingsPanel();
         addTab("Advanced", advancedSettingsPanel);
+    }
+
+    private void toggleSeedComponents() {
+        m_seedField.setEnabled(m_useSeedCheckBox.isSelected());
+        m_newSeedButton.setEnabled(m_useSeedCheckBox.isSelected());
     }
 
     private void updateFilterPanel() {
@@ -625,9 +629,7 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         m_inMemoryCheckBox.setSelected(settings.isInMemory());
         Long seed = settings.getSeed();
-        if (m_useSeedCheckBox.isSelected() != (seed != null)) {
-            m_useSeedCheckBox.doClick();
-        }
+        toggleSeedComponents();
         m_seedField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
         m_chunkSizeSpinner.setValue(settings.getChunkSize());
         m_chunkSizeSpinner.setEnabled(!settings.isInMemory());
