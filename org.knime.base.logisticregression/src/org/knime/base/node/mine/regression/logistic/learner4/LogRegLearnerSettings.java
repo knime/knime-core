@@ -414,7 +414,12 @@ public class LogRegLearnerSettings {
         settings.addDouble(CFG_STEP_SIZE, m_initialLearningRate);
         settings.addDouble(CFG_PRIOR_VARIANCE, m_priorVariance);
         settings.addBoolean(CFG_IN_MEMORY, m_inMemory);
-        String seedS = m_seed.toString();
+        String seedS;
+        if (m_seed != null) {
+            seedS = m_seed.toString();
+        } else {
+            seedS = null;
+        }
         settings.addString(CFG_SEED, seedS);
         settings.addInt(CFG_CHUNK_SIZE, m_chunkSize);
 
