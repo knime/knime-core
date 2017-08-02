@@ -76,6 +76,7 @@ import org.knime.core.gateway.codegen.EntityGenerator;
 import org.knime.core.gateway.codegen.ServiceGenerator;
 import org.knime.core.gateway.codegen.SourceCodeGenerator;
 import org.knime.core.gateway.codegen.def.EntityDef;
+import org.knime.core.gateway.codegen.def.EntityDefUtilGenerator;
 import org.knime.core.gateway.codegen.def.ObjectDef;
 import org.knime.core.gateway.codegen.def.ServiceDef;
 import org.knime.core.gateway.codegen.def.ServiceDefUtilGenerator;
@@ -88,8 +89,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
- * A project builder that generates java source code from velocity templates and json-files for definition and
- * configuration.
+ * A project builder that generates java source code from velocity templates and json-files (for definition and
+ * configuration).
  *
  * In order to activate this builder for a project, either add the following lines to the <code>.project</code> file
  * (the SourceCodeBuilder project must be loaded as eclipse plugin - useful to run it in debug mode):
@@ -105,7 +106,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  * Or add it as a 'External Program' builder and run it via the main-method. Set as location
  * "<code>${system_path:java}</code>" and add into the arguments fields
  * <pre>
-   -classpath "${project_classpath}" org.knime.core.gateway.builder.SourceCodeBuilder -project "${workspace_loc:/org.knime.core.gateway.v0}"
+   -classpath "${project_classpath:org.knime.core.gateway.builder}" org.knime.core.gateway.builder.SourceCodeBuilder -project "${workspace_loc:/org.knime.core.gateway.v0}"
    </pre>
  * (replace the project name!).
  *
@@ -241,6 +242,13 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
                     .generate();
         }
 
+        //generate the EntityDefUtil class the allows programmatic access to all entity defs
+        if (thisEntityDefs.size() > 0) {
+            new EntityDefUtilGenerator(thisEntityDefs,
+                projectRoot.append(configFile.getDefaultOutputDir()).toOSString(), configFile.getDefaultPackage())
+                    .generate();
+        }
+
         // read idl source files (json) into data structures
         List<ServiceDef> serviceDefs = new ArrayList<ServiceDef>();
         List<EntityDef> entityDefs = new ArrayList<EntityDef>();
@@ -309,7 +317,7 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
             if (entry.getValue().getType().equals(ObjectSpec.ObjecType.SERVICE.id())) {
                 //the assumption here is that the spec file (.json) has the same name as the template (.vm)
                 ServiceGenerator serviceGen = new ServiceGenerator(serviceDefs, outputFolder,
-                    entry.getKey().toString().replace(".json", ".vm"), entry.getValue());
+                    getTemplateFileName(entry.getKey().toString()), entry.getValue());
 
                 serviceGen.setEntityFieldsImports(fieldImportSpecs);
 
@@ -324,7 +332,7 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
             if (entry.getValue().getType().equals(ObjectSpec.ObjecType.ENTITY.id())) {
                 //the assumption here is that the spec file (.json) has the same name as the template (.vm)
                 EntityGenerator entityGen = new EntityGenerator(entityDefs, outputFolder,
-                    entry.getKey().toString().replace(".json", ".vm"), entry.getValue());
+                    getTemplateFileName(entry.getKey().toString()), entry.getValue());
                 entityGen.setEntityFieldsImports(fieldImportSpecs);
 
                 //get import specs
@@ -420,6 +428,14 @@ public class SourceCodeBuilder extends IncrementalProjectBuilder {
         try (BufferedReader reader = Files.newBufferedReader(jsonFilePath)) {
             return OBJECT_MAPPER.readValue(reader, clazz);
         }
+    }
+
+    /*
+     * Determines the template file name from the json spec file name.
+     * The assumption here is that the spec file (.json) has the same name as the template (.vm).
+     */
+    private static String getTemplateFileName(final String jsonSpecFileName) {
+        return jsonSpecFileName.substring(0, jsonSpecFileName.length() - 4) + "vm";
     }
 
     public static void main(final String[] args) {
