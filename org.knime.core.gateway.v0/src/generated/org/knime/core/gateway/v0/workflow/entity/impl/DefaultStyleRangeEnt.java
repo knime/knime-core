@@ -72,7 +72,7 @@ public class DefaultStyleRangeEnt implements StyleRangeEnt {
     /**
      * @param builder
      */
-    private DefaultStyleRangeEnt(final DefaultStyleRangeEntBuilder builder) {
+    DefaultStyleRangeEnt(final DefaultStyleRangeEntBuilder builder) {
 		m_Start = builder.m_Start;
 		m_Length = builder.m_Length;
 		m_FontName = builder.m_FontName;
@@ -120,58 +120,4 @@ public class DefaultStyleRangeEnt implements StyleRangeEnt {
 	public static DefaultStyleRangeEntBuilder builder() {
 		return new DefaultStyleRangeEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the StyleRangeEntBuilder-interface.
-	*/
-	public static class DefaultStyleRangeEntBuilder implements StyleRangeEntBuilder {
-    
-		private int m_Start;
-		private int m_Length;
-		private String m_FontName;
-		private String m_FontStyle;
-		private int m_FontSize;
-		private int m_ForegroundColor;
-
-        public StyleRangeEnt build() {
-            return new DefaultStyleRangeEnt(this);
-        }
-
-		@Override
-        public StyleRangeEntBuilder setStart(final int Start) {
-			m_Start = Start;			
-            return this;
-        }
-        
-		@Override
-        public StyleRangeEntBuilder setLength(final int Length) {
-			m_Length = Length;			
-            return this;
-        }
-        
-		@Override
-        public StyleRangeEntBuilder setFontName(final String FontName) {
-			m_FontName = FontName;			
-            return this;
-        }
-        
-		@Override
-        public StyleRangeEntBuilder setFontStyle(final String FontStyle) {
-			m_FontStyle = FontStyle;			
-            return this;
-        }
-        
-		@Override
-        public StyleRangeEntBuilder setFontSize(final int FontSize) {
-			m_FontSize = FontSize;			
-            return this;
-        }
-        
-		@Override
-        public StyleRangeEntBuilder setForegroundColor(final int ForegroundColor) {
-			m_ForegroundColor = ForegroundColor;			
-            return this;
-        }
-        
-    }
 }

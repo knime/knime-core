@@ -46,64 +46,83 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.ConnectionEnt;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the ConnectionEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultConnectionEntBuilder implements ConnectionEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	String m_Dest;
+	int m_DestPort;
+	String m_Source;
+	int m_SourcePort;
+	boolean m_IsDeleteable;
+	boolean m_IsFlowVariablePortConnection;
+	List<XYEnt> m_BendPoints;
+	String m_Type;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public ConnectionEnt build() {
+        return new DefaultConnectionEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public ConnectionEntBuilder setDest(final String Dest) {
+		m_Dest = Dest;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setDestPort(final int DestPort) {
+		m_DestPort = DestPort;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setSource(final String Source) {
+		m_Source = Source;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setSourcePort(final int SourcePort) {
+		m_SourcePort = SourcePort;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setIsDeleteable(final boolean IsDeleteable) {
+		m_IsDeleteable = IsDeleteable;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setIsFlowVariablePortConnection(final boolean IsFlowVariablePortConnection) {
+		m_IsFlowVariablePortConnection = IsFlowVariablePortConnection;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setBendPoints(final List<XYEnt> BendPoints) {
+		m_BendPoints = BendPoints;			
+        return this;
+    }
+        
+	@Override
+    public ConnectionEntBuilder setType(final String Type) {
+		m_Type = Type;			
+        return this;
+    }
+        
 }
+

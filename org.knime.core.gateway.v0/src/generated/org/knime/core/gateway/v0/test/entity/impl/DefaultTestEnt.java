@@ -76,7 +76,7 @@ public class DefaultTestEnt implements TestEnt {
     /**
      * @param builder
      */
-    private DefaultTestEnt(final DefaultTestEntBuilder builder) {
+    DefaultTestEnt(final DefaultTestEntBuilder builder) {
 		m_XY = builder.m_XY;
 		m_XYList = builder.m_XYList;
 		m_Other = builder.m_Other;
@@ -124,58 +124,4 @@ public class DefaultTestEnt implements TestEnt {
 	public static DefaultTestEntBuilder builder() {
 		return new DefaultTestEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the TestEntBuilder-interface.
-	*/
-	public static class DefaultTestEntBuilder implements TestEntBuilder {
-    
-		private XYEnt m_XY;
-		private List<XYEnt> m_XYList;
-		private String m_Other;
-		private List<String> m_PrimitiveList;
-		private Map<String, XYEnt> m_XYMap;
-		private Map<Integer, String> m_PrimitiveMap;
-
-        public TestEnt build() {
-            return new DefaultTestEnt(this);
-        }
-
-		@Override
-        public TestEntBuilder setXY(final XYEnt XY) {
-			m_XY = XY;			
-            return this;
-        }
-        
-		@Override
-        public TestEntBuilder setXYList(final List<XYEnt> XYList) {
-			m_XYList = XYList;			
-            return this;
-        }
-        
-		@Override
-        public TestEntBuilder setOther(final String Other) {
-			m_Other = Other;			
-            return this;
-        }
-        
-		@Override
-        public TestEntBuilder setPrimitiveList(final List<String> PrimitiveList) {
-			m_PrimitiveList = PrimitiveList;			
-            return this;
-        }
-        
-		@Override
-        public TestEntBuilder setXYMap(final Map<String, XYEnt> XYMap) {
-			m_XYMap = XYMap;			
-            return this;
-        }
-        
-		@Override
-        public TestEntBuilder setPrimitiveMap(final Map<Integer, String> PrimitiveMap) {
-			m_PrimitiveMap = PrimitiveMap;			
-            return this;
-        }
-        
-    }
 }

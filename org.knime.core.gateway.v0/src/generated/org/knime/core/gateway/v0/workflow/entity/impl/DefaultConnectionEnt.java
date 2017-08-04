@@ -76,7 +76,7 @@ public class DefaultConnectionEnt implements ConnectionEnt {
     /**
      * @param builder
      */
-    private DefaultConnectionEnt(final DefaultConnectionEntBuilder builder) {
+    DefaultConnectionEnt(final DefaultConnectionEntBuilder builder) {
 		m_Dest = builder.m_Dest;
 		m_DestPort = builder.m_DestPort;
 		m_Source = builder.m_Source;
@@ -136,72 +136,4 @@ public class DefaultConnectionEnt implements ConnectionEnt {
 	public static DefaultConnectionEntBuilder builder() {
 		return new DefaultConnectionEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the ConnectionEntBuilder-interface.
-	*/
-	public static class DefaultConnectionEntBuilder implements ConnectionEntBuilder {
-    
-		private String m_Dest;
-		private int m_DestPort;
-		private String m_Source;
-		private int m_SourcePort;
-		private boolean m_IsDeleteable;
-		private boolean m_IsFlowVariablePortConnection;
-		private List<XYEnt> m_BendPoints;
-		private String m_Type;
-
-        public ConnectionEnt build() {
-            return new DefaultConnectionEnt(this);
-        }
-
-		@Override
-        public ConnectionEntBuilder setDest(final String Dest) {
-			m_Dest = Dest;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setDestPort(final int DestPort) {
-			m_DestPort = DestPort;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setSource(final String Source) {
-			m_Source = Source;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setSourcePort(final int SourcePort) {
-			m_SourcePort = SourcePort;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setIsDeleteable(final boolean IsDeleteable) {
-			m_IsDeleteable = IsDeleteable;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setIsFlowVariablePortConnection(final boolean IsFlowVariablePortConnection) {
-			m_IsFlowVariablePortConnection = IsFlowVariablePortConnection;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setBendPoints(final List<XYEnt> BendPoints) {
-			m_BendPoints = BendPoints;			
-            return this;
-        }
-        
-		@Override
-        public ConnectionEntBuilder setType(final String Type) {
-			m_Type = Type;			
-            return this;
-        }
-        
-    }
 }

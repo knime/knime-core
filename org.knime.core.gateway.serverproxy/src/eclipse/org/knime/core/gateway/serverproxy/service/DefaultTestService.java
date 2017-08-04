@@ -48,10 +48,16 @@
  */
 package org.knime.core.gateway.serverproxy.service;
 
+import static org.knime.core.gateway.entities.EntityBuilderManager.builder;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.gateway.v0.test.entity.builder.TestEntBuilder;
 import org.knime.core.gateway.v0.test.service.TestService;
+import org.knime.core.gateway.v0.workflow.entity.builder.XYEntBuilder;
 
 /**
  *
@@ -63,8 +69,28 @@ public class DefaultTestService implements TestService {
      * {@inheritDoc}
      */
     @Override
+    public TestEnt getTest() {
+        return builder(TestEntBuilder.class)
+            .setOther("bliblablub")
+            .setPrimitiveList(Arrays.asList("1", "2", "3"))
+            .setPrimitiveMap(Collections.emptyMap())
+            .setXY(builder(XYEntBuilder.class).setX(10).setY(15).build())
+            .setXYList(Arrays.asList(builder(XYEntBuilder.class).setX(3).setY(2).build()))
+            .setXYMap(Collections.emptyMap()).build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public TestEnt updateTest(final TestEnt id) {
-        return null;
+        return builder(TestEntBuilder.class)
+            .setOther(id.getOther() + "_updated")
+            .setPrimitiveList(id.getPrimitiveList())
+            .setPrimitiveMap(id.getPrimitiveMap())
+            .setXY(id.getXY())
+            .setXYList(id.getXYList())
+            .setXYMap(id.getXYMap()).build();
     }
 
     /**

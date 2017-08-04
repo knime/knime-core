@@ -151,6 +151,9 @@ public final class ObjectSpecUtil {
 		if(specId.equals("test")) {
 			return "##name##Test";
 		}				
+		if(specId.equals("builder-impl")) {
+			return "Default##name##Builder";
+		}				
 		return null;
     }
 
@@ -173,6 +176,9 @@ public final class ObjectSpecUtil {
 		if(specId.equals("test")) {
 			return "org.knime.core.gateway.v0.test";
 		}				
+		if(specId.equals("builder-impl")) {
+			return "org.knime.core.gateway.v0";
+		}				
 		return null;
     }
 
@@ -194,6 +200,9 @@ public final class ObjectSpecUtil {
 		}				
 		if(specId.equals("test")) {
 			return "test";
+		}				
+		if(specId.equals("builder-impl")) {
+			return "impl";
 		}				
 		return null;
     }

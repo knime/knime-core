@@ -69,7 +69,7 @@ public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
     /**
      * @param builder
      */
-    private DefaultNodeFactoryIDEnt(final DefaultNodeFactoryIDEntBuilder builder) {
+    DefaultNodeFactoryIDEnt(final DefaultNodeFactoryIDEntBuilder builder) {
 		m_ClassName = builder.m_ClassName;
 		m_NodeName = builder.m_NodeName;
     }
@@ -93,30 +93,4 @@ public class DefaultNodeFactoryIDEnt implements NodeFactoryIDEnt {
 	public static DefaultNodeFactoryIDEntBuilder builder() {
 		return new DefaultNodeFactoryIDEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the NodeFactoryIDEntBuilder-interface.
-	*/
-	public static class DefaultNodeFactoryIDEntBuilder implements NodeFactoryIDEntBuilder {
-    
-		private String m_ClassName;
-		private Optional<String> m_NodeName = Optional.empty();
-
-        public NodeFactoryIDEnt build() {
-            return new DefaultNodeFactoryIDEnt(this);
-        }
-
-		@Override
-        public NodeFactoryIDEntBuilder setClassName(final String ClassName) {
-			m_ClassName = ClassName;			
-            return this;
-        }
-        
-		@Override
-        public NodeFactoryIDEntBuilder setNodeName(final Optional<String> NodeName) {
-			m_NodeName = NodeName;			
-            return this;
-        }
-        
-    }
 }

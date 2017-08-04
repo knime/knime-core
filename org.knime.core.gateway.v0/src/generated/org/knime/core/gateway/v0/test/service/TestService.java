@@ -60,6 +60,13 @@ public interface TestService extends GatewayService {
 
     /**
      * Some example documentation.
+     * @return BERND
+     * 
+     */ 
+	TestEnt getTest();
+	
+    /**
+     * Some example documentation.
      * @param id Some example documentation.
      * @return BERND
      * 

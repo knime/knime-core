@@ -82,7 +82,7 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
     /**
      * @param builder
      */
-    private DefaultAnnotationEnt(final DefaultAnnotationEntBuilder builder) {
+    DefaultAnnotationEnt(final DefaultAnnotationEntBuilder builder) {
 		m_Text = builder.m_Text;
 		m_BackgroundColor = builder.m_BackgroundColor;
 		m_Bounds = builder.m_Bounds;
@@ -148,79 +148,4 @@ public class DefaultAnnotationEnt implements AnnotationEnt {
 	public static DefaultAnnotationEntBuilder builder() {
 		return new DefaultAnnotationEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the AnnotationEntBuilder-interface.
-	*/
-	public static class DefaultAnnotationEntBuilder implements AnnotationEntBuilder {
-    
-		private String m_Text;
-		private int m_BackgroundColor;
-		private BoundsEnt m_Bounds;
-		private String m_TextAlignment;
-		private int m_BorderSize;
-		private int m_BorderColor;
-		private int m_DefaultFontSize;
-		private int m_Version;
-		private List<StyleRangeEnt> m_StyleRanges;
-
-        public AnnotationEnt build() {
-            return new DefaultAnnotationEnt(this);
-        }
-
-		@Override
-        public AnnotationEntBuilder setText(final String Text) {
-			m_Text = Text;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
-			m_BackgroundColor = BackgroundColor;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
-			m_Bounds = Bounds;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setTextAlignment(final String TextAlignment) {
-			m_TextAlignment = TextAlignment;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setBorderSize(final int BorderSize) {
-			m_BorderSize = BorderSize;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setBorderColor(final int BorderColor) {
-			m_BorderColor = BorderColor;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
-			m_DefaultFontSize = DefaultFontSize;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setVersion(final int Version) {
-			m_Version = Version;			
-            return this;
-        }
-        
-		@Override
-        public AnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
-			m_StyleRanges = StyleRanges;			
-            return this;
-        }
-        
-    }
 }

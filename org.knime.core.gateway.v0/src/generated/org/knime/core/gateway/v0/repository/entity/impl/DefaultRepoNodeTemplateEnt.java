@@ -71,7 +71,7 @@ public class DefaultRepoNodeTemplateEnt implements RepoNodeTemplateEnt {
     /**
      * @param builder
      */
-    private DefaultRepoNodeTemplateEnt(final DefaultRepoNodeTemplateEntBuilder builder) {
+    DefaultRepoNodeTemplateEnt(final DefaultRepoNodeTemplateEntBuilder builder) {
 		m_Name = builder.m_Name;
 		m_Type = builder.m_Type;
 		m_ID = builder.m_ID;
@@ -113,51 +113,4 @@ public class DefaultRepoNodeTemplateEnt implements RepoNodeTemplateEnt {
 	public static DefaultRepoNodeTemplateEntBuilder builder() {
 		return new DefaultRepoNodeTemplateEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the RepoNodeTemplateEntBuilder-interface.
-	*/
-	public static class DefaultRepoNodeTemplateEntBuilder implements RepoNodeTemplateEntBuilder {
-    
-		private String m_Name;
-		private String m_Type;
-		private String m_ID;
-		private String m_IconURL;
-		private String m_NodeTypeID;
-
-        public RepoNodeTemplateEnt build() {
-            return new DefaultRepoNodeTemplateEnt(this);
-        }
-
-		@Override
-        public RepoNodeTemplateEntBuilder setName(final String Name) {
-			m_Name = Name;			
-            return this;
-        }
-        
-		@Override
-        public RepoNodeTemplateEntBuilder setType(final String Type) {
-			m_Type = Type;			
-            return this;
-        }
-        
-		@Override
-        public RepoNodeTemplateEntBuilder setID(final String ID) {
-			m_ID = ID;			
-            return this;
-        }
-        
-		@Override
-        public RepoNodeTemplateEntBuilder setIconURL(final String IconURL) {
-			m_IconURL = IconURL;			
-            return this;
-        }
-        
-		@Override
-        public RepoNodeTemplateEntBuilder setNodeTypeID(final String NodeTypeID) {
-			m_NodeTypeID = NodeTypeID;			
-            return this;
-        }
-        
-    }
 }

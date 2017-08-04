@@ -72,7 +72,7 @@ public class DefaultMetaPortInfoEnt implements MetaPortInfoEnt {
     /**
      * @param builder
      */
-    private DefaultMetaPortInfoEnt(final DefaultMetaPortInfoEntBuilder builder) {
+    DefaultMetaPortInfoEnt(final DefaultMetaPortInfoEntBuilder builder) {
 		m_PortType = builder.m_PortType;
 		m_IsConnected = builder.m_IsConnected;
 		m_Message = builder.m_Message;
@@ -114,51 +114,4 @@ public class DefaultMetaPortInfoEnt implements MetaPortInfoEnt {
 	public static DefaultMetaPortInfoEntBuilder builder() {
 		return new DefaultMetaPortInfoEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the MetaPortInfoEntBuilder-interface.
-	*/
-	public static class DefaultMetaPortInfoEntBuilder implements MetaPortInfoEntBuilder {
-    
-		private PortTypeEnt m_PortType;
-		private boolean m_IsConnected;
-		private String m_Message;
-		private int m_OldIndex;
-		private int m_NewIndex;
-
-        public MetaPortInfoEnt build() {
-            return new DefaultMetaPortInfoEnt(this);
-        }
-
-		@Override
-        public MetaPortInfoEntBuilder setPortType(final PortTypeEnt PortType) {
-			m_PortType = PortType;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortInfoEntBuilder setIsConnected(final boolean IsConnected) {
-			m_IsConnected = IsConnected;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortInfoEntBuilder setMessage(final String Message) {
-			m_Message = Message;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortInfoEntBuilder setOldIndex(final int OldIndex) {
-			m_OldIndex = OldIndex;			
-            return this;
-        }
-        
-		@Override
-        public MetaPortInfoEntBuilder setNewIndex(final int NewIndex) {
-			m_NewIndex = NewIndex;			
-            return this;
-        }
-        
-    }
 }

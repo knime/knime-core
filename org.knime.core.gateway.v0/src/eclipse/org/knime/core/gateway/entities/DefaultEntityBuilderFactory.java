@@ -69,10 +69,7 @@ public class DefaultEntityBuilderFactory implements EntityBuilderFactory {
         try {
             String name = ObjectSpecUtil.extractNameFromClass(builderInterface, "builder");
             String namespace = ObjectSpecUtil.extractNamespaceFromClass(builderInterface, "builder");
-            String clazz = ObjectSpecUtil.getFullyQualifiedName(namespace, name, "impl");
-            //TODO more generic way to create the builder (e.g. in its own source file)
-            clazz += "$" + "Default" + name + "Builder";
-            return (B)Class.forName(clazz).newInstance();
+            return (B)ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "builder-impl").newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException ex) {
             // TODO better exception handling
             throw new RuntimeException(ex);

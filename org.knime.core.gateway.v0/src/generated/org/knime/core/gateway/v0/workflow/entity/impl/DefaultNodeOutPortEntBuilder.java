@@ -46,64 +46,48 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
+import org.knime.core.gateway.v0.workflow.entity.NodePortEnt;
+import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the NodeOutPortEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultNodeOutPortEntBuilder implements NodeOutPortEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	int m_PortIndex;
+	PortTypeEnt m_PortType;
+	String m_PortName;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public NodeOutPortEnt build() {
+        return new DefaultNodeOutPortEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public NodeOutPortEntBuilder setPortIndex(final int PortIndex) {
+		m_PortIndex = PortIndex;			
+        return this;
+    }
+        
+	@Override
+    public NodeOutPortEntBuilder setPortType(final PortTypeEnt PortType) {
+		m_PortType = PortType;			
+        return this;
+    }
+        
+	@Override
+    public NodeOutPortEntBuilder setPortName(final String PortName) {
+		m_PortName = PortName;			
+        return this;
+    }
+        
 }
+

@@ -44,66 +44,43 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.impl;
+package $package;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+#foreach( $import in $imports)
+import $import;
+#end
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the ${name}Builder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class Default${name}Builder implements ${name}Builder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+#foreach( $field in $fields )
+#if($field.getType().isOptional())
+	$field.getType().toString() m_$field.getName() = Optional.empty();
+#else
+	$field.getType().toString() m_$field.getName();
+#end
+#end
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public ${name} build() {
+        return new Default${name}(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+#foreach( $field in $fields )
+	@Override
+    public ${name}Builder set$field.getName()(final $field.getType().toString() $field.getName()) {
+		m_$field.getName() = $field.getName();			
+        return this;
+    }
+        
+#end
 }
+

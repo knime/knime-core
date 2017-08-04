@@ -71,7 +71,7 @@ public class DefaultPortTypeEnt implements PortTypeEnt {
     /**
      * @param builder
      */
-    private DefaultPortTypeEnt(final DefaultPortTypeEntBuilder builder) {
+    DefaultPortTypeEnt(final DefaultPortTypeEntBuilder builder) {
 		m_Name = builder.m_Name;
 		m_PortObjectClassName = builder.m_PortObjectClassName;
 		m_IsOptional = builder.m_IsOptional;
@@ -113,51 +113,4 @@ public class DefaultPortTypeEnt implements PortTypeEnt {
 	public static DefaultPortTypeEntBuilder builder() {
 		return new DefaultPortTypeEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the PortTypeEntBuilder-interface.
-	*/
-	public static class DefaultPortTypeEntBuilder implements PortTypeEntBuilder {
-    
-		private String m_Name;
-		private String m_PortObjectClassName;
-		private boolean m_IsOptional;
-		private int m_Color;
-		private boolean m_IsHidden;
-
-        public PortTypeEnt build() {
-            return new DefaultPortTypeEnt(this);
-        }
-
-		@Override
-        public PortTypeEntBuilder setName(final String Name) {
-			m_Name = Name;			
-            return this;
-        }
-        
-		@Override
-        public PortTypeEntBuilder setPortObjectClassName(final String PortObjectClassName) {
-			m_PortObjectClassName = PortObjectClassName;			
-            return this;
-        }
-        
-		@Override
-        public PortTypeEntBuilder setIsOptional(final boolean IsOptional) {
-			m_IsOptional = IsOptional;			
-            return this;
-        }
-        
-		@Override
-        public PortTypeEntBuilder setColor(final int Color) {
-			m_Color = Color;			
-            return this;
-        }
-        
-		@Override
-        public PortTypeEntBuilder setIsHidden(final boolean IsHidden) {
-			m_IsHidden = IsHidden;			
-            return this;
-        }
-        
-    }
 }

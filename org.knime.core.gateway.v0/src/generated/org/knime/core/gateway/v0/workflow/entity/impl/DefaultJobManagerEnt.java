@@ -68,7 +68,7 @@ public class DefaultJobManagerEnt implements JobManagerEnt {
     /**
      * @param builder
      */
-    private DefaultJobManagerEnt(final DefaultJobManagerEntBuilder builder) {
+    DefaultJobManagerEnt(final DefaultJobManagerEntBuilder builder) {
 		m_Name = builder.m_Name;
 		m_JobManagerID = builder.m_JobManagerID;
     }
@@ -92,30 +92,4 @@ public class DefaultJobManagerEnt implements JobManagerEnt {
 	public static DefaultJobManagerEntBuilder builder() {
 		return new DefaultJobManagerEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the JobManagerEntBuilder-interface.
-	*/
-	public static class DefaultJobManagerEntBuilder implements JobManagerEntBuilder {
-    
-		private String m_Name;
-		private String m_JobManagerID;
-
-        public JobManagerEnt build() {
-            return new DefaultJobManagerEnt(this);
-        }
-
-		@Override
-        public JobManagerEntBuilder setName(final String Name) {
-			m_Name = Name;			
-            return this;
-        }
-        
-		@Override
-        public JobManagerEntBuilder setJobManagerID(final String JobManagerID) {
-			m_JobManagerID = JobManagerID;			
-            return this;
-        }
-        
-    }
 }

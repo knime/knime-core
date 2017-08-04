@@ -79,7 +79,7 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
     /**
      * @param builder
      */
-    private DefaultWorkflowEnt(final DefaultWorkflowEntBuilder builder) {
+    DefaultWorkflowEnt(final DefaultWorkflowEntBuilder builder) {
 		m_Nodes = builder.m_Nodes;
 		m_Connections = builder.m_Connections;
 		m_MetaInPortInfos = builder.m_MetaInPortInfos;
@@ -127,58 +127,4 @@ public class DefaultWorkflowEnt implements WorkflowEnt {
 	public static DefaultWorkflowEntBuilder builder() {
 		return new DefaultWorkflowEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the WorkflowEntBuilder-interface.
-	*/
-	public static class DefaultWorkflowEntBuilder implements WorkflowEntBuilder {
-    
-		private Map<String, NodeEnt> m_Nodes;
-		private List<ConnectionEnt> m_Connections;
-		private List<MetaPortInfoEnt> m_MetaInPortInfos;
-		private List<MetaPortInfoEnt> m_MetaOutPortInfos;
-		private List<WorkflowAnnotationEnt> m_WorkflowAnnotations;
-		private WorkflowUIInfoEnt m_WorkflowUIInfo;
-
-        public WorkflowEnt build() {
-            return new DefaultWorkflowEnt(this);
-        }
-
-		@Override
-        public WorkflowEntBuilder setNodes(final Map<String, NodeEnt> Nodes) {
-			m_Nodes = Nodes;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setConnections(final List<ConnectionEnt> Connections) {
-			m_Connections = Connections;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setMetaInPortInfos(final List<MetaPortInfoEnt> MetaInPortInfos) {
-			m_MetaInPortInfos = MetaInPortInfos;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setMetaOutPortInfos(final List<MetaPortInfoEnt> MetaOutPortInfos) {
-			m_MetaOutPortInfos = MetaOutPortInfos;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setWorkflowAnnotations(final List<WorkflowAnnotationEnt> WorkflowAnnotations) {
-			m_WorkflowAnnotations = WorkflowAnnotations;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowEntBuilder setWorkflowUIInfo(final WorkflowUIInfoEnt WorkflowUIInfo) {
-			m_WorkflowUIInfo = WorkflowUIInfo;			
-            return this;
-        }
-        
-    }
 }

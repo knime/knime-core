@@ -46,64 +46,74 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the WorkflowUIInfoEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultWorkflowUIInfoEntBuilder implements WorkflowUIInfoEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	int m_GridX;
+	int m_GridY;
+	boolean m_SnapToGrid;
+	boolean m_ShowGrid;
+	double m_ZoomLevel;
+	boolean m_HasCurvedConnection;
+	int m_ConnectionLineWidtdh;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public WorkflowUIInfoEnt build() {
+        return new DefaultWorkflowUIInfoEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public WorkflowUIInfoEntBuilder setGridX(final int GridX) {
+		m_GridX = GridX;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setGridY(final int GridY) {
+		m_GridY = GridY;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setSnapToGrid(final boolean SnapToGrid) {
+		m_SnapToGrid = SnapToGrid;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setShowGrid(final boolean ShowGrid) {
+		m_ShowGrid = ShowGrid;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setZoomLevel(final double ZoomLevel) {
+		m_ZoomLevel = ZoomLevel;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setHasCurvedConnection(final boolean HasCurvedConnection) {
+		m_HasCurvedConnection = HasCurvedConnection;			
+        return this;
+    }
+        
+	@Override
+    public WorkflowUIInfoEntBuilder setConnectionLineWidtdh(final int ConnectionLineWidtdh) {
+		m_ConnectionLineWidtdh = ConnectionLineWidtdh;			
+        return this;
+    }
+        
 }
+

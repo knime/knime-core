@@ -44,66 +44,73 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.impl;
+package org.knime.core.gateway.v0.test.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import java.util.List;
+import java.util.Map;
+import org.knime.core.gateway.v0.test.entity.TestEnt;
+import org.knime.core.gateway.v0.test.entity.builder.TestEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.XYEnt;
+import org.knime.core.gateway.v0.workflow.entity.impl.DefaultXYEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the TestEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultTestEntBuilder implements TestEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	XYEnt m_XY;
+	List<XYEnt> m_XYList;
+	String m_Other;
+	List<String> m_PrimitiveList;
+	Map<String, XYEnt> m_XYMap;
+	Map<Integer, String> m_PrimitiveMap;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public TestEnt build() {
+        return new DefaultTestEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public TestEntBuilder setXY(final XYEnt XY) {
+		m_XY = XY;			
+        return this;
+    }
+        
+	@Override
+    public TestEntBuilder setXYList(final List<XYEnt> XYList) {
+		m_XYList = XYList;			
+        return this;
+    }
+        
+	@Override
+    public TestEntBuilder setOther(final String Other) {
+		m_Other = Other;			
+        return this;
+    }
+        
+	@Override
+    public TestEntBuilder setPrimitiveList(final List<String> PrimitiveList) {
+		m_PrimitiveList = PrimitiveList;			
+        return this;
+    }
+        
+	@Override
+    public TestEntBuilder setXYMap(final Map<String, XYEnt> XYMap) {
+		m_XYMap = XYMap;			
+        return this;
+    }
+        
+	@Override
+    public TestEntBuilder setPrimitiveMap(final Map<Integer, String> PrimitiveMap) {
+		m_PrimitiveMap = PrimitiveMap;			
+        return this;
+    }
+        
 }
+

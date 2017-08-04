@@ -68,7 +68,7 @@ public class DefaultXYEnt implements XYEnt {
     /**
      * @param builder
      */
-    private DefaultXYEnt(final DefaultXYEntBuilder builder) {
+    DefaultXYEnt(final DefaultXYEntBuilder builder) {
 		m_X = builder.m_X;
 		m_Y = builder.m_Y;
     }
@@ -92,30 +92,4 @@ public class DefaultXYEnt implements XYEnt {
 	public static DefaultXYEntBuilder builder() {
 		return new DefaultXYEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the XYEntBuilder-interface.
-	*/
-	public static class DefaultXYEntBuilder implements XYEntBuilder {
-    
-		private int m_X;
-		private int m_Y;
-
-        public XYEnt build() {
-            return new DefaultXYEnt(this);
-        }
-
-		@Override
-        public XYEntBuilder setX(final int X) {
-			m_X = X;			
-            return this;
-        }
-        
-		@Override
-        public XYEntBuilder setY(final int Y) {
-			m_Y = Y;			
-            return this;
-        }
-        
-    }
 }

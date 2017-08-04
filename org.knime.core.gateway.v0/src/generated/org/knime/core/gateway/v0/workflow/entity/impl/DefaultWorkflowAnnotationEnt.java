@@ -79,7 +79,7 @@ public class DefaultWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
     /**
      * @param builder
      */
-    private DefaultWorkflowAnnotationEnt(final DefaultWorkflowAnnotationEntBuilder builder) {
+    DefaultWorkflowAnnotationEnt(final DefaultWorkflowAnnotationEntBuilder builder) {
 		m_Text = builder.m_Text;
 		m_BackgroundColor = builder.m_BackgroundColor;
 		m_Bounds = builder.m_Bounds;
@@ -145,79 +145,4 @@ public class DefaultWorkflowAnnotationEnt implements WorkflowAnnotationEnt {
 	public static DefaultWorkflowAnnotationEntBuilder builder() {
 		return new DefaultWorkflowAnnotationEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the WorkflowAnnotationEntBuilder-interface.
-	*/
-	public static class DefaultWorkflowAnnotationEntBuilder implements WorkflowAnnotationEntBuilder {
-    
-		private String m_Text;
-		private int m_BackgroundColor;
-		private BoundsEnt m_Bounds;
-		private String m_TextAlignment;
-		private int m_BorderSize;
-		private int m_BorderColor;
-		private int m_DefaultFontSize;
-		private int m_Version;
-		private List<StyleRangeEnt> m_StyleRanges;
-
-        public WorkflowAnnotationEnt build() {
-            return new DefaultWorkflowAnnotationEnt(this);
-        }
-
-		@Override
-        public WorkflowAnnotationEntBuilder setText(final String Text) {
-			m_Text = Text;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
-			m_BackgroundColor = BackgroundColor;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
-			m_Bounds = Bounds;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setTextAlignment(final String TextAlignment) {
-			m_TextAlignment = TextAlignment;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setBorderSize(final int BorderSize) {
-			m_BorderSize = BorderSize;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setBorderColor(final int BorderColor) {
-			m_BorderColor = BorderColor;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
-			m_DefaultFontSize = DefaultFontSize;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setVersion(final int Version) {
-			m_Version = Version;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowAnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
-			m_StyleRanges = StyleRanges;			
-            return this;
-        }
-        
-    }
 }

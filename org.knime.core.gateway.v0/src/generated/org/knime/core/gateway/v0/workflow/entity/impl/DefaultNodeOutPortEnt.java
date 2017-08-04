@@ -71,7 +71,7 @@ public class DefaultNodeOutPortEnt implements NodeOutPortEnt {
     /**
      * @param builder
      */
-    private DefaultNodeOutPortEnt(final DefaultNodeOutPortEntBuilder builder) {
+    DefaultNodeOutPortEnt(final DefaultNodeOutPortEntBuilder builder) {
 		m_PortIndex = builder.m_PortIndex;
 		m_PortType = builder.m_PortType;
 		m_PortName = builder.m_PortName;
@@ -101,37 +101,4 @@ public class DefaultNodeOutPortEnt implements NodeOutPortEnt {
 	public static DefaultNodeOutPortEntBuilder builder() {
 		return new DefaultNodeOutPortEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the NodeOutPortEntBuilder-interface.
-	*/
-	public static class DefaultNodeOutPortEntBuilder implements NodeOutPortEntBuilder {
-    
-		private int m_PortIndex;
-		private PortTypeEnt m_PortType;
-		private String m_PortName;
-
-        public NodeOutPortEnt build() {
-            return new DefaultNodeOutPortEnt(this);
-        }
-
-		@Override
-        public NodeOutPortEntBuilder setPortIndex(final int PortIndex) {
-			m_PortIndex = PortIndex;			
-            return this;
-        }
-        
-		@Override
-        public NodeOutPortEntBuilder setPortType(final PortTypeEnt PortType) {
-			m_PortType = PortType;			
-            return this;
-        }
-        
-		@Override
-        public NodeOutPortEntBuilder setPortName(final String PortName) {
-			m_PortName = PortName;			
-            return this;
-        }
-        
-    }
 }

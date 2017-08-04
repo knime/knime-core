@@ -44,66 +44,61 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.impl;
+package org.knime.core.gateway;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import org.knime.core.gateway.entities.EntityBuilderFactory;
-import org.knime.core.gateway.entities.EntityBuilderManager;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
- * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
+ * Utility class that provides programmatic access to entity definitions of this project.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
+public class EntityDefUtil {
 
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
+    private static List<Pair<String, String>> ENTITY_DEFS;
+
+    static {
+        List<Pair<String, String>> list = new ArrayList<>();
+        list.add(Pair.of("TestEnt", "test.entity"));
+        list.add(Pair.of("RepoCategoryEnt", "repository.entity"));
+        list.add(Pair.of("RepoNodeTemplateEnt", "repository.entity"));
+        list.add(Pair.of("MetaPortInfoEnt", "workflow.entity"));
+        list.add(Pair.of("WorkflowUIInfoEnt", "workflow.entity"));
+        list.add(Pair.of("BoundsEnt", "workflow.entity"));
+        list.add(Pair.of("ConnectionEnt", "workflow.entity"));
+        list.add(Pair.of("NodeEnt", "workflow.entity"));
+        list.add(Pair.of("WorkflowAnnotationEnt", "workflow.entity"));
+        list.add(Pair.of("NodeAnnotationEnt", "workflow.entity"));
+        list.add(Pair.of("WorkflowNodeEnt", "workflow.entity"));
+        list.add(Pair.of("NodeInPortEnt", "workflow.entity"));
+        list.add(Pair.of("NativeNodeEnt", "workflow.entity"));
+        list.add(Pair.of("NodeOutPortEnt", "workflow.entity"));
+        list.add(Pair.of("NodeFactoryIDEnt", "workflow.entity"));
+        list.add(Pair.of("XYEnt", "workflow.entity"));
+        list.add(Pair.of("PortTypeEnt", "workflow.entity"));
+        list.add(Pair.of("StyleRangeEnt", "workflow.entity"));
+        list.add(Pair.of("AnnotationEnt", "workflow.entity"));
+        list.add(Pair.of("JobManagerEnt", "workflow.entity"));
+        list.add(Pair.of("WorkflowEnt", "workflow.entity"));
+        list.add(Pair.of("NodeMessageEnt", "workflow.entity"));
+        list.add(Pair.of("NodePortEnt", "workflow.entity"));
+        ENTITY_DEFS = Collections.unmodifiableList(list);
+    }
+
+    private EntityDefUtil() {
+        // utility class
+    }
 
     /**
-     * @param builder
+     * @return all names and namespaces of the available entities
      */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
+    public static Collection<Pair<String, String>> getEntities() {
+        return ENTITY_DEFS;
     }
 
-	@Override
-    public int getX() {
-        return m_X;
-    }
-    
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
-
-	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
-
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
 }

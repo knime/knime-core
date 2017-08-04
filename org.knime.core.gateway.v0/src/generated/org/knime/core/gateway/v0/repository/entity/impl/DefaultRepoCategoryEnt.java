@@ -72,7 +72,7 @@ public class DefaultRepoCategoryEnt implements RepoCategoryEnt {
     /**
      * @param builder
      */
-    private DefaultRepoCategoryEnt(final DefaultRepoCategoryEntBuilder builder) {
+    DefaultRepoCategoryEnt(final DefaultRepoCategoryEntBuilder builder) {
 		m_Name = builder.m_Name;
 		m_IconURL = builder.m_IconURL;
 		m_Categories = builder.m_Categories;
@@ -108,44 +108,4 @@ public class DefaultRepoCategoryEnt implements RepoCategoryEnt {
 	public static DefaultRepoCategoryEntBuilder builder() {
 		return new DefaultRepoCategoryEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the RepoCategoryEntBuilder-interface.
-	*/
-	public static class DefaultRepoCategoryEntBuilder implements RepoCategoryEntBuilder {
-    
-		private String m_Name;
-		private String m_IconURL;
-		private List<RepoCategoryEnt> m_Categories;
-		private List<RepoNodeTemplateEnt> m_Nodes;
-
-        public RepoCategoryEnt build() {
-            return new DefaultRepoCategoryEnt(this);
-        }
-
-		@Override
-        public RepoCategoryEntBuilder setName(final String Name) {
-			m_Name = Name;			
-            return this;
-        }
-        
-		@Override
-        public RepoCategoryEntBuilder setIconURL(final String IconURL) {
-			m_IconURL = IconURL;			
-            return this;
-        }
-        
-		@Override
-        public RepoCategoryEntBuilder setCategories(final List<RepoCategoryEnt> Categories) {
-			m_Categories = Categories;			
-            return this;
-        }
-        
-		@Override
-        public RepoCategoryEntBuilder setNodes(final List<RepoNodeTemplateEnt> Nodes) {
-			m_Nodes = Nodes;			
-            return this;
-        }
-        
-    }
 }

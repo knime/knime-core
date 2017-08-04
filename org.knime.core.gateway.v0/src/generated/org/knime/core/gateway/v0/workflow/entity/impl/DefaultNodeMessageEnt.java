@@ -68,7 +68,7 @@ public class DefaultNodeMessageEnt implements NodeMessageEnt {
     /**
      * @param builder
      */
-    private DefaultNodeMessageEnt(final DefaultNodeMessageEntBuilder builder) {
+    DefaultNodeMessageEnt(final DefaultNodeMessageEntBuilder builder) {
 		m_Message = builder.m_Message;
 		m_Type = builder.m_Type;
     }
@@ -92,30 +92,4 @@ public class DefaultNodeMessageEnt implements NodeMessageEnt {
 	public static DefaultNodeMessageEntBuilder builder() {
 		return new DefaultNodeMessageEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the NodeMessageEntBuilder-interface.
-	*/
-	public static class DefaultNodeMessageEntBuilder implements NodeMessageEntBuilder {
-    
-		private String m_Message;
-		private String m_Type;
-
-        public NodeMessageEnt build() {
-            return new DefaultNodeMessageEnt(this);
-        }
-
-		@Override
-        public NodeMessageEntBuilder setMessage(final String Message) {
-			m_Message = Message;			
-            return this;
-        }
-        
-		@Override
-        public NodeMessageEntBuilder setType(final String Type) {
-			m_Type = Type;			
-            return this;
-        }
-        
-    }
 }

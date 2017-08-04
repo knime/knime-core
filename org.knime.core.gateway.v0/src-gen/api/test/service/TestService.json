@@ -4,6 +4,16 @@
     "description" : "A simple test service.",
     "namespace" : "test.service",
     "methods" : [
+   		 {
+            "name" : "Test",
+            "operation" : "get",
+            "description" : "Some example documentation.",
+            "result" : {
+                "description" : "BERND",
+                "type" : "test.entity.TestEnt"
+            },
+            "params" : []
+        },
         {
             "name" : "Test",
             "operation" : "update",

@@ -92,6 +92,23 @@ public class TestServiceTest {
     }
 
     @Test
+    public void test_getTest() {
+ 
+		//create return value   
+		List<Object> values = TestEntTest.createValueList();
+        TestEnt res = TestEntTest.createEnt(values);
+
+		//mock return value
+		Mockito.when(m_serviceMock.getTest()).thenReturn(res);
+
+		//call method
+		TestEnt methodRes = service(TestService.class, m_serviceConfig).getTest();
+
+		//compare results
+        TestEntTest.testEnt(methodRes, values);
+    }
+
+    @Test
     public void test_updateTest() {
 		//create parameter values
 		TestEnt id = TestEntTest.createEnt(TestEntTest.createValueList());

@@ -55,7 +55,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.knime.core.gateway.v0.workflow.entity.GatewayEntity;
 import org.knime.core.gateway.v0.workflow.entity.builder.GatewayEntityBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowEnt.DefaultWorkflowEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowEntBuilder;
 import org.knime.core.util.ExtPointUtils;
 
 /**

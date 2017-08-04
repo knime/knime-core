@@ -73,7 +73,7 @@ public class DefaultWorkflowUIInfoEnt implements WorkflowUIInfoEnt {
     /**
      * @param builder
      */
-    private DefaultWorkflowUIInfoEnt(final DefaultWorkflowUIInfoEntBuilder builder) {
+    DefaultWorkflowUIInfoEnt(final DefaultWorkflowUIInfoEntBuilder builder) {
 		m_GridX = builder.m_GridX;
 		m_GridY = builder.m_GridY;
 		m_SnapToGrid = builder.m_SnapToGrid;
@@ -127,65 +127,4 @@ public class DefaultWorkflowUIInfoEnt implements WorkflowUIInfoEnt {
 	public static DefaultWorkflowUIInfoEntBuilder builder() {
 		return new DefaultWorkflowUIInfoEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the WorkflowUIInfoEntBuilder-interface.
-	*/
-	public static class DefaultWorkflowUIInfoEntBuilder implements WorkflowUIInfoEntBuilder {
-    
-		private int m_GridX;
-		private int m_GridY;
-		private boolean m_SnapToGrid;
-		private boolean m_ShowGrid;
-		private double m_ZoomLevel;
-		private boolean m_HasCurvedConnection;
-		private int m_ConnectionLineWidtdh;
-
-        public WorkflowUIInfoEnt build() {
-            return new DefaultWorkflowUIInfoEnt(this);
-        }
-
-		@Override
-        public WorkflowUIInfoEntBuilder setGridX(final int GridX) {
-			m_GridX = GridX;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setGridY(final int GridY) {
-			m_GridY = GridY;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setSnapToGrid(final boolean SnapToGrid) {
-			m_SnapToGrid = SnapToGrid;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setShowGrid(final boolean ShowGrid) {
-			m_ShowGrid = ShowGrid;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setZoomLevel(final double ZoomLevel) {
-			m_ZoomLevel = ZoomLevel;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setHasCurvedConnection(final boolean HasCurvedConnection) {
-			m_HasCurvedConnection = HasCurvedConnection;			
-            return this;
-        }
-        
-		@Override
-        public WorkflowUIInfoEntBuilder setConnectionLineWidtdh(final int ConnectionLineWidtdh) {
-			m_ConnectionLineWidtdh = ConnectionLineWidtdh;			
-            return this;
-        }
-        
-    }
 }

@@ -44,66 +44,57 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway.v0.workflow.entity.impl;
+package org.knime.core.gateway.v0.repository.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import java.util.List;
+import org.knime.core.gateway.v0.repository.entity.RepoCategoryEnt;
+import org.knime.core.gateway.v0.repository.entity.RepoNodeTemplateEnt;
+import org.knime.core.gateway.v0.repository.entity.builder.RepoCategoryEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the RepoCategoryEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultRepoCategoryEntBuilder implements RepoCategoryEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	String m_Name;
+	String m_IconURL;
+	List<RepoCategoryEnt> m_Categories;
+	List<RepoNodeTemplateEnt> m_Nodes;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public RepoCategoryEnt build() {
+        return new DefaultRepoCategoryEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public RepoCategoryEntBuilder setName(final String Name) {
+		m_Name = Name;			
+        return this;
+    }
+        
+	@Override
+    public RepoCategoryEntBuilder setIconURL(final String IconURL) {
+		m_IconURL = IconURL;			
+        return this;
+    }
+        
+	@Override
+    public RepoCategoryEntBuilder setCategories(final List<RepoCategoryEnt> Categories) {
+		m_Categories = Categories;			
+        return this;
+    }
+        
+	@Override
+    public RepoCategoryEntBuilder setNodes(final List<RepoNodeTemplateEnt> Nodes) {
+		m_Nodes = Nodes;			
+        return this;
+    }
+        
 }
+

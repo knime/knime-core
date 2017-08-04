@@ -46,64 +46,67 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
-import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.StyleRangeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the StyleRangeEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultStyleRangeEntBuilder implements StyleRangeEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	int m_Start;
+	int m_Length;
+	String m_FontName;
+	String m_FontStyle;
+	int m_FontSize;
+	int m_ForegroundColor;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public StyleRangeEnt build() {
+        return new DefaultStyleRangeEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public StyleRangeEntBuilder setStart(final int Start) {
+		m_Start = Start;			
+        return this;
+    }
+        
+	@Override
+    public StyleRangeEntBuilder setLength(final int Length) {
+		m_Length = Length;			
+        return this;
+    }
+        
+	@Override
+    public StyleRangeEntBuilder setFontName(final String FontName) {
+		m_FontName = FontName;			
+        return this;
+    }
+        
+	@Override
+    public StyleRangeEntBuilder setFontStyle(final String FontStyle) {
+		m_FontStyle = FontStyle;			
+        return this;
+    }
+        
+	@Override
+    public StyleRangeEntBuilder setFontSize(final int FontSize) {
+		m_FontSize = FontSize;			
+        return this;
+    }
+        
+	@Override
+    public StyleRangeEntBuilder setForegroundColor(final int ForegroundColor) {
+		m_ForegroundColor = ForegroundColor;			
+        return this;
+    }
+        
 }
+

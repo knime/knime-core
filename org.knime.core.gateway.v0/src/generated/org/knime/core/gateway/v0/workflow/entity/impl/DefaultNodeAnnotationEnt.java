@@ -80,7 +80,7 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
     /**
      * @param builder
      */
-    private DefaultNodeAnnotationEnt(final DefaultNodeAnnotationEntBuilder builder) {
+    DefaultNodeAnnotationEnt(final DefaultNodeAnnotationEntBuilder builder) {
 		m_IsDefault = builder.m_IsDefault;
 		m_Text = builder.m_Text;
 		m_BackgroundColor = builder.m_BackgroundColor;
@@ -152,86 +152,4 @@ public class DefaultNodeAnnotationEnt implements NodeAnnotationEnt {
 	public static DefaultNodeAnnotationEntBuilder builder() {
 		return new DefaultNodeAnnotationEntBuilder();
 	}
-	
-	/**
-	* Default implementation of the NodeAnnotationEntBuilder-interface.
-	*/
-	public static class DefaultNodeAnnotationEntBuilder implements NodeAnnotationEntBuilder {
-    
-		private boolean m_IsDefault;
-		private String m_Text;
-		private int m_BackgroundColor;
-		private BoundsEnt m_Bounds;
-		private String m_TextAlignment;
-		private int m_BorderSize;
-		private int m_BorderColor;
-		private int m_DefaultFontSize;
-		private int m_Version;
-		private List<StyleRangeEnt> m_StyleRanges;
-
-        public NodeAnnotationEnt build() {
-            return new DefaultNodeAnnotationEnt(this);
-        }
-
-		@Override
-        public NodeAnnotationEntBuilder setIsDefault(final boolean IsDefault) {
-			m_IsDefault = IsDefault;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setText(final String Text) {
-			m_Text = Text;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
-			m_BackgroundColor = BackgroundColor;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
-			m_Bounds = Bounds;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setTextAlignment(final String TextAlignment) {
-			m_TextAlignment = TextAlignment;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setBorderSize(final int BorderSize) {
-			m_BorderSize = BorderSize;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setBorderColor(final int BorderColor) {
-			m_BorderColor = BorderColor;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
-			m_DefaultFontSize = DefaultFontSize;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setVersion(final int Version) {
-			m_Version = Version;			
-            return this;
-        }
-        
-		@Override
-        public NodeAnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
-			m_StyleRanges = StyleRanges;			
-            return this;
-        }
-        
-    }
 }

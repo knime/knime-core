@@ -57,136 +57,129 @@ import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the NodeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the NativeNodeEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultNodeEnt implements NodeEnt {
+ public class DefaultNativeNodeEntBuilder implements NativeNodeEntBuilder {
+    
+	NodeFactoryIDEnt m_NodeFactoryID;
+	Optional<String> m_ParentNodeID = Optional.empty();
+	String m_RootWorkflowID;
+	Optional<JobManagerEnt> m_JobManager = Optional.empty();
+	NodeMessageEnt m_NodeMessage;
+	List<NodeInPortEnt> m_InPorts;
+	List<NodeOutPortEnt> m_OutPorts;
+	String m_Name;
+	String m_NodeID;
+	String m_NodeType;
+	BoundsEnt m_Bounds;
+	boolean m_IsDeletable;
+	String m_NodeState;
+	boolean m_HasDialog;
+	NodeAnnotationEnt m_NodeAnnotation;
 
-	private Optional<String> m_ParentNodeID;
-	private String m_RootWorkflowID;
-	private Optional<JobManagerEnt> m_JobManager;
-	private NodeMessageEnt m_NodeMessage;
-	private List<NodeInPortEnt> m_InPorts;
-	private List<NodeOutPortEnt> m_OutPorts;
-	private String m_Name;
-	private String m_NodeID;
-	private String m_NodeType;
-	private BoundsEnt m_Bounds;
-	private boolean m_IsDeletable;
-	private String m_NodeState;
-	private boolean m_HasDialog;
-	private NodeAnnotationEnt m_NodeAnnotation;
-
-    /**
-     * @param builder
-     */
-    DefaultNodeEnt(final DefaultNodeEntBuilder builder) {
-		m_ParentNodeID = builder.m_ParentNodeID;
-		m_RootWorkflowID = builder.m_RootWorkflowID;
-		m_JobManager = builder.m_JobManager;
-		m_NodeMessage = builder.m_NodeMessage;
-		m_InPorts = builder.m_InPorts;
-		m_OutPorts = builder.m_OutPorts;
-		m_Name = builder.m_Name;
-		m_NodeID = builder.m_NodeID;
-		m_NodeType = builder.m_NodeType;
-		m_Bounds = builder.m_Bounds;
-		m_IsDeletable = builder.m_IsDeletable;
-		m_NodeState = builder.m_NodeState;
-		m_HasDialog = builder.m_HasDialog;
-		m_NodeAnnotation = builder.m_NodeAnnotation;
+	@Override
+    public NativeNodeEnt build() {
+        return new DefaultNativeNodeEnt(this);
     }
 
 	@Override
-    public Optional<String> getParentNodeID() {
-        return m_ParentNodeID;
+    public NativeNodeEntBuilder setNodeFactoryID(final NodeFactoryIDEnt NodeFactoryID) {
+		m_NodeFactoryID = NodeFactoryID;			
+        return this;
     }
-    
+        
 	@Override
-    public String getRootWorkflowID() {
-        return m_RootWorkflowID;
+    public NativeNodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
+		m_ParentNodeID = ParentNodeID;			
+        return this;
     }
-    
+        
 	@Override
-    public Optional<JobManagerEnt> getJobManager() {
-        return m_JobManager;
+    public NativeNodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
+		m_RootWorkflowID = RootWorkflowID;			
+        return this;
     }
-    
+        
 	@Override
-    public NodeMessageEnt getNodeMessage() {
-        return m_NodeMessage;
+    public NativeNodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
+		m_JobManager = JobManager;			
+        return this;
     }
-    
+        
 	@Override
-    public List<NodeInPortEnt> getInPorts() {
-        return m_InPorts;
+    public NativeNodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
+		m_NodeMessage = NodeMessage;			
+        return this;
     }
-    
+        
 	@Override
-    public List<NodeOutPortEnt> getOutPorts() {
-        return m_OutPorts;
+    public NativeNodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
+		m_InPorts = InPorts;			
+        return this;
     }
-    
+        
 	@Override
-    public String getName() {
-        return m_Name;
+    public NativeNodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
+		m_OutPorts = OutPorts;			
+        return this;
     }
-    
+        
 	@Override
-    public String getNodeID() {
-        return m_NodeID;
+    public NativeNodeEntBuilder setName(final String Name) {
+		m_Name = Name;			
+        return this;
     }
-    
+        
 	@Override
-    public String getNodeType() {
-        return m_NodeType;
+    public NativeNodeEntBuilder setNodeID(final String NodeID) {
+		m_NodeID = NodeID;			
+        return this;
     }
-    
+        
 	@Override
-    public BoundsEnt getBounds() {
-        return m_Bounds;
+    public NativeNodeEntBuilder setNodeType(final String NodeType) {
+		m_NodeType = NodeType;			
+        return this;
     }
-    
+        
 	@Override
-    public boolean getIsDeletable() {
-        return m_IsDeletable;
+    public NativeNodeEntBuilder setBounds(final BoundsEnt Bounds) {
+		m_Bounds = Bounds;			
+        return this;
     }
-    
+        
 	@Override
-    public String getNodeState() {
-        return m_NodeState;
+    public NativeNodeEntBuilder setIsDeletable(final boolean IsDeletable) {
+		m_IsDeletable = IsDeletable;			
+        return this;
     }
-    
+        
 	@Override
-    public boolean getHasDialog() {
-        return m_HasDialog;
+    public NativeNodeEntBuilder setNodeState(final String NodeState) {
+		m_NodeState = NodeState;			
+        return this;
     }
-    
+        
 	@Override
-    public NodeAnnotationEnt getNodeAnnotation() {
-        return m_NodeAnnotation;
+    public NativeNodeEntBuilder setHasDialog(final boolean HasDialog) {
+		m_HasDialog = HasDialog;			
+        return this;
     }
-    
-
+        
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
-
-	public static DefaultNodeEntBuilder builder() {
-		return new DefaultNodeEntBuilder();
-	}
+    public NativeNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+		m_NodeAnnotation = NodeAnnotation;			
+        return this;
+    }
+        
 }
+

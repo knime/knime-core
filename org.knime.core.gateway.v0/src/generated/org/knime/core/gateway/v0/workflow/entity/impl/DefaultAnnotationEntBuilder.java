@@ -46,64 +46,95 @@
  */
 package org.knime.core.gateway.v0.workflow.entity.impl;
 
+import java.util.List;
+import org.knime.core.gateway.v0.workflow.entity.AnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.StyleRangeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.AnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.NodeAnnotationEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 /**
- * Default implementation of the BoundsEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the AnnotationEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultBoundsEnt implements BoundsEnt {
-
-	private int m_X;
-	private int m_Y;
-	private int m_Width;
-	private int m_Height;
-
-    /**
-     * @param builder
-     */
-    DefaultBoundsEnt(final DefaultBoundsEntBuilder builder) {
-		m_X = builder.m_X;
-		m_Y = builder.m_Y;
-		m_Width = builder.m_Width;
-		m_Height = builder.m_Height;
-    }
-
-	@Override
-    public int getX() {
-        return m_X;
-    }
+ public class DefaultAnnotationEntBuilder implements AnnotationEntBuilder {
     
-	@Override
-    public int getY() {
-        return m_Y;
-    }
-    
-	@Override
-    public int getWidth() {
-        return m_Width;
-    }
-    
-	@Override
-    public int getHeight() {
-        return m_Height;
-    }
-    
+	String m_Text;
+	int m_BackgroundColor;
+	BoundsEnt m_Bounds;
+	String m_TextAlignment;
+	int m_BorderSize;
+	int m_BorderColor;
+	int m_DefaultFontSize;
+	int m_Version;
+	List<StyleRangeEnt> m_StyleRanges;
 
 	@Override
-	public String toString() {
-	    return ToStringBuilder.reflectionToString(this);
-	}
+    public AnnotationEnt build() {
+        return new DefaultAnnotationEnt(this);
+    }
 
-	public static DefaultBoundsEntBuilder builder() {
-		return new DefaultBoundsEntBuilder();
-	}
+	@Override
+    public AnnotationEntBuilder setText(final String Text) {
+		m_Text = Text;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setBackgroundColor(final int BackgroundColor) {
+		m_BackgroundColor = BackgroundColor;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setBounds(final BoundsEnt Bounds) {
+		m_Bounds = Bounds;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setTextAlignment(final String TextAlignment) {
+		m_TextAlignment = TextAlignment;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setBorderSize(final int BorderSize) {
+		m_BorderSize = BorderSize;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setBorderColor(final int BorderColor) {
+		m_BorderColor = BorderColor;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setDefaultFontSize(final int DefaultFontSize) {
+		m_DefaultFontSize = DefaultFontSize;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setVersion(final int Version) {
+		m_Version = Version;			
+        return this;
+    }
+        
+	@Override
+    public AnnotationEntBuilder setStyleRanges(final List<StyleRangeEnt> StyleRanges) {
+		m_StyleRanges = StyleRanges;			
+        return this;
+    }
+        
 }
+

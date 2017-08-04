@@ -70,7 +70,7 @@ public class Default${name} implements ${name} {
     /**
      * @param builder
      */
-    private Default${name}(final Default${name}Builder builder) {
+    Default${name}(final Default${name}Builder builder) {
 #foreach( $field in $fields )
 		m_$field.getName() = builder.m_$field.getName();
 #end
@@ -92,31 +92,4 @@ public class Default${name} implements ${name} {
 	public static Default${name}Builder builder() {
 		return new Default${name}Builder();
 	}
-	
-	/**
-	* Default implementation of the ${name}Builder-interface.
-	*/
-	public static class Default${name}Builder implements ${name}Builder {
-    
-#foreach( $field in $fields )
-#if($field.getType().isOptional())
-		private $field.getType().toString() m_$field.getName() = Optional.empty();
-#else
-		private $field.getType().toString() m_$field.getName();
-#end
-#end
-
-        public ${name} build() {
-            return new Default${name}(this);
-        }
-
-#foreach( $field in $fields )
-		@Override
-        public ${name}Builder set$field.getName()(final $field.getType().toString() $field.getName()) {
-			m_$field.getName() = $field.getName();			
-            return this;
-        }
-        
-#end
-    }
 }
