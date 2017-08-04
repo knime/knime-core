@@ -1,0 +1,10 @@
+{
+	"id" : "mixin",
+	"type" : "entity",
+	"pattern" : "##name##MixIn",
+	"package-prefix" : "org.knime.core.jsonrpc",
+	"package-suffix" : "",
+	"output-dir" : "src/generated",
+	"import-specs" : ["impl", "builder-impl"],
+	"field-import-specs" : ["api"]
+}
