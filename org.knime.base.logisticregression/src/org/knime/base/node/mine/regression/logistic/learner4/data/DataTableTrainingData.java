@@ -87,11 +87,12 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
     private final ExecutionContext m_exec;
 
     /**
-     * @param data
-     * @param seed
-     * @param rowBuilder
-     * @param cacheSize
-     * @throws CanceledExecutionException
+     * @param data the {@link BufferedDataTable} containing the data to learn on
+     * @param seed for the generation of pseudo random numbers
+     * @param rowBuilder object that creates {@link TrainingRow} objects from {@link DataRow} objects
+     * @param cacheSize the number of rows to hold in memory
+     * @param exec the {@link ExecutionContext} of the KNIME node
+     * @throws CanceledExecutionException if the user cancels the node execution
      *
      */
     public DataTableTrainingData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder,
@@ -125,7 +126,7 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
 
     /**
      * {@inheritDoc}
-     * @throws CanceledExecutionException
+     * @throws CanceledExecutionException if the user cancels the execution of the KNIME node
      */
     @Override
     public T getRandomRow() throws CanceledExecutionException {
@@ -158,11 +159,12 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
     }
 
     private void addRowToCache() throws CanceledExecutionException {
+        // Check if there are still rows left in the table
         if (m_rowIterator.hasNext()) {
             DataRow tableRow = m_rowIterator.next();
             T row = getRowBuilder().build(tableRow, getId(tableRow));
             m_cachedRows.add(row);
-        } else {
+        } else { // reached end of table
             // shuffle data
             shuffle();
             // start again from the beginning
@@ -220,6 +222,11 @@ public class DataTableTrainingData <T extends TrainingRow> extends AbstractTrain
         }
     }
 
+    /**
+     * Used to append the ids of the training rows to the data table for easy access after shuffling.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     private static class IdAppendFactory extends SingleCellFactory {
 
         private int m_idCounter = 0;

@@ -81,6 +81,9 @@ import com.google.common.collect.ImmutableMap;
 /**
  *
  * This class is NOT thread-safe!
+ * It uses caching to allow for an efficient implementation.
+ * Concurrent access to these caches would corrupt the results.
+ * Note that it is possible to use multiple instances in parallel.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -95,9 +98,9 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
     private final float[] m_nonZeroValues;
 
     /**
-     * @param data
-     * @param pmmlSpec
-     * @param sortFactorsCategories
+     * @param data the {@link BufferedDataTable} that contains the data to learn on
+     * @param pmmlSpec the spec of the port object
+     * @param sortFactorsCategories flag that indicates whether factors (nominal features) should be sorted
      *
      */
     public AbstractTrainingRowBuilder(final BufferedDataTable data,
@@ -111,7 +114,6 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         int featureCount = 1;
         // for a one-hot encoded nominal feature only one value will effectively be non zero
         int effectiveFeatureCount = 1;
-        int visited = 0;
         DataTableSpec tableSpec = data.getDataTableSpec();
         List<Integer> learnIndices = new ArrayList<>(learningCols.size());
         Set<Integer> vectorIndices = new HashSet<>();
@@ -122,7 +124,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
             DataType cellType = tableColSpec.getType();
             // add vector columns
             if (cellType.isCompatible(BitVectorValue.class) || cellType.isCompatible(ByteVectorValue.class)
-                    || cellType.isCompatible(DoubleVectorValue.class)
+                    || cellType.isCompatible(DoubleVectorValue.class) // currently the PMMLPortObject does not support DoubleVectors and collections
                     || (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class))) {
                 vectorIndices.add(colIdx);
             }
@@ -166,6 +168,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
     /**
      * Checks if the data contains missing values and if all vectors of the same column have the
      * same length (provided there are vector columns).
+     *
      * @param data the table to learn from
      * @param learnIndices the indices of the learn columns
      * @param the indices of vector columns
@@ -231,10 +234,13 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         m_nonZeroIndices[0] = 0;
         m_nonZeroValues[0] = 1.0F;
         for (int i = 0; i < m_featureCellIndices.size(); i++) {
+            // get cell from row
             Integer cellIdx = m_featureCellIndices.get(i);
             DataCell cell = row.getCell(cellIdx);
             DataType cellType = cell.getType();
+            // handle cell according to cell type
             if (cellType.isCompatible(NominalValue.class)) {
+                // handle nominal cells
                 List<DataCell> nominalDomainValues = m_nominalDomainValues.get(cellIdx);
                 int oneHotIdx = nominalDomainValues.indexOf(cell);
                 if (oneHotIdx == -1) {
@@ -248,6 +254,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
                 }
                 accumulatedIdx += nominalDomainValues.size() - 1;
             } else if (m_vectorLengths.containsKey(cellIdx)) {
+                // handle vector cells
                 if (cellType.isCompatible(BitVectorValue.class)) {
                     BitVectorValue bv = (BitVectorValue)cell;
                     for (long s = bv.nextSetBit(0L); s >= 0; s = bv.nextSetBit(s + 1)) {
@@ -292,6 +299,7 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
                 }
                 accumulatedIdx += m_vectorLengths.get(cellIdx);
             } else if (cellType.isCompatible(DoubleValue.class)) {
+                // handle numerical cells
                 double val = ((DoubleValue)cell).getDoubleValue();
                 if (!MathUtils.equals(val, 0.0)) {
                     m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx;
@@ -340,37 +348,6 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
     @Override
     public Map<Integer, Integer> getVectorLengths() {
         return ImmutableMap.copyOf(m_vectorLengths);
-    }
-
-    private static int getMaximalVectorLength(final BufferedDataTable data, final int colIdx) {
-        long length = 0;
-        for (DataRow row : data) {
-            DataCell cell = row.getCell(colIdx);
-            DataType cellType = cell.getType();
-            long vectorLength = 0;
-            if (cellType.isCompatible(BitVectorValue.class)) {
-                BitVectorValue bv = (BitVectorValue)cell;
-                vectorLength = bv.length();
-            } else if (cellType.isCompatible(ByteVectorValue.class)) {
-                ByteVectorValue bv = (ByteVectorValue)cell;
-                vectorLength = bv.length();
-            } else if (cellType.isCompatible(DoubleVectorValue.class)) {
-                DoubleVectorValue dv = (DoubleVectorValue)cell;
-                vectorLength = dv.getLength();
-            } else if (cell instanceof ListDataValue) {
-                ListDataValue ldv = (ListDataValue)cell;
-                vectorLength = ldv.size();
-            } else {
-                throw new IllegalStateException("Wrong type of value in the column with index (from 1): " + (colIdx + 1) + " : " + cell.getType());
-            }
-            if (length < vectorLength) {
-                length = vectorLength;
-            }
-        }
-        if (length > Integer.MAX_VALUE) {
-            throw new IllegalStateException("The vector column with index (from 1) \"" + (colIdx + 1) + "\" contains too many values.");
-        }
-        return (int)length;
     }
 
 }

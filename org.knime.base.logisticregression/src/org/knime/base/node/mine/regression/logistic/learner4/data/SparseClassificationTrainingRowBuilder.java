@@ -63,6 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
+ * Builder object that creates sparse {@link ClassificationTrainingRow}s.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -71,12 +72,12 @@ public final class SparseClassificationTrainingRowBuilder extends AbstractTraini
     private final int m_targetIdx;
     private final List<DataCell> m_targetDomain;
     /**
-     * @param data
-     * @param pmmlSpec
-     * @param targetReferenceCategory
-     * @param sortTargetCategories
-     * @param sortFactorsCategories
-     * @throws InvalidSettingsException
+     * @param data the {@link BufferedDataTable} containing the data to learn on
+     * @param pmmlSpec the spec of the PMML portobject
+     * @param targetReferenceCategory the category for which the probability is not modeled explicitly
+     * @param sortTargetCategories flag that indicates whether the target categories should be sorted lexicographically
+     * @param sortFactorsCategories flag that indicates whether factor (nominal) features should be sorted lexicographically
+     * @throws InvalidSettingsException if the provided settings are invalid or inconsistent
      */
     public SparseClassificationTrainingRowBuilder(final BufferedDataTable data, final PMMLPortObjectSpec pmmlSpec,
         final DataCell targetReferenceCategory, final boolean sortTargetCategories, final boolean sortFactorsCategories) throws InvalidSettingsException {

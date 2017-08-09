@@ -49,7 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 /**
- * Sparse implementation of a ClassificationTrainingRow.
+ * Sparse implementation of a {@link ClassificationTrainingRow}.
  * See the super class for more details.
  *
  * @author Adrian Nembach, KNIME.com

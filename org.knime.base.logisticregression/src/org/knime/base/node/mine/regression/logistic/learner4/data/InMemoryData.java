@@ -66,6 +66,11 @@ public class InMemoryData <T extends TrainingRow> extends AbstractTrainingData<T
     private final List<T> m_rows;
 
     /**
+     * Instantiates a {@link TrainingData} object that holds all data in memory.
+     *
+     * @param data the {@link BufferedDataTable} that contains the data to learn on
+     * @param seed used to generate pseudo random numbers
+     * @param rowBuilder used to create {@link TrainingRow} objects form {@link DataRow} objects
      *
      */
     public InMemoryData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder) {

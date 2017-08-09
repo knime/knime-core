@@ -53,6 +53,7 @@ import java.util.Random;
 import org.knime.core.node.BufferedDataTable;
 
 /**
+ * Holds members that are common to different implementations of {@link TrainingData}.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -63,9 +64,9 @@ abstract class AbstractTrainingData <T extends TrainingRow> implements TrainingD
     private final TrainingRowBuilder<T> m_rowBuilder;
 
     /**
-     * @param data
-     * @param seed
-     * @param rowBuilder
+     * @param data the {@link BufferedDataTable} that contains the input data
+     * @param seed used to generate pseudo random numbers
+     * @param rowBuilder used to create {@link TrainingRow} objects from the rows of <b>data</b>
      *
      */
     public AbstractTrainingData(final BufferedDataTable data, final Long seed, final TrainingRowBuilder<T> rowBuilder) {

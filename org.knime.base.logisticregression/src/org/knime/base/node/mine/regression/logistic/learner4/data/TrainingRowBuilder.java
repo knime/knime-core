@@ -53,25 +53,59 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
 
 /**
  * Builds a training row.
  *
  * @author Adrian Nembach, KNIME.com
- * @param <T>
+ * @param <T> the kind of {@link TrainingRow} this builder produces
  */
 public interface TrainingRowBuilder <T extends TrainingRow> {
 
+    /**
+     * Creates a {@link TrainingRow} from a {@link DataRow}
+     *
+     * @param row from a {@link BufferedDataTable}
+     * @param id the created {@link TrainingRow} should have
+     * @return a {@link TrainingRow} with the data from <b>row</b>
+     */
     public T build(DataRow row, int id);
 
+    /**
+     * Getter for the number of features.
+     *
+     * @return the number of features
+     */
     public int getFeatureCount();
 
+    /**
+     * Getter for the dimension of the target.
+     * In case of a classification problem with K classes, this would be K-1.
+     *
+     * @return the target dimension
+     */
     public int getTargetDimension();
 
+    /**
+     * The key of the map corresponds to the column index in the input table.
+     *
+     * @return a map of the possible values of all nominal columns
+     */
     public Map<Integer, List<DataCell>> getNominalDomainValues();
 
+    /**
+     * The indices are with respect to the original input table.
+     *
+     * @return a list containing the indices of the columns used for learning
+     */
     public List<Integer> getLearningColumns();
 
+    /**
+     * The key of the map corresponds to the column index in the input table.
+     *
+     * @return a map of the lenghts of all vector columns
+     */
     public Map<Integer, Integer> getVectorLengths();
 
 }

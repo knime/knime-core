@@ -66,7 +66,7 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
     public int getRowCount();
 
     /**
-     * Returns the number of features.
+     * Returns the number of features, this includes the intercept term.
      *
      * @return the number of features
      */
@@ -80,5 +80,11 @@ public interface TrainingData<T extends TrainingRow> extends Iterable<T> {
      */
     public int getTargetDimension();
 
+    /**
+     * Randomly draws a row.
+     *
+     * @return a {@link TrainingRow} drawn randomly from all rows
+     * @throws CanceledExecutionException if the user cancels the node execution
+     */
     public T getRandomRow() throws CanceledExecutionException;
 }
