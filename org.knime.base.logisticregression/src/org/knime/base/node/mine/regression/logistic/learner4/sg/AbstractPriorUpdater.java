@@ -52,6 +52,7 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 
 /**
+ * Contains methods and members that are common to different implementations of the RegularizationUpdater interface.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -62,6 +63,9 @@ abstract class AbstractPriorUpdater implements RegularizationUpdater {
     private final int m_nRows;
 
     /**
+     * @param prior to use for example a Gauss prior
+     * @param nRows the number of rows in the dataset
+     * @param clipAtZero flag that indicates whether the influence of the prior is clipped if a coefficient goes to zero
      *
      */
     public AbstractPriorUpdater(final Prior prior, final int nRows, final boolean clipAtZero) {
@@ -71,6 +75,8 @@ abstract class AbstractPriorUpdater implements RegularizationUpdater {
     }
 
     protected double clip(final double betaValue, final double normalizedStepSize) {
+        // clipping at zero prevents coefficient oscillations around zero
+        // and ensures that coefficients can become exactly zero
         double v = betaValue - normalizedStepSize * m_prior.calculate(betaValue);
         if (betaValue < 0) {
             return v < 0.0 ? v : 0.0;

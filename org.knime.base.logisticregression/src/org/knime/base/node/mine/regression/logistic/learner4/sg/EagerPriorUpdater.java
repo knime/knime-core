@@ -49,12 +49,16 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 /**
+ * Applies the prior update for all coefficients in all iterations.
  *
  * @author Adrian Nembach, KNIME.com
  */
-class EagerPriorUpdater extends AbstractPriorUpdater implements RegularizationUpdater {
+final class EagerPriorUpdater extends AbstractPriorUpdater {
 
     /**
+     * @param prior for example a Gauss prior
+     * @param nRows number of rows in the dataset (needed for normalization)
+     * @param clipAtZero flag that indicates whether the influence of the prior should be clipped at zero
      *
      */
     public EagerPriorUpdater(final Prior prior, final int nRows, final boolean clipAtZero) {

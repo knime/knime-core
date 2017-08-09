@@ -54,7 +54,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegularizationUpdater {
+final class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegularizationUpdater {
 
     private final double[] m_cummulativeSum;
 

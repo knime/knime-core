@@ -49,6 +49,8 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 /**
+ * Assumes that the coefficients are distributed around 0 according to a Laplace distribution with a given variance.
+ * It can be shown that using this prior is equivalent to the LASSO (L1 regularization).
  *
  * @author Adrian Nembach, KNIME.com
  */

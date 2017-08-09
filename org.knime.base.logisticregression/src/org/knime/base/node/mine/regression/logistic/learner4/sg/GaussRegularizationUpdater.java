@@ -53,6 +53,9 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Efficient implementation for Gauss (L2) regularization that scales the entire matrix instead of applying
+ * the updates per coefficient.
+ * Note that it requires the use of a WeightVector implementation that allows to efficiently scale the weights.
  *
  * @author Adrian Nembach, KNIME.com
  */

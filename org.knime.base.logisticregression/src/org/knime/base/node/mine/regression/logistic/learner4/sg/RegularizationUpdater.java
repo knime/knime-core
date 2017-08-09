@@ -51,13 +51,26 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.apache.commons.math3.linear.RealMatrix;
 
 /**
+ * Implementing classes are used to apply regularization updates to the coefficients of the linear model.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface RegularizationUpdater {
 
+    /**
+     * In the eager case this method applies updates to the coefficients.
+     * In the sparse case this method accumulates the learning rate.
+     * @param beta the current estimate of the coefficients
+     * @param stepSize or learning rate
+     * @param iteration the current iteration
+     */
     public void update(WeightVector<?> beta, final double stepSize, final int iteration);
 
+    /**
+     * Creates the hessian matrix with respect to the regularization term.
+     * @param beta the current estimate of the coefficients
+     * @return the hessian of the regularization term.
+     */
     public RealMatrix hessian(WeightVector<?> beta);
 
 }

@@ -49,6 +49,8 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 /**
+ * A uniform distribution for the coefficients is an uninformative prior and therefore corresponds
+ * to now regularization at all.
  *
  * @author Adrian Nembach, KNIME.com
  */

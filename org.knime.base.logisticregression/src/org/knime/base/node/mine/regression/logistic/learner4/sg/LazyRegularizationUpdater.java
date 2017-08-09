@@ -51,12 +51,28 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Implementing classes guarantee that the prior updates are applied lazily to the coefficients.
+ * That means that a coefficient is only updated if the corresponding feature is non zero in the current row.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface LazyRegularizationUpdater extends RegularizationUpdater {
 
+    /**
+     * Calculates the updates for the non zero features in <b>row</b>.
+     * Note that these updates are the accumulation of all updates that were missed because the feature was zero.
+     *
+     * @param beta current estimate of the coefficients for the linear model
+     * @param row current row
+     * @param lastVisited array containing for each feature when it was last visited (non zero)
+     * @param iteration the current iteration
+     */
     void lazyUpdate(WeightVector<?> beta, TrainingRow row, int[] lastVisited, int iteration);
 
+    /**
+     * Apply accumulated updates to all features.
+     * @param beta current estimate of coeffients
+     * @param lastVisited array containing for each feature when it was last visited (non zero)
+     */
     void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited);
 }

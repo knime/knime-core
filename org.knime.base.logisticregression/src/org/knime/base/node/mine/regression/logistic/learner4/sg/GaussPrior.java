@@ -49,14 +49,19 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 /**
+ * Prior that assumes that the coefficients are normal distributed with mean 0 and a given variance.
+ * Using this prior is equivalent to using a L2-norm weight decay with lambda= 1 / variance.
  *
  * @author Adrian Nembach, KNIME.com
  */
-class GaussPrior implements Prior {
+final class GaussPrior implements Prior {
 
     private final double m_factor;
 
     /**
+     * Creates a prior that assumes that the coefficients are normal distributed around 0 with variance <b>variance</b>.
+     *
+     * @param variance the variance of the normal distribution
      *
      */
     public GaussPrior(final double variance) {

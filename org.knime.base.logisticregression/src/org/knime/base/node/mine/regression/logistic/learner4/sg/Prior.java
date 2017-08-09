@@ -49,12 +49,24 @@
 package org.knime.base.node.mine.regression.logistic.learner4.sg;
 
 /**
+ * A prior represents our expectation in which range our coefficients lie.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface Prior {
 
+    /**
+     * Calculates the gradient of the prior term with respect to a coefficient of a linear model
+     *
+     * @param betaValue a coefficient of a linear model
+     * @return gradient of prior with respect to <b>betaValue</b>
+     */
     public double calculate(final double betaValue);
 
+    /**
+     * The hessian of the prior is a diagonal matrix with a single value on the diagonal.
+     *
+     * @return the value of the diagonal of the hessian of the prior
+     */
     public double hessianDiagonalValue();
 }
