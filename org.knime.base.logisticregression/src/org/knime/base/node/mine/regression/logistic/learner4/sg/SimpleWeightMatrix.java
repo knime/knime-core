@@ -56,7 +56,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.Fe
  *
  * @author Adrian Nembach, KNIME.com
  */
-class SimpleWeightMatrix <T extends TrainingRow> extends AbstractWeightVector<T> {
+class SimpleWeightMatrix <T extends TrainingRow> extends AbstractWeightMatrix<T> {
 
     public SimpleWeightMatrix(final int nFets, final int nCats, final boolean fitIntercept) {
         super(nFets, nCats, fitIntercept);
@@ -95,10 +95,6 @@ class SimpleWeightMatrix <T extends TrainingRow> extends AbstractWeightVector<T>
             int idx = iter.getFeatureIndex();
             double val = iter.getFeatureValue();
             for (int c = 0; c < m_data.length; c++) {
-//            double p = 0.0;
-//            for (int i = 0; i < m_data[c].length; i++) {
-//                p += m_data[c][i] * row.getFeature(i);
-//            }
                 prediction[c] += m_data[c][idx] * val;
             }
         }
