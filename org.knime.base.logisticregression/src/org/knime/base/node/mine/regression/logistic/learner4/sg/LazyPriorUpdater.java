@@ -67,7 +67,7 @@ final class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegular
      * {@inheritDoc}
      */
     @Override
-    public void update(final WeightVector<?> beta, final double stepSize, final int iteration) {
+    public void update(final WeightMatrix<?> beta, final double stepSize, final int iteration) {
         double prev = iteration == 0 ? 0 : m_cummulativeSum[iteration - 1];
         m_cummulativeSum[iteration] = prev + stepSize / getNRows();
     }
@@ -76,7 +76,7 @@ final class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegular
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightMatrix<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             double lastCummSum = m_cummulativeSum[iteration - 1];
             if (isClip()) {
@@ -103,7 +103,7 @@ final class LazyPriorUpdater extends AbstractPriorUpdater implements LazyRegular
      * {@inheritDoc}
      */
     @Override
-    public void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited) {
+    public void resetJITSystem(final WeightMatrix<?> beta, final int[] lastVisited) {
         double lastCummSum = m_cummulativeSum[getNRows() - 1];
         // intercept is not regularized
         beta.update((val, c, i) -> doLazyUpdate(val, lastVisited[i], lastCummSum), false);

@@ -56,7 +56,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
  */
 interface StoppingCriterion <T extends TrainingRow> {
 
-    public boolean checkConvergence(WeightVector<T> beta);
+    public boolean checkConvergence(WeightMatrix<T> beta);
 
     public static <T extends TrainingRow> StoppingCriterion<T> or(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
         return beta -> first.checkConvergence(beta) || second.checkConvergence(beta);

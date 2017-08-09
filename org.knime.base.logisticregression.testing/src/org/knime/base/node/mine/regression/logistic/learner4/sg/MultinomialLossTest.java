@@ -132,7 +132,7 @@ public class MultinomialLossTest {
         final MultinomialLoss lossFunc = MultinomialLoss.INSTANCE;
         // the multinomial loss only requires the row to get to the target value
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{2, 3}, 0, 0);
-        final WeightVector<ClassificationTrainingRow> beta = new SimpleWeightVector<ClassificationTrainingRow>(3, 2, true);
+        final WeightMatrix<ClassificationTrainingRow> beta = new SimpleWeightMatrix<ClassificationTrainingRow>(3, 2, true);
         // [0 1 2; 1 2 3]
         beta.update((v, c, i) -> c + i, true);
         Iterator<ClassificationTrainingRow> mockIterator = mock(Iterator.class);

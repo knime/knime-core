@@ -78,7 +78,7 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize, final int iteration) {
+    public void update(final T x, final double[] sig, final WeightMatrix<T> beta, final double stepSize, final int iteration) {
         int id = x.getId();
         if (!m_seen.get(id)) {
             m_seen.set(id);

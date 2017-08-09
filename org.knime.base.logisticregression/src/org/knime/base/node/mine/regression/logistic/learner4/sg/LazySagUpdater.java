@@ -86,7 +86,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void update(final T x, final double[] sig, final WeightVector<T> beta, final double stepSize,
+    public void update(final T x, final double[] sig, final WeightMatrix<T> beta, final double stepSize,
         final int iteration/*, final IndexCache indexCache*/) {
         int id = x.getId();
         if (!m_seen.get(id)) {
@@ -132,7 +132,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<T> beta, final T x, /*final IndexCache indexCache,*/ final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightMatrix<T> beta, final T x, /*final IndexCache indexCache,*/ final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             int lastValid = iteration - 1;
             beta.update((val, c, i, f) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, x);
@@ -162,7 +162,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void normalize(final WeightVector<T> beta, final int[] lastVisited, final int iteration) {
+    public void normalize(final WeightMatrix<T> beta, final int[] lastVisited, final int iteration) {
         beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], iteration), true);
         m_cummulativeSum[iteration] = 0.0;
     }
@@ -171,7 +171,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void resetJITSystem(final WeightVector<T> beta, final int[] lastVisited) {
+    public void resetJITSystem(final WeightMatrix<T> beta, final int[] lastVisited) {
         int lastIteration = m_cummulativeSum.length - 1;
         beta.update((val, c, i) -> doLazyUpdate(val, c, i, lastVisited[i], lastIteration), true);
         Arrays.fill(m_cummulativeSum, 0.0);

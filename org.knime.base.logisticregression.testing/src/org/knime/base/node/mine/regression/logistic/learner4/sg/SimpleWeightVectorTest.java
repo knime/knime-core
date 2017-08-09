@@ -60,9 +60,9 @@ import org.junit.Test;
 public class SimpleWeightVectorTest extends AbstractWeightVectorTest {
 
     @Override
-    protected SimpleWeightVector<MockClassificationTrainingRow> createTestVec(
+    protected SimpleWeightMatrix<MockClassificationTrainingRow> createTestVec(
         final boolean fitIntercept, final int nRows, final int nCols) {
-        SimpleWeightVector<MockClassificationTrainingRow> vec = new SimpleWeightVector<>(nCols, nRows, fitIntercept);
+        SimpleWeightMatrix<MockClassificationTrainingRow> vec = new SimpleWeightMatrix<>(nCols, nRows, fitIntercept);
         double[][] data = vec.m_data;
         assertEquals(data.length, nRows);
         for (int i = 0; i < data.length; i++) {
@@ -74,7 +74,7 @@ public class SimpleWeightVectorTest extends AbstractWeightVectorTest {
     @Override
     @Test
     public void testScale() throws Exception {
-        SimpleWeightVector<MockClassificationTrainingRow> vec = createTestVec(false, 3, 3);
+        SimpleWeightMatrix<MockClassificationTrainingRow> vec = createTestVec(false, 3, 3);
         double[][] data = vec.m_data;
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++) {

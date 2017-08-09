@@ -84,5 +84,5 @@ public interface Loss<T extends TrainingRow> {
      * @param beta weight vector describing a linear model for <b>data</b>
      * @return the hessian matrix
      */
-    public double[][] hessian(final TrainingData<T> data, final WeightVector<T> beta);
+    public double[][] hessian(final TrainingData<T> data, final WeightMatrix<T> beta);
 }

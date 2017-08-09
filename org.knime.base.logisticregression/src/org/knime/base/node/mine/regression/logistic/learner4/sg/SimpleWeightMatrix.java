@@ -56,9 +56,9 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.Fe
  *
  * @author Adrian Nembach, KNIME.com
  */
-class SimpleWeightVector <T extends TrainingRow> extends AbstractWeightVector<T> {
+class SimpleWeightMatrix <T extends TrainingRow> extends AbstractWeightVector<T> {
 
-    public SimpleWeightVector(final int nFets, final int nCats, final boolean fitIntercept) {
+    public SimpleWeightMatrix(final int nFets, final int nCats, final boolean fitIntercept) {
         super(nFets, nCats, fitIntercept);
     }
 

@@ -99,7 +99,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         final U updater = m_updaterFactory.create();
 //        final IndexCache indexCache = createIndexCache(nFets);
 
-        final WeightVector<T> beta = new SimpleWeightVector<>(nFets, nCats, true);
+        final WeightMatrix<T> beta = new SimpleWeightMatrix<>(nFets, nCats, true);
         int epoch = 0;
         for (; epoch < maxEpoch; epoch++) {
             // notify learning rate strategy that a new epoch starts
@@ -157,7 +157,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         return new LogRegLearnerResult(betaMat, covMat, epoch, -lossSum);
     }
 
-    private double totalLoss(final WeightVector<T> beta) {
+    private double totalLoss(final WeightMatrix<T> beta) {
         double lossSum = 0.0;
         for (T x : m_data) {
             double[] prediction = beta.predict(x);
@@ -166,7 +166,7 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         return lossSum;
     }
 
-    private RealMatrix calculateCovariateMatrix(final WeightVector<T> beta) {
+    private RealMatrix calculateCovariateMatrix(final WeightMatrix<T> beta) {
         final RealMatrix llHessian = MatrixUtils.createRealMatrix(m_loss.hessian(m_data, beta));
         final RealMatrix priorHessian = m_regUpdater.hessian(beta);
         RealMatrix observedInformation = llHessian.add(priorHessian);
@@ -174,14 +174,14 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         return covMat;
     }
 
-    protected abstract void normalize(final WeightVector<T> beta, final U updater, final int iteration);
+    protected abstract void normalize(final WeightMatrix<T> beta, final U updater, final int iteration);
 
-    protected abstract void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater,
+    protected abstract void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater,
         int iteration/*, final IndexCache indexCache*/);
 
-    protected abstract void postProcessEpoch(final WeightVector<T> beta, final U updater, final R regUpdater);
+    protected abstract void postProcessEpoch(final WeightMatrix<T> beta, final U updater, final R regUpdater);
 
-    protected abstract void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta,
+    protected abstract void performUpdate(final T x, final U updater, final double[] gradient, final WeightMatrix<T> beta,
         final double stepSize, final int iteration/*, final IndexCache indexCache*/);
 
     protected TrainingData<T> getData() {

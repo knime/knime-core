@@ -66,7 +66,7 @@ final class EagerPriorUpdater extends AbstractPriorUpdater {
     }
 
     @Override
-    public void update(final WeightVector<?> beta, final double stepSize, final int iteration) {
+    public void update(final WeightMatrix<?> beta, final double stepSize, final int iteration) {
         final double normalizedStepSize = stepSize / getNRows();
         if (isClip()) {
             beta.update((val, c, i) -> clip(val, normalizedStepSize), false);

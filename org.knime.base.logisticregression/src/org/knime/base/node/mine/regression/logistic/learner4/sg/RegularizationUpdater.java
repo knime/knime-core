@@ -64,13 +64,13 @@ interface RegularizationUpdater {
      * @param stepSize or learning rate
      * @param iteration the current iteration
      */
-    public void update(WeightVector<?> beta, final double stepSize, final int iteration);
+    public void update(WeightMatrix<?> beta, final double stepSize, final int iteration);
 
     /**
      * Creates the hessian matrix with respect to the regularization term.
      * @param beta the current estimate of the coefficients
      * @return the hessian of the regularization term.
      */
-    public RealMatrix hessian(WeightVector<?> beta);
+    public RealMatrix hessian(WeightMatrix<?> beta);
 
 }

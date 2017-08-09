@@ -56,7 +56,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
  *
  * @author Adrian Nembach, KNIME.com
  */
-interface WeightVector <T extends TrainingRow> {
+interface WeightMatrix <T extends TrainingRow> {
 
     /**
      * Scale the entire vector/matrix except for the intercept term.

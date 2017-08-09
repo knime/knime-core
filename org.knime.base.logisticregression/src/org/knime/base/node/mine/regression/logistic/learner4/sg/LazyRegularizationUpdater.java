@@ -67,12 +67,12 @@ interface LazyRegularizationUpdater extends RegularizationUpdater {
      * @param lastVisited array containing for each feature when it was last visited (non zero)
      * @param iteration the current iteration
      */
-    void lazyUpdate(WeightVector<?> beta, TrainingRow row, int[] lastVisited, int iteration);
+    void lazyUpdate(WeightMatrix<?> beta, TrainingRow row, int[] lastVisited, int iteration);
 
     /**
      * Apply accumulated updates to all features.
      * @param beta current estimate of coeffients
      * @param lastVisited array containing for each feature when it was last visited (non zero)
      */
-    void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited);
+    void resetJITSystem(final WeightMatrix<?> beta, final int[] lastVisited);
 }

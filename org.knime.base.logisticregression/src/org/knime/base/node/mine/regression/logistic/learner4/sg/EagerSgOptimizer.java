@@ -73,7 +73,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void prepareIteration(final WeightVector<T> beta, final T x, final U updater, final R regUpdater, final int iteration
+    protected void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater, final int iteration
         /*final IndexCache indexCache*/) {
         // nothing to prepare
 
@@ -84,7 +84,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void postProcessEpoch(final WeightVector<T> beta, final U updater, final R regUpdater) {
+    protected void postProcessEpoch(final WeightMatrix<T> beta, final U updater, final R regUpdater) {
         // nothing to postprocess
     }
 
@@ -93,7 +93,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void performUpdate(final T x, final U updater, final double[] gradient, final WeightVector<T> beta, final double stepSize,
+    protected void performUpdate(final T x, final U updater, final double[] gradient, final WeightMatrix<T> beta, final double stepSize,
         final int iteration/*, final IndexCache indexCache*/) {
         updater.update(x, gradient, beta, stepSize, iteration);
     }
@@ -105,7 +105,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void normalize(final WeightVector<T> beta, final U updater, final int iteration) {
+    protected void normalize(final WeightMatrix<T> beta, final U updater, final int iteration) {
         // nothing to do
 
     }

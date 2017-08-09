@@ -59,7 +59,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.Fe
  *
  * @author Adrian Nembach, KNIME.com
  */
-abstract class AbstractWeightVector <T extends TrainingRow> implements WeightVector<T> {
+abstract class AbstractWeightVector <T extends TrainingRow> implements WeightMatrix<T> {
 
     protected final double[][] m_data;
     private final boolean m_fitIntercept;

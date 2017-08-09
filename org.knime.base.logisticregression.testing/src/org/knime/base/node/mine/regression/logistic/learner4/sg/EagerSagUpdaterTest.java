@@ -70,8 +70,8 @@ public class EagerSagUpdaterTest {
             new MockClassificationTrainingRow(new double[]{2, 3}, 1, 1),
             new MockClassificationTrainingRow(new double[]{4, 5}, 2, 0),
         };
-        SimpleWeightVector<TrainingRow> beta =
-                new SimpleWeightVector<TrainingRow>(3, 2, true);
+        SimpleWeightMatrix<TrainingRow> beta =
+                new SimpleWeightMatrix<TrainingRow>(3, 2, true);
         double[] gradient = new double[]{3, -2};
 
         updater.update(mockRows[0], gradient, beta, 1.0, 0);

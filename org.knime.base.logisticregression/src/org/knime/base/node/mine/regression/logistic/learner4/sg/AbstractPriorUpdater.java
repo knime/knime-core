@@ -101,7 +101,7 @@ abstract class AbstractPriorUpdater implements RegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public RealMatrix hessian(final WeightVector<?> beta) {
+    public RealMatrix hessian(final WeightMatrix<?> beta) {
         int nVar = beta.getNVariables();
         int dim = nVar * beta.getNVectors();
         double val = m_prior.hessianDiagonalValue();

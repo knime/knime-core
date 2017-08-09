@@ -77,7 +77,7 @@ class BetaChangeStoppingCriterion <T extends TrainingRow> implements StoppingCri
      * {@inheritDoc}
      */
     @Override
-    public boolean checkConvergence(final WeightVector<T> beta) {
+    public boolean checkConvergence(final WeightMatrix<T> beta) {
         double absMaxVal = Double.NEGATIVE_INFINITY;
         double absMaxChange = Double.NEGATIVE_INFINITY;
         double[][] betaMat = beta.getWeightVector();

@@ -65,7 +65,7 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightVector<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightMatrix<?> beta, final TrainingRow row, final int[] lastVisited, final int iteration) {
         // do nothing
     }
 
@@ -73,7 +73,7 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public void resetJITSystem(final WeightVector<?> beta, final int[] lastVisited) {
+    public void resetJITSystem(final WeightMatrix<?> beta, final int[] lastVisited) {
         // do nothing
     }
 
@@ -81,7 +81,7 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public void update(final WeightVector<?> beta, final double stepSize, final int iteration) {
+    public void update(final WeightMatrix<?> beta, final double stepSize, final int iteration) {
         // do nothing
     }
 
@@ -89,7 +89,7 @@ enum UniformRegularizationUpdater implements LazyRegularizationUpdater {
      * {@inheritDoc}
      */
     @Override
-    public RealMatrix hessian(final WeightVector<?> beta) {
+    public RealMatrix hessian(final WeightMatrix<?> beta) {
         int dim = beta.getNVariables() * beta.getNVectors();
         return MatrixUtils.createRealMatrix(dim, dim);
     }

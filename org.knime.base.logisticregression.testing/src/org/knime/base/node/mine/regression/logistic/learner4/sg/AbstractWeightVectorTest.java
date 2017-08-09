@@ -62,7 +62,7 @@ public abstract class AbstractWeightVectorTest {
 
     protected static double EPSILON = 1e-8;
 
-    protected abstract WeightVector<MockClassificationTrainingRow> createTestVec(final boolean fitIntercept, final int nRows, final int nCols);
+    protected abstract WeightMatrix<MockClassificationTrainingRow> createTestVec(final boolean fitIntercept, final int nRows, final int nCols);
 
     protected abstract void testScale() throws Exception;
 
@@ -76,7 +76,7 @@ public abstract class AbstractWeightVectorTest {
 
     private void doTestUpdate(
         final boolean vecFitIntercept, final boolean opFitIntercept) {
-        WeightVector<MockClassificationTrainingRow> vec = createTestVec(vecFitIntercept, 3, 3);
+        WeightMatrix<MockClassificationTrainingRow> vec = createTestVec(vecFitIntercept, 3, 3);
         vec.update((v, c, i) -> 1, opFitIntercept);
         double[][] beta = vec.getWeightVector();
         for (int i = 0; i < beta.length; i++) {
@@ -112,7 +112,7 @@ public abstract class AbstractWeightVectorTest {
 
     @Test
     public void testPredict() throws Exception {
-        WeightVector<MockClassificationTrainingRow> vec = createTestVec(true, 3, 4);
+        WeightMatrix<MockClassificationTrainingRow> vec = createTestVec(true, 3, 4);
         vec.update((v, c, i) -> c + i, true);
         // [0 1 2 3; 1 2 3 4; 2 3 4 5]
         MockClassificationTrainingRow row = new MockClassificationTrainingRow(new double[]{1, 1, 1}, 0, 0);
@@ -130,14 +130,14 @@ public abstract class AbstractWeightVectorTest {
 
     private void predictAndCompare(
         final MockClassificationTrainingRow row, final double[] expected,
-        final WeightVector<MockClassificationTrainingRow> vec) throws Exception{
+        final WeightMatrix<MockClassificationTrainingRow> vec) throws Exception{
         double[] prediction = vec.predict(row);
         assertArrayEquals(expected, prediction, EPSILON);
     }
 
     @Test
     public void testNormalize() throws Exception {
-        WeightVector<MockClassificationTrainingRow> vec = createTestVec(true, 3, 4);
+        WeightMatrix<MockClassificationTrainingRow> vec = createTestVec(true, 3, 4);
         // create [0 1 2 3; 1 2 3 4; 2 3 4 5]
         vec.update((v, c , i) -> c + i, true);
         // scale by 5 (except first position) => [0 5 10 15; 1 10 15 20; 2 15 20 25]

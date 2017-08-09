@@ -94,7 +94,7 @@ public enum MultinomialLoss implements Loss<ClassificationTrainingRow> {
     }
 
     @Override
-    public double[][] hessian(final TrainingData<ClassificationTrainingRow> data, final WeightVector<ClassificationTrainingRow> beta) {
+    public double[][] hessian(final TrainingData<ClassificationTrainingRow> data, final WeightMatrix<ClassificationTrainingRow> beta) {
 
         final int nBetaVecs = data.getTargetDimension();
         final int nFets = data.getFeatureCount();
