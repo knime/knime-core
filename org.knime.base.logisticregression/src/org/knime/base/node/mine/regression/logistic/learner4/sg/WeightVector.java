@@ -51,30 +51,63 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
- * Represents the parameter vector (also sometimes called beta) of a linear model.
+ * Represents the coefficient vector/matrix (also sometimes called beta) of a linear model.
+ * The first column is reserved for the intercept term and gets a special treatment.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface WeightVector <T extends TrainingRow> {
 
-//    public void scale(double alpha, double lambda);
-
+    /**
+     * Scale the entire vector/matrix except for the intercept term.
+     *
+     * @param scaleFactor the factor by which to scale the coefficients
+     */
     public void scale(double scaleFactor);
 
-//    public void update(double alpha, double[][] d, int nCovered);
-
+    /**
+     * Apply eager updates to the coefficients.
+     * That means that we iterate over all coefficients (except for the intercept term if <b>includeIntercept</b> is false).
+     *
+     * @param func function to apply to the individual coefficients
+     * @param includeIntercept flag that indicates whether the updates should also be calculated for the intercept terms
+     */
     public void update(final WeightVectorConsumer1 func, final boolean includeIntercept);
 
+    /**
+     * Apply updates only to those coefficients that are non zero in <b>row</b>
+     * @param func the function to apply to the individual coefficients
+     * @param includeIntercept flag that indicates whether the updates should also be calculated for the intercept terms
+     * @param row for which the coefficients need to be updated
+     */
     public void update(final WeightVectorConsumer2 func, final boolean includeIntercept, final TrainingRow row);
 
+    /**
+     * Apply any accumulated updates (e.g. scaling).
+     */
     public void normalize();
 
+    /**
+     * Returns an array of double arrays that represents the coefficients in a matrix form.
+     *
+     * @return the coefficient matrix as array of double arrays
+     */
     public double[][] getWeightVector();
 
+    /**
+     * Calculates the outputs of the linear models represented by this weight vector/matrix.
+     * Each row of the matrix yields a prediction which is calculated as the inner product of the weightMatrix with <b>row</b>.
+     *
+     * @param row to predict
+     * @return a vector with the predictions of the individual linear models represented by this WeightVector
+     */
     public double[] predict(final T row);
 
-//    public double[] predict(final T row, final int[] nonZeroIndices);
-
+    /**
+     * The scaling factor of this WeightMatrix
+     *
+     * @return the current scale
+     */
     public double getScale();
 
     /**
@@ -89,11 +122,37 @@ interface WeightVector <T extends TrainingRow> {
      */
     public int getNVectors();
 
+    /**
+     * Functional interface for functions of the coefficient value, its category index (row in the matrix) and its feature index (column in the matrix).
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     interface WeightVectorConsumer1 {
+        /**
+         *
+         * @param val value of the coefficient
+         * @param c category (row) index of coefficient
+         * @param i feature (column) index of coefficient
+         * @return value of the function you want to apply
+         */
         public double calculate(double val, int c, int i);
     }
 
+    /**
+     * Functional interface for functions of the coefficient value, its category (row) index, its feature (column) index and
+     * the value of the feature in the row we are currently looking at.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     interface WeightVectorConsumer2 {
+        /**
+         *
+         * @param betaValue value of the coefficient
+         * @param category (row) index of coefficient
+         * @param featureIdx (column) index of coefficient
+         * @param featureValue value of the feature in the currently looked at row
+         * @return value of the function you want to apply
+         */
         public double calculate(double betaValue, int category, int featureIdx, double featureValue);
     }
 
