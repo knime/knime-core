@@ -64,8 +64,15 @@ abstract class AbstractWeightMatrix <T extends TrainingRow> implements WeightMat
     protected final double[][] m_data;
     private final boolean m_fitIntercept;
 
-    public AbstractWeightMatrix(final int nFets, final int nCats, final boolean fitIntercept) {
-        m_data = new double[nCats][nFets];
+    /**
+     * Creates an AbstractWeightMatrix object.
+     *
+     * @param nFets number of features including the intercept term
+     * @param nLinModels number of linear models to represent with this WeightMatrix
+     * @param fitIntercept flag that indicates whether the intercept term should also be fitted
+     */
+    public AbstractWeightMatrix(final int nFets, final int nLinModels, final boolean fitIntercept) {
+        m_data = new double[nLinModels][nFets];
         m_fitIntercept = fitIntercept;
     }
 
@@ -74,16 +81,19 @@ abstract class AbstractWeightMatrix <T extends TrainingRow> implements WeightMat
      */
     @Override
     public void update(final WeightVectorConsumer2 func,
-        final boolean includeIntercept, final TrainingRow row/*final IndexCache indexCache*/) {
+        final boolean includeIntercept, final TrainingRow row) {
         boolean updateIntercept = m_fitIntercept && includeIntercept;
-            for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
-                int i = iter.getFeatureIndex();
-                double featureValue = iter.getFeatureValue();
-                if (!updateIntercept && i == 0) {
-                    continue;
-                }
-                for (int c = 0; c < m_data.length; c++) {
-                    applyFunc(c, i, featureValue, func);
+
+        // use the feature iterator to efficiently traverse the row
+        for (FeatureIterator iter = row.getFeatureIterator(); iter.next();) {
+            int i = iter.getFeatureIndex();
+            double featureValue = iter.getFeatureValue();
+            if (!updateIntercept && i == 0) {
+                // omit intercept term
+                continue;
+            }
+            for (int c = 0; c < m_data.length; c++) {
+                applyFunc(c, i, featureValue, func);
             }
         }
     }
@@ -104,7 +114,9 @@ abstract class AbstractWeightMatrix <T extends TrainingRow> implements WeightMat
     @Override
     public void update(final WeightVectorConsumer1 func, final boolean includeIntercept) {
         // if we decided to not fit the intercept at all, we never touch the intercept weight
+        // no matter what value includeIntercept has
         int startIdx = m_fitIntercept && includeIntercept ? 0 : 1;
+        // iterate over all coefficients, model for model
         for (int c = 0; c < m_data.length; c++) {
             for (int i = startIdx; i < m_data[c].length; i++) {
                 applyFunc(c, i, func);
