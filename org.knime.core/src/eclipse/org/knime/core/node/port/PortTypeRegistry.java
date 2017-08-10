@@ -198,8 +198,10 @@ public final class PortTypeRegistry {
                 createPortTypes(configElement.get());
                 pt = map.get(portClass);
             } else {
-                NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
-                    + "registered at the extension point org.knime.core.PortType.");
+                if (!portClass.isInterface()) {
+                    NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
+                        + "registered at the extension point org.knime.core.PortType.");
+                }
                 pt = new PortType(portClass, isOptional, null, PortType.DEFAULT_COLOR, true);
                 map.put(portClass, pt);
             }
