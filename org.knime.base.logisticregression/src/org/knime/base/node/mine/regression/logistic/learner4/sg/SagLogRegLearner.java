@@ -64,6 +64,7 @@ import org.knime.core.node.NodeProgressMonitor;
 
 /**
  * LogRegLearner implementation that uses the SAG algorithm to find the model.
+ * Sets up training with the SG framework.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -73,6 +74,9 @@ public class SagLogRegLearner implements LogRegLearner {
     private String m_warning;
 
     /**
+     * Create a SagLogRegLearner that obeys the provided settings.
+     *
+     * @param settings contains all settings for the training
      *
      */
     public SagLogRegLearner(final LogRegLearnerSettings settings) {
@@ -104,7 +108,6 @@ public class SagLogRegLearner implements LogRegLearner {
             case Gauss:
                 prior = new GaussPrior(settings.getPriorVariance());
                 break;
-//                return new GaussRegularizationUpdater(settings.getPriorVariance(), data.getRowCount());
             case Laplace:
                 prior = new LaplacePrior(settings.getPriorVariance());
                 break;
