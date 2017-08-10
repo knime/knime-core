@@ -54,6 +54,9 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
+ * Performs SAG updates in an eager way.
+ * Unlike vanilla sgd, sag maintains a stochastic average of all gradients in the training data and uses this
+ * average as direction in the gradient descent step.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -63,14 +66,12 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
     private double[][] m_gradientMemory;
     private BitSet m_seen;
     private int m_nCovered = 0;
-    private int m_nFets;
     private int m_nCats;
 
     private EagerSagUpdater(final int nRows, final int nFets, final int nCats) {
         m_gradientSum = new double[nCats][nFets];
         m_gradientMemory = new double[nCats][nRows];
         m_seen = new BitSet(nRows);
-        m_nFets = nFets;
         m_nCats = nCats;
     }
 
@@ -85,15 +86,6 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
             m_nCovered++;
         }
 
-//        for (int c = 0; c < m_nCats; c++) {
-//            // TODO exploit sparseness
-//            for (int i = 0; i < m_nFets; i++) {
-//                double newD = x.getFeature(i) * (sig[c] - m_gradientMemory[c][id]);
-//                assert Double.isFinite(newD);
-//                m_gradientSum[c][i] += newD;
-//            }
-//            m_gradientMemory[c][id] = sig[c];
-//        }
         for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
             int idx = iter.getFeatureIndex();
             double val = iter.getFeatureValue();
@@ -123,12 +115,18 @@ final class EagerSagUpdater <T extends TrainingRow> implements EagerUpdater<T> {
         private final int m_nCats;
 
         /**
+         * Creates a factory for EagerSagUpdater objects.
+         * For a K class problem <b>nLinModels</b> would be K-1.
+         *
+         * @param nRows number of rows in the training data
+         * @param nFets number of features including the intercept term
+         * @param nLinModels number of linear models to train
          *
          */
-        public EagerSagUpdaterFactory(final int nRows, final int nFets, final int nCats) {
+        public EagerSagUpdaterFactory(final int nRows, final int nFets, final int nLinModels) {
             m_nRows = nRows;
             m_nFets = nFets;
-            m_nCats = nCats;
+            m_nCats = nLinModels;
         }
         /**
          * {@inheritDoc}

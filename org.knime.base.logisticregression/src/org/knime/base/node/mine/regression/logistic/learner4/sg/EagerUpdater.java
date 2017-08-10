@@ -51,10 +51,23 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Performs updates eagerly, that is, all coefficients are updated in each iteration, even if
+ * the corresponding feature is zero.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface EagerUpdater<T extends TrainingRow> extends Updater<T> {
 
+    /**
+     * Performs updates for all coefficients.
+     * Note that <b>sig</b> is not the actual gradient for the individual coefficients and the gradient
+     * must be obtained by multiplying the feature value with sig for the corresponding class.
+     *
+     * @param x the currently looked at row
+     * @param sig the gradient for each model
+     * @param beta the current estimate of the coefficient matrix
+     * @param stepSize to use for gradient descent
+     * @param iteration the current iteration
+     */
     void update(T x, double[] sig, WeightMatrix<T> beta, double stepSize, int iteration);
 }

@@ -52,20 +52,24 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Eager implementation of stochastic gradient descent like optimization schemes for linear models.
  *
  * @author Adrian Nembach, KNIME.com
  */
 final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, R extends RegularizationUpdater> extends AbstractSGOptimizer<T, U, R> {
 
     /**
-     * @param loss
-     * @param updaterFactory
-     * @param prior
-     * @param learningRateStrategy
+     * @param data the training data to learn on
+     * @param loss the loss function to minimize
+     * @param updaterFactory a factory object for loss updater objects
+     * @param regularizationUpdater used to perform regularization updates
+     * @param learningRateStrategy scheme for the learning rate or step size
+     * @param stoppingCriterion criterion that indicates when to stop training
+     * @param calcCovMatrix flag that indicates whether the cofficient covariance matrix should be calculated
      */
-    public EagerSgOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory, final R prior,
+    public EagerSgOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory, final R regularizationUpdater,
         final LearningRateStrategy<T> learningRateStrategy, final StoppingCriterion<T> stoppingCriterion, final boolean calcCovMatrix) {
-        super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion, calcCovMatrix);
+        super(data, loss, updaterFactory, regularizationUpdater, learningRateStrategy, stoppingCriterion, calcCovMatrix);
     }
 
 
@@ -73,8 +77,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      * {@inheritDoc}
      */
     @Override
-    protected void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater, final int iteration
-        /*final IndexCache indexCache*/) {
+    protected void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater, final int iteration) {
         // nothing to prepare
 
     }
@@ -94,7 +97,7 @@ final class EagerSgOptimizer <T extends TrainingRow, U extends EagerUpdater<T>, 
      */
     @Override
     protected void performUpdate(final T x, final U updater, final double[] gradient, final WeightMatrix<T> beta, final double stepSize,
-        final int iteration/*, final IndexCache indexCache*/) {
+        final int iteration) {
         updater.update(x, gradient, beta, stepSize, iteration);
     }
 
