@@ -55,6 +55,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
+ * Lazily performs SAG updates.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -87,7 +88,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      */
     @Override
     public void update(final T x, final double[] sig, final WeightMatrix<T> beta, final double stepSize,
-        final int iteration/*, final IndexCache indexCache*/) {
+        final int iteration) {
         int id = x.getId();
         if (!m_seen.get(id)) {
             m_seen.set(id);
@@ -95,14 +96,6 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         }
 
         // update gradient sum
-//        for (IndexIterator iter = indexCache.getIterator(); iter.hasNext();) {
-//            int nonZero = iter.next();
-//            for (int c = 0; c < m_nCats; c++) {
-//                double newD = x.getFeature(nonZero) * (sig[c] - m_gradientMemory[c][idx]);
-//                assert Double.isFinite(newD);
-//                m_gradientSum[c][nonZero] += newD;
-//            }
-//        }
         for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
             int idx = iter.getFeatureIndex();
             double val = iter.getFeatureValue();
@@ -124,7 +117,6 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         double scale = beta.getScale();
         m_cummulativeSum[iteration] = prev + stepSize / (scale * m_covered);
         // the intersect is not scaled!
-//        assert x.getFeature(0) == 1.0 : "The artificial intercept feature must always be 1!";
         m_intersectStepSize = stepSize / m_covered;
     }
 
@@ -132,7 +124,7 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
      * {@inheritDoc}
      */
     @Override
-    public void lazyUpdate(final WeightMatrix<T> beta, final T x, /*final IndexCache indexCache,*/ final int[] lastVisited, final int iteration) {
+    public void lazyUpdate(final WeightMatrix<T> beta, final T x, final int[] lastVisited, final int iteration) {
         if (iteration > 0) {
             int lastValid = iteration - 1;
             beta.update((val, c, i, f) -> doLazyUpdate(val, c, i, lastVisited[i], lastValid), true, x);
@@ -177,6 +169,11 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         Arrays.fill(m_cummulativeSum, 0.0);
     }
 
+    /**
+     * Factory class for LazySagUpdater.
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
     static class LazySagUpdaterFactory <T extends TrainingRow> implements UpdaterFactory<T, LazyUpdater<T>> {
 
         private final int m_nRows;
@@ -184,12 +181,18 @@ class LazySagUpdater <T extends TrainingRow> implements LazyUpdater<T> {
         private final int m_nCats;
 
         /**
+         * Creates a LazySagUpdaterFactory object.
+         * <b>nLinModels</b> for a K class problem is K-1.
+         *
+         * @param nRows number of rows in the training data
+         * @param nFets number of features including the intercept term
+         * @param nLinModels number of linear models
          *
          */
-        public LazySagUpdaterFactory(final int nRows, final int nFets, final int nCats) {
+        public LazySagUpdaterFactory(final int nRows, final int nFets, final int nLinModels) {
             m_nRows = nRows;
             m_nFets = nFets;
-            m_nCats = nCats;
+            m_nCats = nLinModels;
         }
 
         /**

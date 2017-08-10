@@ -55,6 +55,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow.FeatureIterator;
 
 /**
+ * Lazy implementation of stochastic gradient descent like optimization schemes.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -64,17 +65,21 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
 
 
     /**
-     * @param data
-     * @param loss
-     * @param updaterFactory
-     * @param prior
-     * @param learningRateStrategy
-     * @param stoppingCriterion
+     * Creates a LazySGOptimizer.
+     * All arguments are delegated to the super class.
+     *
+     * @param data the training data to learn on
+     * @param loss the loss to minimize
+     * @param updaterFactory factory for a LazyUpdater
+     * @param regularizationUpdater updater for regularization term
+     * @param learningRateStrategy the strategy used for the learning rate for example fixed
+     * @param stoppingCriterion determines when to stop the training
+     * @param calcCovMatrix flag that indicates whether the covariance matrix of the coefficients should be calculated
      */
     public LazySGOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory,
-        final R prior, final LearningRateStrategy<T> learningRateStrategy,
+        final R regularizationUpdater, final LearningRateStrategy<T> learningRateStrategy,
         final StoppingCriterion<T> stoppingCriterion, final boolean calcCovMatrix) {
-        super(data, loss, updaterFactory, prior, learningRateStrategy, stoppingCriterion, calcCovMatrix);
+        super(data, loss, updaterFactory, regularizationUpdater, learningRateStrategy, stoppingCriterion, calcCovMatrix);
         m_lastVisited = new int[data.getFeatureCount()];
     }
 
@@ -85,8 +90,8 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
      */
     @Override
     protected void performUpdate(final T x, final U updater, final double[] gradient,
-        final WeightMatrix<T> beta, final double stepSize, final int iteration/*, final IndexCache indexCache*/) {
-        updater.update(x, gradient, beta, stepSize, iteration/*, indexCache*/);
+        final WeightMatrix<T> beta, final double stepSize, final int iteration) {
+        updater.update(x, gradient, beta, stepSize, iteration);
     }
 
 
@@ -95,10 +100,10 @@ final class LazySGOptimizer <T extends TrainingRow, U extends LazyUpdater<T>, R 
      */
     @Override
     protected void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater,
-        final int iteration/*, final IndexCache indexCache*/) {
+        final int iteration) {
         // apply lazy updates
-        updater.lazyUpdate(beta, x/*, indexCache,*/, m_lastVisited, iteration);
-        regUpdater.lazyUpdate(beta, x/*, indexCache*/, m_lastVisited, iteration);
+        updater.lazyUpdate(beta, x, m_lastVisited, iteration);
+        regUpdater.lazyUpdate(beta, x, m_lastVisited, iteration);
         // update when present features were last visited
         for (FeatureIterator iter = x.getFeatureIterator(); iter.next();) {
             m_lastVisited[iter.getFeatureIndex()] = iteration;

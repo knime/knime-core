@@ -51,16 +51,51 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Performs updates lazily, that is, only if the corresponding feature of a coefficient is present in the currently looked at row.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface LazyUpdater <T extends TrainingRow> extends Updater<T> {
 
-    void update(T x, double[] sig, WeightMatrix<T> beta, double stepSize, int iteration/*, final IndexCache indexCache*/);
+    /**
+     * Accumulate updates for coefficients of present features in <b>x</b>.
+     * Does not perform the actual updates.
+     *
+     * @param x the currently looked at row
+     * @param sig the partial gradient for each linear model
+     * @param beta the current estimate of the coefficient matrix
+     * @param stepSize or learning rate for gradient descent steps
+     * @param iteration the current iteration
+     */
+    void update(T x, double[] sig, WeightMatrix<T> beta, double stepSize, int iteration);
 
-    void lazyUpdate(final WeightMatrix<T> beta, final T x/*, final IndexCache indexCache*/, final int[] lastVisited, final int iteration);
+    /**
+     * Apply accumulated updates for the coefficients for which the features are present in <b>x</b>.
+     *
+     * @param beta the current estimate of the coefficient matrix
+     * @param x the currently looked at row
+     * @param lastVisited array containing for each feature in which iteration it was last seen (non zero)
+     * @param iteration the current iteration
+     */
+    void lazyUpdate(final WeightMatrix<T> beta, final T x, final int[] lastVisited, final int iteration);
 
+    /**
+     * Apply accumulated updates to all coefficients and reset tracking.
+     * Called after an epoch is finished.
+     *
+     * @param beta the current estimate of the coefficient matrix
+     * @param lastVisited array containing for each feature in which iteration it was last seen (non zero)
+     */
     void resetJITSystem(final WeightMatrix<T> beta, final int[] lastVisited);
 
+    /**
+     * Apply accumulated updates to all coefficients but don't completely reset tracking.
+     * This means that tracking continues from the current iteration.
+     * Calling this function is equivalent to observing a row with all features present.
+     *
+     * @param beta the current estimate of the coefficient matrix
+     * @param lastVisited array containing for each feature in which iteration it was last seen (non zero)
+     * @param iteration the current iteration
+     */
     void normalize(final WeightMatrix<T> beta, final int[] lastVisited, final int iteration);
 }
