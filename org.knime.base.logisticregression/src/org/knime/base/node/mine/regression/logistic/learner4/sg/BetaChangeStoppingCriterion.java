@@ -64,13 +64,19 @@ class BetaChangeStoppingCriterion <T extends TrainingRow> implements StoppingCri
     private final double m_epsilon;
 
     /**
+     * Creates a BetaChangeStoppingCriterion.
+     * For a K class logistic regression problem <b>nLinModels</b> would be K-1.
+     *
+     * @param nFets number of features including the intercept term
+     * @param nLinModels number of linear models
+     * @param epsilon threshold for the relative change
      *
      */
-    public BetaChangeStoppingCriterion(final int nFets, final int nCats, final double epsilon) {
-        m_nCats = nCats;
+    public BetaChangeStoppingCriterion(final int nFets, final int nLinModels, final double epsilon) {
+        m_nCats = nLinModels;
         m_nFets = nFets;
         m_epsilon = epsilon;
-        m_oldBeta = new double[nCats][nFets];
+        m_oldBeta = new double[nLinModels][nFets];
     }
 
     /**

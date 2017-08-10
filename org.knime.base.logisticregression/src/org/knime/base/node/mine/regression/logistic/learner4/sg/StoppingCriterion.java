@@ -51,17 +51,40 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * A stopping criterion tells the learning algorithm when to stop the training.
  *
  * @author Adrian Nembach, KNIME.com
  */
 interface StoppingCriterion <T extends TrainingRow> {
 
+    /**
+     * Check if the training should be stopped.
+     *
+     * @param beta current estimate of the coefficient matrix
+     * @return true if the training converged and should be stopped
+     */
     public boolean checkConvergence(WeightMatrix<T> beta);
 
+    /**
+     * Creates a new stopping criterion that returns true for checkConvergence when either <b>first</b>
+     * or <b>second</b> return true.
+     *
+     * @param first stopping criterion
+     * @param second stopping criterion
+     * @return or-combination of <b>first</b> and <b>second</b>
+     */
     public static <T extends TrainingRow> StoppingCriterion<T> or(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
         return beta -> first.checkConvergence(beta) || second.checkConvergence(beta);
     }
 
+    /**
+     * Creates a new stopping criterion that returns true for checkConvergence only if both <b>first</b> and <b>second</b>
+     * return true.
+     *
+     * @param first stopping criterion
+     * @param second stopping criterion
+     * @return and-combination of <b>first</b> and <b>second</b>
+     */
     public static <T extends TrainingRow> StoppingCriterion<T> and(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
         return beta -> first.checkConvergence(beta) && second.checkConvergence(beta);
     }
