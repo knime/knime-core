@@ -52,7 +52,7 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
- * Represents a loss function used by the {@link SagOptimizer}.
+ * Represents a loss function to minimize.
  *
  * @author Adrian Nembach, KNIME.com
  * @param <T> The type of TrainingRow on which this loss can be evaluated
