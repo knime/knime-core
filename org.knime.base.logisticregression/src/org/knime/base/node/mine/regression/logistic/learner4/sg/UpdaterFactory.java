@@ -51,6 +51,7 @@ package org.knime.base.node.mine.regression.logistic.learner4.sg;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 
 /**
+ * Factory interface for Updater objects.
  *
  * @author Adrian Nembach, KNIME.com
  */

@@ -60,6 +60,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
 import org.knime.core.node.CanceledExecutionException;
 
 /**
+ * Abstract implementation for stochastic gradient descent like optimization scheme.
+ * Serves as base class for both eager and lazy approaches.
  *
  * @author Adrian Nembach, KNIME.com
  * @param <T> The type of row we are dealing with
@@ -77,13 +79,22 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
     private String m_warning = null;
 
     /**
+     * Creates an AbstractSGOptimizer.
+     *
+     * @param data training data to learn on
+     * @param loss function to minimize
+     * @param updaterFactory factory for the updater
+     * @param regularizationUpdater performs updates of the regularization term
+     * @param learningRateStrategy policy for the learning rate for example a constant learning rate
+     * @param stoppingCriterion determines when to stop the training
+     * @param calcCovMatrix flag that indicates whether the coefficient covariance matrix should be calculated
      *
      */
     public AbstractSGOptimizer(final TrainingData<T> data, final Loss<T> loss, final UpdaterFactory<T, U> updaterFactory,
-        final R prior, final LearningRateStrategy<T> learningRateStrategy,
+        final R regularizationUpdater, final LearningRateStrategy<T> learningRateStrategy,
         final StoppingCriterion<T> stoppingCriterion, final boolean calcCovMatrix) {
         m_loss = loss;
-        m_regUpdater = prior;
+        m_regUpdater = regularizationUpdater;
         m_lrStrategy = learningRateStrategy;
         m_updaterFactory = updaterFactory;
         m_stoppingCriterion = stoppingCriterion;
@@ -97,7 +108,6 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         final int nFets = data.getFeatureCount();
         final int nCats = data.getTargetDimension();
         final U updater = m_updaterFactory.create();
-//        final IndexCache indexCache = createIndexCache(nFets);
 
         final WeightMatrix<T> beta = new SimpleWeightMatrix<>(nFets, nCats, true);
         int epoch = 0;
@@ -108,16 +118,13 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
             for (int k = 0; k < nRows; k++) {
                 progress.checkCanceled();
                 T x = data.getRandomRow();
-//                indexCache.prepareRow(x);
-                prepareIteration(beta, x, updater, m_regUpdater, k/*, indexCache*/);
-                double[] prediction = beta.predict(x/*, indexCache*/);
+                prepareIteration(beta, x, updater, m_regUpdater, k);
+                double[] prediction = beta.predict(x);
                 double[] sig = m_loss.gradient(x, prediction);
                 double stepSize = m_lrStrategy.getCurrentLearningRate(x, prediction, sig);
-//                System.out.println("Stepsize: " + stepSize);
                 // beta is updated in two steps
                 m_regUpdater.update(beta, stepSize, k);
-//                updater.update(x, sig, beta, stepSize, k);
-                performUpdate(x, updater, sig, beta, stepSize, k/*, indexCache*/);
+                performUpdate(x, updater, sig, beta, stepSize, k);
                 double scale = beta.getScale();
                 if (scale > 1e10 || scale < -1e10 || (scale > 0 && scale < 1e-10) || (scale < 0 && scale > -1e-10)) {
                     normalize(beta, updater, k);
@@ -157,6 +164,12 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         return new LogRegLearnerResult(betaMat, covMat, epoch, -lossSum);
     }
 
+    /**
+     * Calculates the sum of losses of all rows.
+     *
+     * @param beta coefficient matrix
+     * @return
+     */
     private double totalLoss(final WeightMatrix<T> beta) {
         double lossSum = 0.0;
         for (T x : m_data) {
@@ -174,15 +187,50 @@ abstract class AbstractSGOptimizer <T extends TrainingRow, U extends Updater<T>,
         return covMat;
     }
 
+    /**
+     * Normalize the coefficient matrix <b>beta</b>.
+     *
+     * @param beta current estimate of the coefficient matrix
+     * @param updater the updater used for the current run
+     * @param iteration current iteration
+     */
     protected abstract void normalize(final WeightMatrix<T> beta, final U updater, final int iteration);
 
+    /**
+     * Prepare a new iteration with row <b>x</b>.
+     *
+     * @param beta current estimate of the coefficient matrix
+     * @param x the currently looked at row
+     * @param updater the loss updater used for this training run
+     * @param regUpdater the regularization updater
+     * @param iteration the current iteration
+     */
     protected abstract void prepareIteration(final WeightMatrix<T> beta, final T x, final U updater, final R regUpdater,
-        int iteration/*, final IndexCache indexCache*/);
+        int iteration);
 
+    /**
+     * Perform any operations necessary to finalize a single epoch.
+     *
+     * @param beta current estimate of the coefficient matrix
+     * @param updater the loss updater used for this training run
+     * @param regUpdater the regularization updater
+     */
     protected abstract void postProcessEpoch(final WeightMatrix<T> beta, final U updater, final R regUpdater);
 
+    /**
+     * Perform the updates of the coefficients in <b>beta</b>.
+     * Note that <b>sig</b> is only the partial gradient and needs to be multiplied with the feature values of <b>x</b> to
+     * obtain the actual gradient.
+     *
+     * @param x the currently looked at row
+     * @param updater the loss updater used in the current training run
+     * @param gradient the partial gradient for all linear models (classes)
+     * @param beta the current estimate of the coefficient matrix
+     * @param stepSize or learning rate for gradient descent
+     * @param iteration the current iteration
+     */
     protected abstract void performUpdate(final T x, final U updater, final double[] gradient, final WeightMatrix<T> beta,
-        final double stepSize, final int iteration/*, final IndexCache indexCache*/);
+        final double stepSize, final int iteration);
 
     protected TrainingData<T> getData() {
         return m_data;
