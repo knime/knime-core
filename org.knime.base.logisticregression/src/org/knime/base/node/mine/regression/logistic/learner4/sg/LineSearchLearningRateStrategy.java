@@ -65,7 +65,6 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
     private final Loss<T> m_loss;
     private final double[] m_squaredNorms;
     private final double m_lambda;
-    private final int m_nFets;
     private final StepSizeType m_stepSizeType;
     private final int m_nRows;
     private final double m_lipschitzMultiplier;
@@ -99,7 +98,7 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         // has been initialized for the respective row
         Arrays.fill(m_squaredNorms, Double.NaN);
         m_lambda = lambda;
-        m_nFets = data.getFeatureCount();
+        data.getFeatureCount();
         m_nRows = data.getRowCount();
         m_stepSizeType = stepSizeType;
         m_lipschitzMultiplier = Math.pow(2, -1.0/m_nRows);
@@ -141,8 +140,6 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
                 gg = ngg;
             }
         }
-
-//        System.out.println("loss: " + currentLoss + " new loss: " + newLoss + " gg: " + gg + " lipschitz: " + m_lipschitz );
 
         while (gg > 1.490116119384765625e-8 && newLoss > currentLoss - gg / (2 * m_lipschitz)) {
             m_lipschitz *= 2;
