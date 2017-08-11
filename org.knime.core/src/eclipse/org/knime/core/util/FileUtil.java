@@ -75,6 +75,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -1225,6 +1226,24 @@ public final class FileUtil {
      * @since 2.11
      */
     public static URLConnection openOutputConnection(final URL url, final String httpMethod) throws IOException {
+        return openOutputConnection(url, httpMethod, Collections.emptyMap());
+    }
+
+    /**
+     * Tries to open an output URL connection to the given URL. If the URL is an http URL the given HTTP method is set
+     * and the response code following the initial request is evaluated. Otherwise the connection is simply configured
+     * for output. You can pass optional properties (or headers) that are set before the connection is opened, e.g.
+     * a "Content-Type" for the data you are going to send.
+     *
+     * @param url any URL
+     * @param httpMethod the HTTP method in case the url is http
+     * @param properties a (potentially empty) map with request properties (headers); must not be <code>null</code>
+     * @return a URLConnection configured for output
+     * @throws IOException if an I/O error occurs
+     * @since 3.5
+     */
+    public static URLConnection openOutputConnection(final URL url, final String httpMethod,
+        final Map<String, String> properties) throws IOException {
         URLConnection urlConnection = url.openConnection();
 
         if (urlConnection instanceof HttpURLConnection) {
@@ -1234,6 +1253,8 @@ public final class FileUtil {
         }
 
         urlConnection.setDoOutput(true);
+        URLConnection u = urlConnection;
+        properties.entrySet().stream().forEach(p -> u.setRequestProperty(p.getKey(), p.getValue()));
         urlConnection.connect();
 
         return urlConnection;
