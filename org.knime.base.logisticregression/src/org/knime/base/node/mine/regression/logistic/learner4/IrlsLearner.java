@@ -98,16 +98,6 @@ final class IrlsLearner implements LogRegLearner {
             + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
             + "causes and fixes";
 
-    /**
-     * @param spec The {@link PMMLPortObjectSpec} of the output table.
-     * @param specialColumns The special columns that are learning columns, but cannot be represented as PMML columns (vectors).
-     * @param targetReferenceCategory the target reference category, if not set it is the last category
-     * @param sortTargetCategories true when target categories should be sorted
-     * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
-     */
-    IrlsLearner() {
-        this(30, 1e-14, true);
-    }
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
