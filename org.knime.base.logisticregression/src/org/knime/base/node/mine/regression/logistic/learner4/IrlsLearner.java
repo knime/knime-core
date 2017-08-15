@@ -48,7 +48,6 @@
 package org.knime.base.node.mine.regression.logistic.learner4;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.sqrt;
 
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -75,7 +74,7 @@ import org.knime.core.util.ThreadPool;
 
 
 /**
- * A Logistic Regression Learner based on the iteratively reduced least squares algorithm.
+ * A Logistic Regression Learner based on the iteratively reweighted least squares algorithm.
  *
  * @author Heiko Hofer
  * @author Adrian Nembach, KNIME.com
@@ -89,7 +88,7 @@ final class IrlsLearner implements LogRegLearner {
     private final double m_eps;
     private RealMatrix A;
     private RealMatrix b;
-    private double m_penaltyTerm;
+//    private double m_penaltyTerm;
     private final boolean m_calcCovMatrix;
 
     private String m_warning;
@@ -112,7 +111,7 @@ final class IrlsLearner implements LogRegLearner {
             final boolean calcCovMatrix) {
         m_maxIter = maxIter;
         m_eps = eps;
-        m_penaltyTerm = 0.0;
+//        m_penaltyTerm = 0.0;
         m_calcCovMatrix = calcCovMatrix;
     }
 
@@ -211,18 +210,21 @@ final class IrlsLearner implements LogRegLearner {
 
         }
 
-        if (m_penaltyTerm > 0.0) {
-            RealMatrix stdError = getStdErrorMatrix(xTwx);
-            // do not penalize the constant terms
-            for (int i = 0; i < tcC - 1; i++) {
-                stdError.setEntry(i * (rC + 1), i * (rC + 1), 0);
-            }
-            xTwx = xTwx.add(stdError.scalarMultiply(-0.00001));
-        }
+        // currently not used but could become interesting in the future
+//        if (m_penaltyTerm > 0.0) {
+//            RealMatrix stdError = getStdErrorMatrix(xTwx);
+//            // do not penalize the constant terms
+//            for (int i = 0; i < tcC - 1; i++) {
+//                stdError.setEntry(i * (rC + 1), i * (rC + 1), 0);
+//            }
+//            xTwx = xTwx.add(stdError.scalarMultiply(-0.00001));
+//        }
         exec.checkCanceled();
         b = xTwx.multiply(beta.transpose()).add(xTyu);
         A = xTwx;
         if (rowCount < A.getColumnDimension()) {
+            // fall back check: This case should already be handled on a higher level
+            // but it's important to ensure this property
             throw new IllegalStateException("The dataset must have at least "
                     + A.getColumnDimension() + " rows, but it has only "
                     + rowCount + " rows. It is recommended to use a "
@@ -233,16 +235,16 @@ final class IrlsLearner implements LogRegLearner {
         beta.setSubMatrix(betaNew.transpose().getData(), 0, 0);
     }
 
-    private RealMatrix getStdErrorMatrix(final RealMatrix xTwx) {
-        RealMatrix covMat = new QRDecomposition(xTwx).getSolver().getInverse().scalarMultiply(-1);
-        // the standard error estimate
-        RealMatrix stdErr = MatrixUtils.createRealMatrix(covMat.getColumnDimension(),
-                covMat.getRowDimension());
-        for (int i = 0; i < covMat.getRowDimension(); i++) {
-            stdErr.setEntry(i, i, sqrt(abs(covMat.getEntry(i, i))));
-        }
-        return stdErr;
-    }
+//    private RealMatrix getStdErrorMatrix(final RealMatrix xTwx) {
+//        RealMatrix covMat = new QRDecomposition(xTwx).getSolver().getInverse().scalarMultiply(-1);
+//        // the standard error estimate
+//        RealMatrix stdErr = MatrixUtils.createRealMatrix(covMat.getColumnDimension(),
+//                covMat.getRowDimension());
+//        for (int i = 0; i < covMat.getRowDimension(); i++) {
+//            stdErr.setEntry(i, i, sqrt(abs(covMat.getEntry(i, i))));
+//        }
+//        return stdErr;
+//    }
 
 
     /**
@@ -265,8 +267,6 @@ final class IrlsLearner implements LogRegLearner {
             exec.checkCanceled();
             ClassificationTrainingRow row = iter.next();
 
-//            x.setEntry(0, 0, 1);
-//            x.setSubMatrix(row.getParameter().getData(), 0, 1);
             fillXFromRow(x, row);
 
             double sumEBetaTx = 0;
@@ -325,7 +325,6 @@ final class IrlsLearner implements LogRegLearner {
         final int rC = trainingData.getFeatureCount() - 1;
 
         final RealMatrix beta = MatrixUtils.createRealMatrix(1, (tcC - 1) * (rC + 1));
-//        final RealMatrix beta = MatrixUtils.createRealMatrix(tcC - 1, rC + 1);
 
         Double loglike = 0.0;
         Double loglikeOld = 0.0;
