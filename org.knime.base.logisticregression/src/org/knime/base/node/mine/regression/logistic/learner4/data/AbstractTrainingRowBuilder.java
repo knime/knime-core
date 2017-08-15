@@ -66,8 +66,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
@@ -213,12 +211,14 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
         } else if (cellType.isCompatible(ByteVectorValue.class)) {
             ByteVectorValue bv = (ByteVectorValue)vectorCell;
             vectorLength = bv.length();
-        } else if (cellType.isCompatible(DoubleVectorValue.class)) {
-            DoubleVectorValue dv = (DoubleVectorValue)vectorCell;
-            vectorLength = dv.getLength();
-        } else if (vectorCell instanceof ListDataValue) {
-            ListDataValue ldv = (ListDataValue)vectorCell;
-            vectorLength = ldv.size();
+            // uncomment once double vectors become compatible with PMML
+//        } else if (cellType.isCompatible(DoubleVectorValue.class)) {
+//            DoubleVectorValue dv = (DoubleVectorValue)vectorCell;
+//            vectorLength = dv.getLength();
+            // uncomment once double ists become compatible with PMML
+//        } else if (vectorCell instanceof ListDataValue) {
+//            ListDataValue ldv = (ListDataValue)vectorCell;
+//            vectorLength = ldv.size();
         } else {
             throw new IllegalStateException("The provided cell is of unknown vector type \"" +
                     vectorCell.getType() + "\".");
@@ -267,31 +267,33 @@ abstract class AbstractTrainingRowBuilder <T extends TrainingRow> implements Tra
                         m_nonZeroIndices[nonZeroFeatures] = (int)(accumulatedIdx + s);
                         m_nonZeroValues[nonZeroFeatures++] = bv.get(s);
                     }
-                } else if (cellType.isCompatible(DoubleVectorValue.class)) {
-                    // DoubleVectorValue also implements CollectionDataValue but
-                    // as it then first boxes its values into DataCells, it is much more
-                    // efficient to access its values via the DoubleVectorValue interface
-                    DoubleVectorValue dv = (DoubleVectorValue)cell;
-                    for (int s = 0; s < dv.getLength(); s++) {
-                        float val = (float)dv.getValue(s);
-                        if (!MathUtils.equals(val, 0.0)) {
-                            m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
-                            m_nonZeroValues[nonZeroFeatures++] = val;
-                        }
-                    }
-                } else if (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class)) {
-                    CollectionDataValue cv = (CollectionDataValue)cell;
-                    int s = 0;
-                    for (DataCell c : cv) {
-                        // we already checked above that cv contains DoubleValues
-                        DoubleValue dv = (DoubleValue)c;
-                        double val = dv.getDoubleValue();
-                        if (!MathUtils.equals(val, 0.0)) {
-                            m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
-                            m_nonZeroValues[nonZeroFeatures] = (float)val;
-                        }
-                        s++;
-                    }
+                    // uncomment once DoubleVectors can be used with PMML
+//                } else if (cellType.isCompatible(DoubleVectorValue.class)) {
+//                    // DoubleVectorValue also implements CollectionDataValue but
+//                    // as it then first boxes its values into DataCells, it is much more
+//                    // efficient to access its values via the DoubleVectorValue interface
+//                    DoubleVectorValue dv = (DoubleVectorValue)cell;
+//                    for (int s = 0; s < dv.getLength(); s++) {
+//                        float val = (float)dv.getValue(s);
+//                        if (!MathUtils.equals(val, 0.0)) {
+//                            m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
+//                            m_nonZeroValues[nonZeroFeatures++] = val;
+//                        }
+//                    }
+                    // uncomment once double lists become compatible with PMML
+//                } else if (cellType.isCollectionType() && cellType.getCollectionElementType().isCompatible(DoubleValue.class)) {
+//                    CollectionDataValue cv = (CollectionDataValue)cell;
+//                    int s = 0;
+//                    for (DataCell c : cv) {
+//                        // we already checked above that cv contains DoubleValues
+//                        DoubleValue dv = (DoubleValue)c;
+//                        double val = dv.getDoubleValue();
+//                        if (!MathUtils.equals(val, 0.0)) {
+//                            m_nonZeroIndices[nonZeroFeatures] = accumulatedIdx + s;
+//                            m_nonZeroValues[nonZeroFeatures] = (float)val;
+//                        }
+//                        s++;
+//                    }
                 } else {
                     // should never be thrown because we check the compatibility in the constructor
                     throw new IllegalStateException("DataCell \"" + cell.toString() +
