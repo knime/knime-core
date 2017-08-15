@@ -216,7 +216,7 @@ class LogRegCoordinator {
         m_warning = sb.toString();
     }
 
-    private void checkShapeCompatibility(final TrainingData data) throws InvalidSettingsException {
+    private void checkShapeCompatibility(final TrainingData<?> data) throws InvalidSettingsException {
         boolean moreFeaturesThanRows = data.getFeatureCount() > data.getRowCount();
         if (moreFeaturesThanRows) {
             switch (m_settings.getSolver()) {
@@ -381,7 +381,12 @@ class LogRegCoordinator {
                 betaMat.setEntry(0, i * cols + j, beta.getEntry(i, j));
             }
         }
-        RealMatrix covMat = result.getCovariateMatrix();
+        RealMatrix covMat;
+        if (result.hasCovariateMatrix()) {
+            covMat = result.getCovariateMatrix();
+        } else {
+            covMat = null;
+        }
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_pmmlOutSpec,

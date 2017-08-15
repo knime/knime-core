@@ -88,30 +88,41 @@ public final class LogRegLearnerResult {
         this(beta, null, iterations, logLikelihood);
     }
 
+    /**
+     * Indicates whether a covariance matrix is available.
+     *
+     * @return true if a covariance matrix present
+     */
     public boolean hasCovariateMatrix() {
         return m_covMat != null;
     }
 
+    /**
+     * Returns the covariance matrix of the coefficients which is necessary
+     * to calculate statistics like standard error, z-value and P-value.
+     *
+     * @return the covariance matrix of the coefficients
+     */
     public RealMatrix getCovariateMatrix() {
         return m_covMat;
     }
 
     /**
-     * @return the beta
+     * @return the coefficient matrix of the model
      */
     public RealMatrix getBeta() {
         return m_beta;
     }
 
     /**
-     * @return the iter
+     * @return the number of iterations (epochs) the solver took to find the solution
      */
     public int getIter() {
         return m_iter;
     }
 
     /**
-     * @return the logLike
+     * @return the log likelihood of the final model
      */
     public double getLogLike() {
         return m_logLike;
