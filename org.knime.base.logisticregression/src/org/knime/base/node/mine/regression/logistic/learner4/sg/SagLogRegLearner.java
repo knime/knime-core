@@ -53,7 +53,6 @@ import java.util.Optional;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearner;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerResult;
 import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings;
-import org.knime.base.node.mine.regression.logistic.learner4.LogRegLearnerSettings.Solver;
 import org.knime.base.node.mine.regression.logistic.learner4.data.ClassificationTrainingRow;
 import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingData;
 import org.knime.base.node.mine.regression.logistic.learner4.sg.LineSearchLearningRateStrategy.StepSizeType;
@@ -84,16 +83,12 @@ public class SagLogRegLearner implements LogRegLearner {
     }
 
     private LearningRateStrategy<ClassificationTrainingRow> createLearningRateStrategy(
-        final LogRegLearnerSettings settings, final boolean isSag,
-        final TrainingData<ClassificationTrainingRow> data, final Loss<ClassificationTrainingRow> loss) throws InvalidSettingsException {
+        final LogRegLearnerSettings settings, final TrainingData<ClassificationTrainingRow> data,
+        final Loss<ClassificationTrainingRow> loss) throws InvalidSettingsException {
         switch (settings.getLearningRateStrategy()) {
             case Fixed:
                 return new FixedLearningRateStrategy<>(settings.getInitialLearningRate());
             case LineSearch:
-                if (!isSag) {
-                    throw new InvalidSettingsException("Stochastic gradient descent does not support the "
-                        + "line search learning rate strategy.");
-                }
                 double lambda = 1 / settings.getPriorVariance();
                 return new LineSearchLearningRateStrategy<>(data, loss, lambda, StepSizeType.Default);
             default:
@@ -160,7 +155,7 @@ public class SagLogRegLearner implements LogRegLearner {
         final Loss<ClassificationTrainingRow> loss = MultinomialLoss.INSTANCE;
         final StoppingCriterion<ClassificationTrainingRow> stoppingCriterion =
                 new BetaChangeStoppingCriterion<>(data.getFeatureCount(), data.getTargetDimension(), settings.getEpsilon());
-        LearningRateStrategy<ClassificationTrainingRow> lrs = createLearningRateStrategy(settings, settings.getSolver() == Solver.SAG, data, loss);
+        LearningRateStrategy<ClassificationTrainingRow> lrs = createLearningRateStrategy(settings, data, loss);
         RegularizationUpdater regUpdater = createRegularizationUpdater(settings, data);
         if (settings.isPerformLazy()) {
             UpdaterFactory<ClassificationTrainingRow, LazyUpdater<ClassificationTrainingRow>> updaterFactory = createLazyUpdater(settings, data);
