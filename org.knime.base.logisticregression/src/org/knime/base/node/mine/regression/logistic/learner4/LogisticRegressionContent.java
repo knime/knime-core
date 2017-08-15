@@ -514,7 +514,7 @@ final class LogisticRegressionContent {
     BufferedDataTable createModelStatisticsTable(final ExecutionContext exec) {
         BufferedDataContainer container = exec.createDataContainer(createModelStatisticsTableSpec());
         DataCell[] cells = new DataCell[] {
-            new IntCell(m_iter), new DoubleCell(m_loglike)
+            new IntCell(getIterationCount()), new DoubleCell(getEstimatedLikelihood())
         };
         DataRow row = new DefaultRow("Row0", cells);
         container.addRowToTable(row);
