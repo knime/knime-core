@@ -117,11 +117,9 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JCheckBox m_lazyCalculationCheckBox;
     private JSpinner m_maxEpochSpinner;
     private JCheckBox m_calcCovMatrixCheckBox;
-//    private JSpinner m_epsilonSpinner;
     private JTextField m_epsilonField;
 
     private JComboBox<LearningRateStrategies> m_learningRateStrategyComboBox;
-//    private JSpinner m_initialLearningRateSpinner;
     private JTextField m_initialLearningRateField;
 
     private JComboBox<Prior> m_priorComboBox;
@@ -132,8 +130,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private JTextField m_seedField;
     private JButton m_newSeedButton;
     private JSpinner m_chunkSizeSpinner;
-
-    private JLabel m_warningPanel;
 
     /**
      * Create new dialog for linear regression model.
@@ -146,7 +142,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0), NominalValue.class);
         m_selectionPanel = columnSelectionPanel;
 
-        m_warningPanel = new JLabel();
         m_targetReferenceCategory = new JComboBox<>();
         m_filterPanel = new DataColumnSpecFilterPanel(false);
         m_notSortTarget =
@@ -158,8 +153,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_calcCovMatrixCheckBox = new JCheckBox("Calculate statistics for coefficients");
         m_maxEpochSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_MAX_EPOCH, 1, Integer.MAX_VALUE, 1));
         m_epsilonField= new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
-//        m_initialLearningRateSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_INITIAL_LEARNING_RATE,
-//            Double.MIN_VALUE, 1e3, 1e-3));
         m_initialLearningRateField = new JTextField(Double.toString(LogRegLearnerSettings.DEFAULT_EPSILON), NUMBER_INPUT_FIELD_COLS);
         m_priorVarianceSpinner = new JSpinner(new SpinnerNumberModel(LogRegLearnerSettings.DEFAULT_PRIOR_VARIANCE,
             Double.MIN_VALUE, 1e3, 0.1));
@@ -257,7 +250,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     }
 
     private void enforceLRSCompatibilities(final LearningRateStrategies lrs) {
-//        m_initialLearningRateSpinner.setEnabled(lrs.hasInitialValue());
         m_initialLearningRateField.setEnabled(lrs.hasInitialValue());
     }
 
@@ -303,7 +295,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
     private void setEnabledSGRelated(final boolean enable) {
         m_lazyCalculationCheckBox.setEnabled(enable);
         m_learningRateStrategyComboBox.setEnabled(enable);
-//        m_initialLearningRateSpinner.setEnabled(enable);
         m_initialLearningRateField.setEnabled(enable);
         m_priorComboBox.setEnabled(enable);
         m_priorVarianceSpinner.setEnabled(enable);
@@ -441,7 +432,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridy++;
         panel.add(new JLabel("Step size:"), c);
         c.gridx++;
-//        panel.add(m_initialLearningRateSpinner, c);
         panel.add(m_initialLearningRateField, c);
 
         return panel;
@@ -459,13 +449,11 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.insets = new Insets(5, 5, 0, 0);
         JPanel northPanel = createTargetOptionsPanel();
         northPanel.setBorder(BorderFactory.createTitledBorder("Target"));
-//        panel.add(northPanel, BorderLayout.NORTH);
         panel.add(northPanel, c);
         c.gridy++;
 
         JPanel centerPanel = createSolverPanel();
         centerPanel.setBorder(BorderFactory.createTitledBorder("Solver"));
-//        panel.add(centerPanel, BorderLayout.WEST);
         panel.add(centerPanel, c);
         c.gridy++;
         c.gridwidth = 2;
@@ -473,7 +461,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
 
         JPanel southPanel = createIncludesPanel();
         southPanel.setBorder(BorderFactory.createTitledBorder("Feature selection"));
-//        panel.add(southPanel, BorderLayout.SOUTH);
         panel.add(southPanel, c);
         return panel;
     }
@@ -583,7 +570,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         m_inSpec = (DataTableSpec)specs[0];
         settings.loadSettingsForDialog(s, m_inSpec);
         final DataColumnSpecFilterConfiguration config = settings.getIncludedColumns();
-        //config.loadConfigurationInDialog(s, m_inSpec);
         m_filterPanel.loadConfiguration(config, m_inSpec);
 
         String target = settings.getTargetColumn();
@@ -643,7 +629,6 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         final LogRegLearnerSettings settings = new LogRegLearnerSettings();
         final DataColumnSpecFilterConfiguration config = LogRegLearnerNodeModel.createDCSFilterConfiguration();
         m_filterPanel.saveConfiguration(config);
-        //config.saveConfiguration(s);
         settings.setIncludedColumns(config);
         settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
         settings.setTargetReferenceCategory((DataCell)m_targetReferenceCategory.getSelectedItem());
