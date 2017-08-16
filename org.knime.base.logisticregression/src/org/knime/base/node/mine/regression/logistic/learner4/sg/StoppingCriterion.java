@@ -73,9 +73,9 @@ interface StoppingCriterion <T extends TrainingRow> {
      * @param second stopping criterion
      * @return or-combination of <b>first</b> and <b>second</b>
      */
-    public static <T extends TrainingRow> StoppingCriterion<T> or(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
-        return beta -> first.checkConvergence(beta) || second.checkConvergence(beta);
-    }
+//    public static <T extends TrainingRow> StoppingCriterion<T> or(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
+//        return beta -> first.checkConvergence(beta) || second.checkConvergence(beta);
+//    }
 
     /**
      * Creates a new stopping criterion that returns true for checkConvergence only if both <b>first</b> and <b>second</b>
@@ -85,7 +85,7 @@ interface StoppingCriterion <T extends TrainingRow> {
      * @param second stopping criterion
      * @return and-combination of <b>first</b> and <b>second</b>
      */
-    public static <T extends TrainingRow> StoppingCriterion<T> and(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
-        return beta -> first.checkConvergence(beta) && second.checkConvergence(beta);
-    }
+//    public static <T extends TrainingRow> StoppingCriterion<T> and(final StoppingCriterion<T> first, final StoppingCriterion<T> second) {
+//        return beta -> first.checkConvergence(beta) && second.checkConvergence(beta);
+//    }
 }

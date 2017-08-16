@@ -155,9 +155,10 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
             case Default:
                 stepSize = 1 / (m_lipschitz + m_lambda);
                 break;
-            case StronglyConvex:
-                stepSize = 2 / (m_lipschitz + (m_nRows + 1) * m_lambda);
-                break;
+                // currently not in use
+//            case StronglyConvex:
+//                stepSize = 2 / (m_lipschitz + (m_nRows + 1) * m_lambda);
+//                break;
             default:
                 throw new IllegalStateException("Unknown StepSizeType: " + m_stepSizeType);
         }
