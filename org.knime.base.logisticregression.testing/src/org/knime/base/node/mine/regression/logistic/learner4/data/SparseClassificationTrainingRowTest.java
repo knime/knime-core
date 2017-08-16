@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.regression.logistic.learner4.data;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -107,7 +108,14 @@ public class SparseClassificationTrainingRowTest {
             assertEquals(INDICES[i], fi.getFeatureIndex());
             // there are no differences allowed here
             assertEquals(VALUES[i], fi.getFeatureValue(), 0);
+            if (i == 2) {
+                FeatureIterator sfi = fi.spawn();
+                assertEquals(INDICES[i - 1], sfi.getFeatureIndex());
+                assertEquals(VALUES[i - 1], sfi.getFeatureValue(), 0);
+            }
         }
+        assertFalse(fi.hasNext());
+        assertFalse(fi.next());
     }
 
     /**
