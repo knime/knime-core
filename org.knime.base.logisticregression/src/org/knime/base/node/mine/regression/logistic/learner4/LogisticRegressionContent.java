@@ -75,6 +75,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -516,7 +517,7 @@ final class LogisticRegressionContent {
         DataCell[] cells = new DataCell[] {
             new IntCell(getIterationCount()), new DoubleCell(getEstimatedLikelihood())
         };
-        DataRow row = new DefaultRow("Row0", cells);
+        DataRow row = new DefaultRow(RowKey.createRowKey(0L), cells);
         container.addRowToTable(row);
         container.close();
         return container.getTable();

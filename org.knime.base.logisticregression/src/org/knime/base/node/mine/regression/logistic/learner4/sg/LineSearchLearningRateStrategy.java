@@ -98,7 +98,6 @@ class LineSearchLearningRateStrategy <T extends TrainingRow> implements Learning
         // has been initialized for the respective row
         Arrays.fill(m_squaredNorms, Double.NaN);
         m_lambda = lambda;
-        data.getFeatureCount();
         m_nRows = data.getRowCount();
         m_stepSizeType = stepSizeType;
         m_lipschitzMultiplier = Math.pow(2, -1.0/m_nRows);

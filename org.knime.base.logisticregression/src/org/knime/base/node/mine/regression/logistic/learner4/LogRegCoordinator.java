@@ -381,11 +381,9 @@ class LogRegCoordinator {
                 betaMat.setEntry(0, i * cols + j, beta.getEntry(i, j));
             }
         }
-        RealMatrix covMat;
+        RealMatrix covMat = null;
         if (result.hasCovariateMatrix()) {
             covMat = result.getCovariateMatrix();
-        } else {
-            covMat = null;
         }
         // create content
         LogisticRegressionContent content =

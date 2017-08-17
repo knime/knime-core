@@ -55,10 +55,8 @@ import org.knime.base.node.mine.regression.logistic.learner4.data.TrainingRow;
  * One example is the Stochastic Average Gradient update, another example the
  * Stochastic Gradient Descent update.
  *
- * This is a marker interface.
- *
  * @author Adrian Nembach, KNIME.com
  */
 interface Updater <T extends TrainingRow> {
-
+    // This is a marker interface.
 }
