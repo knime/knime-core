@@ -73,10 +73,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * Dialog for the regression predictor.
  *
  * @author Heiko Hofer
- * @since 3.4
+ * @since 3.5
  */
 public final class RegressionPredictorNodeDialogPane
         extends NodeDialogPane {
+    private final boolean m_showProbOptions;
     private JCheckBox m_includeProbs;
     private JCheckBox m_hasCustomPredictionName;
     private JTextField m_customPredictionName;
@@ -84,9 +85,13 @@ public final class RegressionPredictorNodeDialogPane
 
     /**
      * Create new dialog for linear regression model.
+     * @param showProbabilityOptions flag that indicates whether options for probability columns (only relevant for logistic regression)
+     * should be shown
+     *
      */
-    public RegressionPredictorNodeDialogPane() {
+    public RegressionPredictorNodeDialogPane(final boolean showProbabilityOptions) {
         super();
+        m_showProbOptions = showProbabilityOptions;
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
@@ -107,11 +112,13 @@ public final class RegressionPredictorNodeDialogPane
         predictionColumnPanel.setBorder(BorderFactory.createTitledBorder("Prediction column"));
         p.add(predictionColumnPanel, c);
 
-        c.gridy++;
-        JPanel probabilitesPanel = createProbabilitiesPanel();
-        probabilitesPanel.setBorder(BorderFactory.createTitledBorder(
-            "Probability columns (only for nominal prediction, e.g. Logistic Regression)"));
-        p.add(probabilitesPanel, c);
+        if (m_showProbOptions) {
+            c.gridy++;
+            JPanel probabilitesPanel = createProbabilitiesPanel();
+            probabilitesPanel.setBorder(BorderFactory.createTitledBorder(
+                    "Probability columns (only for nominal prediction, e.g. Logistic Regression)"));
+            p.add(probabilitesPanel, c);
+        }
 
 
         c.gridx = 0;
@@ -223,6 +230,14 @@ public final class RegressionPredictorNodeDialogPane
         m_hasCustomPredictionName.setSelected(s.getHasCustomPredictionName());
         PMMLPortObjectSpec portSpec = (PMMLPortObjectSpec)specs[0];
         DataTableSpec tableSpec = (DataTableSpec)specs[1];
+
+        // check if the model has the correct target type
+        try {
+            RegressionPredictorNodeModel.checkModelTargetType(portSpec, m_showProbOptions);
+        } catch (InvalidSettingsException e1) {
+            throw new NotConfigurableException(e1.getMessage());
+        }
+
         if (s.getCustomPredictionName() != null) {
             m_customPredictionName.setText(s.getCustomPredictionName());
         } else {

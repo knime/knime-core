@@ -89,6 +89,7 @@ import org.w3c.dom.Node;
  * Node model for the general regression predictor.
  * <p>Despite being public no official API.
  * @author Heiko Hofer
+ * @since 3.5
  */
 public final class RegressionPredictorNodeModel extends NodeModel {
     private final RegressionPredictorSettings m_settings;
@@ -97,13 +98,19 @@ public final class RegressionPredictorNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(RegressionPredictorNodeModel.class);
 
+    private final boolean m_expectClassificationModel;
 
-    /** Initialization with 1 data input, 1 model input and 1 data output. */
-    public RegressionPredictorNodeModel() {
+
+    /** Initialization with 1 data input, 1 model input and 1 data output.
+     *
+     * @param expectLogRegModel flag indicating whether the node expects a logistic regression model (for classification)
+     **/
+    public RegressionPredictorNodeModel(final boolean expectLogRegModel) {
         super(new PortType[]{PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
         m_settings = new RegressionPredictorSettings();
+        m_expectClassificationModel = expectLogRegModel;
     }
 
     /**
@@ -216,6 +223,17 @@ public final class RegressionPredictorNodeModel extends NodeModel {
         // nothing to reset, the node has no internal state
     }
 
+    static void checkModelTargetType(final PMMLPortObjectSpec pmmlSpec, final boolean expectClassificationModel) throws InvalidSettingsException {
+        boolean isRegression = pmmlSpec.getTargetCols().get(0).getType().isCompatible(DoubleValue.class);
+        if (!isRegression && !expectClassificationModel) {
+            throw new InvalidSettingsException("This node does not support nominal targets."
+                + " Please check whether this is the correct predictor node for your model.");
+        } else if (isRegression && expectClassificationModel) {
+            throw new InvalidSettingsException("This node does not support numerical targets."
+                + " Please check whether this is the correct predictor node for your model.");
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
@@ -226,11 +244,7 @@ public final class RegressionPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
-        if (regModelSpec.getTargetCols().get(0).getType().isCompatible(DoubleValue.class)
-                && m_settings.getIncludeProbabilities()) {
-            setWarningMessage("The option \"Append columns with predicted probabilities\""
-                + " has only an effect for nominal targets");
-        }
+        checkModelTargetType(regModelSpec, m_expectClassificationModel);
 
         if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec,
                 m_settings)) {
