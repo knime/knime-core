@@ -49,9 +49,7 @@
 package org.knime.core.gateway.serverproxy.workflow.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.service.RepositoryService;
 
 /**
@@ -65,9 +63,11 @@ public class DefaultRepositoryService implements RepositoryService {
      */
     @Override
     public List<String> getAllWorkflows() {
-        return WorkflowProjectManager.getInstance().getWorkflowProjects().stream().map((wp) -> {
-            return wp.getID();
-        }).collect(Collectors.toList());
+        //        return WorkflowProjectManager.getInstance().getWorkflowProjects().stream().map((wp) -> {
+        //            return wp.getID();
+        //        }).collect(Collectors.toList());
+        throw new UnsupportedOperationException(
+            "This method is supposed to be processed on the server and not by the executor");
     }
 
 }
