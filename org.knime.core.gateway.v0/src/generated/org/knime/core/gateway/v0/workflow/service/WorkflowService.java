@@ -46,7 +46,6 @@
  */
 package org.knime.core.gateway.v0.workflow.service;
 
-import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 
@@ -60,18 +59,11 @@ public interface WorkflowService extends GatewayService {
 
     /**
      * Get the workflow entity for a given ID.
-     * @param rootWorkflowID The identifier as per #getAllWorkflows of the root 'node'
+     * @param rootWorkflowID The identifier as per RepositoryService#getAllWorkflows of the root 'node'
      * @param nodeID An optional node id if a subworkflow (contained in a meta node) is requested.
      * @return BERND
      * 
      */ 
 	WorkflowEnt getWorkflow(final String rootWorkflowID, final Optional<String> nodeID);
-	
-    /**
-     * Get a list of IDs for all known workflows
-     * @return BERND
-     * 
-     */ 
-	List<String> getAllWorkflows();
 	
 }

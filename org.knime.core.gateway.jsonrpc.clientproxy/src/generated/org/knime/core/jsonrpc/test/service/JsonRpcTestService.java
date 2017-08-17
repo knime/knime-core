@@ -65,28 +65,28 @@ public interface JsonRpcTestService extends TestService {
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "TestService.getTest")
+    @JsonRpcMethod(value = "test_service_TestService.getTest")
     public TestEnt getTest();
 
 	/**
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "TestService.updateTest")
+    @JsonRpcMethod(value = "test_service_TestService.updateTest")
     public TestEnt updateTest( final TestEnt id);
 
 	/**
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "TestService.updateTestList")
+    @JsonRpcMethod(value = "test_service_TestService.updateTestList")
     public List<TestEnt> updateTestList( final List<TestEnt> list);
 
 	/**
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "TestService.updatePrimitives")
+    @JsonRpcMethod(value = "test_service_TestService.updatePrimitives")
     public double updatePrimitives( final String s, final List<String> stringlist);
 
 

@@ -12,5 +12,7 @@ Require-Bundle: org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
  org.knime.core
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.knime.core.gateway.serverproxy.service,
- org.knime.core.gateway.serverproxy.util
+Export-Package: org.knime.core.gateway.serverproxy.node.service,
+ org.knime.core.gateway.serverproxy.test.service,
+ org.knime.core.gateway.serverproxy.util,
+ org.knime.core.gateway.serverproxy.workflow.service

@@ -64,14 +64,14 @@ public interface JsonRpcExecutionService extends ExecutionService {
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "ExecutionService.getCanExecuteUpToHere")
+    @JsonRpcMethod(value = "workflow_service_ExecutionService.getCanExecuteUpToHere")
     public boolean getCanExecuteUpToHere( final String workflowID, final String nodeID);
 
 	/**
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "ExecutionService.setExecuteUpToHere")
+    @JsonRpcMethod(value = "workflow_service_ExecutionService.setExecuteUpToHere")
     public WorkflowEnt setExecuteUpToHere( final String workflowID, final String nodeID);
 
 

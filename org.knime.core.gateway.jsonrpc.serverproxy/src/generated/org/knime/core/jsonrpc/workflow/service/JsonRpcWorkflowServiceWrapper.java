@@ -46,7 +46,6 @@
  */
 package org.knime.core.jsonrpc.workflow.service;
 
-import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
@@ -77,15 +76,6 @@ public class JsonRpcWorkflowServiceWrapper implements WorkflowService {
     @JsonRpcMethod(value = "getWorkflow")
     public WorkflowEnt getWorkflow(@JsonRpcParam(value="rootWorkflowID") final String rootWorkflowID,@JsonRpcParam(value="nodeID") final Optional<String> nodeID) {
 		return m_service.getWorkflow(rootWorkflowID,nodeID);
-    }
-
-	/**
-     * {@inheritDoc}
-     */
-    @Override
-    @JsonRpcMethod(value = "getAllWorkflows")
-    public List<String> getAllWorkflows() {
-		return m_service.getAllWorkflows();
     }
 
 

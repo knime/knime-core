@@ -15,4 +15,5 @@ Require-Bundle: org.knime.core.gateway.v0,
  org.apache.commons.lang3;bundle-version="3.2.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.googlecode.jsonrpc4j,
+ com.googlecode.jsonrpc4j.spring.rest,
  org.knime.core.jsonrpc

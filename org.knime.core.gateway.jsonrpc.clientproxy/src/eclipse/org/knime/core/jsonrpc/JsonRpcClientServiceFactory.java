@@ -88,7 +88,7 @@ public class JsonRpcClientServiceFactory implements ServiceFactory {
             try {
                 Class<?> proxyInterface = org.knime.core.jsonrpc.clientproxy.ObjectSpecUtil
                     .getClassForFullyQualifiedName(serviceNamespace, serviceName, "jsonrpc");
-                return (S)JsonRpcClientServiceFactory.createService(proxyInterface, url);
+                return (S)createService(proxyInterface, url);
             } catch (ClassNotFoundException ex) {
                 // TODO better exception handling
                 throw new RuntimeException(ex);
@@ -98,7 +98,7 @@ public class JsonRpcClientServiceFactory implements ServiceFactory {
         }
     }
 
-    private static <T> T createService(final Class<T> proxyInterface, final String url) {
+    private <T> T createService(final Class<T> proxyInterface, final String url) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new Jdk8Module());
@@ -107,10 +107,15 @@ public class JsonRpcClientServiceFactory implements ServiceFactory {
 
             Map<String, String> headers = new HashMap<String, String>();
             headers.put("Content-Type", "application/json");
-            return ProxyUtil.createClientProxy(proxyInterface.getClassLoader(), proxyInterface,
-                new JsonRpcHttpClient(mapper, new URL(url), headers));
+            //TODO get the username and password from somewhere for basic authentification (use https, too!!)
+            //String encodedAuth = Base64.getEncoder().encodeToString("admin:admin".getBytes());
+            //headers.put("Authorization", "Basic " + encodedAuth);
+            JsonRpcHttpClient httpClient = new JsonRpcHttpClient(mapper, new URL(url), headers);
+            //JsonRpcRestClient restClient = new JsonRpcRestClient(new URL(url), mapper, null, headers);
+            return ProxyUtil.createClientProxy(proxyInterface.getClassLoader(), proxyInterface, httpClient);
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex);
         }
     }
+
 }

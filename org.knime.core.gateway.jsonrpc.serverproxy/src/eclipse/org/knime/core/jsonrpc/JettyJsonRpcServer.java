@@ -31,7 +31,7 @@ import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
  */
 public class JettyJsonRpcServer implements KnimeGatewayServer {
 
-    private static final String DEFAULT_SERVICE_PACKAGE = "org.knime.core.gateway.serverproxy.service";
+    private static final String DEFAULT_SERVICE_PACKAGE = "org.knime.core.gateway.serverproxy";
 
     private static final String DEFAULT_SERVICE_PREFIX = "Default";
 
@@ -44,12 +44,13 @@ public class JettyJsonRpcServer implements KnimeGatewayServer {
         Map<String, GatewayService> wrappedServices = new HashMap<String, GatewayService>();
         for (Pair<String, String> p : serviceDefs) {
             Class<?> defaultServiceClass;
-            String defaultServiceFullClassName = DEFAULT_SERVICE_PACKAGE + "." + DEFAULT_SERVICE_PREFIX + p.getLeft();
+            String defaultServiceFullClassName =
+                DEFAULT_SERVICE_PACKAGE + "." + p.getRight() + "." + DEFAULT_SERVICE_PREFIX + p.getLeft();
             try {
                 defaultServiceClass = Class.forName(defaultServiceFullClassName);
             } catch (ClassNotFoundException ex1) {
                 throw new RuntimeException(
-                    "No default service implementation not found (" + defaultServiceFullClassName + ")", ex1);
+                    "No default service implementation found (" + defaultServiceFullClassName + ")", ex1);
             }
             try {
                 Class<GatewayService> wrapperServiceClass =
@@ -57,8 +58,10 @@ public class JettyJsonRpcServer implements KnimeGatewayServer {
                         .getClassForFullyQualifiedName(p.getRight(), p.getLeft(), "jsonrpc-wrapper");
                 Class<?> serviceInterface =
                     org.knime.core.gateway.ObjectSpecUtil.getClassForFullyQualifiedName(p.getRight(), p.getLeft(), "api");
-                wrappedServices.put(p.getLeft(), wrapperServiceClass.getConstructor(serviceInterface)
-                    .newInstance(defaultServiceClass.newInstance()));
+                //dots (.) in namespace need to be replaced by '_' and concatenated with the name by '_', too!
+                //Because the json-rpc lib uses the dot (.) to separate the service method to be called from the service (or service identifier)
+                wrappedServices.put(p.getRight().replace(".", "_") + "_" + p.getLeft(), wrapperServiceClass
+                    .getConstructor(serviceInterface).newInstance(defaultServiceClass.newInstance()));
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException
                     | ClassNotFoundException ex) {
@@ -96,7 +99,9 @@ public class JettyJsonRpcServer implements KnimeGatewayServer {
                     (Class<GatewayService>)org.knime.core.jsonrpc.serverproxy.ObjectSpecUtil
                         .getClassForFullyQualifiedName(namespace, name, "jsonrpc-wrapper");
                 Class<?> serviceInterface = ObjectSpecUtil.getClassForFullyQualifiedName(namespace, name, "api");
-                wrappedServices.put(name, wrapperServiceClass.getConstructor(serviceInterface).newInstance(s));
+                //dots (.) in namespace need to be replaced by '_' and concatenated with the name by '_', too!
+                //Because the json-rpc lib uses the dot (.) to separate the service method to be called from the service (or service identifier)
+                wrappedServices.put(namespace.replace(".", "_") + "_" + name, wrapperServiceClass.getConstructor(serviceInterface).newInstance(s));
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException
                     | ClassNotFoundException ex) {

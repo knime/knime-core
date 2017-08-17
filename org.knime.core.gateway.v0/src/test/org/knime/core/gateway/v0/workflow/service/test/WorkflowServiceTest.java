@@ -50,7 +50,6 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 import static org.mockito.Mockito.mock;
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
@@ -110,29 +109,6 @@ public class WorkflowServiceTest {
 
 		//compare results
         WorkflowEntTest.testEnt(methodRes, values);
-    }
-
-    @Test
-    public void test_getAllWorkflows() {
- 
-		//create return value   
-		List<String> res = new ArrayList<>(5);
-        res.add("lzCuG");
-        res.add("5KrGg");
-        res.add("OuJNz");
-        res.add("5VLnL");
-        res.add("YJQGG");
-
-		//mock return value
-		Mockito.when(m_serviceMock.getAllWorkflows()).thenReturn(res);
-
-		//call method
-		List<String> methodRes = service(WorkflowService.class, m_serviceConfig).getAllWorkflows();
-
-		//compare results
-		for (int i = 0; i < methodRes.size(); i++) {
-			assertEquals(res.get(i), methodRes.get(i));
-        }
     }
 
  

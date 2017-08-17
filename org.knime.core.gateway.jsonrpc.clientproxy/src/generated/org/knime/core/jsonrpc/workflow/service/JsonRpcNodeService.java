@@ -65,14 +65,14 @@ public interface JsonRpcNodeService extends NodeService {
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "NodeService.getNodeSettingsJSON")
+    @JsonRpcMethod(value = "workflow_service_NodeService.getNodeSettingsJSON")
     public String getNodeSettingsJSON( final String rootWorkflowID, final String nodeID);
 
 	/**
      * {@inheritDoc}
      */
     @Override
-    @JsonRpcMethod(value = "NodeService.getNode")
+    @JsonRpcMethod(value = "workflow_service_NodeService.getNode")
     public NodeEnt getNode( final String rootWorkflowID, final Optional<String> nodeID);
 
 

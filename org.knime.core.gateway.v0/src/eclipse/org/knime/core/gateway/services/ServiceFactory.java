@@ -86,5 +86,4 @@ public interface ServiceFactory {
      *         because a service config object that cannot be handled)
      */
     <S extends GatewayService> S createService(Class<S> serviceInterface, ServiceConfig serviceConfig);
-
 }

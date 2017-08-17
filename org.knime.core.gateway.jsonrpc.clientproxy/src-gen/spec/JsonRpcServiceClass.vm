@@ -65,8 +65,11 @@ public interface JsonRpc${name} extends ${name} {
 	/**
      * {@inheritDoc}
      */
-    @Override
-    @JsonRpcMethod(value = "${name}.${method.getName()}")
+    @Override#**
+Dots (.) in namespace need to be replaced by '_' and concatenated with the name by '_', too!
+Because the json-rpc lib uses the dot (.) to separate the service method to be called from the service (or service identifier)
+*#
+    @JsonRpcMethod(value = "${namespace.replace('.', '_')}_${name}.${method.getName()}")
     public $method.getResult().getType().toString() ${method.getName()}(#foreach($param in $method.getParameters()) final $param.getType().toString() $param.getName()#if($foreach.hasNext),#end#end);
 
 #end

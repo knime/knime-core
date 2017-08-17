@@ -50,7 +50,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import java.util.Optional;
 
 /**
- * Defines service methods to query details on an individual node or metanode.
+ * Defines service methods to query details on an individual node or metanode within a workflow.
  * 
  * @author Martin Horn, University of Konstanz
  */

@@ -14,7 +14,7 @@
             },
             "params" : [
                 {
-                    "description" : "The identifier as per #getAllWorkflows of the root 'node'",
+                    "description" : "The identifier as per RepositoryService#getAllWorkflows of the root 'node'",
                     "name" : "rootWorkflowID",
                     "type" : "String"
                 },
@@ -24,16 +24,6 @@
                     "type" : "Optional<String>"
                 }
             ]
-        },
-        {
-            "name" : "AllWorkflows",
-            "operation" : "get",
-            "description" : "Get a list of IDs for all known workflows",
-            "result" : {
-                "description" : "BERND",
-                "type" : "List<String>"
-            },
-            "params" : [ ]
         }
     ]
 }

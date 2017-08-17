@@ -56,6 +56,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.knime.core.gateway.v0.workflow.service.GatewayService;
+import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.util.ExtPointUtils;
 import org.knime.core.util.Pair;
 
@@ -81,10 +82,16 @@ public class ServiceManager {
      * Delivers implementations for service interfaces (see {@link GatewayService}. Implementations are injected via
      * {@link ServiceFactory} extension point.
      *
-     * TODO add shortcuts for services (e.g. ServiceManager.workflowService())
+     * In order to be sure that the right service is delivered at any time and stateful
+     * services are handled correctly, always use this method to access the desired service and never keep a service
+     * reference (unless you know what you are doing).
+     *
+     * TODO add more shortcuts for services (e.g. ServiceManager.nodeService())
      *
      * @param serviceInterface the service interface the implementation is requested for
-     * @return an implementation of the requested service interface (it returns the same instance with every method call)
+     * @param serviceConfig the service configuration required to instantiate a service, e.g. server information etc.
+     * @return an implementation of the requested service interface (it returns the same instance with every method
+     *         call)
      */
     public static <S extends GatewayService> S service(final Class<S> serviceInterface, final ServiceConfig serviceConfig) {
         Pair<Class<? extends GatewayService>, ServiceConfig> pair = Pair.create(serviceInterface, serviceConfig);
@@ -97,6 +104,16 @@ public class ServiceManager {
             SERVICES.put(pair, service);
         }
         return service;
+    }
+
+    /**
+     * Shortcut for {@link #service(WorkflowService.class, ServiceConfig)}.
+     *
+     * @param serviceConfig see {@link #service(Class, ServiceConfig)}
+     * @return the workflow service implementation
+     */
+    public static WorkflowService workflowService(final ServiceConfig serviceConfig) {
+        return service(WorkflowService.class, serviceConfig);
     }
 
 //    /**

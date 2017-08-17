@@ -1,7 +1,7 @@
 {
     "type" : "service",
     "name" : "NodeService",
-    "description" : "Defines service methods to query details on an individual node or metanode.",
+    "description" : "Defines service methods to query details on an individual node or metanode within a workflow.",
     "namespace" : "workflow.service",
     "methods" : [
         {

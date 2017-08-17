@@ -65,8 +65,8 @@ public class EntityDefUtil {
     static {
         List<Pair<String, String>> list = new ArrayList<>();
         list.add(Pair.of("TestEnt", "test.entity"));
-        list.add(Pair.of("RepoCategoryEnt", "repository.entity"));
-        list.add(Pair.of("RepoNodeTemplateEnt", "repository.entity"));
+        list.add(Pair.of("RepoCategoryEnt", "node.entity"));
+        list.add(Pair.of("RepoNodeTemplateEnt", "node.entity"));
         list.add(Pair.of("MetaPortInfoEnt", "workflow.entity"));
         list.add(Pair.of("WorkflowUIInfoEnt", "workflow.entity"));
         list.add(Pair.of("BoundsEnt", "workflow.entity"));

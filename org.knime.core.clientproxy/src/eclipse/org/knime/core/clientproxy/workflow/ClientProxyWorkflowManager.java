@@ -98,7 +98,6 @@ import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
-import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -127,10 +126,10 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     }
 
     private WorkflowEnt getWorkflow() {
-        if(m_workflowEnt == null) {
+        if (m_workflowEnt == null) {
             Optional<String> nodeID = m_workflowNodeEnt.getParentNodeID().isPresent()
                 ? Optional.of(m_workflowNodeEnt.getNodeID()) : Optional.empty();
-            m_workflowEnt = ServiceManager.service(WorkflowService.class, m_serviceConfig)
+            m_workflowEnt = ServiceManager.workflowService(m_serviceConfig)
                 .getWorkflow(m_workflowNodeEnt.getRootWorkflowID(), nodeID);
         }
         return m_workflowEnt;
