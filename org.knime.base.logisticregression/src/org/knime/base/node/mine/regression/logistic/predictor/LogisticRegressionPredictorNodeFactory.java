@@ -47,8 +47,8 @@
  */
 package org.knime.base.node.mine.regression.logistic.predictor;
 
-import org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeDialogPane;
-import org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeModel;
+import org.knime.base.node.mine.regression.predict3.RegressionPredictorNodeDialogPane;
+import org.knime.base.node.mine.regression.predict3.RegressionPredictorNodeModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -66,7 +66,7 @@ public final class LogisticRegressionPredictorNodeFactory
      */
     @Override
     public RegressionPredictorNodeModel createNodeModel() {
-        return new RegressionPredictorNodeModel();
+        return new RegressionPredictorNodeModel(true);
     }
 
     /**
@@ -99,6 +99,6 @@ public final class LogisticRegressionPredictorNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RegressionPredictorNodeDialogPane();
+        return new RegressionPredictorNodeDialogPane(true);
     }
 }
