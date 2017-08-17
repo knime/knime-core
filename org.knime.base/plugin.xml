@@ -719,9 +719,10 @@
              deprecated="true"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
        <node
+             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"
              category-path="/analytics/mining/regression"
-             factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
-             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"/> 
+             deprecated="true"
+             factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"/> 
 	    <node
 	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
@@ -1902,6 +1903,12 @@
             category-path="/manipulation/row/row-filter"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.filter.definition.apply.rowsplitter.FilterApplyRowSplitterNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"
+            category-path="/analytics/mining/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.predict3.RegressionPredictorNodeFactory">
       </node>
    </extension>
    
