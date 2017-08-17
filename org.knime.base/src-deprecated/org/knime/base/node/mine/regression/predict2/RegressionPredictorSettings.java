@@ -55,7 +55,9 @@ import org.knime.core.node.NodeSettingsWO;
  * This class hold the settings for the General Regression Predictor node.
  * <p>Despite being public no official API.
  * @author Heiko Hofer
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 public final class RegressionPredictorSettings {
     /** If custom name for the prediction column should be used. */
     private boolean m_hasCustomPredictionName;

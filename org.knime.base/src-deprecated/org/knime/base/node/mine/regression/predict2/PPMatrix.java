@@ -56,7 +56,9 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
  * A convenient class to access the data of PMMLPPCells.
  *
  * @author Heiko Hofer
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 final class PPMatrix {
     private Map<Key, String> m_ppMatrix;
     private Map<String, String> m_ppMap;

@@ -89,7 +89,9 @@ import org.w3c.dom.Node;
  * Node model for the general regression predictor.
  * <p>Despite being public no official API.
  * @author Heiko Hofer
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 public final class RegressionPredictorNodeModel extends NodeModel {
     private final RegressionPredictorSettings m_settings;
 

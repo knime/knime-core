@@ -56,7 +56,9 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
  * Convenient class to access the contents of PMMLPCells.
  *
  * @author Heiko Hofer
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 final class ParamMatrix {
     private Map<Key, Double> m_beta;
     private Map<Key, Integer> m_df;
@@ -140,23 +142,30 @@ final class ParamMatrix {
          */
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             Key other = (Key)obj;
             if (m_paramterName == null) {
-                if (other.m_paramterName != null)
+                if (other.m_paramterName != null) {
                     return false;
-            } else if (!m_paramterName.equals(other.m_paramterName))
+                }
+            } else if (!m_paramterName.equals(other.m_paramterName)) {
                 return false;
+            }
             if (m_targetCategory == null) {
-                if (other.m_targetCategory != null)
+                if (other.m_targetCategory != null) {
                     return false;
-            } else if (!m_targetCategory.equals(other.m_targetCategory))
+                }
+            } else if (!m_targetCategory.equals(other.m_targetCategory)) {
                 return false;
+            }
             return true;
         }
 

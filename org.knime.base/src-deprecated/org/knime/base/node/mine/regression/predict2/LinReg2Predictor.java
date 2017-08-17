@@ -74,7 +74,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Heiko Hofer
  * @author Adrian Nembach, KNIME.com
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 final class LinReg2Predictor extends RegressionPredictorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LinReg2Predictor.class);
     private PMMLGeneralRegressionContent m_content;

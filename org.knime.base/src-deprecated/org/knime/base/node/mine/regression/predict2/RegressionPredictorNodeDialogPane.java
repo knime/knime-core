@@ -74,7 +74,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Heiko Hofer
  * @since 3.4
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 public final class RegressionPredictorNodeDialogPane
         extends NodeDialogPane {
     private JCheckBox m_includeProbs;

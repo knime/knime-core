@@ -75,7 +75,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * Abstraction for all predictro cell factories.
  * <p>Despite being public no official API.
  * @author Heiko Hofer
+ * @deprecated as of 3.5.0
  */
+@Deprecated
 public abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
 
     /**

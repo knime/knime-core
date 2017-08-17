@@ -64,7 +64,7 @@ public final class RegressionPredictorNodeFactory
      */
     @Override
     public RegressionPredictorNodeModel createNodeModel() {
-        return new RegressionPredictorNodeModel();
+        return new RegressionPredictorNodeModel(false);
     }
 
     /**
@@ -97,6 +97,6 @@ public final class RegressionPredictorNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RegressionPredictorNodeDialogPane();
+        return new RegressionPredictorNodeDialogPane(false);
     }
 }
