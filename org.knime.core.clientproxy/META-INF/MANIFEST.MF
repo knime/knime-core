@@ -19,7 +19,6 @@ Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[
  org.eclipse.jface,
  org.eclipse.core.filesystem,
  org.eclipse.ui;bundle-version="3.108.0",
- com.knime.explorer.server,
  org.knime.workbench.editor,
  org.eclipse.core.resources;bundle-version="3.11.0",
  com.knime.enterprise.client.api,
@@ -27,5 +26,6 @@ Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.knime.core.clientproxy.workflow
+Export-Package: org.knime.core.clientproxy.util,
+ org.knime.core.clientproxy.workflow
 Bundle-ActivationPolicy: lazy

@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="false"
-            id="org.knime.workbench.explorer.view"
-            objectClass="org.knime.workbench.explorer.view.ContentObject">
-         <action
-               class="org.knime.core.clientproxy.ui.OpenRemoteWorkflowAction"
-               enablesFor="+"
-               id="org.knime.core.clientproxy.openRemoteAction"
-               label="Open Remotely">
-         </action>
-      </objectContribution>
-   </extension>
 
 </plugin>
