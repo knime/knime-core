@@ -96,7 +96,7 @@ final class SoftVoting extends AbstractVoting {
              the target column
              */
             int idxInVotingDistr = getIndexForClass(targetVals[i].getNominalValue());
-            m_distribution[i] += targetDistribution[idxInVotingDistr] / nrRecordsInLeaf;
+            m_distribution[idxInVotingDistr] += targetDistribution[i] / nrRecordsInLeaf;
         }
     }
 }
