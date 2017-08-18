@@ -354,10 +354,14 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
                     //TODO for subnodes move to submenu?
-                    InteractiveWebViewsResult interactiveWebViewsResult = container.getInteractiveWebViews();
-                    for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
-                        action = new OpenInteractiveWebViewAction(container, interactiveWebViewsResult.get(i));
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    if (container instanceof NodeContainer) {
+                        InteractiveWebViewsResult interactiveWebViewsResult =
+                            CastUtil.cast(container, NodeContainer.class).getInteractiveWebViews();
+                        for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
+                            action = new OpenInteractiveWebViewAction(CastUtil.cast(container, NodeContainer.class),
+                                interactiveWebViewsResult.get(i));
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        }
                     }
                 }
 
@@ -424,8 +428,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    action = new OpenPortViewAction(CastUtil.cast(container, NodeContainer.class), i, numOutPorts);
-                    manager.appendToGroup("outPortViews", action);
+                    if (container instanceof NodeContainer) {
+                        action = new OpenPortViewAction(CastUtil.cast(container, NodeContainer.class), i, numOutPorts);
+                        manager.appendToGroup("outPortViews", action);
+                    }
                 }
 
             }

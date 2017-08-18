@@ -254,7 +254,21 @@ public abstract class AbstractNodeAction extends SelectionAction {
      */
     @Override
     protected final boolean calculateEnabled() {
+        if (!canBeRunOnWriteProtectedWorkflows() && getManager().isWriteProtected()) {
+            return false;
+        }
         return getManager() != null && internalCalculateEnabled();
+    }
+
+    /**
+     * Override this method and return <code>true</code> if the derived action can be run on write protected workflows.
+     *
+     * @return <code>true</code> if the action can be generally run on write protected workflows. Whether the action is
+     *         enabled then still depends on the {@link #internalCalculateEnabled()} result. If <code>false</code>, the
+     *         action will be disabled if the workflow manager is write protected.
+     */
+    protected boolean canBeRunOnWriteProtectedWorkflows() {
+        return false;
     }
 
     /**
