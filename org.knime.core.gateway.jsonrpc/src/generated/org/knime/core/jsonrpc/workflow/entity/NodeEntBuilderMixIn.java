@@ -58,12 +58,15 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNativeNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowNodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWrappedWorkflowNodeEntBuilder;
 
 
 import org.knime.core.jsonrpc.JsonRpcUtil;
@@ -87,7 +90,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @Type(value = DefaultNodeEntBuilder.class, name="NodeEnt")
 ,
   @Type(value = DefaultWorkflowNodeEntBuilder.class, name = "WorkflowNodeEnt"),
-  @Type(value = DefaultNativeNodeEntBuilder.class, name = "NativeNodeEnt")})
+  @Type(value = DefaultNativeNodeEntBuilder.class, name = "NativeNodeEnt"),
+  @Type(value = DefaultWrappedWorkflowNodeEntBuilder.class, name = "WrappedWorkflowNodeEnt")})
 // AUTO-GENERATED CODE; DO NOT MODIFY
 public interface NodeEntBuilderMixIn extends NodeEntBuilder {
 

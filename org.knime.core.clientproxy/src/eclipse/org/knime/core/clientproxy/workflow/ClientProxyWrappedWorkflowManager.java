@@ -97,8 +97,8 @@ import org.knime.core.gateway.v0.workflow.entity.MetaPortInfoEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -109,31 +109,32 @@ import org.knime.core.util.Pair;
 
 /**
  * {@link IWorkflowManager} implementation that wraps (and therewith retrieves its information) from a
- * {@link WorkflowNodeEnt} most likely received remotely.
+ * {@link WrappedWorkflowNodeEnt} most likely received remotely.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ClientProxyWorkflowManager extends ClientProxyNodeContainer implements IWorkflowManager {
+public class ClientProxyWrappedWorkflowManager extends ClientProxyNodeContainer implements IWorkflowManager {
 
     private WorkflowEnt m_workflowEnt;
-    private final WorkflowNodeEnt m_workflowNodeEnt;
+    private final WrappedWorkflowNodeEnt m_wrappedWorkflowNodeEnt;
     private ObjectCache m_objCache;
 
     /**
-     * @param workflowNodeEnt
+     * @param wrappedWorkflowNodeEnt
      */
-    public ClientProxyWorkflowManager(final WorkflowNodeEnt workflowNodeEnt, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
-        super(workflowNodeEnt, objCache, serviceConfig);
-        m_workflowNodeEnt = workflowNodeEnt;
+    public ClientProxyWrappedWorkflowManager(final WrappedWorkflowNodeEnt wrappedWorkflowNodeEnt,
+        final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
+        super(wrappedWorkflowNodeEnt, objCache, serviceConfig);
+        m_wrappedWorkflowNodeEnt = wrappedWorkflowNodeEnt;
         m_objCache = objCache;
     }
 
     private WorkflowEnt getWorkflow() {
         if (m_workflowEnt == null) {
-            Optional<String> nodeID = m_workflowNodeEnt.getParentNodeID().isPresent()
-                ? Optional.of(m_workflowNodeEnt.getNodeID()) : Optional.empty();
+            Optional<String> nodeID = m_wrappedWorkflowNodeEnt.getParentNodeID().isPresent()
+                ? Optional.of(m_wrappedWorkflowNodeEnt.getNodeID()) : Optional.empty();
             m_workflowEnt = ServiceManager.workflowService(m_serviceConfig)
-                .getWorkflow(m_workflowNodeEnt.getRootWorkflowID(), nodeID);
+                .getWorkflow(m_wrappedWorkflowNodeEnt.getRootWorkflowID(), nodeID);
         }
         return m_workflowEnt;
     }
@@ -863,7 +864,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public boolean isEncrypted() {
-        return m_workflowNodeEnt.getIsEncrypted();
+        return m_wrappedWorkflowNodeEnt.getIsEncrypted();
     }
 
     /**
@@ -912,7 +913,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
     @Override
     public IWorkflowInPort getInPort(final int index) {
         //get underlying port
-        return ClientProxyUtil.getWorkflowInPort(m_workflowNodeEnt.getInPorts().get(index), null, m_objCache);
+        return ClientProxyUtil.getWorkflowInPort(m_wrappedWorkflowNodeEnt.getInPorts().get(index), null, m_objCache);
     }
 
     /**
@@ -920,7 +921,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public IWorkflowOutPort getOutPort(final int index) {
-        return ClientProxyUtil.getWorkflowOutPort(m_workflowNodeEnt.getOutPorts().get(index), m_objCache);
+        return ClientProxyUtil.getWorkflowOutPort(m_wrappedWorkflowNodeEnt.getOutPorts().get(index), m_objCache);
     }
 
     /**
@@ -976,7 +977,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public int getNrWorkflowIncomingPorts() {
-        return m_workflowNodeEnt.getWorkflowIncomingPorts().size();
+        return m_wrappedWorkflowNodeEnt.getWorkflowIncomingPorts().size();
     }
 
     /**
@@ -984,7 +985,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public int getNrWorkflowOutgoingPorts() {
-        return m_workflowNodeEnt.getWorkflowOutgoingPorts().size();
+        return m_wrappedWorkflowNodeEnt.getWorkflowOutgoingPorts().size();
     }
 
     /**
@@ -992,7 +993,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeOutPort getWorkflowIncomingPort(final int i) {
-        return ClientProxyUtil.getNodeOutPort(m_workflowNodeEnt.getWorkflowIncomingPorts().get(i), m_objCache);
+        return ClientProxyUtil.getNodeOutPort(m_wrappedWorkflowNodeEnt.getWorkflowIncomingPorts().get(i), m_objCache);
     }
 
     /**
@@ -1000,7 +1001,7 @@ public class ClientProxyWorkflowManager extends ClientProxyNodeContainer impleme
      */
     @Override
     public INodeInPort getWorkflowOutgoingPort(final int i) {
-        return ClientProxyUtil.getNodeInPort(m_workflowNodeEnt.getWorkflowOutgoingPorts().get(i), m_objCache);
+        return ClientProxyUtil.getNodeInPort(m_wrappedWorkflowNodeEnt.getWorkflowOutgoingPorts().get(i), m_objCache);
     }
 
     /**

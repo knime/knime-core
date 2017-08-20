@@ -52,7 +52,6 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -75,28 +74,27 @@ import org.knime.core.clientproxy.util.ClientProxyUtil;
 import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.service.NodeService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.JSONConfig;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.workbench.repository.RepositoryManager;
+import org.knime.core.util.JobManagerUtil;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ClientProxyNodeContainer implements INodeContainer {
+public abstract class ClientProxyNodeContainer implements INodeContainer {
 
     private final NodeEnt m_node;
 
-    private ObjectCache m_objCache;
+    protected ObjectCache m_objCache;
 
     /*--------- listener administration------------*/
 
@@ -164,8 +162,17 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public Optional<JobManagerUID> getJobManagerUID() {
-        return m_node.getJobManager()
-            .map(jm -> JobManagerUID.builder(jm.getJobManagerID()).setName(jm.getName()).build());
+        if (m_node.getJobManager().isPresent()) {
+            return m_node.getJobManager()
+                .map(jm -> JobManagerUID.builder(jm.getJobManagerID()).setName(jm.getName()).build());
+        } else if (getParent() == null) {
+            //if it's the root workflow and no job manager set, return the default one
+            return Optional
+                .of(JobManagerUtil.getJobManagerUID(NodeExecutionJobManagerPool.getDefaultJobManagerFactory()));
+        } else {
+            //if there is no job manager set nor it's the root workflow
+            return Optional.empty();
+        }
     }
 
     /**
@@ -176,7 +183,15 @@ public class ClientProxyNodeContainer implements INodeContainer {
         //optionally derive the job manager uid from the parent
         return m_node.getJobManager()
             .map(jm -> JobManagerUID.builder(jm.getJobManagerID()).setName(jm.getName()).build())
-            .orElseGet(() -> getParent().findJobManagerUID());
+            .orElseGet(() -> {
+                if(getParent() == null) {
+                    //if it's the root workflow, there must be a job manager set
+                    return getJobManagerUID().get();
+                } else {
+                    return getParent().findJobManagerUID();
+                }
+
+            });
     }
 
     /**
@@ -524,27 +539,6 @@ public class ClientProxyNodeContainer implements INodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public URL getIcon() {
-        //if a native node - get the icon url via the node factory
-        if (m_node instanceof NativeNodeEnt) {
-            NodeFactoryIDEnt nodeFactoryID = ((NativeNodeEnt)m_node).getNodeFactoryID();
-            try {
-                String id = nodeFactoryID.getClassName() + nodeFactoryID.getNodeName().map(n -> "#" + n).orElse("");
-                return RepositoryManager.INSTANCE.getNodeTemplate(id).createFactoryInstance()
-                    .getIcon();
-            } catch (Exception ex) {
-                // TODO better exception handling
-                throw new RuntimeException(ex);
-            }
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public NodeType getType() {
         return Enum.valueOf(NodeType.class, m_node.getNodeType());
     }
@@ -611,7 +605,7 @@ public class ClientProxyNodeContainer implements INodeContainer {
      */
     @Override
     public String getCustomDescription() {
-        return "TODO custom description";
+        return null;
     }
 
     /**

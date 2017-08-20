@@ -68,6 +68,7 @@ import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.INodeInPort;
 import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
@@ -88,6 +89,7 @@ import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowUIInfoEnt;
+import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.XYEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.ConnectionEntBuilder;
@@ -105,6 +107,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowAnnotationEntBu
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowUIInfoEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -267,6 +270,8 @@ public class EntityBuilderUtil {
             return buildNativeNodeEnt((NativeNodeContainer) nc, rootWorkflowID);
         } else if(nc instanceof IWorkflowManager) {
             return buildWorkflowNodeEnt((IWorkflowManager) nc, rootWorkflowID);
+        } else if(nc instanceof ISubNodeContainer) {
+            return buildWrappedWorkflowNodeEnt((ISubNodeContainer) nc, rootWorkflowID);
         } else {
             throw new IllegalArgumentException("Node container " + nc.getClass().getCanonicalName() + " cannot be mapped to a node entity.");
         }
@@ -305,17 +310,52 @@ public class EntityBuilderUtil {
         } else {
             jobManagerUID = wm.getJobManagerUID();
         }
+        Optional<String> parentNodeID;
+        if (wm.getParent() == null || wm.getParent() == WorkflowManager.ROOT) {
+            parentNodeID = Optional.empty();
+        } else {
+            parentNodeID = Optional.of(wm.getParent().getID().toString());
+        }
         return builder(WorkflowNodeEntBuilder.class).setName(wm.getName()).setNodeID(wm.getID().toString())
                 .setNodeMessage(buildNodeMessageEnt(wm)).setNodeType(wm.getType().toString())
                 .setBounds(buildBoundsEnt(wm.getUIInformation())).setIsDeletable(wm.isDeletable())
                 .setNodeState(wm.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(wm))
-                .setParentNodeID(wm.getParent() == WorkflowManager.ROOT ? Optional.empty() : Optional.of(wm.getParent().getID().toString()))
+                .setParentNodeID(parentNodeID)
                 .setJobManager(buildJobManagerEnt(jobManagerUID)).setNodeAnnotation(buildNodeAnnotationEnt(wm))
                 .setInPorts(buildNodeInPortEnts(wm)).setHasDialog(wm.hasDialog())
                 .setWorkflowIncomingPorts(buildWorkflowIncomingPortEnts(wm))
                 .setWorkflowOutgoingPorts(buildWorkflowOutgoingPortEnts(wm))
                 .setRootWorkflowID(rootWorkflowID)
                 .setIsEncrypted(wm.isEncrypted()).build();
+    }
+
+    /**
+     * @param subNode
+     * @param rootWorkflowID
+     * @return
+     */
+    public static WrappedWorkflowNodeEnt buildWrappedWorkflowNodeEnt(final ISubNodeContainer subNode, final String rootWorkflowID) {
+        Optional<JobManagerUID> jobManagerUID;
+        if (subNode.getParent() == WorkflowManager.ROOT) {
+            //TODO somehow get the default job manager from the workflow manager itself!!
+            jobManagerUID =
+                Optional.of(JobManagerUtil.getJobManagerUID(NodeExecutionJobManagerPool.getDefaultJobManagerFactory()));
+        } else {
+            jobManagerUID = subNode.getJobManagerUID();
+        }
+        return builder(WrappedWorkflowNodeEntBuilder.class).setName(subNode.getName()).setNodeID(subNode.getID().toString())
+                .setNodeMessage(buildNodeMessageEnt(subNode)).setNodeType(subNode.getType().toString())
+                .setBounds(buildBoundsEnt(subNode.getUIInformation())).setIsDeletable(subNode.isDeletable())
+                .setNodeState(subNode.getNodeContainerState().toString()).setOutPorts(buildNodeOutPortEnts(subNode))
+                .setParentNodeID(subNode.getParent() == WorkflowManager.ROOT ? Optional.empty() : Optional.of(subNode.getParent().getID().toString()))
+                .setJobManager(buildJobManagerEnt(jobManagerUID)).setNodeAnnotation(buildNodeAnnotationEnt(subNode))
+                .setInPorts(buildNodeInPortEnts(subNode)).setHasDialog(subNode.hasDialog())
+                .setWorkflowIncomingPorts(buildWorkflowIncomingPortEnts(subNode.getWorkflowManager()))
+                .setWorkflowOutgoingPorts(buildWorkflowOutgoingPortEnts(subNode.getWorkflowManager()))
+                .setRootWorkflowID(rootWorkflowID)
+                .setIsEncrypted(subNode.getWorkflowManager().isEncrypted())
+                .setVirtualInNodeID(subNode.getVirtualInNodeID().toString())
+                .setVirtualOutNodeID(subNode.getVirtualOutNodeID().toString()).build();
     }
 
     private static ConnectionEnt buildContainerEnt(final IConnectionContainer cc) {

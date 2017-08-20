@@ -53,10 +53,11 @@ import static org.knime.core.gateway.services.ServiceManager.service;
 import java.util.Optional;
 
 import org.knime.core.clientproxy.workflow.ClientProxyConnectionContainer;
+import org.knime.core.clientproxy.workflow.ClientProxyNativeNodeContainer;
 import org.knime.core.clientproxy.workflow.ClientProxyNodeContainer;
 import org.knime.core.clientproxy.workflow.ClientProxyNodeInPort;
 import org.knime.core.clientproxy.workflow.ClientProxyNodeOutPort;
-import org.knime.core.clientproxy.workflow.ClientProxySingleNodeContainer;
+import org.knime.core.clientproxy.workflow.ClientProxySubNodeContainer;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowAnnotation;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowInPort;
 import org.knime.core.clientproxy.workflow.ClientProxyWorkflowManager;
@@ -70,6 +71,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.service.NodeService;
 
 /**
@@ -96,7 +98,7 @@ public class ClientProxyUtil {
      */
     public static ClientProxyWorkflowManager getWorkflowManager(final String rootWorkflowID,
         final Optional<String> nodeID, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
-        return objCache.getOrCreate(rootWorkflowID, we -> {
+        return objCache.getOrCreate(rootWorkflowID + "_" + nodeID.orElse(""), we -> {
             NodeEnt node = service(NodeService.class, serviceConfig).getNode(rootWorkflowID, nodeID);
             assert node instanceof WorkflowNodeEnt;
             return new ClientProxyWorkflowManager((WorkflowNodeEnt)node, objCache, serviceConfig);
@@ -118,10 +120,13 @@ public class ClientProxyUtil {
         //return exactly the same node container instance for the same node entity
         return objCache.getOrCreate(key, k -> {
             if (nodeEnt instanceof NativeNodeEnt) {
-                return new ClientProxySingleNodeContainer(nodeEnt, objCache, serviceConfig);
+                return new ClientProxyNativeNodeContainer((NativeNodeEnt)nodeEnt, objCache, serviceConfig);
             }
             if (nodeEnt instanceof WorkflowNodeEnt) {
                 return new ClientProxyWorkflowManager((WorkflowNodeEnt)nodeEnt, objCache, serviceConfig);
+            }
+            if(nodeEnt instanceof WrappedWorkflowNodeEnt) {
+                return new ClientProxySubNodeContainer((WrappedWorkflowNodeEnt)nodeEnt, objCache, serviceConfig);
             }
             throw new IllegalStateException("Node entity type " + nodeEnt.getClass().getName() + " not supported.");
         }, ClientProxyNodeContainer.class);

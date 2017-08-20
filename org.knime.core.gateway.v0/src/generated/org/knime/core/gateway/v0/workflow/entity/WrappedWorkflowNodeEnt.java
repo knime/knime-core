@@ -44,62 +44,112 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.gateway;
+package org.knime.core.gateway.v0.workflow.entity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.Optional;
 
 /**
- * Utility class that provides programmatic access to entity definitions of this project.
+ * A node wrapping (referencing) a workflow (also referred to it as wrapped metanode or subnode) that almost behaves as a ordinary node.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class EntityDefUtil {
-
-    private static List<Pair<String, String>> ENTITY_DEFS;
-
-    static {
-        List<Pair<String, String>> list = new ArrayList<>();
-        list.add(Pair.of("TestEnt", "test.entity"));
-        list.add(Pair.of("RepoCategoryEnt", "node.entity"));
-        list.add(Pair.of("RepoNodeTemplateEnt", "node.entity"));
-        list.add(Pair.of("MetaPortInfoEnt", "workflow.entity"));
-        list.add(Pair.of("WorkflowUIInfoEnt", "workflow.entity"));
-        list.add(Pair.of("BoundsEnt", "workflow.entity"));
-        list.add(Pair.of("ConnectionEnt", "workflow.entity"));
-        list.add(Pair.of("NodeEnt", "workflow.entity"));
-        list.add(Pair.of("WorkflowAnnotationEnt", "workflow.entity"));
-        list.add(Pair.of("NodeAnnotationEnt", "workflow.entity"));
-        list.add(Pair.of("WorkflowNodeEnt", "workflow.entity"));
-        list.add(Pair.of("NodeInPortEnt", "workflow.entity"));
-        list.add(Pair.of("NativeNodeEnt", "workflow.entity"));
-        list.add(Pair.of("NodeOutPortEnt", "workflow.entity"));
-        list.add(Pair.of("NodeFactoryIDEnt", "workflow.entity"));
-        list.add(Pair.of("XYEnt", "workflow.entity"));
-        list.add(Pair.of("PortTypeEnt", "workflow.entity"));
-        list.add(Pair.of("StyleRangeEnt", "workflow.entity"));
-        list.add(Pair.of("AnnotationEnt", "workflow.entity"));
-        list.add(Pair.of("JobManagerEnt", "workflow.entity"));
-        list.add(Pair.of("WorkflowEnt", "workflow.entity"));
-        list.add(Pair.of("WrappedWorkflowNodeEnt", "workflow.entity"));
-        list.add(Pair.of("NodeMessageEnt", "workflow.entity"));
-        list.add(Pair.of("NodePortEnt", "workflow.entity"));
-        ENTITY_DEFS = Collections.unmodifiableList(list);
-    }
-
-    private EntityDefUtil() {
-        // utility class
-    }
+// AUTO-GENERATED CODE; DO NOT MODIFY
+public interface WrappedWorkflowNodeEnt extends GatewayEntity, NodeEnt  {
 
     /**
-     * @return all names and namespaces of the available entities
+     * @return List of all incoming workflow ports.
      */
-    public static Collection<Pair<String, String>> getEntities() {
-        return ENTITY_DEFS;
-    }
-
+ 	List<NodeOutPortEnt> getWorkflowIncomingPorts();
+ 	
+    /**
+     * @return List of all outgoing workflow ports.
+     */
+ 	List<NodeInPortEnt> getWorkflowOutgoingPorts();
+ 	
+    /**
+     * @return Whether the referenced workflow is encrypted is required to be unlocked before it can be accessed.
+     */
+ 	boolean getIsEncrypted();
+ 	
+    /**
+     * @return Node ID of the virtual in-node (i.e. source).
+     */
+ 	String getVirtualInNodeID();
+ 	
+    /**
+     * @return Node ID of the virtual out-node (i.e. sink).
+     */
+ 	String getVirtualOutNodeID();
+ 	
+    /**
+     * @return The parent node id of the node or not present if it's the root node.
+     */
+ 	Optional<String> getParentNodeID();
+ 	
+    /**
+     * @return The id of the root workflow this node is contained in or represents.
+     */
+ 	String getRootWorkflowID();
+ 	
+    /**
+     * @return The job manager (e.g. cluster or streaming).
+     */
+ 	Optional<JobManagerEnt> getJobManager();
+ 	
+    /**
+     * @return The current node message (warning, error, none).
+     */
+ 	NodeMessageEnt getNodeMessage();
+ 	
+    /**
+     * @return The list of inputs.
+     */
+ 	List<NodeInPortEnt> getInPorts();
+ 	
+    /**
+     * @return The list of outputs.
+     */
+ 	List<NodeOutPortEnt> getOutPorts();
+ 	
+    /**
+     * @return The name.
+     */
+ 	String getName();
+ 	
+    /**
+     * @return The ID of the node.
+     */
+ 	String getNodeID();
+ 	
+    /**
+     * @return The type of the node as string.
+     */
+ 	String getNodeType();
+ 	
+    /**
+     * @return The bounds / rectangle on screen of the node.
+     */
+ 	BoundsEnt getBounds();
+ 	
+    /**
+     * @return Whether node is deletable.
+     */
+ 	boolean getIsDeletable();
+ 	
+    /**
+     * @return The state of the node.
+     */
+ 	String getNodeState();
+ 	
+    /**
+     * @return Whether the node has a configuration dialog / user settings.
+     */
+ 	boolean getHasDialog();
+ 	
+    /**
+     * @return The annotation underneath the node.
+     */
+ 	NodeAnnotationEnt getNodeAnnotation();
+ 	
 }

@@ -68,6 +68,7 @@ import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.builder.BoundsEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.JobManagerEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
@@ -78,6 +79,7 @@ import org.knime.core.gateway.v0.workflow.entity.builder.NodeInPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeMessageEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.NodeOutPortEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
+import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 
 /**
  *

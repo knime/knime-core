@@ -51,26 +51,20 @@ package org.knime.core.clientproxy.workflow;
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.clientproxy.util.ObjectCache;
 import org.knime.core.gateway.services.ServerServiceConfig;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
-import org.knime.workbench.repository.RepositoryManager;
-import org.w3c.dom.Element;
 
 /**
  *
  * @author Martin Horn, University of Konstanz
  */
-public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer implements ISingleNodeContainer {
+public abstract class ClientProxySingleNodeContainer extends ClientProxyNodeContainer implements ISingleNodeContainer {
 
-    private NodeEnt m_node;
 
     /**
      * @param node
      */
     public ClientProxySingleNodeContainer(final NodeEnt node, final ObjectCache objCache, final ServerServiceConfig serviceConfig) {
         super(node, objCache, serviceConfig);
-        m_node = node;
     }
 
     /**
@@ -89,26 +83,6 @@ public class ClientProxySingleNodeContainer extends ClientProxyNodeContainer imp
     public boolean isInactive() {
         // TODO
         return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Element getXMLDescription() {
-        //get xml description from underlying node model, if a native node
-        if (m_node instanceof NativeNodeEnt) {
-            NodeFactoryIDEnt nodeFactoryID = ((NativeNodeEnt)m_node).getNodeFactoryID();
-            try {
-                String id = nodeFactoryID.getClassName() + nodeFactoryID.getNodeName().map(n -> "#" + n).orElse("");
-                return RepositoryManager.INSTANCE.getNodeTemplate(id).createFactoryInstance().getXMLDescription();
-            } catch (Exception ex) {
-                // TODO better exception handling
-                throw new RuntimeException(ex);
-            }
-        } else {
-            return null;
-        }
     }
 
 }

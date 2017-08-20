@@ -48,6 +48,8 @@
  */
 package org.knime.core.api.node.workflow;
 
+import org.knime.core.node.workflow.NodeID;
+
 /**
  * TODO
  *
@@ -66,13 +68,13 @@ public interface ISubNodeContainer extends ISingleNodeContainer{
 //     * @return input specs from subnode (as available from connected outports).
 //     */
 //    PortObjectSpec[] fetchInputSpecFromParent();
-//
-//    /** @return the inNodeID */
-//    NodeID getVirtualInNodeID();
-//
-//    /** @return the outNodeID */
-//    NodeID getVirtualOutNodeID();
-//
+
+    /** @return the inNodeID */
+    NodeID getVirtualInNodeID();
+
+    /** @return the outNodeID */
+    NodeID getVirtualOutNodeID();
+
 //    /**
 //     * {@inheritDoc}
 //     */

@@ -50,22 +50,13 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNativeNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWrappedWorkflowNodeEnt;
+import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWrappedWorkflowNodeEntBuilder;
 
 
@@ -75,10 +66,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
- * MixIn class for entity implementations that adds jackson annotations for de-/serialization.
+ * MixIn class for entity builder implementations that adds jackson annotations for the de-/serialization.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -86,72 +76,91 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = JsonRpcUtil.ENTITY_TYPE_KEY,
-    defaultImpl = DefaultNodeEnt.class)
+    defaultImpl = DefaultWrappedWorkflowNodeEntBuilder.class)
 @JsonSubTypes({
-    @Type(value = DefaultNodeEnt.class, name="NodeEnt")
-,
-  @Type(value = DefaultWorkflowNodeEnt.class, name = "WorkflowNodeEnt"),
-  @Type(value = DefaultNativeNodeEnt.class, name = "NativeNodeEnt"),
-  @Type(value = DefaultWrappedWorkflowNodeEnt.class, name = "WrappedWorkflowNodeEnt")})
-@JsonDeserialize(builder=DefaultNodeEntBuilder.class)
+    @Type(value = DefaultWrappedWorkflowNodeEntBuilder.class, name="WrappedWorkflowNodeEnt")
+})
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface NodeEntMixIn extends NodeEnt {
+public interface WrappedWorkflowNodeEntBuilderMixIn extends WrappedWorkflowNodeEntBuilder {
 
+    @Override
+    public WrappedWorkflowNodeEnt build();
+    
+	@Override
+	@JsonProperty("WorkflowIncomingPorts")
+    public WrappedWorkflowNodeEntBuilder setWorkflowIncomingPorts(final List<NodeOutPortEnt> WorkflowIncomingPorts);
+    
+	@Override
+	@JsonProperty("WorkflowOutgoingPorts")
+    public WrappedWorkflowNodeEntBuilder setWorkflowOutgoingPorts(final List<NodeInPortEnt> WorkflowOutgoingPorts);
+    
+	@Override
+	@JsonProperty("IsEncrypted")
+    public WrappedWorkflowNodeEntBuilder setIsEncrypted(final boolean IsEncrypted);
+    
+	@Override
+	@JsonProperty("VirtualInNodeID")
+    public WrappedWorkflowNodeEntBuilder setVirtualInNodeID(final String VirtualInNodeID);
+    
+	@Override
+	@JsonProperty("VirtualOutNodeID")
+    public WrappedWorkflowNodeEntBuilder setVirtualOutNodeID(final String VirtualOutNodeID);
+    
 	@Override
 	@JsonProperty("ParentNodeID")
-    public Optional<String> getParentNodeID();
+    public WrappedWorkflowNodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID);
     
 	@Override
 	@JsonProperty("RootWorkflowID")
-    public String getRootWorkflowID();
+    public WrappedWorkflowNodeEntBuilder setRootWorkflowID(final String RootWorkflowID);
     
 	@Override
 	@JsonProperty("JobManager")
-    public Optional<JobManagerEnt> getJobManager();
+    public WrappedWorkflowNodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager);
     
 	@Override
 	@JsonProperty("NodeMessage")
-    public NodeMessageEnt getNodeMessage();
+    public WrappedWorkflowNodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage);
     
 	@Override
 	@JsonProperty("InPorts")
-    public List<NodeInPortEnt> getInPorts();
+    public WrappedWorkflowNodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts);
     
 	@Override
 	@JsonProperty("OutPorts")
-    public List<NodeOutPortEnt> getOutPorts();
+    public WrappedWorkflowNodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts);
     
 	@Override
 	@JsonProperty("Name")
-    public String getName();
+    public WrappedWorkflowNodeEntBuilder setName(final String Name);
     
 	@Override
 	@JsonProperty("NodeID")
-    public String getNodeID();
+    public WrappedWorkflowNodeEntBuilder setNodeID(final String NodeID);
     
 	@Override
 	@JsonProperty("NodeType")
-    public String getNodeType();
+    public WrappedWorkflowNodeEntBuilder setNodeType(final String NodeType);
     
 	@Override
 	@JsonProperty("Bounds")
-    public BoundsEnt getBounds();
+    public WrappedWorkflowNodeEntBuilder setBounds(final BoundsEnt Bounds);
     
 	@Override
 	@JsonProperty("IsDeletable")
-    public boolean getIsDeletable();
+    public WrappedWorkflowNodeEntBuilder setIsDeletable(final boolean IsDeletable);
     
 	@Override
 	@JsonProperty("NodeState")
-    public String getNodeState();
+    public WrappedWorkflowNodeEntBuilder setNodeState(final String NodeState);
     
 	@Override
 	@JsonProperty("HasDialog")
-    public boolean getHasDialog();
+    public WrappedWorkflowNodeEntBuilder setHasDialog(final boolean HasDialog);
     
 	@Override
 	@JsonProperty("NodeAnnotation")
-    public NodeAnnotationEnt getNodeAnnotation();
+    public WrappedWorkflowNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation);
     
 
 }

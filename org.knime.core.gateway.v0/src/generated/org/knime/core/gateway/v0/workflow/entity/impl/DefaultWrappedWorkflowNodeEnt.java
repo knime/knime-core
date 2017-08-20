@@ -50,18 +50,12 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
@@ -70,13 +64,18 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Default implementation of the NodeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the WrappedWorkflowNodeEnt-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class DefaultNodeEnt implements NodeEnt {
+public class DefaultWrappedWorkflowNodeEnt implements WrappedWorkflowNodeEnt {
 
+	private List<NodeOutPortEnt> m_WorkflowIncomingPorts;
+	private List<NodeInPortEnt> m_WorkflowOutgoingPorts;
+	private boolean m_IsEncrypted;
+	private String m_VirtualInNodeID;
+	private String m_VirtualOutNodeID;
 	private Optional<String> m_ParentNodeID;
 	private String m_RootWorkflowID;
 	private Optional<JobManagerEnt> m_JobManager;
@@ -95,7 +94,12 @@ public class DefaultNodeEnt implements NodeEnt {
     /**
      * @param builder
      */
-    DefaultNodeEnt(final DefaultNodeEntBuilder builder) {
+    DefaultWrappedWorkflowNodeEnt(final DefaultWrappedWorkflowNodeEntBuilder builder) {
+		m_WorkflowIncomingPorts = builder.m_WorkflowIncomingPorts;
+		m_WorkflowOutgoingPorts = builder.m_WorkflowOutgoingPorts;
+		m_IsEncrypted = builder.m_IsEncrypted;
+		m_VirtualInNodeID = builder.m_VirtualInNodeID;
+		m_VirtualOutNodeID = builder.m_VirtualOutNodeID;
 		m_ParentNodeID = builder.m_ParentNodeID;
 		m_RootWorkflowID = builder.m_RootWorkflowID;
 		m_JobManager = builder.m_JobManager;
@@ -112,6 +116,31 @@ public class DefaultNodeEnt implements NodeEnt {
 		m_NodeAnnotation = builder.m_NodeAnnotation;
     }
 
+	@Override
+    public List<NodeOutPortEnt> getWorkflowIncomingPorts() {
+        return m_WorkflowIncomingPorts;
+    }
+    
+	@Override
+    public List<NodeInPortEnt> getWorkflowOutgoingPorts() {
+        return m_WorkflowOutgoingPorts;
+    }
+    
+	@Override
+    public boolean getIsEncrypted() {
+        return m_IsEncrypted;
+    }
+    
+	@Override
+    public String getVirtualInNodeID() {
+        return m_VirtualInNodeID;
+    }
+    
+	@Override
+    public String getVirtualOutNodeID() {
+        return m_VirtualOutNodeID;
+    }
+    
 	@Override
     public Optional<String> getParentNodeID() {
         return m_ParentNodeID;
@@ -188,7 +217,7 @@ public class DefaultNodeEnt implements NodeEnt {
 	    return ToStringBuilder.reflectionToString(this);
 	}
 
-	public static DefaultNodeEntBuilder builder() {
-		return new DefaultNodeEntBuilder();
+	public static DefaultWrappedWorkflowNodeEntBuilder builder() {
+		return new DefaultWrappedWorkflowNodeEntBuilder();
 	}
 }

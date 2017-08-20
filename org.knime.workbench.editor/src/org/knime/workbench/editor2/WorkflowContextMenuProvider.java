@@ -415,8 +415,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
                     ((AbstractNodeAction)action).update();
 
-                    action = new OpenSubnodeWebViewAction((SubNodeContainer)container);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    if (container instanceof SubNodeContainer) {
+                        action = new OpenSubnodeWebViewAction(CastUtil.cast(container, SubNodeContainer.class));
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    }
                 }
 
                 // add port views

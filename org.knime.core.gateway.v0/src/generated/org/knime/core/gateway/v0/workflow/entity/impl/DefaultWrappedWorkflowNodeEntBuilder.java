@@ -50,31 +50,30 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.builder.NativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.NodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.builder.WorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.builder.WrappedWorkflowNodeEntBuilder;
 
 import org.knime.core.gateway.entities.EntityBuilderFactory;
 import org.knime.core.gateway.entities.EntityBuilderManager;
 
 /**
- * Default implementation of the NodeEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
+ * Default implementation of the WrappedWorkflowNodeEntBuilder-interface. E.g. used if no other {@link EntityBuilderFactory}
  * implementation (provided via the respective extension point, see {@link EntityBuilderManager}) is available.
  *
  * @author Martin Horn, University of Konstanz
  */
- public class DefaultNodeEntBuilder implements NodeEntBuilder {
+ public class DefaultWrappedWorkflowNodeEntBuilder implements WrappedWorkflowNodeEntBuilder {
     
+	List<NodeOutPortEnt> m_WorkflowIncomingPorts;
+	List<NodeInPortEnt> m_WorkflowOutgoingPorts;
+	boolean m_IsEncrypted;
+	String m_VirtualInNodeID;
+	String m_VirtualOutNodeID;
 	Optional<String> m_ParentNodeID = Optional.empty();
 	String m_RootWorkflowID;
 	Optional<JobManagerEnt> m_JobManager = Optional.empty();
@@ -91,90 +90,120 @@ import org.knime.core.gateway.entities.EntityBuilderManager;
 	NodeAnnotationEnt m_NodeAnnotation;
 
 	@Override
-    public NodeEnt build() {
-        return new DefaultNodeEnt(this);
+    public WrappedWorkflowNodeEnt build() {
+        return new DefaultWrappedWorkflowNodeEnt(this);
     }
 
 	@Override
-    public NodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
+    public WrappedWorkflowNodeEntBuilder setWorkflowIncomingPorts(final List<NodeOutPortEnt> WorkflowIncomingPorts) {
+		m_WorkflowIncomingPorts = WorkflowIncomingPorts;			
+        return this;
+    }
+        
+	@Override
+    public WrappedWorkflowNodeEntBuilder setWorkflowOutgoingPorts(final List<NodeInPortEnt> WorkflowOutgoingPorts) {
+		m_WorkflowOutgoingPorts = WorkflowOutgoingPorts;			
+        return this;
+    }
+        
+	@Override
+    public WrappedWorkflowNodeEntBuilder setIsEncrypted(final boolean IsEncrypted) {
+		m_IsEncrypted = IsEncrypted;			
+        return this;
+    }
+        
+	@Override
+    public WrappedWorkflowNodeEntBuilder setVirtualInNodeID(final String VirtualInNodeID) {
+		m_VirtualInNodeID = VirtualInNodeID;			
+        return this;
+    }
+        
+	@Override
+    public WrappedWorkflowNodeEntBuilder setVirtualOutNodeID(final String VirtualOutNodeID) {
+		m_VirtualOutNodeID = VirtualOutNodeID;			
+        return this;
+    }
+        
+	@Override
+    public WrappedWorkflowNodeEntBuilder setParentNodeID(final Optional<String> ParentNodeID) {
 		m_ParentNodeID = ParentNodeID;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
+    public WrappedWorkflowNodeEntBuilder setRootWorkflowID(final String RootWorkflowID) {
 		m_RootWorkflowID = RootWorkflowID;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
+    public WrappedWorkflowNodeEntBuilder setJobManager(final Optional<JobManagerEnt> JobManager) {
 		m_JobManager = JobManager;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
+    public WrappedWorkflowNodeEntBuilder setNodeMessage(final NodeMessageEnt NodeMessage) {
 		m_NodeMessage = NodeMessage;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
+    public WrappedWorkflowNodeEntBuilder setInPorts(final List<NodeInPortEnt> InPorts) {
 		m_InPorts = InPorts;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
+    public WrappedWorkflowNodeEntBuilder setOutPorts(final List<NodeOutPortEnt> OutPorts) {
 		m_OutPorts = OutPorts;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setName(final String Name) {
+    public WrappedWorkflowNodeEntBuilder setName(final String Name) {
 		m_Name = Name;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setNodeID(final String NodeID) {
+    public WrappedWorkflowNodeEntBuilder setNodeID(final String NodeID) {
 		m_NodeID = NodeID;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setNodeType(final String NodeType) {
+    public WrappedWorkflowNodeEntBuilder setNodeType(final String NodeType) {
 		m_NodeType = NodeType;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setBounds(final BoundsEnt Bounds) {
+    public WrappedWorkflowNodeEntBuilder setBounds(final BoundsEnt Bounds) {
 		m_Bounds = Bounds;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setIsDeletable(final boolean IsDeletable) {
+    public WrappedWorkflowNodeEntBuilder setIsDeletable(final boolean IsDeletable) {
 		m_IsDeletable = IsDeletable;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setNodeState(final String NodeState) {
+    public WrappedWorkflowNodeEntBuilder setNodeState(final String NodeState) {
 		m_NodeState = NodeState;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setHasDialog(final boolean HasDialog) {
+    public WrappedWorkflowNodeEntBuilder setHasDialog(final boolean HasDialog) {
 		m_HasDialog = HasDialog;			
         return this;
     }
         
 	@Override
-    public NodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
+    public WrappedWorkflowNodeEntBuilder setNodeAnnotation(final NodeAnnotationEnt NodeAnnotation) {
 		m_NodeAnnotation = NodeAnnotation;			
         return this;
     }

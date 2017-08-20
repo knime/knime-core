@@ -50,21 +50,12 @@ import java.util.List;
 import java.util.Optional;
 import org.knime.core.gateway.v0.workflow.entity.BoundsEnt;
 import org.knime.core.gateway.v0.workflow.entity.JobManagerEnt;
-import org.knime.core.gateway.v0.workflow.entity.NativeNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.NodeFactoryIDEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeMessageEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
-import org.knime.core.gateway.v0.workflow.entity.WorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.WrappedWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNativeNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNativeNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultNodeEntBuilder;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowNodeEnt;
-import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWorkflowNodeEntBuilder;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWrappedWorkflowNodeEnt;
 import org.knime.core.gateway.v0.workflow.entity.impl.DefaultWrappedWorkflowNodeEntBuilder;
 
@@ -86,17 +77,34 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
     property = JsonRpcUtil.ENTITY_TYPE_KEY,
-    defaultImpl = DefaultNodeEnt.class)
+    defaultImpl = DefaultWrappedWorkflowNodeEnt.class)
 @JsonSubTypes({
-    @Type(value = DefaultNodeEnt.class, name="NodeEnt")
-,
-  @Type(value = DefaultWorkflowNodeEnt.class, name = "WorkflowNodeEnt"),
-  @Type(value = DefaultNativeNodeEnt.class, name = "NativeNodeEnt"),
-  @Type(value = DefaultWrappedWorkflowNodeEnt.class, name = "WrappedWorkflowNodeEnt")})
-@JsonDeserialize(builder=DefaultNodeEntBuilder.class)
+    @Type(value = DefaultWrappedWorkflowNodeEnt.class, name="WrappedWorkflowNodeEnt")
+})
+@JsonDeserialize(builder=DefaultWrappedWorkflowNodeEntBuilder.class)
 // AUTO-GENERATED CODE; DO NOT MODIFY
-public interface NodeEntMixIn extends NodeEnt {
+public interface WrappedWorkflowNodeEntMixIn extends WrappedWorkflowNodeEnt {
 
+	@Override
+	@JsonProperty("WorkflowIncomingPorts")
+    public List<NodeOutPortEnt> getWorkflowIncomingPorts();
+    
+	@Override
+	@JsonProperty("WorkflowOutgoingPorts")
+    public List<NodeInPortEnt> getWorkflowOutgoingPorts();
+    
+	@Override
+	@JsonProperty("IsEncrypted")
+    public boolean getIsEncrypted();
+    
+	@Override
+	@JsonProperty("VirtualInNodeID")
+    public String getVirtualInNodeID();
+    
+	@Override
+	@JsonProperty("VirtualOutNodeID")
+    public String getVirtualOutNodeID();
+    
 	@Override
 	@JsonProperty("ParentNodeID")
     public Optional<String> getParentNodeID();

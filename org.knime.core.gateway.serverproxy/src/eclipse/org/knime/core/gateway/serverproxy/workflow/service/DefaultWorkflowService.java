@@ -54,8 +54,10 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.gateway.serverproxy.util.EntityBuilderUtil;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;
 import org.knime.core.node.workflow.NodeID;
@@ -77,12 +79,18 @@ public class DefaultWorkflowService implements WorkflowService {
                 .orElseThrow(
                     () -> new NoSuchElementException("Workflow project for ID \"" + rootWorkflowID + "\" not found."))
                 .findNodeContainer(NodeID.fromString(nodeID.get()));
-            assert metaNode instanceof IWorkflowManager;
-            IWorkflowManager wfm = (IWorkflowManager)metaNode;
-            if (wfm.isEncrypted()) {
-                throw new IllegalStateException("Workflow is encrypted and cannot be accessed.");
+            if(metaNode instanceof IWorkflowManager) {
+                IWorkflowManager wfm = (IWorkflowManager)metaNode;
+                if (wfm.isEncrypted()) {
+                    throw new IllegalStateException("Workflow is encrypted and cannot be accessed.");
+                }
+                return buildWorkflowEnt(wfm, rootWorkflowID);
+            } else if(metaNode instanceof ISubNodeContainer) {
+                ISubNodeContainer snc = (ISubNodeContainer)metaNode;
+                return EntityBuilderUtil.buildWorkflowEnt(snc.getWorkflowManager(), rootWorkflowID);
+            } else {
+                throw new IllegalArgumentException("Node for the given node id ('" + nodeID.toString() + "') is neither a metanode nor a wrapped metanode.");
             }
-            return buildWorkflowEnt(wfm, rootWorkflowID);
         } else {
             IWorkflowManager wfm =
                 WorkflowProjectManager.getInstance().openAndCacheWorkflow(rootWorkflowID).orElseThrow(
