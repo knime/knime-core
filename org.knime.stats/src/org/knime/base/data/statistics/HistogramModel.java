@@ -180,7 +180,7 @@ public abstract class HistogramModel<Def> {
     /**
      * @return the bins (modifiable)
      */
-    protected List<Bin<Def>> getBins() {
+    public List<Bin<Def>> getBins() {
         return m_bins;
     }
     /**
