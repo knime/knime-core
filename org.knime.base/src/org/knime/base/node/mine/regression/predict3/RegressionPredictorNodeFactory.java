@@ -54,7 +54,8 @@ import org.knime.core.node.NodeView;
 /**
  * Factory for general regression predictor node.
  * <p>Despite being public no official API.
- * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.5
  */
 public final class RegressionPredictorNodeFactory
     extends NodeFactory<RegressionPredictorNodeModel> {

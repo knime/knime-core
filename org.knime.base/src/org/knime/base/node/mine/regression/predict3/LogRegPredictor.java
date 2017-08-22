@@ -84,7 +84,8 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 /**
  * A Predictor for a logistic regression model.
  * <p>Despite being public no official API.
- * @author Heiko Hofer
+ * @author Adrian Nembach, KNIME.com
+ * @since 3.5
  */
 public final class LogRegPredictor extends RegressionPredictorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LogRegPredictor.class);
