@@ -59,6 +59,54 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/LogRegPredictor.java" type="org.knime.base.node.mine.regression.predict2.LogRegPredictor">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.LogRegPredictor"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/RegressionPredictorCellFactory.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/RegressionPredictorNodeDialogPane.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeDialogPane">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeDialogPane"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/RegressionPredictorNodeFactory.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/RegressionPredictorNodeModel.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeModel">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeModel"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/predict2/RegressionPredictorSettings.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorSettings">
+        <filter comment="Replaced by new version (and was never part of official API)" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorSettings"/>
+                <message_argument value="org.knime.base_3.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/preproc/double2int/DoubleToIntNodeDialog.java" type="org.knime.base.node.preproc.double2int.DoubleToIntNodeDialog">
         <filter id="305365105">
             <message_arguments>
