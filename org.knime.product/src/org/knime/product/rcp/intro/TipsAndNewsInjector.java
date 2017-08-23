@@ -117,9 +117,10 @@ class TipsAndNewsInjector extends AbstractInjector {
                     //Add the partner name to the URL
                     branding = "&brand=" + URLEncoder.encode(brandingInfo.get("PartnerName"), "UTF-8");
                 }
-                tipsTricksUrl = new URL("http://www.knime.org/tips-and-tricks?knid="
-                    + KNIMEConstants.getKNIMEInstanceID() + "&version=" + KNIMEConstants.VERSION + "&os="
-                    + Platform.getOS() + "&osname=" + detectOS() + "&arch=" + Platform.getOSArch() + branding);
+                tipsTricksUrl =
+                    new URL(("https://www.knime.com/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID()
+                        + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&osname=" + detectOS()
+                        + "&arch=" + Platform.getOSArch() + branding).replace(" ", "%20"));
             }
         } catch (MalformedURLException | UnsupportedEncodingException ex) {
             // does not happen
@@ -154,7 +155,7 @@ class TipsAndNewsInjector extends AbstractInjector {
         for (int i = 0; i < nl.getLength(); i++) {
             Element e = (Element)nl.item(i);
             if (!e.getAttribute("src").startsWith("http")) {
-                e.setAttribute("src", "http://www.knime.org/" + e.getAttribute("src"));
+                e.setAttribute("src", "https://www.knime.com/" + e.getAttribute("src"));
             }
         }
 
@@ -162,7 +163,7 @@ class TipsAndNewsInjector extends AbstractInjector {
         for (int i = 0; i < nl.getLength(); i++) {
             Element e = (Element)nl.item(i);
             if (!e.getAttribute("href").startsWith("http")) {
-                e.setAttribute("href", "http://www.knime.org/" + e.getAttribute("href"));
+                e.setAttribute("href", "https://www.knime.com/" + e.getAttribute("href"));
             }
         }
     }
