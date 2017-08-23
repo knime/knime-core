@@ -111,7 +111,7 @@ import org.osgi.service.prefs.Preferences;
 public final class NodeTimer {
 
     /* For now we use the default store address always. */
-    private static final String SERVER_ADDRESS = "http://www.knime.org/store/rest";
+    private static final String SERVER_ADDRESS = "https://www.knime.com/store/rest";
             /*"http://localhost:8080/com.knime.store.server/rest"*/
 
     private final NodeContainer m_parent;
