@@ -74,7 +74,7 @@ public class AddMetaNodeWizard extends Wizard {
     private final WorkflowEditor m_wfEditor;
 
     private SelectMetaNodePage m_selectPage;
-    private AddMetaNodePage m_addPage;
+    private ConfigureMetaNodePortsPage m_addPage;
 
 
     /**
@@ -101,7 +101,7 @@ public class AddMetaNodeWizard extends Wizard {
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
                 ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
         m_selectPage = new SelectMetaNodePage();
-        m_addPage = new AddMetaNodePage("Create a new Metanode");
+        m_addPage = new ConfigureMetaNodePortsPage("Create a new Metanode");
         addPage(m_selectPage);
         addPage(m_addPage);
     }

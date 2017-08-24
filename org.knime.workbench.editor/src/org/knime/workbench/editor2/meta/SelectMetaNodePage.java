@@ -233,7 +233,7 @@ public class SelectMetaNodePage extends WizardPage {
             public void widgetSelected(final SelectionEvent e) {
                 changeSelection((Button)e.getSource());
                 m_selectedMetaNode = TWO_TWO;
-                ((AddMetaNodePage)getNextPage()).setTemplate(
+                ((ConfigureMetaNodePortsPage)getNextPage()).setTemplate(
                         m_selectedMetaNode);
                 setPageComplete(true);
             }
@@ -270,7 +270,7 @@ public class SelectMetaNodePage extends WizardPage {
         newSelection.setSelection(true);
         newSelection.setImage(m_activeIconMap.get(newSelection));
         m_selectedButton = newSelection;
-        ((AddMetaNodePage)getNextPage()).setTemplate(m_selectedMetaNode);
+        ((ConfigureMetaNodePortsPage)getNextPage()).setTemplate(m_selectedMetaNode);
     }
 
     /**

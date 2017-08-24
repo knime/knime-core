@@ -49,7 +49,6 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -60,7 +59,8 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.meta.ReconfigureMetaNodeWizard;
+import org.knime.workbench.editor2.meta.SetupSubnodeWizard;
+import org.knime.workbench.editor2.meta.SubnodeWizardDialog;
 
 /**
  *
@@ -92,7 +92,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reconfigure...";
+        return "Setup...";
     }
 
     /**
@@ -101,7 +101,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Change name and ports of Wrapped Metanode";
+        return "Change name, ports and behaviour of Wrapped Metanode";
     }
 
     /**
@@ -140,8 +140,8 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
 
-        ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), Wrapper.unwrap(subnodeNC, SubNodeContainer.class));
-        WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
+        SetupSubnodeWizard wizard = new SetupSubnodeWizard(ep.getViewer(), subnodeNC);
+        SubnodeWizardDialog dlg = new SubnodeWizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();
         dlg.open();
     }

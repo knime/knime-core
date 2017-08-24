@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,21 +41,31 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   21.06.2012 (Peter Ohl): created
+ *   23 Aug 2017 (albrecht): created
  */
 package org.knime.workbench.editor2.meta;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.InputNode;
+import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -62,97 +73,101 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
 
 /**
- * One page wizard to reconfigure a metanode by changing the number and type, order or number of in
+ * Wizard to configure the setup of a wrapped metanode,
+ * e.g. changing the name or the number and type of in
  * and out ports.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  */
-public class ReconfigureMetaNodeWizard extends Wizard {
+public class SetupSubnodeWizard extends Wizard {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ReconfigureMetaNodeWizard.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SetupSubnodeWizard.class);
 
-    private ConfigureMetaNodePortsPage m_addPage;
+    private ConfigureMetaNodePortsPage m_portsPage;
+    private ConfigureNodeUsagePage m_usagePage;
 
-    private final WorkflowManager m_metaNode;
     private final EditPartViewer m_viewer;
     private final SubNodeContainer m_subNode;
 
     /**
      * @param viewer The viewer
-     * @param metaNode The metanode
+     * @param subNode The subnode container
      */
-    public ReconfigureMetaNodeWizard(final EditPartViewer viewer, final WorkflowManager metaNode) {
+    public SetupSubnodeWizard(final EditPartViewer viewer, final SubNodeContainer subNode) {
         super();
-        m_metaNode = metaNode;
-        m_subNode = null;
-        m_viewer = viewer;
-        setHelpAvailable(false);
-    }
-
-    /**
-     * @param viewer The viewer
-     * @param subNode The sub node
-     */
-    public ReconfigureMetaNodeWizard(final EditPartViewer viewer, final SubNodeContainer subNode) {
-        super();
-        m_metaNode = null;
         m_subNode = subNode;
         m_viewer = viewer;
         setHelpAvailable(false);
     }
 
+    /**
+    *
+    * {@inheritDoc}
+    */
+   @Override
+   public void addPages() {
+       setWindowTitle("Setup Wrapped Metanode Wizard");
+       setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
+               ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
+
+       WorkflowManager wfManager = m_subNode.getWorkflowManager();
+       Map<NodeID, NodeModel> allNodes = wfManager.findNodes(NodeModel.class, false);
+       LinkedHashMap<NodeID, NodeModel> usageNodes = new LinkedHashMap<NodeID, NodeModel>();
+       List<NodeID> nodeIDs = new ArrayList<NodeID>();
+       nodeIDs.addAll(allNodes.keySet());
+       Collections.sort(nodeIDs);
+       for (NodeID id : nodeIDs) {
+           NodeModel model = allNodes.get(id);
+           if (considerNodeForUsage(model)) {
+               usageNodes.put(id, model);
+           }
+       }
+
+       m_portsPage = new ConfigureMetaNodePortsPage("Change the Wrapped Metanode configuration");
+       m_portsPage.setSubNode(m_subNode);
+       m_portsPage.setTemplate(null);
+       addPage(m_portsPage);
+
+       m_usagePage = new ConfigureNodeUsagePage("Change node usage configuration");
+       m_usagePage.setNodes(m_subNode, usageNodes);
+       addPage(m_usagePage);
+   }
+
+   private boolean considerNodeForUsage(final NodeModel model) {
+       boolean consider = false;
+       consider |= model instanceof WizardNode;
+       consider |= model instanceof DialogNode;
+       consider |= model instanceof InputNode;
+       consider |= model instanceof OutputNode;
+       return consider;
+   }
+
+   /**
+   *
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean canFinish() {
+      return m_portsPage.isPageComplete() && m_usagePage.isPageComplete();
+  }
 
     /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void addPages() {
-        String name = m_metaNode != null ? "Metanode" : "Wrapped Metanode";
-        setWindowTitle("Reconfigure " + name + " Wizard");
-        setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
-                ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
-        m_addPage = new ConfigureMetaNodePortsPage("Change the " + name + " configuration");
-        if (m_metaNode != null) {
-            m_addPage.setMetaNode(m_metaNode);
-        } else {
-            m_addPage.setSubNode(m_subNode);
-        }
-        m_addPage.setTemplate(null);
-        addPage(m_addPage);
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canFinish() {
-        return m_addPage.isPageComplete();
-    }
-
-    /**
-     *
      * {@inheritDoc}
      */
     @Override
     public boolean performFinish() {
-        NodeContainer node = m_metaNode != null ? m_metaNode : m_subNode;
-        List<MetaPortInfo> inPorts = m_addPage.getInPorts();
-        List<MetaPortInfo> outPorts = m_addPage.getOutPorts();
-        String name = m_addPage.getMetaNodeName();
+        NodeContainer node = m_subNode;
+        List<MetaPortInfo> inPorts = m_portsPage.getInports();
+        List<MetaPortInfo> outPorts = m_portsPage.getOutPorts();
+        String name = m_portsPage.getMetaNodeName();
 
         // fix the indicies
         for (int i = 0; i < inPorts.size(); i++) {
-            m_addPage.replaceInPortAtIndex(i, MetaPortInfo.builder(inPorts.get(i)).setNewIndex(i).build());
+            inPorts.get(i).setNewIndex(i);
         }
         for (int i = 0; i < outPorts.size(); i++) {
-            m_addPage.replaceOutPortAtIndex(i, MetaPortInfo.builder(outPorts.get(i)).setNewIndex(i).build());
+            outPorts.get(i).setNewIndex(i);
         }
-
-        inPorts = m_addPage.getInPorts();
-        outPorts = m_addPage.getOutPorts();
-
         // determine what has changed
         boolean inPortChanges = node.getNrInPorts() != inPorts.size();
         for (MetaPortInfo inInfo : inPorts) {
@@ -183,7 +198,8 @@ public class ReconfigureMetaNodeWizard extends Wizard {
         infoStr.append("of MetaNode " + node.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(), node.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(),
+                node.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }

@@ -90,9 +90,9 @@ import org.knime.workbench.editor2.figures.AbstractPortFigure;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class AddMetaNodePage extends WizardPage {
+public class ConfigureMetaNodePortsPage extends WizardPage {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(AddMetaNodePage.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConfigureMetaNodePortsPage.class);
 
     private static final String DESCRIPTION = "Specifiy the name of the node and define the number and type of "
         + "the desired in and out ports.";
@@ -128,7 +128,7 @@ public class AddMetaNodePage extends WizardPage {
      * Creates the page and sets title and description.
      * @param title of the wizard page
      */
-    public AddMetaNodePage(final String title) {
+    public ConfigureMetaNodePortsPage(final String title) {
         super(title);
         setDescription(DESCRIPTION);
     }
