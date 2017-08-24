@@ -87,9 +87,9 @@ public class MetaPortDialog extends Dialog {
 
     private Shell m_shell;
     private Label m_error;
+    private Label m_typeLabel;
     private Combo m_type;
 
-    private static final int WIDTH = 280;
     private static final int HEIGHT = 120;
 
     private PortType m_port = null;
@@ -143,17 +143,24 @@ public class MetaPortDialog extends Dialog {
      * @return the entered port (with name and type)
      */
     public PortType open() {
+        //create shell and contents
         Shell parent = getParent();
         m_shell = new Shell(parent, SWT.DIALOG_TRIM
                 | SWT.APPLICATION_MODAL);
-        Point location = parent.getLocation();
-        Point size = parent.getSize();
-        m_shell.setLocation(location.x + (size.x / 2) - (WIDTH / 2),
-                location.y + (size.y / 2) - (HEIGHT / 2));
         m_shell.setText(getText());
-        m_shell.setSize(WIDTH, HEIGHT);
         m_shell.setLayout(new FillLayout());
         createControl(m_shell);
+
+        //calculate size and set location
+        Point location = parent.getLocation();
+        Point size = parent.getSize();
+        int labelWidth = m_typeLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+        int comboWidth = m_type.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
+        int shellWidth = labelWidth + comboWidth + 40;
+        m_shell.setLocation(location.x + (size.x / 2) - (shellWidth / 2),
+                location.y + (size.y / 2) - (HEIGHT / 2));
+        m_shell.setSize(shellWidth, HEIGHT);
+
         m_shell.open();
         Display display = parent.getDisplay();
         while (!m_shell.isDisposed()) {
@@ -173,8 +180,8 @@ public class MetaPortDialog extends Dialog {
         gridData.horizontalSpan = 2;
         m_error.setLayoutData(gridData);
 
-        Label label2 = new Label(composite, SWT.NONE);
-        label2.setText("Port Type:");
+        m_typeLabel = new Label(composite, SWT.NONE);
+        m_typeLabel.setText("Port Type:");
         m_type = new Combo(composite,
                 SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY | SWT.BORDER);
         String[] names = new String[PORT_TYPES.size()];
