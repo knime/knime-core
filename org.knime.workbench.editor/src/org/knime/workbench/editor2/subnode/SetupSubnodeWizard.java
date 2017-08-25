@@ -200,7 +200,7 @@ public class SetupSubnodeWizard extends Wizard {
             infoStr.append("the name - ");
         }
         if (infoStr.length() == 0) {
-            LOGGER.info("No changes made in the configuration wizard. Nothing to do.");
+            LOGGER.debug("No changes made in the port configuration wizard page. Nothing to do.");
             return true;
         }
         infoStr.insert(0, "Changing - ");
@@ -224,59 +224,37 @@ public class SetupSubnodeWizard extends Wizard {
 
     private boolean applyUsageChanges() {
         WorkflowManager wfManager = m_subNode.getWorkflowManager();
-        Map<NodeID, NodeModel> allNodes = wfManager.findNodes(NodeModel.class, false);
         for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
             NodeID id = wUsage.getKey();
-            NodeModel model = allNodes.get(id);
-            if (model == null) {
-                LOGGER.error("Node with ID " + id + " was not found in wrapped metanode.");
+            boolean hide = !wUsage.getValue().getSelection();
+            try {
+                wfManager.hideNodeFromWizard(m_subNode, id, hide);
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Unable to set hide in wizard flag on node: " + e.getMessage(), e);
                 return false;
-            }
-            if (!(model instanceof WizardNode)) {
-                LOGGER.error("Node with ID " + id + " was not of type WizardNode.");
-                return false;
-            }
-            WizardNode<?, ?> wNode = (WizardNode<?,?>)model;
-            boolean previous = wNode.isHideInWizard();
-            boolean newState = !wUsage.getValue().getSelection();
-            if (previous != newState) {
-                wNode.setHideInWizard(newState);
-                //FIXME: new state needs to be saved, but method is not visible
-                /*m_subNode.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true)
-                .saveNodeSettingsToDefault();*/
             }
         }
 
         for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
-            NodeModel model = allNodes.get(dUsage.getKey());
-            if (model == null) {
-                LOGGER.error("Node with ID " + dUsage.getKey() + " was not found in wrapped metanode.");
+            NodeID id = dUsage.getKey();
+            boolean hide = !dUsage.getValue().getSelection();
+            try {
+                wfManager.hideNodeFromDialog(m_subNode, id, hide);
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
                 return false;
             }
-            if (!(model instanceof DialogNode)) {
-                LOGGER.error("Node with ID " + dUsage.getKey() + " was not of type DialogNode.");
-                return false;
-            }
-            DialogNode<?, ?> dNode = (DialogNode<?,?>)model;
-            dNode.setHideInDialog(!dUsage.getValue().getSelection());
         }
 
         for (Entry<NodeID, Button> iUsage : m_usagePage.getInterfaceUsageMap().entrySet()) {
-            NodeModel model = allNodes.get(iUsage.getKey());
-            if (model == null) {
-                LOGGER.error("Node with ID " + iUsage.getKey() + " was not found in wrapped metanode.");
+            NodeID id = iUsage.getKey();
+            boolean hide = !iUsage.getValue().getSelection();
+            try {
+                //TODO: implement once nodes can be enabled/disabled for interface use
+                //wfManager.hideNodeFromInterface(id, hide);
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("Unable to set hide in interface flag on node: " + e.getMessage(), e);
                 return false;
-            }
-            if (!(model instanceof InputNode || model instanceof OutputNode)) {
-                LOGGER.error("Node with ID " + iUsage.getKey() + " was not of type DialogNode.");
-                return false;
-            }
-            if (model instanceof InputNode) {
-                InputNode iNode = (InputNode)model;
-                //TODO assign value when implemented
-            } else if (model instanceof OutputNode) {
-                OutputNode oNode = (OutputNode)model;
-                //TODO assign value when implemented
             }
         }
 
