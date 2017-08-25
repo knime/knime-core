@@ -230,6 +230,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 //TODO: remove once interface status can be configured in nodes
                 interfaceButton.setEnabled(false);
                 interfaceButton.setToolTipText("Interface usage not configurable yet.");
+                interfaceButton.setSelection(true);
                 m_interfaceUsageMap.put(id, interfaceButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
@@ -242,6 +243,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
         selectAllWizard.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                selectAllWizard.setGrayed(false);
                 for (Button b : m_wizardUsageMap.values()) {
                     b.setSelection(selectAllWizard.getSelection());
                 }
@@ -253,6 +255,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
         selectAllDialog.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                selectAllDialog.setGrayed(false);
                 for (Button b : m_dialogUsageMap.values()) {
                     b.setSelection(selectAllDialog.getSelection());
                 }
@@ -264,6 +267,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
         selectAllInterface.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                selectAllInterface.setGrayed(false);
                 for (Button b : m_interfaceUsageMap.values()) {
                     b.setSelection(selectAllInterface.getSelection());
                 }
@@ -278,10 +282,13 @@ public class ConfigureNodeUsagePage extends WizardPage {
 
     private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
         boolean allSelected = true;
+        boolean oneSelected = false;
         for(Button b : buttons.values()) {
             allSelected &= b.getSelection();
+            oneSelected |= b.getSelection();
         }
-        selectAllButton.setSelection(allSelected);
+        selectAllButton.setSelection(oneSelected);
+        selectAllButton.setGrayed(!allSelected);
     }
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
