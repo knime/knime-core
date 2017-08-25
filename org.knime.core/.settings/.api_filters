@@ -65,6 +65,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="setHideInDialog(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveView.java" type="org.knime.core.node.interactive.InteractiveView">
         <filter id="438399040">
             <message_arguments>
@@ -169,6 +177,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
                 <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNode.java" type="org.knime.core.node.wizard.WizardNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="setHideInWizard(boolean)"/>
             </message_arguments>
         </filter>
     </resource>

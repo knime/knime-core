@@ -107,4 +107,11 @@ public interface WizardNode<REP extends WebViewContent, VAL extends WebViewConte
     /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
      * @return that property. */
     public boolean isHideInWizard();
+
+    /**
+     * Property set in the configuration dialog to the node to skip this node in the wizard execution.
+     * @param hide true if node is to be skipped, false otherwise
+     * @since 3.5
+     */
+    public void setHideInWizard(final boolean hide);
 }

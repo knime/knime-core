@@ -366,6 +366,17 @@ public class SubnodeViewableModel implements ViewableModel, WizardNode<JSONWebNo
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 3.5
+     */
+    @Override
+    public void setHideInWizard(final boolean hide) {
+        /* TODO no implementation possible at the moment
+         * this needs to be configurable for nested subnodes, etc
+         */
+    }
+
     private static class SubnodeWizardViewCreator extends JavaScriptViewCreator<JSONWebNodePage, SubnodeViewValue> {
 
         public SubnodeWizardViewCreator() {

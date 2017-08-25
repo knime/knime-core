@@ -196,14 +196,11 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 wizardButton.addSelectionListener(new SelectionAdapter() {
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
-                        boolean allSelected = true;
-                        for(Button b : m_wizardUsageMap.values()) {
-                            allSelected &= b.getSelection();
-                        }
-                        selectAllWizard.setSelection(allSelected);
+                        checkAllSelected(m_wizardUsageMap, selectAllWizard);
                     }
                 });
                 wizardButton.setToolTipText("Enable/disable for usage in WebPortal and wizard execution.");
+                wizardButton.setSelection(!((WizardNode<?,?>)model).isHideInWizard());
                 m_wizardUsageMap.put(id, wizardButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
@@ -213,14 +210,11 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 dialogButton.addSelectionListener(new SelectionAdapter() {
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
-                        boolean allSelected = true;
-                        for(Button b : m_dialogUsageMap.values()) {
-                            allSelected &= b.getSelection();
-                        }
-                        selectAllDialog.setSelection(allSelected);
+                        checkAllSelected(m_dialogUsageMap, selectAllDialog);
                     }
                 });
                 dialogButton.setToolTipText("Enable/disable for usage in wrapped metanode configure dialog.");
+                dialogButton.setSelection(!((DialogNode<?,?>)model).isHideInDialog());
                 m_dialogUsageMap.put(id, dialogButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
@@ -230,11 +224,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 interfaceButton.addSelectionListener(new SelectionAdapter() {
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
-                        boolean allSelected = true;
-                        for(Button b : m_interfaceUsageMap.values()) {
-                            allSelected &= b.getSelection();
-                        }
-                        selectAllInterface.setSelection(allSelected);
+                        checkAllSelected(m_interfaceUsageMap, selectAllInterface);
                     }
                 });
                 //TODO: remove once interface status can be configured in nodes
@@ -245,6 +235,10 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
         }
+        checkAllSelected(m_wizardUsageMap, selectAllWizard);
+        checkAllSelected(m_dialogUsageMap, selectAllDialog);
+        checkAllSelected(m_interfaceUsageMap, selectAllInterface);
+
         selectAllWizard.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -280,6 +274,14 @@ public class ConfigureNodeUsagePage extends WizardPage {
         }
         //TODO: remove once interface status can be configured in nodes
         selectAllInterface.setEnabled(false);
+    }
+
+    private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
+        boolean allSelected = true;
+        for(Button b : buttons.values()) {
+            allSelected &= b.getSelection();
+        }
+        selectAllButton.setSelection(allSelected);
     }
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {

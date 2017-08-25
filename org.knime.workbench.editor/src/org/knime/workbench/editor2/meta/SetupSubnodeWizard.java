@@ -53,10 +53,12 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.widgets.Button;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.DialogNode;
@@ -64,7 +66,6 @@ import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -156,7 +157,13 @@ public class SetupSubnodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
-        NodeContainer node = m_subNode;
+        if (!applyPortChanges()) {
+            return false;
+        }
+        return applyUsageChanges();
+    }
+
+    private boolean applyPortChanges() {
         List<MetaPortInfo> inPorts = m_portsPage.getInports();
         List<MetaPortInfo> outPorts = m_portsPage.getOutPorts();
         String name = m_portsPage.getMetaNodeName();
@@ -169,17 +176,17 @@ public class SetupSubnodeWizard extends Wizard {
             outPorts.get(i).setNewIndex(i);
         }
         // determine what has changed
-        boolean inPortChanges = node.getNrInPorts() != inPorts.size();
+        boolean inPortChanges = m_subNode.getNrInPorts() != inPorts.size();
         for (MetaPortInfo inInfo : inPorts) {
             // new port types would create a new info object - which would have an unspecified old index -> change
             inPortChanges |= inInfo.getOldIndex() != inInfo.getNewIndex();
         }
-        boolean outPortChanges = node.getNrOutPorts() != outPorts.size();
+        boolean outPortChanges = m_subNode.getNrOutPorts() != outPorts.size();
         for (MetaPortInfo outInfo : outPorts) {
             // new port types would create a new info object - which would have an unspecified old index -> change
             outPortChanges |= outInfo.getOldIndex() != outInfo.getNewIndex();
         }
-        boolean nameChange = !node.getName().equals(name);
+        boolean nameChange = !m_subNode.getName().equals(name);
         StringBuilder infoStr = new StringBuilder();
         if (inPortChanges) {
             infoStr.append("the input ports - ");
@@ -195,11 +202,11 @@ public class SetupSubnodeWizard extends Wizard {
             return true;
         }
         infoStr.insert(0, "Changing - ");
-        infoStr.append("of MetaNode " + node.getID());
+        infoStr.append("of MetaNode " + m_subNode.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(),
-                node.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(m_subNode.getParent(),
+            m_subNode.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }
@@ -210,6 +217,59 @@ public class SetupSubnodeWizard extends Wizard {
             reconfCmd.setNewOutPorts(outPorts);
         }
         m_viewer.getEditDomain().getCommandStack().execute(reconfCmd);
+        return true;
+    }
+
+    private boolean applyUsageChanges() {
+        WorkflowManager wfManager = m_subNode.getWorkflowManager();
+        Map<NodeID, NodeModel> allNodes = wfManager.findNodes(NodeModel.class, false);
+        for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
+            NodeModel model = allNodes.get(wUsage.getKey());
+            if (model == null) {
+                LOGGER.error("Node with ID " + wUsage.getKey() + " was not found in wrapped metanode.");
+                return false;
+            }
+            if (!(model instanceof WizardNode)) {
+                LOGGER.error("Node with ID " + wUsage.getKey() + " was not of type WizardNode.");
+                return false;
+            }
+            WizardNode<?, ?> wNode = (WizardNode<?,?>)model;
+            wNode.setHideInWizard(!wUsage.getValue().getSelection());
+        }
+
+        for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
+            NodeModel model = allNodes.get(dUsage.getKey());
+            if (model == null) {
+                LOGGER.error("Node with ID " + dUsage.getKey() + " was not found in wrapped metanode.");
+                return false;
+            }
+            if (!(model instanceof DialogNode)) {
+                LOGGER.error("Node with ID " + dUsage.getKey() + " was not of type DialogNode.");
+                return false;
+            }
+            DialogNode<?, ?> dNode = (DialogNode<?,?>)model;
+            dNode.setHideInDialog(!dUsage.getValue().getSelection());
+        }
+
+        for (Entry<NodeID, Button> iUsage : m_usagePage.getInterfaceUsageMap().entrySet()) {
+            NodeModel model = allNodes.get(iUsage.getKey());
+            if (model == null) {
+                LOGGER.error("Node with ID " + iUsage.getKey() + " was not found in wrapped metanode.");
+                return false;
+            }
+            if (!(model instanceof InputNode || model instanceof OutputNode)) {
+                LOGGER.error("Node with ID " + iUsage.getKey() + " was not of type DialogNode.");
+                return false;
+            }
+            if (model instanceof InputNode) {
+                InputNode iNode = (InputNode)model;
+                //TODO assign value when implemented
+            } else if (model instanceof OutputNode) {
+                OutputNode oNode = (OutputNode)model;
+                //TODO assign value when implemented
+            }
+        }
+
         return true;
     }
 

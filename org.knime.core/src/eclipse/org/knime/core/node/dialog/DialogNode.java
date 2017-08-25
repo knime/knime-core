@@ -150,4 +150,11 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * @return that property. */
     public boolean isHideInDialog();
 
+    /** Property set in the configuration dialog of the node to hide this quickform/dialog node in the
+     * meta or subnode dialog
+     * @param hide true, if node is supposed to be ignored for dialog, false otherwise
+     * @since 3.5
+     */
+    public void setHideInDialog(final boolean hide);
+
 }
