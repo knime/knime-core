@@ -59,6 +59,8 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -136,9 +138,18 @@ public class ConfigureNodeUsagePage extends WizardPage {
         if (m_viewNodes.size() > 0) {
             createNodeGrid(composite);
         } else {
-            //TODO display message
+            createMessage(composite, "No nodes for usage configuration available.");
         }
         setControl(composite);
+    }
+
+    private void createMessage(final Composite parent, final String message) {
+        GridData gridData = new GridData();
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.horizontalAlignment = SWT.CENTER;
+        Label infoLabel = new Label(parent, SWT.CENTER);
+        infoLabel.setText(message);
+        infoLabel.setLayoutData(gridData);
     }
 
     private void createNodeGrid(final Composite parent) {
@@ -149,29 +160,29 @@ public class ConfigureNodeUsagePage extends WizardPage {
         scrollPane.setContent(composite);
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
         composite.setLayout(new GridLayout(4, false));
-        composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 
         //titles
         new Composite(composite, SWT.NONE); /* Placeholder */
-        Label wizardLabel = new Label(composite, SWT.LEFT);
+        Label wizardLabel = new Label(composite, SWT.CENTER);
         FontData fontData = wizardLabel.getFont().getFontData()[0];
         Font boldFont = new Font(Display.getCurrent(),
             new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
         wizardLabel.setText("WebPortal");
         wizardLabel.setFont(boldFont);
-        Label dialogLabel = new Label(composite, SWT.LEFT);
+        Label dialogLabel = new Label(composite, SWT.CENTER);
         dialogLabel.setText("Dialog");
         dialogLabel.setFont(boldFont);
-        Label interfaceLabel = new Label(composite, SWT.LEFT);
+        Label interfaceLabel = new Label(composite, SWT.CENTER);
         interfaceLabel.setText("Interface");
         interfaceLabel.setFont(boldFont);
 
         //select all checkboxes
         Label selectAllLabel = new Label(composite, SWT.LEFT);
         selectAllLabel.setText("Enable/Disable");
-        Button selectAllWizard = new Button(composite, SWT.CHECK);
-        Button selectAllDialog = new Button(composite, SWT.CHECK);
-        Button selectAllInterface = new Button(composite, SWT.CHECK);
+        Button selectAllWizard = new Button(composite, SWT.CHECK | SWT.CENTER);
+        Button selectAllDialog = new Button(composite, SWT.CHECK | SWT.CENTER);
+        Button selectAllInterface = new Button(composite, SWT.CHECK | SWT.CENTER);
 
         //individual nodes
         for (Entry<NodeID, NodeModel> entry : m_viewNodes.entrySet()) {
@@ -181,21 +192,94 @@ public class ConfigureNodeUsagePage extends WizardPage {
 
             NodeModel model = entry.getValue();
             if (model instanceof WizardNode) {
-                m_wizardUsageMap.put(id, new Button(composite, SWT.CHECK));
+                Button wizardButton = new Button(composite, SWT.CHECK | SWT.CENTER);
+                wizardButton.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(final SelectionEvent e) {
+                        boolean allSelected = true;
+                        for(Button b : m_wizardUsageMap.values()) {
+                            allSelected &= b.getSelection();
+                        }
+                        selectAllWizard.setSelection(allSelected);
+                    }
+                });
+                wizardButton.setToolTipText("Enable/disable for usage in WebPortal and wizard execution.");
+                m_wizardUsageMap.put(id, wizardButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
             if (model instanceof DialogNode) {
-                m_dialogUsageMap.put(id, new Button(composite, SWT.CHECK));
+                Button dialogButton = new Button(composite, SWT.CHECK | SWT.CENTER);
+                dialogButton.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(final SelectionEvent e) {
+                        boolean allSelected = true;
+                        for(Button b : m_dialogUsageMap.values()) {
+                            allSelected &= b.getSelection();
+                        }
+                        selectAllDialog.setSelection(allSelected);
+                    }
+                });
+                dialogButton.setToolTipText("Enable/disable for usage in wrapped metanode configure dialog.");
+                m_dialogUsageMap.put(id, dialogButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
             if (model instanceof InputNode || model instanceof OutputNode) {
-                m_interfaceUsageMap.put(id, new Button(composite, SWT.CHECK));
+                Button interfaceButton = new Button(composite, SWT.CHECK | SWT.CENTER);
+                interfaceButton.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(final SelectionEvent e) {
+                        boolean allSelected = true;
+                        for(Button b : m_interfaceUsageMap.values()) {
+                            allSelected &= b.getSelection();
+                        }
+                        selectAllInterface.setSelection(allSelected);
+                    }
+                });
+                //TODO: remove once interface status can be configured in nodes
+                interfaceButton.setEnabled(false);
+                interfaceButton.setToolTipText("Interface usage not configurable yet.");
+                m_interfaceUsageMap.put(id, interfaceButton);
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
         }
+        selectAllWizard.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                for (Button b : m_wizardUsageMap.values()) {
+                    b.setSelection(selectAllWizard.getSelection());
+                }
+            }
+        });
+        if (m_wizardUsageMap.size() < 1) {
+            selectAllWizard.setEnabled(false);
+        }
+        selectAllDialog.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                for (Button b : m_dialogUsageMap.values()) {
+                    b.setSelection(selectAllDialog.getSelection());
+                }
+            }
+        });
+        if (m_dialogUsageMap.size() < 1) {
+            selectAllDialog.setEnabled(false);
+        }
+        selectAllInterface.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                for (Button b : m_interfaceUsageMap.values()) {
+                    b.setSelection(selectAllInterface.getSelection());
+                }
+            }
+        });
+        if (m_interfaceUsageMap.size() < 1) {
+            selectAllInterface.setEnabled(false);
+        }
+        //TODO: remove once interface status can be configured in nodes
+        selectAllInterface.setEnabled(false);
     }
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
@@ -238,6 +322,27 @@ public class ConfigureNodeUsagePage extends WizardPage {
         }
         nodeLabel.setText(nodeLabelText);
         return labelComposite;
+    }
+
+    /**
+     * @return the wizardUsageMap
+     */
+    Map<NodeID, Button> getWizardUsageMap() {
+        return m_wizardUsageMap;
+    }
+
+    /**
+     * @return the dialogUsageMap
+     */
+    Map<NodeID, Button> getDialogUsageMap() {
+        return m_dialogUsageMap;
+    }
+
+    /**
+     * @return the interfaceUsageMap
+     */
+    Map<NodeID, Button> getInterfaceUsageMap() {
+        return m_interfaceUsageMap;
     }
 
 }
