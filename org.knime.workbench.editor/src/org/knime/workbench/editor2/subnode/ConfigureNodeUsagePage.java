@@ -46,7 +46,7 @@
  * History
  *   24 Aug 2017 (albrecht): created
  */
-package org.knime.workbench.editor2.meta;
+package org.knime.workbench.editor2.subnode;
 
 import java.io.IOException;
 import java.io.InputStream;

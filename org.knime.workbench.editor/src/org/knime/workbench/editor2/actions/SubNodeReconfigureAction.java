@@ -59,8 +59,8 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.meta.SetupSubnodeWizard;
-import org.knime.workbench.editor2.meta.SubnodeWizardDialog;
+import org.knime.workbench.editor2.subnode.SetupSubnodeWizard;
+import org.knime.workbench.editor2.subnode.SubnodeWizardDialog;
 
 /**
  *

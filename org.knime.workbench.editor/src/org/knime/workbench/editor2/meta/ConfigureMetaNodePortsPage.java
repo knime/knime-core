@@ -155,7 +155,7 @@ public class ConfigureMetaNodePortsPage extends WizardPage {
      *
      * @param template the selected metanode template from previous page (that is to be created)
      */
-    void setTemplate(final String template) {
+    public void setTemplate(final String template) {
         m_template = template;
     }
 
@@ -174,7 +174,7 @@ public class ConfigureMetaNodePortsPage extends WizardPage {
      *
      * @param subNode the sub node to initialize the port lists from (and that is to be reconfigured)
      */
-    void setSubNode(final SubNodeContainer subNode) {
+    public void setSubNode(final SubNodeContainer subNode) {
         m_subNode = subNode;
         m_offset = 1;
     }

@@ -46,7 +46,7 @@
  * History
  *   24 Aug 2017 (albrecht): created
  */
-package org.knime.workbench.editor2.meta;
+package org.knime.workbench.editor2.subnode;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.wizard.IWizard;

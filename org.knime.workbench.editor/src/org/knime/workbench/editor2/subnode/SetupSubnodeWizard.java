@@ -46,7 +46,7 @@
  * History
  *   23 Aug 2017 (albrecht): created
  */
-package org.knime.workbench.editor2.meta;
+package org.knime.workbench.editor2.subnode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,6 +72,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
+import org.knime.workbench.editor2.meta.ConfigureMetaNodePortsPage;
 
 /**
  * Wizard to configure the setup of a wrapped metanode,
@@ -79,6 +80,7 @@ import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
  * and out ports.
  *
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
+ * @since 3.5
  */
 public class SetupSubnodeWizard extends Wizard {
 
@@ -224,17 +226,25 @@ public class SetupSubnodeWizard extends Wizard {
         WorkflowManager wfManager = m_subNode.getWorkflowManager();
         Map<NodeID, NodeModel> allNodes = wfManager.findNodes(NodeModel.class, false);
         for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
-            NodeModel model = allNodes.get(wUsage.getKey());
+            NodeID id = wUsage.getKey();
+            NodeModel model = allNodes.get(id);
             if (model == null) {
-                LOGGER.error("Node with ID " + wUsage.getKey() + " was not found in wrapped metanode.");
+                LOGGER.error("Node with ID " + id + " was not found in wrapped metanode.");
                 return false;
             }
             if (!(model instanceof WizardNode)) {
-                LOGGER.error("Node with ID " + wUsage.getKey() + " was not of type WizardNode.");
+                LOGGER.error("Node with ID " + id + " was not of type WizardNode.");
                 return false;
             }
             WizardNode<?, ?> wNode = (WizardNode<?,?>)model;
-            wNode.setHideInWizard(!wUsage.getValue().getSelection());
+            boolean previous = wNode.isHideInWizard();
+            boolean newState = !wUsage.getValue().getSelection();
+            if (previous != newState) {
+                wNode.setHideInWizard(newState);
+                //FIXME: new state needs to be saved, but method is not visible
+                /*m_subNode.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true)
+                .saveNodeSettingsToDefault();*/
+            }
         }
 
         for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
