@@ -461,7 +461,11 @@ public class DatabaseConnectionSettings {
         settings.addString("driver", m_driver);
         settings.addString("database", m_jdbcUrl);
         if (m_credName == null) {
-            settings.addString("user", m_user);
+//            settings.addString("user", m_user); //this was the key prior 3.4.1
+            //we use the new settings key starting with 3.4.1 in order to provoke an exception when a 3.4.1 or
+        	//later workflow is opened in KNIME 3.4.0 or earlier to prevent problems with the missing password
+            //see JIRA AP-7824
+            settings.addString("userName", m_user);
             //always save the password encrypted...
             settings.addPassword("passwordEncrypted", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", m_pass);
             ///... and set the password to null to indicate for the loadConection method that the password is saved encrypted (introduced with KNIME 3.4)
@@ -547,7 +551,13 @@ public class DatabaseConnectionSettings {
             }
         } else {
             // user and password
-            user = settings.getString("user");
+        	if (settings.containsKey("userName")) {
+        		//this is the new user name setting starting with KNIME 3.4.1
+        	    user = settings.getString("userName");
+        	} else {
+        		//this is the old user name setting in KNIME 3.4.0 and earlier
+    	    	user = settings.getString("user");
+    	    }
             final String pw = settings.getString("password", null);
             if (pw != null) {
                 //these settings where either created prior KNIME 3.4 or flow variables are used to set the password
