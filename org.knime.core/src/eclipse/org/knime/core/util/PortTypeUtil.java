@@ -48,7 +48,7 @@
  */
 package org.knime.core.util;
 
-import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeUID;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;

@@ -49,8 +49,8 @@ import java.util.List;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;

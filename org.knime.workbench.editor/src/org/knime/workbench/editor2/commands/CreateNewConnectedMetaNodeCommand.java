@@ -49,7 +49,7 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;

@@ -71,7 +71,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 

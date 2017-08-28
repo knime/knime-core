@@ -52,7 +52,7 @@ import java.net.URI;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 
 /**
  *

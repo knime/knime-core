@@ -52,7 +52,7 @@ import java.util.List;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
-import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;

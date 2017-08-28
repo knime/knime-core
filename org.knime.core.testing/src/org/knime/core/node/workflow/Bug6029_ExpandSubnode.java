@@ -56,7 +56,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 
 /**

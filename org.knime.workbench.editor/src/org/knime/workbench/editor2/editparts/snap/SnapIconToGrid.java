@@ -58,7 +58,7 @@ import org.eclipse.gef.Request;
 import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
-import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;

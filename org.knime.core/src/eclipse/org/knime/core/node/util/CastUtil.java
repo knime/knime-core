@@ -50,8 +50,8 @@ package org.knime.core.node.util;
 
 import java.util.Optional;
 
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;

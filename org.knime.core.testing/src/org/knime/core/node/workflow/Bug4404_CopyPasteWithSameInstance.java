@@ -46,7 +46,7 @@ package org.knime.core.node.workflow;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeSettings;
 
 

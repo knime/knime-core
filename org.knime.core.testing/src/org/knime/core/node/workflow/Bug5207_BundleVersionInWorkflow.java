@@ -53,7 +53,7 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;

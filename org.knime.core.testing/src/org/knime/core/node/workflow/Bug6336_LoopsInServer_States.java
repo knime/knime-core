@@ -57,10 +57,10 @@ import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
-import org.knime.core.api.node.workflow.WorkflowAnnotationID;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.workflow.WorkflowAnnotationID;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 

@@ -46,7 +46,7 @@ package org.knime.core.node;
 
 import java.util.function.Supplier;
 
-import org.knime.core.api.node.workflow.NodeProgressListener;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 
 
 /**

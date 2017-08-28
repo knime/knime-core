@@ -54,7 +54,7 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
-import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CastUtil;

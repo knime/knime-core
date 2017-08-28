@@ -60,7 +60,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**

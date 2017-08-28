@@ -44,10 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.api.node.workflow.INodeAnnotation;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.def.node.workflow.INodeAnnotation;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.NodeUIInformationEvent;
+import org.knime.core.def.node.workflow.NodeUIInformationListener;
 
 /**
  * Annotation associated with a node. Moves with the node. Can't be moved

@@ -57,8 +57,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
-import org.knime.core.api.node.workflow.ISubNodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.ISubNodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;

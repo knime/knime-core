@@ -61,10 +61,10 @@ import java.util.function.Function;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Assert;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.NodeProgress;
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.data.RowKey;
+import org.knime.core.def.node.workflow.NodeProgress;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
 import org.knime.core.util.Pointer;
 

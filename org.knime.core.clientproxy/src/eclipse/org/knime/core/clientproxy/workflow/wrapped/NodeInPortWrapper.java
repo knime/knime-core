@@ -48,9 +48,9 @@
  */
 package org.knime.core.clientproxy.workflow.wrapped;
 
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.INodeInPort;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.INodeInPort;
 
 /**
  *

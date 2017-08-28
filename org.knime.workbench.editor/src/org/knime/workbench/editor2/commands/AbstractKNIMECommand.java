@@ -48,7 +48,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to

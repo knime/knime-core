@@ -48,7 +48,7 @@
  */
 package org.knime.core.node.workflow.action;
 
-import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
+import org.knime.core.def.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowLock;

@@ -8,7 +8,7 @@ Bundle-ClassPath: .,
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Fragment-Host: org.knime.core.gateway.jsonrpc;bundle-version="3.3.0.qualifier"
 Require-Bundle: org.eclipse.osgi,
- org.knime.core.api;bundle-version="3.3.0",
+ org.knime.core.def;bundle-version="3.3.0",
  org.knime.core.gateway.serverproxy;bundle-version="3.3.0",
  org.eclipse.jetty.server;bundle-version="9.3.9",
  org.eclipse.jetty.servlet,

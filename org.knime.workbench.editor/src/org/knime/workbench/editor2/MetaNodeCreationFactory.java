@@ -49,7 +49,7 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;

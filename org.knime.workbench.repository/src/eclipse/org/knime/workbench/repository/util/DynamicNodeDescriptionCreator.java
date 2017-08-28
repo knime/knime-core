@@ -53,10 +53,10 @@ import java.util.Set;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.ISingleNodeContainer;
-import org.knime.core.api.node.workflow.ISubNodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.ISingleNodeContainer;
+import org.knime.core.def.node.workflow.ISubNodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;

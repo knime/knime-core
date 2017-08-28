@@ -47,10 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.api.node.workflow.INodeContainer.NodeLocks;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
+import org.knime.core.def.node.workflow.INodeContainer.NodeLocks;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;

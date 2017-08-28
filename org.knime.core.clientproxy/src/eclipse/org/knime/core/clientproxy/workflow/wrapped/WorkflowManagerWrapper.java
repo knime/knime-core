@@ -59,27 +59,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import org.knime.core.api.node.NodeFactoryUID;
-import org.knime.core.api.node.port.MetaPortInfo;
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.ConnectionID;
-import org.knime.core.api.node.workflow.EditorUIInformation;
-import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.INodeAnnotation;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowAnnotation;
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.JobManagerUID;
-import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.api.node.workflow.WorkflowAnnotationID;
-import org.knime.core.api.node.workflow.WorkflowListener;
-import org.knime.core.api.node.workflow.action.ICollapseIntoMetaNodeResult;
-import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
-import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
-import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
-import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.def.node.NodeFactoryUID;
+import org.knime.core.def.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.ConnectionID;
+import org.knime.core.def.node.workflow.EditorUIInformation;
+import org.knime.core.def.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.INodeAnnotation;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowAnnotation;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.JobManagerUID;
+import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.NodeUIInformationEvent;
+import org.knime.core.def.node.workflow.WorkflowAnnotationID;
+import org.knime.core.def.node.workflow.WorkflowListener;
+import org.knime.core.def.node.workflow.action.ICollapseIntoMetaNodeResult;
+import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
+import org.knime.core.def.node.workflow.action.IExpandSubNodeResult;
+import org.knime.core.def.node.workflow.action.IMetaNodeToSubNodeResult;
+import org.knime.core.def.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -169,7 +169,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param factoryUID
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#createAndAddNode(org.knime.core.api.node.NodeFactoryUID)
+     * @see org.knime.core.node.workflow.WorkflowManager#createAndAddNode(org.knime.core.def.node.NodeFactoryUID)
      */
     @Override
     public NodeID createAndAddNode(final NodeFactoryUID factoryUID) {
@@ -179,7 +179,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param factoryUID
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#addNode(org.knime.core.api.node.NodeFactoryUID)
+     * @see org.knime.core.node.workflow.WorkflowManager#addNode(org.knime.core.def.node.NodeFactoryUID)
      */
     @Override
     public NodeID addNode(final NodeFactoryUID factoryUID) {
@@ -210,7 +210,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
      * @param outPorts
      * @param name
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#createAndAddSubWorkflow(org.knime.core.api.node.port.PortTypeUID[], org.knime.core.api.node.port.PortTypeUID[], java.lang.String)
+     * @see org.knime.core.node.workflow.WorkflowManager#createAndAddSubWorkflow(org.knime.core.def.node.port.PortTypeUID[], org.knime.core.def.node.port.PortTypeUID[], java.lang.String)
      */
     @Override
     public WorkflowManagerWrapper createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts, final String name) {
@@ -268,7 +268,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param cc
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#canRemoveConnection(org.knime.core.api.node.workflow.IConnectionContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#canRemoveConnection(org.knime.core.def.node.workflow.IConnectionContainer)
      */
     @Override
     public boolean canRemoveConnection(final IConnectionContainer cc) {
@@ -277,7 +277,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param cc
-     * @see org.knime.core.node.workflow.WorkflowManager#removeConnection(org.knime.core.api.node.workflow.IConnectionContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#removeConnection(org.knime.core.def.node.workflow.IConnectionContainer)
      */
     @Override
     public void removeConnection(final IConnectionContainer cc) {
@@ -333,7 +333,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param id
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getConnection(org.knime.core.api.node.workflow.ConnectionID)
+     * @see org.knime.core.node.workflow.WorkflowManager#getConnection(org.knime.core.def.node.workflow.ConnectionID)
      */
     @Override
     public IConnectionContainer getConnection(final ConnectionID id) {
@@ -384,7 +384,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param subFlowID
      * @param newPorts
-     * @see org.knime.core.node.workflow.WorkflowManager#changeMetaNodeInputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.api.node.port.MetaPortInfo[])
+     * @see org.knime.core.node.workflow.WorkflowManager#changeMetaNodeInputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.def.node.port.MetaPortInfo[])
      */
     @Override
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
@@ -394,7 +394,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param subFlowID
      * @param newPorts
-     * @see org.knime.core.node.workflow.WorkflowManager#changeMetaNodeOutputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.api.node.port.MetaPortInfo[])
+     * @see org.knime.core.node.workflow.WorkflowManager#changeMetaNodeOutputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.def.node.port.MetaPortInfo[])
      */
     @Override
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
@@ -404,7 +404,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param subFlowID
      * @param newPorts
-     * @see org.knime.core.node.workflow.WorkflowManager#changeSubNodeInputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.api.node.port.MetaPortInfo[])
+     * @see org.knime.core.node.workflow.WorkflowManager#changeSubNodeInputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.def.node.port.MetaPortInfo[])
      */
     @Override
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
@@ -414,7 +414,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param subFlowID
      * @param newPorts
-     * @see org.knime.core.node.workflow.WorkflowManager#changeSubNodeOutputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.api.node.port.MetaPortInfo[])
+     * @see org.knime.core.node.workflow.WorkflowManager#changeSubNodeOutputPorts(org.knime.core.node.workflow.NodeID, org.knime.core.def.node.port.MetaPortInfo[])
      */
     @Override
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
@@ -602,7 +602,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param nc
-     * @see org.knime.core.node.workflow.WorkflowManager#cancelExecution(org.knime.core.api.node.workflow.INodeContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#cancelExecution(org.knime.core.def.node.workflow.INodeContainer)
      */
     @Override
     public void cancelExecution(final INodeContainer nc) {
@@ -611,7 +611,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param nc
-     * @see org.knime.core.node.workflow.WorkflowManager#pauseLoopExecution(org.knime.core.api.node.workflow.INodeContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#pauseLoopExecution(org.knime.core.def.node.workflow.INodeContainer)
      */
     @Override
     public void pauseLoopExecution(final INodeContainer nc) {
@@ -621,7 +621,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param nc
      * @param oneStep
-     * @see org.knime.core.node.workflow.WorkflowManager#resumeLoopExecution(org.knime.core.api.node.workflow.INodeContainer, boolean)
+     * @see org.knime.core.node.workflow.WorkflowManager#resumeLoopExecution(org.knime.core.def.node.workflow.INodeContainer, boolean)
      */
     @Override
     public void resumeLoopExecution(final INodeContainer nc, final boolean oneStep) {
@@ -641,7 +641,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param nodeID
      * @param jobMgr
-     * @see org.knime.core.node.workflow.WorkflowManager#setJobManager(org.knime.core.node.workflow.NodeID, org.knime.core.api.node.workflow.JobManagerUID)
+     * @see org.knime.core.node.workflow.WorkflowManager#setJobManager(org.knime.core.node.workflow.NodeID, org.knime.core.def.node.workflow.JobManagerUID)
      */
     @Override
     public void setJobManager(final NodeID nodeID, final JobManagerUID jobMgr) {
@@ -898,7 +898,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param listener
-     * @see org.knime.core.node.workflow.WorkflowManager#addListener(org.knime.core.api.node.workflow.WorkflowListener)
+     * @see org.knime.core.node.workflow.WorkflowManager#addListener(org.knime.core.def.node.workflow.WorkflowListener)
      */
     @Override
     public void addListener(final WorkflowListener listener) {
@@ -907,7 +907,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param listener
-     * @see org.knime.core.node.workflow.WorkflowManager#removeListener(org.knime.core.api.node.workflow.WorkflowListener)
+     * @see org.knime.core.node.workflow.WorkflowManager#removeListener(org.knime.core.def.node.workflow.WorkflowListener)
      */
     @Override
     public void removeListener(final WorkflowListener listener) {
@@ -953,7 +953,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param editorInfo
-     * @see org.knime.core.node.workflow.WorkflowManager#setEditorUIInformation(org.knime.core.api.node.workflow.EditorUIInformation)
+     * @see org.knime.core.node.workflow.WorkflowManager#setEditorUIInformation(org.knime.core.def.node.workflow.EditorUIInformation)
      */
     @Override
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
@@ -1009,7 +1009,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param inPortsBarUIInfo
-     * @see org.knime.core.node.workflow.WorkflowManager#setInPortsBarUIInfo(org.knime.core.api.node.workflow.NodeUIInformation)
+     * @see org.knime.core.node.workflow.WorkflowManager#setInPortsBarUIInfo(org.knime.core.def.node.workflow.NodeUIInformation)
      */
     @Override
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
@@ -1018,7 +1018,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param outPortsBarUIInfo
-     * @see org.knime.core.node.workflow.WorkflowManager#setOutPortsBarUIInfo(org.knime.core.api.node.workflow.NodeUIInformation)
+     * @see org.knime.core.node.workflow.WorkflowManager#setOutPortsBarUIInfo(org.knime.core.def.node.workflow.NodeUIInformation)
      */
     @Override
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
@@ -1081,7 +1081,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
     /**
      * @param wfaID
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getWorkflowAnnotation(org.knime.core.api.node.workflow.WorkflowAnnotationID)
+     * @see org.knime.core.node.workflow.WorkflowManager#getWorkflowAnnotation(org.knime.core.def.node.workflow.WorkflowAnnotationID)
      */
     @Override
     public WorkflowAnnotationWrapper getWorkflowAnnotation(final WorkflowAnnotationID wfaID) {
@@ -1090,7 +1090,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param annotation
-     * @see org.knime.core.node.workflow.WorkflowManager#addWorkflowAnnotation(org.knime.core.api.node.workflow.IWorkflowAnnotation)
+     * @see org.knime.core.node.workflow.WorkflowManager#addWorkflowAnnotation(org.knime.core.def.node.workflow.IWorkflowAnnotation)
      */
     @Override
     public void addWorkflowAnnotation(final IWorkflowAnnotation annotation) {
@@ -1099,7 +1099,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param annotation
-     * @see org.knime.core.node.workflow.WorkflowManager#removeAnnotation(org.knime.core.api.node.workflow.IWorkflowAnnotation)
+     * @see org.knime.core.node.workflow.WorkflowManager#removeAnnotation(org.knime.core.def.node.workflow.IWorkflowAnnotation)
      */
     @Override
     public void removeAnnotation(final IWorkflowAnnotation annotation) {
@@ -1108,7 +1108,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param wfaID
-     * @see org.knime.core.node.workflow.WorkflowManager#removeAnnotation(org.knime.core.api.node.workflow.WorkflowAnnotationID)
+     * @see org.knime.core.node.workflow.WorkflowManager#removeAnnotation(org.knime.core.def.node.workflow.WorkflowAnnotationID)
      */
     @Override
     public void removeAnnotation(final WorkflowAnnotationID wfaID) {
@@ -1117,7 +1117,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param annotation
-     * @see org.knime.core.node.workflow.WorkflowManager#bringAnnotationToFront(org.knime.core.api.node.workflow.IWorkflowAnnotation)
+     * @see org.knime.core.node.workflow.WorkflowManager#bringAnnotationToFront(org.knime.core.def.node.workflow.IWorkflowAnnotation)
      */
     @Override
     public void bringAnnotationToFront(final IWorkflowAnnotation annotation) {
@@ -1126,7 +1126,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param annotation
-     * @see org.knime.core.node.workflow.WorkflowManager#sendAnnotationToBack(org.knime.core.api.node.workflow.IWorkflowAnnotation)
+     * @see org.knime.core.node.workflow.WorkflowManager#sendAnnotationToBack(org.knime.core.def.node.workflow.IWorkflowAnnotation)
      */
     @Override
     public void sendAnnotationToBack(final IWorkflowAnnotation annotation) {
@@ -1135,7 +1135,7 @@ public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWor
 
     /**
      * @param evt
-     * @see org.knime.core.node.workflow.WorkflowManager#nodeUIInformationChanged(org.knime.core.api.node.workflow.NodeUIInformationEvent)
+     * @see org.knime.core.node.workflow.WorkflowManager#nodeUIInformationChanged(org.knime.core.def.node.workflow.NodeUIInformationEvent)
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {

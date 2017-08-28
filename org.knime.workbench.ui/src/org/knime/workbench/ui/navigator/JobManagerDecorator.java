@@ -54,7 +54,7 @@ import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.util.JobManagerUtil;
 
 /**

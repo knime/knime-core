@@ -47,7 +47,7 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.api.node.workflow.IWorkflowInPort;
+import org.knime.core.def.node.workflow.IWorkflowInPort;
 import org.knime.core.node.port.PortType;
 
 /**

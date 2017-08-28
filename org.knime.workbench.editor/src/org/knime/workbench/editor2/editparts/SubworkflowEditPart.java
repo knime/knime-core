@@ -46,7 +46,7 @@
 package org.knime.workbench.editor2.editparts;
 
 import org.eclipse.draw2d.IFigure;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.editor2.figures.SubworkflowFigure;
 

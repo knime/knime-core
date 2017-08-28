@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.knime.core.api</name>
+	<name>org.knime.core.def</name>
 	<comment>@key 32303034313032372D31302064652E756E696B6E2E68616465732E636F7265 </comment>
 	<projects>
 	</projects>

@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 

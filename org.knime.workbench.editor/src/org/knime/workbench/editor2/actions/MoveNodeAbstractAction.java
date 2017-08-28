@@ -56,7 +56,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;

@@ -53,8 +53,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.knime.core.api.node.port.MetaPortInfo;
-import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.def.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.PortTypeUID;
 
 /**
  * Tests for the {@link MetaPortInfo} class.

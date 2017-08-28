@@ -47,9 +47,9 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.api.node.workflow.INodeContainer.NodeLocks;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.INodeContainer.NodeLocks;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;

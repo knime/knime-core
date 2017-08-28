@@ -61,7 +61,7 @@ import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.handles.MoveHandle;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.swt.graphics.Cursor;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;

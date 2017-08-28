@@ -48,11 +48,11 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.INodeOutPort;
-import org.knime.core.api.node.workflow.NodeContainerState;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.INodeOutPort;
+import org.knime.core.def.node.workflow.NodeContainerState;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 

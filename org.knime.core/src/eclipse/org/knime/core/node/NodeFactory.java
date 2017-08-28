@@ -60,7 +60,7 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.XmlException;
-import org.knime.core.api.node.NodeType;
+import org.knime.core.def.node.NodeType;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.missing.MissingNodeFactory;

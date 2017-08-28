@@ -51,9 +51,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
-import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.def.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.workbench.editor2.figures.NodeInPortFigure;

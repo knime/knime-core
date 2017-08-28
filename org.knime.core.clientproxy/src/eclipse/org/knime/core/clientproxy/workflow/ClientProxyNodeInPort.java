@@ -48,8 +48,8 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.INodeInPort;
+import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.INodeInPort;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.PortTypeEnt;
 

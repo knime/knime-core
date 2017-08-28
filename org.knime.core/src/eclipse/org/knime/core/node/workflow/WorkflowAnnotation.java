@@ -49,9 +49,9 @@ package org.knime.core.node.workflow;
 
 import java.util.Optional;
 
-import org.knime.core.api.node.workflow.AnnotationData;
-import org.knime.core.api.node.workflow.IWorkflowAnnotation;
-import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.def.node.workflow.AnnotationData;
+import org.knime.core.def.node.workflow.IWorkflowAnnotation;
+import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 
 /** Workflow annotation (not associated with a node).
  * Bernd Wiswedel, KNIME.com, Zurich, Switzerland

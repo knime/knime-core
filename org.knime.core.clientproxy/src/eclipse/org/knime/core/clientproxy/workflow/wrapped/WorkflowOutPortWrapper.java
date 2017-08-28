@@ -48,8 +48,8 @@
  */
 package org.knime.core.clientproxy.workflow.wrapped;
 
-import org.knime.core.api.node.workflow.IWorkflowOutPort;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.def.node.workflow.IWorkflowOutPort;
 
 /**
  *

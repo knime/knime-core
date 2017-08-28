@@ -61,9 +61,9 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
-import org.knime.core.api.node.workflow.NodeProgress;
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
+import org.knime.core.def.node.workflow.NodeProgress;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 
 /**
  * A dialog that contains a progress bar, a label with a message, and a cancel

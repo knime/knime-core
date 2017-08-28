@@ -50,12 +50,12 @@ package org.knime.workbench.ui.layout.commands;
 import java.util.Map;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.api.node.workflow.ConnectionID;
-import org.knime.core.api.node.workflow.ConnectionUIInformation;
-import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.ConnectionID;
+import org.knime.core.def.node.workflow.ConnectionUIInformation;
+import org.knime.core.def.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.layout.align.HorizAlignManager;

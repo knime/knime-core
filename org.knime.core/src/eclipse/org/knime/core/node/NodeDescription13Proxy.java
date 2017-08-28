@@ -56,7 +56,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.knime.node.v13.DataInDocument.DataIn;
 import org.knime.node.v13.DataOutDocument.DataOut;
-import org.knime.core.api.node.NodeType;
+import org.knime.core.def.node.NodeType;
 import org.knime.node.v13.KnimeNodeDocument;
 import org.knime.node.v13.ModelInDocument.ModelIn;
 import org.knime.node.v13.ModelOutDocument.ModelOut;

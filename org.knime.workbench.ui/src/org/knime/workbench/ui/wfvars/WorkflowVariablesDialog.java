@@ -68,8 +68,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.WorkflowManager;
 

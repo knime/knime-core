@@ -48,7 +48,7 @@
  */
 package org.knime.core.util;
 
-import org.knime.core.api.node.workflow.JobManagerUID;
+import org.knime.core.def.node.workflow.JobManagerUID;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;

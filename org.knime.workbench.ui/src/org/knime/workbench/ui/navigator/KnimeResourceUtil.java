@@ -78,7 +78,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ContainerGenerator;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
 import org.eclipse.ui.wizards.datatransfer.ImportOperation;
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor;

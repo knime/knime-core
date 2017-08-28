@@ -56,9 +56,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;

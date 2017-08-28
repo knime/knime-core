@@ -48,8 +48,8 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;

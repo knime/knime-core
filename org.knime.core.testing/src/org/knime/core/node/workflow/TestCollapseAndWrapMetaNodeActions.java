@@ -54,8 +54,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.workflow.IWorkflowAnnotation;
-import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.def.node.workflow.IWorkflowAnnotation;
+import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;

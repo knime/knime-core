@@ -54,12 +54,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.INodeOutPort;
-import org.knime.core.api.node.workflow.IWorkflowOutPort;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeOutPort;
+import org.knime.core.def.node.workflow.IWorkflowOutPort;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowOutPort;

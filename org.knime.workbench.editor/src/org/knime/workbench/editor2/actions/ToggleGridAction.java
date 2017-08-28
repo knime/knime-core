@@ -46,7 +46,7 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.api.node.workflow.EditorUIInformation;
+import org.knime.core.def.node.workflow.EditorUIInformation;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;

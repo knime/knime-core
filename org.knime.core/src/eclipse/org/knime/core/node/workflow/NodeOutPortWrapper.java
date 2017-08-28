@@ -51,9 +51,9 @@ import java.awt.Rectangle;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.api.node.workflow.NodeContainerState;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
-import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.def.node.workflow.NodeContainerState;
+import org.knime.core.def.node.workflow.NodeStateChangeListener;
+import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;

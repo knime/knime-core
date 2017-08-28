@@ -55,7 +55,7 @@ import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.knime.node2012.InPortDocument.InPort;
-import org.knime.core.api.node.NodeType;
+import org.knime.core.def.node.NodeType;
 import org.knime.node2012.KnimeNodeDocument;
 import org.knime.node2012.KnimeNodeDocument.KnimeNode.Deprecated;
 import org.knime.node2012.OutPortDocument.OutPort;

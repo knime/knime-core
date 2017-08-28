@@ -51,7 +51,8 @@ package org.knime.core.api.node.workflow;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.AnnotationData.StyleRange;
 
 /**
  * Tests for the {@link NodeAnnotationData} class.

@@ -54,8 +54,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
-import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
+import org.knime.core.def.node.workflow.AnnotationData;
+import org.knime.core.def.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.def.node.workflow.AnnotationData.TextAlignment;
 
 /**
  *

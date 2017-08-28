@@ -71,13 +71,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 
-import org.knime.core.api.node.workflow.NodeProgress;
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.sort.DataTableSorter;
+import org.knime.core.def.node.workflow.NodeProgress;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;

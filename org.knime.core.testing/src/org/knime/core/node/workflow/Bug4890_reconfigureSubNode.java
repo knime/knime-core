@@ -52,7 +52,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.util.PortTypeUtil;
 

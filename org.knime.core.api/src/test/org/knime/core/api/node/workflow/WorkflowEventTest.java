@@ -51,6 +51,7 @@ package org.knime.core.api.node.workflow;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.knime.core.def.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.NodeID;
 
 /**

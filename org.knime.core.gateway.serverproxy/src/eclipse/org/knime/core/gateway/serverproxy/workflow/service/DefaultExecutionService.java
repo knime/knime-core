@@ -50,8 +50,8 @@ package org.knime.core.gateway.serverproxy.workflow.service;
 
 import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWorkflowEnt;
 
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.ExecutionService;
 import org.knime.core.node.workflow.NodeID;

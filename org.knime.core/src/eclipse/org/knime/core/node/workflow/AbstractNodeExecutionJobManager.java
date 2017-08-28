@@ -49,7 +49,7 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.net.URL;
 
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;

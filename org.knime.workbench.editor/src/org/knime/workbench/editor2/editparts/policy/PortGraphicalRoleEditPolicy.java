@@ -52,7 +52,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy;
 import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.ReconnectRequest;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.commands.ReconnectConnectionCommand;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;

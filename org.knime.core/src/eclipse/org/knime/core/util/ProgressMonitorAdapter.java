@@ -49,9 +49,9 @@ package org.knime.core.util;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.api.node.workflow.NodeProgress;
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
+import org.knime.core.def.node.workflow.NodeProgress;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeProgressMonitor;

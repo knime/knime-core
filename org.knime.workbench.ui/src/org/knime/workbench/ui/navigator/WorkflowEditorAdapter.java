@@ -48,7 +48,7 @@
 package org.knime.workbench.ui.navigator;
 
 import org.eclipse.ui.IEditorPart;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 
 /**
  * Hackaround to avoid cyclic dependencies. The navigator needs to ask the

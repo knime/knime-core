@@ -51,11 +51,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.knime.core.api.node.workflow.ConnectionID;
-import org.knime.core.api.node.workflow.ConnectionUIInformation;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.ConnectionID;
+import org.knime.core.def.node.workflow.ConnectionUIInformation;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;

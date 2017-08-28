@@ -47,8 +47,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.INodePort;
+import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.INodePort;
 import org.knime.core.node.port.PortType;
 import org.knime.core.util.PortTypeUtil;
 

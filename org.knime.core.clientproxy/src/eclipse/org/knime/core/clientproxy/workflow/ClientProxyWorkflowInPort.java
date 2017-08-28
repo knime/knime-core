@@ -48,10 +48,10 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import org.knime.core.api.node.workflow.INodeOutPort;
-import org.knime.core.api.node.workflow.IWorkflowInPort;
 import org.knime.core.clientproxy.util.ClientProxyUtil;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.def.node.workflow.INodeOutPort;
+import org.knime.core.def.node.workflow.IWorkflowInPort;
 import org.knime.core.gateway.v0.workflow.entity.NodeInPortEnt;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 

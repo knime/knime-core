@@ -54,10 +54,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.project.ProjectTreeNode;
-import org.knime.core.api.node.workflow.project.WorkflowProject;
-import org.knime.core.api.node.workflow.project.WorkflowProjectFactory;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.project.ProjectTreeNode;
+import org.knime.core.def.node.workflow.project.WorkflowProject;
+import org.knime.core.def.node.workflow.project.WorkflowProjectFactory;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;

@@ -55,7 +55,7 @@ import org.eclipse.gef.editparts.AbstractEditPart;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;

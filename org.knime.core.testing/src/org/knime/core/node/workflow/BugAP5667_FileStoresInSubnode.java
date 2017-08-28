@@ -61,7 +61,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;

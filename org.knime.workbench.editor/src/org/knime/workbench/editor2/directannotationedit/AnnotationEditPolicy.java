@@ -52,10 +52,10 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.swt.widgets.Composite;
-import org.knime.core.api.node.workflow.AnnotationData;
-import org.knime.core.api.node.workflow.IAnnotation;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeAnnotationData.Builder;
+import org.knime.core.def.node.workflow.AnnotationData;
+import org.knime.core.def.node.workflow.IAnnotation;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.NodeAnnotationData.Builder;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
@@ -95,7 +95,7 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
             newAnnoDataBuilder.setWidth(compositeEditor.getBounds().width - trim.width);
             newAnnoData = newAnnoDataBuilder.build();
         } else {
-            org.knime.core.api.node.workflow.AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder(oldAnnoData, true);
+            org.knime.core.def.node.workflow.AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder(oldAnnoData, true);
 
             // y-coordinate is the only dimension that doesn't change
             newAnnoDataBuilder.setY(oldFigBounds.y);

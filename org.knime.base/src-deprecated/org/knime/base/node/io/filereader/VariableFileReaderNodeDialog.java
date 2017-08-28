@@ -88,12 +88,12 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.NodeProgressListener;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;

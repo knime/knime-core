@@ -46,13 +46,13 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.api.node.workflow.ConnectionID;
-import org.knime.core.api.node.workflow.ConnectionProgressEvent;
-import org.knime.core.api.node.workflow.ConnectionProgressListener;
-import org.knime.core.api.node.workflow.ConnectionUIInformation;
-import org.knime.core.api.node.workflow.ConnectionUIInformationEvent;
-import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
-import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.ConnectionID;
+import org.knime.core.def.node.workflow.ConnectionProgressEvent;
+import org.knime.core.def.node.workflow.ConnectionProgressListener;
+import org.knime.core.def.node.workflow.ConnectionUIInformation;
+import org.knime.core.def.node.workflow.ConnectionUIInformationEvent;
+import org.knime.core.def.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.util.CheckUtils;
 
 /**

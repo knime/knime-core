@@ -48,8 +48,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.api.node.workflow.IAnnotation;
-import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.IAnnotation;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**

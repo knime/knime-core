@@ -53,7 +53,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
+import org.knime.core.def.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.def.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.NodeID;
 
 /**

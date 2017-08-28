@@ -48,7 +48,7 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import org.knime.core.api.node.workflow.IWorkflowOutPort;
+import org.knime.core.def.node.workflow.IWorkflowOutPort;
 import org.knime.core.gateway.v0.workflow.entity.NodeOutPortEnt;
 
 /**

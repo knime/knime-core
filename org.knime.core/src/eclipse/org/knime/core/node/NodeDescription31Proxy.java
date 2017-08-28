@@ -54,7 +54,7 @@ import java.util.Map;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
-import org.knime.core.api.node.NodeType;
+import org.knime.core.def.node.NodeType;
 import org.knime.node.v31.InPort;
 import org.knime.node.v31.KnimeNodeDocument;
 import org.knime.node.v31.OutPort;

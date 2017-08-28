@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension-point id="org.knime.core.api.node.workflow.project.WorkflowProjectFactory" name="WorkflowProjectFactory" schema="schema/org.knime.core.api.node.workflow.project.WorkflowProjectFactory.exsd"/>
+   <extension-point id="org.knime.core.def.node.workflow.project.WorkflowProjectFactory" name="WorkflowProjectFactory" schema="schema/org.knime.core.def.node.workflow.project.WorkflowProjectFactory.exsd"/>
 
 </plugin>

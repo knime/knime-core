@@ -48,13 +48,13 @@
  */
 package org.knime.core.clientproxy.workflow;
 
-import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
-import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
-import org.knime.core.api.node.workflow.IAnnotation;
-import org.knime.core.api.node.workflow.INodeAnnotation;
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.def.node.workflow.IAnnotation;
+import org.knime.core.def.node.workflow.INodeAnnotation;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.NodeAnnotationData;
+import org.knime.core.def.node.workflow.NodeUIInformationListener;
+import org.knime.core.def.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.def.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.gateway.v0.workflow.entity.NodeAnnotationEnt;
 
 /**

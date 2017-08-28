@@ -55,9 +55,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.XmlException;
-import org.knime.core.api.node.workflow.ISubNodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.clientproxy.util.ObjectCache;
+import org.knime.core.def.node.workflow.ISubNodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.gateway.services.ServerServiceConfig;
 import org.knime.core.gateway.services.ServiceManager;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;

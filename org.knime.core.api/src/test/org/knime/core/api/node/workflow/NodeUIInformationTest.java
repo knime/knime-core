@@ -52,6 +52,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+import org.knime.core.def.node.workflow.NodeUIInformation;
 
 /**
  * Tests the {@link NodeUIInformation} class.

@@ -53,10 +53,10 @@ import static org.knime.core.gateway.serverproxy.util.EntityBuilderUtil.buildWor
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import org.knime.core.api.node.workflow.INodeContainer;
-import org.knime.core.api.node.workflow.ISubNodeContainer;
-import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.api.node.workflow.project.WorkflowProjectManager;
+import org.knime.core.def.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.ISubNodeContainer;
+import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.def.node.workflow.project.WorkflowProjectManager;
 import org.knime.core.gateway.serverproxy.util.EntityBuilderUtil;
 import org.knime.core.gateway.v0.workflow.entity.WorkflowEnt;
 import org.knime.core.gateway.v0.workflow.service.WorkflowService;

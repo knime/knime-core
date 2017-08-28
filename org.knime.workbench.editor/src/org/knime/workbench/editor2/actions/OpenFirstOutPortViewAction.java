@@ -50,9 +50,7 @@ import java.util.OptionalInt;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.ui.PlatformUI;
-import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeOutPort;
