@@ -785,7 +785,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                 if (!type.equals(field.getDataType())) {
                     // Input column type changed, try to find new converter
                     final Optional<?> factory =
-                        ConverterUtil.getConverterFactory(field.getDataType(), field.getJavaType());
+                        ConverterUtil.getConverterFactory(type, field.getJavaType());
 
                     if (factory.isPresent()) {
                         warnings.add(
