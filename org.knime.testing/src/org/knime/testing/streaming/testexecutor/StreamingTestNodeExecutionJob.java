@@ -62,12 +62,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainerException;
+import org.knime.core.def.node.workflow.IConnectionContainer;
+import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;

@@ -50,7 +50,7 @@ package org.knime.testing.core.ng;
 import java.io.File;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.api.node.workflow.NodeContainerState;
+import org.knime.core.def.node.workflow.NodeContainerState;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;

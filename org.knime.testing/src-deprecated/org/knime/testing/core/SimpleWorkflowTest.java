@@ -52,7 +52,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.knime.core.api.node.workflow.NodeContainerState;
+import org.knime.core.def.node.workflow.NodeContainerState;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
