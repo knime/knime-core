@@ -265,7 +265,7 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
 
         final ZonedDateTime fixedDateTime;
         if (m_modusSelectModel.getStringValue().equals(ModusOptions.UseExecutionTime.name())) {
-            fixedDateTime = ZonedDateTime.now().withNano(0);
+            fixedDateTime = ZonedDateTime.now();
         } else if (m_modusSelectModel.getStringValue().equals(ModusOptions.UseFixedTime.name())) {
             fixedDateTime = m_fixedDateTimeModel.getZonedDateTime();
         } else {
