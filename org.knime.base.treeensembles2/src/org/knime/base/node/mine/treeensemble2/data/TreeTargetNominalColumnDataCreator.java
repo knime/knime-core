@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -74,6 +75,12 @@ public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCrea
             throw new IllegalStateException("Type not nominal: " + colSpec.getName());
         }
         m_string2NomValRepMap = new HashMap<String, NominalValueRepresentation>();
+        Set<DataCell> possibleValues = colSpec.getDomain().getValues();
+        for (DataCell val : possibleValues) {
+            String str = val.toString();
+            int assignedValue = m_string2NomValRepMap.size();
+            m_string2NomValRepMap.put(str, new NominalValueRepresentation(str, assignedValue, 0.0));
+        }
         m_data = new ArrayList<Integer>();
     }
 
