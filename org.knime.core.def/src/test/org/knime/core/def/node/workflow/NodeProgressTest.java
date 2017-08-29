@@ -46,47 +46,34 @@
  * History
  *   Oct 17, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.knime.core.def.node.workflow.NodePropertyChangedEvent;
-import org.knime.core.def.node.workflow.NodePropertyChangedEvent.NodeProperty;
-import org.knime.core.node.workflow.NodeID;
+import org.knime.core.def.node.workflow.NodeProgress;
 
 /**
- * Tests for the {@link NodePropertyChangedEvent} class.
+ * Tests for the {@link NodeProgress} class.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodePropertyChangedEventTest {
+public class NodeProgressTest {
 
     @Test
     public void testGetters() {
-        NodePropertyChangedEvent e = new NodePropertyChangedEvent(new NodeID(10), NodeProperty.LockStatus);
+        NodeProgress np = new NodeProgress(.432, "message ...");
 
-        assertEquals(e.getProperty(), NodeProperty.LockStatus);
-        assertEquals(e.getSource(), new NodeID(10));
-    }
+        assertTrue(np.hasProgress());
+        assertTrue(np.hasMessage());
+        assertEquals(np.getMessage(), "message ...");
+        assertEquals(np.getProgress().doubleValue(), .432, 0.0);
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Test
-    public void testInitWithNull1() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("Argument must not be null");
-        new NodePropertyChangedEvent(new NodeID(10), null);
-    }
-
-    @Test
-    public void testInitWithNull2() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("null source");
-        new NodePropertyChangedEvent(null, NodeProperty.JobManager);
+        np = new NodeProgress(null, null);
+        assertFalse(np.hasProgress());
+        assertFalse(np.hasMessage());
     }
 
 }

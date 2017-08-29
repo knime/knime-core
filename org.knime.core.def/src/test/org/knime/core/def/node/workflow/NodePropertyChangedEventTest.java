@@ -44,53 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 22, 2016 (hornm): created
+ *   Oct 17, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Rule;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.junit.rules.ExpectedException;
+import org.knime.core.def.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.def.node.workflow.NodePropertyChangedEvent.NodeProperty;
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * Tests the {@link NodeUIInformation} class.
+ * Tests for the {@link NodePropertyChangedEvent} class.
  *
- * @author Martin Horn, KNIME.com
+ * @author Martin Horn, University of Konstanz
  */
-public class NodeUIInformationTest {
+public class NodePropertyChangedEventTest {
 
     @Test
-    public void testBuilderAndGetter() {
-        NodeUIInformation uiinf = NodeUIInformation.builder()
-                .setHasAbsoluteCoordinates(false)
-                .setIsDropLocation(true)
-                .setIsSymbolRelative(false)
-                .setSnapToGrid(true)
-                .setNodeLocation(10, 11, 13, 15)
-                .translate(new int[]{2,3}).build();
-        assertEquals(uiinf.hasAbsoluteCoordinates(), false);
-        assertEquals(uiinf.isSymbolRelative(), false);
-        assertEquals(uiinf.isDropLocation(), true);
-        assertEquals(uiinf.getSnapToGrid(), true);
-        assertArrayEquals(uiinf.getBounds(), new int[]{12, 14, 13, 15});
+    public void testGetters() {
+        NodePropertyChangedEvent e = new NodePropertyChangedEvent(new NodeID(10), NodeProperty.LockStatus);
+
+        assertEquals(e.getProperty(), NodeProperty.LockStatus);
+        assertEquals(e.getSource(), new NodeID(10));
+    }
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void testInitWithNull1() {
+        thrown.expect(NullPointerException.class);
+        thrown.expectMessage("Argument must not be null");
+        new NodePropertyChangedEvent(new NodeID(10), null);
     }
 
     @Test
-    public void testCopyBuilder() {
-        NodeUIInformation uiinf = NodeUIInformation.builder()
-                .setHasAbsoluteCoordinates(false)
-                .setIsDropLocation(true)
-                .setIsSymbolRelative(false)
-                .setSnapToGrid(true)
-                .setNodeLocation(10, 11, 13, 15)
-                .translate(new int[]{2,3}).build();
-        NodeUIInformation uiinf2 = NodeUIInformation.builder(uiinf).build();
-        assertEquals(uiinf.hasAbsoluteCoordinates(), uiinf2.hasAbsoluteCoordinates());
-        assertEquals(uiinf.isSymbolRelative(), uiinf2.isSymbolRelative());
-        assertEquals(uiinf.isDropLocation(), uiinf2.isDropLocation());
-        assertEquals(uiinf.getSnapToGrid(), uiinf2.getSnapToGrid());
-        assertArrayEquals(uiinf.getBounds(), uiinf2.getBounds());
+    public void testInitWithNull2() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("null source");
+        new NodePropertyChangedEvent(null, NodeProperty.JobManager);
     }
+
 }

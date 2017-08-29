@@ -44,46 +44,53 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 23, 2016 (hornm): created
+ *   Sep 22, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.workflow.NodeUIInformation;
 
 /**
- * Tests for the {@link PortTypeUID} class.
+ * Tests the {@link NodeUIInformation} class.
  *
  * @author Martin Horn, KNIME.com
  */
-public class PortTypeUIDTest {
+public class NodeUIInformationTest {
 
     @Test
-    public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder("class")
-                .setName("name")
-                .setColor(3)
-                .setIsHidden(false)
-                .setIsOptional(true).build();
-        assertEquals(uid.getName(), "name");
-        assertEquals(uid.getPortObjectClassName(), "class");
-        assertEquals(uid.getColor(), 3);
-        assertEquals(uid.isHidden(), false);
-        assertEquals(uid.isOptional(), true);
+    public void testBuilderAndGetter() {
+        NodeUIInformation uiinf = NodeUIInformation.builder()
+                .setHasAbsoluteCoordinates(false)
+                .setIsDropLocation(true)
+                .setIsSymbolRelative(false)
+                .setSnapToGrid(true)
+                .setNodeLocation(10, 11, 13, 15)
+                .translate(new int[]{2,3}).build();
+        assertEquals(uiinf.hasAbsoluteCoordinates(), false);
+        assertEquals(uiinf.isSymbolRelative(), false);
+        assertEquals(uiinf.isDropLocation(), true);
+        assertEquals(uiinf.getSnapToGrid(), true);
+        assertArrayEquals(uiinf.getBounds(), new int[]{12, 14, 13, 15});
     }
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testClassNameNotSet() throws IllegalArgumentException {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Class name must not be null");
-        PortTypeUID uid = PortTypeUID.builder(null).build();
+    public void testCopyBuilder() {
+        NodeUIInformation uiinf = NodeUIInformation.builder()
+                .setHasAbsoluteCoordinates(false)
+                .setIsDropLocation(true)
+                .setIsSymbolRelative(false)
+                .setSnapToGrid(true)
+                .setNodeLocation(10, 11, 13, 15)
+                .translate(new int[]{2,3}).build();
+        NodeUIInformation uiinf2 = NodeUIInformation.builder(uiinf).build();
+        assertEquals(uiinf.hasAbsoluteCoordinates(), uiinf2.hasAbsoluteCoordinates());
+        assertEquals(uiinf.isSymbolRelative(), uiinf2.isSymbolRelative());
+        assertEquals(uiinf.isDropLocation(), uiinf2.isDropLocation());
+        assertEquals(uiinf.getSnapToGrid(), uiinf2.getSnapToGrid());
+        assertArrayEquals(uiinf.getBounds(), uiinf2.getBounds());
     }
-
 }

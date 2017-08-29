@@ -46,66 +46,44 @@
  * History
  *   Sep 23, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.def.node.port.PortTypeUID;
 
 /**
- * Tests for the {@link MetaPortInfo} class.
+ * Tests for the {@link PortTypeUID} class.
  *
  * @author Martin Horn, KNIME.com
  */
-public class MetaPortInfoTest {
+public class PortTypeUIDTest {
 
     @Test
     public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder("test").build();
-        MetaPortInfo mpi = MetaPortInfo.builder()
-                .setIsConnected(false)
-                .setMessage("message")
-                .setNewIndex(1)
-                .setOldIndex(2)
-                .setPortTypeUID(uid).build();
-        assertEquals(mpi.isConnected(), false);
-        assertEquals(mpi.getMessage(), "message");
-        assertEquals(mpi.getNewIndex(), 1);
-        assertEquals(mpi.getOldIndex(), 2);
-        assertEquals(mpi.getTypeUID(), uid);
-    }
-
-    @Test
-    public void testCopyBuilder() {
-        PortTypeUID uid = PortTypeUID.builder("test").build();
-        MetaPortInfo mpi = MetaPortInfo.builder()
-                .setIsConnected(false)
-                .setMessage("message")
-                .setNewIndex(1)
-                .setOldIndex(2)
-                .setPortTypeUID(uid).build();
-
-        MetaPortInfo mpi2 = MetaPortInfo.builder(mpi).build();
-        assertEquals(mpi2.isConnected(), false);
-        assertEquals(mpi2.getMessage(), "message");
-        assertEquals(mpi2.getNewIndex(), 1);
-        assertEquals(mpi2.getOldIndex(), 2);
-        assertEquals(mpi2.getTypeUID(), uid);
+        PortTypeUID uid = PortTypeUID.builder("class")
+                .setName("name")
+                .setColor(3)
+                .setIsHidden(false)
+                .setIsOptional(true).build();
+        assertEquals(uid.getName(), "name");
+        assertEquals(uid.getPortObjectClassName(), "class");
+        assertEquals(uid.getColor(), 3);
+        assertEquals(uid.isHidden(), false);
+        assertEquals(uid.isOptional(), true);
     }
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testUIDNotSet() throws IllegalArgumentException {
+    public void testClassNameNotSet() throws IllegalArgumentException {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("No port type uid set");
-        MetaPortInfo mpi = MetaPortInfo.builder().build();
+        thrown.expectMessage("Class name must not be null");
+        PortTypeUID uid = PortTypeUID.builder(null).build();
     }
-
 
 }

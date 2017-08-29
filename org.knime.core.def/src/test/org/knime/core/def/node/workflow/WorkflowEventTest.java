@@ -46,29 +46,31 @@
  * History
  *   Oct 17, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.knime.core.def.node.workflow.NodeProgress;
-import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.def.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.NodeID;
 
 /**
- * Tests for the {@link NodeProgressEvent} class.
+ * Tests for the {@link WorkflowEvent} class.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeProgressEventTest {
+public class WorkflowEventTest {
 
     @Test
     public void testGetters() {
-        NodeProgress np = new NodeProgress(null, null);
-        NodeProgressEvent e = new NodeProgressEvent(new NodeID(10), np);
+        Object oldVal = new Object();
+        Object newVal = new Object();
+        WorkflowEvent we = new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED, new NodeID(10), oldVal, newVal);
 
-        assertEquals(e.getSource(), new NodeID(10));
-        assertEquals(e.getNodeProgress(), np);
+        assertEquals(we.getType(), WorkflowEvent.Type.NODE_ADDED);
+        assertEquals(we.getID(), new NodeID(10));
+        assertEquals(we.getOldValue(), oldVal);
+        assertEquals(we.getNewValue(), newVal);
     }
 
 }

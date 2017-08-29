@@ -44,49 +44,31 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 23, 2016 (hornm): created
+ *   Oct 17, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.knime.core.def.node.workflow.NodeAnnotationData;
-import org.knime.core.def.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.def.node.workflow.NodeProgress;
+import org.knime.core.def.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * Tests for the {@link NodeAnnotationData} class.
+ * Tests for the {@link NodeProgressEvent} class.
  *
- * @author Martin Horn, KNIME.com
+ * @author Martin Horn, University of Konstanz
  */
-public class NodeAnnotationDataTest {
+public class NodeProgressEventTest {
 
     @Test
-    public void testBuilderAndGetters() {
-        StyleRange styleRange = StyleRange.builder().build();
-        NodeAnnotationData nad = NodeAnnotationData.builder()
-                .setIsDefault(false).build();
-        assertEquals(nad.isDefault(), false);
-    }
+    public void testGetters() {
+        NodeProgress np = new NodeProgress(null, null);
+        NodeProgressEvent e = new NodeProgressEvent(new NodeID(10), np);
 
-    @Test
-    public void testCopyBuilder() {
-        StyleRange styleRange = StyleRange.builder().build();
-        NodeAnnotationData nad = NodeAnnotationData.builder()
-                .setIsDefault(false).build();
-        NodeAnnotationData nad2 = NodeAnnotationData.builder(nad, true).build();
-        assertEquals(nad.isDefault(), nad2.isDefault());
-    }
-
-    @Test
-    public void testCreateFromObsoleteCustomName() {
-        NodeAnnotationData nad = NodeAnnotationData.createFromObsoleteCustomName(null);
-        assertEquals(nad.isDefault(), true);
-        assertEquals(nad.getText(), "");
-
-        nad = NodeAnnotationData.createFromObsoleteCustomName("test");
-        assertEquals(nad.isDefault(), false);
-        assertEquals(nad.getText(), "test");
+        assertEquals(e.getSource(), new NodeID(10));
+        assertEquals(e.getNodeProgress(), np);
     }
 
 }

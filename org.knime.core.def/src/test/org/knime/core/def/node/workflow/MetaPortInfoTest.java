@@ -44,36 +44,68 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 17, 2016 (hornm): created
+ *   Sep 23, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.def.node.workflow;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
+import org.junit.Rule;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.NodeProgress;
+import org.junit.rules.ExpectedException;
+import org.knime.core.def.node.port.MetaPortInfo;
+import org.knime.core.def.node.port.PortTypeUID;
 
 /**
- * Tests for the {@link NodeProgress} class.
+ * Tests for the {@link MetaPortInfo} class.
  *
- * @author Martin Horn, University of Konstanz
+ * @author Martin Horn, KNIME.com
  */
-public class NodeProgressTest {
+public class MetaPortInfoTest {
 
     @Test
-    public void testGetters() {
-        NodeProgress np = new NodeProgress(.432, "message ...");
-
-        assertTrue(np.hasProgress());
-        assertTrue(np.hasMessage());
-        assertEquals(np.getMessage(), "message ...");
-        assertEquals(np.getProgress().doubleValue(), .432, 0.0);
-
-        np = new NodeProgress(null, null);
-        assertFalse(np.hasProgress());
-        assertFalse(np.hasMessage());
+    public void testBuilderAndGetters() {
+        PortTypeUID uid = PortTypeUID.builder("test").build();
+        MetaPortInfo mpi = MetaPortInfo.builder()
+                .setIsConnected(false)
+                .setMessage("message")
+                .setNewIndex(1)
+                .setOldIndex(2)
+                .setPortTypeUID(uid).build();
+        assertEquals(mpi.isConnected(), false);
+        assertEquals(mpi.getMessage(), "message");
+        assertEquals(mpi.getNewIndex(), 1);
+        assertEquals(mpi.getOldIndex(), 2);
+        assertEquals(mpi.getTypeUID(), uid);
     }
+
+    @Test
+    public void testCopyBuilder() {
+        PortTypeUID uid = PortTypeUID.builder("test").build();
+        MetaPortInfo mpi = MetaPortInfo.builder()
+                .setIsConnected(false)
+                .setMessage("message")
+                .setNewIndex(1)
+                .setOldIndex(2)
+                .setPortTypeUID(uid).build();
+
+        MetaPortInfo mpi2 = MetaPortInfo.builder(mpi).build();
+        assertEquals(mpi2.isConnected(), false);
+        assertEquals(mpi2.getMessage(), "message");
+        assertEquals(mpi2.getNewIndex(), 1);
+        assertEquals(mpi2.getOldIndex(), 2);
+        assertEquals(mpi2.getTypeUID(), uid);
+    }
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void testUIDNotSet() throws IllegalArgumentException {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("No port type uid set");
+        MetaPortInfo mpi = MetaPortInfo.builder().build();
+    }
+
 
 }
