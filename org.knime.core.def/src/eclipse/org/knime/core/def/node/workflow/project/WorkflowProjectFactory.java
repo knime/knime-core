@@ -54,7 +54,7 @@ package org.knime.core.def.node.workflow.project;
  */
 public interface WorkflowProjectFactory {
 
-    static final String EXT_POINT_ID = "org.knime.core.api.node.workflow.project.WorkflowProjectFactory";
+    static final String EXT_POINT_ID = "org.knime.core.def.node.workflow.project.WorkflowProjectFactory";
     static final String EXT_POINT_ATTR = "WorkflowProjectFactory";
 
     /**
