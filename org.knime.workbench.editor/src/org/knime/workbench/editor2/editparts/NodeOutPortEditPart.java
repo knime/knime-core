@@ -58,10 +58,10 @@ import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.INodeOutPort;
 import org.knime.core.def.node.workflow.ISingleNodeContainer;
-import org.knime.core.def.node.workflow.NodeStateChangeListener;
-import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**

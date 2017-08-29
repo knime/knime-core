@@ -68,7 +68,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.def.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.workbench.KNIMEEditorPlugin;
 
 /**

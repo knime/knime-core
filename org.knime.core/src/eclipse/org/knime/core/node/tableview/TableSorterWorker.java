@@ -75,9 +75,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.sort.DataTableSorter;
-import org.knime.core.def.node.workflow.NodeProgress;
-import org.knime.core.def.node.workflow.NodeProgressEvent;
-import org.knime.core.def.node.workflow.NodeProgressListener;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -85,6 +82,9 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
  * SwingWorker that is used to sort the table content on mouse click in header.

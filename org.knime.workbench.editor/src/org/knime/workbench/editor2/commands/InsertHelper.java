@@ -55,8 +55,8 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 

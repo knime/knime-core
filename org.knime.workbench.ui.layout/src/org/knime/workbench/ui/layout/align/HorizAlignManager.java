@@ -52,14 +52,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.def.node.workflow.ConnectionID;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;

@@ -55,8 +55,8 @@ import java.util.Map;
 
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**

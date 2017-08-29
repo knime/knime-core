@@ -47,7 +47,7 @@
 package org.knime.core.node;
 
 import org.apache.xmlbeans.XmlObject;
-import org.knime.core.def.node.NodeType;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.w3c.dom.Element;
 
 /**

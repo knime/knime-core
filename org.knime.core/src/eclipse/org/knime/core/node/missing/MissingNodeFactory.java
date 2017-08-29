@@ -46,7 +46,6 @@
  */
 package org.knime.core.node.missing;
 
-import org.knime.core.def.node.NodeType;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeDialogPane;

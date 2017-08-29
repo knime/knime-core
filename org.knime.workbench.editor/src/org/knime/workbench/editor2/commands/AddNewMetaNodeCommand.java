@@ -49,11 +49,11 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 

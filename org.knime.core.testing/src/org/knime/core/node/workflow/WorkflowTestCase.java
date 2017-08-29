@@ -67,8 +67,6 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.NodeStateChangeListener;
-import org.knime.core.def.node.workflow.NodeStateEvent;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;

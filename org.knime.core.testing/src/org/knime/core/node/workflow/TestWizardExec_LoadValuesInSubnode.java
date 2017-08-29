@@ -59,9 +59,9 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.TestWizardExec_Loop_Simple.WizardHold;
+import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 
 /**
  *

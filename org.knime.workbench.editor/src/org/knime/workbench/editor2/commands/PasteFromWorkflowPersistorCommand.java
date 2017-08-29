@@ -57,15 +57,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IAnnotation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;

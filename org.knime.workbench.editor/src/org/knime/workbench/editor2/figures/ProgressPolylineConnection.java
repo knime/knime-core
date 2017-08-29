@@ -60,7 +60,7 @@ import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.ConnectionProgress;
+import org.knime.core.node.workflow.ConnectionProgress;
 
 /**
  * PolylineConnection that can optionally show a label and provides animation to

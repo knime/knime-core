@@ -47,14 +47,11 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.def.node.workflow.AnnotationData;
 import org.knime.core.def.node.workflow.IAnnotation;
-import org.knime.core.def.node.workflow.NodeUIInformationEvent;
-import org.knime.core.def.node.workflow.NodeUIInformationListener;
-import org.knime.core.def.node.workflow.AnnotationData.Builder;
-import org.knime.core.def.node.workflow.AnnotationData.StyleRange;
-import org.knime.core.def.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.AnnotationData.Builder;
+import org.knime.core.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as

@@ -57,14 +57,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.knime.core.def.node.workflow.ConnectionID;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;

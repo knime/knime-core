@@ -49,10 +49,10 @@
 package org.knime.core.node.workflow.action;
 
 import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.def.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 

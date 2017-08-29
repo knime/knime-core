@@ -48,9 +48,9 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 

@@ -60,11 +60,11 @@ import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.INodeInPort;
 import org.knime.core.def.node.workflow.INodeOutPort;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.PortTypeUtil;
 

@@ -52,13 +52,13 @@ import java.util.Map;
 import java.util.Random;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.ConnectionID;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.ui.layout.LayoutManager;
 
 /**

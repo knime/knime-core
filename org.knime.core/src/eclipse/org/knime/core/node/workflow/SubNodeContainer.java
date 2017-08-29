@@ -79,16 +79,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.def.node.NodeType;
-import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.NodeContainerState;
-import org.knime.core.def.node.workflow.NodeStateChangeListener;
-import org.knime.core.def.node.workflow.NodeStateEvent;
-import org.knime.core.def.node.workflow.NodeUIInformation;
 import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.WorkflowCopyContent;
-import org.knime.core.def.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -100,6 +92,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDescription27Proxy;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -113,6 +106,7 @@ import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -129,6 +123,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -559,11 +554,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     }
 
     /** @return the inNodeID */
+    @Override
     public NodeID getVirtualInNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualInNodeIDSuffix);
     }
 
     /** @return the outNodeID */
+    @Override
     public NodeID getVirtualOutNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualOutNodeIDSuffix);
     }

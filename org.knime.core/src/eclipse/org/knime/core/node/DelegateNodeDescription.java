@@ -48,7 +48,7 @@
  */
 package org.knime.core.node;
 
-import org.knime.core.def.node.NodeType;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.util.CheckUtils;
 import org.w3c.dom.Element;
 

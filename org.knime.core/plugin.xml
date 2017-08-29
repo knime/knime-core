@@ -12,6 +12,7 @@
    <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
    <extension-point id="JavaToDataCellConverter" name="JavaToDataCellConverter" schema="schema/JavaToDataCellConverter.exsd"/>
    <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
+   <extension-point id="WorkflowProjectFactory" name="WorkflowProjectFactory" schema="schema/WorkflowProjectFactory.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory

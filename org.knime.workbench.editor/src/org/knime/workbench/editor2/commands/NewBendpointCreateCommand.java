@@ -49,9 +49,9 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.def.node.workflow.ConnectionUIInformation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;

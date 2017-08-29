@@ -51,9 +51,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;

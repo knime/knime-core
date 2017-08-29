@@ -47,9 +47,9 @@
  */
 package org.knime.workbench.repository.model;
 
-import org.knime.core.def.node.NodeType;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeModel;
 
 /**

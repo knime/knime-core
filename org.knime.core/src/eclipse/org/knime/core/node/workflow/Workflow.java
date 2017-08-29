@@ -59,9 +59,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.knime.core.def.node.port.MetaPortInfo;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.util.Pair;
 import org.knime.core.util.PortTypeUtil;

@@ -47,10 +47,10 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.util.CastUtil;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.KNIMEEditorPlugin;

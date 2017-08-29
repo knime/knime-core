@@ -60,7 +60,6 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.XmlException;
-import org.knime.core.def.node.NodeType;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.missing.MissingNodeFactory;
@@ -82,6 +81,51 @@ public abstract class NodeFactory<T extends NodeModel> {
     private static final List<String> LOADED_NODE_FACTORIES = new ArrayList<String>();
 
     private static final List<String> RO_LIST = Collections.unmodifiableList(LOADED_NODE_FACTORIES);
+
+    /**
+     * Enum for all node types.
+     */
+    public static enum NodeType {
+        /** A data producing node. */
+        Source,
+        /** A data consuming node. */
+        Sink,
+        /** A learning node. */
+        Learner,
+        /** A predicting node. */
+        Predictor,
+        /** A data manipulating node. */
+        Manipulator,
+        /** A visualizing node. */
+        Visualizer,
+        /** A metanode. */
+        Meta,
+        /** Start node of a loop. */
+        LoopStart,
+        /** End node of a loop. */
+        LoopEnd,
+        /** Start node of a scope.
+         * @since 2.8*/
+        ScopeStart,
+        /** End node of a scope.
+         * @since 2.8*/
+        ScopeEnd,
+        /** A node contributing to quick/web form. */
+        QuickForm,
+        /** All other nodes. */
+        Other,
+        /** A missing node (framework use only).
+         * @since 2.7 */
+        Missing,
+        /** If not specified. */
+        Unknown,
+        /** @since 2.10 */
+        Subnode,
+        /** @since 2.10 */
+        VirtualIn,
+        /** @since 2.10 */
+        VirtualOut
+    }
 
     private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");
 

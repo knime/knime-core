@@ -50,7 +50,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.def.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 

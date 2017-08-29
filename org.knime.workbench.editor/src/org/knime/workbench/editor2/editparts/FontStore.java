@@ -61,10 +61,10 @@ import org.eclipse.swt.SWTError;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.AnnotationData;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 

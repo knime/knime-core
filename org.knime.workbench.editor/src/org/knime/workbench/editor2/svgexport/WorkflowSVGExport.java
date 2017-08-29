@@ -48,7 +48,6 @@ package org.knime.workbench.editor2.svgexport;
 
 import java.io.File;
 
-
 import org.knime.workbench.editor2.WorkflowEditor;
 
 /**

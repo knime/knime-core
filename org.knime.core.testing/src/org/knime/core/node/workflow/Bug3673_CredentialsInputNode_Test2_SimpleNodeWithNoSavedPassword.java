@@ -60,7 +60,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;

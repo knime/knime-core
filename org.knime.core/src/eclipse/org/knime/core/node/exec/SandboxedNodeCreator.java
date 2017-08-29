@@ -62,9 +62,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.def.node.workflow.ConnectionID;
 import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.WorkflowCopyContent;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -96,6 +94,7 @@ import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
