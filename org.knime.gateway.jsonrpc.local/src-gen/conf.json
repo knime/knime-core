@@ -1,0 +1,7 @@
+{
+	"project-dependencies" : [
+			"org.knime.gateway"
+		],
+	"default-output-dir" : "src/generated",
+	"default-package" : "org.knime.gateway.jsonrpc.local"
+}

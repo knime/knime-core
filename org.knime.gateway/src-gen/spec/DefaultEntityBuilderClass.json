@@ -1,0 +1,10 @@
+{
+	"id" : "builder-impl",
+	"type" : "entity",
+	"pattern" : "Default##name##Builder",
+	"package-prefix" : "org.knime.gateway.v0",
+	"package-suffix" : "impl",
+	"output-dir" : "src/generated",
+	"import-specs" : ["builder"],
+	"field-import-specs" : ["api"]
+}

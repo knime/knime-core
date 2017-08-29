@@ -1,0 +1,10 @@
+{
+	"id" : "jsonrpc",
+	"type" : "service",
+	"pattern" : "JsonRpc##name##",
+	"package-prefix" : "org.knime.gateway.jsonrpc.local",
+	"package-suffix" : "",
+	"output-dir" : "src/generated",
+	"import-specs" : ["api"],
+	"field-import-specs" : ["api"]
+}

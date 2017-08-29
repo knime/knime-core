@@ -1,0 +1,31 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Gateway Local Implementation
+Bundle-SymbolicName: org.knime.gateway.local;singleton:=true
+Bundle-Version: 3.5.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
+ com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
+ org.knime.core.util;bundle-version="[5.4.1,6.0.0)",
+ org.junit;bundle-version="4.12.0",
+ org.knime.core.def;bundle-version="3.3.0",
+ org.knime.gateway;bundle-version="3.3.0",
+ org.knime.core,
+ org.knime.workbench.repository;bundle-version="3.3.1",
+ org.eclipse.ui.ide,
+ org.knime.workbench.explorer.view,
+ org.eclipse.jface,
+ org.eclipse.core.filesystem,
+ org.eclipse.ui;bundle-version="3.108.0",
+ org.knime.workbench.editor,
+ org.eclipse.core.resources;bundle-version="3.11.0",
+ com.knime.enterprise.client.api,
+ com.knime.enterprise.client.filesystem
+Eclipse-RegisterBuddy: org.apache.log4j
+Eclipse-BuddyPolicy: dependent
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: org.knime.gateway.local.util,
+ org.knime.gateway.local.workflow
+Bundle-ActivationPolicy: lazy

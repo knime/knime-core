@@ -1,0 +1,10 @@
+{
+	"id" : "jsonrpc-wrapper",
+	"type" : "service",
+	"pattern" : "JsonRpc##name##Wrapper",
+	"package-prefix" : "org.knime.gateway.jsonrpc.remote",
+	"package-suffix" : "",
+	"output-dir" : "src/generated",
+	"import-specs" : ["api"],
+	"field-import-specs" : ["api"]
+}

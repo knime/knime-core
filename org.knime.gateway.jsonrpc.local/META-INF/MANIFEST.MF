@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Gateway JsonRpc Implementation Local
+Bundle-SymbolicName: org.knime.gateway.jsonrpc.local;singleton:=true
+Bundle-Version: 3.5.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.knime.gateway,
+ org.knime.gateway.jsonrpc;bundle-version="3.3.0",
+ com.fasterxml.jackson.core.jackson-core;bundle-version="2.8.1",
+ com.fasterxml.jackson.core.jackson-databind;bundle-version="2.7.1",
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="2.7.1",
+ org.apache.commons.lang3;bundle-version="3.2.1",
+ com.fasterxml.jackson.datatype.jackson-datatype-jdk8;bundle-version="2.7.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: org.knime.gateway.jsonrpc.local
