@@ -1,9 +1,0 @@
-{
-    "type" : "entity",
-    "name" : "WorkflowAnnotationEnt",
-    "description" : "A workflow annotation.",
-    "namespace" : "workflow.entity",
-    "parents" : [ "workflow.entity.AnnotationEnt" ],
-    "fields" : [
-    ]
-}

@@ -1,8 +1,0 @@
-{
-    "type" : "entity",
-    "name" : "NodeInPortEnt",
-    "description" : "An input port of a node.",
-    "namespace" : "workflow.entity",
-    "parents" : [ "workflow.entity.NodePortEnt" ],
-    "fields" : [ ]
-}

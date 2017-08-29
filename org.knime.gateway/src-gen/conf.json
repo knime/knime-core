@@ -1,5 +1,0 @@
-{
-	"project-dependencies" : [],
-	"default-output-dir" : "src/generated",
-	"default-package" : "org.knime.gateway"
-}
