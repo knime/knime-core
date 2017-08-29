@@ -346,9 +346,25 @@ final class StringToDateTimeNodeDialog extends DataAwareNodeDialogPane {
      * method for change/action listener of type and date combo boxes.
      */
     private boolean formatListener(final String format) {
-        // the regex finds all expressions in not quoted square brackets, i.e. removes all optional fields of the format
-        final String formatNoOptionalFields =
-            format.replaceAll("((?<!\\')\\[|\\[(?!\\'))(.*)((?<!\\')\\]|\\](?!\\'))", "");
+        // remove all expressions in unquoted square brackets, i.e. removes all optional fields of the format
+        final StringBuilder buffer = new StringBuilder();
+        int parenthesisCounter = 0;
+        int apostropheCounter = 0;
+        for (char c : format.toCharArray()) {
+            if (c == '\'') {
+                apostropheCounter++;
+            } else if ((c == '[') && (apostropheCounter % 2 == 0)) {
+                parenthesisCounter++;
+            } else if ((c == ']') && (apostropheCounter % 2 == 0)) {
+                parenthesisCounter--;
+            }
+            if ((!((c == '[') || (c == ']')) || (apostropheCounter % 2 == 1)) && (parenthesisCounter == 0)) {
+                buffer.append(c);
+            }
+        }
+        final String formatNoOptionalFields = buffer.toString();
+
+        // check, if the pattern is valid
         switch ((DateTimeType)m_typeCombobox.getSelectedItem()) {
             case LOCAL_DATE: {
                 try {
