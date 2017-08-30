@@ -135,7 +135,7 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
 
     /** {@inheritDoc} */
     @Override
-    public NodeType getType() {
+    public org.knime.core.node.NodeFactory.NodeType getType() {
         return NodeType.VirtualOut;
     }
 

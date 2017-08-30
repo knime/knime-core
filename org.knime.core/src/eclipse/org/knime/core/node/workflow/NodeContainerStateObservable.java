@@ -49,7 +49,8 @@ package org.knime.core.node.workflow;
 /**
  * Trackable node container state object (either the node container itself or a port representing a connected node).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface NodeContainerStateObservable {
 

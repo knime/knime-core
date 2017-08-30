@@ -83,7 +83,6 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.CredentialsStore;
-import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;

@@ -5021,7 +5021,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     * @return true if node can be executed.
     */
    @Override
-public boolean canExecuteNode(final NodeID nodeID) {
+   public boolean canExecuteNode(final NodeID nodeID) {
        try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
            if (nc == null) {
@@ -5097,7 +5097,7 @@ public boolean canExecuteNode(final NodeID nodeID) {
     *
     */
    @Override
-public boolean canCancelNode(final NodeID nodeID) {
+   public boolean canCancelNode(final NodeID nodeID) {
        try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
            if (nc == null) {
@@ -5117,7 +5117,7 @@ public boolean canCancelNode(final NodeID nodeID) {
    /** @return true if all nodes in this workflow / metanode can be canceled.
     * @since 3.1 */
    @Override
-public boolean canCancelAll() {
+   public boolean canCancelAll() {
        // added as part of fix for bug 6534 - this method is called often also indirectly via change events
        // as part of a reset - do the best to not lock parent instance
        if (isProject()) {

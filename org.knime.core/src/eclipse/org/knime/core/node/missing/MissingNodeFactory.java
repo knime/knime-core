@@ -49,6 +49,7 @@ package org.knime.core.node.missing;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.config.ConfigWO;
@@ -175,7 +176,7 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
     /** @return type of missing node. */
     @Override
-    public NodeType getType() {
+    public NodeFactory.NodeType getType() {
         return NodeType.Missing;
     }
 

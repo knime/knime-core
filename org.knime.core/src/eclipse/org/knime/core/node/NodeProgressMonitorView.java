@@ -125,7 +125,6 @@ public class NodeProgressMonitorView extends JDialog implements
         m_progressBar.setStringPainted(true);
         m_cancelButton = new JButton("Cancel");
         m_cancelButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(final ActionEvent e) {
                 onPressCancel();
             }
@@ -169,7 +168,6 @@ public class NodeProgressMonitorView extends JDialog implements
      *
      * {@inheritDoc}
      */
-    @Override
     public void progressChanged(final NodeProgressEvent pe) {
         if (pe.getNodeProgress().hasProgress()) {
             double progress = pe.getNodeProgress().getProgress().doubleValue();

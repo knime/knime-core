@@ -147,7 +147,7 @@ public class VirtualParallelizedChunkPortObjectOutNodeFactory extends DynamicNod
 	 * {@inheritDoc}
 	 */
 	@Override
-    public NodeType getType() {
+    public org.knime.core.node.NodeFactory.NodeType getType() {
 	    return NodeType.VirtualOut;
 	}
 

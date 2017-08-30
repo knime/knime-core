@@ -702,13 +702,13 @@ public abstract class NodeContainer implements INodeContainer {
     }
 
     /**
-    *
-    * @param listener listener to the node progress
-    * @return true if the listener was not already registered before, false
-    *         otherwise
-    */
+     *
+     * @param listener listener to the node progress
+     * @return true if the listener was not already registered before, false
+     *         otherwise
+     */
    @Override
-public boolean addProgressListener(final NodeProgressListener listener) {
+   public boolean addProgressListener(final NodeProgressListener listener) {
        if (listener == null) {
            throw new NullPointerException("Node progress listener must not be null");
        }
@@ -723,7 +723,7 @@ public boolean addProgressListener(final NodeProgressListener listener) {
     *         not registered
     */
    @Override
-       public boolean removeNodeProgressListener(final NodeProgressListener listener) {
+   public boolean removeNodeProgressListener(final NodeProgressListener listener) {
        return m_progressListeners.remove(listener);
    }
 
@@ -777,7 +777,7 @@ public boolean addProgressListener(final NodeProgressListener listener) {
     * @param newMessage the nodeMessage to set
     */
    @Override
-public final void setNodeMessage(final NodeMessage newMessage) {
+   public final void setNodeMessage(final NodeMessage newMessage) {
        NodeMessage oldMessage = m_nodeMessage;
        m_nodeMessage = newMessage == null ? NodeMessage.NONE : newMessage;
        if (!m_nodeMessage.equals(oldMessage)) {
