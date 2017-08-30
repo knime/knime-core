@@ -154,9 +154,7 @@ public class MetaPortDialog extends Dialog {
         //calculate size and set location
         Point location = parent.getLocation();
         Point size = parent.getSize();
-        int labelWidth = m_typeLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
-        int comboWidth = m_type.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
-        int shellWidth = labelWidth + comboWidth + 40;
+        int shellWidth = m_type.getParent().computeSize(SWT.DEFAULT, SWT.DEFAULT).x + 20;
         m_shell.setLocation(location.x + (size.x / 2) - (shellWidth / 2),
                 location.y + (size.y / 2) - (HEIGHT / 2));
         m_shell.setSize(shellWidth, HEIGHT);
