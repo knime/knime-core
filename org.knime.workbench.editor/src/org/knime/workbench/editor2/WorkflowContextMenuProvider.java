@@ -72,6 +72,7 @@ import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -346,7 +347,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // add interactive view options
-                if (container.hasInteractiveView() || container.hasInteractiveWebView()) {
+                if (container.hasInteractiveView()) {
                     action = new OpenInteractiveViewAction(CastUtil.cast(container, NodeContainer.class));
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 } else {
