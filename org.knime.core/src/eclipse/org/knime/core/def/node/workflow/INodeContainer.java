@@ -299,12 +299,6 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
     boolean hasInteractiveView();
 
     /**
-     * @return true if node provides {@link WebTemplate} for an interactive web view.
-     * @since 2.8
-     */
-    boolean hasInteractiveWebView();
-
-    /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
      *
      * @return name of the interactive view or <code>null</code>

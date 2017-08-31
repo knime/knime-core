@@ -1236,8 +1236,7 @@ public abstract class NodeContainer implements INodeContainer {
      * @return An new {@link InteractiveWebViewsResult} with possibly 0 or more views.
      * @since 3.3
      */
-    @Override
-    public abstract boolean hasInteractiveWebView();
+    public abstract InteractiveWebViewsResult getInteractiveWebViews();
 
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
