@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Basic interface for extra information.
@@ -81,8 +82,8 @@ public interface UIInformation extends Cloneable {
         throws InvalidSettingsException;
 
     /** UIInformation objects are cloneable without further restriction.
-    *
-    * @return a clone of this object
-    */
-   UIInformation clone();
+     *
+     * @return a clone of this object
+     */
+    public UIInformation clone();
 }
