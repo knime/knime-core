@@ -55,9 +55,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -75,6 +77,10 @@ public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCrea
             throw new IllegalStateException("Type not nominal: " + colSpec.getName());
         }
         m_string2NomValRepMap = new HashMap<String, NominalValueRepresentation>();
+        DataColumnDomain domain = colSpec.getDomain();
+        CheckUtils.checkArgument(domain.hasValues(), "The target column does not have possible values assigned. "
+            + "Most likely it has too many different distinct values (learning an ID column?) "
+            + "Fix it by preprocessing the table using a \"Domain Calculator\".");
         Set<DataCell> possibleValues = colSpec.getDomain().getValues();
         for (DataCell val : possibleValues) {
             String str = val.toString();
