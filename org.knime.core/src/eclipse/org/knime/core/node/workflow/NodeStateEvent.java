@@ -57,29 +57,53 @@ import org.knime.core.def.node.workflow.INodeContainer;
  */
 public class NodeStateEvent extends EventObject {
 
-    private final NodeContainerState m_state;
+    private final InternalNodeContainerState m_internalNCState;
+
+    /**
+     * A new event from the current node container ID. By calling this constructor, the internal node container state is
+     * <code>null</code> (if the passed object is not of type {@link NodeContainer}). State can then only be retrieved
+     * via the node associated with the node id.
+     *
+     * @param nc a node container to derive the state from (not null).
+     */
+    public NodeStateEvent(final INodeContainer nc) {
+        this(nc.getID(), (nc instanceof NodeContainer) ? ((NodeContainer)nc).getInternalState() : null);
+    }
 
     /** A new event from the current node container ID and state.
-     * TODO: might be replace by an NodeStateEvent(INodeContainer)-constructor
-     *
-     * @param nodeID the id of the node which state has bee changed
-     * @param state the new state
+     * @param nc A node container to derive the state from (not null).
      */
-    public NodeStateEvent(final NodeID nodeID, final NodeContainerState state) {
-        super(nodeID);
-        m_state = state;
+    public NodeStateEvent(final NodeContainer nc) {
+        this(nc.getID(), nc.getInternalState());
+    }
+
+    /**
+     * @param src id of the node
+     * @param newState the new state.
+     */
+    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
+        super(src);
+        m_internalNCState = newState;
+    }
+
+    /**
+     *
+     * @return the new state of the node
+     * @deprecated Don't get the state from the event but receive it from the node itself
+     */
+    @Deprecated
+    public NodeContainer.State getState() {
+        return m_internalNCState.mapToOldStyleState();
+    }
+
+    /** @return the internalNCState */
+    InternalNodeContainerState getInternalNCState() {
+        return m_internalNCState;
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeID getSource() {
         return (NodeID)super.getSource();
-    }
-
-    /**
-     * @return the node's state
-     */
-    public NodeContainerState getState() {
-        return m_state;
     }
 }

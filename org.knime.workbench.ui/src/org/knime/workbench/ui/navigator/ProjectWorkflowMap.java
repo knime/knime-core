@@ -370,7 +370,7 @@ public final class ProjectWorkflowMap {
             WORKFLOW_CLIENTS.put(new MapWFKey(newPath), clientList);
         }
         WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED, nc.getID(), null, nc));
-        NSC_LISTENER.stateChanged(new NodeStateEvent(nc.getID(), nc.getNodeContainerState()));
+        NSC_LISTENER.stateChanged(new NodeStateEvent(nc));
     }
 
     /**

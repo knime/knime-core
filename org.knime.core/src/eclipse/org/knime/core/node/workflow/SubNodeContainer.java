@@ -440,12 +440,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             final WorkflowManager parent = getParent();
             assert parent.isLockedByCurrentThread() : "Unsynchronized workflow state event";
             final InternalNodeContainerState oldState = getInternalState();
-            final InternalNodeContainerState newState;
-            if(state.getState() instanceof InternalNodeContainerState) {
-               newState = (InternalNodeContainerState) state.getState();
-            } else {
-                throw new IllegalArgumentException("Only InternaleNodeContainerState's supported.");
-            }
+            final InternalNodeContainerState newState = state.getInternalNCState();
             final boolean gotReset = oldState.isExecuted() && !newState.isExecuted();
             if (gotReset) {
                 // a contained node was reset -- trigger reset downstream
@@ -1151,7 +1146,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * processing call from parent.
      * @param newState State of the internal WFM to decide whether to publish ports and/or specs. */
     @SuppressWarnings("null")
-    private boolean setVirtualOutputIntoOutport(final NodeContainerState newState) {
+    private boolean setVirtualOutputIntoOutport(final InternalNodeContainerState newState) {
         // retrieve results and copy to outports
         final VirtualSubNodeOutputNodeModel virtualOutNodeModel = getVirtualOutNodeModel();
         final boolean isInactive = getVirtualOutNode().isInactive();
@@ -1208,7 +1203,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             }
         }
         if (changed && !m_isPerformingActionCalledFromParent) {
-            notifyStateChangeListeners(new NodeStateEvent(this.getID(), this.getNodeContainerState())); // updates port views
+            notifyStateChangeListeners(new NodeStateEvent(this)); // updates port views
         }
         return changed;
     }
