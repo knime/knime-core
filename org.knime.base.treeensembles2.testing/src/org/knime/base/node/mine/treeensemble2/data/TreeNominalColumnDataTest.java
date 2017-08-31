@@ -78,6 +78,7 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.ColumnSamplingMode;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.SplitCriterion;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.RowKey;
@@ -98,7 +99,7 @@ public class TreeNominalColumnDataTest {
 
     // H - hot, M - mild, C - cold
     private static final String[] SMALL_TARGET_DATA =
-        TreeNumericColumnDataTest.asStringArray("H,H,H,M,C,C,C,M,C,M,M,M,H,M");
+            TreeNumericColumnDataTest.asStringArray("H,H,H,M,C,C,C,M,C,M,M,M,H,M");
 
     private static final double[] SMALL_TARGET_DATA_REGRESSION =
         new double[]{30, 32, 27, 25, 20, 17, 16, 23, 19, 25, 24, 21, 33, 22};
@@ -107,18 +108,11 @@ public class TreeNominalColumnDataTest {
 
     private static Pair<TreeNominalColumnData, TreeTargetNominalColumnData>
         tennisData(final TreeEnsembleLearnerConfiguration config) {
-        DataColumnSpec colSpec = new DataColumnSpecCreator("test-col", StringCell.TYPE).createSpec();
-        TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
-        DataColumnSpec targetSpec = new DataColumnSpecCreator("target-col", StringCell.TYPE).createSpec();
-        TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
-        for (int i = 0; i < SMALL_COLUMN_DATA.length; i++) {
-            final RowKey key = RowKey.createRowKey((long)i);
-            colCreator.add(key, new StringCell(SMALL_COLUMN_DATA[i]));
-            targetCreator.add(key, new StringCell(SMALL_TARGET_DATA[i]));
-        }
-        final TreeNominalColumnData testColData = colCreator.createColumnData(0, config);
+        TestDataGenerator dataGen = new TestDataGenerator(config);
+        final TreeNominalColumnData testColData = dataGen.createNominalAttributeColumn(SMALL_COLUMN_DATA, "test-col", 0);
+        final TreeTargetNominalColumnData target = TestDataGenerator.createNominalTargetColumn(SMALL_TARGET_DATA);
         testColData.getMetaData().setAttributeIndex(0);
-        return Pair.create(testColData, (TreeTargetNominalColumnData)targetCreator.createColumnData());
+        return Pair.create(testColData, target);
     }
 
     private static Pair<TreeNominalColumnData, TreeTargetNumericColumnData>
@@ -140,12 +134,15 @@ public class TreeNominalColumnDataTest {
     private static Pair<TreeNominalColumnData, TreeTargetNominalColumnData>
         createPCATestData(final TreeEnsembleLearnerConfiguration config) {
         DataColumnSpec colSpec = new DataColumnSpecCreator("test-col", StringCell.TYPE).createSpec();
-        TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
-        DataColumnSpec targetSpec = new DataColumnSpecCreator("target-col", StringCell.TYPE).createSpec();
-        TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
-        long rowKeyCounter = 0;
         final String[] attVals = new String[]{"A", "B", "C", "D", "E"};
         final String[] classes = new String[]{"T1", "T2", "T3"};
+        TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator("target-col", StringCell.TYPE);
+        specCreator.setDomain(new DataColumnDomainCreator(
+            Arrays.stream(classes).distinct().map(s -> new StringCell(s)).toArray(i -> new StringCell[i])).createDomain());
+        DataColumnSpec targetSpec = specCreator.createSpec();
+        TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
+        long rowKeyCounter = 0;
         final int[][] classDistributions =
             new int[][]{{40, 10, 10}, {10, 40, 10}, {20, 30, 10}, {20, 15, 25}, {10, 5, 45}};
 
@@ -163,20 +160,21 @@ public class TreeNominalColumnDataTest {
         return Pair.create(testColData, (TreeTargetNominalColumnData)targetCreator.createColumnData());
     }
 
+    private static String[] extractSubArray(final String[] values, final int[] indices) {
+        String[] extracted = new String[indices.length];
+        for (int i = 0; i < indices.length; i++) {
+            extracted[i] = values[indices[i]];
+        }
+        return extracted;
+    }
+
     private static Pair<TreeNominalColumnData, TreeTargetNominalColumnData>
         twoClassTennisData(final TreeEnsembleLearnerConfiguration config) {
-        DataColumnSpec colSpec = new DataColumnSpecCreator("test-col", StringCell.TYPE).createSpec();
-        TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
-        DataColumnSpec targetSpec = new DataColumnSpecCreator("target-col", StringCell.TYPE).createSpec();
-        TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
-        for (int i = 0; i < TWO_CLASS_INDICES.length; i++) {
-            final RowKey key = RowKey.createRowKey((long)i);
-            colCreator.add(key, new StringCell(SMALL_COLUMN_DATA[TWO_CLASS_INDICES[i]]));
-            targetCreator.add(key, new StringCell(SMALL_TARGET_DATA[TWO_CLASS_INDICES[i]]));
-        }
-        final TreeNominalColumnData testColData = colCreator.createColumnData(0, config);
+        TestDataGenerator testGen = new TestDataGenerator(config);
+        TreeTargetNominalColumnData targetCol = TestDataGenerator.createNominalTargetColumn(extractSubArray(SMALL_TARGET_DATA, TWO_CLASS_INDICES));
+        final TreeNominalColumnData testColData = testGen.createNominalAttributeColumn(extractSubArray(SMALL_COLUMN_DATA, TWO_CLASS_INDICES), "test-col", 0);
         testColData.getMetaData().setAttributeIndex(0);
-        return Pair.create(testColData, (TreeTargetNominalColumnData)targetCreator.createColumnData());
+        return Pair.create(testColData, targetCol);
 
     }
 

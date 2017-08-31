@@ -55,6 +55,7 @@ import org.apache.commons.math.random.RandomData;
 import org.apache.commons.math.random.RandomDataImpl;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.MissingCell;
@@ -103,7 +104,15 @@ public class TestDataGenerator {
 
     public static TreeTargetNominalColumnData createNominalTargetColumn(final String stringCSV) {
         String[] values = asStringArray(stringCSV);
-        DataColumnSpec targetSpec = new DataColumnSpecCreator("test-target", StringCell.TYPE).createSpec();
+        return createNominalTargetColumn(values);
+    }
+
+    public static TreeTargetNominalColumnData createNominalTargetColumn(final String[] values) {
+        DataColumnDomainCreator dc = new DataColumnDomainCreator(Arrays.stream(values).distinct().map(s -> new StringCell(s))
+            .toArray(i -> new StringCell[i]));
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator("test-target", StringCell.TYPE);
+        specCreator.setDomain(dc.createDomain());
+        DataColumnSpec targetSpec = specCreator.createSpec();
         TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
         for (int i = 0; i < values.length; i++) {
             RowKey rowKey = RowKey.createRowKey((long)i);
@@ -115,14 +124,18 @@ public class TestDataGenerator {
     public TreeOrdinaryNumericColumnData createNumericAttributeColumn(final String dataCSV, final String name,
         final int attributeIndex) {
         double[] data = asDataArray(dataCSV);
+        return createNumericAttributeColumnData(data, name, attributeIndex);
+    }
+
+    public TreeOrdinaryNumericColumnData createNumericAttributeColumnData(final double[] values, final String name, final int attributeIndex) {
         DataColumnSpec colSpec = new DataColumnSpecCreator(name, DoubleCell.TYPE).createSpec();
         TreeOrdinaryNumericColumnDataCreator colCreator = new TreeOrdinaryNumericColumnDataCreator(colSpec);
-        for (int i = 0; i < data.length; i++) {
+        for (int i = 0; i < values.length; i++) {
             final RowKey key = RowKey.createRowKey((long)i);
-            if (Double.isNaN(data[i])) {
+            if (Double.isNaN(values[i])) {
                 colCreator.add(key, new MissingCell(null));
             } else {
-                colCreator.add(key, new DoubleCell(data[i]));
+                colCreator.add(key, new DoubleCell(values[i]));
             }
         }
         TreeOrdinaryNumericColumnData col = colCreator.createColumnData(0, m_config);
@@ -142,6 +155,10 @@ public class TestDataGenerator {
     public TreeNominalColumnData createNominalAttributeColumn(final String stringCSV, final String name,
         final int attributeIndex) {
         String[] values = asStringArray(stringCSV);
+        return createNominalAttributeColumn(values, name, attributeIndex);
+    }
+
+    public TreeNominalColumnData createNominalAttributeColumn(final String[] values, final String name, final int attributeIndex) {
         DataColumnSpec colSpec = new DataColumnSpecCreator(name, StringCell.TYPE).createSpec();
         TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
         for (int i = 0; i < values.length; i++) {

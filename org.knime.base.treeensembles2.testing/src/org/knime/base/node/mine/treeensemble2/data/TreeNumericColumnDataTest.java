@@ -81,7 +81,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.util.Pair;
 
@@ -120,21 +119,9 @@ public class TreeNumericColumnDataTest {
 
     private static Pair<TreeOrdinaryNumericColumnData, TreeTargetNominalColumnData>
         exampleData(final TreeEnsembleLearnerConfiguration config, final double[] data, final String[] target) {
-        DataColumnSpec colSpec = new DataColumnSpecCreator("test-col", DoubleCell.TYPE).createSpec();
-        TreeOrdinaryNumericColumnDataCreator colCreator = new TreeOrdinaryNumericColumnDataCreator(colSpec);
-        DataColumnSpec targetSpec = new DataColumnSpecCreator("test-col", StringCell.TYPE).createSpec();
-        TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
-        for (int i = 0; i < data.length; i++) {
-            final RowKey key = RowKey.createRowKey(i);
-            if (Double.isNaN(data[i])) {
-                colCreator.add(key, new MissingCell(null));
-            } else {
-                colCreator.add(key, new DoubleCell(data[i]));
-            }
-            targetCreator.add(key, new StringCell(target[i]));
-        }
-        return Pair.create(colCreator.createColumnData(0, config),
-            (TreeTargetNominalColumnData)targetCreator.createColumnData());
+        TestDataGenerator dataGen = new TestDataGenerator(config);
+        return Pair.create(dataGen.createNumericAttributeColumnData(data, "test-col", 0),
+            TestDataGenerator.createNominalTargetColumn(target));
     }
 
     public static TreeData
