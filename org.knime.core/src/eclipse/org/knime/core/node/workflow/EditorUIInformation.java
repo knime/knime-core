@@ -134,22 +134,6 @@ public class EditorUIInformation {
     }
 
     /**
-     * @param curved if <code>true</code> connections are rendered as curves, otherwise as straight lines
-     * @since 3.3
-     */
-    public void setHasCurvedConnections(final boolean curved) {
-        m_hasCurvedConnections = curved;
-    }
-
-    /**
-     * @param width the width of the line connection two nodes
-     * @since 3.3
-     */
-    public void setConnectionLineWidth(final int width) {
-        m_connectionLineWidth = width;
-    }
-
-    /**
      * @return the width of the line connecting two nodes
      * @since 3.3
      */
