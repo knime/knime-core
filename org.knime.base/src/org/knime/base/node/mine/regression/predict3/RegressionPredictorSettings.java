@@ -70,14 +70,17 @@ public final class RegressionPredictorSettings {
     /** The suffix for the probability columns. */
     private String m_propColumnSuffix;
 
+    private final boolean m_isClassification;
+
     /**
      * Create instance with default values.
      */
-    public RegressionPredictorSettings() {
+    public RegressionPredictorSettings(final boolean expectClassificationModel) {
         m_hasCustomPredictionName = false;
         m_customPredictionName = null;
         m_includeProbabilities = false;
         m_propColumnSuffix = "";
+        m_isClassification = expectClassificationModel;
     }
 
     private static final String CFG_HAS_CUSTOM_PREDICTION_NAME = "has_custom_predicition_name";
@@ -95,8 +98,10 @@ public final class RegressionPredictorSettings {
             throws InvalidSettingsException {
         m_hasCustomPredictionName = settings.getBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME);
         m_customPredictionName = settings.getString(CFG_CUSTOM_PREDICTION_NAME);
-        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
-        m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX);
+        if (m_isClassification) {
+            m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
+            m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX);
+        }
     }
 
     /**
@@ -108,8 +113,10 @@ public final class RegressionPredictorSettings {
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
         m_hasCustomPredictionName = settings.getBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME, false);
         m_customPredictionName = settings.getString(CFG_CUSTOM_PREDICTION_NAME, null);
-        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES, false);
-        m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX, "");
+        if (m_isClassification) {
+            m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES, false);
+            m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX, "");
+        }
     }
 
     /**
@@ -120,8 +127,10 @@ public final class RegressionPredictorSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME, m_hasCustomPredictionName);
         settings.addString(CFG_CUSTOM_PREDICTION_NAME, m_customPredictionName);
-        settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
-        settings.addString(CFG_PROP_COLUMN_SUFFIX, m_propColumnSuffix);
+        if (m_isClassification) {
+            settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
+            settings.addString(CFG_PROP_COLUMN_SUFFIX, m_propColumnSuffix);
+        }
     }
 
 

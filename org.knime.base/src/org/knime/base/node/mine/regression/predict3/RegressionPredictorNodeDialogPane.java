@@ -119,8 +119,6 @@ public final class RegressionPredictorNodeDialogPane
                     "Probability columns (only for nominal prediction, e.g. Logistic Regression)"));
             p.add(probabilitesPanel, c);
         }
-
-
         c.gridx = 0;
         c.gridy++;
         c.insets = new Insets(0, 0, 0, 0);
@@ -224,7 +222,7 @@ public final class RegressionPredictorNodeDialogPane
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        RegressionPredictorSettings s = new RegressionPredictorSettings();
+        RegressionPredictorSettings s = new RegressionPredictorSettings(m_showProbOptions);
         s.loadSettingsForDialog(settings);
 
         m_hasCustomPredictionName.setSelected(s.getHasCustomPredictionName());
@@ -243,16 +241,17 @@ public final class RegressionPredictorNodeDialogPane
         } else {
             try {
                 DataColumnSpec[] outSpec = RegressionPredictorCellFactory.createColumnSpec(
-                    portSpec, tableSpec, new RegressionPredictorSettings());
+                    portSpec, tableSpec, new RegressionPredictorSettings(m_showProbOptions));
                 m_customPredictionName.setText(outSpec[outSpec.length - 1].getName());
             } catch (InvalidSettingsException e) {
                 // Open dialog and give a chance define settings
             }
         }
 
-
-        m_includeProbs.setSelected(s.getIncludeProbabilities());
-        m_probColumnSuffix.setText(s.getPropColumnSuffix());
+        if (m_showProbOptions) {
+            m_includeProbs.setSelected(s.getIncludeProbabilities());
+            m_probColumnSuffix.setText(s.getPropColumnSuffix());
+        }
 
         updateEnableState();
 
@@ -260,7 +259,9 @@ public final class RegressionPredictorNodeDialogPane
 
     private void updateEnableState() {
         m_customPredictionName.setEnabled(m_hasCustomPredictionName.isSelected());
-        m_probColumnSuffix.setEnabled(m_includeProbs.isSelected());
+        if (m_showProbOptions) {
+            m_probColumnSuffix.setEnabled(m_includeProbs.isSelected());
+        }
     }
 
 
@@ -270,11 +271,13 @@ public final class RegressionPredictorNodeDialogPane
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        RegressionPredictorSettings s = new RegressionPredictorSettings();
+        RegressionPredictorSettings s = new RegressionPredictorSettings(m_showProbOptions);
         s.setHasCustomPredictionName(m_hasCustomPredictionName.isSelected());
         s.setCustomPredictionName(m_customPredictionName.getText());
-        s.setIncludeProbabilities(m_includeProbs.isSelected());
-        s.setPropColumnSuffix(m_probColumnSuffix.getText());
+        if (m_showProbOptions) {
+            s.setIncludeProbabilities(m_includeProbs.isSelected());
+            s.setPropColumnSuffix(m_probColumnSuffix.getText());
+        }
 
         s.saveSettings(settings);
     }

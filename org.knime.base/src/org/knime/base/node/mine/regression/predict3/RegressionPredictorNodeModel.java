@@ -109,8 +109,8 @@ public final class RegressionPredictorNodeModel extends NodeModel {
         super(new PortType[]{PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
-        m_settings = new RegressionPredictorSettings();
         m_expectClassificationModel = expectLogRegModel;
+        m_settings = new RegressionPredictorSettings(m_expectClassificationModel);
     }
 
     /**
@@ -127,7 +127,7 @@ public final class RegressionPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        RegressionPredictorSettings s = new RegressionPredictorSettings();
+        RegressionPredictorSettings s = new RegressionPredictorSettings(m_expectClassificationModel);
         s.loadSettings(settings);
 
         if (s.getHasCustomPredictionName()
