@@ -239,6 +239,8 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
                 }
             }
         });
+
+        recreateHiLite();
     }
 
     /** {@inheritDoc} */
