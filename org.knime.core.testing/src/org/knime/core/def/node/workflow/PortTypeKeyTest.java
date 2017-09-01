@@ -65,14 +65,8 @@ public class PortTypeKeyTest {
     @Test
     public void testBuilderAndGetters() {
         PortTypeKey key = PortTypeKey.builder("class")
-                .setName("name")
-                .setColor(3)
-                .setIsHidden(false)
                 .setIsOptional(true).build();
-        assertEquals(key.getName(), "name");
         assertEquals(key.getPortObjectClassName(), "class");
-        assertEquals(key.getColor(), 3);
-        assertEquals(key.isHidden(), false);
         assertEquals(key.isOptional(), true);
     }
 
