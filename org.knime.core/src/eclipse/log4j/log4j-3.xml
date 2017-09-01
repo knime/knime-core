@@ -1,0 +1,109 @@
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="WARN" />
+            <param name="levelMax" value="WARN" />
+        </filter>
+    </appender>
+
+    <appender name="stderr" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.err" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="ERROR" />
+        </filter>
+    </appender>
+
+    <appender name="batchexec" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="INFO" />
+            <param name="levelMax" value="INFO" />
+        </filter>
+    </appender>
+
+    <appender name="logfile" class="org.knime.core.util.LogfileAppender">
+        <layout class="org.knime.core.node.NodeLoggerPatternLayout">
+            <!--  Supported parameter are 
+                %W = Workflow directory if available
+                    the depth can be specified e.g. %W{2} prints the name of the workflow and the folder it is located in
+                    if the depth is omitted the complete workflow directory is printed
+                %N = Node name if available
+                %Q = Qualifier as a combination of N (Node name) and c (category). Displays the category if the node name is not available.
+                    the depth can be specified and is used for the category e.g. %Q{1} prints only last index of the category
+                    if the depth is omitted the complete category is printed
+                %I = Node id if available
+                    the depth can be specified e.g. %I{1} prints only last index of the node id
+                    if the depth is omitted the complete node id is printed
+            -->
+            <param name="ConversionPattern" value="%d{ISO8601} : %-5p : %t : %c{1} : %N : %I : %m%n" />
+        </layout>
+    </appender>
+    
+    <appender name="knimeConsole" class="org.apache.log4j.varia.NullAppender">
+        <!-- This appender is only used to retrieve the conversion pattern layout for the KNIME console output
+        that is why we use the NullApender that does no log to any file. -->
+        <layout class="org.knime.core.node.NodeLoggerPatternLayout">
+            <!--  Supported parameter are 
+                %W = Workflow directory if available
+                    the depth can be specified e.g. %W{2} prints the name of the workflow and the folder it is located in
+                    if the depth is omitted the complete workflow directory is printed
+                %N = Node name if available
+                %Q = Qualifier as a combination of N (Node name) and c (category). Displays the category if the node name is not available.
+                    the depth can be specified and is used for the category e.g. %Q{1} prints only last index of the category
+                    if the depth is omitted the complete category is printed
+                %I = Node id if available
+                    the depth can be specified e.g. %I{1} prints only last index of the node id
+                    if the depth is omitted the complete node id is printed
+            -->
+            <param name="ConversionPattern" value="%-5p %-20Q{1} %-10I %.10000m\n" />
+            <!-- Strict pattern that maintains the distance by truncating long qualifiers and node ids
+            <param name="ConversionPattern" value="%-5p %-35.35Q{1} %-20.20I %.10000m\n" />
+            -->
+            <!-- Compact log pattern.
+            <param name="ConversionPattern" value="%-5p %Q{1} %I %.10000m\n" />
+            -->
+        </layout>
+    </appender>
+
+
+<!--
+if you want to enable debug message for a specific package or class, add something like:
+
+<logger name="org.knime.dev.node.xyz">
+    <appender-ref ref="debug"/>
+</logger>
+-->
+
+    <logger name="org.knime">
+        <level value="all" />
+    </logger>
+
+    <logger name="com.knime">
+        <level value="all" />
+    </logger>
+
+    <logger name="org.knime.core.node.workflow.BatchExecutor">
+        <appender-ref ref="batchexec" />
+    </logger>
+
+    <logger name="com.knime.product.headless.ReportBatchExecutor">
+        <appender-ref ref="batchexec" />
+    </logger>
+
+    <root>
+        <level value="error" />
+        <appender-ref ref="stdout" />
+        <appender-ref ref="stderr" />
+        <appender-ref ref="logfile" />
+        <appender-ref ref="knimeConsole" />
+    </root>
+</log4j:configuration>
