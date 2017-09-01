@@ -44,52 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 22, 2016 (hornm): created
+ *   Sep 26, 2016 (hornm): created
  */
-package org.knime.core.util;
+package org.knime.core.def.node.workflow;
 
-import org.knime.core.def.node.workflow.JobManagerUID;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.NodeExecutionJobManager;
-import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
- * Utility class for {@link NodeExecutionJobManager}-functions (e.g. conversion).
+ * Test for {@link JobManagerKey}.
  *
  * @author Martin Horn, KNIME.com
  */
-public class JobManagerUtil {
+public class JobManagerKeyTest {
 
-    private JobManagerUtil() {
-        // utility class
+    @Test
+    public void testBuilderAndGetters() {
+        JobManagerKey key = JobManagerKey.builder("id").build();
+        assertEquals(key.getID(), "id");
+        assertEquals(key.getName(), "id");
+
+        key = JobManagerKey.builder("id").setID("new_id").setName("name").build();
+        assertEquals(key.getID(), "new_id");
+        assertEquals(key.getName(), "name");
     }
 
-    /**
-     * Maps the given job manager uid (unique identifier) to the respective {@link NodeExecutionJobManagerFactory}.
-     *
-     * @param uid the unique identifier for a job manager
-     * @return the associated {@link NodeExecutionJobManagerFactory}
-     */
-    public static NodeExecutionJobManagerFactory getJobManagerFactory(final JobManagerUID uid) {
-        return NodeExecutionJobManagerPool.getJobManagerFactory(uid.getID());
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void testIDNotSet() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Job manager id must not be null");
+        JobManagerKey key = JobManagerKey.builder(null).build();
     }
 
-    /**
-     * Maps a {@link NodeExecutionJobManagerFactory} to a unique job manager identifier ({@link JobManagerUID}).
-     *
-     * @param factory the factory to map
-     * @return a newly created instance of {@link JobManagerUID}
-     */
-    public static JobManagerUID getJobManagerUID(final NodeExecutionJobManagerFactory factory) {
-        return JobManagerUID.builder(factory.getID()).setName(factory.getLabel()).build();
-    }
-
-    /**
-     * Maps a {@link NodeExecutionJobManager} to a unique job manager identifier.
-     * @param jobManager the job manager to map
-     * @return a newly created instance of {@link JobManagerUID} with its id taken from the argument job manager (and nothing else)
-     */
-    public static JobManagerUID getJobManagerUID(final NodeExecutionJobManager jobManager) {
-        return JobManagerUID.builder(jobManager.getID()).build();
-    }
 }

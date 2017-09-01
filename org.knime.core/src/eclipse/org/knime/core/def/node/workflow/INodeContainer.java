@@ -93,14 +93,14 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
 //    NodeContainerParent getDirectNCParent();
 
     /**
-     * @return the unique identifier (UID) of the job manager associated with this node or an empty optional if this
+     * @return the unique identifier (key) of the job manager associated with this node or an empty optional if this
      * node will use the job manager of the parent (or the parent of ...)
-     * @see #findJobManagerUID()
+     * @see #findJobManagerKey()
      */
-    Optional<JobManagerUID> getJobManagerUID();
+    Optional<JobManagerKey> getJobManagerKey();
 
-    /** @return the unique identifier (UID) of the job manager that is responsible for this node and all its children. */
-    JobManagerUID findJobManagerUID();
+    /** @return the unique identifier (key) of the job manager that is responsible for this node and all its children. */
+    JobManagerKey findJobManagerKey();
 
     boolean addNodePropertyChangedListener(NodePropertyChangedListener l);
 

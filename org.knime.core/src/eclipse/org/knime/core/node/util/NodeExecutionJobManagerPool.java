@@ -57,6 +57,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -280,6 +281,35 @@ public final class NodeExecutionJobManagerPool {
         NodeContainerSettings result = new NodeContainerSettings();
         result.setJobManager(instance);
         return result;
+    }
+
+    /**
+     * Maps the given job manager key (unique identifier) to the respective {@link NodeExecutionJobManagerFactory}.
+     *
+     * @param key the key identifying a specific job manager
+     * @return the associated {@link NodeExecutionJobManagerFactory}
+     */
+    public static NodeExecutionJobManagerFactory getJobManagerFactory(final JobManagerKey key) {
+        return NodeExecutionJobManagerPool.getJobManagerFactory(key.getID());
+    }
+
+    /**
+     * Maps a {@link NodeExecutionJobManagerFactory} to a unique job manager identifier ({@link JobManagerKey}).
+     *
+     * @param factory the factory to map
+     * @return a newly created instance of {@link JobManagerKey}
+     */
+    public static JobManagerKey getJobManagerKey(final NodeExecutionJobManagerFactory factory) {
+        return JobManagerKey.builder(factory.getID()).setName(factory.getLabel()).build();
+    }
+
+    /**
+     * Maps a {@link NodeExecutionJobManager} to a unique job manager identifier.
+     * @param jobManager the job manager to map
+     * @return a newly created instance of {@link JobManagerKey} with its id taken from the argument job manager (and nothing else)
+     */
+    public static JobManagerKey getJobManagerKey(final NodeExecutionJobManager jobManager) {
+        return JobManagerKey.builder(jobManager.getID()).build();
     }
 
     private static void collectJobManagerFactories() {

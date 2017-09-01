@@ -77,12 +77,12 @@ import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.util.JobManagerUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -186,7 +186,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             INodeContainer cont = ProjectWorkflowMap.getWorkflow(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
-                URL iconURL = JobManagerUtil.getJobManagerFactory(cont.findJobManagerUID()).getInstance().getIcon();
+                URL iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(cont.findJobManagerKey()).getInstance().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);

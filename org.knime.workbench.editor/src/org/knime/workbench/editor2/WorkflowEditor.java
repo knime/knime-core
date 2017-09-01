@@ -166,6 +166,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.util.CastUtil;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
@@ -187,7 +188,6 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
-import org.knime.core.util.JobManagerUtil;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -1211,7 +1211,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void updateJobManagerDisplay() {
-        NodeExecutionJobManager jobManager = JobManagerUtil.getJobManagerFactory(m_manager.findJobManagerUID()).getInstance();
+        NodeExecutionJobManager jobManager = NodeExecutionJobManagerPool.getJobManagerFactory(m_manager.findJobManagerKey()).getInstance();
         URL url;
         if (jobManager instanceof AbstractNodeExecutionJobManager) {
             url = ((AbstractNodeExecutionJobManager)jobManager).getIconForWorkflow();

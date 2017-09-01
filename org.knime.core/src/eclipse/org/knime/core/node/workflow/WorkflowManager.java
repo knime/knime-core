@@ -127,7 +127,7 @@ import org.knime.core.def.node.workflow.INodeAnnotation;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowAnnotation;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.JobManagerUID;
+import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.internal.ReferencedFile;
@@ -5285,7 +5285,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * {@inheritDoc}
      */
     @Override
-    public void setJobManager(final NodeID nodeID, final JobManagerUID jobMgr) {
+    public void setJobManager(final NodeID nodeID, final JobManagerKey jobMgr) {
         throw new UnsupportedOperationException();
     }
 

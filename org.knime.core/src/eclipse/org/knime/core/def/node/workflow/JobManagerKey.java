@@ -56,13 +56,13 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Martin Horn, KNIME.com
  */
-public final class JobManagerUID {
+public final class JobManagerKey {
 
     private final String m_id;
 
     private final String m_name;
 
-    private JobManagerUID(final Builder builder) {
+    private JobManagerKey(final Builder builder) {
         CheckUtils.checkArgumentNotNull(builder.m_id, "Job manager id must not be null.");
         m_id = builder.m_id;
         m_name = builder.m_name;
@@ -94,7 +94,7 @@ public final class JobManagerUID {
     }
 
     /**
-     * Builder for {@link JobManagerUID} instances.
+     * Builder for {@link JobManagerKey} instances.
      */
     public static final class Builder {
 
@@ -126,10 +126,10 @@ public final class JobManagerUID {
         }
 
         /**
-         * @return a new instance of {@link JobManagerUID} with the attributes copied from this builder
+         * @return a new instance of {@link JobManagerKey} with the attributes copied from this builder
          */
-        public JobManagerUID build() {
-            return new JobManagerUID(this);
+        public JobManagerKey build() {
+            return new JobManagerKey(this);
         }
 
     }

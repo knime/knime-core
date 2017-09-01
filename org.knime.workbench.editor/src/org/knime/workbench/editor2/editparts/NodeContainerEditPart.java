@@ -108,12 +108,13 @@ import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.INodePort;
 import org.knime.core.def.node.workflow.ISubNodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.JobManagerUID;
+import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.CastUtil;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -134,7 +135,6 @@ import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
-import org.knime.core.util.JobManagerUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -942,14 +942,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     private void updateJobManagerIcon() {
         INodeContainer nc = getNodeContainer();
-        Optional<JobManagerUID> jobManager = nc.getJobManagerUID();
+        Optional<JobManagerKey> jobManager = nc.getJobManagerKey();
         URL iconURL;
         if (jobManager.isPresent()) {
-            iconURL = JobManagerUtil.getJobManagerFactory(jobManager.get()).getInstance().getIcon();
+            iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(jobManager.get()).getInstance().getIcon();
         } else {
-            NodeExecutionJobManager parentJobManager = JobManagerUtil.getJobManagerFactory(nc.findJobManagerUID()).getInstance();
+            NodeExecutionJobManager parentJobManager = NodeExecutionJobManagerPool.getJobManagerFactory(nc.findJobManagerKey()).getInstance();
             if (parentJobManager instanceof AbstractNodeExecutionJobManager) {
-                iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(nc);
+                if(nc instanceof NodeContainer) {
+                    iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(CastUtil.castNC(nc));
+                } else {
+                    iconURL = null;
+                }
             } else {
                 iconURL = null;
             }

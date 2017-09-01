@@ -55,7 +55,7 @@ import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.util.JobManagerUtil;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 
 /**
  *
@@ -108,7 +108,7 @@ public class JobManagerDecorator implements
             INodeContainer cont = ProjectWorkflowMap.getWorkflow(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
-                URL iconURL = JobManagerUtil.getJobManagerFactory(cont.findJobManagerUID()).getInstance().getIcon();
+                URL iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(cont.findJobManagerKey()).getInstance().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);

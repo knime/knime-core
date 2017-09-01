@@ -55,7 +55,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.JobManagerUID;
+import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -89,7 +89,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
-import org.knime.core.util.JobManagerUtil;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -310,8 +309,8 @@ public abstract class NodeContainer implements INodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public final Optional<JobManagerUID> getJobManagerUID() {
-        return getJobManager() != null ? Optional.of(JobManagerUtil.getJobManagerUID(getJobManager()))
+    public final Optional<JobManagerKey> getJobManagerKey() {
+        return getJobManager() != null ? Optional.of(NodeExecutionJobManagerPool.getJobManagerKey(getJobManager()))
             : Optional.empty();
     }
 
@@ -319,8 +318,8 @@ public abstract class NodeContainer implements INodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public JobManagerUID findJobManagerUID() {
-        return JobManagerUtil.getJobManagerUID(findJobManager());
+    public JobManagerKey findJobManagerKey() {
+        return NodeExecutionJobManagerPool.getJobManagerKey(findJobManager());
     }
 
     /**

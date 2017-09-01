@@ -644,7 +644,7 @@ public interface IWorkflowManager extends INodeContainer{
      * @throws IllegalArgumentException If the node is unknown
      * @see #canSetJobManager(NodeID)
      */
-    void setJobManager(NodeID nodeID, JobManagerUID jobMgr);
+    void setJobManager(NodeID nodeID, JobManagerKey jobMgr);
 
     /** Attempts to cancel or running nodes in preparation for a removal of
      * this node (or its parent) from the root. Executing nodes, which can be
