@@ -218,6 +218,8 @@ public final class RegressionTreeLearnerNodeView
                 }
             }
         });
+
+        recreateHiLite();
     }
 
     /** {@inheritDoc} */
