@@ -102,10 +102,7 @@ public final class RegressionPredictorNodeDialogPane
         c.anchor = GridBagConstraints.BASELINE;
         c.insets = new Insets(5, 5, 0, 0);
 
-        Insets leftInsets = new Insets(3, 8, 3, 8);
-        Insets rightInsets = new Insets(3, 0, 3, 8);
         Insets leftCategoryInsets = new Insets(11, 8, 3, 8);
-        Insets rightCategoryInsets = new Insets(11, 0, 3, 8);
 
         c.insets = leftCategoryInsets;
         JPanel predictionColumnPanel = createPredictionColumnPanel();
@@ -142,8 +139,6 @@ public final class RegressionPredictorNodeDialogPane
 
         Insets leftInsets = new Insets(3, 8, 3, 8);
         Insets rightInsets = new Insets(3, 0, 3, 8);
-        Insets leftCategoryInsets = new Insets(11, 8, 3, 8);
-        Insets rightCategoryInsets = new Insets(11, 0, 3, 8);
 
         c.gridy++;
         c.insets = leftInsets;
@@ -183,7 +178,6 @@ public final class RegressionPredictorNodeDialogPane
         Insets leftInsets = new Insets(3, 8, 3, 8);
         Insets rightInsets = new Insets(3, 0, 3, 8);
         Insets leftCategoryInsets = new Insets(11, 8, 3, 8);
-        Insets rightCategoryInsets = new Insets(11, 0, 3, 8);
 
         c.insets = leftCategoryInsets;
         c.gridwidth = 2;

@@ -74,6 +74,7 @@ public final class RegressionPredictorSettings {
 
     /**
      * Create instance with default values.
+     * @param expectClassificationModel flag that indicates whether the settings are for a classification task
      */
     public RegressionPredictorSettings(final boolean expectClassificationModel) {
         m_hasCustomPredictionName = false;
