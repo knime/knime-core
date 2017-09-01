@@ -191,7 +191,8 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
         JMenuItem unHiliteMenu = createUnHiliteItem();
         unHiliteMenu.setText("UnHiLite Branch");
         m_popup.add(unHiliteMenu);
-        m_popup.add(createClearHiliteItem());
+        JMenuItem clearHiliteMenu = createClearHiliteItem();
+        m_popup.add(clearHiliteMenu);
         m_popup.add(new ExpandBranchAction<DecisionTreeNode>(m_graph));
         m_popup.add(new CollapseBranchAction<DecisionTreeNode>(m_graph));
 
@@ -199,6 +200,11 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
             private void showPopup(final MouseEvent e) {
                 DecisionTreeNode node = m_graph.nodeAtPoint(e.getPoint());
                 if (null != node) {
+                    boolean hiliteEnabled = isHiliteEnabled();
+                    boolean hasPatterns = hiliteEnabled && !node.coveredPattern().isEmpty();
+                    hiliteMenu.setEnabled(hasPatterns);
+                    unHiliteMenu.setEnabled(hasPatterns);
+                    clearHiliteMenu.setEnabled(hiliteEnabled);
                     m_popup.show(m_graph.getView(), e.getX(), e.getY());
                 }
             }
@@ -351,8 +357,13 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
                 newHdl.addHiLiteListener(this);
             }
             m_hiLiteHdl = newHdl;
-            m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);
+            m_hiLiteMenu.setEnabled(isHiliteEnabled() && m_hiLiteHdl != null);
         }
+    }
+
+    private boolean isHiliteEnabled() {
+        DataTable rowSample = getNodeModel().getHiliteRowSample();
+        return rowSample != null && rowSample.iterator().hasNext();
     }
 
     private void modelChangedInUI() {
@@ -404,6 +415,15 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
         }
     }
 
+    private boolean branchContainsPatterns() {
+        DecisionTreeNode selected = m_graph.getSelected();
+        if (selected == null) {
+            return false;
+        }
+        return !selected.coveredPattern().isEmpty();
+
+    }
+
     /**
      * Create menu to control hiliting.
      *
@@ -413,9 +433,21 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
         final JMenu result = new JMenu(HiLiteHandler.HILITE);
         result.setMnemonic('H');
 
-        result.add(createHiliteItem());
-        result.add(createUnHiliteItem());
+        JMenuItem hiliteItem = createHiliteItem();
+        result.add(hiliteItem);
+        JMenuItem unhiliteItem = createUnHiliteItem();
+        result.add(unhiliteItem);
         result.add(createClearHiliteItem());
+        result.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                boolean branchContainsPatterns = branchContainsPatterns();
+                hiliteItem.setEnabled(branchContainsPatterns);
+                unhiliteItem.setEnabled(branchContainsPatterns);
+
+            }
+        });
 
         return result;
     }
