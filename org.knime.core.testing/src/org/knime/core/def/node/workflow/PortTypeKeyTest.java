@@ -53,27 +53,27 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 
 /**
- * Tests for the {@link PortTypeUID} class.
+ * Tests for the {@link PortTypeKey} class.
  *
  * @author Martin Horn, KNIME.com
  */
-public class PortTypeUIDTest {
+public class PortTypeKeyTest {
 
     @Test
     public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder("class")
+        PortTypeKey key = PortTypeKey.builder("class")
                 .setName("name")
                 .setColor(3)
                 .setIsHidden(false)
                 .setIsOptional(true).build();
-        assertEquals(uid.getName(), "name");
-        assertEquals(uid.getPortObjectClassName(), "class");
-        assertEquals(uid.getColor(), 3);
-        assertEquals(uid.isHidden(), false);
-        assertEquals(uid.isOptional(), true);
+        assertEquals(key.getName(), "name");
+        assertEquals(key.getPortObjectClassName(), "class");
+        assertEquals(key.getColor(), 3);
+        assertEquals(key.isHidden(), false);
+        assertEquals(key.isOptional(), true);
     }
 
     @Rule
@@ -83,7 +83,7 @@ public class PortTypeUIDTest {
     public void testClassNameNotSet() throws IllegalArgumentException {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Class name must not be null");
-        PortTypeUID uid = PortTypeUID.builder(null).build();
+        PortTypeKey key = PortTypeKey.builder(null).build();
     }
 
 }

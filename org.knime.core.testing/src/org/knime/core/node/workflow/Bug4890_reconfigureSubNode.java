@@ -53,8 +53,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.util.PortTypeUtil;
 
 /**
  *
@@ -124,8 +124,8 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
             }
         }
         MetaPortInfo[] ports = new MetaPortInfo[2];
-        ports[0] = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(FlowVariablePortObject.TYPE)).setOldIndex(0).build();
-        ports[1] = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(FlowVariablePortObject.TYPE)).setOldIndex(1).build();
+        ports[0] = MetaPortInfo.builder().setPortTypeKey(PortTypeRegistry.getPortTypeKey(FlowVariablePortObject.TYPE)).setOldIndex(0).build();
+        ports[1] = MetaPortInfo.builder().setPortTypeKey(PortTypeRegistry.getPortTypeKey(FlowVariablePortObject.TYPE)).setOldIndex(1).build();
         getManager().changeSubNodeInputPorts(m_subNode, ports);
         getManager().changeSubNodeOutputPorts(m_subNode, ports);
         getManager().addConnection(m_varSource, 1, m_subNode, 1);

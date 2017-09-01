@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 import org.knime.core.node.port.MetaPortInfo;
 
 /**
@@ -65,36 +65,36 @@ public class MetaPortInfoTest {
 
     @Test
     public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder("test").build();
+        PortTypeKey uid = PortTypeKey.builder("test").build();
         MetaPortInfo mpi = MetaPortInfo.builder()
                 .setIsConnected(false)
                 .setMessage("message")
                 .setNewIndex(1)
                 .setOldIndex(2)
-                .setPortTypeUID(uid).build();
+                .setPortTypeKey(uid).build();
         assertEquals(mpi.isConnected(), false);
         assertEquals(mpi.getMessage(), "message");
         assertEquals(mpi.getNewIndex(), 1);
         assertEquals(mpi.getOldIndex(), 2);
-        assertEquals(mpi.getTypeUID(), uid);
+        assertEquals(mpi.getTypeKey(), uid);
     }
 
     @Test
     public void testCopyBuilder() {
-        PortTypeUID uid = PortTypeUID.builder("test").build();
+        PortTypeKey uid = PortTypeKey.builder("test").build();
         MetaPortInfo mpi = MetaPortInfo.builder()
                 .setIsConnected(false)
                 .setMessage("message")
                 .setNewIndex(1)
                 .setOldIndex(2)
-                .setPortTypeUID(uid).build();
+                .setPortTypeKey(uid).build();
 
         MetaPortInfo mpi2 = MetaPortInfo.builder(mpi).build();
         assertEquals(mpi2.isConnected(), false);
         assertEquals(mpi2.getMessage(), "message");
         assertEquals(mpi2.getNewIndex(), 1);
         assertEquals(mpi2.getOldIndex(), 2);
-        assertEquals(mpi2.getTypeUID(), uid);
+        assertEquals(mpi2.getTypeKey(), uid);
     }
 
     @Rule

@@ -47,8 +47,6 @@
  */
 package org.knime.workbench.editor2;
 
-import static org.knime.core.util.PortTypeUtil.getPortType;
-
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
 import org.eclipse.ui.IPartListener2;
@@ -66,6 +64,7 @@ import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowInPort;
 import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.def.node.workflow.IWorkflowOutPort;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeInPort;
@@ -193,7 +192,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
              * NodeContainerEditPart and we look at it as a node in port.
              */
             IWorkflowInPort inport = (IWorkflowInPort)model;
-            part = new WorkflowInPortEditPart(getPortType(inport.getPortTypeUID()), inport.getPortIndex());
+            part = new WorkflowInPortEditPart(PortTypeRegistry.getPortType(inport.getPortTypeKey()), inport.getPortIndex());
         } else if (model instanceof IWorkflowOutPort && context instanceof WorkflowOutPortBarEditPart) {
             // WorkflowOutPort and context WorkflowRootEditPart ->
             // WorkflowOutPortEditPart
@@ -208,20 +207,20 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
             // TODO: return SubWorkFlowOutPortEditPart
             IWorkflowOutPort outport = (IWorkflowOutPort)model;
 
-            part = new WorkflowOutPortEditPart(getPortType(outport.getPortTypeUID()), outport.getPortIndex());
+            part = new WorkflowOutPortEditPart(PortTypeRegistry.getPortType(outport.getPortTypeKey()), outport.getPortIndex());
         } else if (model instanceof IWorkflowOutPort) {
             // TODO: return SubWorkFlowOutPortEditPart
             IWorkflowOutPort outport = (IWorkflowOutPort)model;
-            part = new MetaNodeOutPortEditPart(getPortType(outport.getPortTypeUID()), outport.getPortIndex());
+            part = new MetaNodeOutPortEditPart(PortTypeRegistry.getPortType(outport.getPortTypeKey()), outport.getPortIndex());
 
         } else if (model instanceof INodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             INodePort port = (INodeInPort)model;
-            part = new NodeInPortEditPart(getPortType(port.getPortTypeUID()), port.getPortIndex());
+            part = new NodeInPortEditPart(PortTypeRegistry.getPortType(port.getPortTypeKey()), port.getPortIndex());
         } else if (model instanceof INodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
             INodePort port = (INodeOutPort)model;
-            part = new NodeOutPortEditPart(getPortType(port.getPortTypeUID()), port.getPortIndex());
+            part = new NodeOutPortEditPart(PortTypeRegistry.getPortType(port.getPortTypeKey()), port.getPortIndex());
         } else if (model instanceof IConnectionContainer) {
             // ConnectionContainer -> ConnectionContainerEditPart
             part = new ConnectionContainerEditPart();

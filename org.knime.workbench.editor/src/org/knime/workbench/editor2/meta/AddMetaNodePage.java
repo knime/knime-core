@@ -75,12 +75,12 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
@@ -258,13 +258,13 @@ public class AddMetaNodePage extends WizardPage {
         for (int i = 0; i < nrInPorts; i++) {
             // the "new index" is not maintained in this wizard page
             MetaPortInfo info = MetaPortInfo.builder()
-                .setPortTypeUID(PortTypeUtil.getPortTypeUID(BufferedDataTable.TYPE)).setNewIndex(-1).build();
+                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(BufferedDataTable.TYPE)).setNewIndex(-1).build();
             m_inPortList.add(info);
         }
         for (int i = 0; i < nrOutPorts; i++) {
             // the "new index" is not maintained in this wizard page
             MetaPortInfo info = MetaPortInfo.builder()
-                    .setPortTypeUID(PortTypeUtil.getPortTypeUID(BufferedDataTable.TYPE)).setNewIndex(-1).build();
+                    .setPortTypeKey(PortTypeRegistry.getPortTypeKey(BufferedDataTable.TYPE)).setNewIndex(-1).build();
             m_outPortList.add(info);
         }
     }
@@ -279,7 +279,7 @@ public class AddMetaNodePage extends WizardPage {
         selList.removeAll();
         for (int i = m_offset; i < infoList.size(); i++) {
             MetaPortInfo info = infoList.get(i);
-            String listEntry = namePrefix + i + " (" + PortTypeUtil.getPortType(info.getTypeUID()).getName() + ")";
+            String listEntry = namePrefix + i + " (" + PortTypeRegistry.getPortType(info.getTypeKey()).getName() + ")";
             selList.add(listEntry);
         }
     }
@@ -633,7 +633,7 @@ public class AddMetaNodePage extends WizardPage {
         MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
         PortType port = dialog.open();
         if (port != null) {
-            MetaPortInfo info = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(port))
+            MetaPortInfo info = MetaPortInfo.builder().setPortTypeKey(PortTypeRegistry.getPortTypeKey(port))
                 .setNewIndex(infoList.size()).build();
             infoList.add(info);
             populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
@@ -756,19 +756,19 @@ public class AddMetaNodePage extends WizardPage {
                 int i = 0;
                 for (MetaPortInfo inPort : m_inPortList) {
                     int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
-                    if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(BufferedDataTable.TYPE)) {
+                    if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(BufferedDataTable.TYPE)) {
                         gc.drawPolygon(new int[] {
                                 left - PORT_SIZE, y,
                                 left, y + (PORT_SIZE / 2),
                                 left - PORT_SIZE, y + PORT_SIZE});
                     } else if (PMMLPortObject.TYPE.isSuperTypeOf(
-                            PortTypeUtil.getPortType(inPort.getTypeUID()))) {
+                        PortTypeRegistry.getPortType(inPort.getTypeKey()))) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(
                                 left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
-                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
+                    } else if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(
                             DatabasePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
@@ -776,7 +776,7 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
-                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
+                    } else if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(
                             FlowVariablePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_RED));
@@ -804,21 +804,21 @@ public class AddMetaNodePage extends WizardPage {
                 int i = 0;
                 for (MetaPortInfo inPort : m_outPortList) {
                     int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
-                    if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(BufferedDataTable.TYPE)) {
+                    if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(BufferedDataTable.TYPE)) {
                         gc.drawPolygon(new int[] {
                                 right, y,
                                 right + PORT_SIZE, y + (PORT_SIZE / 2),
                                 right, y + PORT_SIZE});
                     } else if (PMMLPortObject.TYPE.isSuperTypeOf(
-                            PortTypeUtil.getPortType(inPort.getTypeUID()))) {
+                        PortTypeRegistry.getPortType(inPort.getTypeKey()))) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
-                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
+                    } else if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(
                             DatabasePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
-                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
+                    } else if (PortTypeRegistry.getPortType(inPort.getTypeKey()).equals(
                             FlowVariablePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_RED));

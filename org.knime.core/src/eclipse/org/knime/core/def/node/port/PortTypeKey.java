@@ -56,28 +56,15 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Martin Horn, KNIME.com
  */
-public final class PortTypeUID {
+public final class PortTypeKey {
 
-    private final String m_name;
     private final String m_className;
     private final boolean m_isOptional;
-    private final int m_color;
-    private final boolean m_isHidden;
 
-    private PortTypeUID(final Builder builder) {
+    private PortTypeKey(final Builder builder) {
         CheckUtils.checkArgumentNotNull(builder.m_className, "Class name must not be null.");
-        m_name = builder.m_name;
         m_className = builder.m_className;
         m_isOptional = builder.m_isOptional;
-        m_isHidden = builder.m_isHidden;
-        m_color = builder.m_color;
-    }
-
-    /**
-     * @return a human-readable name for this port type
-     */
-    public String getName() {
-        return m_name;
     }
 
     /**
@@ -94,23 +81,6 @@ public final class PortTypeUID {
         return m_isOptional;
     }
 
-    /**
-     * Returns a color for the port type.
-     * @return color as int
-     */
-    public int getColor() {
-        return m_color;
-    }
-
-    /**
-     * Returns whether this port type should be shown to the user in e.g. dialogs.
-     *
-     * @return <code>true</code> if this type should be hidden, <code>false</code> otherwise
-     */
-    public boolean isHidden() {
-        return m_isHidden;
-    }
-
 
     /**
      * @param className the associated port object's fully-qualified class name
@@ -121,28 +91,15 @@ public final class PortTypeUID {
     }
 
     /**
-     * Builder to create {@link PortTypeUID} objects.
+     * Builder to create {@link PortTypeKey} objects.
      */
     public static final class Builder {
 
-        private String m_name;
         private String m_className;
         private boolean m_isOptional;
-        private int m_color;
-        private boolean m_isHidden;
 
         private Builder(final String className) {
             m_className = className;
-        }
-
-        /**
-         * Sets a human-readable name for this port type.
-         * @param name
-         * @return this
-         */
-        public Builder setName(final String name) {
-            m_name = name;
-            return this;
         }
 
         /**
@@ -168,30 +125,10 @@ public final class PortTypeUID {
         }
 
         /**
-         * Sets whether the port should be shown to the user or not.
-         * @param isHidden
-         * @return this
+         * @return the newly created {@link PortTypeKey} from this builder
          */
-        public Builder setIsHidden(final boolean isHidden) {
-            m_isHidden = isHidden;
-            return this;
-        }
-
-        /**
-         * @param color the color of the port
-         * @return this
-         */
-        public Builder setColor(final int color) {
-            m_color = color;
-            return this;
-        }
-
-
-        /**
-         * @return the newly created {@link PortTypeUID} from this builder
-         */
-        public PortTypeUID build() {
-            return new PortTypeUID(this);
+        public PortTypeKey build() {
+            return new PortTypeKey(this);
         }
 
     }

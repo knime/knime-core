@@ -119,7 +119,7 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.def.node.NodeFactoryUID;
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 import org.knime.core.def.node.workflow.IAnnotation;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.IConnectionContainer.ConnectionType;
@@ -163,6 +163,7 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
@@ -208,7 +209,6 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
-import org.knime.core.util.PortTypeUtil;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 
@@ -847,7 +847,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * {@inheritDoc}
      */
     @Override
-    public IWorkflowManager createAndAddSubWorkflow(final PortTypeUID[] inPorts, final PortTypeUID[] outPorts, final String name) {
+    public IWorkflowManager createAndAddSubWorkflow(final PortTypeKey[] inPorts, final PortTypeKey[] outPorts, final String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -1577,7 +1577,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowInPort(i, PortTypeUtil.getPortType(newPorts[i].getTypeUID()));
+                    newMNPorts[i] = new WorkflowInPort(i, PortTypeRegistry.getPortType(newPorts[i].getTypeKey()));
                 }
             }
             subFlowMgr.m_inPorts = newMNPorts;
@@ -1638,7 +1638,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowOutPort(i, PortTypeUtil.getPortType(newPorts[i].getTypeUID()));
+                    newMNPorts[i] = new WorkflowOutPort(i, PortTypeRegistry.getPortType(newPorts[i].getTypeKey()));
                 }
             }
             subFlowMgr.m_outPorts = newMNPorts;
@@ -1691,7 +1691,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = PortTypeUtil.getPortType(newPorts[i + 1].getTypeUID());
+                portTypes[i] = PortTypeRegistry.getPortType(newPorts[i + 1].getTypeKey());
             }
             snc.setInPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1745,7 +1745,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = PortTypeUtil.getPortType(newPorts[i + 1].getTypeUID());
+                portTypes[i] = PortTypeRegistry.getPortType(newPorts[i + 1].getTypeKey());
             }
             snc.setOutPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {

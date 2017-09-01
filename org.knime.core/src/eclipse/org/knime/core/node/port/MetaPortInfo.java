@@ -47,7 +47,7 @@
  */
 package org.knime.core.node.port;
 
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 
 /** Object describing a metanode port. Used in the action to modify metanode
  * port orders, types, etc. It comprises the port type, whether it's connected
@@ -61,7 +61,7 @@ import org.knime.core.def.node.port.PortTypeUID;
  */
 public final class MetaPortInfo {
 
-    private final PortTypeUID m_typeUID;
+    private final PortTypeKey m_typeKey;
     private final boolean m_isConnected;
     private final String m_message;
     private final int m_oldIndex;
@@ -72,10 +72,10 @@ public final class MetaPortInfo {
      * Creates a new instance from the passed builder.
      */
     private MetaPortInfo(final Builder builder) {
-        if(builder.m_typeUID == null) {
+        if(builder.m_typeKey == null) {
             throw new IllegalArgumentException("No port type uid set.");
         }
-        m_typeUID = builder.m_typeUID;
+        m_typeKey = builder.m_typeKey;
         m_isConnected = builder.m_isConnected;
         m_message = builder.m_message;
         m_oldIndex = builder.m_oldIndex;
@@ -83,8 +83,8 @@ public final class MetaPortInfo {
     }
 
     /** @return the type */
-    public PortTypeUID getTypeUID() {
-        return m_typeUID;
+    public PortTypeKey getTypeKey() {
+        return m_typeKey;
     }
 
     /** @return the isConnected */
@@ -127,7 +127,7 @@ public final class MetaPortInfo {
      */
     public static final class Builder {
 
-        private PortTypeUID m_typeUID;
+        private PortTypeKey m_typeKey;
         private boolean m_isConnected = false;
         private String m_message = null;
         private int m_oldIndex = -1;
@@ -138,7 +138,7 @@ public final class MetaPortInfo {
         }
 
         private Builder copyFrom(final MetaPortInfo mpi) {
-            m_typeUID = mpi.m_typeUID;
+            m_typeKey = mpi.m_typeKey;
             m_isConnected = mpi.m_isConnected;
             m_message = mpi.m_message;
             m_oldIndex = mpi.m_oldIndex;
@@ -147,11 +147,11 @@ public final class MetaPortInfo {
         }
 
         /**
-         * @param typeUID the unique identifier for the port type
+         * @param typeKey the unique identifier for the port type
          * @return this
          */
-        public Builder setPortTypeUID(final PortTypeUID typeUID) {
-            m_typeUID = typeUID;
+        public Builder setPortTypeKey(final PortTypeKey typeKey) {
+            m_typeKey = typeKey;
             return this;
         }
 

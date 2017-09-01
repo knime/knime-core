@@ -55,10 +55,10 @@ import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.PortTypeUtil;
 
 /**
  * GEF command for reconfiguring (rename, change port number and/or types). Command executes only if at least one of the
@@ -205,10 +205,10 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
             if (newInfo.getOldIndex() >= 0) {
                 int revOldIdx = newInfo.getNewIndex();
                 int revNewIdx = newInfo.getOldIndex();
-                PortType revType = PortTypeUtil.getPortType(currentPortList[newInfo.getOldIndex()].getTypeUID());
+                PortType revType = PortTypeRegistry.getPortType(currentPortList[newInfo.getOldIndex()].getTypeKey());
                 boolean revConn = currentPortList[newInfo.getOldIndex()].isConnected();
                 MetaPortInfo revInfo = MetaPortInfo.builder()
-                        .setPortTypeUID(PortTypeUtil.getPortTypeUID(revType))
+                        .setPortTypeKey(PortTypeRegistry.getPortTypeKey(revType))
                         .setIsConnected(revConn)
                         .setOldIndex(revOldIdx)
                         .setNewIndex(revNewIdx).build();

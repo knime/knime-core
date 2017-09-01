@@ -110,6 +110,7 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
@@ -143,7 +144,6 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeMode
 import org.knime.core.quickform.QuickFormRepresentation;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
-import org.knime.core.util.PortTypeUtil;
 import org.knime.core.util.ThreadPool;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -1964,7 +1964,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 message = null;
             }
             result.add(MetaPortInfo.builder()
-                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build());
@@ -2012,7 +2012,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 message = null;
             }
             result.add(MetaPortInfo.builder()
-                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build());

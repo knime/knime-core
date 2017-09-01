@@ -59,12 +59,12 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -172,7 +172,7 @@ public class ReplaceHelper {
             // replacing a metanode (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
             if (m_oldNode.getNrInPorts() > 0 && container.getNrInPorts() > 1) {
                 // shift ports one index - unless we need to use the invisible optional flow var port of new node
-                if (!PortTypeUtil.getPortType(m_oldNode.getInPort(0).getPortTypeUID()).equals(FlowVariablePortObject.TYPE)) {
+                if (!PortTypeRegistry.getPortType(m_oldNode.getInPort(0).getPortTypeKey()).equals(FlowVariablePortObject.TYPE)) {
                     inShift = 1;
                 } else if (container.getInPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
                     inShift = 1;
@@ -181,7 +181,7 @@ public class ReplaceHelper {
 
             outShift = 0;
             if (m_oldNode.getNrOutPorts() > 0 && container.getNrOutPorts() > 1) {
-                if (!PortTypeUtil.getPortType(m_oldNode.getOutPort(0).getPortTypeUID()).equals(FlowVariablePortObject.TYPE)) {
+                if (!PortTypeRegistry.getPortType(m_oldNode.getOutPort(0).getPortTypeKey()).equals(FlowVariablePortObject.TYPE)) {
                     outShift = 1;
                 } else if (container.getOutPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
                     outShift = 1;

@@ -47,10 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 import org.knime.core.def.node.workflow.INodePort;
 import org.knime.core.node.port.PortType;
-import org.knime.core.util.PortTypeUtil;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
@@ -111,8 +111,8 @@ public class NodePortAdaptor implements INodePort, NodePort {
      * {@inheritDoc}
      */
     @Override
-    public PortTypeUID getPortTypeUID() {
-        return PortTypeUtil.getPortTypeUID(m_portType);
+    public PortTypeKey getPortTypeKey() {
+        return PortTypeRegistry.getPortTypeKey(m_portType);
     }
 
     /**

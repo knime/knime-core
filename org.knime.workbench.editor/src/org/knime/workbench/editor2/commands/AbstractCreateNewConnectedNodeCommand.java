@@ -62,11 +62,11 @@ import org.knime.core.def.node.workflow.INodeOutPort;
 import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.PortTypeUtil;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and
@@ -199,8 +199,8 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
             for (int leftPidx = leftFirst; leftPidx < left.getNrOutPorts(); leftPidx++) {
                 INodeOutPort leftPort = left.getOutPort(leftPidx);
                 INodeInPort rightPort = right.getInPort(rightPidx);
-                PortType leftPortType = PortTypeUtil.getPortType(leftPort.getPortTypeUID());
-                PortType rightPortType = PortTypeUtil.getPortType(rightPort.getPortTypeUID());
+                PortType leftPortType = PortTypeRegistry.getPortType(leftPort.getPortTypeKey());
+                PortType rightPortType = PortTypeRegistry.getPortType(rightPort.getPortTypeKey());
                 if (leftPortType.isSuperTypeOf(rightPortType)) {
                     if (getHostWFM().getOutgoingConnectionsFor(left.getID(),
                             leftPidx).size() == 0) {

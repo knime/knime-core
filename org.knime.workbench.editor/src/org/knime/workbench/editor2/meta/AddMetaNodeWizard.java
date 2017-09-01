@@ -57,8 +57,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.CastUtil;
-import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -223,11 +223,11 @@ public class AddMetaNodeWizard extends Wizard {
         PortType[] outPorts = new PortType[m_addPage.getOutPorts().size()];
         int i = 0;
         for (MetaPortInfo p : m_addPage.getInPorts()) {
-            inPorts[i++] = PortTypeUtil.getPortType(p.getTypeUID());
+            inPorts[i++] = PortTypeRegistry.getPortType(p.getTypeKey());
         }
         i = 0;
         for (MetaPortInfo p : m_addPage.getOutPorts()) {
-            outPorts[i++] = PortTypeUtil.getPortType(p.getTypeUID());
+            outPorts[i++] = PortTypeRegistry.getPortType(p.getTypeKey());
         }
         String name = "";
         if (m_addPage.getMetaNodeName() != null

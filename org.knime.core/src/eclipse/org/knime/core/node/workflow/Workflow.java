@@ -63,8 +63,8 @@ import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.util.Pair;
-import org.knime.core.util.PortTypeUtil;
 
 /** Container class wrapping wrapping the network of nodes forming
  * a workflow together with some of the basic functionality, especially
@@ -1181,7 +1181,7 @@ class Workflow {
                 message = null;
             }
             result[i] = MetaPortInfo.builder()
-                    .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                    .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
                     .setIsConnected(isConnected)
                     .setMessage(message)
                     .setOldIndex(i).build();
@@ -1230,7 +1230,7 @@ class Workflow {
                 message = null;
             }
             result[i] = MetaPortInfo.builder()
-                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build();

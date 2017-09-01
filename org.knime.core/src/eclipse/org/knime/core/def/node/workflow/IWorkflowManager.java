@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.def.node.NodeFactoryUID;
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 import org.knime.core.def.node.workflow.action.ICollapseIntoMetaNodeResult;
 import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.def.node.workflow.action.IExpandSubNodeResult;
@@ -205,7 +205,7 @@ public interface IWorkflowManager extends INodeContainer{
      * @param name Name of the workflow (null values will be handled)
      * @return newly created <code>WorkflowManager</code>
      */
-    IWorkflowManager createAndAddSubWorkflow(PortTypeUID[] inPorts, PortTypeUID[] outPorts, String name);
+    IWorkflowManager createAndAddSubWorkflow(PortTypeKey[] inPorts, PortTypeKey[] outPorts, String name);
 
     /** Returns true if this workflow manager is a project (which usually means
      * that the parent is {@link #ROOT}). It returns false if this workflow

@@ -44,7 +44,7 @@
  */
 package org.knime.core.def.node.workflow;
 
-import org.knime.core.def.node.port.PortTypeUID;
+import org.knime.core.def.node.port.PortTypeKey;
 
 
 /**
@@ -68,7 +68,7 @@ public interface INodePort {
     /**
      * @return the unique identifier for the port type.
      */
-    public PortTypeUID getPortTypeUID();
+    public PortTypeKey getPortTypeKey();
 
     /**
      * @return The port name.
