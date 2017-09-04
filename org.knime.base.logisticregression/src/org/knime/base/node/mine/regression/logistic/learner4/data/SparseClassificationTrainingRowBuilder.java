@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+f *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -121,6 +122,9 @@ public final class SparseClassificationTrainingRowBuilder extends AbstractTraini
         if (!type.isCompatible(NominalValue.class)) {
             throw new IllegalStateException("The DataCell \"" + targetCell.toString() + " is not nominal!");
         }
+
+        CheckUtils.checkState(!targetCell.isMissing(), "The target column contains missing values in row with ID "
+            + "\"%s\"; consider to use \"Missing Value\" node to fix it.", row.getKey().toString());
         int target = m_targetDomain.indexOf(targetCell);
         if (target < 0) {
             throw new IllegalStateException("DataCell \"" + row.getCell(target).toString()
