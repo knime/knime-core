@@ -80,6 +80,16 @@ public final class NominalValueRepresentation {
         m_totalFrequency = initialFrequency;
     }
 
+    /**
+     * Constructor to be used when reinitializing a NominalValueRepresentation object for example from PMML.
+     *
+     * @param nominalValue the string representation of the value
+     * @param assignedInteger the assigned integer representation
+     */
+    public NominalValueRepresentation(final String nominalValue, final int assignedInteger) {
+        this(nominalValue, assignedInteger, -1);
+    }
+
     /** @return the assignedInteger */
     public int getAssignedInteger() {
         return m_assignedInteger;
