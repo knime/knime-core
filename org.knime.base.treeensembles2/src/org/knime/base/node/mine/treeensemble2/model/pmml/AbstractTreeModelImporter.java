@@ -48,6 +48,9 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate;
 import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate.BooleanOperator.Enum;
 import org.dmg.pmml.FalseDocument.False;
@@ -56,19 +59,28 @@ import org.dmg.pmml.SimplePredicateDocument.SimplePredicate;
 import org.dmg.pmml.SimpleSetPredicateDocument.SimpleSetPredicate;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.dmg.pmml.TrueDocument.True;
+import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
+import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNodeSurrogateCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeColumnCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition.NumericOperator;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Handles the import of {@link AbstractTreeModel} objects from PMML
+ * Handles the import of {@link AbstractTreeModel} objects from PMML.
+ * This includes the handling of conditions as those are independent of the node type.
  *
  * @author Adrian Nembach, KNIME
  */
 abstract class AbstractTreeModelImporter<T extends AbstractTreeNode> {
+    private MetaDataMapper m_metaDataMapper;
 
     public AbstractTreeModel<T> importFromPMML(final TreeModel treeModel) {
         Node rootNode = treeModel.getNode();
@@ -89,7 +101,7 @@ abstract class AbstractTreeModelImporter<T extends AbstractTreeNode> {
         }
         SimplePredicate simplePred = pmmlNode.getSimplePredicate();
         if (simplePred != null) {
-            return handleSimplePredicate(simplePred);
+            return handleSimplePredicate(simplePred, false);
         }
         SimpleSetPredicate simpleSetPred = pmmlNode.getSimpleSetPredicate();
         if (simpleSetPred != null) {
@@ -117,11 +129,35 @@ abstract class AbstractTreeModelImporter<T extends AbstractTreeNode> {
 
     private AbstractTreeNodeSurrogateCondition handleSurrogate(final CompoundPredicate compound) {
         return null;
-
     }
 
-    private TreeNodeColumnCondition handleSimplePredicate(final SimplePredicate simplePred) {
-        return null;
+    private TreeNodeColumnCondition handleSimplePredicate(final SimplePredicate simplePred, final boolean acceptsMissings) {
+        String field = simplePred.getField();
+        if (m_metaDataMapper.isNominal(field)) {
+            TreeNominalColumnMetaData metaData = m_metaDataMapper.getNominalColumnMetaData(field);
+            return new TreeNodeNominalCondition(metaData, getValueIndex(metaData, simplePred.getValue()), acceptsMissings);
+        } else {
+            TreeNumericColumnMetaData metaData = m_metaDataMapper.getNumericColumnMetaData(field);
+            double value = Double.parseDouble(simplePred.getValue());
+            return new TreeNodeNumericCondition(metaData, value, parseNumericOperator(simplePred.getOperator()), acceptsMissings);
+        }
+    }
+
+    private static NumericOperator parseNumericOperator(final SimplePredicate.Operator.Enum operator) {
+        if (operator == SimplePredicate.Operator.LESS_OR_EQUAL) {
+            return NumericOperator.LessThanOrEqual;
+        } else if (operator == SimplePredicate.Operator.GREATER_THAN) {
+            return NumericOperator.LargerThan;
+        }
+        throw new IllegalArgumentException("The numeric operator \"" + operator + "\" is currently not supported.");
+    }
+
+    private static int getValueIndex(final TreeNominalColumnMetaData metaData, final String value) {
+        // this implementation is slow as it has to scan the nominal value representation for all values
+        NominalValueRepresentation[] values = metaData.getValues();
+        Optional<NominalValueRepresentation> optional = Arrays.stream(values).filter(v -> v.getNominalValue().equals(value)).findFirst();
+        CheckUtils.checkArgument(optional.isPresent(), "The value \"%s\" is not a valid value for field \"%s\".", value, metaData.getAttributeName());
+        return optional.get().getAssignedInteger();
     }
 
     private TreeNodeColumnCondition handleSimpleSetPredicate(final SimpleSetPredicate simpleSetPred) {
