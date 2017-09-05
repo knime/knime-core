@@ -142,6 +142,20 @@ public final class TreeNodeRegression extends AbstractTreeNode {
         return m_mean;
     }
 
+    /**
+     * @return the total sum
+     */
+    public double getTotalSum() {
+        return m_totalSum;
+    }
+
+    /**
+     * @return the sum of the squared deviation
+     */
+    public double getSumSquaredDeviation() {
+        return m_sumSquaredDeviation;
+    }
+
     public String toStringRecursion(final String indent) {
         StringBuilder b = new StringBuilder();
         TreeNodeCondition condition = getCondition();
