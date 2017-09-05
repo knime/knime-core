@@ -49,6 +49,8 @@
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.core.data.DataTableSpec;
 
@@ -66,6 +68,12 @@ interface MetaDataMapper {
      * @return the meta data object for <b>field</b>
      */
     public TreeAttributeColumnMetaData getMetaData(final String field);
+
+    public boolean isNominal(final String field);
+
+    public TreeNominalColumnMetaData getNominalColumnMetaData(final String field);
+
+    public TreeNumericColumnMetaData getNumericColumnMetaData(final String field);
 
     /**
      * Returns the {@link DataTableSpec} on which the model was learned.

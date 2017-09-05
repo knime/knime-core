@@ -154,4 +154,33 @@ class SimpleMetaDataMapper implements MetaDataMapper {
         return m_learnSpec;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isNominal(final String field) {
+        TreeAttributeColumnMetaData metaData = getMetaData(field);
+        return metaData instanceof TreeNominalColumnMetaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeNominalColumnMetaData getNominalColumnMetaData(final String field) {
+        TreeAttributeColumnMetaData metaData = getMetaData(field);
+        CheckUtils.checkArgument(metaData instanceof TreeNominalColumnMetaData, "The provided field \"%s\" is not nominal.", field);
+        return (TreeNominalColumnMetaData)metaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeNumericColumnMetaData getNumericColumnMetaData(final String field) {
+        TreeAttributeColumnMetaData metaData = getMetaData(field);
+        CheckUtils.checkArgument(metaData instanceof TreeNumericColumnMetaData, "The provided field \"%s\" is not numeric.", field);
+        return (TreeNumericColumnMetaData)metaData;
+    }
+
 }
