@@ -76,10 +76,11 @@ public class SubsetWithReplacementSelectorTest {
             assertThat("Unexpected number of included rows", included, is(i));
         }
 
-        SubsetWithReplacementRowSample sample = selector.select(rd, 100, 100);
+        SubsetWithReplacementRowSample sample = selector.select(rd, 1000, 1000);
         int uniqueRows = SamplerTestUtil.countUniqueRows(sample);
-        assertThat("A bootstrap sample will usually contain about 63.2% of the rows.", uniqueRows, is(lessThan(70)));
+        assertThat("A bootstrap sample will usually contain about 63.2% of the rows.", uniqueRows, is(lessThan(700)));
     }
+
 
     @Test
     public void testCombine() throws Exception {
