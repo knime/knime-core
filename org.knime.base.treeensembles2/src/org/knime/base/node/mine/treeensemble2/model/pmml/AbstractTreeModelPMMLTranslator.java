@@ -67,6 +67,7 @@ import org.dmg.pmml.SimplePredicateDocument.SimplePredicate.Operator;
 import org.dmg.pmml.SimpleSetPredicateDocument.SimpleSetPredicate;
 import org.dmg.pmml.SimpleSetPredicateDocument.SimpleSetPredicate.BooleanOperator.Enum;
 import org.dmg.pmml.TreeModelDocument;
+import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.dmg.pmml.TreeModelDocument.TreeModel.SplitCharacteristic;
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
@@ -110,7 +111,14 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
      */
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
-        // TODO Auto-generated method stub
+        PMML pmml = pmmlDoc.getPMML();
+        List<TreeModel> trees = pmml.getTreeModelList();
+        if (trees.size() > 1) {
+            throw new IllegalArgumentException("This translator handles only single trees.");
+        } else if (trees.isEmpty()) {
+            throw new IllegalArgumentException("The provided PMMLDocument contains no tree models.");
+        }
+        TreeModel tree = trees.get(0);
 
     }
 
@@ -157,29 +165,6 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
     private void addTreeNode(final Node pmmlNode, final T node) {
         int index = m_nodeIndex++;
         pmmlNode.setId(Integer.toString(index));
-        // TODO remove out-commented code once the deriving classes are implemented
-//        if (node instanceof TreeNodeClassification) {
-//            final TreeNodeClassification clazNode = (TreeNodeClassification)node;
-//            pmmlNode.setScore(clazNode.getMajorityClassName());
-//            float[] targetDistribution = clazNode.getTargetDistribution();
-//            NominalValueRepresentation[] targetVals = clazNode.getTargetMetaData().getValues();
-//            double sum = 0.0;
-//            for (float v : targetDistribution) {
-//                sum += v;
-//            }
-//            pmmlNode.setRecordCount(sum);
-//            // adding score distribution (class counts)
-//            for (int i = 0; i < targetDistribution.length; i++) {
-//                String className = targetVals[i].getNominalValue();
-//                double freq = targetDistribution[i];
-//                ScoreDistribution pmmlScoreDist = pmmlNode.addNewScoreDistribution();
-//                pmmlScoreDist.setValue(className);
-//                pmmlScoreDist.setRecordCount(freq);
-//            }
-//        } else if (node instanceof TreeNodeRegression) {
-//            final TreeNodeRegression regNode = (TreeNodeRegression)node;
-//            pmmlNode.setScore(Double.toString(regNode.getMean()));
-//        }
         addNodeContent(index, pmmlNode, node);
 
 
