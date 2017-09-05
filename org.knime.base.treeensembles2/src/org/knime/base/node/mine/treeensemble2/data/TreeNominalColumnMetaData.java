@@ -62,7 +62,7 @@ public final class TreeNominalColumnMetaData extends TreeAttributeColumnMetaData
     /**
      * @param attributeName
      */
-    TreeNominalColumnMetaData(final String attributeName, final NominalValueRepresentation[] values) {
+    public TreeNominalColumnMetaData(final String attributeName, final NominalValueRepresentation[] values) {
         super(attributeName);
         m_values = values;
     }

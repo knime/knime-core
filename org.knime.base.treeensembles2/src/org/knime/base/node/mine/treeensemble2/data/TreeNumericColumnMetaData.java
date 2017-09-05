@@ -85,7 +85,7 @@ public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData
     /**
      * @param attributeName
      */
-    TreeNumericColumnMetaData(final String attributeName) {
+    public TreeNumericColumnMetaData(final String attributeName) {
         super(attributeName);
     }
 
