@@ -190,6 +190,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             boolean expected = false;
             List<Pattern> currentList = occurrenceMap.get(logEvent.getLevel());
             if (currentList != null) {
+                currentList.addAll(flowConfiguration.getOptionalLogMessages());
                 Iterator<Pattern> it = currentList.iterator();
                 while (it.hasNext()) {
                     Pattern p = it.next();

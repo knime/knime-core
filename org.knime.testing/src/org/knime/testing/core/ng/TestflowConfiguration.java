@@ -105,6 +105,8 @@ class TestflowConfiguration {
 
     private final Collection<Pattern> m_requiredInfos = new ArrayList<Pattern>();
 
+    private final Collection<Pattern> m_optionalLogMessages = new ArrayList<Pattern>();
+
     private final Map<NodeID, Pattern> m_nodeWarningMessages = new HashMap<NodeID, Pattern>();
 
     private final Map<NodeID, Pattern> m_nodeErrorMessages = new HashMap<NodeID, Pattern>();
@@ -171,6 +173,10 @@ class TestflowConfiguration {
 
         for (String info : settings.requiredLogInfos()) {
             m_requiredInfos.add(createPatternFromMessage(info));
+        }
+
+        for (String msg : settings.optionalLogMessages()) {
+            m_optionalLogMessages.add(createPatternFromMessage(msg));
         }
 
         for (String id : settings.failingNodes()) {
@@ -518,6 +524,15 @@ class TestflowConfiguration {
      */
     public Collection<Pattern> getRequiredDebugs() {
         return m_requiredDebugs;
+    }
+
+    /**
+     * Returns a collection of optional log messages.
+     *
+     * @return a collection of patterns specifying the optional messages
+     */
+    public Collection<Pattern> getOptionalLogMessages() {
+        return m_optionalLogMessages;
     }
 
     /**

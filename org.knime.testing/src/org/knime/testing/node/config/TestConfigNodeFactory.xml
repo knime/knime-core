@@ -42,6 +42,14 @@
                 By default the message is treated as a plain string. By enclosing parts of the string by <tt>_!_</tt>
                 you can enter regular expressions in between, e.g. <i>File _!_.+_!_ not found</i>.
             </option>
+            <option name="Log Optional">
+                These lists contains optional error, warning, or info messages that can be present
+                in the log file after the workflows has been fully executed. Usually these
+                are messages written by a NodeLogger.<br />
+                You can also use regular expression for log messages in case there are slight variations.
+                By default the message is treated as a plain string. By enclosing parts of the string by <tt>_!_</tt>
+                you can enter regular expressions in between, e.g. <i>File _!_.+_!_ not found</i>.
+            </option>
         </tab>
         <tab name="Node settings">
             <option name="Node is expected to fail">

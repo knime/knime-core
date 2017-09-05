@@ -117,6 +117,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final DefaultListModel<String> m_logInfosModel = new DefaultListModel<>();
 
+    private final DefaultListModel<String> m_optLogMessagesModel = new DefaultListModel<>();
+
     private final JList<NodeContainer> m_allNodes = new JList<>(m_allNodesModel);
 
     private final JCheckBox m_mustFail = new JCheckBox();
@@ -243,6 +245,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         logLevels.addTab("Log Errors", createLogLevelTab(m_logErrorsModel));
         logLevels.addTab("Log Warnings", createLogLevelTab(m_logWarningsModel));
         logLevels.addTab("Log Infos", createLogLevelTab(m_logInfosModel));
+        logLevels.addTab("Log Optional", createLogLevelTab(m_optLogMessagesModel));
         return p;
     }
 
@@ -498,6 +501,12 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         }
         m_settings.requiredLogInfos(temp);
 
+        temp.clear();
+        for (int i = 0; i < m_optLogMessagesModel.getSize(); i++) {
+            temp.add(m_optLogMessagesModel.get(i));
+        }
+        m_settings.optionalLogMessages(temp);
+
         List<String> janitorIds = new ArrayList<>(m_usedJanitors.size());
         for (Map.Entry<String, JCheckBox> e : m_usedJanitors.entrySet()) {
             if (e.getValue().isSelected()) {
@@ -538,6 +547,11 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_logInfosModel.removeAllElements();
         for (String l : m_settings.requiredLogInfos()) {
             m_logInfosModel.addElement(l);
+        }
+
+        m_optLogMessagesModel.removeAllElements();
+        for (String l : m_settings.optionalLogMessages()) {
+            m_optLogMessagesModel.addElement(l);
         }
 
         fillNodeList();

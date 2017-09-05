@@ -85,6 +85,8 @@ public class TestConfigSettings {
 
     private List<String> m_requiredLogInfos = new ArrayList<String>();
 
+    private List<String> m_optionalLogMessages = new ArrayList<String>();
+
     private Set<String> m_failingNodes = new HashSet<String>();
 
     private int m_timeout = TestrunConfiguration.DEFAULT_TIMEOUT;
@@ -135,6 +137,15 @@ public class TestConfigSettings {
      */
     public List<String> requiredLogWarnings() {
         return Collections.unmodifiableList(m_requiredLogWarnings);
+    }
+
+    /**
+     * Returns a list of optional messages in the log file.
+     *
+     * @return a list with optional messages
+     */
+    public List<String> optionalLogMessages() {
+        return Collections.unmodifiableList(m_optionalLogMessages);
     }
 
     /**
@@ -205,6 +216,16 @@ public class TestConfigSettings {
     public void requiredLogInfos(final Collection<String> col) {
         m_requiredLogInfos.clear();
         m_requiredLogInfos.addAll(col);
+    }
+
+    /**
+     * Sets the optional messages in the log file.
+     *
+     * @param col a collection with optional messages
+     */
+    public void optionalLogMessages(final Collection<String> col) {
+        m_optionalLogMessages.clear();
+        m_optionalLogMessages.addAll(col);
     }
 
     /**
@@ -381,6 +402,13 @@ public class TestConfigSettings {
             m_requiredLogInfos.add(s);
         }
 
+        // since 3.5
+        temp = settings.getStringArray("optionalLogMessages", EMPTY);
+        m_optionalLogMessages.clear();
+        for (String s : temp) {
+            m_optionalLogMessages.add(s);
+        }
+
         temp = settings.getStringArray("failingNodes");
         m_failingNodes.clear();
         for (String s : temp) {
@@ -458,6 +486,12 @@ public class TestConfigSettings {
         m_requiredLogInfos.clear();
         for (String s : temp) {
             m_requiredLogInfos.add(s);
+        }
+
+        temp = settings.getStringArray("optionalLogMessages", EMPTY);
+        m_optionalLogMessages.clear();
+        for (String s : temp) {
+            m_optionalLogMessages.add(s);
         }
 
         temp = settings.getStringArray("failingNodes", EMPTY);
@@ -543,6 +577,8 @@ public class TestConfigSettings {
                 m_requiredLogWarnings.toArray(EMPTY));
         settings.addStringArray("requiredLogInfos",
                 m_requiredLogInfos.toArray(EMPTY));
+        settings.addStringArray("optionalLogMessages",
+                m_optionalLogMessages.toArray(EMPTY));
         settings.addStringArray("failingNodes", m_failingNodes.toArray(EMPTY));
 
         NodeSettingsWO subs = settings.addNodeSettings("requiredNodeWarnings");
