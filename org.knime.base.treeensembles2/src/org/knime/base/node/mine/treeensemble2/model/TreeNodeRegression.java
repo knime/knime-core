@@ -57,6 +57,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.base.node.mine.treeensemble2.data.RegressionPriors;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
@@ -96,6 +97,25 @@ public final class TreeNodeRegression extends AbstractTreeNode {
         m_mean = targetPriors.getMean();
         m_totalSum = targetPriors.getNrRecords();
         m_sumSquaredDeviation = targetPriors.getSumSquaredDeviation();
+    }
+
+    /**
+     * Constructor intended to be used when reading models from PMML.
+     *
+     * @param targetMetaData the meta data information for the target column
+     * @param signature the signature of this tree node
+     * @param mean the mean of the rows falling into this tree node
+     * @param totalSum the total sum of the rows falling into this tree node
+     * @param sumSquaredDeviation the sum of the squared deviation of the row falling into this tree node
+     * @param childNodes the children of this tree node
+     */
+    public TreeNodeRegression(final TreeTargetColumnMetaData targetMetaData, final TreeNodeSignature signature,
+        final double mean, final double totalSum,
+        final double sumSquaredDeviation, final TreeNodeRegression[] childNodes) {
+        super(signature, targetMetaData, childNodes);
+            m_mean = mean;
+            m_totalSum = totalSum;
+            m_sumSquaredDeviation = sumSquaredDeviation;
     }
 
     /**
