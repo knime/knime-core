@@ -44,34 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.09.2017 (Adrian): created
+ *   06.09.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import org.dmg.pmml.NodeDocument.Node;
-import org.dmg.pmml.TreeModelDocument.TreeModel;
-import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 
 /**
- * Handles the import of {@link AbstractTreeModel} objects from PMML.
- * This includes the handling of conditions as those are independent of the node type.
+ * Parses PMML conditions of a {@link Node} into {@link TreeNodeCondition} objects.
  *
  * @author Adrian Nembach, KNIME
  */
-abstract class AbstractTreeModelImporter<T extends AbstractTreeNode> {
-    private MetaDataMapper m_metaDataMapper;
-    private ConditionParser m_conditionParser;
+interface ConditionParser {
 
-    public AbstractTreeModel<T> importFromPMML(final TreeModel treeModel) {
-        Node rootNode = treeModel.getNode();
-
-        return null;
-    }
-
-    private T createNodeFromPMML(final Node pmmlNode) {
-
-        return null;
-    }
-
+    /**
+     * Parses the condition of <b>node</b> into a {@link TreeNodeCondition} that
+     * can be assigned to an {@link AbstractTreeNode}.
+     *
+     * @param node the PMML {@link Node} object from which to extract the condition
+     * @return a KNIME {@link TreeNodeCondition}
+     */
+    public TreeNodeCondition parseCondition(final Node node);
 }
