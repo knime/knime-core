@@ -151,7 +151,7 @@ import org.w3c.dom.Element;
 public final class Node implements NodeModelWarningListener {
 
     /** The node logger for this class. */
-    private final NodeLogger m_logger;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Node.class);
 
     /**
      * Config for node (and node container) settings which are shown in the
@@ -259,7 +259,6 @@ public final class Node implements NodeModelWarningListener {
         m_name = m_factory.getNodeName().intern();
         m_model = m_factory.callCreateNodeModel(context);
         m_model.addWarningListener(this);
-        m_logger = NodeLogger.getLogger(m_name);
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
@@ -335,7 +334,7 @@ public final class Node implements NodeModelWarningListener {
                 saveInternals(internTempDir, exec.createSubProgress(0.0));
                 result.setNodeInternDir(new ReferencedFile(internTempDir));
             } catch (IOException ioe) {
-                m_logger.error("Unable to save internals", ioe);
+                LOGGER.error("Unable to save internals", ioe);
             }
         }
         if (m_internalHeldPortObjects != null) {
@@ -403,7 +402,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public void loadDataAndInternals(final NodeContentPersistor loader,
             final ExecutionMonitor exec, final LoadResult loadResult) {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         boolean hasContent = loader.hasContent();
@@ -453,14 +452,14 @@ public final class Node implements NodeModelWarningListener {
                 if (e instanceof IOException) {
                     error = "Loading model internals failed: " + e.getMessage();
                     if (loader.mustWarnOnDataLoadError()) {
-                        m_logger.debug(error, e);
+                        LOGGER.debug(error, e);
                     } else {
-                        m_logger.debug(error);
+                        LOGGER.debug(error);
                     }
                 } else {
                     error = "Caught \"" + e.getClass().getSimpleName() + "\", "
                         + "Loading model internals failed: " + e.getMessage();
-                    m_logger.coding(error, e);
+                    LOGGER.coding(error, e);
                 }
                 loadResult.addError(error, true);
             } finally {
@@ -530,7 +529,7 @@ public final class Node implements NodeModelWarningListener {
         } catch (Throwable t) {
             String msg = "Loading model settings failed, caught \""
                     + t.getClass().getSimpleName() + "\": " + t.getMessage();
-            m_logger.coding(msg, t);
+            LOGGER.coding(msg, t);
             throw new InvalidSettingsException(msg, t);
         }
     }
@@ -545,7 +544,7 @@ public final class Node implements NodeModelWarningListener {
     public void loadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         /* Note, as of 2.8 the argument contains ONLY the actual settings, no variable settings. The root element
          * is passed to the NodeModel. In 2.7- the root element was "model" and "variableSettings"; */
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
         try {
@@ -555,7 +554,7 @@ public final class Node implements NodeModelWarningListener {
         } catch (Throwable t) {
             String msg = "Loading model settings failed, caught \""
                     + t.getClass().getSimpleName() + "\": " + t.getMessage();
-            m_logger.coding(msg, t);
+            LOGGER.coding(msg, t);
             throw new InvalidSettingsException(msg, t);
         }
     }
@@ -570,7 +569,7 @@ public final class Node implements NodeModelWarningListener {
      */
     // (previously called areSettingsValid with boolean return type)
     public void validateModelSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
         /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
@@ -579,7 +578,7 @@ public final class Node implements NodeModelWarningListener {
         } catch (InvalidSettingsException e) {
             throw e;
         } catch (Throwable t) {
-            m_logger.coding(String.format("Validating settings failed - \"%s\" threw %s: %s",
+            LOGGER.coding(String.format("Validating settings failed - \"%s\" threw %s: %s",
                 m_model.getClass().getName(), t.getClass().getSimpleName(), t.getMessage()), t);
             throw new InvalidSettingsException("Coding issue: " + t.getMessage(), t);
         }
@@ -849,7 +848,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public boolean execute(final PortObject[] rawInData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         // clear the message object
@@ -1040,7 +1039,7 @@ public final class Node implements NodeModelWarningListener {
         if (previousInternalHeldTables != null
                 && !(this.isModelCompatibleTo(LoopStartNode.class) || this.isModelCompatibleTo(LoopEndNode.class))
                 && !((exEnv != null) && (exEnv.reExecute()))) {
-            m_logger.coding("Found internal tables for non loop node: " + getName());
+            LOGGER.coding("Found internal tables for non loop node: " + getName());
         }
 
         if (m_model instanceof BufferedDataTableHolder || m_model instanceof PortObjectHolder) {
@@ -1198,7 +1197,7 @@ public final class Node implements NodeModelWarningListener {
                     // TODO ensure model was skipped during configure?
                 } else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
                     createErrorMessageAndNotify("Invalid output port object at port " + i);
-                    m_logger.error("  (Wanted: " + thisType.getPortObjectClass().getName() + ", "
+                    LOGGER.error("  (Wanted: " + thisType.getPortObjectClass().getName() + ", "
                     + "actual: " + newOutData[i].getClass().getName() + ")");
                     return false;
                 }
@@ -1226,7 +1225,7 @@ public final class Node implements NodeModelWarningListener {
                 if ((portSpec != null) && !tolerateDifferentSpecs) {
                     if (!portSpec.equalStructure(newPortSpec)) {
                         String errorMsg = "DataSpec generated by configure does not match spec after execution.";
-                        m_logger.coding(errorMsg);
+                        LOGGER.coding(errorMsg);
                         createErrorMessageAndNotify(errorMsg);
                     }
                 }
@@ -1366,9 +1365,9 @@ public final class Node implements NodeModelWarningListener {
      */
     public void createWarningMessageAndNotify(final String warningMessage,
             final Throwable t) {
-        m_logger.warn(warningMessage);
+        LOGGER.warn(warningMessage);
         if (t != null) {
-            m_logger.debug(warningMessage, t);
+            LOGGER.debug(warningMessage, t);
         }
         notifyMessageListeners(new NodeMessage(NodeMessage.Type.WARNING,
                 warningMessage));
@@ -1395,9 +1394,9 @@ public final class Node implements NodeModelWarningListener {
      */
     public void createErrorMessageAndNotify(final String errorMessage, final
             Throwable t) {
-        m_logger.error(errorMessage);
+        LOGGER.error(errorMessage);
         if (t != null) {
-            m_logger.debug(errorMessage, t);
+            LOGGER.debug(errorMessage, t);
         }
         notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
                 errorMessage));
@@ -1441,10 +1440,10 @@ public final class Node implements NodeModelWarningListener {
      * Resets this node without re-configuring it.
      */
     public void reset() {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
-        m_logger.debug("reset");
+        LOGGER.debug("reset");
         clearLoopContext();
         setPauseLoopExecution(false);
         m_model.resetModel();
@@ -1474,17 +1473,17 @@ public final class Node implements NodeModelWarningListener {
             FlowObjectStack inStack = getFlowObjectStack();
             FlowLoopContext flc = inStack.peek(FlowLoopContext.class);
             if (flc != null && flc.isInactiveScope()) {
-                m_logger.coding("Encountered an inactive FlowLoopContext in a loop restart.");
+                LOGGER.coding("Encountered an inactive FlowLoopContext in a loop restart.");
                 // continue with historically "correct" solution:
                 flc = inStack.peekScopeContext(FlowLoopContext.class, false);
             }
             if (flc == null && !this.isModelCompatibleTo(LoopStartNode.class)) {
-                m_logger.coding("Encountered a loop restart action but there is"
+                LOGGER.coding("Encountered a loop restart action but there is"
                         + " no loop context on the flow object stack (node "
                         + getName() + ")");
             }
         }
-        m_logger.debug("clean output ports.");
+        LOGGER.debug("clean output ports.");
         Set<BufferedDataTable> disposableTables =
             new LinkedHashSet<BufferedDataTable>();
         for (int i = 0; i < m_outputs.length; i++) {
@@ -1627,14 +1626,14 @@ public final class Node implements NodeModelWarningListener {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         m_model.unregisterAllViews();
         try {
             m_model.onDispose();
         } catch (Throwable t) {
-            m_logger.error(t.getClass().getSimpleName() + " during cleanup of node: " + t.getMessage(), t);
+            LOGGER.error(t.getClass().getSimpleName() + " during cleanup of node: " + t.getMessage(), t);
         }
         cleanOutPorts(false);
     }
@@ -1664,7 +1663,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public boolean configure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper configureHelper) {
         boolean success = false;
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
         synchronized (m_configureLock) {
             // reset message object
@@ -1718,7 +1717,7 @@ public final class Node implements NodeModelWarningListener {
                         m_outputs[j].spec = InactiveBranchPortObjectSpec.INSTANCE;
                     }
                     if (success) {
-                        m_logger.debug("Configure skipped. (" + getName() + " in inactive branch.)");
+                        LOGGER.debug("Configure skipped. (" + getName() + " in inactive branch.)");
                     }
                     return true;
                 }
@@ -1779,7 +1778,7 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         if (success) {
-            m_logger.debug("Configure succeeded. (" + this.getName() + ")");
+            LOGGER.debug("Configure succeeded. (" + this.getName() + ")");
         }
         return success;
     }
@@ -1822,14 +1821,14 @@ public final class Node implements NodeModelWarningListener {
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
     public AbstractNodeView<?> getView(final int viewIndex, final String title) {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         try {
             return m_factory.createAbstractNodeView(viewIndex, m_model);
         } catch (Throwable e) {
             String errorMsg = "View instantiation failed: " + e.getMessage();
-            m_logger.error(errorMsg, e);
+            LOGGER.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }
     }
@@ -1884,19 +1883,19 @@ public final class Node implements NodeModelWarningListener {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView(final String title) {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         if (!(m_factory instanceof InteractiveNodeFactoryExtension)) {
             String errorMsg = "Interactive View instantiation failed: wrong factory!";
-            m_logger.error(errorMsg);
+            LOGGER.error(errorMsg);
             throw new RuntimeException(errorMsg);
         }
         try {
             return (V)((InteractiveNodeFactoryExtension)m_factory).createInteractiveView(m_model);
         } catch (Throwable e) {
             String errorMsg = "Interactive View instantiation failed: " + e.getMessage();
-            m_logger.error(errorMsg, e);
+            LOGGER.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }
     }
@@ -1989,9 +1988,9 @@ public final class Node implements NodeModelWarningListener {
             } catch (Exception ise) {
                 final String msg = "Could not load current value into dialog: " + ise.getMessage();
                 if (ise instanceof InvalidSettingsException) {
-                    m_logger.warn(msg, ise);
+                    LOGGER.warn(msg, ise);
                 } else {
-                    m_logger.coding(msg, ise);
+                    LOGGER.coding(msg, ise);
                 }
             }
 
@@ -2069,9 +2068,9 @@ public final class Node implements NodeModelWarningListener {
         try {
             m_model.saveSettingsTo(model);
         } catch (Exception e) {
-            m_logger.error("Could not save model", e);
+            LOGGER.error("Could not save model", e);
         } catch (Throwable t) {
-            m_logger.fatal("Could not save model", t);
+            LOGGER.fatal("Could not save model", t);
         }
     }
 
@@ -2082,16 +2081,16 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      */
     public void saveModelSettingsTo(final NodeSettingsWO modelSettings) {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
         /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
             m_model.saveSettingsTo(modelSettings);
         } catch (Exception e) {
-            m_logger.error("Could not save model", e);
+            LOGGER.error("Could not save model", e);
         } catch (Throwable t) {
-            m_logger.fatal("Could not save model", t);
+            LOGGER.fatal("Could not save model", t);
         }
     }
 
@@ -2105,7 +2104,7 @@ public final class Node implements NodeModelWarningListener {
     // Called by 3rd party executor
     public void saveInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
 
@@ -2129,7 +2128,7 @@ public final class Node implements NodeModelWarningListener {
                     errMsg = "I/O error while saving internals: " + details;
                 } else {
                     errMsg = "Unable to save internals: " + details;
-                    m_logger.coding("saveInternals() "
+                    LOGGER.coding("saveInternals() "
                             + "should only cause IOException.", t);
                 }
                 createErrorMessageAndNotify(errMsg, t);
@@ -2151,7 +2150,7 @@ public final class Node implements NodeModelWarningListener {
     // Called by 3rd party executor
     public void loadInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
         if (m_model.hasContent()) {
@@ -2167,7 +2166,7 @@ public final class Node implements NodeModelWarningListener {
                 createErrorMessageAndNotify("Unable to load internals: "
                         + details, e);
                 if (!(e instanceof IOException)) {
-                    m_logger.coding("loadInternals() "
+                    LOGGER.coding("loadInternals() "
                             + "should only cause IOException.", e);
                 }
             }
@@ -2196,7 +2195,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public void removeMessageListener(final NodeMessageListener listener) {
         if (!m_messageListeners.remove(listener)) {
-            m_logger.debug("listener was not registered: " + listener);
+            LOGGER.debug("listener was not registered: " + listener);
         }
     }
 
@@ -2212,7 +2211,7 @@ public final class Node implements NodeModelWarningListener {
                 listener.messageChanged(new NodeMessageEvent(
                         new NodeID(0), message));
             } catch (Throwable t) {
-                m_logger.error("Exception while notifying node listeners", t);
+                LOGGER.error("Exception while notifying node listeners", t);
             }
         }
     }
@@ -2479,7 +2478,7 @@ public final class Node implements NodeModelWarningListener {
      * @return true (default) if loop body nodes have to be reset/configure during each iteration.
      */
     public boolean resetAndConfigureLoopBody() {
-        m_logger.assertLog(NodeContext.getContext() != null,
+        LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
 
         return getNodeModel().resetAndConfigureLoopBody();
