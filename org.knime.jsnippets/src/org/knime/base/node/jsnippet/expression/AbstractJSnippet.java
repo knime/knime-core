@@ -63,8 +63,7 @@ import org.knime.core.node.NodeLogger;
  * @author Heiko Hofer
  */
 public abstract class AbstractJSnippet {
-    private static NodeLogger LOGGER = NodeLogger.getLogger(
-        AbstractJSnippet.class);
+    private static NodeLogger LOGGER = NodeLogger.getLogger(AbstractJSnippet.class);
 
     /** the id of the current row. */
     public String ROWID = "";
@@ -81,7 +80,7 @@ public abstract class AbstractJSnippet {
     private List<String> m_columns;
     private FlowVariableRepository m_flowVars;
 
-    private NodeLogger m_logger = NodeLogger.getLogger("Java Snippet");
+    private NodeLogger m_logger;
 
     /**
      * Create new instance.

@@ -75,7 +75,7 @@ import org.w3c.dom.Element;
 public final class NodeDescription28Proxy extends NodeDescription {
     private static final XmlOptions OPTIONS = new XmlOptions();
 
-    private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription13Proxy.class);
+    private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription28Proxy.class);
 
     static {
         Map<String, String> namespaceMap = new HashMap<String, String>(1);

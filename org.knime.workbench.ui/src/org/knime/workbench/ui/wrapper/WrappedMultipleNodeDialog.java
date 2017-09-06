@@ -81,7 +81,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * @author Peter Ohl, KNIME.com AG, Switzerland
  */
 public class WrappedMultipleNodeDialog extends Dialog {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedMultipleNodeDialog.class.getName());
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedMultipleNodeDialog.class);
 
     private final WorkflowManager m_parentMgr;
 

@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
-import org.knime.base.node.preproc.colconvert.ColConvertNodeModel;
 import org.knime.base.node.preproc.pmml.PMMLStringConversionTranslator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -71,7 +70,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -91,10 +89,6 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * @author cebron, University of Konstanz
  */
 public class NumberToStringNodeModel extends NodeModel {
-
-    /* Node Logger of this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ColConvertNodeModel.class);
 
     /**
      * Key for the included columns in the NodeSettings.
@@ -181,7 +175,7 @@ public class NumberToStringNodeModel extends NodeModel {
                 warnings.append("Problems occurred, see Console messages.\n");
             }
             if (warnings.length() > 0) {
-                LOGGER.warn(errorMessage);
+                getLogger().warn(errorMessage);
                 setWarningMessage(warnings.toString());
             }
         }

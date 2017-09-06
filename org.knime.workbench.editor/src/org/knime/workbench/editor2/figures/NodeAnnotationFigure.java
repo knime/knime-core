@@ -118,8 +118,7 @@ public class NodeAnnotationFigure extends Figure {
             public int compare(final AnnotationData.StyleRange o1,
                     final AnnotationData.StyleRange o2) {
                 if (o1.getStart() == o2.getStart()) {
-                    NodeLogger.getLogger(AnnotationEditPart.class).error(
-                            "Ranges overlap");
+                    NodeLogger.getLogger(NodeAnnotationFigure.class).error("Ranges overlap");
                     return 0;
                 } else {
                     return o1.getStart() < o2.getStart() ? -1 : 1;

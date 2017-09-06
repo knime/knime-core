@@ -138,7 +138,7 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
                 m_lastCreatedNode.loadModelSettingsFrom(modelSettings);
             }
         } catch (InvalidSettingsException e) {
-            NodeLogger.getLogger(CopySingleNodeContainerPersistor.class).debug(
+            NodeLogger.getLogger(CopyNativeNodeContainerPersistor.class).debug(
                 "Failed to copy settings into node target: " + e.getMessage(), e);
         }
         m_nodePersistor.loadInto(m_lastCreatedNode);

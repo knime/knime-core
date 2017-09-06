@@ -89,7 +89,7 @@ import org.knime.timeseries.node.timemissvaluehandler.tshandler.TSNextHandler;
  */
 @Deprecated
 final class TimeMissingValueHandlingColSetting {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(TimeMissValueNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(TimeMissingValueHandlingColSetting.class);
 
     /** NodeSettings key: write method. */
     static final String CFG_METHOD = "miss_method";

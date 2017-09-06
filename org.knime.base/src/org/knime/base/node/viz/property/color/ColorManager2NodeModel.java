@@ -69,7 +69,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -89,9 +88,6 @@ import org.knime.core.node.port.viewproperty.ColorHandlerPortObject;
  * @author Thomas Gabriel, University of Konstanz
  */
 class ColorManager2NodeModel extends NodeModel {
-
-    /** Logger for this package. */
-    static final NodeLogger LOGGER = NodeLogger.getLogger("Color Manager");
 
     /** The selected column. */
     private String m_column;
@@ -374,7 +370,7 @@ class ColorManager2NodeModel extends NodeModel {
                 Color c1 = new Color(settings.getInt(MAX_COLOR), true);
                 m_map.put(MAX_VALUE, ColorAttr.getInstance(c1));
                 if (c0.equals(c1)) {
-                    LOGGER.info("Lower and upper color are equal: " + c0);
+                    getLogger().info("Lower and upper color are equal: " + c0);
                 }
             }
         }

@@ -261,11 +261,11 @@ abstract class AbstractInjector implements Runnable {
                             }
                         }
                     } catch (PartInitException ex) {
-                        NodeLogger.getLogger(IntroPage.class).error(
+                        NodeLogger.getLogger(AbstractInjector.class).error(
                             "Could not open web browser with intro page: " + ex.getMessage(), ex);
                     } catch (SecurityException | NoSuchFieldException | IllegalArgumentException
                             | IllegalAccessException ex) {
-                        NodeLogger.getLogger(IntroPage.class).error(
+                        NodeLogger.getLogger(AbstractInjector.class).error(
                             "Could not attach location listener to web browser: " + ex.getMessage(), ex);
                     }
                 }
@@ -296,7 +296,7 @@ abstract class AbstractInjector implements Runnable {
         } catch (AssertionFailedException ex) {
             // may happen if the editor "ref" points to a resource that doesn't exist any more
             NodeLogger
-                .getLogger(IntroPage.class)
+                .getLogger(AbstractInjector.class)
                 .error(
                     "Could not get editor input, probably the resource was removed outside Eclipse: " + ex.getMessage(),
                     ex);

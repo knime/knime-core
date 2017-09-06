@@ -84,8 +84,7 @@ import org.knime.core.node.NodeLogger;
  */
 public final class DataColumnSpecCreator {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(DataColumnSpec.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataColumnSpecCreator.class);
 
     /** Keeps the column name. */
     private String m_name;

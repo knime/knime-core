@@ -110,7 +110,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private final NodeDialogPane m_dialogPane;
 
-    private final NodeLogger m_logger;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedNodeDialog.class);
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -132,7 +132,6 @@ public class WrappedNodeDialog extends Dialog {
         this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
-        m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
     }
 
     /**
@@ -547,17 +546,17 @@ public class WrappedNodeDialog extends Dialog {
                 return true;
             }
         } catch (InvalidSettingsException ise) {
-            m_logger.warn("failed to apply settings: " + ise.getMessage(), ise);
+            LOGGER.warn("failed to apply settings: " + ise.getMessage(), ise);
             showWarningMessage("Invalid settings:\n" + ise.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
         } catch (IllegalStateException ex) {
-            m_logger.warn("failed to apply settings: " + ex.getMessage(), ex);
+            LOGGER.warn("failed to apply settings: " + ex.getMessage(), ex);
             showWarningMessage("Invalid node state:\n" + ex.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
         } catch (Throwable t) {
-            m_logger.error("failed to apply settings: " + t.getMessage(), t);
+            LOGGER.error("failed to apply settings: " + t.getMessage(), t);
             showErrorMessage(t.getClass().getSimpleName() + ": "
                     + t.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears

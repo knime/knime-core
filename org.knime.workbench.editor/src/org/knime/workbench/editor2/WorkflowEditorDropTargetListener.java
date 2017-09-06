@@ -97,7 +97,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      *
      */
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowEditorFileDropTargetListener.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowEditorDropTargetListener.class);
 
     /**
      * The minimum distance between two nodes which is need to insert a new one. If the distance between two nodes is

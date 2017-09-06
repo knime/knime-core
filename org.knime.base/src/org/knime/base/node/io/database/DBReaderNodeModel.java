@@ -60,7 +60,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -81,8 +80,6 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger("Database Reader");
 
     protected final DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
 

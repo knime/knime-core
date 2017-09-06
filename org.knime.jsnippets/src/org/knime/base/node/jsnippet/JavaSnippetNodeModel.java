@@ -64,7 +64,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowVariable;
@@ -80,15 +79,13 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
 
     private JavaSnippetSettings m_settings;
     private JavaSnippet m_snippet;
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-        "Java Snippet");
     /**
      * Create a new instance.
      */
     public JavaSnippetNodeModel() {
         m_settings = new JavaSnippetSettings();
         m_snippet = new JavaSnippet();
-        m_snippet.attachLogger(LOGGER);
+        m_snippet.attachLogger(getLogger());
     }
 
     /**
@@ -177,7 +174,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
                 JavaSnippetDocument.GUARDED_BODY_END);
             boolean uses = snippetCode.contains(JavaSnippet.ROWINDEX);
             if (uses) {
-                LOGGER.warn(
+                getLogger().warn(
                     "The ROWINDEX field is used in the snippet. Calculations cannot be done in distributed manner!");
             }
             return uses;
@@ -199,7 +196,7 @@ public class JavaSnippetNodeModel extends AbstractConditionalStreamingNodeModel 
                 JavaSnippetDocument.GUARDED_BODY_END);
             boolean uses = snippetCode.contains(JavaSnippet.ROWCOUNT);
             if (uses) {
-                LOGGER
+                getLogger()
                     .warn("The ROWCOUNT field is used in the snippet. Calculations cannot be done in streamed manner!");
             }
             return uses;

@@ -109,7 +109,7 @@ class DatabaseUtilityRegistry {
                     final DatabaseUtility utility = (DatabaseUtility)utilityElement.createExecutableExtension("class");
                     addUtility(utility);
                 } catch (CoreException ex) {
-                    NodeLogger.getLogger(DatabaseUtility.class).error(
+                    NodeLogger.getLogger(DatabaseUtilityRegistry.class).error(
                         "Could not create registered database utility "
                             + utilityElement.getAttribute("class") + " from plug-in "
                                 + utilityElement.getNamespaceIdentifier() + ": " + ex.getMessage(), ex);

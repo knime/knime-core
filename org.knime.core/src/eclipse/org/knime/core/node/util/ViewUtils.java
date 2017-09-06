@@ -64,7 +64,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -315,7 +314,7 @@ public final class ViewUtils {
 
             return new ImageIcon(loader.getResource(correctedPath));
         } catch (Exception e) {
-            NodeLogger.getLogger(DataValue.class).debug(
+            NodeLogger.getLogger(ViewUtils.class).debug(
                     "Unable to load icon at path " + path, e);
             return null;
         }

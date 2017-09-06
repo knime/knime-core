@@ -59,7 +59,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
@@ -74,9 +73,6 @@ import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
  */
 public class StringManipulationNodeModel extends AbstractConditionalStreamingNodeModel
     implements FlowVariableProvider {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            "String Manipulation");
 
     private StringManipulationSettings m_settings;
 
@@ -163,7 +159,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
     protected boolean usesRowCount() {
         boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWCOUNT);
         if (uses) {
-            LOGGER
+            getLogger()
                 .warn("The ROWCOUNT field is used in the expression. Manipulations cannot be done in streamed manner!");
         }
         return uses;
@@ -178,7 +174,7 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
     protected boolean usesRowIndex() {
         boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWINDEX);
         if (uses) {
-            LOGGER
+            getLogger()
                 .warn("The ROWINDEX field is used in the expression. Manipulations cannot be done in distributed manner!");
         }
         return uses;

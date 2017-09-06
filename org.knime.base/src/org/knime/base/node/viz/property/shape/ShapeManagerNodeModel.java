@@ -54,15 +54,14 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.property.ShapeFactory;
+import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.ShapeModelNominal;
-import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -76,16 +75,13 @@ import org.knime.core.node.port.viewproperty.ShapeHandlerPortObject;
  * {@link org.knime.core.data.DataColumnSpec} domain. The created
  * {@link org.knime.core.data.property.ShapeHandler} is then set in the column
  * spec.
- * 
+ *
  * @see ShapeManagerNodeDialogPane
  * @see ShapeHandler
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 class ShapeManagerNodeModel extends NodeModel {
-
-    /** Logger for this package. */
-    static final NodeLogger LOGGER = NodeLogger.getLogger("Shape Manager");
 
     /** Stores the mapping from column value to shape. */
     private final Map<DataCell, Shape> m_map;
@@ -116,12 +112,12 @@ class ShapeManagerNodeModel extends NodeModel {
 
     /**
      * Is invoked during the node's execution to make the shape settings.
-     * 
+     *
      * @param data the input data array
      * @param exec the execution monitor
      * @return the same input data table with assigned shapes to one column
      * @throws CanceledExecutionException if user canceled execution
-     * 
+     *
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
@@ -146,7 +142,7 @@ class ShapeManagerNodeModel extends NodeModel {
      * Appends the given <code>ShapeHandler</code> to the given
      * <code>DataTableSpec</code> for the given column. If the spec already
      * contains a ShapeHandler, it will be removed and replaced by the new one.
-     * 
+     *
      * @param spec to which the ShapeHandler is appended
      * @param column for this column
      * @param shapeHandler ShapeHandler

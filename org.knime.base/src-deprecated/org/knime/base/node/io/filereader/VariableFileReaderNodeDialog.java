@@ -94,7 +94,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -121,9 +120,6 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
 @Deprecated
 public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         ItemListener {
-
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileReaderNodeDialog.class);
 
     private static final int HORIZ_SPACE = 10;
 
@@ -1462,13 +1458,13 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         synchronized (m_analysisRunning) {
             // wait until we have a chance to run the analysis
             while (m_analysisRunning.booleanValue()) {
-                LOGGER.error("Internal error: Re-entering analysis thread - "
+                getLogger().error("Internal error: Re-entering analysis thread - "
                         + "canceling it - waiting for it to finish...");
                 m_analysisExecMonitor.setExecuteInterrupted();
                 // wait until it finishes
                 try {
                     m_analysisRunning.wait();
-                    LOGGER.error("Alright - continuing with new analysis...");
+                    getLogger().error("Alright - continuing with new analysis...");
                 } catch (InterruptedException ie) {
                     // huh?!?
                 }

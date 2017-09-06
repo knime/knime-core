@@ -163,7 +163,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContext;
@@ -1649,7 +1648,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             try {
                 svgExporter.exportToSVG(this, svgFile);
             } catch (Exception e) {
-                NodeLogger.getLogger(FileWorkflowPersistor.class).error("Could not save workflow SVG", e);
+                LOGGER.error("Could not save workflow SVG", e);
             }
         }
     }
