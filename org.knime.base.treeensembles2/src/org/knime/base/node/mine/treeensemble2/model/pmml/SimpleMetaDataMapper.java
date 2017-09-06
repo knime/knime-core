@@ -57,18 +57,23 @@ import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * This implementation of MetaDataMapper only supports models that were build with ordinary KNIME tables containing no vectors.
+ * This implementation of MetaDataMapper only supports models that were build with
+ * ordinary KNIME tables containing no vectors.
  *
  * @author Adrian Nembach, KNIME
  */
@@ -76,6 +81,7 @@ class SimpleMetaDataMapper implements MetaDataMapper {
 
     private final DataTableSpec m_learnSpec;
     private final Map<String, TreeAttributeColumnMetaData> m_metaDataMap;
+    private final TreeTargetColumnMetaData m_targetColumnMetaData;
 
     /**
      * Creates a SimpleMetaDataMapper by extracting the meta data information from the data dictionary of the provided
@@ -88,7 +94,22 @@ class SimpleMetaDataMapper implements MetaDataMapper {
         dataDictTrans.initializeFrom(pmmlDoc);
         DataTableSpec tableSpec = dataDictTrans.getDataTableSpec();
         m_learnSpec = tableSpec;
-        m_metaDataMap = createMetaDataMapFromSpec(tableSpec);
+        ColumnRearranger cr = new ColumnRearranger(tableSpec);
+        // Remove the target column (assumes that the last column is the target)
+        final int targetIdx = tableSpec.getNumColumns() - 1;
+        cr.remove(targetIdx);
+        m_metaDataMap = createMetaDataMapFromSpec(cr.createSpec());
+        m_targetColumnMetaData = createTargetMetaDataFromSpec(tableSpec.getColumnSpec(targetIdx));
+    }
+
+    private static TreeTargetColumnMetaData createTargetMetaDataFromSpec(final DataColumnSpec targetSpec) {
+        if (targetSpec.getType().isCompatible(DoubleCell.class)) {
+            return new TreeTargetNumericColumnMetaData(targetSpec.getName());
+        } else if (targetSpec.getType().isCompatible(StringCell.class)) {
+            return new TreeTargetNominalColumnMetaData(targetSpec.getName(), extractNomValReps(targetSpec));
+        }
+        throw new IllegalArgumentException("The target column is of incompatible type \"" + targetSpec.getType()
+        + "\".");
     }
 
     private static Map<String, TreeAttributeColumnMetaData> createMetaDataMapFromSpec(final DataTableSpec tableSpec) {
@@ -118,14 +139,16 @@ class SimpleMetaDataMapper implements MetaDataMapper {
     }
 
     private static TreeNominalColumnMetaData createNominalMetaData(final DataColumnSpec colSpec, final int colIdx) {
-        TreeNominalColumnMetaData metaData = new TreeNominalColumnMetaData(colSpec.getName(), extractNomValReps(colSpec));
+        TreeNominalColumnMetaData metaData = new TreeNominalColumnMetaData(colSpec.getName(),
+            extractNomValReps(colSpec));
         metaData.setAttributeIndex(colIdx);
         return metaData;
     }
 
     private static NominalValueRepresentation[] extractNomValReps(final DataColumnSpec colSpec) {
         DataColumnDomain domain = colSpec.getDomain();
-        CheckUtils.checkArgument(domain.hasValues(), "The data dictionary of the field \"%s\" has no possible values assigned.", colSpec.getName());
+        CheckUtils.checkArgument(domain.hasValues(),
+            "The data dictionary of the field \"%s\" has no possible values assigned.", colSpec.getName());
         Set<DataCell> kvalues = domain.getValues();
         int assignedInteger = 0;
         NominalValueRepresentation[] values = new NominalValueRepresentation[kvalues.size()];
@@ -169,7 +192,8 @@ class SimpleMetaDataMapper implements MetaDataMapper {
     @Override
     public TreeNominalColumnMetaData getNominalColumnMetaData(final String field) {
         TreeAttributeColumnMetaData metaData = getMetaData(field);
-        CheckUtils.checkArgument(metaData instanceof TreeNominalColumnMetaData, "The provided field \"%s\" is not nominal.", field);
+        CheckUtils.checkArgument(metaData instanceof TreeNominalColumnMetaData,
+            "The provided field \"%s\" is not nominal.", field);
         return (TreeNominalColumnMetaData)metaData;
     }
 
@@ -179,8 +203,17 @@ class SimpleMetaDataMapper implements MetaDataMapper {
     @Override
     public TreeNumericColumnMetaData getNumericColumnMetaData(final String field) {
         TreeAttributeColumnMetaData metaData = getMetaData(field);
-        CheckUtils.checkArgument(metaData instanceof TreeNumericColumnMetaData, "The provided field \"%s\" is not numeric.", field);
+        CheckUtils.checkArgument(metaData instanceof TreeNumericColumnMetaData,
+            "The provided field \"%s\" is not numeric.", field);
         return (TreeNumericColumnMetaData)metaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeTargetColumnMetaData getTargetColumnMetaData() {
+        return m_targetColumnMetaData;
     }
 
 }

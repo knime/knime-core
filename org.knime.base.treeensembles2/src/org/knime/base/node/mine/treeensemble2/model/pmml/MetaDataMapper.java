@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.core.data.DataTableSpec;
 
@@ -69,10 +70,31 @@ interface MetaDataMapper {
      */
     public TreeAttributeColumnMetaData getMetaData(final String field);
 
+    /**
+     * Returns true if <b>field</b> is nominal.
+     * @param field to be tested
+     * @return true if <b>field</b> corresponds to a nominal column
+     */
     public boolean isNominal(final String field);
 
+    /**
+     * Returns the meta data information for nominal columns.
+     * It is recommended to only call this method if the isNominal method
+     * returned true.
+     * @param field identifier of a nominal column
+     * @return the meta data information
+     * @throws IllegalArgumentException if <b>field</b> does not correspond to a nominal column
+     */
     public TreeNominalColumnMetaData getNominalColumnMetaData(final String field);
 
+    /**
+     * Returns the meta data information for numeric columns.
+     * It is recommended to only call this method if the isNominal method
+     * returned true.
+     * @param field identifier of a numeric column
+     * @return the meta data information
+     * @throws IllegalArgumentException if <b>field</b> does not correspond to a numeric column
+     */
     public TreeNumericColumnMetaData getNumericColumnMetaData(final String field);
 
     /**
@@ -83,4 +105,9 @@ interface MetaDataMapper {
      * @return the {@link DataTableSpec} of the table the model was originally learned on
      */
     public DataTableSpec getLearnSpec();
+
+    /**
+     * @return the meta data information for the target column
+     */
+    public TreeTargetColumnMetaData getTargetColumnMetaData();
 }
