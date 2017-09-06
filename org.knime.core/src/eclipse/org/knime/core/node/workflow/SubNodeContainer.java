@@ -992,7 +992,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // theoretically we can come from any state into queued state, e.g. this node can be marked for
         // execution (which is the most likely state when run from the outer workflow) and then something is done
         // internally that causes an internal checkForNodeStateChanges.
-        runIfInExternalExecutor(() -> m_wfm.markForExecution(true));
         setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
         return true;
     }
@@ -1137,6 +1136,40 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
     }
 
+    @Override
+    void markForExecution(final boolean flag) {
+            super.markForExecution(flag);
+        if (!m_wfm.isLocalWFM()) {
+            runParentAction(() -> m_wfm.markForExecution(flag));
+        }
+    }
+
+    @Override
+    void mimicRemotePreExecute() {
+        super.mimicRemotePreExecute();
+        runParentAction(() -> m_wfm.mimicRemotePreExecute());
+    }
+
+    @Override
+    void mimicRemotePostExecute() {
+        super.mimicRemotePostExecute();
+        runParentAction(() -> m_wfm.mimicRemotePostExecute());
+    }
+
+
+    @Override
+    void mimicRemoteExecuting() {
+        super.mimicRemoteExecuting();
+        runParentAction(() -> m_wfm.mimicRemoteExecuting());
+    }
+
+
+    @Override
+    void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
+        super.mimicRemoteExecuted(status);
+        runParentAction(() -> m_wfm.mimicRemoteExecuted(status.getChildStatus(0)));
+    }
+
     /** Copies data from virtual output node into m_outputs, notifies state listeners if not
      * processing call from parent.
      * @param newState State of the internal WFM to decide whether to publish ports and/or specs. */
@@ -1255,6 +1288,10 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             super.loadExecutionResult(result, exec, loadResult);
             WorkflowExecutionResult innerExecResult = r.getWorkflowExecutionResult();
             runParentAction(() -> getWorkflowManager().loadExecutionResult(innerExecResult, exec, loadResult));
+            // After loading the execution result of the workflow manager we need to set the real output of the subnode
+            if (r.isSuccess()) {
+                setVirtualOutputIntoOutport(EXECUTED);
+            }
         }
     }
 
