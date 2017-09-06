@@ -48,10 +48,16 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.dmg.pmml.NodeDocument.Node;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 
 /**
  * Handles the import of {@link AbstractTreeModel} objects from PMML.
@@ -59,19 +65,41 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
  *
  * @author Adrian Nembach, KNIME
  */
-abstract class AbstractTreeModelImporter<T extends AbstractTreeNode> {
-    private MetaDataMapper m_metaDataMapper;
-    private ConditionParser m_conditionParser;
+class TreeModelImporter<T extends AbstractTreeNode> {
+    private final MetaDataMapper m_metaDataMapper;
+    private final ConditionParser m_conditionParser;
+    private final TreeNodeSignatureFactory m_signatureFactory;
+    private final ContentParser<T> m_contentParser;
+    private final TreeFactory<T> m_treeFactory;
+
+    public TreeModelImporter(final MetaDataMapper metaDataMapper, final ConditionParser conditionParser,
+        final TreeNodeSignatureFactory signatureFactory,
+        final ContentParser<T> contentParser, final TreeFactory<T> treeFactory) {
+        m_metaDataMapper = metaDataMapper;
+        m_conditionParser = conditionParser;
+        m_signatureFactory = signatureFactory;
+        m_contentParser = contentParser;
+        m_treeFactory = treeFactory;
+    }
 
     public AbstractTreeModel<T> importFromPMML(final TreeModel treeModel) {
         Node rootNode = treeModel.getNode();
-
-        return null;
+        T root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());
+        return m_treeFactory.createTree(root);
     }
 
-    private T createNodeFromPMML(final Node pmmlNode) {
-
-        return null;
+    private T createNodeFromPMML(final Node pmmlNode, final TreeNodeSignature signature) {
+        List<T> children = new ArrayList<>();
+        byte i = 0;
+        for (Node child : pmmlNode.getNodeList()) {
+            TreeNodeSignature childSignature = m_signatureFactory.getChildSignatureFor(signature, i);
+            i++;
+            children.add(createNodeFromPMML(child, childSignature));
+        }
+        TreeNodeCondition condition = m_conditionParser.parseCondition(pmmlNode);
+        T node = m_contentParser.createNode(pmmlNode, m_metaDataMapper.getTargetColumnMetaData(), signature, children);
+        node.setTreeNodeCondition(condition);
+        return node;
     }
 
 }
