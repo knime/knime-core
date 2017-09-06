@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +72,8 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalBinaryConditi
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition.NumericOperator;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSurrogateCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSurrogateOnlyDefDirCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
 import org.knime.core.node.util.CheckUtils;
 
@@ -125,18 +128,36 @@ final class LiteralConditionParser implements ConditionParser {
     private TreeNodeCondition handleCompoundPredicate(final CompoundPredicate compound) {
         Enum operator = compound.getBooleanOperator();
         if (operator.equals(CompoundPredicate.BooleanOperator.SURROGATE)) {
-            return handleSurrogate(compound);
+            return parseSurrogateCompound(compound);
         } else if (operator.equals(CompoundPredicate.BooleanOperator.OR)) {
-
+            return parseOrCompound(compound);
         }
         throw new IllegalArgumentException("The operator \"" + operator + "\" is currently not supported.");
     }
 
-    private AbstractTreeNodeSurrogateCondition handleSurrogate(final CompoundPredicate compound) {
-        return null;
+    private AbstractTreeNodeSurrogateCondition parseSurrogateCompound(final CompoundPredicate compound) {
+        CheckUtils.checkArgument(compound.getCompoundPredicateList().isEmpty(),
+            "Compound predicates inside surrogate-compounds are currently not supported.");
+        List<TreeNodeColumnCondition> conds = new ArrayList<>();
+        for (SimplePredicate simplePred : compound.getSimplePredicateList()) {
+            conds.add(handleSimplePredicate(simplePred, false));
+        }
+        for (SimpleSetPredicate simpleSetPred : compound.getSimpleSetPredicateList()) {
+            conds.add(handleSimpleSetPredicate(simpleSetPred, false));
+        }
+        CheckUtils.checkArgument(!conds.isEmpty(),
+            "The surrogate-compound \"%s\" contains no SimplePredicates or SimpleSetPredicates.", compound);
+        boolean defaultResponse = !compound.getTrueList().isEmpty();
+
+        if (conds.size() == 1) {
+            return new TreeNodeSurrogateOnlyDefDirCondition(conds.get(0), defaultResponse);
+        } else {
+            return new TreeNodeSurrogateCondition(conds.toArray(new TreeNodeColumnCondition[conds.size()]),
+                defaultResponse);
+        }
     }
 
-    private TreeNodeColumnCondition handleOrCompound(final CompoundPredicate compound) {
+    private TreeNodeColumnCondition parseOrCompound(final CompoundPredicate compound) {
         CheckUtils.checkArgument(compound.getCompoundPredicateList().isEmpty(),
             "Currently only simple or-compounds are supported that consist of exactly one"
             + " SimpleSetPredicate or SimplePredicate followed by a SimplePredicate with operator isMissing.");
