@@ -59,7 +59,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.FlowVariable;
 
 
@@ -133,7 +132,7 @@ public abstract class TestrunJanitor {
                 try {
                     janitors.add((TestrunJanitor)janitorElement.createExecutableExtension("class"));
                 } catch (CoreException ex) {
-                    NodeLogger.getLogger(StatementManipulator.class).error(
+                    NodeLogger.getLogger(TestrunJanitor.class).error(
                         "Could not create testrun janitor " + janitorElement.getAttribute("class")
                             + " from plug-in " + janitorElement.getNamespaceIdentifier() + ": " + ex.getMessage(),
                         ex);

@@ -114,7 +114,7 @@ import org.knime.core.node.workflow.execresult.NodeExecutionResult;
  */
 public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger("Test Executor (Streamed and Distributed)");
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(StreamingTestNodeExecutionJobManager.class);
 
     private int m_numChunks;
 
