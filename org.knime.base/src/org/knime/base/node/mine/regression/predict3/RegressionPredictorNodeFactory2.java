@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
  * @author Adrian Nembach, KNIME.com
  * @since 3.5
  */
-public final class RegressionPredictorNodeFactory
+public final class RegressionPredictorNodeFactory2
     extends NodeFactory<RegressionPredictorNodeModel> {
 
     /**
