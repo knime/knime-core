@@ -118,18 +118,6 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.def.node.NodeFactoryUID;
-import org.knime.core.def.node.port.PortTypeKey;
-import org.knime.core.def.node.workflow.IAnnotation;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IConnectionContainer.ConnectionType;
-import org.knime.core.def.node.workflow.INodeAnnotation;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.JobManagerKey;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -163,12 +151,12 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
@@ -222,7 +210,7 @@ import org.knime.core.util.pathresolve.ResolverUtil;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class WorkflowManager extends NodeContainer implements IWorkflowManager, NodeUIInformationListener, NodeContainerParent, NodeContainerTemplate {
+public final class WorkflowManager extends NodeContainer implements NodeUIInformationListener, NodeContainerParent, NodeContainerTemplate {
 
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowManager.class);
@@ -278,12 +266,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
-    private Map<WorkflowAnnotationID, IWorkflowAnnotation> m_annotations =
-        new HashMap<WorkflowAnnotationID, IWorkflowAnnotation>();
-
-    //annotation to keep track of the number of added workflow annotation
-    //in order to generate unique workflow annotation ID's
-    private int m_annotationsIdx = 0;
+    private final Vector<WorkflowAnnotation> m_annotations =
+        new Vector<WorkflowAnnotation>();
 
     // Misc members:
 
@@ -668,7 +652,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param id of the project to be removed.
      */
-    @Override
     public void removeProject(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
@@ -696,14 +679,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
         return internalAddNewNode(factory, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeID createAndAddNode(final NodeFactoryUID factoryUID) {
-        throw new UnsupportedOperationException();
-    }
-
     /** Create new Node based on given factory and add to workflow.
      *
      * @param factory ...
@@ -712,14 +687,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      */
     public NodeID addNode(final NodeFactory<?> factory) {
         return addNodeAndApplyContext(factory, null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeID addNode(final NodeFactoryUID factoryUID) {
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -758,7 +725,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param nodeID id of node to be removed
      * @return true if node can safely be removed.
      */
-    @Override
     public boolean canRemoveNode(final NodeID nodeID) {
         try (WorkflowLock lock = lock()) {
             // check to make sure we can safely remove this node
@@ -792,7 +758,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param nodeID id of node to be removed
      */
-    @Override
     public void removeNode(final NodeID nodeID) {
         NodeContainer nc;
         try (WorkflowLock lock = lock()) {
@@ -841,14 +806,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
         return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null, null);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IWorkflowManager createAndAddSubWorkflow(final PortTypeKey[] inPorts, final PortTypeKey[] outPorts, final String name) {
-        throw new UnsupportedOperationException();
     }
 
     /** Adds new empty metanode to this WFM.
@@ -901,7 +858,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * is only a metanode in another metanode or project.
      * @return This property.
      * @since 2.6 */
-    @Override
     public boolean isProject() {
         return this == ROOT || getReentrantLockInstance() != getDirectNCParent().getReentrantLockInstance();
     }
@@ -965,7 +921,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */
-    @Override
     public ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
@@ -1039,7 +994,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             newConn =
                 new ConnectionContainer(source, sourcePort, dest, destPort, newConnType, isFlowVariablePortConnection);
             m_workflow.addConnection(newConn);
-
             // handle special cases with port reference chains (WFM border
             // crossing connections:
             if ((source.equals(getID())) && (dest.equals(getID()))) {
@@ -1105,7 +1059,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param destPort port index at destination node
      * @return true if connection can be added.
      */
-    @Override
     public boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
@@ -1120,7 +1073,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return true if the connection can be added, false otherwise
      * @since 2.6
      */
-    @Override
     public boolean canAddNewConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
@@ -1247,8 +1199,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param cc connection
      * @return true if connection cc is removable.
      */
-    @Override
-    public boolean canRemoveConnection(final IConnectionContainer cc) {
+    public boolean canRemoveConnection(final ConnectionContainer cc) {
         try (WorkflowLock lock = lock()) {
             if (cc == null || !cc.isDeletable()) {
                 return false;
@@ -1288,8 +1239,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param cc connection
      */
-    @Override
-    public void removeConnection(final IConnectionContainer cc) {
+    public void removeConnection(final ConnectionContainer cc) {
         try (WorkflowLock lock = lock()) {
             // make sure both nodes (well, their connection lists) exist
             if (m_workflow.getConnectionsByDest(cc.getDest()) == null) {
@@ -1403,16 +1353,15 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return all outgoing connections for the passed node at the specified
      *  port
      */
-    @Override
-    public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
+    public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
             final int portIdx) {
         try (WorkflowLock lock = lock()) {
             Set<ConnectionContainer> outConnections = m_workflow.getConnectionsBySource(id);
-            Set<IConnectionContainer> outConsForPort = new HashSet<IConnectionContainer>();
+            Set<ConnectionContainer> outConsForPort = new HashSet<ConnectionContainer>();
             if (outConnections == null) {
                 return outConsForPort;
             }
-            for (IConnectionContainer cont : outConnections) {
+            for (ConnectionContainer cont : outConnections) {
                 if (cont.getSourcePort() == portIdx) {
                     outConsForPort.add(cont);
                 }
@@ -1426,11 +1375,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return All current outgoing connections in a new set.
      * @throws IllegalArgumentException If the node is unknown or null.
      */
-    @Override
-    public Set<IConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
+    public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             getNodeContainer(id); // for exception handling
-            return new LinkedHashSet<IConnectionContainer>(m_workflow.getConnectionsBySource(id));
+            return new LinkedHashSet<ConnectionContainer>(m_workflow.getConnectionsBySource(id));
         }
     }
 
@@ -1442,7 +1390,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return incoming connection at that port of the given node or null if it
      *     doesn't exist
      */
-    @Override
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
         try (WorkflowLock lock = lock()) {
@@ -1463,11 +1410,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return All current incoming connections in a new set.
      * @throws IllegalArgumentException If the node is unknown or null.
      */
-    @Override
-    public Set<IConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
+    public Set<ConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             getNodeContainer(id); // for exception handling
-            return new LinkedHashSet<IConnectionContainer>(
+            return new LinkedHashSet<ConnectionContainer>(
                     m_workflow.getConnectionsByDest(id));
         }
     }
@@ -1477,7 +1423,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param id of the connection to return
      * @return the connection with the specified id
      */
-    @Override
     public ConnectionContainer getConnection(final ConnectionID id) {
         try (WorkflowLock lock = lock()) {
             return getIncomingConnectionFor(id.getDestinationNode(),
@@ -1492,7 +1437,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return the metanode's port info.
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
-    @Override
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
         try (WorkflowLock lock = lock()) {
             return m_workflow.getMetanodeInputPortInfo(metaNodeID);
@@ -1505,7 +1449,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return ...
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
-    @Override
     public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
         try (WorkflowLock lock = lock()) {
             return m_workflow.getMetanodeOutputPortInfo(metaNodeID);
@@ -1519,7 +1462,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return the sub node's port info.
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.10 */
-    @Override
     public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
         try (WorkflowLock lock = lock()) {
             return getNodeContainer(subNodeID, SubNodeContainer.class, true).getInputPortInfo();
@@ -1532,7 +1474,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return ...
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.10 */
-    @Override
     public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
         try (WorkflowLock lock = lock()) {
             return getNodeContainer(subNodeID, SubNodeContainer.class, true).getOutputPortInfo();
@@ -1544,7 +1485,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param newPorts The new ports
      * @since 2.6
      */
-    @Override
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         try (WorkflowLock lock = lock()) {
             WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
@@ -1577,7 +1517,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowInPort(i, PortTypeRegistry.getPortType(newPorts[i].getTypeKey()));
+                    newMNPorts[i] = new WorkflowInPort(i, newPorts[i].getType());
                 }
             }
             subFlowMgr.m_inPorts = newMNPorts;
@@ -1605,7 +1545,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param newPorts The new ports
      * @since 2.6
      */
-    @Override
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         try (WorkflowLock lock = lock()) {
             WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
@@ -1638,7 +1577,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowOutPort(i, PortTypeRegistry.getPortType(newPorts[i].getTypeKey()));
+                    newMNPorts[i] = new WorkflowOutPort(i, newPorts[i].getType());
                 }
             }
             subFlowMgr.m_outPorts = newMNPorts;
@@ -1665,7 +1604,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param newPorts The new ports
      * @since 2.10
      */
-    @Override
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
@@ -1691,7 +1629,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = PortTypeRegistry.getPortType(newPorts[i + 1].getTypeKey());
+                portTypes[i] = newPorts[i + 1].getType();
             }
             snc.setInPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1719,7 +1657,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param newPorts The new ports
      * @since 2.10
      */
-    @Override
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
@@ -1745,7 +1682,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = PortTypeRegistry.getPortType(newPorts[i + 1].getTypeKey());
+                portTypes[i] = newPorts[i + 1].getType();
             }
             snc.setOutPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -2337,14 +2274,12 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Resets and freshly configures all nodes in this workflow.
      * @deprecated Use {@link #resetAndConfigureAll()} instead
      */
-    @Override
     @Deprecated
     public void resetAll() {
         resetAndConfigureAll();
     }
 
     /** Resets and freshly configures all nodes in this workflow. */
-    @Override
     public void resetAndConfigureAll() {
         // TODO this does not reset connected outports (which it should as this
         // is a public methods. (see resetAndReconfigureAllNodesInWFM)
@@ -2455,7 +2390,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param ids node ids to mark
      */
-    @Override
     public void executeUpToHere(final NodeID... ids) {
         try (WorkflowLock lock = lock()) {
             for (NodeID id : ids) {
@@ -2482,7 +2416,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalArgumentException if node is not of proper type.
      * @since 2.8
      */
-    @Override
     public boolean canReExecuteNode(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
@@ -2533,7 +2466,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param id The node in question.
      * @since 2.8
      */
-    @Override
     public void saveNodeSettingsToDefault(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
@@ -2711,7 +2643,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws InterruptedException If thread is canceled during waiting
      * (has no affect on the workflow execution).
      * @since 2.6*/
-    @Override
     public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
         final NodeOutPort[] predecessorOutPorts;
         try (WorkflowLock lock = lock()) {
@@ -3657,7 +3588,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return null of ok otherwise reason (String) why not
      * @since 2.10
      */
-    @Override
     public String canExpandSubNode(final NodeID subNodeID) {
         try (WorkflowLock lock = lock()) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
@@ -3682,7 +3612,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param wfmID the id of the metanode to be expanded
      * @return null of ok otherwise reason (String) why not
      */
-    @Override
     public String canExpandMetaNode(final NodeID wfmID) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(wfmID);
@@ -3709,11 +3638,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param wfmID the id of the metanode to be expanded
      * @return copied content containing nodes and annotations
      * @throws IllegalArgumentException if expand cannot be done
-     * @deprecated use {@link #expandMetaNodeUndoable(NodeID)} instead
      */
-    @Deprecated
     public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
-        return expandMetaNodeUndoable(wfmID).getExpandedCopyContent();
+        // TODO: This should probably be the same as for subnode extraction ... proper return value/undo
+        return expandSubWorkflow(wfmID).getExpandedCopyContent();
     }
 
     /** Expand the selected subnode into a set of nodes in this WFM and remove the old metanode.
@@ -3723,26 +3651,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalStateException if expand cannot be done
      * @since 2.12
      * @noreference This method is not intended to be referenced by clients.
-     * @deprecated use {@link #expandSubNodeUndoable(NodeID)} instead
      */
-    @Deprecated
     public ExpandSubnodeResult expandSubWorkflow(final NodeID nodeID) throws IllegalStateException {
-        return expandSubNodeUndoable(nodeID);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IExpandMetaNodeResult expandMetaNodeUndoable(final NodeID wfmID) throws IllegalArgumentException {
-        return expandSubNodeUndoable(wfmID);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExpandSubnodeResult expandSubNodeUndoable(final NodeID nodeID) throws IllegalStateException {
         try (WorkflowLock lock = lock()) {
             WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
             cnt.setNodeIDs(nodeID);
@@ -3773,17 +3683,17 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                 i++;
             }
             // retrieve all workflow annotations
-            Collection<IWorkflowAnnotation> annos =
+            Collection<WorkflowAnnotation> annos =
                 subWFM.getWorkflowAnnotations();
-            IWorkflowAnnotation[] orgAnnos = annos.toArray(
-                    new IWorkflowAnnotation[annos.size()]);
+            WorkflowAnnotation[] orgAnnos = annos.toArray(
+                    new WorkflowAnnotation[annos.size()]);
             // copy the nodes from the sub workflow manager:
             WorkflowCopyContent.Builder orgContent = WorkflowCopyContent.builder();
             orgContent.setNodeIDs(orgIDs);
-            orgContent.setAnnotationIDs(Arrays.stream(orgAnnos).map(wa -> wa.getID().get()).collect(Collectors.toList()).toArray(new WorkflowAnnotationID[0]));
+            orgContent.setAnnotation(orgAnnos);
             WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent.build());
             NodeID[] newIDs = newContent.getNodeIDs();
-            WorkflowAnnotationID[] newAnnoIDs = newContent.getAnnotationIDs();
+            Annotation[] newAnnos = newContent.getAnnotations();
             // create map and set of quick lookup/search
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             HashSet<NodeID> newIDsHashSet = new HashSet<NodeID>();
@@ -3808,7 +3718,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     }
                 }
                 // connect connection FROM the sub workflow
-                for (IConnectionContainer cc : getOutgoingConnectionsFor(subWFM.getID())) {
+                for (ConnectionContainer cc : getOutgoingConnectionsFor(subWFM.getID())) {
                     int sourcePortIndex = cc.getSourcePort();
                     ConnectionContainer subCC = subWFM.getIncomingConnectionFor(subWFM.getID(), sourcePortIndex);
                     if (subCC != null) {
@@ -3886,11 +3796,11 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                         nc.setUIInformation(newUii);
                     }
                 }
-                for (WorkflowAnnotationID annoID : newAnnoIDs) {
-                    m_annotations.get(annoID).shiftPosition(xShift, yShift);
+                for (Annotation anno : newAnnos) {
+                    anno.shiftPosition(xShift, yShift);
                 }
                 // move bendpoints of connections between moved nodes
-                for (IConnectionContainer cc : this.getConnectionContainers()) {
+                for (ConnectionContainer cc : this.getConnectionContainers()) {
                     if ((newIDsHashSet.contains(cc.getSource()))
                             && (newIDsHashSet.contains(cc.getDest()))) {
                         ConnectionUIInformation cuii = cc.getUIInfo();
@@ -3920,7 +3830,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return ID to the created sub node.
      * @since 2.10
      */
-    @Override
     public MetaNodeToSubNodeResult convertMetaNodeToSubNode(final NodeID wfmID) {
         try (WorkflowLock l = lock()) {
             WorkflowManager subWFM = getNodeContainer(wfmID, WorkflowManager.class, true);
@@ -3968,7 +3877,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalStateException If it cannot perform the operation (e.g. node executing)
      * @since 3.1
      */
-    @Override
     public SubNodeToMetaNodeResult convertSubNodeToMetaNode(final NodeID subnodeID) {
         try (WorkflowLock l = lock()) {
             SubNodeContainer subnode = getNodeContainer(subnodeID, SubNodeContainer.class, true);
@@ -3982,8 +3890,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
 
             WorkflowPersistor fromSubnodePersistor = subnode.getConvertToMetaNodeCopyPersistor();
 
-            Set<IConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(subnodeID);
-            Set<IConnectionContainer> incomingConnections = getIncomingConnectionsFor(subnodeID);
+            Set<ConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(subnodeID);
+            Set<ConnectionContainer> incomingConnections = getIncomingConnectionsFor(subnodeID);
             PortType[] inPorts = IntStream.range(1, subnode.getNrInPorts())
                     .mapToObj(i -> subnode.getInPort(i).getPortType()).toArray(PortType[]::new);
             PortType[] outPorts = IntStream.range(1, subnode.getNrOutPorts())
@@ -3999,7 +3907,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             metaNode.paste(fromSubnodePersistor);
             metaNode.setCustomDescription(subnode.getCustomDescription());
 
-            for (IConnectionContainer c : incomingConnections) {
+            for (ConnectionContainer c : incomingConnections) {
                 if (c.getDestPort() != 0) {
                     ConnectionContainer newConnection =
                             addConnection(c.getSource(), c.getSourcePort(), subnodeID, c.getDestPort() - 1);
@@ -4007,7 +3915,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                 }
             }
 
-            for (IConnectionContainer c : outgoingConnections) {
+            for (ConnectionContainer c : outgoingConnections) {
                 if (c.getSourcePort() != 0) {
                     ConnectionContainer newConnection =
                             addConnection(subnodeID, c.getSourcePort() - 1, c.getDest(), c.getDestPort());
@@ -4028,7 +3936,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
      * @return null or reason why this cannot be done as string.
      */
-    @Override
     public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
         try (WorkflowLock lock = lock()) {
             // for quick search:
@@ -4121,8 +4028,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return newly create metanode
      * @throws IllegalArgumentException if collapse cannot be done
      */
-    @Override
-    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotationID[] orgAnnos,
+    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotation[] orgAnnos,
         final String name) {
         try (WorkflowLock lock = lock()) {
             // make sure this is still true:
@@ -4273,7 +4179,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             // copy the nodes into the newly create WFM:
             WorkflowCopyContent.Builder orgContentBuilder = WorkflowCopyContent.builder();
             orgContentBuilder.setNodeIDs(orgIDs);
-            orgContentBuilder.setAnnotationIDs(orgAnnos);
+            orgContentBuilder.setAnnotation(orgAnnos);
             orgContentBuilder.setIncludeInOutConnections(true);
             final WorkflowPersistor undoPersistor = copy(true, orgContentBuilder.build());
 
@@ -4316,11 +4222,11 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     }
                 }
                 // move new annotations
-                for (IAnnotation anno : newWFM.m_annotations.values()) {
+                for (Annotation anno : newWFM.m_annotations) {
                     anno.shiftPosition(xshift, yshift);
                 }
                 // move bendpoints of all internal connections
-                for (IConnectionContainer cc : newWFM.getConnectionContainers()) {
+                for (ConnectionContainer cc : newWFM.getConnectionContainers()) {
                     if ((!cc.getSource().equals(newWFM.getID())) && (!cc.getDest().equals(newWFM.getID()))) {
                         ConnectionUIInformation uii = cc.getUIInfo();
                         if (uii != null) {
@@ -4611,7 +4517,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param nodeID the id of the node
      * @return true if the node can safely be reset.
      */
-    @Override
     public boolean canResetNode(final NodeID nodeID) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
@@ -4851,7 +4756,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param id of first node in chain to be reset.
      */
-    @Override
     public void resetAndConfigureNode(final NodeID id) {
         resetAndConfigureNodeAndSuccessors(id, true);
     }
@@ -4993,7 +4897,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return true if node is configured and all immediate predecessors are executed.
      * @since 2.9
      */
-    @Override
     public boolean canExecuteNodeDirectly(final NodeID nodeID) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
@@ -5020,7 +4923,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     * @param nodeID id of node
     * @return true if node can be executed.
     */
-   @Override
    public boolean canExecuteNode(final NodeID nodeID) {
        try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
@@ -5096,7 +4998,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     * @return true if node can be cancelled
     *
     */
-   @Override
    public boolean canCancelNode(final NodeID nodeID) {
        try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
@@ -5116,7 +5017,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
 
    /** @return true if all nodes in this workflow / metanode can be canceled.
     * @since 3.1 */
-   @Override
    public boolean canCancelAll() {
        // added as part of fix for bug 6534 - this method is called often also indirectly via change events
        // as part of a reset - do the best to not lock parent instance
@@ -5173,17 +5073,11 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param nc node to be canceled
      */
-    @Override
-    public void cancelExecution(final INodeContainer nc) {
+    public void cancelExecution(final NodeContainer nc) {
         try (WorkflowLock lock = lock()) {
             disableNodeForExecution(nc.getID());
-            if (nc instanceof NodeContainer && nc.getNodeContainerState().isExecutionInProgress()) {
-                ((NodeContainer)nc).cancelExecution();
-            } else if (!(nc instanceof NodeContainer)) {
-                //TODO: possibly add a public cancelExecution method to the INodeContainer interface
-                throw new IllegalArgumentException(
-                    "Cancel execution operation not supported for the node container of type "
-                        + nc.getClass().getName());
+            if (nc.getInternalState().isExecutionInProgress()) {
+                nc.cancelExecution();
             }
             lock.queueCheckForNodeStateChangeNotification(true);
         }
@@ -5194,8 +5088,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param nc node to be canceled
      */
-    @Override
-    public void pauseLoopExecution(final INodeContainer nc) {
+    public void pauseLoopExecution(final NodeContainer nc) {
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
@@ -5217,8 +5110,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param nc The node container
      * @param oneStep If execution should only be resumed by one step
      */
-    @Override
-    public void resumeLoopExecution(final INodeContainer nc, final boolean oneStep) {
+    public void resumeLoopExecution(final NodeContainer nc, final boolean oneStep) {
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
@@ -5246,7 +5138,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return Whether it's save to invoke the
      * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
      */
-    @Override
     public boolean canSetJobManager(final NodeID nodeID) {
         try (WorkflowLock lock = lock()) {
             if (!m_workflow.containsNodeKey(nodeID)) {
@@ -5281,20 +5172,11 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setJobManager(final NodeID nodeID, final JobManagerKey jobMgr) {
-        throw new UnsupportedOperationException();
-    }
-
     /** Attempts to cancel or running nodes in preparation for a removal of
      * this node (or its parent) from the root. Executing nodes, which can be
      * disconnected from the execution (e.g. remote cluster execution) are
      * disconnected if their status has been saved before.
      */
-    @Override
     public void shutdown() {
         performShutdown();
     }
@@ -5330,7 +5212,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     * @return true if execution was successful
     * @see #executeAllAndWaitUntilDoneInterruptibly()
     */
-    @Override
     public boolean executeAllAndWaitUntilDone() {
         try {
             return executeAllAndWaitUntilDoneInterruptibly();
@@ -5347,7 +5228,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * the workflow.
      * @since 3.2
      */
-    @Override
     public boolean executeAllAndWaitUntilDoneInterruptibly() throws InterruptedException {
         checkState(this != ROOT, "Can't execute ROOT workflow");
         executeAll(); // outside of lock as this could lock up parent when running in external executor
@@ -5369,7 +5249,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *         {@code true} if the time argument is 0 or negative.
      * @throws InterruptedException if the current thread is interrupted
      */
-    @Override
     public boolean waitWhileInExecution(final long time, final TimeUnit unit)
     throws InterruptedException {
         return waitWhileInExecution(m_workflowLock, new NodeContainer[] {this}, time, unit);
@@ -5441,7 +5320,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * at least one node that is executable (even though the state of the wfm is idle).
      * @return that property
      * @since 2.10 */
-    @Override
     public boolean canExecuteAll() {
         if (isLocalWFM()) {
             try (WorkflowLock lock = lock()) {
@@ -5459,7 +5337,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * immediately. If a job manager is set on the WFM this one will run the execution. In any case this method
      * returns immediately and does not wait for the execution to finish.
      * @see #executeAllAndWaitUntilDone() */
-    @Override
     public void executeAll() {
         if (isLocalWFM()) {
             try (WorkflowLock lock = lock()) {
@@ -5575,7 +5452,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
         return dialogPane;
     }
 
-    /** {@inheritDoc} */
+    /** @return user settings for this node, possibly empty but not <code>null</code>.
+     * @since 3.5*/
     @Override
     public NodeSettings getNodeSettings() {
         NodeSettings settings = new NodeSettings("wfm_settings");
@@ -6347,7 +6225,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param indent number of leading spaces
      * @return string
      */
-    @Override
     public String printNodeSummary(final NodeID prefix, final int indent) {
         char[] indentChars = new char[indent];
         Arrays.fill(indentChars, ' ');
@@ -6395,31 +6272,18 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     // WFM functionality
     ////////////////////////
 
-    /** {@inheritDoc}
-     *
-     * @deprecated use {@link #getAllNodeContainers()} instead
-     */
+    /** {@inheritDoc} */
     @Override
-    @Deprecated
     public Collection<NodeContainer> getNodeContainers() {
         return m_workflow.getNodeValues();
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<INodeContainer> getAllNodeContainers() {
-        return Collections.unmodifiableCollection(m_workflow.getNodeValues());
-    }
-
-    /**
      * @return collection of ConnectionContainer in this WFM
      */
-    @Override
-    public Collection<IConnectionContainer> getConnectionContainers() {
-        Set<IConnectionContainer> result =
-            new LinkedHashSet<IConnectionContainer>();
+    public Collection<ConnectionContainer> getConnectionContainers() {
+        Set<ConnectionContainer> result =
+            new LinkedHashSet<ConnectionContainer>();
         for (Set<ConnectionContainer> s
                 : m_workflow.getConnectionsBySourceValues()) {
             if (s != null) {
@@ -6433,7 +6297,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param id node ID
      * @return NodeContainer for given ID
      */
-    @Override
     public NodeContainer getNodeContainer(final NodeID id) {
         NodeContainer nc = m_workflow.getNode(id);
         if (nc == null) {
@@ -6453,7 +6316,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalArgumentException If node is not found or of the expected type and the flag is true.
      * @since 2.10
      * @noreference This method is not intended to be referenced by clients (only used in core and testing plugin). */
-    @Override
     public <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
         NodeContainer nc = m_workflow.getNode(id);
         if (nc == null || !subclass.isInstance(nc)) {
@@ -6474,7 +6336,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param id The id in question.
      * @return true if there is node with the given id, false otherwise.
      */
-    @Override
     public boolean containsNodeContainer(final NodeID id) {
         return m_workflow.getNode(id) != null;
     }
@@ -6500,7 +6361,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return list of errors messages (list empty if none exist).
      * @deprecated Use {@link #getNodeMessages(Type...)} instead.
      */
-    @Override
     @Deprecated
     public List<NodeMessage> getNodeErrorMessages() {
         List<NodeMessage> result = new ArrayList<>();
@@ -6517,7 +6377,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalArgumentException If argument is invalid.
      * @since 2.11
      */
-    @Override
     public List<Pair<String, NodeMessage>> getNodeMessages(final NodeMessage.Type... types) {
         CheckUtils.checkArgumentNotNull(types, "Argument must not be null");
         final List<Type> asList = Arrays.asList(types);
@@ -6668,7 +6527,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return list of node ids, ids not necessarily direct childs of this WFM!
      * @since 2.6
      */
-    @Override
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
         try (WorkflowLock lock = lock()) {
             Map<NodeID, NodeContainerTemplate> filled =
@@ -6842,7 +6700,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * metanode is executed or contains executed nodes.
      * @param id The metanode in question.
      * @return The above described property. */
-    @Override
     public boolean canUpdateMetaNodeLink(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(id);
@@ -6869,7 +6726,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return if the ID is unknown or there are no metanodes with the appropriate update flag.
      * @since 2.9
      */
-    @Override
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(id);
@@ -7051,18 +6907,17 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
             NodeUIInformation oldUI = oldLinkMN.getUIInformation();
 
-            NodeUIInformation newUI = oldUI != null ? oldUI.clone() : null;
+            NodeUIInformation newUI = oldUI != null ? NodeUIInformation.builder(oldUI).build() : null;
             // keep old in/out connections to later relink them
-            Set<IConnectionContainer> inConns = getIncomingConnectionsFor(id);
-            Set<IConnectionContainer> outConns = getOutgoingConnectionsFor(id);
+            Set<ConnectionContainer> inConns = getIncomingConnectionsFor(id);
+            Set<ConnectionContainer> outConns = getOutgoingConnectionsFor(id);
 
             removeNode(id);
             WorkflowCopyContent pasteResult = copyFromAndPasteHere(tempLink.getParent(),
                 WorkflowCopyContent.builder().setNodeID(tempLink.getID(), id.getIndex(), newUI).build());
             newLinkMN = getNodeContainer(pasteResult.getNodeIDs()[0], NodeContainerTemplate.class, true);
             if (oldAnnoData != null && !oldAnnoData.isDefault()) {
-                //since AnnotationData is immutable, just setting it here without copying it should be fine
-                ((NodeContainer)newLinkMN).getNodeAnnotation().setData(oldAnnoData);
+                ((NodeContainer)newLinkMN).getNodeAnnotation().getData().copyFrom(oldAnnoData, true);
             }
 
             loadRes.setNCTemplate(newLinkMN);
@@ -7074,7 +6929,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                 loadRes.addError(error);
             }
 
-            for (IConnectionContainer cc : inConns) {
+            for (ConnectionContainer cc : inConns) {
                 NodeID s = cc.getSource();
                 int sourcePort = cc.getSourcePort();
                 int destPort = cc.getDestPort();
@@ -7085,10 +6940,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     ConnectionContainer c = addConnection(s, sourcePort, id, destPort);
                     c.setDeletable(cc.isDeletable());
                     ConnectionUIInformation uiInfo = cc.getUIInfo();
-                    c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
+                    c.setUIInfo(uiInfo != null ? ConnectionUIInformation.builder(uiInfo).build() : null);
                 }
             }
-            for (IConnectionContainer cc : outConns) {
+            for (ConnectionContainer cc : outConns) {
                 int sourcePort = cc.getSourcePort();
                 int destPort = cc.getDestPort();
                 NodeID des = cc.getDest();
@@ -7099,7 +6954,7 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     ConnectionContainer c = addConnection(id, sourcePort, des, destPort);
                     c.setDeletable(cc.isDeletable());
                     ConnectionUIInformation uiInfo = cc.getUIInfo();
-                    c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
+                    c.setUIInfo(uiInfo != null ? ConnectionUIInformation.builder(uiInfo).build() : null);
                 }
             }
             return newLinkMN;
@@ -7240,7 +7095,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param password The new password (or null to always unlock)
      * @param hint The hint/copyright.
      * @throws NoSuchAlgorithmException If encryption fails. */
-    @Override
     public void setWorkflowPassword(final String password, final String hint)
         throws NoSuchAlgorithmException {
         if (this == ROOT) {
@@ -7274,14 +7128,12 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     }
 
     /** @return see {@link WorkflowCipher#isUnlocked()}. */
-    @Override
     @SuppressWarnings("javadoc")
     public boolean isUnlocked() {
         return m_cipher.isUnlocked();
     }
 
     /** @return see {@link WorkflowCipher#getPasswordHint()}. */
-    @Override
     @SuppressWarnings("javadoc")
     public String getPasswordHint() {
         return m_cipher.getPasswordHint();
@@ -7304,7 +7156,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     }
 
     /** @return see {@link WorkflowCipher#isEncrypted()}. */
-    @Override
     @SuppressWarnings("javadoc")
     public boolean isEncrypted() {
         return this != ROOT && m_cipher.isEncrypted();
@@ -7331,7 +7182,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param listener new listener
      */
-    @Override
     public void addListener(final WorkflowListener listener) {
         if (!m_wfmListeners.contains(listener)) {
             m_wfmListeners.add(listener);
@@ -7342,7 +7192,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * Remove listener.
      * @param listener listener to be removed
      */
-    @Override
     public void removeListener(final WorkflowListener listener) {
         m_wfmListeners.remove(listener);
     }
@@ -7513,11 +7362,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
                     }
                 }
             }
-            IWorkflowAnnotation[] annotations =
-                Arrays.stream(content.getAnnotationIDs()).map(wfaID -> m_annotations.get(wfaID))
-                    .collect(Collectors.toList()).toArray(new IWorkflowAnnotation[0]);
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates,
-                    additionalConnTemplates, annotations,
+                    additionalConnTemplates, content.getAnnotations(),
                     isUndoableDeleteCommand);
         }
     }
@@ -7874,8 +7720,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
             new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
-        List<IWorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
-        for (IWorkflowAnnotation w : annos) {
+        List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
+        for (WorkflowAnnotation w : annos) {
             addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
@@ -7922,11 +7768,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
         }
         Collection<NodeID> resultColl = persistorMap.keySet();
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
-        WorkflowAnnotationID[] newAnnotationIDs = annos.stream().map(wa -> wa.getID().get())
-            .collect(Collectors.toList()).toArray(new WorkflowAnnotationID[annos.size()]);
+        WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
         addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
         WorkflowCopyContent.Builder result = WorkflowCopyContent.builder();
-        result.setAnnotationIDs(newAnnotationIDs);
+        result.setAnnotation(newAnnotations);
         result.setNodeIDs(newIDs);
         return result.build();
     }
@@ -8552,7 +8397,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Marks the workflow and all nodes contained as dirty in the auto-save location.
      * @noreference This method is not intended to be referenced by clients.
      * @since 2.10 */
-    @Override
     public void setAutoSaveDirectoryDirtyRecursivly() {
         try (WorkflowLock lock = lock()) {
             ReferencedFile autoSaveDirectory = getAutoSaveDirectory();
@@ -8654,7 +8498,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * has not been saved yet).
      * @param name The new name or null
      */
-    @Override
     public void setName(final String name) {
         if (!ConvenienceMethods.areEqual(m_name, name)) {
             m_name = name;
@@ -8669,7 +8512,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalStateException If the workflow has not been saved yet
      * (has no corresponding node directory).
      */
-    @Override
     public boolean renameWorkflowDirectory(final String newName) {
         try (WorkflowLock lock = lock()) {
             ReferencedFile file = getNodeContainerDirectory();
@@ -8734,7 +8576,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * In comparison to {@link #getName()} this method does not use the workflow
      * directory name if no other name is set.
      */
-    @Override
     public String getNameField() {
         return m_name;
     }
@@ -8789,7 +8630,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param editorInfo the settings to store
      * @since 2.6
      */
-    @Override
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
         if (!Objects.equals(editorInfo, m_editorInfo)) {
             m_editorInfo = editorInfo;
@@ -8802,7 +8642,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return the editor settings currently stored
      * @since 2.6
      */
-    @Override
     public EditorUIInformation getEditorUIInformation() {
         return m_editorInfo;
     }
@@ -8954,7 +8793,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /**
      * @return The number of incoming ports
      */
-    @Override
     public int getNrWorkflowIncomingPorts() {
         return getNrInPorts();
     }
@@ -8962,7 +8800,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /**
      * @return The number of outgoing ports
      */
-    @Override
     public int getNrWorkflowOutgoingPorts() {
         return getNrOutPorts();
     }
@@ -8971,7 +8808,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param i Index of the port
      * @return The incoming port at the given index
      */
-    @Override
     public NodeOutPort getWorkflowIncomingPort(final int i) {
         return m_inPorts[i].getUnderlyingPort();
     }
@@ -8980,7 +8816,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param i Index of the port
      * @return The outgoing port at the given index
      */
-    @Override
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
     }
@@ -8988,8 +8823,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
      * @param inPortsBarUIInfo The new UI info.
+     * @since 3.5
      */
-    @Override
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
             m_inPortsBarUIInfo = inPortsBarUIInfo;
@@ -9000,8 +8835,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Set UI information for workflow's output ports
      * (typically aligned as a bar).
      * @param outPortsBarUIInfo The new UI info.
+     * @since 3.5
      */
-    @Override
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(
                 m_outPortsBarUIInfo, outPortsBarUIInfo)) {
@@ -9013,8 +8848,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
      * @see #setInPortsBarUIInfo(UIInformation)
+     * @since 3.5
      */
-    @Override
     public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
@@ -9022,8 +8857,8 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
      * @see #setOutPortsBarUIInfo(UIInformation)
+     * @since 3.5
      */
-    @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
@@ -9123,140 +8958,72 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
 
     /* -- Workflow Annotations ---------------------------------------------*/
 
-    /**
-     * @return read-only collection of all currently registered annotations. The returned collection is sorted according
-     *         to the order of the associated {@link WorkflowAnnotationID}s of each {@link IWorkflowAnnotation}.
-     */
-    @Override
-    public Collection<IWorkflowAnnotation> getWorkflowAnnotations() {
-        List<IWorkflowAnnotation> sortedValues = m_annotations.values().stream()
-            .sorted((o1, o2) -> o1.getID().get().compareTo(o2.getID().get())).collect(Collectors.toList());
-        return Collections.unmodifiableList(sortedValues);
-    }
-
-    /**
-     * @return read-only collection of ids of all currently registered annotations.
-     */
-    @Override
-    public Collection<WorkflowAnnotationID> getWorkflowAnnotationIDs() {
-        return Collections.unmodifiableSet(m_annotations.keySet());
-    }
-
-    /**
-     * @param wfaID the id of the request workflow annotation
-     * @return the workflow annotation associated with the given key or <code>null</code> it doesn't exist
-     */
-    @Override
-    public IWorkflowAnnotation getWorkflowAnnotation(final WorkflowAnnotationID wfaID) {
-        return m_annotations.get(wfaID);
+    /** @return read-only collection of all currently registered annotations. */
+    public Collection<WorkflowAnnotation> getWorkflowAnnotations() {
+        return Collections.unmodifiableList(m_annotations);
     }
 
     /** Add new workflow annotation, fire events.
      * @param annotation to add
      * @throws IllegalArgumentException If annotation already registered. */
-    @Override
-    public void addWorkflowAnnotation(final IWorkflowAnnotation annotation) {
+    public void addWorkflowAnnotation(final WorkflowAnnotation annotation) {
         addWorkflowAnnotationInternal(annotation);
         setDirty();
     }
 
-    /** Adds annotation as in {@link #addWorkflowAnnotation(WorkflowAnnotation)} but does not fire dirty event. */
+    /** Adds annotation as in #addWorkf but does not fire dirty event. */
     private void addWorkflowAnnotationInternal(
-            final IWorkflowAnnotation annotation) {
-        WorkflowAnnotationID wfaID = new WorkflowAnnotationID(m_annotationsIdx++);
-        m_annotations.put(wfaID, annotation);
-        annotation.setID(wfaID);
+            final WorkflowAnnotation annotation) {
+        if (m_annotations.contains(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" already exists");
+        }
+        m_annotations.add(annotation);
         annotation.addUIInformationListener(this);
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
     }
 
-    /** Remove workflow annotation with the id associated with the given workflow annotation and fire events.
-     * @param annotation to remove (or more precise: the annotation with the id associated with the given annotation will be removed)
+    /** Remove workflow annotation, fire events.
+     * @param annotation to remove
      * @throws IllegalArgumentException If annotation is not registered. */
-    @Override
-    public void removeAnnotation(final IWorkflowAnnotation annotation) {
-        if (!annotation.getID().isPresent()) {
-            throw new IllegalArgumentException("No id set for the workflow annotation \"" + annotation + "\".");
+    public void removeAnnotation(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" does not exists");
         }
-        removeAnnotation(annotation.getID().get());
-    }
-
-    /**
-     * Same as {@link #removeAnnotation(IWorkflowAnnotation)} but triggered by the annotation id directly.
-     *
-     * @param wfaID the id of the workflow annotation to be removed
-     */
-    @Override
-    public void removeAnnotation(final WorkflowAnnotationID wfaID) {
-        if (!m_annotations.containsKey(wfaID)) {
-            throw new IllegalArgumentException("Annotation with id \"" + wfaID + "\" does not exists");
-        }
-        IWorkflowAnnotation removedAnno = m_annotations.remove(wfaID);
-        removedAnno.removeUIInformationListener(this);
+        annotation.removeUIInformationListener(this);
         notifyWorkflowListeners(new WorkflowEvent(
-                WorkflowEvent.Type.ANNOTATION_REMOVED, null, removedAnno, null));
+                WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
         setDirty();
     }
 
     /**
-     * Resorts the internal ids to move the specified annotation to the last index.
-     * It also updates its associated ids (of both, the passed annotation and the with the workflow manager stored annotation, if different).
+     * Resorts the internal array to move the specified annotation to the last index.
      * @param annotation to bring to front
      * @since 2.6
      */
-    @Override
-    public void bringAnnotationToFront(final IWorkflowAnnotation annotation) {
-        if (!annotation.getID().isPresent()) {
-            throw new IllegalArgumentException("No id set for the workflow annotation \"" + annotation + "\".");
-        }
-        if (!m_annotations.containsKey(annotation.getID().get())) {
-            throw new IllegalArgumentException("Annotation  with id \"" + annotation.getID().get()
+    public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
                     + "\" does not exists - can't be moved to front");
         }
-        //get last annotation (i.e. the one with the highest index)
-        List<WorkflowAnnotationID> sortedWorkflowAnnotationIDs = getSortedWorkflowAnnotationIDs();
-        WorkflowAnnotationID last = sortedWorkflowAnnotationIDs.get(sortedWorkflowAnnotationIDs.size()-1);
-        swapWorkflowAnnotationIDs(annotation.getID().get(), last);
-        annotation.setID(last);
-
+        m_annotations.add(annotation);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 
     /**
-     * Resorts the internal ids to move the specified annotation to the first index.
-     * It also updates it's associated id (of both, the passed annotation and the with the workflow manager stored annotation, if different).
+     * Resorts the internal array to move the specified annotation to the first index.
      * @param annotation to bring to front
      * @since 2.6
      */
-    @Override
-    public void sendAnnotationToBack(final IWorkflowAnnotation annotation) {
-        if (!annotation.getID().isPresent()) {
-            throw new IllegalArgumentException("No id set for the workflow annotation \"" + annotation + "\".");
-        }
-        if (!m_annotations.containsKey(annotation.getID().get())) {
-            throw new IllegalArgumentException("Annotation with id \"" + annotation.getID().get()
+    public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
                     + "\" does not exists - can't be moved to front");
         }
-        //get first annotation (i.e. the one with the lowest index)
-        WorkflowAnnotationID first = getSortedWorkflowAnnotationIDs().get(0);
-        swapWorkflowAnnotationIDs(annotation.getID().get(), first);
-        annotation.setID(first);
-
+        m_annotations.insertElementAt(annotation, 0);
         annotation.fireChangeEvent(); // triggers workflow dirty
-    }
-
-    private void swapWorkflowAnnotationIDs(final WorkflowAnnotationID wfaID1, final WorkflowAnnotationID wfaID2) {
-        IWorkflowAnnotation wfa1 = m_annotations.get(wfaID1);
-        IWorkflowAnnotation wfa2 = m_annotations.get(wfaID2);
-        wfa1.setID(wfaID2);
-        wfa2.setID(wfaID1);
-        m_annotations.replace(wfaID1, wfa2);
-        m_annotations.replace(wfaID2, wfa1);
-    }
-
-    private List<WorkflowAnnotationID> getSortedWorkflowAnnotationIDs() {
-        return m_annotations.keySet().stream().sorted((o1, o2) -> o1.compareTo(o2)).collect(Collectors.toList());
     }
 
     /** Listener to annotations, etc; sets content dirty.
@@ -9274,11 +9041,10 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
     /**
      * @return a list of all node annotations in the contained flow.
      */
-    @Override
-    public List<INodeAnnotation> getNodeAnnotations() {
+    public List<NodeAnnotation> getNodeAnnotations() {
         try (WorkflowLock lock = lock()) {
             Collection<NodeContainer> nodeContainers = getNodeContainers();
-            List<INodeAnnotation> result = new LinkedList<INodeAnnotation>();
+            List<NodeAnnotation> result = new LinkedList<NodeAnnotation>();
             for (NodeContainer node : nodeContainers) {
                 result.add(node.getNodeAnnotation());
             }
@@ -9314,7 +9080,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *         a {@link NativeNodeContainer} or the model does not implement the
      *         requested type.
      */
-    @Override
     public <T> T castNodeModel(final NodeID id, final Class<T> cl) {
         NodeContainer nc = getNodeContainer(id);
         if (!(nc instanceof NativeNodeContainer)) {
@@ -9336,7 +9101,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @param recurse Whether to recurse into contained metanodes.
      * @return A (unsorted) list of nodes matching the class criterion
      */
-    @Override
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
         return findNodes(nodeModelClass, new NodeModelFilter<T>(), recurse);
     }
@@ -9412,7 +9176,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws IllegalArgumentException If the node is not contained in
      * this workflow.
      * @since 2.6 */
-    @Override
     public NodeContainer findNodeContainer(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             final NodeID prefix = id.getPrefix();
@@ -9564,7 +9327,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return A map from {@link DialogNode#getParameterName() node's parameter name} to its (JSON object value)
      * @since 2.12
      */
-    @Override
     public Map<String, ExternalNodeData> getInputNodes() {
         // remove the NodeContainer from the map...
         final Map<String, Pair<NativeNodeContainer, ExternalNodeData>> inputNodes =
@@ -9581,7 +9343,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @throws InvalidSettingsException If parameter name is not valid or a not uniquely defined in the workflow.
      * @since 2.12
      */
-    @Override
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
         try (WorkflowLock lock = lock()) {
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
@@ -9636,7 +9397,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return A map from node's parameter name to its node data
      * @since 2.12
      */
-    @Override
     public Map<String, ExternalNodeData> getExternalOutputs() {
         // remove the NodeContainer from the map...
         final Map<String, Pair<NativeNodeContainer, ExternalNodeData>> outputNodes =
@@ -9691,7 +9451,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      *
      * @param name of variable to be removed.
      */
-    @Override
     public void removeWorkflowVariable(final String name) {
         for (int i = 0; i < m_workflowVariables.size(); i++) {
             FlowVariable sv = m_workflowVariables.elementAt(i);
@@ -9716,7 +9475,6 @@ public final class WorkflowManager extends NodeContainer implements IWorkflowMan
      * @return a workflow context or <code>null</code>
      * @since 2.8
      */
-    @Override
     public WorkflowContext getContext() {
         return m_workflowContext;
     }

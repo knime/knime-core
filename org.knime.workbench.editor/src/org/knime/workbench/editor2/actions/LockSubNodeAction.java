@@ -60,6 +60,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.UI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -134,8 +136,8 @@ public class LockSubNodeAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof SubNodeContainer) {
-            SubNodeContainer snc = (SubNodeContainer)model;
+        if (Wrapper.wraps(model, SubNodeContainer.class)) {
+            SubNodeContainer snc = Wrapper.unwrap((UI)model, SubNodeContainer.class);
             if (snc.isWriteProtected()) {
                 return false;
             }
@@ -152,10 +154,10 @@ public class LockSubNodeAction extends AbstractNodeAction {
             return;
         }
         Object model = nodes[0].getModel();
-        if (!(model instanceof SubNodeContainer)) {
+        if (!(Wrapper.wraps(model, SubNodeContainer.class))) {
             return;
         }
-        WorkflowManager metaNodeWFM = ((SubNodeContainer)model).getWorkflowManager();
+        WorkflowManager metaNodeWFM = Wrapper.unwrap((UI)model, SubNodeContainer.class).getWorkflowManager();
         final Shell shell = Display.getCurrent().getActiveShell();
         if (!metaNodeWFM.unlock(new GUIWorkflowCipherPrompt())) {
             return;

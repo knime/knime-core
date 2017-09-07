@@ -129,7 +129,7 @@ public class ChangeEditorUIAction extends AbstractNodeAction {
             //store settings with the workflow (workflow is marked dirty)
             getEditor().markDirty();
             getEditor().applyEditorSettings(dlg.getSettings());
-            getEditor().getWorkflowManager().setEditorUIInformation(dlg.getSettings());
+            getEditor().getWorkflowManager().get().setEditorUIInformation(dlg.getSettings());
 
             //refresh workflow editor
 
@@ -139,7 +139,7 @@ public class ChangeEditorUIAction extends AbstractNodeAction {
             //editorPart.refresh();
 
             //workaround to refresh all connection container edit parts
-            getEditor().getWorkflowManager().getConnectionContainers().forEach(cc -> cc.setUIInfo(cc.getUIInfo()));
+            getEditor().getWorkflowManager().get().getConnectionContainers().forEach(cc -> cc.setUIInfo(cc.getUIInfo()));
         }
     }
 }

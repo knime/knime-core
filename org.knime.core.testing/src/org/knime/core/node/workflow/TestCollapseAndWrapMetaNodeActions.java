@@ -54,8 +54,6 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
@@ -92,10 +90,10 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
         mgr.resetAndConfigureAll();
         // there is only one in the wfm
-        IWorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
         CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
-            new WorkflowAnnotationID[] {annotation.getID().get()}, "Test-Meta/Wrap Node");
+            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
         NodeID metaSubID = collapseResult.getCollapsedMetanodeID();
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
         assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
@@ -120,10 +118,10 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
         mgr.resetAndConfigureAll();
         // there is only one in the wfm
-        IWorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
         CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
-            new WorkflowAnnotationID[] {annotation.getID().get()}, "Test-Meta/Wrap Node");
+            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
         WorkflowManager metaNode = mgr.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         NodeID metaSubID = metaNode.getID();

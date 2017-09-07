@@ -51,10 +51,11 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
@@ -65,7 +66,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  */
 public class InsertNodeCommand extends CreateNodeCommand {
 
-    private IConnectionContainer m_edge;
+    private ConnectionContainer m_edge;
 
     private final RootEditPart m_root;
 
@@ -80,10 +81,10 @@ public class InsertNodeCommand extends CreateNodeCommand {
      * @param snapToGrid should metanode snap to grid
      * @param edge on which the metanode should be inserted
      */
-    public InsertNodeCommand(final IWorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+    public InsertNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
         super(manager, factory, location, snapToGrid);
-        m_edge = edge.getModel();
+        m_edge = Wrapper.unwrapCC(edge.getModel());
         m_root = edge.getRoot();
         m_ih = new InsertHelper(getHostWFM(), m_edge);
 

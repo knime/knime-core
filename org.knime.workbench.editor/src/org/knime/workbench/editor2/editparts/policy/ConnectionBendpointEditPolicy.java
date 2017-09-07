@@ -65,7 +65,8 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import org.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
 import org.knime.workbench.editor2.commands.NewBendpointMoveCommand;
@@ -463,13 +464,13 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /** @return The workflow manager associated with the host. */
-    public IWorkflowManager getWorkflowManager() {
+    public WorkflowManager getWorkflowManager() {
         // we need the workflow manager
         // This is a bit tricky here, as the parent of the connection's edit
         // part is the ScalableFreefromEditPart. We need to get the first (and
         // only) child to get a reference to "our" root (WorkflowRootEditPart)
-        return ((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
-            .getWorkflowManager();
+        return Wrapper.unwrapWFM(((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
+            .getWorkflowManager());
     }
 
     /**
@@ -496,7 +497,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         int index = req.getIndex();
         ConnectionContainerEditPart editPart
             = (ConnectionContainerEditPart)getHost();
-        IWorkflowManager wfm = getWorkflowManager();
+        WorkflowManager wfm = getWorkflowManager();
         return new NewBendpointDeleteCommand(editPart, wfm, index);
     }
 
@@ -512,7 +513,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
 
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
-        IWorkflowManager m = getWorkflowManager();
+        WorkflowManager m = getWorkflowManager();
         return new NewBendpointMoveCommand(edit, m, index, loc, zoomManager);
     }
 }

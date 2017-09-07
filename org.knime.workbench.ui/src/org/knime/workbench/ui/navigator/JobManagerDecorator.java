@@ -54,8 +54,7 @@ import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.ui.node.workflow.UINodeContainer;
 
 /**
  *
@@ -105,10 +104,10 @@ public class JobManagerDecorator implements
     @Override
     public Image decorateImage(final Image image, final Object element) {
         if (element instanceof IContainer) {
-            INodeContainer cont = ProjectWorkflowMap.getWorkflow(
+            UINodeContainer cont = ProjectWorkflowMap.getUIWorkflow(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
-                URL iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(cont.findJobManagerKey()).getInstance().getIcon();
+                URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);

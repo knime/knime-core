@@ -52,30 +52,30 @@ import java.net.URI;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowManagerInput implements IEditorInput {
-    private final IWorkflowManager m_manager;
+    private final UIWorkflowManager m_manager;
     private final WorkflowEditor m_parent;
     private final URI m_workflowLocation;
 
-    public WorkflowManagerInput(final IWorkflowManager manager, final WorkflowEditor parent) {
+    public WorkflowManagerInput(final UIWorkflowManager manager, final WorkflowEditor parent) {
         m_manager = manager;
         m_parent = parent;
         m_workflowLocation = null;
     }
 
-    public WorkflowManagerInput(final IWorkflowManager manager, final URI workflowLocation) {
+    public WorkflowManagerInput(final UIWorkflowManager manager, final URI workflowLocation) {
         m_manager = manager;
         m_parent = null;
         m_workflowLocation = workflowLocation;
     }
 
-    public IWorkflowManager getWorkflowManager() {
+    public UIWorkflowManager getWorkflowManager() {
         return m_manager;
     }
 

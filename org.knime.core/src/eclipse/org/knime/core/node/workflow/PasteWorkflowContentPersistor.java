@@ -59,7 +59,6 @@ import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -80,7 +79,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
-    private final IWorkflowAnnotation[] m_copiedAnnotations;
+    private final WorkflowAnnotation[] m_copiedAnnotations;
     private final boolean m_isUndoableDeleteCommand;
 
     /** Create new persistor.
@@ -95,7 +94,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
             final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connectionSet,
             final Set<ConnectionContainerTemplate> additionalConnectionSet,
-            final IWorkflowAnnotation[] copiedAnnotations,
+            final WorkflowAnnotation[] copiedAnnotations,
             final boolean isUndoableDeleteCommand) {
         m_connectionSet = connectionSet;
         m_additionalConnectionSet = additionalConnectionSet;
@@ -138,7 +137,8 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
     public NodeUIInformation getInPortsBarUIInfo() {
         throwUnsupportedOperationException();
@@ -213,7 +213,8 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         throwUnsupportedOperationException();
@@ -244,15 +245,15 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
         if (m_isUndoableDeleteCommand) {
             return Arrays.asList(m_copiedAnnotations);
         } else {
             // must create a new fresh copy on each invocation
             // (multiple pastes possible)
-            ArrayList<IWorkflowAnnotation> result =
-                new ArrayList<IWorkflowAnnotation>(m_copiedAnnotations.length);
-            for (IWorkflowAnnotation a : m_copiedAnnotations) {
+            ArrayList<WorkflowAnnotation> result =
+                new ArrayList<WorkflowAnnotation>(m_copiedAnnotations.length);
+            for (WorkflowAnnotation a : m_copiedAnnotations) {
                 result.add(a.clone());
             }
             return result;

@@ -182,7 +182,8 @@ public final class NodeUIInformation {
                 + (m_hasAbsoluteCoordinates ? "(absolute)" : "(relative)");
     }
 
-    /** @return new Builder with defaults. */
+    /** @return new Builder with defaults.
+     * @since 3.5*/
     public static final Builder builder() {
         return new Builder();
     }
@@ -190,12 +191,14 @@ public final class NodeUIInformation {
     /**
      * @param nodeUIInfo object to copy the values from
      * @return new Builder with the values copied from the passed argument
+     * @since 3.5
      */
     public static final Builder builder(final NodeUIInformation nodeUIInfo) {
         return new Builder().copyFrom(nodeUIInfo);
     }
 
-    /** Builder pattern for {@link NodeUIInformation}. */
+    /** Builder pattern for {@link NodeUIInformation}.
+     * @since 3.5*/
     public static final class Builder {
 
         private int[] m_bounds = new int[]{0, 0, -1, -1};

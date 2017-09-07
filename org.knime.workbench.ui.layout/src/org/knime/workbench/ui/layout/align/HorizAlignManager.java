@@ -52,14 +52,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -75,7 +75,7 @@ public class HorizAlignManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(HorizAlignManager.class);
 
-    private IWorkflowManager m_wfm;
+    private UIWorkflowManager m_wfm;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
 
@@ -90,7 +90,7 @@ public class HorizAlignManager {
      * @param nodes the nodes to align
      *
      */
-    public HorizAlignManager(final IWorkflowManager wfManager,
+    public HorizAlignManager(final UIWorkflowManager wfManager,
             final NodeContainerEditPart[] nodes) {
         m_wfm = wfManager;
         m_nodeParts = nodes.clone();
@@ -118,7 +118,7 @@ public class HorizAlignManager {
         // transfer new coordinates into nodes
         for (Map.Entry<NodeContainerEditPart, Integer> e : offsets.entrySet()) {
             NodeContainerEditPart node = e.getKey();
-            INodeContainer nc = node.getNodeContainer();
+            UINodeContainer nc = node.getNodeContainer();
             NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
             NodeUIInformation newCoord = NodeUIInformation.builder()
@@ -139,12 +139,12 @@ public class HorizAlignManager {
 
     private void adjustBendPoints(final NodeContainerEditPart node,
             final int offset) {
-        INodeContainer nc = node.getNodeContainer();
+        UINodeContainer nc = node.getNodeContainer();
 
-        Set<IConnectionContainer> inConns =
+        Set<UIConnectionContainer> inConns =
                 m_wfm.getIncomingConnectionsFor(nc.getID());
 
-        for (IConnectionContainer conn : inConns) {
+        for (UIConnectionContainer conn : inConns) {
             ConnectionUIInformation ui =
                     conn.getUIInfo();
             if (ui == null) {
@@ -183,9 +183,9 @@ public class HorizAlignManager {
             conn.setUIInfo(newUIBuilder.build());
         }
 
-        Set<IConnectionContainer> outConns =
+        Set<UIConnectionContainer> outConns =
                 m_wfm.getOutgoingConnectionsFor(nc.getID());
-        for (IConnectionContainer conn : outConns) {
+        for (UIConnectionContainer conn : outConns) {
             ConnectionUIInformation ui =
                     conn.getUIInfo();
             if (ui == null || ui.getAllBendpoints().length == 0) {

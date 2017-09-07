@@ -51,11 +51,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeInPort;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeInPortFigure;
 
 /**
@@ -80,8 +80,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     protected IFigure createFigure() {
         // Create the figure, we need the number of ports from the parent
         // container
-        INodeContainer container = getNodeContainer();
-        boolean isMetaNode = !(container instanceof ISingleNodeContainer);
+        UINodeContainer container = getNodeContainer();
+        boolean isMetaNode = !(container instanceof UISingleNodeContainer);
         NodeInPortFigure portFigure =
                 new NodeInPortFigure(getType(), getIndex(), container
                         .getNrInPorts(), isMetaNode, container.getInPort(
@@ -99,11 +99,11 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    public List<IConnectionContainer> getModelTargetConnections() {
+    public List<UIConnectionContainer> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        IConnectionContainer container =
+        UIConnectionContainer container =
                 getManager().getIncomingConnectionFor(
                         getNodeContainer().getID(), getIndex());
 
@@ -120,7 +120,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    protected List<IConnectionContainer> getModelSourceConnections() {
+    protected List<UIConnectionContainer> getModelSourceConnections() {
         return EMPTY_LIST;
     }
 

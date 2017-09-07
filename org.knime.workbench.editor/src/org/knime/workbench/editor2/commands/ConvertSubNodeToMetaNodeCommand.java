@@ -48,10 +48,10 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 
 /**
  * Command to unwrap a sub node into a metanode.
@@ -62,13 +62,13 @@ public class ConvertSubNodeToMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertSubNodeToMetaNodeCommand.class);
 
     private final NodeID m_id;
-    private ISubNodeToMetaNodeResult m_subNodeToMetaNodeResult;
+    private SubNodeToMetaNodeResult m_subNodeToMetaNodeResult;
 
     /**
      * @param wfm the workflow manager holding the metanode
      * @param id of node to be converted.
      */
-    public ConvertSubNodeToMetaNodeCommand(final IWorkflowManager wfm, final NodeID id) {
+    public ConvertSubNodeToMetaNodeCommand(final WorkflowManager wfm, final NodeID id) {
         super(wfm);
         m_id = id;
     }

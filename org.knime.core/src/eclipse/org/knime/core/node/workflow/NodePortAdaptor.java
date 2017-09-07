@@ -47,16 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.def.node.port.PortTypeKey;
-import org.knime.core.def.node.workflow.INodePort;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
  * @author berthold, University of Konstanz
  */
-public class NodePortAdaptor implements INodePort, NodePort {
+public class NodePortAdaptor implements NodePort {
     /** This ports ID assigned from the underlying node. */
     private int m_portIndex;
 
@@ -86,7 +83,6 @@ public class NodePortAdaptor implements INodePort, NodePort {
     /**
      * @return The port id.
      */
-    @Override
     public final int getPortIndex() {
         return m_portIndex;
     }
@@ -102,23 +98,13 @@ public class NodePortAdaptor implements INodePort, NodePort {
     /**
      * @return The port type.
      */
-    @Override
     public final PortType getPortType() {
         return m_portType;
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortTypeKey getPortTypeKey() {
-        return PortTypeRegistry.getPortTypeKey(m_portType);
-    }
-
-    /**
      * @return The port name.
      */
-    @Override
     public final String getPortName() {
         return m_portName;
     }
@@ -130,7 +116,6 @@ public class NodePortAdaptor implements INodePort, NodePort {
      * @param portName The new name for this port. If null is passed, the
      *            default name will be generated.
      */
-    @Override
     public final void setPortName(final String portName) {
         if (portName == null || portName.trim().length() == 0) {
             if (this instanceof NodeInPort) {

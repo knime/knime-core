@@ -65,7 +65,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
@@ -286,7 +285,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     private static final class CheckUpdateRunnableWithProgress
         implements IRunnableWithProgress {
 
-        private final IWorkflowManager m_hostWFM;
+        private final WorkflowManager m_hostWFM;
         private final List<NodeID> m_candidateList;
         private final List<NodeID> m_updateList;
         private Status m_status;
@@ -294,7 +293,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         /**
          * @param hostWFM
          * @param candidateList */
-        public CheckUpdateRunnableWithProgress(final IWorkflowManager hostWFM,
+        public CheckUpdateRunnableWithProgress(final WorkflowManager hostWFM,
                 final List<NodeID> candidateList) {
             m_hostWFM = hostWFM;
             m_candidateList = candidateList;

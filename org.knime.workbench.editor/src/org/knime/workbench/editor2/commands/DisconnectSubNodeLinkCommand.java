@@ -50,14 +50,11 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.CastUtil.castWFM;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
 
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
@@ -90,7 +87,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager containing the links to change
      * @param ids The ids of the link nodes.
      */
-    public DisconnectSubNodeLinkCommand(final IWorkflowManager manager,
+    public DisconnectSubNodeLinkCommand(final WorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
         m_ids = ids.clone();
@@ -107,7 +104,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         for (NodeID id : m_ids) {
-            NodeContainer nc = castWFM(getHostWFM()).getNodeContainer(id);
+            NodeContainer nc = getHostWFM().getNodeContainer(id);
             if (nc instanceof SubNodeContainer) {
                 SubNodeContainer snc = (SubNodeContainer)nc;
                 MetaNodeTemplateInformation lI = snc.getTemplateInformation();
@@ -124,7 +121,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
     public void execute() {
         m_changedIDs = new ArrayList<NodeID>();
         m_oldTemplInfos = new ArrayList<MetaNodeTemplateInformation>();
-        WorkflowManager hostWFM = castWFM(getHostWFM());
+        WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_ids) {
             NodeContainer nc = hostWFM.getNodeContainer(id);
             if (nc instanceof SubNodeContainer) {
@@ -163,7 +160,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);
-            castWFM(getHostWFM()).setTemplateInformation(id, old);
+            getHostWFM().setTemplateInformation(id, old);
         }
         m_changedIDs = null;
         m_oldTemplInfos = null;

@@ -48,18 +48,17 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -73,9 +72,9 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             ExpandMetaNodeCommand.class);
 
     private final NodeID m_id;
-
-    private IExpandMetaNodeResult m_expandResult;
-
+    private NodeID[] m_pastedNodes;
+    private WorkflowAnnotation[] m_pastedAnnotations;
+    private WorkflowPersistor m_undoCopyPersistor;
     private final WorkflowEditor m_editor;
 
     /**
@@ -83,7 +82,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      * @param id of node to be expanded.
      * @param editor this command is called on.
      */
-    public ExpandMetaNodeCommand(final IWorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
+    public ExpandMetaNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
         m_editor = editor;
         m_id = id;
@@ -104,17 +103,18 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            IWorkflowManager hostWFM = getHostWFM();
+            WorkflowManager hostWFM = getHostWFM();
             // close editor of metanode and children
             for (IEditorPart child : m_editor.getSubEditors(m_id)) {
                 child.getEditorSite().getPage().closeEditor(child, false);
             }
-
-            m_expandResult = hostWFM.expandMetaNodeUndoable(m_id);
-            List<IWorkflowAnnotation> annotations =
-                    Arrays.stream(m_expandResult.getExpandedCopyContent().getAnnotationIDs())
-                        .map(id -> hostWFM.getWorkflowAnnotation(id)).collect(Collectors.toList());
-                NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
+            WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
+            cnt.setNodeIDs(m_id);
+            cnt.setIncludeInOutConnections(true);
+            m_undoCopyPersistor = hostWFM.copy(true, cnt.build());
+            WorkflowCopyContent wcc = hostWFM.expandMetaNode(m_id);
+            m_pastedNodes = wcc.getNodeIDs();
+            m_pastedAnnotations = wcc.getAnnotations();
 
             EditPartViewer partViewer = m_editor.getViewer();
             partViewer.deselectAll();
@@ -122,8 +122,8 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             if (partViewer.getRootEditPart().getContents() != null
                 && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
                 WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
-                rootEditPart.setFutureSelection(nodeIDs);
-                rootEditPart.setFutureAnnotationSelection(annotations);
+                rootEditPart.setFutureSelection(m_pastedNodes);
+                rootEditPart.setFutureAnnotationSelection(Arrays.asList(m_pastedAnnotations));
             }
 
 
@@ -140,7 +140,16 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canUndo() {
-        return m_expandResult != null && m_expandResult.canUndo();
+        if (m_undoCopyPersistor != null) {
+            WorkflowManager hostWFM = getHostWFM();
+            for (NodeID id : m_pastedNodes) {
+                if (!hostWFM.canRemoveNode(id)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -148,8 +157,17 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        m_expandResult.undo();
-        m_expandResult = null;
+        WorkflowManager hostWFM = getHostWFM();
+        for (NodeID id : m_pastedNodes) {
+            hostWFM.removeNode(id);
+        }
+        for (WorkflowAnnotation anno : m_pastedAnnotations) {
+            hostWFM.removeAnnotation(anno);
+        }
+        hostWFM.paste(m_undoCopyPersistor);
+        m_pastedNodes = null;
+        m_pastedAnnotations = null;
+        m_undoCopyPersistor = null;
     }
 
 }

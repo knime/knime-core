@@ -62,12 +62,12 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 
 /**
  *
@@ -91,16 +91,16 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
-            INodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+            UINodeContainer workflow = ProjectWorkflowMap.getUIWorkflow(
                     project.getLocationURI());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
-                return ((IWorkflowManager)workflow).getAllNodeContainers()
+                return ((UIWorkflowManager)workflow).getNodeContainers()
                     .size() > 0;
             }
-        } else if (element instanceof IWorkflowManager) {
-            return ((IWorkflowManager)element).getAllNodeContainers().size() > 0;
+        } else if (element instanceof UIWorkflowManager) {
+            return ((UIWorkflowManager)element).getNodeContainers().size() > 0;
         }
         // check if parent is a KNIME workflow
         // then it is a node and has no children
@@ -154,32 +154,32 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
-            INodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+            UINodeContainer workflow = ProjectWorkflowMap.getUIWorkflow(
                     project.getLocationURI());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
                 return getSortedNodeContainers(
-                        ((IWorkflowManager)workflow).getAllNodeContainers());
+                        ((UIWorkflowManager)workflow).getNodeContainers());
             }
         } else if (element instanceof WorkflowManager) {
-            return getSortedNodeContainers(((IWorkflowManager)element)
-                    .getAllNodeContainers());
+            return getSortedNodeContainers(((UIWorkflowManager)element)
+                    .getNodeContainers());
         }
         return getFolders(element);
     }
 
     // bugfix: 1474 (now nodes are always sorted lexicographically)
     private Object[] getSortedNodeContainers(
-            final Collection<INodeContainer> nodes) {
-        Set<INodeContainer>copy = new TreeSet<INodeContainer>(
-                new Comparator<INodeContainer>() {
+            final Collection<UINodeContainer> nodes) {
+        Set<UINodeContainer>copy = new TreeSet<UINodeContainer>(
+                new Comparator<UINodeContainer>() {
             /**
              * {@inheritDoc}
              */
             @Override
-            public int compare(final INodeContainer o1,
-                    final INodeContainer o2) {
+            public int compare(final UINodeContainer o1,
+                    final UINodeContainer o2) {
                 return o1.getNameWithID().compareTo(o2.getNameWithID());
             }
 

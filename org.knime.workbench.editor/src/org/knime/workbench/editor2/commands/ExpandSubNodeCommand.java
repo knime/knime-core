@@ -48,19 +48,17 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -75,7 +73,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
 
     private final NodeID m_id;
 
-    private IExpandSubNodeResult m_expandResult;
+    private ExpandSubnodeResult m_expandResult;
 
     private final WorkflowEditor m_editor;
 
@@ -84,7 +82,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
      * @param id of node to be expanded.
      * @param editor on which this command is executed
      */
-    public ExpandSubNodeCommand(final IWorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
+    public ExpandSubNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
         m_id = id;
         m_editor = editor;
@@ -107,7 +105,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            IWorkflowManager hostWFM = getHostWFM();
+            WorkflowManager hostWFM = getHostWFM();
 
             // close editor of subnode and children
             NodeID wfmID = ((SubNodeContainer)hostWFM.getNodeContainer(m_id)).getWorkflowManager().getID();
@@ -115,10 +113,8 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
                 child.getEditorSite().getPage().closeEditor(child, false);
             }
 
-            m_expandResult = hostWFM.expandSubNodeUndoable(m_id);
-            List<IWorkflowAnnotation> annotations =
-                Arrays.stream(m_expandResult.getExpandedCopyContent().getAnnotationIDs())
-                    .map(id -> hostWFM.getWorkflowAnnotation(id)).collect(Collectors.toList());
+            m_expandResult = hostWFM.expandSubWorkflow(m_id);
+            WorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
             NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
 
             EditPartViewer partViewer = m_editor.getViewer();
@@ -128,7 +124,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
                 && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
                 WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
                 rootEditPart.setFutureSelection(nodeIDs);
-                rootEditPart.setFutureAnnotationSelection(annotations);
+                rootEditPart.setFutureAnnotationSelection(Arrays.asList(annotations));
             }
 
         } catch (Exception e) {

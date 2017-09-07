@@ -140,7 +140,7 @@ public class SendAnnotationToBackAction extends AbstractNodeAction {
         if (sel.length != 1) {
             return;
         }
-        getEditor().getWorkflowManager().sendAnnotationToBack((WorkflowAnnotation)sel[0].getModel());
+        getEditor().getWorkflowManager().get().sendAnnotationToBack((WorkflowAnnotation)sel[0].getModel());
         getEditor().getViewer().getRootEditPart().getContents().refresh();
     }
 }

@@ -59,11 +59,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.util.Pair;
 
 /** Container class wrapping wrapping the network of nodes forming
@@ -240,7 +239,7 @@ class Workflow {
      * @param cc the connection to be removed.
      * @throws IllegalArgumentException if connection does not exist.
      */
-    synchronized void removeConnection(final IConnectionContainer cc) throws IllegalArgumentException {
+    synchronized void removeConnection(final ConnectionContainer cc) throws IllegalArgumentException {
         clearGraphAnnotationCache();
         // 1) try to delete it from set of outgoing connections
         if (!m_connectionsBySource.get(cc.getSource()).remove(cc)) {
@@ -1063,7 +1062,7 @@ class Workflow {
                         sortedNodes.put(prevID, is);
                     }
                 } else {
-                    assert cc.getType().equals(IConnectionContainer.ConnectionType.WFMTHROUGH);
+                    assert cc.getType().equals(ConnectionType.WFMTHROUGH);
                     Set<Integer> is = new HashSet<Integer>();
                     is.add(cc.getSourcePort());
                     sortedNodes.put(prevID, is);
@@ -1181,7 +1180,7 @@ class Workflow {
                 message = null;
             }
             result[i] = MetaPortInfo.builder()
-                    .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
+                    .setPortType(portType)
                     .setIsConnected(isConnected)
                     .setMessage(message)
                     .setOldIndex(i).build();
@@ -1230,7 +1229,7 @@ class Workflow {
                 message = null;
             }
             result[i] = MetaPortInfo.builder()
-                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
+                .setPortType(portType)
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build();

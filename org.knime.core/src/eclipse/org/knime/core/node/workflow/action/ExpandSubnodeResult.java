@@ -48,10 +48,8 @@
  */
 package org.knime.core.node.workflow.action;
 
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-import org.knime.core.def.node.workflow.action.IExpandMetaNodeResult;
-import org.knime.core.def.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -69,7 +67,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.12
  */
-public final class ExpandSubnodeResult implements IExpandSubNodeResult, IExpandMetaNodeResult {
+public final class ExpandSubnodeResult {
 
     private final WorkflowManager m_hostWFM;
 
@@ -90,7 +88,6 @@ public final class ExpandSubnodeResult implements IExpandSubNodeResult, IExpandM
     }
 
 
-    @Override
     public boolean canUndo() {
         WorkflowManager hostWFM = m_hostWFM;
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
@@ -101,13 +98,12 @@ public final class ExpandSubnodeResult implements IExpandSubNodeResult, IExpandM
         return true;
     }
 
-    @Override
     public void undo() {
         WorkflowManager hostWFM = m_hostWFM;
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
             hostWFM.removeNode(id);
         }
-        for (WorkflowAnnotationID anno : m_expandedCopyContent.getAnnotationIDs()) {
+        for (WorkflowAnnotation anno : m_expandedCopyContent.getAnnotations()) {
             hostWFM.removeAnnotation(anno);
         }
         hostWFM.paste(m_undoCopyPersistor);
@@ -116,7 +112,6 @@ public final class ExpandSubnodeResult implements IExpandSubNodeResult, IExpandM
     /**
      * @return the expandedCopyContent
      */
-    @Override
     public WorkflowCopyContent getExpandedCopyContent() {
         return m_expandedCopyContent;
     }

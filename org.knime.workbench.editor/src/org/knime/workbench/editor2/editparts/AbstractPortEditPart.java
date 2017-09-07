@@ -62,18 +62,18 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.INodeInPort;
-import org.knime.core.def.node.workflow.INodeOutPort;
-import org.knime.core.def.node.workflow.INodePort;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UINodeInPort;
+import org.knime.core.ui.node.workflow.UINodeOutPort;
+import org.knime.core.ui.node.workflow.UINodePort;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.editparts.anchor.InPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
@@ -108,8 +108,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @see WorkflowOutPortEditPart#getModelTargetConnections()
      *
      */
-    protected static final List<IConnectionContainer> EMPTY_LIST =
-            new LinkedList<IConnectionContainer>();
+    protected static final List<UIConnectionContainer> EMPTY_LIST =
+            new LinkedList<UIConnectionContainer>();
 
     /**
      * Subclasses must call this with the appropriate port type, port index and
@@ -179,7 +179,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return true, if the underlying port is connected.
      */
     public boolean isConnected() {
-        IWorkflowManager manager = getManager();
+        UIWorkflowManager manager = getManager();
         if (manager == null) {
             return false;
         }
@@ -197,12 +197,12 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @return the container
      */
-    protected INodeContainer getNodeContainer() {
+    protected UINodeContainer getNodeContainer() {
         if (getParent().getModel() instanceof WorkflowPortBar) {
             return ((WorkflowPortBar)getParent().getModel())
                     .getWorkflowManager();
         }
-        return (INodeContainer)getParent().getModel();
+        return (UINodeContainer)getParent().getModel();
     }
 
     /**
@@ -210,7 +210,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @return the workflow manager
      */
-    protected IWorkflowManager getManager() {
+    protected UIWorkflowManager getManager() {
         // should be no problem to return null
         // but avoid NullPointerException by calling methods on null object
         if (getParent() != null && getParent().getParent() != null) {
@@ -422,15 +422,15 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return tooltip text for the port (with number of columns and rows)
      */
     protected String getTooltipText(final String portName,
-            final INodePort port) {
+            final UINodePort port) {
         String name = portName;
         if (portName == null) {
             name = port.getPortName();
         }
         StringBuilder sb = new StringBuilder();
         sb.append(name);
-        if (port instanceof INodeOutPort) {
-            String portSummary = ((INodeOutPort)port).getPortSummary();
+        if (port instanceof UINodeOutPort) {
+            String portSummary = ((UINodeOutPort)port).getPortSummary();
             if (portSummary != null && portSummary.length() > 0) {
                 sb.append(" (");
                 sb.append(portSummary);
@@ -448,13 +448,13 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public void rebuildTooltip() {
         if (isInPort()) {
             if (getIndex() < getNodeContainer().getNrInPorts()) {
-                INodeInPort port = getNodeContainer().getInPort(getIndex());
+                UINodeInPort port = getNodeContainer().getInPort(getIndex());
                 String tooltip = getTooltipText(port.getPortName(), port);
                 ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
             }
         } else {
             if (getIndex() < getNodeContainer().getNrOutPorts()) {
-                INodeOutPort port = getNodeContainer().getOutPort(getIndex());
+                UINodeOutPort port = getNodeContainer().getOutPort(getIndex());
                 String tooltip = getTooltipText(port.getPortName(), port);
                 ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
             }

@@ -47,8 +47,8 @@
  */
 package org.knime.workbench.editor2.editparts;
 
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 
 /**
@@ -65,6 +65,6 @@ public interface ConnectableEditPart {
      *
      * @return the underlying node container, which should be connected.
      */
-    public INodeContainer getNodeContainer();
+    public UINodeContainer getNodeContainer();
 
 }

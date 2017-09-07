@@ -51,7 +51,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.IConnectionContainer;
 
 /**
  *
@@ -168,7 +167,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
     public void testDeleteOuterConnectionTryExecuteInsertAgain()
         throws Exception {
         WorkflowManager m = getManager();
-        IConnectionContainer c = findInConnection(m_meta, 0);
+        ConnectionContainer c = findInConnection(m_meta, 0);
         assertNotNull(c);
 
         assertTrue(m.canRemoveConnection(c));
@@ -200,7 +199,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
     public void testDeleteInnerConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
-        IConnectionContainer c = findInConnection(m_colFilterInMeta, 1);
+        ConnectionContainer c = findInConnection(m_colFilterInMeta, 1);
         assertNotNull(c);
 
         assertTrue(meta.canRemoveConnection(c));
@@ -235,7 +234,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
         executeAndWait(m_tblView);
-        IConnectionContainer connection = findInConnection(m_meta, 0);
+        ConnectionContainer connection = findInConnection(m_meta, 0);
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
 
@@ -250,7 +249,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
         executeAndWait(m_tblView);
-        IConnectionContainer connection = findInConnection(m_colFilterInMeta, 1);
+        ConnectionContainer connection = findInConnection(m_colFilterInMeta, 1);
         assertTrue(meta.canRemoveConnection(connection));
         meta.removeConnection(connection);
 

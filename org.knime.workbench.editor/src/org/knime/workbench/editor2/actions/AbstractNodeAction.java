@@ -59,7 +59,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.keys.IBindingService;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -121,9 +123,23 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * already been created completely !
      *
      */
-    protected final IWorkflowManager getManager() {
-        return m_editor.getWorkflowManager();
+    protected final WorkflowManager getManager() {
+        if (canHandleUIWorklfowManager()) {
+            throw new IllegalStateException(
+                "This action can supposedly handle the UIWorkflowManager but tries to retrieve the WorkflowManager.");
+        }
+        return m_editor.getWorkflowManager().get();
+    }
 
+    /**
+     * @return The manager that is edited by the current editor. Subclasses that can handle a {@link UIWorkflowManager}
+     *         (see {@link #canHandleUIWorklfowManager()}) may want to have a reference to this.
+     *
+     * Note that this value may be <code>null</code> if the editor has not
+     * already been created completely !
+     */
+    protected final UIWorkflowManager getUIManager() {
+        return m_editor.getUIWorkflowManager();
     }
 
     /**
@@ -254,20 +270,28 @@ public abstract class AbstractNodeAction extends SelectionAction {
      */
     @Override
     protected final boolean calculateEnabled() {
-        if (!canBeRunOnWriteProtectedWorkflows() && getManager().isWriteProtected()) {
+        if (getUIManager() != null && !Wrapper.wraps(getUIManager(), WorkflowManager.class)
+            && !canHandleUIWorklfowManager()) {
+            //if the UIWorkflowManager is NOT just a wrapper the WorkflowManager
+            //and the action cannot deal with the UIWorkflowManager-interface itself, it is disabled
             return false;
         }
         return getManager() != null && internalCalculateEnabled();
     }
 
     /**
-     * Override this method and return <code>true</code> if the derived action can be run on write protected workflows.
+     * Subclasses override this method and return <code>true</code> if they can handle, i.e., work on the
+     * {@link UIWorkflowManager} interface. If the current {@link UIWorkflowManager} is NOT just a wrapper of {@link WorkflowManager}
+     * and the derived action cannot deal with the {@link UIWorkflowManager}-interface only, the respective action will be
+     * disabled!
      *
-     * @return <code>true</code> if the action can be generally run on write protected workflows. Whether the action is
-     *         enabled then still depends on the {@link #internalCalculateEnabled()} result. If <code>false</code>, the
-     *         action will be disabled if the workflow manager is write protected.
+     * If the methods returns <code>true</code> the action MUST only work on the {@link UIWorkflowManager}, returned by
+     * the {@link #getUIManager()}-method.
+     *
+     * @return whether the action can handle the {@link UIWorkflowManager}.
+     *
      */
-    protected boolean canBeRunOnWriteProtectedWorkflows() {
+    protected boolean canHandleUIWorklfowManager() {
         return false;
     }
 

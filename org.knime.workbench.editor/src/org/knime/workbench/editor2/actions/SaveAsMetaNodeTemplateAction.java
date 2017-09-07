@@ -58,6 +58,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -133,9 +135,9 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)model;
-            switch (wm.getTemplateInformation().getRole()) {
+        if (model instanceof UIWorkflowManager) {
+            UIWorkflowManager wm = (UIWorkflowManager)model;
+            switch (Wrapper.unwrapWFM(wm).getTemplateInformation().getRole()) {
             case None:
                 break;
             default:
@@ -158,7 +160,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
             return;
         }
 
-        WorkflowManager wm = (WorkflowManager)nodes[0].getModel();
+        WorkflowManager wm = Wrapper.unwrapWFM(nodes[0].getNodeContainer());
 
         List<String> validMountPointList = new ArrayList<String>();
 //        Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().findView(ID)

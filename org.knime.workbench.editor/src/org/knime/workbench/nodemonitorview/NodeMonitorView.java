@@ -47,6 +47,9 @@
  */
 package org.knime.workbench.nodemonitorview;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.unwrapOptionalNC;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -85,13 +88,11 @@ import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -104,6 +105,8 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -123,7 +126,7 @@ public class NodeMonitorView extends ViewPart
 
     private IStructuredSelection m_lastSelection;
     private IStructuredSelection m_lastSelectionWhilePinned;
-    private INodeContainer m_lastNode;
+    private UINodeContainer m_lastNode;
     private boolean m_pinned = false;
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS }
@@ -288,7 +291,7 @@ public class NodeMonitorView extends ViewPart
                 ISelection sel = event.getSelection();
                 try {
                     int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
-                    updateDataTable(CastUtil.castNC(m_lastNode), newIndex);
+                    updateDataTable(unwrapNC(m_lastNode), newIndex);
                 } catch (NumberFormatException nfe) {
                     // ignore.
                 }
@@ -318,7 +321,7 @@ public class NodeMonitorView extends ViewPart
      */
     @Override
     public void dispose() {
-        INodeContainer cont = m_lastNode;
+        UINodeContainer cont = m_lastNode;
         if (cont != null) {
             cont.removeNodeStateChangeListener(this);
             m_lastNode = null;
@@ -367,7 +370,7 @@ public class NodeMonitorView extends ViewPart
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            INodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
+            UINodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
             updateNodeContainerInfo(nc);
         } else {
             // unsupported selection
@@ -385,7 +388,7 @@ public class NodeMonitorView extends ViewPart
      * Also de-register previous node and register with the new one if
      * the underlying NC changed.
      */
-    private void updateNodeContainerInfo(final INodeContainer nc) {
+    private void updateNodeContainerInfo(final UINodeContainer nc) {
         if (nc == null) {
             return;
         }
@@ -403,7 +406,7 @@ public class NodeMonitorView extends ViewPart
         Optional<NodeContainer> castNC;
         switch (m_choice) {
         case VARS:
-            castNC = CastUtil.castNCOptional(nc);
+            castNC = unwrapOptionalNC(nc);
             if(castNC.isPresent()) {
                 updateVariableTable(castNC.get());
             } else {
@@ -429,7 +432,7 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
 
-            castNC = CastUtil.castNCOptional(nc);
+            castNC = unwrapOptionalNC(nc);
             if(castNC.isPresent()) {
                 updateDataTable(castNC.get(), 0);
             } else {
@@ -437,7 +440,7 @@ public class NodeMonitorView extends ViewPart
             }
             break;
         case TIMER:
-            castNC = CastUtil.castNCOptional(nc);
+            castNC = unwrapOptionalNC(nc);
             if(castNC.isPresent()) {
                 updateTimerTable(castNC.get());
             } else {
@@ -445,7 +448,7 @@ public class NodeMonitorView extends ViewPart
             }
             break;
         case GRAPHANNOTATIONS:
-            castNC = CastUtil.castNCOptional(nc);
+            castNC = unwrapOptionalNC(nc);
             if(castNC.isPresent()) {
                 updateGraphAnnotationTable(castNC.get());
             } else {
@@ -603,7 +606,7 @@ public class NodeMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final INodeContainer nc,
+    private void updateSettingsTable(final UINodeContainer nc,
                                      final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Node Configuration");
@@ -620,8 +623,8 @@ public class NodeMonitorView extends ViewPart
             column.setText(titles[i]);
         }
         // add information about plugin and version to list (in show all/expert mode only)
-        if ((nc instanceof NativeNodeContainer) && showAll) {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+        if (Wrapper.wraps(nc, NativeNodeContainer.class) && showAll) {
+            NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
 
             TableItem item4 = new TableItem(m_table, SWT.NONE);
             item4.setText(0, "Node's feature name");

@@ -51,8 +51,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-
 
 
 /**
@@ -64,7 +62,7 @@ import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 public final class WorkflowCopyContent {
 
     private final List<NodeID> m_nodeIDs;
-    private final List<WorkflowAnnotationID> m_annotationIDs;
+    private final List<WorkflowAnnotation> m_annotations;
     /** see {@link #setIncludeInOutConnections(boolean)}. */
     private final boolean m_isIncludeInOutConnections;
     /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
@@ -81,10 +79,10 @@ public final class WorkflowCopyContent {
         } else {
             m_nodeIDs = Collections.emptyList();
         }
-        if (builder.m_annotationIDs != null) {
-            m_annotationIDs = Collections.unmodifiableList(Arrays.asList(builder.m_annotationIDs));
+        if (builder.m_annotations != null) {
+            m_annotations = Collections.unmodifiableList(Arrays.asList(builder.m_annotations));
         } else {
-            m_annotationIDs = Collections.emptyList();
+            m_annotations = Collections.emptyList();
         }
         m_isIncludeInOutConnections = builder.m_isIncludeInOutConnections;
         if (builder.m_suggestedNodeIDSuffixMap != null) {
@@ -106,7 +104,8 @@ public final class WorkflowCopyContent {
 
     /** The overwritten NodeID suffix to the given node or null if not overwritten.
      * @param id The ID in question.
-     * @return Null or the suffix. */
+     * @return Null or the suffix.
+     * @since 3.5*/
     public Integer getSuggestedNodIDSuffix(final NodeID id) {
         return m_suggestedNodeIDSuffixMap == null ? null : m_suggestedNodeIDSuffixMap.get(id);
     }
@@ -114,6 +113,7 @@ public final class WorkflowCopyContent {
     /** Get overwritten UIInfo to node with given ID or null.
      * @param id ...
      * @return ...
+     * @since 3.5
      */
     public NodeUIInformation getOverwrittenUIInfo(final NodeID id) {
         return m_uiInfoMap == null ? null : m_uiInfoMap.get(id);
@@ -125,13 +125,15 @@ public final class WorkflowCopyContent {
         return m_isIncludeInOutConnections;
     }
 
-    /** @return the annotations as a newly created array, never null */
-    public WorkflowAnnotationID[] getAnnotationIDs() {
-        return m_annotationIDs.toArray(new WorkflowAnnotationID[m_annotationIDs.size()]);
+    /** @return the annotations as a newly created array, never null
+     * @since 3.5*/
+    public WorkflowAnnotation[] getAnnotations() {
+    	return m_annotations.toArray(new WorkflowAnnotation[m_annotations.size()]);
     }
 
     /**
      * @return a new {@link Builder} with default values.
+     * @since 3.5
      */
     public static Builder builder() {
         return new Builder();
@@ -139,11 +141,12 @@ public final class WorkflowCopyContent {
 
     /**
      * Builder to create immutable objects of {@link WorkflowCopyContent}.
+     * @since 3.5
      */
     public static class Builder {
 
         private NodeID[] m_nodeIDs;
-        private WorkflowAnnotationID[] m_annotationIDs;
+        private WorkflowAnnotation[] m_annotations;
         /** see {@link #setIncludeInOutConnections(boolean)}. */
         private boolean m_isIncludeInOutConnections;
         /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
@@ -188,12 +191,12 @@ public final class WorkflowCopyContent {
             return this;
         }
 
-        /** Sets annotation ids.
-         * @param annotations the annotation ids
+        /** Sets annotations.
+         * @param annotations the annotations
          * @return this;
          */
-        public Builder setAnnotationIDs(final WorkflowAnnotationID... annotations) {
-            m_annotationIDs = annotations;
+        public Builder setAnnotation(final WorkflowAnnotation... annotations) {
+            m_annotations = annotations;
             return this;
         }
 

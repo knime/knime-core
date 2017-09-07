@@ -52,7 +52,7 @@ import org.knime.workbench.core.util.ImageRepository.SharedImages;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated

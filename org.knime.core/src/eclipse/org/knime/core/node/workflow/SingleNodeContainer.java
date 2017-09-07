@@ -50,7 +50,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -63,7 +62,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigEditTreeModel;
-import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -80,7 +78,7 @@ import org.w3c.dom.Element;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public abstract class SingleNodeContainer extends NodeContainer implements ISingleNodeContainer {
+public abstract class SingleNodeContainer extends NodeContainer {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -801,7 +799,7 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
 
     /** {@inheritDoc} */
     @Override
-    public ConfigBaseRO getNodeSettings() {
+    public NodeSettings getNodeSettings() {
         NodeSettings settings = new NodeSettings("configuration");
         saveSettings(settings, true);
         return settings;
@@ -967,7 +965,6 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
      * @return true if node is part of a scope context.
      * @since 2.8
      */
-    @Override
     public boolean isMemberOfScope() {
         synchronized (m_nodeMutex) {
             // we need to check if either a FlowScopeObject is on the stack or of
@@ -1024,7 +1021,6 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
      *   part of an inactive branch.
      * @see Node#isInactive()
      */
-    @Override
     public abstract boolean isInactive();
 
     /** @return <code>true</code> if the underlying node is able to consume
@@ -1037,7 +1033,6 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
     /**
      * @return the XML description of the node for the NodeDescription view
      */
-    @Override
     public abstract Element getXMLDescription();
 
     /** {@inheritDoc} */

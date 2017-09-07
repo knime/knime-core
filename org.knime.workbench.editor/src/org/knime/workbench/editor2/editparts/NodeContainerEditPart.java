@@ -51,7 +51,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -103,20 +102,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.views.properties.IPropertySource;
-import org.knime.core.def.node.workflow.INodeAnnotation;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.INodePort;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.CastUtil;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
@@ -133,8 +125,12 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UINodePort;
+import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -206,8 +202,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @return The <code>NodeContainer</code>(= model)
      */
     @Override
-    public INodeContainer getNodeContainer() {
-        return (INodeContainer)getModel();
+    public UINodeContainer getNodeContainer() {
+        return (UINodeContainer)getModel();
     }
 
     /**
@@ -215,8 +211,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      * @return The hosting WFM
      */
-    public IWorkflowManager getWorkflowManager() {
-        return (IWorkflowManager)getParent().getModel();
+    public UIWorkflowManager getWorkflowManager() {
+        return (UIWorkflowManager)getParent().getModel();
     }
 
     public boolean getShowImplFlowVarPorts() {
@@ -239,7 +235,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         initFigure();
 
         // If we already have extra info, init figure now
-        INodeContainer cont = getNodeContainer();
+        UINodeContainer cont = getNodeContainer();
         NodeUIInformation uiInfo = cont.getUIInformation();
         if (uiInfo != null) {
             // takes over all info except the coordinates
@@ -254,7 +250,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         // need to notify node annotation about our presence
         // the annotation is a child that's added first (placed in background)
         // to the viewer - so it doesn't know about the correct location yet
-        INodeAnnotation nodeAnnotation = cont.getNodeAnnotation();
+        NodeAnnotation nodeAnnotation = cont.getNodeAnnotation();
         NodeAnnotationEditPart nodeAnnotationEditPart =
             (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(nodeAnnotation);
         if (nodeAnnotationEditPart != null) {
@@ -288,7 +284,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      */
     @Override
     public void deactivate() {
-        INodeContainer nc = getNodeContainer();
+        UINodeContainer nc = getNodeContainer();
         IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.removePropertyChangeListener(this);
         nc.removeNodeStateChangeListener(this);
@@ -347,7 +343,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     /** @return The associated node annotation edit part (maybe null). */
     public final NodeAnnotationEditPart getNodeAnnotationEditPart() {
-        INodeAnnotation nodeAnnotation = getNodeContainer().getNodeAnnotation();
+        NodeAnnotation nodeAnnotation = getNodeContainer().getNodeAnnotation();
         NodeAnnotationEditPart nodeAnnotationEditPart =
             (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(nodeAnnotation);
         return nodeAnnotationEditPart;
@@ -373,9 +369,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * {@inheritDoc}
      */
     @Override
-    protected List<INodePort> getModelChildren() {
-        ArrayList<INodePort> ports = new ArrayList<INodePort>();
-        INodeContainer container = getNodeContainer();
+    protected List<UINodePort> getModelChildren() {
+        ArrayList<UINodePort> ports = new ArrayList<UINodePort>();
+        UINodeContainer container = getNodeContainer();
 
         for (int i = 0; i < container.getNrInPorts(); i++) {
             ports.add(container.getInPort(i));
@@ -407,7 +403,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
                     NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                     m_updateInProgress.set(false);
                     if (isActive()) {
-                        INodeContainer nc = getNodeContainer();
+                        UINodeContainer nc = getNodeContainer();
                         fig.setStateFromNC(nc);
                         updateNodeMessage();
                         // reset the tooltip text of the outports
@@ -506,7 +502,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         }
 
         // for sub node refresh all tooltips
-        if (getNodeContainer() instanceof SubNodeContainer) {
+        if (getNodeContainer() instanceof UISubNodeContainer) {
             for (Object part : getChildren()) {
                 if (part instanceof NodeInPortEditPart) {
                     NodeInPortEditPart inPortPart = (NodeInPortEditPart)part;
@@ -636,7 +632,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * is set. Otherwise the currently displayed message is removed.
      */
     private void updateNodeMessage() {
-        INodeContainer nc = getNodeContainer();
+        UINodeContainer nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = nc.getNodeMessage();
         containerFigure.setMessage(nodeMessage);
@@ -728,8 +724,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      */
     public void openDialog() {
-        INodeContainer container = (INodeContainer)getModel();
-        if (container instanceof IWorkflowManager) {
+        UINodeContainer container = (UINodeContainer)getModel();
+        if (container instanceof UIWorkflowManager) {
             openSubWorkflowEditor();
         } else {
             openNodeDialog();
@@ -742,7 +738,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @since 2.6
      */
     public void openNodeDialog() {
-        final INodeContainer container = (INodeContainer)getModel();
+        final UINodeContainer container = (UINodeContainer)getModel();
         // if this node does not have a dialog
         if (!container.hasDialog()) {
             LOGGER.debug("No dialog for " + container.getNameWithID());
@@ -823,8 +819,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, CastUtil.cast(container, NodeContainer.class));
-                dlg.open();
+                if (Wrapper.wraps(container, NodeContainer.class)) {
+                    WrappedNodeDialog dlg = new WrappedNodeDialog(shell, Wrapper.unwrapNC(container));
+                    dlg.open();
+                }
             } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
                 mb.setText("Dialog cannot be opened");
@@ -842,18 +840,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     public void openSubWorkflowEditor() {
         WorkflowCipherPrompt prompt = new GUIWorkflowCipherPrompt();
         Object obj = getModel();
-        IWorkflowManager wm;
-        if (obj instanceof IWorkflowManager) {
-            wm = (IWorkflowManager)getModel();
-        } else if (obj instanceof ISubNodeContainer) {
-            wm = ((ISubNodeContainer)obj).getWorkflowManager();
+        UIWorkflowManager wm;
+        if (obj instanceof UIWorkflowManager) {
+            wm = (UIWorkflowManager)getModel();
+        } else if (obj instanceof UISubNodeContainer) {
+            wm = ((UISubNodeContainer)obj).getWorkflowManager();
         } else {
             return;
         }
 
         //if workflow manager is encrypted, try unlocking it
         if (wm.isEncrypted()) {
-            if (!CastUtil.castWFM(wm).unlock(prompt)) {
+            if (!Wrapper.unwrapWFM(wm).unlock(prompt)) {
                 return;
             }
         }
@@ -941,16 +939,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void updateJobManagerIcon() {
-        INodeContainer nc = getNodeContainer();
-        Optional<JobManagerKey> jobManager = nc.getJobManagerKey();
+        UINodeContainer nc = getNodeContainer();
+        NodeExecutionJobManager jobManager = nc.getJobManager();
         URL iconURL;
-        if (jobManager.isPresent()) {
-            iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(jobManager.get()).getInstance().getIcon();
+        if (jobManager != null) {
+            iconURL = jobManager.getIcon();
         } else {
-            NodeExecutionJobManager parentJobManager = NodeExecutionJobManagerPool.getJobManagerFactory(nc.findJobManagerKey()).getInstance();
+            NodeExecutionJobManager parentJobManager = nc.findJobManager();
             if (parentJobManager instanceof AbstractNodeExecutionJobManager) {
-                if(nc instanceof NodeContainer) {
-                    iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(CastUtil.castNC(nc));
+                if (Wrapper.wraps(nc, NodeContainer.class)) {
+                    iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(Wrapper.unwrapNC(nc));
                 } else {
                     iconURL = null;
                 }
@@ -966,7 +964,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkMetaNodeTemplateIcon() {
-        INodeContainer nc = getNodeContainer();
+        UINodeContainer nc = getNodeContainer();
         MetaNodeTemplateInformation templInfo = null;
         if (nc instanceof NodeContainerTemplate) {
             NodeContainerTemplate t = (NodeContainerTemplate)nc;
@@ -996,9 +994,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkMetaNodeLockIcon() {
-        INodeContainer nc = getNodeContainer();
-        if (nc instanceof IWorkflowManager) {
-            IWorkflowManager wm = (IWorkflowManager)nc;
+        UINodeContainer nc = getNodeContainer();
+        if (nc instanceof UIWorkflowManager) {
+            UIWorkflowManager wm = (UIWorkflowManager)nc;
             Image i;
             if (wm.isEncrypted()) {
                 if (wm.isUnlocked()) {
@@ -1015,7 +1013,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkNodeLockIcon() {
-        INodeContainer nc = getNodeContainer();
+        UINodeContainer nc = getNodeContainer();
         Image i;
         StringBuilder toolTip = new StringBuilder();
         //node is considered being locked if it is either lock from being reseted, it's not deletable, or the dialog is locked
@@ -1156,7 +1154,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @SuppressWarnings("rawtypes")
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
-            return new NodeContainerProperties(CastUtil.cast(getNodeContainer(), NodeContainer.class));
+            return new NodeContainerProperties(Wrapper.unwrapNC(getNodeContainer()));
         }
         return super.getAdapter(adapter);
     }
@@ -1167,14 +1165,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @return the first free port the specified port could be connected to. Or -1 if there is none.
      */
     public int getFreeInPort(final ConnectableEditPart sourceNode, final int srcPortIdx) {
-        IWorkflowManager wm = getWorkflowManager();
+        UIWorkflowManager wm = getWorkflowManager();
         if (wm == null || sourceNode == null || srcPortIdx < 0) {
             return -1;
         }
         int startPortIdx = 1; // skip variable ports
         int connPortIdx = -1;
-        INodeContainer nc = getNodeContainer();
-        if (nc instanceof IWorkflowManager) {
+        UINodeContainer nc = getNodeContainer();
+        if (nc instanceof UIWorkflowManager) {
             startPortIdx = 0;
         }
         for (int i = startPortIdx; i < nc.getNrInPorts(); i++) {

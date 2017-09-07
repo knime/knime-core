@@ -45,8 +45,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.CastUtil.castWFM;
-
 import java.util.Arrays;
 
 import org.eclipse.draw2d.geometry.Point;
@@ -54,12 +52,11 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -104,7 +101,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if node location should be rounded to closest grid location.
      */
-    public CreateMetaNodeCommand(final IWorkflowManager manager,
+    public CreateMetaNodeCommand(final WorkflowManager manager,
             final WorkflowPersistor persistor, final Point location, final boolean snapToGrid) {
         super(manager);
         m_persistor = persistor;
@@ -124,7 +121,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         // Add node to workflow and get the container
         try {
-            WorkflowManager wfm = castWFM(getHostWFM());
+            WorkflowManager wfm = getHostWFM();
             m_copyContent = wfm.paste(m_persistor);
             NodeID[] nodeIDs = m_copyContent.getNodeIDs();
             if (nodeIDs.length > 0) {
@@ -182,13 +179,13 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             }
             LOGGER.debug(debug);
         }
-        WorkflowManager wm = castWFM(getHostWFM());
+        WorkflowManager wm = getHostWFM();
         if (canUndo()) {
             for (NodeID id : ids) {
                 wm.removeNode(id);
             }
-            for (WorkflowAnnotationID id : m_copyContent.getAnnotationIDs()) {
-                wm.removeAnnotation(id);
+            for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
+                wm.removeAnnotation(anno);
             }
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),

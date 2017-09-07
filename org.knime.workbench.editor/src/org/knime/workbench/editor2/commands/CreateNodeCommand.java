@@ -52,11 +52,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
@@ -101,7 +99,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid snap new node to grid
      */
-    public CreateNodeCommand(final IWorkflowManager manager,
+    public CreateNodeCommand(final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory, final Point location, final boolean snapToGrid) {
         super(manager);
         m_factory = factory;
@@ -119,7 +117,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
+        WorkflowManager hostWFM = getHostWFM();
         // Add node to workflow and get the container
         try {
             NodeID id = hostWFM.createAndAddNode(m_factory);

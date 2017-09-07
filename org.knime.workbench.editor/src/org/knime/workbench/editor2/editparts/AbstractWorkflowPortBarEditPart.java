@@ -55,17 +55,17 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeAnnotation;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.INodePort;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UINodePort;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortBarFigure;
@@ -126,10 +126,10 @@ public abstract class AbstractWorkflowPortBarEditPart
         int maxX = Integer.MIN_VALUE;
         int minX = Integer.MAX_VALUE;
         // find the smallest and the biggest X coordinate in all the UI infos in the flow
-        IWorkflowManager manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
-        for (INodeContainer nc : manager.getAllNodeContainers()) {
+        UIWorkflowManager manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
+        for (UINodeContainer nc : manager.getNodeContainers()) {
             int nodeWidth = NodeContainerFigure.WIDTH;
-            INodeAnnotation nodeAnno = nc.getNodeAnnotation();
+            NodeAnnotation nodeAnno = nc.getNodeAnnotation();
             if ((nodeAnno != null) && (nodeAnno.getWidth() > nodeWidth)) {
                 nodeWidth = nodeAnno.getWidth();
             }
@@ -148,7 +148,7 @@ public abstract class AbstractWorkflowPortBarEditPart
                 }
             }
         }
-        for (IWorkflowAnnotation anno : manager.getWorkflowAnnotations()) {
+        for (WorkflowAnnotation anno : manager.getWorkflowAnnotations()) {
             int x = anno.getX();
             if (minX > x) {
                 minX = x;
@@ -158,7 +158,7 @@ public abstract class AbstractWorkflowPortBarEditPart
                 maxX = x;
             }
         }
-        for (IConnectionContainer conn : manager.getConnectionContainers()) {
+        for (UIConnectionContainer conn : manager.getConnectionContainers()) {
             ConnectionUIInformation uiInfo = conn.getUIInfo();
             if (uiInfo != null) {
                 int[][] bendpoints = uiInfo.getAllBendpoints();
@@ -184,7 +184,7 @@ public abstract class AbstractWorkflowPortBarEditPart
         for (Object ep : getChildren()) {
             if (ep instanceof AbstractPortEditPart) {
                 Object model = ((EditPart)ep).getModel();
-                if (model instanceof INodePort) {
+                if (model instanceof UINodePort) {
                     ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
                 }
             }
@@ -236,7 +236,7 @@ public abstract class AbstractWorkflowPortBarEditPart
 
     /** {@inheritDoc} */
     @Override
-    public IWorkflowManager getNodeContainer() {
+    public UIWorkflowManager getNodeContainer() {
         return ((WorkflowPortBar)getModel()).getWorkflowManager();
     }
 

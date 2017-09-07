@@ -51,25 +51,27 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 
-import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.workbench.editor2.commands.AbstractKNIMECommand;
 import org.knime.workbench.ui.layout.LayoutManager;
 
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AutoLayoutCommand extends Command {
+public class AutoLayoutCommand extends AbstractKNIMECommand {
 
-    private final IWorkflowManager m_wfm;
+    private final WorkflowManager m_wfm;
 
-    private final Collection<INodeContainer> m_nodes;
+    private final Collection<UINodeContainer> m_nodes;
 
     private LayoutManager m_layoutMgr;
 
@@ -81,8 +83,9 @@ public class AutoLayoutCommand extends Command {
      * @param wfm
      * @param nodes if null, all nodes are laid out
      */
-    public AutoLayoutCommand(final IWorkflowManager wfm,
-            final Collection<INodeContainer> nodes) {
+    public AutoLayoutCommand(final WorkflowManager wfm,
+            final Collection<UINodeContainer> nodes) {
+        super(wfm);
         m_wfm = wfm;
         m_nodes = nodes;
     }
@@ -97,7 +100,7 @@ public class AutoLayoutCommand extends Command {
     }
 
     private void doLayout(final long seed) {
-        m_layoutMgr = new LayoutManager(m_wfm, seed);
+        m_layoutMgr = new LayoutManager(WorkflowManagerWrapper.wrap(m_wfm), seed);
         m_layoutMgr.doLayout(m_nodes);
     }
 
@@ -128,7 +131,7 @@ public class AutoLayoutCommand extends Command {
                 m_layoutMgr.getOldBendpoints();
         // re-position nodes
         for (Map.Entry<NodeID, NodeUIInformation> e : oldPositions.entrySet()) {
-            INodeContainer nc = m_wfm.getNodeContainer(e.getKey());
+            NodeContainer nc = m_wfm.getNodeContainer(e.getKey());
             if (nc == null) {
                 continue;
             }
@@ -137,7 +140,7 @@ public class AutoLayoutCommand extends Command {
         // re-create bendpoints
         for (Map.Entry<ConnectionID, ConnectionUIInformation> e : oldBendpoints
                 .entrySet()) {
-            IConnectionContainer cc = m_wfm.getConnection(e.getKey());
+            ConnectionContainer cc = m_wfm.getConnection(e.getKey());
             if (cc == null) {
                 continue;
             }

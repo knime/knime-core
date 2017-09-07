@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -67,12 +69,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -146,17 +150,17 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        INodeContainer nc = nodes[0].getNodeContainer();
-        if (!(nc instanceof WorkflowManager)) {
+        UINodeContainer nc = nodes[0].getNodeContainer();
+        if (!(nc instanceof UIWorkflowManager)) {
             return false;
         }
-        WorkflowManager metaNode = (WorkflowManager)nc;
-        if (!Role.Link.equals(metaNode.getTemplateInformation().getRole()) || metaNode.getParent().isWriteProtected()) {
+        UIWorkflowManager metaNode = (UIWorkflowManager)nc;
+        if (!Role.Link.equals(unwrapWFM(metaNode).getTemplateInformation().getRole()) || metaNode.getParent().isWriteProtected()) {
             // metanode must be linked and parent must not forbid the change
             return false;
         }
         // we can reconfigure the template link - but only if template and flow are in the same mountpoint
-        URI targetURI = metaNode.getTemplateInformation().getSourceURI();
+        URI targetURI = unwrapWFM(metaNode).getTemplateInformation().getSourceURI();
         try {
             if (ResolverUtil.isMountpointRelativeURL(targetURI)
                 || ResolverUtil.isWorkflowRelativeURL(targetURI)) {
@@ -190,7 +194,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
             return;
         }
 
-        WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getModel();
+        WorkflowManager metaNode = Wrapper.unwrapWFM(nodeParts[0].getNodeContainer());
         if (Role.Link.equals(metaNode.getTemplateInformation().getRole())) {
             WorkflowManager wfm = metaNode;
             while (!wfm.isProject()) {

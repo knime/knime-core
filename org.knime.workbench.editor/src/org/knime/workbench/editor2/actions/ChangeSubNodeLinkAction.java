@@ -71,13 +71,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -151,7 +151,7 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = CastUtil.cast(nodes[0].getNodeContainer(), NodeContainer.class);
+        NodeContainer nc = Wrapper.unwrapNC(nodes[0].getNodeContainer());
         if (!(nc instanceof SubNodeContainer)) {
             return false;
         }
@@ -195,7 +195,7 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
             return;
         }
 
-        SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getModel();
+        SubNodeContainer subNode = Wrapper.unwrap(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
         if (Role.Link.equals(subNode.getTemplateInformation().getRole())) {
             WorkflowManager wfm = subNode.getParent();
             URI targetURI = subNode.getTemplateInformation().getSourceURI();

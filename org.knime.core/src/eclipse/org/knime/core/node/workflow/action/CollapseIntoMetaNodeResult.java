@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow.action;
 
-import org.knime.core.def.node.workflow.action.ICollapseIntoMetaNodeResult;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowLock;
@@ -63,7 +62,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.2
  */
-public final class CollapseIntoMetaNodeResult implements ICollapseIntoMetaNodeResult {
+public final class CollapseIntoMetaNodeResult {
 
     private final WorkflowManager m_hostWFM;
 
@@ -84,18 +83,10 @@ public final class CollapseIntoMetaNodeResult implements ICollapseIntoMetaNodeRe
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean canUndo() {
         return m_hostWFM.canRemoveNode(m_collapsedMetanodeID);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void undo() {
         WorkflowManager hostWFM = m_hostWFM;
         try (WorkflowLock l = m_hostWFM.lock()) {
@@ -104,10 +95,7 @@ public final class CollapseIntoMetaNodeResult implements ICollapseIntoMetaNodeRe
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    /** @return the collapsedMetanodeID */
     public NodeID getCollapsedMetanodeID() {
         return m_collapsedMetanodeID;
     }

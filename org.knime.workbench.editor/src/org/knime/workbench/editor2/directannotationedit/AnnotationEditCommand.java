@@ -48,7 +48,7 @@
 package org.knime.workbench.editor2.directannotationedit;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.IAnnotation;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
@@ -62,7 +62,7 @@ public class AnnotationEditCommand extends Command {
 
     private AnnotationData m_oldAnnotation;
 
-    private final IAnnotation m_theAnnotation;
+    private final Annotation m_theAnnotation;
 
     /**
      * Creates a new command to change the user node name.
@@ -71,7 +71,7 @@ public class AnnotationEditCommand extends Command {
      * @param newAnnotation an annotation containing the new values.
      */
     public AnnotationEditCommand(final AnnotationEditPart annoPart,
-            final IAnnotation theAnnotation,
+            final Annotation theAnnotation,
             final AnnotationData newAnnotation) {
         m_newAnnotation = newAnnotation;
         m_theAnnotation = theAnnotation;
@@ -83,7 +83,7 @@ public class AnnotationEditCommand extends Command {
     @Override
     public void execute() {
         // store the old value for undo
-        m_oldAnnotation = m_theAnnotation.getData();
+        m_oldAnnotation = m_theAnnotation.getData().clone();
         m_theAnnotation.copyFrom(m_newAnnotation, true);
     }
 

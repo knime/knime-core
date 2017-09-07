@@ -57,7 +57,6 @@ import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 
@@ -132,7 +131,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         assertTrue(ids.remove(m_dataGenerator1));
         assertTrue(ids.remove(m_tableView12));
         final CollapseIntoMetaNodeResult collapseResult = manager.collapseIntoMetaNode(
-            ids.toArray(new NodeID[0]), new WorkflowAnnotationID[0], "Collapsed Content");
+            ids.toArray(new NodeID[0]), new WorkflowAnnotation[0], "Collapsed Content");
         WorkflowManager metaNode = manager.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         // remaining: data gen, table view, and new meta node

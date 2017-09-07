@@ -49,18 +49,18 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.wfvars.WorkflowVariablesDialog;
 
 /**
- * Action which opens {@link WorkflowVariablesDialog} that let the user add, 
+ * Action which opens {@link WorkflowVariablesDialog} that let the user add,
  * edit or remove workflow variables.
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
 public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -70,7 +70,7 @@ public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
         final WorkflowManager wf = getWorkflow();
         // open the dialog
         final Display d = Display.getDefault();
-        // run in UI thread 
+        // run in UI thread
         d.asyncExec(new Runnable() {
             @Override
             public void run() {
@@ -81,9 +81,9 @@ public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
             }
         });
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

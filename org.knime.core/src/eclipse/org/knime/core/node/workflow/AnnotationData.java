@@ -48,14 +48,19 @@
 package org.knime.core.node.workflow;
 
 import java.util.Arrays;
-import java.util.Objects;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * @author  Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class AnnotationData {
+public class AnnotationData implements Cloneable {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AnnotationData.class);
 
     /** Text alignment in annotation. */
     public enum TextAlignment {
@@ -85,53 +90,38 @@ public class AnnotationData {
     private StyleRange[] m_styleRanges = new StyleRange[0];
 
     /**  */
-    private final int m_bgColor;
+    private int m_bgColor;
 
     /**  */
-    private final int m_x;
+    private int m_x;
 
     /**  */
-    private final int m_y;
+    private int m_y;
 
     /**  */
-    private final int m_width;
+    private int m_width;
 
     /**  */
-    private final int m_height;
+    private int m_height;
 
-    private final TextAlignment m_alignment;
+    private TextAlignment m_alignment = TextAlignment.LEFT;
 
-    private final int m_borderSize;
+    private int m_borderSize = 0;
 
-    private final int m_borderColor;
+    private int m_borderColor = 0;
 
-    private final int m_defaultFontSize;
+    private int m_defaultFontSize = -1;
 
-    private final int m_version;
-
-    /**
-     * Creates a new annotation data object from the passed builder.
-     *
-     * @param builder
-     */
-    AnnotationData(@SuppressWarnings("rawtypes") final Builder builder) {
-        m_text = builder.m_text;
-        m_styleRanges = builder.m_styleRanges;
-        m_bgColor = builder.m_bgColor;
-        m_x = builder.m_x;
-        m_y = builder.m_y;
-        m_width = builder.m_width;
-        m_height = builder.m_height;
-        m_alignment = builder.m_alignment;
-        m_borderSize = builder.m_borderSize;
-        m_borderColor = builder.m_borderColor;
-        m_defaultFontSize = builder.m_defaultFontSize;
-        m_version = builder.m_version;
-    }
+    private int m_version = VERSION_20151123;
 
     /** @return the text */
     public final String getText() {
         return m_text;
+    }
+
+    /** @param text the text to set */
+    public final void setText(final String text) {
+        m_text = text;
     }
 
     /** @return the styleRanges */
@@ -139,9 +129,22 @@ public class AnnotationData {
         return m_styleRanges;
     }
 
+    /** @param styleRanges the styleRanges to set */
+    public final void setStyleRanges(final StyleRange[] styleRanges) {
+        if (styleRanges == null || Arrays.asList(styleRanges).contains(null)) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_styleRanges = styleRanges;
+    }
+
     /** @return the bgColor */
     public final int getBgColor() {
         return m_bgColor;
+    }
+
+    /** @param bgColor the bgColor to set */
+    public final void setBgColor(final int bgColor) {
+        m_bgColor = bgColor;
     }
 
     /** @return the x */
@@ -149,9 +152,19 @@ public class AnnotationData {
         return m_x;
     }
 
+    /** @param x the x to set */
+    public final void setX(final int x) {
+        m_x = x;
+    }
+
     /** @return the y */
     public final int getY() {
         return m_y;
+    }
+
+    /** @param y the y to set */
+    public final void setY(final int y) {
+        m_y = y;
     }
 
     /** @return the width */
@@ -159,9 +172,24 @@ public class AnnotationData {
         return m_width;
     }
 
+    /** @param width the width to set */
+    public final void setWidth(final int width) {
+        m_width = width;
+    }
+
     /** @return the height */
     public final int getHeight() {
         return m_height;
+    }
+
+    /** @param height the height to set */
+    public final void setHeight(final int height) {
+        m_height = height;
+    }
+
+    /** @param alignment the alignment to set */
+    public final void setAlignment(final TextAlignment alignment) {
+        m_alignment = alignment == null ? TextAlignment.LEFT : alignment;
     }
 
     /** @return the alignment */
@@ -175,10 +203,31 @@ public class AnnotationData {
         return m_borderSize;
     }
 
+    /** @param size border size in pixel, 0 or neg. for no border.
+     * @since 3.0*/
+    public final void setBorderSize(final int size) {
+        m_borderSize = size;
+    }
+
     /** @return the color of the border. See also {@link #getBorderSize()}.
      * @since 3.0*/
     public final int getBorderColor() {
         return m_borderColor;
+    }
+
+    /** @param color the new border color to set.
+     * @since 3.0*/
+    public final void setBorderColor(final int color) {
+        m_borderColor = color;
+    }
+
+    /** Shift annotation after copy&amp;paste.
+     * @param xOff x offset
+     * @param yOff y offset
+     */
+    public final void shiftPosition(final int xOff, final int yOff) {
+        setX(getX() + xOff);
+        setY(getY() + yOff);
     }
 
     /** Save-Version of this annotation. "Old" annotations used the system default font, newer ones will use
@@ -187,6 +236,31 @@ public class AnnotationData {
      * @since 3.0 */
     public final int getVersion() {
         return m_version;
+    }
+
+    /**
+     * Set dimensionality.
+     *
+     * @param x x-coordinate
+     * @param y y-coordinate
+     * @param width width of component
+     * @param height height of component
+     */
+    public final void setDimension(final int x, final int y, final int width,
+            final int height) {
+        setX(x);
+        setY(y);
+        setWidth(width);
+        setHeight(height);
+    }
+
+    /**
+     * Set the default font size for this annotation.
+     * @param size new default size
+     * @since 3.1
+     */
+    public final void setDefaultFontSize(final int size) {
+        m_defaultFontSize = size;
     }
 
     /**
@@ -249,7 +323,7 @@ public class AnnotationData {
         if (!Arrays.equals(m_styleRanges, other.m_styleRanges)) {
             return false;
         }
-        if (!Objects.equals(m_text, other.m_text)) {
+        if (!ConvenienceMethods.areEqual(m_text, other.m_text)) {
             return false;
         }
         if (m_defaultFontSize != other.m_defaultFontSize) {
@@ -280,14 +354,36 @@ public class AnnotationData {
     }
 
     /**
-     * Helper method to clone an array of {@link StyleRange}s.
+     * Copy content, styles, position from the argument.
      *
+     * @param otherData To copy from.
+     * @param includeBounds Whether to also update x, y, width, height. If
+     * false, it will only a copy the text with its styles
+     */
+    public void copyFrom(final AnnotationData otherData, final boolean includeBounds) {
+        if (includeBounds) {
+            setDimension(otherData.getX(), otherData.getY(),
+                    otherData.getWidth(), otherData.getHeight());
+        }
+        setText(otherData.getText());
+        setBgColor(otherData.getBgColor());
+        setAlignment(otherData.getAlignment());
+        setBorderSize(otherData.getBorderSize());
+        setBorderColor(otherData.getBorderColor());
+        setDefaultFontSize(otherData.getDefaultFontSize());
+        m_version = otherData.getVersion();
+        StyleRange[] otherStyles = otherData.getStyleRanges();
+        StyleRange[] myStyles = cloneStyleRanges(otherStyles);
+        setStyleRanges(myStyles);
+    }
+
+    /**
      * @param otherStyles
      * @return */
-    private static StyleRange[] cloneStyleRanges(final StyleRange[] otherStyles) {
+    private StyleRange[] cloneStyleRanges(final StyleRange[] otherStyles) {
         StyleRange[] myStyles = new StyleRange[otherStyles.length];
         for (int i = 0; i < otherStyles.length; i++) {
-            myStyles[i] = StyleRange.builder(otherStyles[i]).build();
+            myStyles[i] = otherStyles[i].clone();
         }
         return myStyles;
     }
@@ -295,244 +391,102 @@ public class AnnotationData {
     /** {@inheritDoc} */
     @Override
     public AnnotationData clone() {
-        //we should not provide a clone method
-        //e.g. conflicts with the final-fields
-        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
-        throw new UnsupportedOperationException();
+        try {
+            AnnotationData clone = (AnnotationData)super.clone();
+            StyleRange[] clonedStyles = cloneStyleRanges(getStyleRanges());
+            clone.setStyleRanges(clonedStyles);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Cant't clone", e);
+        }
     }
-
-    /** @return new Builder with defaults. */
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
-     * @param annoData object to copy the values from
-     * @param includeBounds Whether to also update x, y, width, height. If false, it will only a copy the text with
-         *            its styles
-     * @return new Builder with the values copied from the passed argument
+    /** Save all data.
+     * @param config To save to.
      */
-    public static final Builder builder(final AnnotationData annoData, final boolean includeBounds) {
-        return new Builder().copyFrom(annoData, includeBounds);
+    public void save(final NodeSettingsWO config) {
+        config.addString("text", getText());
+        config.addInt("bgcolor", getBgColor());
+        config.addInt("x-coordinate", getX());
+        config.addInt("y-coordinate", getY());
+        config.addInt("width", getWidth());
+        config.addInt("height", getHeight());
+        config.addString("alignment", getAlignment().toString());
+        config.addInt("borderSize", m_borderSize);
+        config.addInt("borderColor", m_borderColor);
+        config.addInt("defFontSize", m_defaultFontSize);
+        config.addInt("annotation-version", m_version);
+        NodeSettingsWO styleConfigs = config.addNodeSettings("styles");
+        int i = 0;
+        for (StyleRange sr : getStyleRanges()) {
+            NodeSettingsWO cur = styleConfigs.addNodeSettings("style_" + (i++));
+            sr.save(cur);
+        }
     }
 
-    /** Builder pattern for {@link AnnotationData}.
-     * @param <B> allows to return the right builder when sub-classed
-     * @param <D>
-     * */
-    public static class Builder<B extends Builder<B, D>, D extends AnnotationData> {
-
-        /**  */
-        private String m_text = "";
-
-        /**  */
-        private StyleRange[] m_styleRanges = new StyleRange[0];
-
-        /**  */
-        private int m_bgColor;
-
-        /**  */
-        private int m_x;
-
-        /**  */
-        private int m_y;
-
-        /**  */
-        private int m_width;
-
-        /**  */
-        private int m_height;
-
-        private TextAlignment m_alignment = TextAlignment.LEFT;
-
-        private int m_borderSize = 0;
-
-        private int m_borderColor = 0;
-
-        private int m_defaultFontSize = -1;
-
-        private int m_version = VERSION_20151123;
-
-        /**
-         * Copy content, styles, position from the argument.
-         *
-         * @param otherData To copy from.
-         * @param includeBounds Whether to also update x, y, width, height. If false, it will only a copy the text with
-         *            its styles
-         * @return this
-         */
-        public B copyFrom(final AnnotationData otherData, final boolean includeBounds) {
-            if (includeBounds) {
-                setDimension(otherData.getX(), otherData.getY(), otherData.getWidth(), otherData.getHeight());
+    /** loads new values.
+     * @param config To load from
+     * @param loadVersion Version to load
+     * @throws InvalidSettingsException If fails*/
+    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
+            throws InvalidSettingsException {
+        setText(config.getString("text"));
+        setBgColor(config.getInt("bgcolor"));
+        int x = config.getInt("x-coordinate");
+        int y = config.getInt("y-coordinate");
+        int width = config.getInt("width");
+        int height = config.getInt("height");
+        int borderSize = config.getInt("borderSize", 0); // default to 0 for backward compatibility
+        int borderColor = config.getInt("borderColor", 0); // default for backward compatibility
+        int defFontSize = config.getInt("defFontSize", -1); // default for backward compatibility
+        m_version = config.getInt("annotation-version", VERSION_OLD); // added in 3.0
+        TextAlignment alignment = TextAlignment.LEFT;
+        if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
+            String alignmentS = config.getString("alignment");
+            try {
+                alignment = TextAlignment.valueOf(alignmentS);
+            } catch (Exception e) {
+                throw new InvalidSettingsException(
+                        "Invalid alignment: " + alignmentS, e);
             }
-            setText(otherData.getText());
-            setBgColor(otherData.getBgColor());
-            setAlignment(otherData.getAlignment());
-            setBorderSize(otherData.getBorderSize());
-            setBorderColor(otherData.getBorderColor());
-            setDefaultFontSize(otherData.getDefaultFontSize());
-            m_version = otherData.getVersion();
-            StyleRange[] otherStyles = otherData.getStyleRanges();
-            StyleRange[] myStyles = cloneStyleRanges(otherStyles);
-            setStyleRanges(myStyles);
-            return (B)this;
         }
-
-        /** @param text the text to set
-         * @return this*/
-        public final B setText(final String text) {
-            m_text = text;
-            return (B)this;
+        setDimension(x, y, width, height);
+        setAlignment(alignment);
+        setBorderSize(borderSize);
+        setBorderColor(borderColor);
+        setDefaultFontSize(defFontSize);
+        NodeSettingsRO styleConfigs = config.getNodeSettings("styles");
+        StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
+        int i = 0;
+        for (String key : styleConfigs.keySet()) {
+            NodeSettingsRO cur = styleConfigs.getNodeSettings(key);
+            styles[i++] = StyleRange.load(cur);
         }
-
-        /** @param styleRanges the styleRanges to set
-         * @return this*/
-        public final B setStyleRanges(final StyleRange[] styleRanges) {
-            if (styleRanges == null || Arrays.asList(styleRanges).contains(null)) {
-                throw new NullPointerException("Argument must not be null.");
-            }
-            m_styleRanges = styleRanges;
-            return (B)this;
-        }
-
-        /** @param bgColor the bgColor to set
-         * @return this*/
-        public final B setBgColor(final int bgColor) {
-            m_bgColor = bgColor;
-            return (B)this;
-        }
-
-        /** @param x the x to set
-         * @return this*/
-        public final B setX(final int x) {
-            m_x = x;
-            return (B)this;
-        }
-
-        /** @param y the y to set
-         * @return this*/
-        public final B setY(final int y) {
-            m_y = y;
-            return (B)this;
-        }
-
-        /** @param width the width to set
-         * @return this*/
-        public final B setWidth(final int width) {
-            m_width = width;
-            return (B)this;
-        }
-
-        /** @param height the height to set
-         * @return this*/
-        public final B setHeight(final int height) {
-            m_height = height;
-            return (B)this;
-        }
-
-        /** @param alignment the alignment to set
-         * @return this*/
-        public final B setAlignment(final TextAlignment alignment) {
-            m_alignment = alignment == null ? TextAlignment.LEFT : alignment;
-            return (B)this;
-        }
-
-        /** @param size border size in pixel, 0 or neg. for no border.
-         * @return this
-         * @since 3.0*/
-        public final B setBorderSize(final int size) {
-            m_borderSize = size;
-            return (B)this;
-        }
-
-        /** @param color the new border color to set.
-         * @return this
-         * @since 3.0*/
-        public final B setBorderColor(final int color) {
-            m_borderColor = color;
-            return (B)this;
-        }
-
-        /** Shift annotation after copy&amp;paste.
-         * @param xOff x offset
-         * @param yOff y offset
-         * @return this
-         */
-        public final B shiftPosition(final int xOff, final int yOff) {
-            setX(m_x + xOff);
-            setY(m_y + yOff);
-            return (B)this;
-        }
-
-        /**
-         * Set dimensionality.
-         *
-         * @param x x-coordinate
-         * @param y y-coordinate
-         * @param width width of component
-         * @param height height of component
-         * @return this
-         */
-        public final B setDimension(final int x, final int y, final int width,
-                final int height) {
-            setX(x);
-            setY(y);
-            setWidth(width);
-            setHeight(height);
-            return (B)this;
-        }
-
-        /**
-         * Set the default font size for this annotation.
-         * @param size new default size
-         * @return this
-         * @since 3.1
-         */
-        public final B setDefaultFontSize(final int size) {
-            m_defaultFontSize = size;
-            return (B)this;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return ToStringBuilder.reflectionToString(this);
-        }
-
-        /** @return {@link AnnotationData} with current values. */
-        public D build() {
-            return (D)new AnnotationData(this);
-        }
-
+        setStyleRanges(styles);
     }
 
     /** Formatting rule on the text; similar to SWT style range. */
-    public static final class StyleRange {
+    public static final class StyleRange implements Cloneable {
 
-        private final int m_start;
+        private int m_start;
 
-        private final int m_length;
+        private int m_length;
 
-        private final String m_fontName;
+        private String m_fontName;
 
-        private final int m_fontStyle;
+        private int m_fontStyle;
 
-        private final int m_fontSize;
+        private int m_fontSize;
 
-        private final int m_fgColor;
-
-        private StyleRange(final Builder builder) {
-            m_start = builder.m_start;
-            m_length = builder.m_length;
-            m_fontName = builder.m_fontName;
-            m_fontStyle = builder.m_fontStyle;
-            m_fontSize = builder.m_fontSize;
-            m_fgColor = builder.m_fgColor;
-        }
+        private int m_fgColor;
 
         /** @return the start */
         public int getStart() {
             return m_start;
+        }
+
+        /** @param start the start to set */
+        public void setStart(final int start) {
+            m_start = start;
         }
 
         /** @return the length */
@@ -540,9 +494,19 @@ public class AnnotationData {
             return m_length;
         }
 
+        /** @param length the length to set */
+        public void setLength(final int length) {
+            m_length = length;
+        }
+
         /** @return the fontName */
         public String getFontName() {
             return m_fontName;
+        }
+
+        /** @param fontName the fontName to set */
+        public void setFontName(final String fontName) {
+            m_fontName = fontName;
         }
 
         /** @return the fontStyle */
@@ -550,9 +514,19 @@ public class AnnotationData {
             return m_fontStyle;
         }
 
+        /** @param fontStyle the fontStyle to set */
+        public void setFontStyle(final int fontStyle) {
+            m_fontStyle = fontStyle;
+        }
+
         /** @return the fontSize */
         public int getFontSize() {
             return m_fontSize;
+        }
+
+        /** @param fontSize the fontSize to set */
+        public void setFontSize(final int fontSize) {
+            m_fontSize = fontSize;
         }
 
         /** @return the fgColor */
@@ -560,13 +534,53 @@ public class AnnotationData {
             return m_fgColor;
         }
 
+        /** @param fgColor the fgColor to set */
+        public void setFgColor(final int fgColor) {
+            m_fgColor = fgColor;
+        }
+
+        /**
+         * Save to settings.
+         *
+         * @param settings To save to.
+         */
+        public void save(final NodeSettingsWO settings) {
+            settings.addInt("start", getStart());
+            settings.addInt("length", getLength());
+            settings.addString("fontname", getFontName());
+            settings.addInt("fontstyle", getFontStyle());
+            settings.addInt("fontsize", getFontSize());
+            settings.addInt("fgcolor", getFgColor());
+        }
+
+        /**
+         * Load from settings.
+         *
+         * @param settings To load from.
+         * @return The load style.
+         * @throws InvalidSettingsException If that fails.
+         */
+        public static StyleRange load(final NodeSettingsRO settings)
+                throws InvalidSettingsException {
+            StyleRange result = new StyleRange();
+            result.setStart(settings.getInt("start"));
+            result.setLength(settings.getInt("length"));
+            result.setFontName(settings.getString("fontname"));
+            result.setFontStyle(settings.getInt("fontstyle"));
+            result.setFontSize(settings.getInt("fontsize"));
+            result.setFgColor(settings.getInt("fgcolor"));
+            return result;
+        }
+
         /** {@inheritDoc} */
         @Override
         protected StyleRange clone() {
-            //we should not provide a clone method
-            //e.g. conflicts with the final-fields
-            //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
-            throw new UnsupportedOperationException();
+            try {
+                return (StyleRange)super.clone();
+            } catch (CloneNotSupportedException e) {
+                LOGGER.error("Error cloning style", e);
+            }
+            return new StyleRange();
         }
 
         /**
@@ -587,7 +601,7 @@ public class AnnotationData {
             if (other.m_fontStyle != m_fontStyle) {
                 return false;
             }
-            if (!Objects.equals(m_fontName, other.m_fontName) ) {
+            if (!ConvenienceMethods.areEqual(m_fontName, other.m_fontName) ) {
                 return false;
             }
             if (other.m_length != m_length) {
@@ -613,104 +627,6 @@ public class AnnotationData {
                 result ^= m_fontName.hashCode();
             }
             return result;
-        }
-
-        /** @return new Builder with defaults. */
-        public static final Builder builder() {
-            return new Builder();
-        }
-
-        /**
-         * @param styleRange
-         * @return new Builder with values copied from the passed {@link StyleRange} object
-         */
-        public static final Builder builder(final StyleRange styleRange) {
-            return new Builder().copyFrom(styleRange);
-        }
-
-        /** Builder pattern for {@link StyleRange}. */
-        public static final class Builder {
-
-            private int m_start;
-
-            private int m_length;
-
-            private String m_fontName;
-
-            private int m_fontStyle;
-
-            private int m_fontSize;
-
-            private int m_fgColor;
-
-            public Builder() {
-                //
-            }
-
-            /**
-             * Copies all fields from another {@link StyleRange} object.
-             *
-             * @param styleRange To copy from.
-             * @return this
-             */
-            public Builder copyFrom(final StyleRange styleRange) {
-                m_start = styleRange.m_start;
-                m_length = styleRange.m_length;
-                m_fontName = styleRange.m_fontName;
-                m_fontStyle = styleRange.m_fontStyle;
-                m_fontSize = styleRange.m_fontSize;
-                m_fgColor = styleRange.m_fgColor;
-                return this;
-            }
-
-
-            /** @param start the start to set
-             * @return this*/
-            public Builder setStart(final int start) {
-                m_start = start;
-                return this;
-            }
-
-            /** @param length the length to set
-             * @return this*/
-            public Builder setLength(final int length) {
-                m_length = length;
-                return this;
-            }
-
-            /** @param fontName the fontName to set
-             * @return this*/
-            public Builder setFontName(final String fontName) {
-                m_fontName = fontName;
-                return this;
-            }
-
-            /** @param fontStyle the fontStyle to set
-             * @return this*/
-            public Builder setFontStyle(final int fontStyle) {
-                m_fontStyle = fontStyle;
-                return this;
-            }
-
-            /** @param fontSize the fontSize to set
-             * @return this*/
-            public Builder setFontSize(final int fontSize) {
-                m_fontSize = fontSize;
-                return this;
-            }
-
-            /** @param fgColor the fgColor to set
-             * @return this*/
-            public Builder setFgColor(final int fgColor) {
-                m_fgColor = fgColor;
-                return this;
-            }
-
-            /** @return {@link StyleRange} with current values. */
-            public StyleRange build() {
-                return new StyleRange(this);
-            }
-
         }
 
     }

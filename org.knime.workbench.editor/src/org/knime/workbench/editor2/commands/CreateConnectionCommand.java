@@ -47,15 +47,17 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeTimer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -83,10 +85,10 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
 
     private ConnectionUIInformation m_newConnectionUIInfo;
 
-    private IConnectionContainer m_connection;
+    private ConnectionContainer m_connection;
 
     // for undo
-    private IConnectionContainer m_oldConnection;
+    private ConnectionContainer m_oldConnection;
 
     private boolean m_confirm;
 
@@ -96,7 +98,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * not.
      * @param hostWFM The host workflow
      */
-    public CreateConnectionCommand(final IWorkflowManager hostWFM) {
+    public CreateConnectionCommand(final WorkflowManager hostWFM) {
         super(hostWFM);
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
@@ -211,7 +213,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * @return Returns the connection, <code>null</code> if execute() was not
      *         called before.
      */
-    public IConnectionContainer getConnection() {
+    public ConnectionContainer getConnection() {
         return m_connection;
     }
 
@@ -229,7 +231,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         if (m_sourceNode == null || m_targetNode == null) {
             return false;
         }
-        IWorkflowManager wm = getHostWFM();
+        WorkflowManager wm = getHostWFM();
         if (m_targetPortID < 0) {
             ConnectableEditPart target = getTargetNode();
             if (target instanceof NodeContainerEditPart) {
@@ -238,7 +240,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         }
 
         // check whether an existing connection can be removed
-        IConnectionContainer conn = wm.getIncomingConnectionFor(
+        ConnectionContainer conn = wm.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         boolean canRemove = conn == null || wm.canRemoveConnection(conn);
         // let the workflow manager check if the connection can be created
@@ -267,7 +269,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         // check whether it is the same connection
-        IConnectionContainer conn = getHostWFM().getIncomingConnectionFor(
+        ConnectionContainer conn = getHostWFM().getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         if (conn != null
                 && conn.getSource().equals(
@@ -279,7 +281,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             // it is the very same connection -> do nothing
             return;
         }
-        IWorkflowManager wm = getHostWFM();
+        WorkflowManager wm = getHostWFM();
 
         // let the workflow manager check if the connection can be created
         // in case it cannot an exception is thrown which is caught and
@@ -311,8 +313,8 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             m_connection = wm.addConnection(
                     m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
                     m_targetNode.getNodeContainer().getID(), m_targetPortID);
-            NodeTimer.GLOBAL_TIMER.addConnectionCreation(m_sourceNode.getNodeContainer(),
-                                                         m_targetNode.getNodeContainer());
+            NodeTimer.GLOBAL_TIMER.addConnectionCreation(unwrapNC(m_sourceNode.getNodeContainer()),
+                                                         unwrapNC(m_targetNode.getNodeContainer()));
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
             }
@@ -351,11 +353,11 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        IWorkflowManager wm = getHostWFM();
+        WorkflowManager wm = getHostWFM();
         wm.removeConnection(m_connection);
-        IConnectionContainer old = m_oldConnection;
+        ConnectionContainer old = m_oldConnection;
         if (old != null) {
-            IConnectionContainer newConn = wm.addConnection(
+            ConnectionContainer newConn = wm.addConnection(
                     old.getSource(), old.getSourcePort(),
                     old.getDest(), old.getDestPort());
             newConn.setUIInfo(old.getUIInfo());

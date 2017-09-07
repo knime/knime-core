@@ -44,17 +44,16 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.def.node.workflow.INodeAnnotation;
-
 /**
  * Annotation associated with a node. Moves with the node. Can't be moved
  * separately.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public final class NodeAnnotation extends Annotation<NodeAnnotationData> implements INodeAnnotation, NodeUIInformationListener {
+public final class NodeAnnotation extends Annotation implements NodeUIInformationListener {
 
-    private NodeContainer m_nodeContainer;
+    private NodeID m_nodeID = null;
+    private Runnable m_changeListener;
 
     /**
      * @param data */
@@ -62,27 +61,39 @@ public final class NodeAnnotation extends Annotation<NodeAnnotationData> impleme
         super(data);
     }
 
-    void registerOnNodeContainer(final NodeContainer node) {
-        assert m_nodeContainer == null;
-        if (node == null) {
+    /**
+     *
+     * @param nodeID the node id this node annotation is registered for
+     * @param changeListener called when something has changed, .e.g. in order to set the workflow dirty in consequence
+     * @since 3.5
+     */
+    public void registerOnNodeContainer(final NodeID nodeID, final Runnable changeListener) {
+        m_changeListener = changeListener;
+        assert m_nodeID == null;
+        if (nodeID == null) {
             throw new NullPointerException("Can't hook annotation to null");
         }
-        m_nodeContainer = node;
-        m_nodeContainer.addUIInformationListener(this);
+        m_nodeID = nodeID;
     }
 
     void unregisterFromNodeContainer() {
-        assert m_nodeContainer != null;
-        m_nodeContainer.removeUIInformationListener(this);
-        m_nodeContainer = null;
+        assert m_nodeID != null;
+        m_nodeID = null;
+        m_changeListener = null;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the id of the node associated with this annotation
+     * @since 3.5
      */
+    public NodeID getNodeID() {
+        return m_nodeID;
+    }
+
+    /** {@inheritDoc} */
     @Override
-    public NodeContainer getNodeContainer() {
-        return m_nodeContainer;
+    public NodeAnnotationData getData() {
+        return (NodeAnnotationData)super.getData();
     }
 
     /**
@@ -98,16 +109,6 @@ public final class NodeAnnotation extends Annotation<NodeAnnotationData> impleme
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected NodeAnnotationData.Builder createAnnotationDataBuilder(final NodeAnnotationData annoData,
-        final boolean includeBounds) {
-        return NodeAnnotationData.builder(annoData, includeBounds);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         // don't set dirty - event was fired by corresponding node
@@ -116,8 +117,8 @@ public final class NodeAnnotation extends Annotation<NodeAnnotationData> impleme
 
     /** {@inheritDoc} */
     @Override
-    public void fireChangeEvent() {
-        m_nodeContainer.setDirty();
+    protected void fireChangeEvent() {
+        m_changeListener.run();
         super.fireChangeEvent();
     }
 

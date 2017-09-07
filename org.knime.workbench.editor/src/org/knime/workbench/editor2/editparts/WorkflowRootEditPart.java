@@ -72,20 +72,19 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.def.node.workflow.IAnnotation;
-import org.knime.core.def.node.workflow.INodeAnnotation;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
@@ -129,15 +128,15 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
     /* same deal for added annotations */
-    private final Set<IWorkflowAnnotation> m_annotationSelection =
-            new LinkedHashSet<IWorkflowAnnotation>();
+    private final Set<WorkflowAnnotation> m_annotationSelection =
+            new LinkedHashSet<WorkflowAnnotation>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
      *         edit part
      */
-    public IWorkflowManager getWorkflowManager() {
-        return (IWorkflowManager)getModel();
+    public UIWorkflowManager getWorkflowManager() {
+        return (UIWorkflowManager)getModel();
     }
 
     /**
@@ -163,7 +162,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      *            created
      */
     public void setFutureAnnotationSelection(
-            final Collection<IWorkflowAnnotation> annos) {
+            final Collection<WorkflowAnnotation> annos) {
         m_annotationSelection.clear();
         m_annotationSelection.addAll(annos);
     }
@@ -173,7 +172,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    public INodeContainer getNodeContainer() {
+    public UINodeContainer getNodeContainer() {
         return getWorkflowManager();
     }
 
@@ -187,21 +186,21 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {
         List modelChildren = new ArrayList();
-        IWorkflowManager wfm = getWorkflowManager();
+        UIWorkflowManager wfm = getWorkflowManager();
         // sequence here determines z-order of edit parts
 
         // Add workflow annotations as children of the workflow manager.
         // Add them first so they appear behind everything else
-        for (IAnnotation anno : wfm.getWorkflowAnnotations()) {
+        for (Annotation anno : wfm.getWorkflowAnnotations()) {
             modelChildren.add(anno);
         }
         // Add the annotations associated with nodes (add them after the
         // workflow annotations so they appear above them)
-        for (INodeAnnotation nodeAnno : wfm.getNodeAnnotations()) {
+        for (NodeAnnotation nodeAnno : wfm.getNodeAnnotations()) {
             modelChildren.add(nodeAnno);
         }
 
-        modelChildren.addAll(wfm.getAllNodeContainers());
+        modelChildren.addAll(wfm.getNodeContainers());
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);

@@ -50,11 +50,11 @@ import java.util.OptionalInt;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeOutPort;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -130,7 +130,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
-            final INodeContainer cont = p.getNodeContainer();
+            final UINodeContainer cont = p.getNodeContainer();
             return getPortIndex(cont).isPresent();
         }
         return false;
@@ -141,8 +141,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
      * @param nc the node in question.
      * @return that index or an empty optional if the node has no such port.
      */
-    private static OptionalInt getPortIndex(final INodeContainer nc) {
-        int portOfInterest = nc instanceof WorkflowManager ? 0 : 1;
+    private static OptionalInt getPortIndex(final UINodeContainer nc) {
+        int portOfInterest = nc instanceof UIWorkflowManager ? 0 : 1;
         return portOfInterest < nc.getNrOutPorts() ? OptionalInt.of(portOfInterest) : OptionalInt.empty();
     }
 
@@ -156,8 +156,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
         LOGGER.debug("Creating open first out-port view job for "
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
-            final INodeContainer cont = p.getNodeContainer();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+            final UINodeContainer cont = p.getNodeContainer();
+            final java.awt.Rectangle knimeWindowBounds = OpenViewAction.getAppBoundsAsAWTRec();
             // first port is flow var port
             final OptionalInt portIndex = getPortIndex(cont);
             if (portIndex.isPresent()) {
@@ -165,11 +165,9 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
-                        NodeOutPort port = CastUtil.cast(cont.getOutPort(portIndex.getAsInt()), NodeOutPort.class);
-                        LOGGER.debug("Open First Out-Port View "
-                           + cont.getName() + " on port " + port.getPortName());
-                        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                        port.openPortView(port.getPortName(), bounds);
+                        NodeOutPort port = Wrapper.unwrapNC(cont).getOutPort(portIndex.getAsInt());
+                        LOGGER.debug("Open First Out-Port View " + cont.getName() + " on port " + port.getPortName());
+                        port.openPortView(port.getPortName(), knimeWindowBounds);
                     }
                 });
             }

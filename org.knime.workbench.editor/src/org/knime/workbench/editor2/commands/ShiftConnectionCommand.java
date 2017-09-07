@@ -44,12 +44,11 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -75,7 +74,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
     /**
      *
      */
-    public ShiftConnectionCommand(final IWorkflowManager wfm,
+    public ShiftConnectionCommand(final UIWorkflowManager wfm,
             final NodeContainerEditPart node) {
         super(wfm);
         m_nodeID = node.getNodeContainer().getID();
@@ -86,9 +85,9 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
      * @return the lowest index of a port that is not connected.
      */
     private int getLastConnectedPort() {
-        INodeContainer nc = m_node.getNodeContainer();
+        UINodeContainer nc = m_node.getNodeContainer();
         int startIdx = 1;
-        if (nc instanceof WorkflowManager) {
+        if (nc instanceof UIWorkflowManager) {
             startIdx = 0;
         }
         int lastConnPort = -1;
@@ -104,7 +103,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
         return lastConnPort;
     }
 
-    private int getNextMatchingPort(final IConnectionContainer conn) {
+    private int getNextMatchingPort(final ConnectionContainer conn) {
         int p = conn.getDestPort() + 1; // start with the next port
         while (p < m_node.getNodeContainer().getNrInPorts() - 1) {
             if (getHostWFM().canAddNewConnection(conn.getSource(),
@@ -128,7 +127,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
         if (port < 0 || port >= m_node.getNodeContainer().getNrInPorts() - 1) {
             return false;
         }
-        IConnectionContainer existingConn =
+        ConnectionContainer existingConn =
                 getHostWFM().getIncomingConnectionFor(m_nodeID, port);
         assert existingConn != null;
         if (!getHostWFM().canRemoveConnection(existingConn)) {
@@ -146,7 +145,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         m_oldPort = getLastConnectedPort();
-        IConnectionContainer existingConn =
+        ConnectionContainer existingConn =
                 getHostWFM().getIncomingConnectionFor(m_nodeID, m_oldPort);
         assert existingConn != null;
         m_newPort = getNextMatchingPort(existingConn);
@@ -177,7 +176,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        IConnectionContainer newConn =
+        ConnectionContainer newConn =
                 getHostWFM().getIncomingConnectionFor(m_nodeID, m_newPort);
         assert newConn != null;
         getHostWFM().removeConnection(newConn);

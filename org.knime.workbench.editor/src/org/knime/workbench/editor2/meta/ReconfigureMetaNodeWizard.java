@@ -183,8 +183,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
         infoStr.append("of MetaNode " + node.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(),
-                node.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(), node.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }

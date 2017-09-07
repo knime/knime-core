@@ -49,12 +49,13 @@ import java.util.List;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.wrapper.NodeContainerWrapper;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -122,11 +123,11 @@ public class SelectLoopAction extends AbstractNodeAction {
         if (selected.length != 1) {
             return false;
         }
-        INodeContainer node = selected[0].getNodeContainer();
-        if (!(node instanceof ISingleNodeContainer)) {
+        UINodeContainer node = selected[0].getNodeContainer();
+        if (!(node instanceof UISingleNodeContainer)) {
             return false;
         }
-        if (((ISingleNodeContainer)node).isMemberOfScope()) {
+        if (((UISingleNodeContainer)node).isMemberOfScope()) {
              return true;
         }
         return false;
@@ -137,14 +138,14 @@ public class SelectLoopAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManager wfm = CastUtil.castWFM(getManager());
+        WorkflowManager wfm = getManager();
         for (NodeContainerEditPart selNode : nodeParts) {
-            INodeContainer selNC = selNode.getNodeContainer();
-            if (selNC instanceof ISingleNodeContainer) {
+            UINodeContainer selNC = selNode.getNodeContainer();
+            if (selNC instanceof UISingleNodeContainer) {
                 EditPartViewer viewer = selNode.getViewer();
-                List<NodeContainer> loopNodes = wfm.getNodesInScope((SingleNodeContainer)selNC);
+                List<NodeContainer> loopNodes = wfm.getNodesInScope(Wrapper.unwrap(selNC, SingleNodeContainer.class));
                 for (NodeContainer nc : loopNodes) {
-                    NodeContainerEditPart sel = (NodeContainerEditPart)viewer.getEditPartRegistry().get(nc);
+                    NodeContainerEditPart sel = (NodeContainerEditPart)viewer.getEditPartRegistry().get(NodeContainerWrapper.wrap(nc));
                     viewer.appendSelection(sel);
                 }
             }

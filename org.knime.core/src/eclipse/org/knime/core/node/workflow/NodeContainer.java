@@ -49,13 +49,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.JobManagerKey;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -98,7 +95,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  * @noextend This class is not intended to be subclassed by clients.
  */
-public abstract class NodeContainer implements INodeContainer {
+public abstract class NodeContainer implements NodeProgressListener, NodeContainerStateObservable {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -218,8 +215,9 @@ public abstract class NodeContainer implements INodeContainer {
         m_id = id;
         m_state = InternalNodeContainerState.IDLE;
         m_nodeLocks = new NodeLocks(false, false, false);
-        m_annotation = new NodeAnnotation(NodeAnnotationData.builder().setIsDefault(true).build());
-        m_annotation.registerOnNodeContainer(this);
+        m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
+        m_annotation.registerOnNodeContainer(getID(), () -> setDirty());
+        addUIInformationListener(m_annotation);
     }
 
     /**
@@ -232,7 +230,7 @@ public abstract class NodeContainer implements INodeContainer {
     NodeContainer(final WorkflowManager parent, final NodeID id, final NodeAnnotation nodeAnno) {
         this(parent, id);
         if (nodeAnno != null) {
-            m_annotation.setData(NodeAnnotationData.builder(nodeAnno.getData(), true).build());
+            m_annotation.getData().copyFrom(nodeAnno.getData(), true);
         }
     }
 
@@ -250,7 +248,7 @@ public abstract class NodeContainer implements INodeContainer {
         m_customDescription = persistor.getCustomDescription();
         NodeAnnotationData annoData = persistor.getNodeAnnotationData();
         if (annoData != null && !annoData.isDefault()) {
-            m_annotation.setData(NodeAnnotationData.builder(annoData, true).build());
+            m_annotation.getData().copyFrom(annoData, true);
         }
 
         m_uiInformation = persistor.getUIInfo();
@@ -265,7 +263,6 @@ public abstract class NodeContainer implements INodeContainer {
     /**
      * @return parent workflowmanager holding this node (or null if root).
      */
-    @Override
     public final WorkflowManager getParent() {
         return m_parent;
     }
@@ -304,24 +301,6 @@ public abstract class NodeContainer implements INodeContainer {
         }
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final Optional<JobManagerKey> getJobManagerKey() {
-        return getJobManager() != null ? Optional.of(NodeExecutionJobManagerPool.getJobManagerKey(getJobManager()))
-            : Optional.empty();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JobManagerKey findJobManagerKey() {
-        return NodeExecutionJobManagerPool.getJobManagerKey(findJobManager());
-    }
-
     /**
      * @return The job manager associated with this node or null if this
      * node will use the job manager of the parent (or the parent of ...)
@@ -354,13 +333,11 @@ public abstract class NodeContainer implements INodeContainer {
         return m_executionJob;
     }
 
-    @Override
     public boolean addNodePropertyChangedListener(
             final NodePropertyChangedListener l) {
         return m_nodePropertyChangedListeners.add(l);
     }
 
-    @Override
     public boolean removeNodePropertyChangedListener(
             final NodePropertyChangedListener l) {
         return m_nodePropertyChangedListeners.remove(l);
@@ -660,7 +637,6 @@ public abstract class NodeContainer implements INodeContainer {
 
     /** clears the list of waiting loops.
      */
-    @Override
     public void clearWaitingLoopList() {
         m_listOfWaitingLoops.clear();
     }
@@ -701,12 +677,11 @@ public abstract class NodeContainer implements INodeContainer {
     }
 
     /**
-     *
-     * @param listener listener to the node progress
-     * @return true if the listener was not already registered before, false
-     *         otherwise
-     */
-   @Override
+    *
+    * @param listener listener to the node progress
+    * @return true if the listener was not already registered before, false
+    *         otherwise
+    */
    public boolean addProgressListener(final NodeProgressListener listener) {
        if (listener == null) {
            throw new NullPointerException("Node progress listener must not be null");
@@ -721,7 +696,6 @@ public abstract class NodeContainer implements INodeContainer {
     * @return true if the listener was successfully removed, false if it was
     *         not registered
     */
-   @Override
    public boolean removeNodeProgressListener(final NodeProgressListener listener) {
        return m_progressListeners.remove(listener);
    }
@@ -746,7 +720,6 @@ public abstract class NodeContainer implements INodeContainer {
     * @param listener listener to the node messages (warnings and errors)
     * @return true if the listener was not already registered, false otherwise
     */
-   @Override
    public boolean addNodeMessageListener(final NodeMessageListener listener) {
        if (listener == null) {
            throw new NullPointerException("Node message listner must not be null!");
@@ -760,14 +733,12 @@ public abstract class NodeContainer implements INodeContainer {
     * @return true if the listener was successfully removed, false if it was not
     *         registered
     */
-   @Override
    public boolean removeNodeMessageListener(final NodeMessageListener listener) {
        return m_messageListeners.remove(listener);
    }
 
    /** Get the message to be displayed to the user.
     * @return the node message consisting of type and message, never null. */
-   @Override
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
@@ -775,7 +746,6 @@ public abstract class NodeContainer implements INodeContainer {
    /**
     * @param newMessage the nodeMessage to set
     */
-   @Override
    public final void setNodeMessage(final NodeMessage newMessage) {
        NodeMessage oldMessage = m_nodeMessage;
        m_nodeMessage = newMessage == null ? NodeMessage.NONE : newMessage;
@@ -798,7 +768,6 @@ public abstract class NodeContainer implements INodeContainer {
 
    /* ---------------- UI -----------------*/
 
-   @Override
    public void addUIInformationListener(final NodeUIInformationListener l) {
        if (l == null) {
            throw new NullPointerException("NodeUIInformationListener must not be null!");
@@ -806,7 +775,6 @@ public abstract class NodeContainer implements INodeContainer {
        m_uiListeners.add(l);
    }
 
-   @Override
    public void removeUIInformationListener(final NodeUIInformationListener l) {
        m_uiListeners.remove(l);
    }
@@ -822,7 +790,6 @@ public abstract class NodeContainer implements INodeContainer {
     *
     * @return a the node information
     */
-   @Override
    public NodeUIInformation getUIInformation() {
        return m_uiInformation;
    }
@@ -832,7 +799,6 @@ public abstract class NodeContainer implements INodeContainer {
     * @param uiInformation new user interface information of the node such as
     *   coordinates on workbench.
     */
-   @Override
    public void setUIInformation(final NodeUIInformation uiInformation) {
        // ui info is a property of the outer workflow (it just happened
        // to be a field member of this class)
@@ -958,7 +924,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @return that property
      * @since 2.6
      */
-    @Override
     public boolean hasDataAwareDialogPane() {
         return false;
     }
@@ -996,7 +961,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @see WorkflowManager#isAllInputDataAvailableToNode(NodeID)
      * @noreference This method is not intended to be referenced by clients.
      */
-    @Override
     public final boolean isAllInputDataAvailable() {
         return getParent().isAllInputDataAvailableToNode(m_id);
     }
@@ -1009,7 +973,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @since 2.8
      * @noreference This method is not intended to be referenced by clients.
      */
-    @Override
     public final boolean canExecuteUpToHere() {
         return getParent().isFullyConnected(m_id);
     }
@@ -1029,7 +992,6 @@ public abstract class NodeContainer implements INodeContainer {
      *
      * @throws InvalidSettingsException if settings are not applicable.
      */
-    @Override
     public void applySettingsFromDialog() throws InvalidSettingsException {
         CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         // TODO do we need to reset the node first??
@@ -1043,7 +1005,6 @@ public abstract class NodeContainer implements INodeContainer {
         }
     }
 
-    @Override
     public boolean areDialogSettingsValid() {
         CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         NodeSettings sett = new NodeSettings("node settings");
@@ -1061,7 +1022,6 @@ public abstract class NodeContainer implements INodeContainer {
 
     /* --------------- Dialog handling --------------- */
 
-    @Override
     public abstract boolean hasDialog();
 
 
@@ -1071,8 +1031,15 @@ public abstract class NodeContainer implements INodeContainer {
 
     abstract NodeDialogPane getDialogPane();
 
-    @Override
     public abstract boolean areDialogAndNodeSettingsEqual();
+
+    /** @return user settings for this node, possibly empty but not <code>null</code>.
+     * @since 3.5*/
+    public NodeSettings getNodeSettings() {
+        NodeSettings settings = new NodeSettings("node_settings");
+        saveSettings(settings);
+        return settings;
+    }
 
     void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         /*
@@ -1129,22 +1096,17 @@ public abstract class NodeContainer implements INodeContainer {
 
     /* ------------- ports --------------- */
 
-    @Override
     public abstract int getNrInPorts();
 
-    @Override
     public abstract NodeInPort getInPort(final int index);
 
-    @Override
     public abstract NodeOutPort getOutPort(final int index);
 
-    @Override
     public abstract int getNrOutPorts();
 
     /* -------------- views ---------------- */
 
 
-    @Override
     public int getNrViews() {
 
         int numOfNodeViews = getNrNodeViews();
@@ -1162,10 +1124,8 @@ public abstract class NodeContainer implements INodeContainer {
      * Returns the number of views provided by the node implementation.
      * @return the number of views provided by the node implementation
      */
-    @Override
     public abstract int getNrNodeViews();
 
-    @Override
     public String getViewName(final int i) {
         if (i < getNrNodeViews()) {
             return getNodeViewName(i);
@@ -1175,7 +1135,6 @@ public abstract class NodeContainer implements INodeContainer {
         }
     }
 
-    @Override
     public abstract String getNodeViewName(final int i);
 
     public AbstractNodeView<NodeModel> getView(final int i) {
@@ -1221,7 +1180,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @return true if node provides an interactive view.
      * @since 2.8
      */
-    @Override
     public abstract boolean hasInteractiveView();
 
     /** Get the 'interactive web views' provided by this node. That is, views providing a {@link WebTemplate} for an interactive
@@ -1243,7 +1201,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @return name of the interactive view or <code>null</code>
      * @since 2.8
      */
-    @Override
     public abstract String getInteractiveViewName();
 
     /**
@@ -1261,21 +1218,16 @@ public abstract class NodeContainer implements INodeContainer {
      * @since 3.1 */
     public abstract FlowObjectStack getFlowObjectStack();
 
-    @Override
     public abstract URL getIcon();
 
-    @Override
     public abstract NodeType getType();
 
-    @Override
     public final NodeID getID() {
         return m_id;
     }
 
-    @Override
     public abstract String getName();
 
-    @Override
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
@@ -1290,7 +1242,6 @@ public abstract class NodeContainer implements INodeContainer {
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
      */
-    @Override
     public String getDisplayLabel() {
         String label = getID().toString() + " - "
             + getName();
@@ -1355,7 +1306,6 @@ public abstract class NodeContainer implements INodeContainer {
      *         flows the custom name) or null, if no annotation or no old custom
      *         name is set.
      */
-    @Override
     public String getCustomName() {
         String annoLine = getFirstAnnotationLine();
         if (annoLine.isEmpty()) {
@@ -1368,17 +1318,14 @@ public abstract class NodeContainer implements INodeContainer {
     /**
      * @return the annotation associated with the node, never null.
      */
-    @Override
     public NodeAnnotation getNodeAnnotation() {
         return m_annotation;
     }
 
-    @Override
     public String getCustomDescription() {
         return m_customDescription;
     }
 
-    @Override
     public void setCustomDescription(final String customDescription) {
         boolean notify = false;
         synchronized (m_nodeMutex) {
@@ -1413,7 +1360,6 @@ public abstract class NodeContainer implements INodeContainer {
     protected abstract boolean isLocalWFM();
 
     /** @param value the isDeletable to set */
-    @Override
     public void setDeletable(final boolean value) {
         if (m_nodeLocks.hasDeleteLock() == value) {
             changeNodeLocks(!value, NodeLock.DELETE);
@@ -1421,7 +1367,6 @@ public abstract class NodeContainer implements INodeContainer {
     }
 
     /** @return the isDeletable */
-    @Override
     public boolean isDeletable() {
         return !m_nodeLocks.hasDeleteLock();
     }
@@ -1433,6 +1378,7 @@ public abstract class NodeContainer implements INodeContainer {
     void cleanup() {
         if (m_annotation != null) {
             m_annotation.unregisterFromNodeContainer();
+            removeUIInformationListener(m_annotation);
         }
         closeAllJobManagerViews();
         for (int i = 0; i < getNrOutPorts(); i++) {
@@ -1444,7 +1390,6 @@ public abstract class NodeContainer implements INodeContainer {
     /**
      * @return the isDirty
      */
-    @Override
     public final boolean isDirty() {
         final ReferencedFile ncDirectory = getNodeContainerDirectory();
         return ncDirectory == null || ncDirectory.isDirty() || internalIsDirty();
@@ -1480,7 +1425,6 @@ public abstract class NodeContainer implements INodeContainer {
     /**
      * Mark this node container to be changed, that is, it needs to be saved.
      */
-    @Override
     public void setDirty() {
         if (setDirty(getNodeContainerDirectory())) {
             LOGGER.debug("Setting dirty flag on " + getNameWithID());
@@ -1688,7 +1632,6 @@ public abstract class NodeContainer implements INodeContainer {
      *            {@link NodeLock#CONFIGURE}
      * @since 3.2
      */
-    @Override
     public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
         boolean deleteLock = m_nodeLocks.hasDeleteLock();
         boolean resetLock = m_nodeLocks.hasResetLock();
@@ -1726,8 +1669,81 @@ public abstract class NodeContainer implements INodeContainer {
      * @return the currently set {@link NodeLocks}
      * @since 3.2
      */
-    @Override
     public NodeLocks getNodeLocks() {
         return m_nodeLocks;
+    }
+
+    /**
+     * Class that represents the lock status of a node, i.e. whether a node has a reset, delete or configure-lock.
+     * If a lock is set then the respective action is not allowed to be performed.
+     *
+     * @since 3.2
+     */
+    public final static class NodeLocks {
+
+        private boolean m_hasDeleteLock;
+        private boolean m_hasResetLock;
+        private boolean m_hasConfigureLock;
+
+        /**
+         * @since 3.5
+         */
+        public NodeLocks(final boolean hasDeleteLock, final boolean hasResetLock, final boolean hasConfigureLock) {
+            m_hasDeleteLock = hasDeleteLock;
+            m_hasResetLock = hasResetLock;
+            m_hasConfigureLock = hasConfigureLock;
+        }
+
+        /**
+         * @return <code>true</code> if the node can be deleted
+         */
+        public boolean hasDeleteLock() {
+           return m_hasDeleteLock;
+        }
+
+       /**
+        * @return <code>true</code> if the node is locked from being reseted, i.e. it is under NO circumstances resetable, if
+        *         <code>false</code> it still might be not resetable depending on the {@link NodeContainer#isResetable()}-implementation.
+        * @since 3.2
+        */
+       public boolean hasResetLock() {
+           return m_hasResetLock;
+       }
+
+       /**
+        * @return <code>true</code> if the node is locked from being configured
+        * @since 3.2
+        */
+       public boolean hasConfigureLock() {
+           return m_hasConfigureLock;
+       }
+
+    }
+
+    /**
+     * Available locks to be passed in the {@link NodeContainer#changeNodeLocks(boolean, NodeLock...)}-method.
+     *
+     * @since 3.2
+     */
+    public static enum NodeLock {
+        /**
+         * Represents all available locks.
+         */
+        ALL,
+
+        /**
+         * Represents a delete node lock.
+         */
+        DELETE,
+
+        /**
+         * Represents a reset node lock.
+         */
+        RESET,
+
+        /**
+         * Represents a configure node lock.
+         */
+        CONFIGURE;
     }
 }

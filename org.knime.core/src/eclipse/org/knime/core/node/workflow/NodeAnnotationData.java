@@ -47,19 +47,28 @@
  */
 package org.knime.core.node.workflow;
 
+
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NodeAnnotationData extends AnnotationData {
 
-    private final boolean m_isDefault;
+    private boolean m_isDefault;
 
     /**  */
-    private NodeAnnotationData(final Builder builder) {
-        super(builder.setAlignment(TextAlignment.CENTER).setBgColor(0xFFFFFF));
-        m_isDefault = builder.m_isDefault;
+    NodeAnnotationData(final boolean isDefault) {
+        m_isDefault = isDefault;
+        super.setAlignment(TextAlignment.CENTER);
+        super.setBgColor(0xFFFFFF);
+    }
 
+    /** {@inheritDoc} */
+    @Override
+    public void copyFrom(final AnnotationData otherData,
+            final boolean includeBounds) {
+        m_isDefault = false;
+        super.copyFrom(otherData, includeBounds);
     }
 
     /** @return the isDefault */
@@ -70,78 +79,18 @@ public final class NodeAnnotationData extends AnnotationData {
     /** {@inheritDoc} */
     @Override
     public NodeAnnotationData clone() {
-        //we should not provide a clone method
-        //e.g. conflicts with the final-fields
-        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
-        throw new UnsupportedOperationException();
+        return (NodeAnnotationData)super.clone();
     }
 
     public static NodeAnnotationData createFromObsoleteCustomName(
             final String customName) {
         if (customName == null) {
-            return NodeAnnotationData.builder().setIsDefault(true).build();
+            return new NodeAnnotationData(true);
         }
-        NodeAnnotationData result = NodeAnnotationData.builder().setIsDefault(false).setText(customName).build();
+        NodeAnnotationData result = new NodeAnnotationData(false);
+        result.setText(customName);
         return result;
     }
 
-    /** @return builder with defaults */
-    public static final Builder builder() {
-        return new Builder();
-    }
-
-    /**
-     * @param annoData object to copy the values from
-     * @param includeBounds Whether to also update x, y, width, height. If false, it will only a copy the text with
-         *            its styles
-     * @return new Builder with the values copied from the passed argument
-     */
-    public static final Builder builder(final NodeAnnotationData annoData, final boolean includeBounds) {
-        return new Builder().copyFrom(annoData, includeBounds);
-    }
-
-    /** Builder pattern for {@link NodeAnnotationData} */
-    public static final class Builder extends AnnotationData.Builder<Builder, NodeAnnotationData> {
-
-        private boolean m_isDefault;
-
-        /**
-         *
-         */
-        public Builder() {
-            //
-        }
-
-        /**
-         * Copy content, styles, position from a {@link NodeAnnotationData}-object.
-         *
-         * @param otherData To copy from.
-         * @param includeBounds Whether to also update x, y, width, height. If false, it will only a copy the text with
-         *            its styles
-         * @return this
-         */
-        public Builder copyFrom(final NodeAnnotationData otherData,
-                final boolean includeBounds) {
-            m_isDefault = otherData.m_isDefault;
-            super.copyFrom(otherData, includeBounds);
-            return this;
-        }
-
-        /**
-         * @param isDefault
-         * @return this
-         */
-        public Builder setIsDefault(final boolean isDefault) {
-            m_isDefault = isDefault;
-            return this;
-        }
-
-        /** @return {@link NodeAnnotationData} with current values. */
-        @Override
-        public NodeAnnotationData build() {
-            return new NodeAnnotationData(this);
-        }
-
-    }
 
 }

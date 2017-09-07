@@ -47,6 +47,9 @@
  */
 package org.knime.workbench.editor2;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.util.List;
 
 import org.eclipse.gef.ContextMenuProvider;
@@ -63,18 +66,18 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -232,11 +235,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                INodeContainer container =
-                        (INodeContainer)((NodeContainerEditPart)p).getModel();
-                if (container instanceof SingleNodeContainer) {
-                    ISingleNodeContainer snc = (ISingleNodeContainer)container;
-                    CastUtil.castOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
+                UINodeContainer container =
+                        (UINodeContainer)((NodeContainerEditPart)p).getModel();
+                if (container instanceof UISingleNodeContainer) {
+                    UISingleNodeContainer snc = (UISingleNodeContainer)container;
+                    Wrapper.unwrapOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
                         if (sncImpl.isModelCompatibleTo(LoopEndNode.class)) {
                             // pause loop execution
                             IAction loopAction;
@@ -285,12 +288,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 addSelectLoop = false;
                 break;
             }
-            INodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
-            if (!(nc instanceof ISingleNodeContainer)) {
+            UINodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
+            if (!(nc instanceof UISingleNodeContainer)) {
                 addSelectLoop = false;
                 break;
             }
-            if (!((ISingleNodeContainer)nc).isMemberOfScope()) {
+            if (!((UISingleNodeContainer)nc).isMemberOfScope()) {
                 addSelectLoop = false;
                 break;
             }
@@ -320,7 +323,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
-                        final WorkflowManager wm = CastUtil.castWFM(((WorkflowPortBar)root.getModel()).getWorkflowManager());
+                        final WorkflowManager wm = Wrapper.unwrapWFM(((WorkflowPortBar)root.getModel()).getWorkflowManager());
                         action = new OpenWorkflowPortViewAction(wm,
                             ((WorkflowInPortEditPart)child).getIndex(), wm.getNrInPorts());
                         manager.appendToGroup("outPortViews", action);
@@ -330,10 +333,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             }
             if (p instanceof NodeContainerEditPart) {
 
-                INodeContainer container = null;
-                container = (INodeContainer)((NodeContainerEditPart)p).getModel();
+                UINodeContainer container = null;
+                container = (UINodeContainer)((NodeContainerEditPart)p).getModel();
 
-                if (!(container instanceof IWorkflowManager)) {
+                if (!(container instanceof UIWorkflowManager)) {
                     action = m_actionRegistry.getAction(ToggleFlowVarPortsAction.ID);
                     manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
                     ((AbstractNodeAction)action).update();
@@ -342,31 +345,31 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 int numNodeViews = container.getNrViews();
                 for (int i = 0; i < numNodeViews; i++) {
-                    action = new OpenViewAction(CastUtil.cast(container, NodeContainer.class), i);
+                    action = new OpenViewAction(unwrapNC(container), i);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add interactive view options
                 if (container.hasInteractiveView()) {
-                    action = new OpenInteractiveViewAction(CastUtil.cast(container, NodeContainer.class));
+                    action = new OpenInteractiveViewAction(unwrapNC(container));
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 } else {
                     // in the 'else' block? Yes:
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
                     //TODO for subnodes move to submenu?
-                    if (container instanceof NodeContainer) {
+                    if (wraps(container, NodeContainer.class)) {
                         InteractiveWebViewsResult interactiveWebViewsResult =
-                            CastUtil.cast(container, NodeContainer.class).getInteractiveWebViews();
+                            unwrapNC(container).getInteractiveWebViews();
                         for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
-                            action = new OpenInteractiveWebViewAction(CastUtil.cast(container, NodeContainer.class),
+                            action = new OpenInteractiveWebViewAction(unwrapNC(container),
                                 interactiveWebViewsResult.get(i));
                             manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                         }
                     }
                 }
 
-                if (container instanceof IWorkflowManager) {
+                if (container instanceof UIWorkflowManager) {
                     metanodeMenuMgr = getMetaNodeMenuManager(metanodeMenuMgr, manager);
 
                     // OPEN META NODE
@@ -393,7 +396,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // SUBNODE
-                if (container instanceof ISubNodeContainer) {
+                if (container instanceof UISubNodeContainer) {
 
                     subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
 
@@ -416,8 +419,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
                     ((AbstractNodeAction)action).update();
 
-                    if (container instanceof SubNodeContainer) {
-                        action = new OpenSubnodeWebViewAction(CastUtil.cast(container, SubNodeContainer.class));
+                    if (wraps(container, SubNodeContainer.class)) {
+                        action = new OpenSubnodeWebViewAction(Wrapper.unwrap(container, SubNodeContainer.class));
                         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                     }
                 }
@@ -427,12 +430,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
                 int numOutPorts = container.getNrOutPorts();
                 for (int i = 0; i < numOutPorts; i++) {
-                    if (i == 0 && !(container instanceof IWorkflowManager)) {
+                    if (i == 0 && !(container instanceof UIWorkflowManager)) {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    if (container instanceof NodeContainer) {
-                        action = new OpenPortViewAction(CastUtil.cast(container, NodeContainer.class), i, numOutPorts);
+                    if (wraps(container, NodeContainer.class)) {
+                        action = new OpenPortViewAction(unwrapNC(container), i, numOutPorts);
                         manager.appendToGroup("outPortViews", action);
                     }
                 }
@@ -444,10 +447,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         boolean addSubNodeActions = false;
         for (Object p : parts) {
             if (p instanceof NodeContainerEditPart) {
-                INodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
-                if (model instanceof IWorkflowManager) {
+                UINodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
+                if (model instanceof UIWorkflowManager) {
                     addMetaNodeActions = true;
-                } else if (model instanceof ISubNodeContainer) {
+                } else if (model instanceof UISubNodeContainer) {
                     addSubNodeActions = true;
                 }
             }

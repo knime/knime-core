@@ -60,8 +60,6 @@ import java.util.Set;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -89,7 +87,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
-    private final List<IWorkflowAnnotation> m_workflowAnnotations;
+    private final List<WorkflowAnnotation> m_workflowAnnotations;
     private final boolean m_isProject;
     /** Create copy persistor.
      * @param original To copy from
@@ -108,9 +106,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
-            ? original.getInPortsBarUIInfo().clone() : null;
+            ? NodeUIInformation.builder(original.getInPortsBarUIInfo()).build() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
-            ? original.getOutPortsBarUIInfo().clone() : null;
+            ? NodeUIInformation.builder(original.getOutPortsBarUIInfo()).build() : null;
         m_isProject = original.isProject();
         m_inportTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         m_outportTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
@@ -148,13 +146,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                     m_tableRep, null, true, isUndoableDeleteCommand));
         }
 
-        for (IConnectionContainer cc : original.getConnectionContainers()) {
-            if (cc instanceof ConnectionContainer) {
-                m_cons.add(new ConnectionContainerTemplate((ConnectionContainer)cc, true));
-            } else {
-                throw new IllegalArgumentException(
-                    "Connection containers of type " + cc.getClass().getName() + " not supported, yet.");
-            }
+        for (ConnectionContainer cc : original.getConnectionContainers()) {
+            m_cons.add(new ConnectionContainerTemplate(cc, true));
         }
         List<FlowVariable> vars = original.getWorkflowVariables();
         m_workflowVariables = vars == null ? Collections.EMPTY_LIST
@@ -163,9 +156,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (Credentials c : original.getCredentialsStore().getCredentials()) {
             m_credentials.add(c.clone());
         }
-        m_workflowAnnotations = new ArrayList<IWorkflowAnnotation>();
-        for (IWorkflowAnnotation w : original.getWorkflowAnnotations()) {
-            IWorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
+        m_workflowAnnotations = new ArrayList<WorkflowAnnotation>();
+        for (WorkflowAnnotation w : original.getWorkflowAnnotations()) {
+            WorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
             m_workflowAnnotations.add(anno);
         }
     }
@@ -261,7 +254,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
         return m_workflowAnnotations;
     }
 

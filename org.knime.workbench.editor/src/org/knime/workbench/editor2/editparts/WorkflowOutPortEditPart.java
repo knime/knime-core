@@ -55,12 +55,12 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.GraphicalEditPart;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -106,14 +106,14 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final INodeContainer getNodeContainer() {
+    protected final UINodeContainer getNodeContainer() {
         if (getParent() == null) {
             return null;
         }
         // if the referring WorkflowManager is displayed as a metanode, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
-            return (INodeContainer) getParent().getModel();
+            return (UINodeContainer) getParent().getModel();
         }
         // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
@@ -126,8 +126,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final IWorkflowManager getManager() {
-        return (IWorkflowManager)getNodeContainer();
+    protected final UIWorkflowManager getManager() {
+        return (UIWorkflowManager)getNodeContainer();
     }
 
     /**
@@ -153,11 +153,11 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
     @Override
-    public List<IConnectionContainer> getModelTargetConnections() {
+    public List<UIConnectionContainer> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        IConnectionContainer container = getManager().getIncomingConnectionFor(
+        UIConnectionContainer container = getManager().getIncomingConnectionFor(
                 getNodeContainer().getID(), getIndex());
 
         if (container != null) {
@@ -175,7 +175,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      *      #getModelSourceConnections()
      */
     @Override
-    protected List<IConnectionContainer> getModelSourceConnections() {
+    protected List<UIConnectionContainer> getModelSourceConnections() {
         return EMPTY_LIST;
     }
 

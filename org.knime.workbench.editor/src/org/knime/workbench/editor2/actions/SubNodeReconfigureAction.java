@@ -51,9 +51,10 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -120,7 +121,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = CastUtil.castOptional(nodes[0].getNodeContainer(), NodeContainer.class).orElse(null);
+        NodeContainer nc = Wrapper.unwrapOptionalNC(nodes[0].getNodeContainer()).orElse(null);
         if (nc instanceof SubNodeContainer) {
             return !((SubNodeContainer)nc).isWriteProtected();
         }
@@ -134,12 +135,12 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
         NodeContainerEditPart ep = nodeParts[0];
-        SubNodeContainer subnodeNC = (SubNodeContainer)ep.getModel();
-        if (!subnodeNC.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
+        UISubNodeContainer subnodeNC = (UISubNodeContainer)ep.getModel();
+        if (!Wrapper.unwrap(subnodeNC, SubNodeContainer.class).getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }
 
-        ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), subnodeNC);
+        ReconfigureMetaNodeWizard wizard = new ReconfigureMetaNodeWizard(ep.getViewer(), Wrapper.unwrap(subnodeNC, SubNodeContainer.class));
         WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();
         dlg.open();

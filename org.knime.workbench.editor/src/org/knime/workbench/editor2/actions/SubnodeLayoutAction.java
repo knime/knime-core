@@ -53,9 +53,6 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -132,7 +129,7 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        final WorkflowManager manager = CastUtil.castWFMOptional(getManager()).orElse(null);
+        final WorkflowManager manager = getManager();
         if(manager == null) {
             return false;
         }
@@ -148,8 +145,8 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        IWorkflowManager manager = getManager();
-        ISubNodeContainer subnode = (ISubNodeContainer)CastUtil.castWFM(manager).getDirectNCParent();
+        WorkflowManager manager = getManager();
+        SubNodeContainer subnode = (SubNodeContainer)manager.getDirectNCParent();
         SubnodeLayoutWizard wizard = new SubnodeLayoutWizard(subnode);
         WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();

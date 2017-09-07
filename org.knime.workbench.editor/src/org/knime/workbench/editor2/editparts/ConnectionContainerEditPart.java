@@ -62,8 +62,6 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionProgressEvent;
 import org.knime.core.node.workflow.ConnectionProgressListener;
@@ -71,6 +69,8 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
@@ -81,7 +81,7 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
- * workflow. Model: {@link IConnectionContainer} View: {@link PolylineConnection}
+ * workflow. Model: {@link UIConnectionContainer} View: {@link PolylineConnection}
  * created in {@link #createFigure()} Controller:
  * {@link ConnectionContainerEditPart}
  *
@@ -96,8 +96,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
     /** {@inheritDoc} */
     @Override
-    public IConnectionContainer getModel() {
-        return (IConnectionContainer)super.getModel();
+    public UIConnectionContainer getModel() {
+        return (UIConnectionContainer)super.getModel();
     }
 
     /**
@@ -106,7 +106,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      *
      * @return The hosting WFM
      */
-    public IWorkflowManager getWorkflowManager() {
+    public UIWorkflowManager getWorkflowManager() {
         EditPart targetEditPart = getTarget();
         if (targetEditPart instanceof NodeInPortEditPart) {
             return ((NodeInPortEditPart)targetEditPart).getManager();
@@ -250,7 +250,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @param conn
      * @return
      */
-    private boolean isIncomingConnection(final IConnectionContainer conn) {
+    private boolean isIncomingConnection(final UIConnectionContainer conn) {
         switch (conn.getType()) {
             case WFMIN:
             case WFMTHROUGH:

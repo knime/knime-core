@@ -49,12 +49,10 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -89,7 +87,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if location should be rounded to closest grid location
      */
-    public DropNodeCommand(final IWorkflowManager manager,
+    public DropNodeCommand(final WorkflowManager manager,
             final ContextAwareNodeFactory<NodeModel> factory,
             final NodeCreationContext context, final Point location, final boolean snapToGrid) {
         super(manager);
@@ -112,7 +110,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         // Add node to workflow and get the container
-        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
+        WorkflowManager hostWFM = getHostWFM();
         try {
             NodeID id =
                     hostWFM.addNodeAndApplyContext(m_factory, m_dropContext);

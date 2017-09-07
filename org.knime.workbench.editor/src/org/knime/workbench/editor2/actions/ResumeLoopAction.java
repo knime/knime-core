@@ -46,12 +46,13 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -133,9 +134,9 @@ public class ResumeLoopAction extends AbstractNodeAction {
         }
         // enabled if the one selected node is a configured and "in progress"
         // LoopEndNode
-        INodeContainer nc = parts[0].getNodeContainer();
-        if (nc instanceof NativeNodeContainer) {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+        UINodeContainer nc = parts[0].getNodeContainer();
+        if (Wrapper.wraps(nc, NativeNodeContainer.class)) {
+            NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
             if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                 return true;
             }
@@ -152,11 +153,11 @@ public class ResumeLoopAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating 'Resume Loop Execution' job for "
                 + nodeParts.length + " node(s)...");
-        IWorkflowManager manager = getManager();
+        WorkflowManager manager = getManager();
         for (NodeContainerEditPart p : nodeParts) {
-            INodeContainer nc = p.getNodeContainer();
+            UINodeContainer nc = p.getNodeContainer();
             if (nc instanceof NativeNodeContainer) {
-                NativeNodeContainer nnc = (NativeNodeContainer)nc;
+                NativeNodeContainer nnc = (NativeNodeContainer) nc;
                 if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(nnc, /*oneStep=*/false);
                 }

@@ -46,7 +46,7 @@ package org.knime.workbench.ui.navigator.actions;
 
 import java.util.List;
 
-import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.CredentialsStore;
@@ -56,7 +56,7 @@ import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 /**
  *
  * @author Thomas Gabriel, KNIME.com AG
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -81,7 +81,7 @@ public class OpenCredentialVariablesDialogAction
                 CredentialVariablesDialog dialog =
                     new CredentialVariablesDialog(d.getActiveShell(), store,
                         wf.getName());
-                if (dialog.open() == Dialog.OK) {
+                if (dialog.open() == Window.OK) {
                     for (String name : store.listNames()) {
                         store.remove(name);
                     }

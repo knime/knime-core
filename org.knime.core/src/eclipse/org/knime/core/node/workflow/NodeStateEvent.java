@@ -49,8 +49,6 @@ package org.knime.core.node.workflow;
 
 import java.util.EventObject;
 
-import org.knime.core.def.node.workflow.INodeContainer;
-
 /**
  *
  * @author Fabian Dill, University of Konstanz
@@ -60,14 +58,15 @@ public class NodeStateEvent extends EventObject {
     private final InternalNodeContainerState m_internalNCState;
 
     /**
-     * A new event from the current node container ID. By calling this constructor, the internal node container state is
-     * <code>null</code> (if the passed object is not of type {@link NodeContainer}). State can then only be retrieved
-     * via the node associated with the node id.
+     * A new event from node container with the given id.
      *
-     * @param nc a node container to derive the state from (not null).
+     * The internally kept (and deprecated) {@link InternalNodeContainerState} state will be set to <code>null</code>!
+     *
+     * @param nodeID the node container the state has changed for (not null)
+     * @since 3.5
      */
-    public NodeStateEvent(final INodeContainer nc) {
-        this(nc.getID(), (nc instanceof NodeContainer) ? ((NodeContainer)nc).getInternalState() : null);
+    public NodeStateEvent(final NodeID nodeID) {
+        this(nodeID, null);
     }
 
     /** A new event from the current node container ID and state.

@@ -53,15 +53,13 @@ import java.util.Set;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -150,7 +148,7 @@ public final class DynamicNodeDescriptionCreator {
                     MetaNodeTemplate templ = (MetaNodeTemplate)child;
                     if (!idsDisplayed.contains(templ.getID())) {
                         idsDisplayed.add(templ.getID());
-                        NodeContainer manager =
+                        UINodeContainer manager =
                                 ((MetaNodeTemplate)child).getManager();
                         addDescription(manager, /* useSingleLine */true, bld);
                     }
@@ -220,13 +218,13 @@ public final class DynamicNodeDescriptionCreator {
      *            otherwise the entire full description is added
      * @param bld the buffer to add the one line strings to.
      */
-    public void addDescription(final INodeContainer nc,
+    public void addDescription(final UINodeContainer nc,
             final boolean useSingleLine, final StringBuilder bld) {
 
-        if (!(nc instanceof ISingleNodeContainer)) {
+        if (!(nc instanceof UISingleNodeContainer)) {
             addSubWorkflowDescription(nc, useSingleLine, bld);
         } else {
-            ISingleNodeContainer singleNC = (ISingleNodeContainer)nc;
+            UISingleNodeContainer singleNC = (UISingleNodeContainer)nc;
             if (useSingleLine) {
                 bld.append("<dt><b>");
                 bld.append(nc.getName());
@@ -264,7 +262,7 @@ public final class DynamicNodeDescriptionCreator {
      */
     public void addDescription(final MetaNodeTemplate template,
             final boolean useSingleLine, final StringBuilder builder) {
-        WorkflowManager manager = template.getManager();
+        UIWorkflowManager manager = template.getManager();
         if (!useSingleLine) {
             builder.append(getHeader());
             builder.append("<h1>");
@@ -273,7 +271,7 @@ public final class DynamicNodeDescriptionCreator {
             builder.append("<h2>Description:</h2>");
             builder.append("<p>" + template.getDescription() + "</p>");
             builder.append("<h2>Contained nodes: </h2>");
-            for (NodeContainer child : manager.getNodeContainers()) {
+            for (UINodeContainer child : manager.getNodeContainers()) {
                 addDescription(child, true, builder);
             }
             builder.append("</body></html>");
@@ -283,13 +281,13 @@ public final class DynamicNodeDescriptionCreator {
         }
     }
 
-    private void addSubWorkflowDescription(final INodeContainer nc,
+    private void addSubWorkflowDescription(final UINodeContainer nc,
             final boolean useSingleLine, final StringBuilder bld) {
-        IWorkflowManager wfm;
-        if (nc instanceof ISubNodeContainer) {
-            wfm = ((ISubNodeContainer)nc).getWorkflowManager();
+        UIWorkflowManager wfm;
+        if (nc instanceof UISubNodeContainer) {
+            wfm = ((UISubNodeContainer)nc).getWorkflowManager();
         } else {
-            wfm = (IWorkflowManager)nc;
+            wfm = (UIWorkflowManager)nc;
         }
         if (!useSingleLine) {
             bld.append(getHeader());
@@ -301,7 +299,7 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append("<p>" + nc.getCustomDescription() + "</p>");
             }
             bld.append("<h2>Contained nodes: </h2>");
-            for (INodeContainer child : wfm.getAllNodeContainers()) {
+            for (UINodeContainer child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</body></html>");
@@ -311,7 +309,7 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("</b></dt>");
             bld.append("<dd>");
             bld.append("<dl>");
-            for (INodeContainer child : wfm.getAllNodeContainers()) {
+            for (UINodeContainer child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</dl>");

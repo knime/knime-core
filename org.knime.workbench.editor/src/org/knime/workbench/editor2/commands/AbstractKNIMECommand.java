@@ -48,7 +48,9 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to
@@ -58,32 +60,62 @@ import org.knime.core.def.node.workflow.IWorkflowManager;
  */
 public abstract class AbstractKNIMECommand extends Command {
 
-   private IWorkflowManager m_hostWFM;
+   private UIWorkflowManager m_hostUIWFM;
+   private WorkflowManager m_hostWFM;
 
    /** @param hostWFM The host workflow, must not be null. */
-    public AbstractKNIMECommand(final IWorkflowManager hostWFM) {
+    public AbstractKNIMECommand(final WorkflowManager hostWFM) {
+        if (hostWFM == null) {
+            //allow for a null hostWFM -> there might be only a UI host WFM available
+            //throw new IllegalArgumentException("Argument must not be null.");
+            m_hostUIWFM = null;
+            m_hostWFM = null;
+        } else {
+            m_hostUIWFM = WorkflowManagerWrapper.wrap(hostWFM);
+            m_hostWFM = hostWFM;
+        }
+    }
+
+    /**
+     * If this constructor is used, the {@link #getHostWFM()}-method will return <code>null</code> and the
+     * {@link #getHostUIWFM()} must be used instead.
+     *
+     * @param hostWFM The host UI(!) workflow, must not be null.
+     */
+    public AbstractKNIMECommand(final UIWorkflowManager hostWFM) {
         if (hostWFM == null) {
             throw new IllegalArgumentException("Argument must not be null.");
         }
-        m_hostWFM = hostWFM;
+        m_hostUIWFM = hostWFM;
+        m_hostWFM = null;
     }
 
-    /** @return the hostWFM, not null unless this command is disposed. */
-    protected final IWorkflowManager getHostWFM() {
+    /**
+     * @return the hostWFM, not null unless this command is disposed or the derived command works on the
+     *         {@link UIWorkflowManager}.
+     */
+    protected final WorkflowManager getHostWFM() {
         return m_hostWFM;
+    }
+
+    /**
+     * @return the hostUIWFM, not null unless the command is disposed.
+     */
+    protected final UIWorkflowManager getHostUIWFM() {
+        return m_hostUIWFM;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return !m_hostWFM.isWriteProtected();
+        return m_hostUIWFM != null && !m_hostUIWFM.isWriteProtected();
     }
 
     /** {@inheritDoc} */
     @Override
     public void dispose() {
         super.dispose();
+        m_hostUIWFM = null;
         m_hostWFM = null;
     }
-
 }

@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -54,10 +56,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CastUtil;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -85,7 +85,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager containing the links to be updated.
      * @param ids The ids of the link nodes.
      */
-    public UpdateMetaNodeLinkCommand(final IWorkflowManager manager,
+    public UpdateMetaNodeLinkCommand(final WorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
         m_ids = ids.clone();
@@ -102,9 +102,9 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         boolean containsUpdateableMN = false;
-        IWorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_ids) {
-            INodeContainer nc = hostWFM.findNodeContainer(id);
+            NodeContainer nc = hostWFM.findNodeContainer(id);
             if (nc instanceof NodeContainerTemplate) {
                 NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
                 final WorkflowManager parent = tnc.getParent();
@@ -126,7 +126,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         try {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
+            WorkflowManager hostWFM = getHostWFM();
             updateRunner = new UpdateMetaNodeTemplateRunnable(hostWFM, m_ids);
             ps.busyCursorWhile(updateRunner);
             m_newIDs = updateRunner.getNewIDs();
@@ -166,7 +166,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
     public void undo() {
         LOGGER.debug("Undo: Reverting metanode links ("
                 + m_newIDs.size() + " metanode(s))");
-        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
+        WorkflowManager hostWFM = getHostWFM();
         for (int i = 0; i < m_newIDs.size(); i++) {
             NodeID id = m_newIDs.get(i);
             WorkflowPersistor p = m_undoPersistors.get(i);

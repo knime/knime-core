@@ -47,14 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.def.node.workflow.IWorkflowInPort;
 import org.knime.core.node.port.PortType;
 
 /**
  *
  * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
-public final class WorkflowInPort extends NodeInPort implements IWorkflowInPort {
+public final class WorkflowInPort extends NodeInPort {
 
     /** wrap the underlying port in yet another wrapper to enable
      * us to return this one as a wrapper.
@@ -79,7 +78,6 @@ public final class WorkflowInPort extends NodeInPort implements IWorkflowInPort 
     /**
      * @return the underlyingOutPort
      */
-    @Override
     public NodeOutPort getUnderlyingPort() {
         return m_underlyingPortWrapper;
     }

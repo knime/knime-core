@@ -62,6 +62,8 @@ public final class NodeUIInformationEvent extends EventObject {
     /**
      * @param src the node id of the source node
      * @param uiInformation the new UI information
+     * @param description
+     * @since 3.5
      */
     public NodeUIInformationEvent(final NodeID src,
             final NodeUIInformation uiInformation,
@@ -74,6 +76,7 @@ public final class NodeUIInformationEvent extends EventObject {
     /**
      *
      * @return the new UI information
+     * @since 3.5
      */
     public NodeUIInformation getUIInformation() {
         return m_uiInformation;

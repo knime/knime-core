@@ -113,7 +113,8 @@ public class ConnectionUIInformation {
         throw new UnsupportedOperationException();
     }
 
-    /** @return new Builder with defaults. */
+    /** @return new Builder with defaults.
+     * @since 3.5*/
     public static final Builder builder() {
         return new Builder();
     }
@@ -121,12 +122,14 @@ public class ConnectionUIInformation {
     /**
      * @param connectionUIInfo object to copy the values from
      * @return new Builder with the values copied from the passed argument
+     * @since 3.5
      */
     public static final Builder builder(final ConnectionUIInformation connectionUIInfo) {
         return new Builder().copyFrom(connectionUIInfo);
     }
 
-    /** Builder pattern for {@link ConnectionUIInformation}. */
+    /** Builder pattern for {@link ConnectionUIInformation}.
+     * @since 3.5*/
     public static final class Builder {
 
         private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();

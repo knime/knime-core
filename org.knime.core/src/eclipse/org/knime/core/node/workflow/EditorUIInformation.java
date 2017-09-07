@@ -207,7 +207,8 @@ public class EditorUIInformation {
         return true;
     }
 
-    /** @return new Builder with defaults. */
+    /** @return new Builder with defaults.
+     * @since 3.5*/
     public static final Builder builder() {
         return new Builder();
     }
@@ -215,13 +216,15 @@ public class EditorUIInformation {
     /**
      * @param editorUIInfo the instance to take the initial values from
      * @return a new {@link Builder} initialized with all the values copied from the passed argument
+     * @since 3.5
      */
     public static final Builder builder(final EditorUIInformation editorUIInfo) {
         return new Builder().copyFrom(editorUIInfo);
     }
 
 
-    /** Builder pattern for {@link EditorUIInformation}. */
+    /** Builder pattern for {@link EditorUIInformation}.
+     * @since 3.5*/
     public static final class Builder {
 
         private boolean m_snapToGrid = false;

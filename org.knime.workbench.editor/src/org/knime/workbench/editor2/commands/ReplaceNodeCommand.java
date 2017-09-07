@@ -51,9 +51,10 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -77,12 +78,12 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
      * @param snapToGrid should metanode snap to grid
      * @param node which will be replaced by this node
      */
-    public ReplaceNodeCommand(final IWorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+    public ReplaceNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
         final Point location, final boolean snapToGrid, final NodeContainerEditPart nodeToReplace) {
         super(manager, factory, location, snapToGrid);
         m_node = nodeToReplace;
         m_root = nodeToReplace.getRoot();
-        m_rh = new ReplaceHelper(manager, m_node.getNodeContainer());
+        m_rh = new ReplaceHelper(manager, Wrapper.unwrapNC(m_node.getNodeContainer()));
 
         // delete command handles undo action (restoring connections and positions)
         m_delete = new DeleteCommand(Collections.singleton(m_node), manager);

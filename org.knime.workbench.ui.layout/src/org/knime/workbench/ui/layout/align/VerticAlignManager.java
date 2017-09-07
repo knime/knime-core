@@ -51,13 +51,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -69,7 +69,7 @@ public class VerticAlignManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(VerticAlignManager.class);
 
-    private IWorkflowManager m_wfm;
+    private UIWorkflowManager m_wfm;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
 
@@ -84,7 +84,7 @@ public class VerticAlignManager {
      * @param nodes the nodes to align
      *
      */
-    public VerticAlignManager(final IWorkflowManager wfManager,
+    public VerticAlignManager(final UIWorkflowManager wfManager,
             final NodeContainerEditPart[] nodes) {
         m_wfm = wfManager;
         m_nodeParts = nodes.clone();
@@ -110,7 +110,7 @@ public class VerticAlignManager {
         // transfer new coordinates into nodes
         for (Map.Entry<NodeContainerEditPart, Integer> e : offsets.entrySet()) {
             NodeContainerEditPart node = e.getKey();
-            INodeContainer nc = node.getNodeContainer();
+            UINodeContainer nc = node.getNodeContainer();
             NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
             NodeUIInformation newCoord = NodeUIInformation.builder()

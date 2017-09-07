@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+
 import java.security.NoSuchAlgorithmException;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -55,7 +57,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -130,8 +132,8 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof WorkflowManager) {
-            WorkflowManager metaNode = (WorkflowManager)model;
+        if (model instanceof UIWorkflowManager) {
+            UIWorkflowManager metaNode = (UIWorkflowManager)model;
             if (metaNode.isWriteProtected()) {
                 return false;
             }
@@ -148,16 +150,16 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return;
         }
         Object model = nodes[0].getModel();
-        if (!(model instanceof WorkflowManager)) {
+        if (!(model instanceof UIWorkflowManager)) {
             return;
         }
-        WorkflowManager metaNodeWFM = (WorkflowManager)model;
+        UIWorkflowManager metaNodeWFM = (UIWorkflowManager)model;
         final Shell shell = Display.getCurrent().getActiveShell();
-        if (!metaNodeWFM.unlock(new GUIWorkflowCipherPrompt())) {
+        if (!unwrapWFM(metaNodeWFM).unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }
         LockMetaNodeDialog lockDialog =
-            new LockMetaNodeDialog(shell, metaNodeWFM);
+            new LockMetaNodeDialog(shell, unwrapWFM(metaNodeWFM));
         if (lockDialog.open() != Window.OK) {
             return;
         }

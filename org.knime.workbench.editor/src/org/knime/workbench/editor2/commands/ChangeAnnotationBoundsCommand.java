@@ -48,8 +48,8 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.def.node.workflow.IAnnotation;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
@@ -70,11 +70,11 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
      * @param portBar The workflow port bar to change
      * @param newBounds The new bounds
      */
-    public ChangeAnnotationBoundsCommand(final IWorkflowManager hostWFM,
+    public ChangeAnnotationBoundsCommand(final WorkflowManager hostWFM,
             final AnnotationEditPart portBar,
             final Rectangle newBounds) {
         super(hostWFM);
-        IAnnotation anno = portBar.getModel();
+        Annotation anno = portBar.getModel();
         m_oldBounds =
                 new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
                         anno.getHeight());
@@ -89,7 +89,7 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
      */
     @Override
     public void execute() {
-        IAnnotation annotation =
+        Annotation annotation =
                 m_annotationEditPart.getModel();
         annotation.setDimension(m_newBounds.x, m_newBounds.y,
                 m_newBounds.width, m_newBounds.height);
@@ -105,7 +105,7 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        IAnnotation annotation =
+        Annotation annotation =
                 m_annotationEditPart.getModel();
         annotation.setDimension(m_oldBounds.x, m_oldBounds.y,
                         m_oldBounds.width, m_oldBounds.height);

@@ -66,7 +66,6 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -274,11 +273,11 @@ public abstract class WorkflowTestCase {
         return parent.getNodeContainer(id);
     }
 
-    protected IConnectionContainer findInConnection(final NodeID id,
+    protected ConnectionContainer findInConnection(final NodeID id,
             final int port)
         throws Exception {
         WorkflowManager parent = findParent(id);
-        for (IConnectionContainer cc : parent.getConnectionContainers()) {
+        for (ConnectionContainer cc : parent.getConnectionContainers()) {
             if (cc.getDest().equals(id) && cc.getDestPort() == port) {
                 return cc;
             }
@@ -333,14 +332,14 @@ public abstract class WorkflowTestCase {
         return result;
     }
 
-    protected IConnectionContainer findLeavingWorkflowConnection(final NodeID id,
+    protected ConnectionContainer findLeavingWorkflowConnection(final NodeID id,
             final int port) throws Exception {
         NodeContainer nc = findNodeContainer(id);
         if (!(nc instanceof WorkflowManager)) {
             throw new IllegalArgumentException("Node " + id
                     + " is not a workflow manager");
         }
-        for (IConnectionContainer cc
+        for (ConnectionContainer cc
                 : ((WorkflowManager)nc).getConnectionContainers()) {
             if (cc.getDest().equals(id) && cc.getDestPort() == port) {
                 return cc;

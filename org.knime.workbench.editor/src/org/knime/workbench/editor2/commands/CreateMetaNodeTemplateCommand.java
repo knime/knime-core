@@ -56,14 +56,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
@@ -106,7 +105,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if node should be placed on closest grid location
      */
-    public CreateMetaNodeTemplateCommand(final IWorkflowManager manager,
+    public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
             final AbstractExplorerFileStore templateFolder,
             final Point location, final boolean snapToGrid) {
         super(manager);
@@ -137,7 +136,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
-            loadRunnable = new LoadMetaNodeTemplateRunnable(CastUtil.castWFM(getHostWFM()), m_templateKNIMEFolder);
+            loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(), m_templateKNIMEFolder);
             ps.run(false, true, loadRunnable);
             MetaNodeLinkUpdateResult result = loadRunnable.getLoadResult();
             m_container = (NodeContainer)result.getLoadedInstance();

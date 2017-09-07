@@ -59,7 +59,6 @@ import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformation;
@@ -163,7 +162,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     List<Credentials> getCredentials();
 
     /** @return (non-mull) map of annotations. */
-    List<IWorkflowAnnotation> getWorkflowAnnotations();
+    List<WorkflowAnnotation> getWorkflowAnnotations();
 
     /** NodeSettings used to save the wizard state (usually null). */
     NodeSettingsRO getWizardExecutionControllerState();
@@ -180,11 +179,13 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
+     * @since 3.5
      */
     public NodeUIInformation getInPortsBarUIInfo();
 
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
+     * @since 3.5
      */
     public NodeUIInformation getOutPortsBarUIInfo();
 

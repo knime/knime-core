@@ -65,7 +65,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
 import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
 
 /**
@@ -111,7 +111,7 @@ public final class HelpWindow extends Window implements LocationListener {
      *
      * @param nc the node for which the description should be shown
      */
-    public void showDescriptionForNode(final NodeContainer nc) {
+    public void showDescriptionForNode(final UINodeContainer nc) {
         final StringBuilder content = new StringBuilder();
         DynamicNodeDescriptionCreator.instance().addDescription(nc, false,
                 content);

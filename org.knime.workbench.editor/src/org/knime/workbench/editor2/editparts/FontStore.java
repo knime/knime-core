@@ -224,7 +224,7 @@ public class FontStore {
      * @param f The used font
      */
     public static void saveAnnotationFontToStyleRange(
-            final AnnotationData.StyleRange.Builder toSaveTo,
+            final AnnotationData.StyleRange toSaveTo,
             final Font f) {
         if (f != null) {
             final FontData fontData = f.getFontData()[0];

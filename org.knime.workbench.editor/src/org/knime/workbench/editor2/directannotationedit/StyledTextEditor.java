@@ -86,8 +86,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.knime.core.def.node.workflow.IAnnotation;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -576,8 +576,8 @@ public class StyledTextEditor extends CellEditor {
      */
     @Override
     protected void doSetValue(final Object value) {
-        assert value instanceof IAnnotation : "Wrong value object!";
-        IAnnotation wa = (IAnnotation)value;
+        assert value instanceof Annotation : "Wrong value object!";
+        Annotation wa = (Annotation)value;
         int alignment;
         switch (wa.getAlignment()) {
             case CENTER:

@@ -57,8 +57,6 @@ import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.core.node.util.CastUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -212,7 +210,7 @@ public class AddMetaNodeWizard extends Wizard {
         } while (ep instanceof NodeContainerEditPart);
 
         AddNewMetaNodeCommand cmd =
-                new AddNewMetaNodeCommand(CastUtil.castWFM(m_wfEditor.getWorkflowManager()), inPorts, outPorts, name, location);
+                new AddNewMetaNodeCommand(m_wfEditor.getWorkflowManager().get(), inPorts, outPorts, name, location);
         m_wfEditor.getViewer().getEditDomain().getCommandStack().execute(cmd);
     }
 
@@ -223,11 +221,11 @@ public class AddMetaNodeWizard extends Wizard {
         PortType[] outPorts = new PortType[m_addPage.getOutPorts().size()];
         int i = 0;
         for (MetaPortInfo p : m_addPage.getInPorts()) {
-            inPorts[i++] = PortTypeRegistry.getPortType(p.getTypeKey());
+            inPorts[i++] = p.getType();
         }
         i = 0;
         for (MetaPortInfo p : m_addPage.getOutPorts()) {
-            outPorts[i++] = PortTypeRegistry.getPortType(p.getTypeKey());
+            outPorts[i++] = p.getType();
         }
         String name = "";
         if (m_addPage.getMetaNodeName() != null

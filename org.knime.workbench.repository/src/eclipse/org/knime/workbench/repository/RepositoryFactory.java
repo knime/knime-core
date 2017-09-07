@@ -69,6 +69,8 @@ import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.model.Category;
@@ -162,7 +164,7 @@ public final class RepositoryFactory {
                 configuration.getDeclaringExtension().getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
 
-        WorkflowManager manager = loadMetaNode(pluginId, workflowDir);
+        UIWorkflowManager manager = loadMetaNode(pluginId, workflowDir);
         if (manager == null) {
             LOGGER.error("MetaNode  " + name + " could not be loaded. "
                     + "Skipped.");
@@ -192,7 +194,7 @@ public final class RepositoryFactory {
         return template;
     }
 
-    private static WorkflowManager loadMetaNode(final String pluginId,
+    private static UIWorkflowManager loadMetaNode(final String pluginId,
             final String workflowDir) {
         LOGGER.debug("found pre-installed template " + workflowDir);
 
@@ -216,7 +218,7 @@ public final class RepositoryFactory {
 
                 WorkflowManager metaNode = WorkflowManager.META_NODE_ROOT.load(persistor, new ExecutionMonitor(),
                                 false).getWorkflowManager();
-                return metaNode;
+                return WorkflowManagerWrapper.wrap(metaNode);
             } catch (CanceledExecutionException cee) {
                 LOGGER.error("Unexpected canceled execution exception", cee);
             } catch (Exception e) {

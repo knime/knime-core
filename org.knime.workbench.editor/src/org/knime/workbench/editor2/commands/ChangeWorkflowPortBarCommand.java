@@ -51,6 +51,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -73,7 +74,7 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     public ChangeWorkflowPortBarCommand(
             final AbstractWorkflowPortBarEditPart portBar,
             final Rectangle newBounds) {
-        super(portBar.getNodeContainer());
+        super(Wrapper.unwrapWFM(portBar.getNodeContainer()));
         WorkflowPortBar barModel = (WorkflowPortBar)portBar.getModel();
         NodeUIInformation uiInfo = barModel.getUIInfo();
         if (uiInfo != null) {

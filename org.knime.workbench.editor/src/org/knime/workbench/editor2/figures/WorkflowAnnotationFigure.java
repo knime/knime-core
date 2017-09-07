@@ -54,7 +54,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
-import org.knime.core.def.node.workflow.IAnnotation;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -70,7 +70,7 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
 
     private static final Image MOVE_ICON = ImageRepository.getImage(SharedImages.AnnotationMoveHover);
 
-    public WorkflowAnnotationFigure(final IAnnotation anno) {
+    public WorkflowAnnotationFigure(final Annotation anno) {
         super(anno);
         ImageData d = MOVE_ICON.getImageData();
         m_editIcon = new Label(MOVE_ICON);
@@ -88,7 +88,7 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
     }
 
     @Override
-    public void newContent(final IAnnotation annotation) {
+    public void newContent(final Annotation annotation) {
         super.newContent(annotation);
 
         AnnotationData data = annotation.getData();

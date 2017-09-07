@@ -63,7 +63,6 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.def.node.port.PortTypeKey;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.BufferedDataTable;
@@ -359,29 +358,6 @@ public final class PortTypeRegistry {
                 return Optional.empty();
             }
         }
-    }
-
-    /**
-     * Determines the unique port type identifier {@PortTypeKey} from the given {@link PortType}.
-     *
-     * @param portType the port type, must not be <code>null</code>
-     * @return the new port type key
-     */
-    public synchronized static PortTypeKey getPortTypeKey(final PortType portType) {
-        return PortTypeKey.builder(portType.getPortObjectClass().getName()).setIsOptional(portType.isOptional())
-            .build();
-    }
-
-    /**
-     * Determines the {@link PortType} from the given {@link PortTypeKey}.
-     *
-     * @param portTypeKey the port type key, must not be <code>null</code>
-     * @return the determined port type, never <code>null</code>
-     */
-    public synchronized static PortType getPortType(final PortTypeKey portTypeKey) {
-        PortTypeRegistry ptr = PortTypeRegistry.getInstance();
-        return ptr.getPortType(ptr.getObjectClass(portTypeKey.getPortObjectClassName()).get(),
-            portTypeKey.isOptional());
     }
 
     /**

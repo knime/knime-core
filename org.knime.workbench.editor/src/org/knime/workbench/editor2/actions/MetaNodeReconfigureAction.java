@@ -51,10 +51,10 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -121,9 +121,9 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        INodeContainer nc = nodes[0].getNodeContainer();
-        if (nc instanceof IWorkflowManager) {
-            IWorkflowManager metaNode = (IWorkflowManager)nc;
+        UINodeContainer nc = nodes[0].getNodeContainer();
+        if (nc instanceof UIWorkflowManager) {
+            UIWorkflowManager metaNode = (UIWorkflowManager)nc;
             return !metaNode.isWriteProtected();
         }
         return false;
@@ -136,7 +136,7 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
         NodeContainerEditPart ep = nodeParts[0];
-        WorkflowManager metanode = CastUtil.castWFM((IWorkflowManager)ep.getModel());
+        WorkflowManager metanode = Wrapper.unwrapWFM(ep.getNodeContainer());
         if (!metanode.unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }

@@ -50,9 +50,10 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -124,9 +125,9 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
         if (parts.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof SubNodeContainer) {
-            SubNodeContainer subnode = (SubNodeContainer)parts[0].getNodeContainer();
-            return !subnode.isWriteProtected();
+        if (Wrapper.wraps(parts[0].getNodeContainer(), SubNodeContainer.class)) {
+            UISubNodeContainer subnode = (UISubNodeContainer)parts[0].getNodeContainer();
+            return !Wrapper.unwrap(subnode, SubNodeContainer.class).isWriteProtected();
         }
         return false;
     }
@@ -143,8 +144,8 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
         }
 
         try {
-            IWorkflowManager manager = getManager();
-            SubNodeContainer subNode = CastUtil.cast(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
+            WorkflowManager manager = getManager();
+            SubNodeContainer subNode = Wrapper.unwrap(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
             if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }

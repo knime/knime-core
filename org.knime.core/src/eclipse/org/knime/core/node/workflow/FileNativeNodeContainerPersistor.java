@@ -72,6 +72,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
@@ -91,6 +92,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownExceptio
  */
 public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPersistor
     implements NativeNodeContainerPersistor {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileNativeNodeContainerPersistor.class);
 
     public static final String NODE_FILE = "node.xml";
 
@@ -302,15 +305,21 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
     }
 
+    /**
+     * Creates the node factory instance for the given fully-qualified factory class name.
+     * Otherwise a respective exception will be thrown.
+     *
+     * @since 3.5
+     */
     @SuppressWarnings("unchecked")
-    final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
+    public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
         InstantiationException, IllegalAccessException, ClassNotFoundException {
         List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
         for (NodeFactoryClassMapper mapper : classMapperList) {
             @SuppressWarnings("rawtypes")
             NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
             if (factory != null) {
-                getLogger().debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
+                LOGGER.debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
                     + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
                     mapper.getClass().getName()));
                 return factory;
@@ -329,7 +338,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 // first
                 REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
             } catch (Exception ex1) {
-                getLogger().error("Could not load repository manager", ex1);
+                LOGGER.error("Could not load repository manager", ex1);
             }
 
             String[] x = factoryClassName.split("\\.");
@@ -339,7 +348,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 if (s.endsWith("." + simpleClassName)) {
                     NodeFactory<NodeModel> f =
                         (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
-                    getLogger().warn(
+                    LOGGER.warn(
                         "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
                     return f;
                 }

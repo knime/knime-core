@@ -55,8 +55,6 @@ import java.io.File;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.util.FileUtil;
@@ -113,7 +111,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 //        cnt.setNodeIDs(m_credentialsInput_1);
 //        getManager().copyFromAndPasteHere(getManager(), cnt);
         CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(
-            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotationID[0], "Collapsed-by-Testflow");
+            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotation[0], "Collapsed-by-Testflow");
         WorkflowManager metaNode = getManager().getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         getManager().convertMetaNodeToSubNode(metaNode.getID());
@@ -124,7 +122,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         NodeID subnodeID = subNode.getID();
         final int subNodeIDIndex = subnodeID.getIndex();
 
-        IConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
+        ConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
         assertEquals("Source should be subnode", subnodeID, findInConnection.getSource());
 
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);

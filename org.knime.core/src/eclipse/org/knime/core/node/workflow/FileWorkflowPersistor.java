@@ -70,8 +70,6 @@ import java.util.TreeMap;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -87,8 +85,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.AnnotationData.StyleRange;
-import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.util.FileUtil;
@@ -239,7 +235,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
 
-    /** The key under which the bounds to store the {@link ConnectionUIInformation} are registered. * */
+    /** The key under which the bounds to store the {@link ConnectionUIInformation} are registered. *
+     * @since 3.5*/
     public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
     /** The key under which the bounds are registered. * */
@@ -294,7 +291,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private List<Credentials> m_credentials;
 
-    private List<IWorkflowAnnotation> m_workflowAnnotations;
+    private List<WorkflowAnnotation> m_workflowAnnotations;
 
     private NodeSettingsRO m_wizardState;
 
@@ -496,7 +493,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /** {@inheritDoc} */
     @Override
-    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
+    public List<WorkflowAnnotation> getWorkflowAnnotations() {
         return m_workflowAnnotations;
     }
 
@@ -524,13 +521,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return m_outPortTemplates;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
     public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
@@ -1384,20 +1383,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /**
      * Sub-class hook to load port bar info.
      *
-     * @param uiInfo Ignored.
-     * @param settings Ignored.
-     * @throws InvalidSettingsException Not actually thrown
-     */
-    void loadInPortsBarUIInfo(final UIInformation uiInfo, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            loadUIInfoSettings(uiInfo, settings);
-        }
-    }
-
-    /**
-     * Sub-class hook to load port bar info.
-     *
      * @param settings Ignored.
      * @return null
      * @throws InvalidSettingsException Not actually thrown
@@ -1407,20 +1392,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             return loadUIInfoClassName(settings);
         }
         return null;
-    }
-
-    /**
-     * Load output port bars. This implementation does nothing, sub-classes override this method.
-     *
-     * @param uiInfo Ignored here.
-     * @param settings Ignored here.
-     * @throws InvalidSettingsException Not actually thrown here.
-     */
-    void loadOutPortsBarUIInfo(final UIInformation uiInfo, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            loadUIInfoSettings(uiInfo, settings);
-        }
     }
 
     /**
@@ -1707,7 +1678,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @return non-null list.
      * @throws InvalidSettingsException If this fails for any reason.
      */
-    List<IWorkflowAnnotation> loadWorkflowAnnotations(final NodeSettingsRO settings) throws InvalidSettingsException {
+    List<WorkflowAnnotation> loadWorkflowAnnotations(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V230)) {
             // no credentials in v2.2 and before
             return Collections.emptyList();
@@ -1716,79 +1687,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 return Collections.emptyList();
             }
             NodeSettingsRO annoSettings = settings.getNodeSettings("annotations");
-            List<IWorkflowAnnotation> result = new ArrayList<IWorkflowAnnotation>();
+            List<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>();
             for (String key : annoSettings.keySet()) {
                 NodeSettingsRO child = annoSettings.getNodeSettings(key);
-                AnnotationData annotationData = loadAnnotationData(child, getLoadVersion());
-                WorkflowAnnotation anno = new WorkflowAnnotation(annotationData);
-                anno.fireChangeEvent();
+                WorkflowAnnotation anno = new WorkflowAnnotation();
+                anno.load(child, getLoadVersion());
                 result.add(anno);
             }
             return result;
         }
-    }
-
-    /**
-     * Loads the annotation data from the given settings object.
-     *
-     * @param settings
-     * @param loadVersion
-     * @return a new {@link AnnotationData} object
-     * @throws InvalidSettingsException
-     */
-    static AnnotationData loadAnnotationData(final NodeSettingsRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        AnnotationData.Builder builder = AnnotationData.builder();
-        builder.setText(settings.getString("text"));
-        builder.setBgColor(settings.getInt("bgcolor"));
-        int x = settings.getInt("x-coordinate");
-        int y = settings.getInt("y-coordinate");
-        int width = settings.getInt("width");
-        int height = settings.getInt("height");
-        int borderSize = settings.getInt("borderSize", 0); // default to 0 for backward compatibility
-        int borderColor = settings.getInt("borderColor", 0); // default for backward compatibility
-        int defFontSize = settings.getInt("defFontSize", -1); // default for backward compatibility
-        int version = settings.getInt("annotation-version", AnnotationData.VERSION_OLD); // added in 3.0
-        TextAlignment alignment = TextAlignment.LEFT;
-        if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
-            String alignmentS = settings.getString("alignment");
-            try {
-                alignment = TextAlignment.valueOf(alignmentS);
-            } catch (Exception e) {
-                throw new InvalidSettingsException("Invalid alignment: " + alignmentS, e);
-            }
-        }
-        builder.setDimension(x, y, width, height);
-        builder.setAlignment(alignment);
-        builder.setBorderSize(borderSize);
-        builder.setBorderColor(borderColor);
-        builder.setDefaultFontSize(defFontSize);
-        NodeSettingsRO styleConfigs = settings.getNodeSettings("styles");
-        StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
-        int i = 0;
-        for (String key : styleConfigs.keySet()) {
-            NodeSettingsRO cur = styleConfigs.getNodeSettings(key);
-            styles[i++] = loadStyleRange(cur);
-        }
-        builder.setStyleRanges(styles);
-        return builder.build();
-    }
-
-    /**
-     * Helper method to load a style range from a settings object.
-     *
-     * @param settings
-     * @throws InvalidSettingsException
-     */
-    private static StyleRange loadStyleRange(final NodeSettingsRO settings) throws InvalidSettingsException {
-        StyleRange.Builder result = StyleRange.builder();
-        result.setStart(settings.getInt("start"));
-        result.setLength(settings.getInt("length"));
-        result.setFontName(settings.getString("fontname"));
-        result.setFontStyle(settings.getInt("fontstyle"));
-        result.setFontSize(settings.getInt("fontsize"));
-        result.setFgColor(settings.getInt("fgcolor"));
-        return result.build();
     }
 
     /** @return the wizard state saved in the file or null (often null).
@@ -2114,16 +2021,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             execMon.setMessage("connection information");
             NodeSettingsWO connSettings = saveSettingsForConnections(preFilledSettings);
             int connectionNumber = 0;
-            for (IConnectionContainer cc : wm.getConnectionContainers()) {
-                if (cc instanceof ConnectionContainer) {
-                    NodeSettingsWO nextConnectionConfig =
-                        connSettings.addNodeSettings("connection_" + connectionNumber);
-                    saveConnection(nextConnectionConfig, (ConnectionContainer)cc);
-                    connectionNumber += 1;
-                } else {
-                    throw new IllegalArgumentException(
-                        "Connection container of type " + cc.getClass().getName() + " are not supported, yet.");
-                }
+            for (ConnectionContainer cc : wm.getConnectionContainers()) {
+                NodeSettingsWO nextConnectionConfig = connSettings.addNodeSettings("connection_" + connectionNumber);
+                saveConnection(nextConnectionConfig, cc);
+                connectionNumber += 1;
             }
             int inCount = wm.getNrInPorts();
             NodeSettingsWO inPortsSetts = inCount > 0 ? saveInPortsSetting(preFilledSettings) : null;
@@ -2287,55 +2188,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     protected static void saveWorkflowAnnotations(final WorkflowManager manager, final NodeSettingsWO settings) {
-        Collection<IWorkflowAnnotation> annotations = manager.getWorkflowAnnotations();
+        Collection<WorkflowAnnotation> annotations = manager.getWorkflowAnnotations();
         if (annotations.size() == 0) {
             return;
         }
         NodeSettingsWO annoSettings = settings.addNodeSettings("annotations");
         int i = 0;
-        for (IWorkflowAnnotation a : annotations) {
+        for (Annotation a : annotations) {
             NodeSettingsWO t = annoSettings.addNodeSettings("annotation_" + i);
-            saveAnnotationData(t, a.getData());
+            a.save(t);
             i += 1;
         }
-    }
-
-    /**
-     * Stores the given annotation data to the settings object
-     *
-     * @param settings
-     * @param annotationData
-     */
-    static void saveAnnotationData(final NodeSettingsWO settings, final AnnotationData annotationData) {
-        settings.addString("text", annotationData.getText());
-        settings.addInt("bgcolor", annotationData.getBgColor());
-        settings.addInt("x-coordinate", annotationData.getX());
-        settings.addInt("y-coordinate", annotationData.getY());
-        settings.addInt("width", annotationData.getWidth());
-        settings.addInt("height", annotationData.getHeight());
-        settings.addString("alignment", annotationData.getAlignment().toString());
-        settings.addInt("borderSize", annotationData.getBorderSize());
-        settings.addInt("borderColor", annotationData.getBorderColor());
-        settings.addInt("defFontSize", annotationData.getDefaultFontSize());
-        settings.addInt("annotation-version", annotationData.getVersion());
-        NodeSettingsWO styleConfigs = settings.addNodeSettings("styles");
-        int i = 0;
-        for (StyleRange sr : annotationData.getStyleRanges()) {
-            NodeSettingsWO cur = styleConfigs.addNodeSettings("style_" + (i++));
-            saveStyleRange(cur, sr);
-        }
-    }
-
-    /**
-     * Stores the given style range object to the settings object.
-     */
-    private static void saveStyleRange(final NodeSettingsWO settings, final StyleRange styleRange) {
-        settings.addInt("start", styleRange.getStart());
-        settings.addInt("length", styleRange.getLength());
-        settings.addString("fontname", styleRange.getFontName());
-        settings.addInt("fontstyle", styleRange.getFontStyle());
-        settings.addInt("fontsize", styleRange.getFontSize());
-        settings.addInt("fgcolor", styleRange.getFgColor());
     }
 
     /**
@@ -2450,10 +2313,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return settings.addNodeSettings("inport_" + portIndex);
     }
 
+    /**
+     * @since 3.5
+     */
     protected static void saveInportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
         settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
     }
 
+    /**
+     * @since 3.5
+     */
     protected static void saveInportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
         saveNodeUIInformation(settings, uiInfo);
     }
@@ -2474,10 +2343,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return settings.addNodeSettings("port_enum");
     }
 
+    /**
+     * @since 3.5
+     */
     protected static void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
         settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
     }
 
+    /**
+     * @since 3.5
+     */
     protected static void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
         saveNodeUIInformation(settings, uiInfo);
     }

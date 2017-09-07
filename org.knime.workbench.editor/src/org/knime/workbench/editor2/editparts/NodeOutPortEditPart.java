@@ -54,14 +54,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.INodeOutPort;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UINodeOutPort;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
@@ -88,10 +88,10 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     protected IFigure createFigure() {
         // Create the figure, we need the number of ports from the parent
         // container
-        INodeContainer container = getNodeContainer();
-        INodeOutPort port = container.getOutPort(getIndex());
+        UINodeContainer container = getNodeContainer();
+        UINodeOutPort port = container.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
-        boolean isMetaNode = !(container instanceof ISingleNodeContainer);
+        boolean isMetaNode = !(container instanceof UISingleNodeContainer);
         NodeOutPortFigure portFigure =
                 new NodeOutPortFigure(getType(), getIndex(),
                         container.getNrOutPorts(), isMetaNode, tooltip);
@@ -106,7 +106,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     @Override
     public void activate() {
         super.activate();
-        INodeOutPort outPort = (INodeOutPort)getModel();
+        UINodeOutPort outPort = (UINodeOutPort)getModel();
         outPort.addNodeStateChangeListener(this);
     }
 
@@ -115,7 +115,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      */
     @Override
     public void deactivate() {
-        INodeOutPort outPort = (INodeOutPort)getModel();
+        UINodeOutPort outPort = (UINodeOutPort)getModel();
         outPort.removeNodeStateChangeListener(this);
         super.deactivate();
     }
@@ -129,14 +129,14 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      *         {@inheritDoc}
      */
     @Override
-    public List<IConnectionContainer> getModelSourceConnections() {
+    public List<UIConnectionContainer> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<IConnectionContainer> containers =
+        Set<UIConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(), getIndex());
-        List<IConnectionContainer> conns = new ArrayList<IConnectionContainer>();
+        List<UIConnectionContainer> conns = new ArrayList<UIConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -150,7 +150,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      *         {@inheritDoc}
      */
     @Override
-    protected List<IConnectionContainer> getModelTargetConnections() {
+    protected List<UIConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 
@@ -173,7 +173,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
                         return;
                     }
                     m_updateInProgressFlag.set(false);
-                    INodeOutPort outPort = (INodeOutPort)getModel();
+                    UINodeOutPort outPort = (UINodeOutPort)getModel();
                     NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
                     rebuildTooltip();
                     fig.setInactive(outPort.isInactive());

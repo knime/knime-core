@@ -61,8 +61,11 @@ import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.handles.MoveHandle;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.swt.graphics.Cursor;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
@@ -109,11 +112,17 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         Command command = null;
 
         Rectangle rect = ((Rectangle)constraint).getCopy();
-        if (child.getModel() instanceof NodeContainer) {
-            NodeContainer container = (NodeContainer)child.getModel();
+        if (child.getModel() instanceof UINodeContainer) {
+            UINodeContainer container = (UINodeContainer)child.getModel();
+
+            if (!Wrapper.wraps(container, NodeContainer.class)) {
+                //not supported for others than ordinary NodeContainers
+                return null;
+            }
+
             NodeContainerEditPart nodePart = (NodeContainerEditPart)child;
             command =
-                    new ChangeNodeBoundsCommand(container,
+                    new ChangeNodeBoundsCommand(Wrapper.unwrapNC(container),
                             (NodeContainerFigure)nodePart.getFigure(), rect);
         } else if (child instanceof AbstractWorkflowPortBarEditPart) {
             command =
@@ -124,8 +133,14 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
             // TODO the workflow annotation could know what its WFM is?
             WorkflowRootEditPart root =
                     (WorkflowRootEditPart)annoPart.getParent();
-            IWorkflowManager wm = root.getWorkflowManager();
-            command = new ChangeAnnotationBoundsCommand(wm, annoPart, rect);
+            UIWorkflowManager wm = root.getWorkflowManager();
+
+            if(!Wrapper.wraps(wm, WorkflowManager.class)) {
+                //not supported for others than an ordinary workflow manager
+                return null;
+            }
+
+            command = new ChangeAnnotationBoundsCommand(Wrapper.unwrapWFM(wm), annoPart, rect);
         }
         return command;
     }

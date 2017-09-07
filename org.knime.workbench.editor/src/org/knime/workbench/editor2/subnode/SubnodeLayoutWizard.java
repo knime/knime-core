@@ -57,9 +57,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -74,14 +71,14 @@ import org.knime.workbench.core.util.ImageRepository;
  */
 public class SubnodeLayoutWizard extends Wizard {
 
-    private final ISubNodeContainer m_subNodeContainer;
+    private final SubNodeContainer m_subNodeContainer;
     private SubnodeLayoutJSONEditorPage m_page;
 
     /**
      * @param container the subnode container
      *
      */
-    public SubnodeLayoutWizard(final ISubNodeContainer container) {
+    public SubnodeLayoutWizard(final SubNodeContainer container) {
         m_subNodeContainer = container;
         setHelpAvailable(false);
     }
@@ -95,8 +92,8 @@ public class SubnodeLayoutWizard extends Wizard {
         setWindowTitle("Wrapped Metanode Layout");
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
-        IWorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
-        Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
+        WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
+        //Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);
         LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : viewNodes.entrySet()) {

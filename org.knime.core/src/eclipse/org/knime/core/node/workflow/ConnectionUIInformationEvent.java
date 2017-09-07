@@ -49,8 +49,6 @@ package org.knime.core.node.workflow;
 
 import java.util.EventObject;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
-
 /**
  * Event that's fired by a {@link ConnectionContainer} when its UI information
  * changes.
@@ -68,7 +66,7 @@ public class ConnectionUIInformationEvent extends EventObject {
      * @param uiInformation the new UI information
      */
     public ConnectionUIInformationEvent(
-            final IConnectionContainer src,
+            final ConnectionContainer src,
             final ConnectionUIInformation uiInformation) {
         super(src);
         m_uiInformation = uiInformation;
@@ -84,8 +82,8 @@ public class ConnectionUIInformationEvent extends EventObject {
 
     /** {@inheritDoc} */
     @Override
-    public IConnectionContainer getSource() {
-        return (IConnectionContainer)super.getSource();
+    public ConnectionContainer getSource() {
+        return (ConnectionContainer)super.getSource();
     }
 
 }

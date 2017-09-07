@@ -47,21 +47,14 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Optional;
-
-import org.knime.core.def.node.workflow.IWorkflowAnnotation;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
-
 /** Workflow annotation (not associated with a node).
  * Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowAnnotation extends Annotation<AnnotationData> implements IWorkflowAnnotation {
-
-    private WorkflowAnnotationID m_wfaID = null;
+public class WorkflowAnnotation extends Annotation {
 
     /** New empty annotation. */
     public WorkflowAnnotation() {
-        this(AnnotationData.builder().build());
+        this(new AnnotationData());
     }
 
     /** Restore annotation.
@@ -70,38 +63,10 @@ public class WorkflowAnnotation extends Annotation<AnnotationData> implements IW
         super(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setID(final WorkflowAnnotationID wfaID) {
-        m_wfaID = wfaID;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Optional<WorkflowAnnotationID> getID() {
-        return Optional.ofNullable(m_wfaID);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("rawtypes")
-    @Override
-    protected AnnotationData.Builder createAnnotationDataBuilder(final AnnotationData annoData,
-        final boolean includeBounds) {
-        return AnnotationData.builder(annoData, includeBounds);
-    }
-
     /** {@inheritDoc} */
     @Override
     public WorkflowAnnotation clone() {
-        WorkflowAnnotation clone = (WorkflowAnnotation)super.clone();
-        clone.m_wfaID = m_wfaID;
-        return clone;
+        return (WorkflowAnnotation)super.clone();
     }
 
 }

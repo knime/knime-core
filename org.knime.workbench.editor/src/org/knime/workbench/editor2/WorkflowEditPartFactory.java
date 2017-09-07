@@ -54,18 +54,9 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextActivation;
 import org.eclipse.ui.contexts.IContextService;
-import org.knime.core.def.node.workflow.IAnnotation;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeAnnotation;
-import org.knime.core.def.node.workflow.INodeInPort;
-import org.knime.core.def.node.workflow.INodeOutPort;
-import org.knime.core.def.node.workflow.INodePort;
-import org.knime.core.def.node.workflow.ISingleNodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowInPort;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.def.node.workflow.IWorkflowOutPort;
-import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -74,6 +65,14 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeInPort;
+import org.knime.core.ui.node.workflow.UINodeOutPort;
+import org.knime.core.ui.node.workflow.UINodePort;
+import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowInPort;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.UIWorkflowOutPort;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
@@ -146,7 +145,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
         // correct type in the if statement
         // model at the end of method
         EditPart part = null;
-        if (model instanceof IWorkflowManager) {
+        if (model instanceof UIWorkflowManager) {
             // this is out "root" workflow manager
             if (m_isTop) {
                 // all following objects of type WorkflowManager are treated as
@@ -158,11 +157,11 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
                 // must be a metanode
                 part = new SubworkflowEditPart();
             }
-        } else if (model instanceof INodeAnnotation) {
+        } else if (model instanceof NodeAnnotation) {
             /* IMPORTANT: first test NodeAnnotation then Annotation (as the
              * first derives from the latter! */
             part = new NodeAnnotationEditPart();
-        } else if (model instanceof IAnnotation) {
+        } else if (model instanceof Annotation) {
             /* IMPORTANT: first test NodeAnnotation then Annotation (as the
              * first derives from the latter! */
             /* workflow annotations hang off the workflow manager */
@@ -174,14 +173,14 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
             } else {
                 part = new WorkflowOutPortBarEditPart();
             }
-        } else if (model instanceof ISingleNodeContainer) {
+        } else if (model instanceof UISingleNodeContainer) {
             // SingleNodeContainer -> NodeContainerEditPart
             part = new NodeContainerEditPart();
 
             // we have to test for WorkflowInPort first because it's a
             // subclass of NodeInPort (same holds for WorkflowOutPort and
             // NodeOutPort)
-        } else if (model instanceof IWorkflowInPort && context instanceof WorkflowInPortBarEditPart) {
+        } else if (model instanceof UIWorkflowInPort && context instanceof WorkflowInPortBarEditPart) {
             // WorkflowInPort and context WorkflowRootEditPart ->
             // WorkflowInPortEditPart
             /*
@@ -191,9 +190,9 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
              * NodeContainerEditPart the WorkflowInPort is a model child of a
              * NodeContainerEditPart and we look at it as a node in port.
              */
-            IWorkflowInPort inport = (IWorkflowInPort)model;
-            part = new WorkflowInPortEditPart(PortTypeRegistry.getPortType(inport.getPortTypeKey()), inport.getPortIndex());
-        } else if (model instanceof IWorkflowOutPort && context instanceof WorkflowOutPortBarEditPart) {
+            UIWorkflowInPort inport = (UIWorkflowInPort)model;
+            part = new WorkflowInPortEditPart(inport.getPortType(), inport.getPortIndex());
+        } else if (model instanceof UIWorkflowOutPort && context instanceof WorkflowOutPortBarEditPart) {
             // WorkflowOutPort and context WorkflowRootEditPart ->
             // WorkflowOutPortEditPart
             /*
@@ -205,23 +204,23 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
              */
 
             // TODO: return SubWorkFlowOutPortEditPart
-            IWorkflowOutPort outport = (IWorkflowOutPort)model;
+            UIWorkflowOutPort outport = (UIWorkflowOutPort)model;
 
-            part = new WorkflowOutPortEditPart(PortTypeRegistry.getPortType(outport.getPortTypeKey()), outport.getPortIndex());
-        } else if (model instanceof IWorkflowOutPort) {
+            part = new WorkflowOutPortEditPart(outport.getPortType(), outport.getPortIndex());
+        } else if (model instanceof UIWorkflowOutPort) {
             // TODO: return SubWorkFlowOutPortEditPart
-            IWorkflowOutPort outport = (IWorkflowOutPort)model;
-            part = new MetaNodeOutPortEditPart(PortTypeRegistry.getPortType(outport.getPortTypeKey()), outport.getPortIndex());
+            UIWorkflowOutPort outport = (UIWorkflowOutPort)model;
+            part = new MetaNodeOutPortEditPart(outport.getPortType(), outport.getPortIndex());
 
-        } else if (model instanceof INodeInPort) {
+        } else if (model instanceof UINodeInPort) {
             // NodeInPort -> NodeInPortEditPart
-            INodePort port = (INodeInPort)model;
-            part = new NodeInPortEditPart(PortTypeRegistry.getPortType(port.getPortTypeKey()), port.getPortIndex());
-        } else if (model instanceof INodeOutPort) {
+            UINodePort port = (UINodeInPort)model;
+            part = new NodeInPortEditPart(port.getPortType(), port.getPortIndex());
+        } else if (model instanceof UINodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
-            INodePort port = (INodeOutPort)model;
-            part = new NodeOutPortEditPart(PortTypeRegistry.getPortType(port.getPortTypeKey()), port.getPortIndex());
-        } else if (model instanceof IConnectionContainer) {
+            UINodePort port = (UINodeOutPort)model;
+            part = new NodeOutPortEditPart(port.getPortType(), port.getPortIndex());
+        } else if (model instanceof UIConnectionContainer) {
             // ConnectionContainer -> ConnectionContainerEditPart
             part = new ConnectionContainerEditPart();
         } else {

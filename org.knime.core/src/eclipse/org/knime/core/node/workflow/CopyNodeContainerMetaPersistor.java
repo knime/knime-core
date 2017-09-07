@@ -47,13 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.def.node.workflow.INodeContainer.NodeLocks;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -89,7 +89,8 @@ implements NodeContainerMetaPersistor {
             final boolean preserveDeletableFlag,
             final boolean isUndoableDeleteCommand) {
         NodeAnnotation nodeAnn = original.getNodeAnnotation();
-        m_nodeAnnotationData = nodeAnn == null ? null : NodeAnnotationData.builder(nodeAnn.getData(), true).build();
+        m_nodeAnnotationData = nodeAnn == null ? null
+                : nodeAnn.getData().clone();
         m_customDescription = original.getCustomDescription();
         m_nodeIDSuffix = original.getID().getIndex();
         NodeExecutionJobManager orig = original.getJobManager();

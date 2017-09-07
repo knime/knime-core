@@ -79,8 +79,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.def.node.workflow.ISubNodeContainer;
-import org.knime.core.def.node.workflow.WorkflowAnnotationID;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -110,7 +108,6 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
@@ -156,7 +153,7 @@ import org.w3c.dom.Element;
  * @author M. Berthold &amp; B. Wiswedel
  * @since 2.9
  */
-public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate, ISubNodeContainer {
+public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {
 
     /** Shown in help description when nothing is set in input/output node. */
     private static final String NO_DESCRIPTION_SET = "<no description set>";
@@ -315,7 +312,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
         WorkflowCopyContent.Builder c = WorkflowCopyContent.builder();
-        c.setAnnotationIDs(content.getWorkflowAnnotationIDs().toArray(new WorkflowAnnotationID[0]));
+        c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
         c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
         c.setIncludeInOutConnections(false);
         WorkflowPersistor wp = content.copy(c.build());
@@ -549,13 +546,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     }
 
     /** @return the inNodeID */
-    @Override
     public NodeID getVirtualInNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualInNodeIDSuffix);
     }
 
     /** @return the outNodeID */
-    @Override
     public NodeID getVirtualOutNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualOutNodeIDSuffix);
     }
@@ -743,7 +738,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /**
      * @return underlying workflow.
      */
-    @Override
     public WorkflowManager getWorkflowManager() {
         return m_wfm;
     }
@@ -1767,7 +1761,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * once the node is unwrapped to a metanode. */
     WorkflowPersistor getConvertToMetaNodeCopyPersistor() {
         assert isLockedByCurrentThread();
-        Collection<WorkflowAnnotationID> workflowAnnotationIDs = m_wfm.getWorkflowAnnotationIDs();
+        Collection<WorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();
         // all but virtual in and output node
         NodeID[] nodes = m_wfm.getNodeContainers().stream().map(nc -> nc.getID())
                 .filter(id -> id.getIndex() != m_virtualInNodeIDSuffix)
@@ -1775,7 +1769,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 .toArray(NodeID[]::new);
         WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
         cnt.setNodeIDs(nodes);
-        cnt.setAnnotationIDs(workflowAnnotationIDs.toArray(new WorkflowAnnotationID[workflowAnnotationIDs.size()]));
+        cnt.setAnnotation(workflowAnnotations.toArray(new WorkflowAnnotation[workflowAnnotations.size()]));
         cnt.setIncludeInOutConnections(true);
         WorkflowPersistor persistor = m_wfm.copy(true, cnt.build());
         final Set<ConnectionContainerTemplate> additionalConnectionSet = persistor.getAdditionalConnectionSet();
@@ -1878,7 +1872,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return the layoutJSONString
      * @since 3.1
      */
-    @Override
     public String getLayoutJSONString() {
         if (m_layoutJSONString == null) {
             m_layoutJSONString = "";
@@ -1890,7 +1883,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @param layoutJSONString the layoutJSONString to set
      * @since 3.1
      */
-    @Override
     public void setLayoutJSONString(final String layoutJSONString) {
         if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
             m_layoutJSONString = layoutJSONString;
@@ -1964,7 +1956,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 message = null;
             }
             result.add(MetaPortInfo.builder()
-                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
+                .setPortType(portType)
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build());
@@ -2012,7 +2004,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 message = null;
             }
             result.add(MetaPortInfo.builder()
-                .setPortTypeKey(PortTypeRegistry.getPortTypeKey(portType))
+                .setPortType(portType)
                 .setIsConnected(isConnected)
                 .setMessage(message)
                 .setOldIndex(i).build());

@@ -51,10 +51,10 @@ import java.util.Arrays;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
@@ -79,7 +79,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
      * @param figureBounds The new bounds of the figure
      * @param figure the figure that is going to be moved
      */
-    public ChangeNodeBoundsCommand(final INodeContainer container,
+    public ChangeNodeBoundsCommand(final NodeContainer container,
             final NodeContainerFigure figure, final Rectangle figureBounds) {
         super(container.getParent());
 
@@ -101,10 +101,10 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            IWorkflowManager wm = getHostWFM();
+            WorkflowManager wm = getHostWFM();
             NodeUIInformation information = NodeUIInformation.builder()
                 .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
-            INodeContainer container = wm.getNodeContainer(m_nodeID);
+            NodeContainer container = wm.getNodeContainer(m_nodeID);
             // must set explicitly so that event is fired by container
             container.setUIInformation(information);
         }
@@ -120,7 +120,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
             NodeUIInformation information = NodeUIInformation.builder()
                 .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
-            INodeContainer container = getHostWFM().getNodeContainer(m_nodeID);
+            NodeContainer container = getHostWFM().getNodeContainer(m_nodeID);
             container.setUIInformation(information);
         }
     }

@@ -46,7 +46,6 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -56,7 +55,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public class ConnectionContainer implements IConnectionContainer{
+public class ConnectionContainer implements ConnectionProgressListener {
 
     private final NodeID m_source;
     private final int m_sourcePort;
@@ -71,6 +70,21 @@ public class ConnectionContainer implements IConnectionContainer{
     m_progressListeners = new CopyOnWriteArraySet<ConnectionProgressListener>();
 
 
+    /** Typ of the connection: metanode input, output, through or "standard" connection.
+     * @noreference */
+    public enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
+        /**
+         * @return Whether this type is leaving a workflow (through or out)
+         */
+        public boolean isLeavingWorkflow() {
+            switch (this) {
+                case WFMOUT:
+                case WFMTHROUGH: return true;
+                default: return false;
+            }
+        }
+    }
+
     private final ConnectionType m_type;
     private boolean m_isFlowVariablePortConnection;
 
@@ -82,6 +96,7 @@ public class ConnectionContainer implements IConnectionContainer{
      * @param destPort port of destination node
      * @param type of connection
      * @param isFlowVariablePortConnection whether it's a connection between two flow variable ports
+     * @since 3.5
      */
     public ConnectionContainer(final NodeID src, final int srcPort, final NodeID dest, final int destPort,
         final ConnectionType type, final boolean isFlowVariablePortConnection) {
@@ -103,7 +118,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the uiInfo
      */
-    @Override
     public ConnectionUIInformation getUIInfo() {
         return m_uiInfo;
     }
@@ -111,7 +125,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the dest
      */
-    @Override
     public NodeID getDest() {
         return m_dest;
     }
@@ -119,7 +132,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the destPort
      */
-    @Override
     public int getDestPort() {
         return m_destPort;
     }
@@ -127,7 +139,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the source
      */
-    @Override
     public NodeID getSource() {
         return m_source;
     }
@@ -135,7 +146,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the sourcePort
      */
-    @Override
     public int getSourcePort() {
         return m_sourcePort;
     }
@@ -143,15 +153,14 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the isDeletable
      */
-    @Override
     public boolean isDeletable() {
         return m_isDeletable;
     }
 
     /**
-     * {@inheritDoc}
+     * @return whether the connection connects two flow variable ports
+     * @since 3.5
      */
-    @Override
     public boolean isFlowVariablePortConnection() {
         return m_isFlowVariablePortConnection;
     }
@@ -166,7 +175,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return type of the connection
      */
-    @Override
     public ConnectionType getType() {
         return m_type;
     }
@@ -174,7 +182,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @return the ID for this connection.
      */
-    @Override
     public ConnectionID getID() {
         return new ConnectionID(m_dest, m_destPort);
     }
@@ -184,7 +191,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /**
      * @param uiInfo the uiInfo to set
      */
-    @Override
     public void setUIInfo(final ConnectionUIInformation uiInfo) {
         m_uiInfo = uiInfo;
         notifyUIListeners(new ConnectionUIInformationEvent(this, m_uiInfo));
@@ -193,7 +199,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /** Add a listener to the list of registered listeners.
      * @param l The listener to add, must not be null.
      */
-    @Override
     public void addUIInformationListener(
             final ConnectionUIInformationListener l) {
         m_uiListeners.add(CheckUtils.checkArgumentNotNull(l));
@@ -202,7 +207,6 @@ public class ConnectionContainer implements IConnectionContainer{
     /** Remove a registered listener from the listener list.
      * @param l The listener to remove.
      */
-    @Override
     public void removeUIInformationListener(final ConnectionUIInformationListener l) {
         m_uiListeners.remove(l);
     }
@@ -211,7 +215,6 @@ public class ConnectionContainer implements IConnectionContainer{
      * Adds a listener to the list of registered progress listeners.
      * @param listener The listener to add, must not be null.
      */
-    @Override
     public void addProgressListener(final ConnectionProgressListener listener) {
         m_progressListeners.add(CheckUtils.checkArgumentNotNull(listener));
     }
@@ -220,7 +223,6 @@ public class ConnectionContainer implements IConnectionContainer{
      * Removes a listener from the list of registered progress listeners.
      * @param listener The listener to remove
      */
-    @Override
     public void removeProgressListener(final ConnectionProgressListener listener) {
         m_progressListeners.remove(listener);
     }
@@ -240,7 +242,6 @@ public class ConnectionContainer implements IConnectionContainer{
 
     /** Removes all registered listeners in order to release references on
      * this object. */
-    @Override
     public void cleanup() {
         m_uiListeners.clear();
         m_progressListeners.clear();

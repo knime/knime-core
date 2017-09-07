@@ -91,7 +91,6 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -202,7 +201,7 @@ public final class NodeTimer {
                 processStatChanges();
             }
         }
-        public void addConnectionCreation(final INodeContainer source, final INodeContainer dest) {
+        public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
@@ -633,7 +632,7 @@ public final class NodeTimer {
 
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
 
-    private static String getCanonicalName(final INodeContainer nc) {
+    private static String getCanonicalName(final NodeContainer nc) {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;

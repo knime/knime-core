@@ -47,8 +47,6 @@ package org.knime.core.node.workflow;
 
 import java.util.EventObject;
 
-import org.knime.core.def.node.workflow.IConnectionContainer;
-
 /**
  * This event is fired in order to update the UI with connection statistics and
  * provide animation.
@@ -62,7 +60,7 @@ public final class ConnectionProgressEvent extends EventObject {
      * @param src the source connection
      * @param progress the progress object
      */
-    public ConnectionProgressEvent(final IConnectionContainer src,
+    public ConnectionProgressEvent(final ConnectionContainer src,
             final ConnectionProgress progress) {
         super(src);
         m_progress = progress;
@@ -81,8 +79,8 @@ public final class ConnectionProgressEvent extends EventObject {
      * {@inheritDoc}
      */
     @Override
-    public IConnectionContainer getSource() {
-        return (IConnectionContainer)super.getSource();
+    public ConnectionContainer getSource() {
+        return (ConnectionContainer)super.getSource();
     }
 
 }

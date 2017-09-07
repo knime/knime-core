@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow.action;
 
-import org.knime.core.def.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowLock;
@@ -62,7 +61,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @noreference This class is not intended to be referenced by clients.
  * @since 3.1
  */
-public final class MetaNodeToSubNodeResult implements IMetaNodeToSubNodeResult {
+public final class MetaNodeToSubNodeResult {
 
     private NodeID m_nodeID;
     private WorkflowPersistor m_undoPersistor;
@@ -80,13 +79,11 @@ public final class MetaNodeToSubNodeResult implements IMetaNodeToSubNodeResult {
     }
 
     /** @return true if undo-able, that is node can be removed (hence converted, then removed). */
-    @Override
     public boolean canUndo() {
         return m_wfm.canRemoveNode(m_nodeID);
     }
 
     /** Perform the undo. */
-    @Override
     public void undo() {
         try (WorkflowLock lock = m_wfm.lock()) { // prevent events to be sent too early
             m_wfm.removeNode(m_nodeID);

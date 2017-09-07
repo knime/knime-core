@@ -62,7 +62,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -422,20 +421,14 @@ public final class SandboxedNodeCreator {
         } else {
             return;
         }
-        for (IConnectionContainer cc : origWFM.getConnectionContainers()) {
-            if (cc instanceof ConnectionContainer) {
-                NodeID sandboxTargetID = sandboxWFM.getID();
-                if (!cc.getDest().equals(origWFM.getID())) {
-                    // real connection, not a wfm out or through connection
-                    sandboxTargetID = new NodeID(sandboxTargetID, cc.getDest().getIndex());
-                }
-                IConnectionContainer sbCC =
-                    sandboxWFM.getConnection(new ConnectionID(sandboxTargetID, cc.getDestPort()));
-                sbCC.addProgressListener(pe -> ((ConnectionContainer)cc).progressChanged(pe));
-            } else {
-                throw new IllegalArgumentException(
-                    "Connection container of type " + cc.getClass().getName() + " not supported, yet.");
+        for (ConnectionContainer cc : origWFM.getConnectionContainers()) {
+            NodeID sandboxTargetID = sandboxWFM.getID();
+            if (!cc.getDest().equals(origWFM.getID())) {
+                // real connection, not a wfm out or through connection
+                sandboxTargetID = new NodeID(sandboxTargetID, cc.getDest().getIndex());
             }
+            ConnectionContainer sbCC = sandboxWFM.getConnection(new ConnectionID(sandboxTargetID, cc.getDestPort()));
+            sbCC.addProgressListener(pe -> cc.progressChanged(pe));
         }
     }
 

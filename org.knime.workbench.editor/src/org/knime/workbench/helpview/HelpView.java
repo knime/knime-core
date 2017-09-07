@@ -68,9 +68,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.part.ViewPart;
-import org.knime.core.def.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -217,7 +216,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
                     // if multiple nodes in the editor are selected we should
                     // not show description for the same node (if used multiple
                     // times) twice. We store the node name in the set.
-                    INodeContainer nc = ((NodeContainerEditPart)sel)
+                    UINodeContainer nc = ((NodeContainerEditPart)sel)
                             .getNodeContainer();
                     if (!ids.contains(nc.getName())) {
                         ids.add(nc.getName());
@@ -227,7 +226,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
                 } else if (sel instanceof MetaNodeTemplate) {
                     // TODO: add support for MetaNodeTemplates and get the
                     // description out of them
-                    NodeContainer manager
+                    UINodeContainer manager
                         = ((MetaNodeTemplate)sel).getManager();
                     DynamicNodeDescriptionCreator.instance()
                         .addDescription(manager,

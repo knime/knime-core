@@ -47,8 +47,6 @@
  */
 package org.knime.core.node.port;
 
-import org.knime.core.def.node.port.PortTypeKey;
-
 /** Object describing a metanode port. Used in the action to modify metanode
  * port orders, types, etc. It comprises the port type, whether it's connected
  * (only if created from the WFM) and what its index in the list of all
@@ -61,21 +59,21 @@ import org.knime.core.def.node.port.PortTypeKey;
  */
 public final class MetaPortInfo {
 
-    private final PortTypeKey m_typeKey;
+    private final PortType m_type;
     private final boolean m_isConnected;
     private final String m_message;
-    private final int m_oldIndex;
-    private final int m_newIndex;
+    private int m_oldIndex;
+    private int m_newIndex;
 
 
     /**
      * Creates a new instance from the passed builder.
      */
     private MetaPortInfo(final Builder builder) {
-        if(builder.m_typeKey == null) {
-            throw new IllegalArgumentException("No port type uid set.");
+        if(builder.m_type == null) {
+            throw new IllegalArgumentException("No port type set.");
         }
-        m_typeKey = builder.m_typeKey;
+        m_type = builder.m_type;
         m_isConnected = builder.m_isConnected;
         m_message = builder.m_message;
         m_oldIndex = builder.m_oldIndex;
@@ -83,8 +81,8 @@ public final class MetaPortInfo {
     }
 
     /** @return the type */
-    public PortTypeKey getTypeKey() {
-        return m_typeKey;
+    public PortType getType() {
+        return m_type;
     }
 
     /** @return the isConnected */
@@ -109,6 +107,7 @@ public final class MetaPortInfo {
 
     /**
      * @return a new builder with default values
+     * @since 3.5
      */
     public static Builder builder() {
         return new Builder();
@@ -117,6 +116,7 @@ public final class MetaPortInfo {
     /**
      * @param mpi the object to take the initial values from
      * @return a new builder with the values initialized by the ones given by the passed {@link MetaPortInfo}
+     * @since 3.5
      */
     public static Builder builder(final MetaPortInfo mpi) {
         return new Builder().copyFrom(mpi);
@@ -124,10 +124,11 @@ public final class MetaPortInfo {
 
     /**
      * Builder to create immutable instances of the {@link MetaPortInfo}-class.
+     * @since 3.5
      */
     public static final class Builder {
 
-        private PortTypeKey m_typeKey;
+        private PortType m_type;
         private boolean m_isConnected = false;
         private String m_message = null;
         private int m_oldIndex = -1;
@@ -138,7 +139,7 @@ public final class MetaPortInfo {
         }
 
         private Builder copyFrom(final MetaPortInfo mpi) {
-            m_typeKey = mpi.m_typeKey;
+            m_type = mpi.m_type;
             m_isConnected = mpi.m_isConnected;
             m_message = mpi.m_message;
             m_oldIndex = mpi.m_oldIndex;
@@ -147,11 +148,11 @@ public final class MetaPortInfo {
         }
 
         /**
-         * @param typeKey the unique identifier for the port type
+         * @param type the port type
          * @return this
          */
-        public Builder setPortTypeKey(final PortTypeKey typeKey) {
-            m_typeKey = typeKey;
+        public Builder setPortType(final PortType type) {
+            m_type = type;
             return this;
         }
 

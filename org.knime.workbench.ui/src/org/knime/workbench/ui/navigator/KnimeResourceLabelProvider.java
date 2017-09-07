@@ -75,14 +75,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -183,10 +182,10 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     protected ImageDescriptor decorateImage(final ImageDescriptor input,
             final Object element) {
         if (element instanceof IContainer) {
-            INodeContainer cont = ProjectWorkflowMap.getWorkflow(
+            UINodeContainer cont = ProjectWorkflowMap.getUIWorkflow(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
-                URL iconURL = NodeExecutionJobManagerPool.getJobManagerFactory(cont.findJobManagerKey()).getInstance().getIcon();
+                URL iconURL = cont.findJobManager().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);
@@ -261,12 +260,12 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public Image getImage(final Object element) {
         Image img = super.getImage(element);
-        INodeContainer projectNode = null;
+        UINodeContainer projectNode = null;
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
             if (container.exists(WORKFLOW_FILE)) {
                 // in any case a knime workflow or meta node (!)
-                projectNode = ProjectWorkflowMap.getWorkflow(
+                projectNode = ProjectWorkflowMap.getUIWorkflow(
                         container.getLocationURI());
                 if (projectNode == null && !isMetaNode(container)) {
                     return CLOSED_WORKFLOW;
@@ -279,16 +278,16 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     return WORKFLOW_GROUP;
                 }
             }
-        } else if (element instanceof INodeContainer) {
-                projectNode = (INodeContainer)element;
+        } else if (element instanceof UINodeContainer) {
+                projectNode = (UINodeContainer)element;
         }
         if (projectNode != null) {
-            if (projectNode instanceof IWorkflowManager
+            if (projectNode instanceof UIWorkflowManager
                     // display state only for projects
                     // with this check only projects (
                     // direct children of the ROOT
                     // are displayed with state
-                    && ((IWorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                    && ((UIWorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
                 NodeContainerState state = projectNode.getNodeContainerState();
                 if (projectNode.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR)) {
                     return ERROR;
@@ -319,9 +318,9 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public String getText(final Object element) {
 
-        if (element instanceof INodeContainer) {
-            String output =  ((INodeContainer)element).getName()
-                + " (#" + ((INodeContainer)element).getID().getIndex() + ")";
+        if (element instanceof UINodeContainer) {
+            String output =  ((UINodeContainer)element).getName()
+                + " (#" + ((UINodeContainer)element).getID().getIndex() + ")";
             // meta nodes are as object (workflow open) represented with ":"
             // then it cannot be found
             return output.replace(":", "_");

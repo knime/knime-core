@@ -46,7 +46,6 @@ package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
 
-import org.knime.core.def.node.workflow.INodeOutPort;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -60,7 +59,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @noextend This interface is not intended to be extended by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  */
-public interface NodeOutPort extends INodeOutPort, NodePort {
+public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeContainerStateObservable {
 
     /**
      * Returns the <code>DataTableSpec</code> or null if not available.
@@ -84,14 +83,12 @@ public interface NodeOutPort extends INodeOutPort, NodePort {
      * workflow file (or the node's corresponding sub directory).
      * @return The port object's summary.
      */
-    @Override
     public String getPortSummary();
 
 
     /** @return true if the contained spec is not null and instance of
      * {@link org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec}
      */
-    @Override
     public boolean isInactive();
 
     /**
@@ -99,7 +96,6 @@ public interface NodeOutPort extends INodeOutPort, NodePort {
      * @since 2.8
      * @noreference This method is not intended to be referenced by clients.
      */
-    @Override
     public InternalNodeContainerState getNodeState();
 
     /** The single node container associated with this port. For 'standard' nodes this is just the corresponding node;
@@ -152,7 +148,6 @@ public interface NodeOutPort extends INodeOutPort, NodePort {
      * @param e the event which should be forwarded to all regsitered
      * {@link NodeStateChangeListener}s
      */
-    @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e);
 
 

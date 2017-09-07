@@ -49,14 +49,15 @@ package org.knime.workbench.ui.layout.commands;
 
 import java.util.Map;
 
-import org.eclipse.gef.commands.Command;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.workbench.editor2.commands.AbstractKNIMECommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.layout.align.VerticAlignManager;
 
@@ -64,9 +65,9 @@ import org.knime.workbench.ui.layout.align.VerticAlignManager;
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class VerticAlignCommand extends Command {
+public class VerticAlignCommand extends AbstractKNIMECommand {
 
-    private final IWorkflowManager m_wfm;
+    private final WorkflowManager m_wfm;
 
     private VerticAlignManager m_alignMgr;
 
@@ -76,8 +77,9 @@ public class VerticAlignCommand extends Command {
      * @param wfm the workflow manager holding the nodes
      * @param nodes the nodes to align.
      */
-    public VerticAlignCommand(final IWorkflowManager wfm,
+    public VerticAlignCommand(final WorkflowManager wfm,
             final NodeContainerEditPart[] nodes) {
+        super(wfm);
         m_wfm = wfm;
         m_nodes = nodes.clone();
     }
@@ -87,7 +89,7 @@ public class VerticAlignCommand extends Command {
      */
     @Override
     public void execute() {
-        m_alignMgr = new VerticAlignManager(m_wfm, m_nodes);
+        m_alignMgr = new VerticAlignManager(WorkflowManagerWrapper.wrap(m_wfm), m_nodes);
         m_alignMgr.doLayout();
     }
 
@@ -110,7 +112,7 @@ public class VerticAlignCommand extends Command {
                 m_alignMgr.getOldBendpoints();
         // re-position nodes
         for (Map.Entry<NodeID, NodeUIInformation> e : oldPositions.entrySet()) {
-            INodeContainer nc = m_wfm.getNodeContainer(e.getKey());
+            NodeContainer nc = m_wfm.getNodeContainer(e.getKey());
             if (nc == null) {
                 continue;
             }
@@ -119,7 +121,7 @@ public class VerticAlignCommand extends Command {
         // re-create bendpoints
         for (Map.Entry<ConnectionID, ConnectionUIInformation> e : oldBendpoints
                 .entrySet()) {
-            IConnectionContainer cc = m_wfm.getConnection(e.getKey());
+            ConnectionContainer cc = m_wfm.getConnection(e.getKey());
             if (cc == null) {
                 continue;
             }

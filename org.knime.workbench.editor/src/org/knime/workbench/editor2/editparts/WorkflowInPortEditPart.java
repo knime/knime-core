@@ -57,14 +57,13 @@ import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.def.node.workflow.IConnectionContainer;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.INodeOutPort;
-import org.knime.core.def.node.workflow.IWorkflowManager;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowInPort;
+import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UINodeOutPort;
+import org.knime.core.ui.node.workflow.UIWorkflowInPort;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.editor2.WorkflowContextMenuProvider;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
@@ -111,14 +110,14 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final INodeContainer getNodeContainer() {
+    protected final UINodeContainer getNodeContainer() {
         if (getParent() == null) {
             return null;
         }
         // if the referring WorkflowManager is displayed as a metanode, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
-            return (NodeContainer)getParent().getModel();
+            return (UINodeContainer)getParent().getModel();
         }
         // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
@@ -131,8 +130,8 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final IWorkflowManager getManager() {
-        return (IWorkflowManager)getNodeContainer();
+    protected final UIWorkflowManager getManager() {
+        return (UIWorkflowManager)getNodeContainer();
     }
 
     /**
@@ -149,7 +148,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        INodeOutPort port = getManager().getInPort(getIndex()).getUnderlyingPort();
+        UINodeOutPort port = getManager().getInPort(getIndex()).getUnderlyingPort();
         String tooltip = getTooltipText(PORT_NAME + ": "  + getIndex(), port);
         WorkflowInPortFigure f = new WorkflowInPortFigure(getType(),
                 getManager().getNrInPorts(), getIndex(), tooltip);
@@ -232,15 +231,15 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
     @Override
-    public List<IConnectionContainer> getModelSourceConnections() {
+    public List<UIConnectionContainer> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<IConnectionContainer> containers =
+        Set<UIConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
                         getIndex());
-        List<IConnectionContainer>conns = new ArrayList<IConnectionContainer>();
+        List<UIConnectionContainer>conns = new ArrayList<UIConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -255,7 +254,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      *      #getModelSourceConnections()
      */
     @Override
-    protected List<IConnectionContainer> getModelTargetConnections() {
+    protected List<UIConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 
@@ -264,7 +263,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     public void rebuildTooltip() {
-        NodeOutPort port = ((WorkflowInPort)getNodeContainer().getInPort(
+        UINodeOutPort port = ((UIWorkflowInPort)getNodeContainer().getInPort(
                 getIndex())).getUnderlyingPort();
         String tooltip = getTooltipText(PORT_NAME + ": " + getIndex(), port);
         ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);

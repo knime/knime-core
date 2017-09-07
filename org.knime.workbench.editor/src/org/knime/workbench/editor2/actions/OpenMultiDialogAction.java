@@ -47,12 +47,11 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.def.node.workflow.INodeContainer;
-import org.knime.core.def.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.UIWorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -124,7 +123,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
             return false;
         }
         for (NodeContainerEditPart ep : selected) {
-            INodeContainer nc = ep.getNodeContainer();
+            UINodeContainer nc = ep.getNodeContainer();
             if (nc.getParent().isWriteProtected()) {
                 // don't do it in write protected metanodes.
                 return false;
@@ -145,15 +144,15 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
         NodeID[] nodes = new NodeID[nodeParts.length];
         SplitType splitType = SplitType.USER;
         for (int i = 0; i < nodeParts.length; i++) {
-            INodeContainer nc = nodeParts[i].getNodeContainer();
+            UINodeContainer nc = nodeParts[i].getNodeContainer();
             nodes[i] = nc.getID();
-            if (nc instanceof IWorkflowManager) {
+            if (nc instanceof UIWorkflowManager) {
                 // one metanode disables splitting
                 splitType = SplitType.DISALLOWED;
             }
         }
         WrappedMultipleNodeDialog dlg =
-                new WrappedMultipleNodeDialog(Display.getCurrent().getActiveShell(), CastUtil.castWFM(getManager()), splitType,
+                new WrappedMultipleNodeDialog(Display.getCurrent().getActiveShell(), getManager(), splitType,
                         nodes);
         dlg.open(); // the dialog applies new settings on OK
     }

@@ -56,7 +56,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 
 /**
@@ -99,7 +98,7 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
         assertThat("Expected to be dirty after expand", mgr.isDirty(), is(true));
         assertThat("Subnode must not longer exist", mgr.getNodeContainer(m_subnode8, SubNodeContainer.class, false),
             is(nullValue()));
-        IConnectionContainer flowVarConn = findInConnection(m_javaSnippet_After_Expand_3, 0);
+        ConnectionContainer flowVarConn = findInConnection(m_javaSnippet_After_Expand_3, 0);
         assertNotNull("didn't find connection after expand", flowVarConn);
         assertThat("Source should be string input node", flowVarConn.getSource(), is(m_stringInput5));
         executeAllAndWait();
