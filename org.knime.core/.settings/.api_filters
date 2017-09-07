@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.5.0"/>
+                <message_argument value="3.4.0"/>
+            </message_arguments>
+        </filter>
         <filter comment="Java-Snippet Changes (AP-6805)" id="924844039">
             <message_arguments>
                 <message_argument value="3.3.1"/>
@@ -71,6 +77,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
                 <message_argument value="T"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/MetaPortInfo.java" type="org.knime.core.node.port.MetaPortInfo">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.MetaPortInfo"/>
+                <message_argument value="setNewIndex(int)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -184,6 +198,307 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionContainer.java" type="org.knime.core.node.workflow.ConnectionContainer">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionContainer"/>
+                <message_argument value="ConnectionContainer(NodeID, int, NodeID, int, ConnectionContainer.ConnectionType)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionID.java" type="org.knime.core.node.workflow.ConnectionID">
+        <filter id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionID"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="ConnectionUIInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="KEY_BENDPOINTS"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="KEY_VERSION"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="addBendpoint(int, int, int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="createNewWithOffsetPosition(int[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="removeBendpoint(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="save(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/EditorUIInformation.java" type="org.knime.core.node.workflow.EditorUIInformation">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="EditorUIInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="save(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setConnectionLineWidth(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setGridX(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setGridY(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setHasCurvedConnections(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setShowGrid(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setSnapToGrid(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="setZoomLevel(double)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileNativeNodeContainerPersistor">
+        <filter id="421662840">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+                <message_argument value="loadNodeFactory(String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getInPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="getOutPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="saveInportsBarUIInfoClassName(NodeSettingsWO, UIInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="saveInportsBarUIInfoSettings(NodeSettingsWO, UIInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="saveOutportsBarUIInfoClassName(NodeSettingsWO, UIInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+                <message_argument value="saveOutportsBarUIInfoSettings(NodeSettingsWO, UIInformation)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeAnnotation.java" type="org.knime.core.node.workflow.NodeAnnotation">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeAnnotation"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeAnnotation"/>
+                <message_argument value="getNodeContainer()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeAnnotation"/>
+                <message_argument value="nodeUIInformationChanged(NodeUIInformationEvent)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeUIInformation.java" type="org.knime.core.node.workflow.NodeUIInformation">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+            </message_arguments>
+        </filter>
+        <filter id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="NodeUIInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="NodeUIInformation(int, int, int, int, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="createNewWithOffsetPosition(int[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="isFilledProperly()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="save(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="setIsDropLocation(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="setNodeLocation(int, int, int, int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="setSnapToGrid(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeUIInformationEvent.java" type="org.knime.core.node.workflow.NodeUIInformationEvent">
+        <filter id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformationEvent"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformationEvent"/>
+                <message_argument value="NodeUIInformationEvent(NodeID, UIInformation, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformationEvent"/>
+                <message_argument value="getUIInformation()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="getInPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="getOutPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController">
         <filter id="338792546">
             <message_arguments>
@@ -200,6 +515,84 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WizardExecutionController.WizardPageContent"/>
                 <message_argument value="org.knime.core_3.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCopyContent.java" type="org.knime.core.node.workflow.WorkflowCopyContent">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
+                <message_argument value="WorkflowCopyContent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
+                <message_argument value="setAnnotation(WorkflowAnnotation[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
+                <message_argument value="setIncludeInOutConnections(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCopyContent"/>
+                <message_argument value="setNodeIDs(NodeID[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getInPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getOutPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="setInPortsBarUIInfo(UIInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="setOutPortsBarUIInfo(UIInformation)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getInPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getOutPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getInPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getOutPortsBarUIInfo()"/>
             </message_arguments>
         </filter>
     </resource>
