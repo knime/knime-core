@@ -65,7 +65,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainerException;
-import org.knime.core.def.node.workflow.IConnectionContainer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -88,6 +87,7 @@ import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -668,7 +668,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         NativeNodeContainer[] nodeContainers = new NativeNodeContainer[numCopies];
         NodeID[] nodeIDs = new NodeID[numCopies];
         NodeUIInformation uiInf = nodeContainer.getUIInformation();
-        Set<IConnectionContainer> connections = workflowManager.getIncomingConnectionsFor(nodeContainer.getID());
+        Set<ConnectionContainer> connections = workflowManager.getIncomingConnectionsFor(nodeContainer.getID());
         for (int i = 0; i < numCopies; i++) {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
@@ -677,7 +677,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             nodeIDs[i] = nodeContainers[i].getID();
 
             //set all incoming connections
-            for (IConnectionContainer c : connections) {
+            for (ConnectionContainer c : connections) {
                 workflowManager.addConnection(c.getSource(), c.getSourcePort(), nodeContainers[i].getID(),
                     c.getDestPort());
             }
