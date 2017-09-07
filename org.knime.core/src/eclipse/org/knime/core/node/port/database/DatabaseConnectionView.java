@@ -92,7 +92,14 @@ final class DatabaseConnectionView extends JPanel {
             buf.append("<tt>" + credName + "</tt>");
         } else {
             buf.append("<strong>User Name:</strong>&nbsp;&nbsp;");
-            buf.append("<tt>" + sett.getString("user", "") + "</tt>");
+          //see JIRA AP-7824
+            final String user;
+            if (sett.containsKey(DatabaseConnectionSettings.CFG_USER_NAME)) {
+                user = sett.getString(DatabaseConnectionSettings.CFG_USER_NAME, "");
+            } else {
+                user = sett.getString("user", "");
+            }
+            buf.append("<tt>" + user + "</tt>");
         }
         String dbIdentifier = sett.getString("databaseIdentifier", null);
         if (dbIdentifier == null) {

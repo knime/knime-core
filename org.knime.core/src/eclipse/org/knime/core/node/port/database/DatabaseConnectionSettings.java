@@ -79,6 +79,11 @@ import org.knime.core.util.Version;
  */
 public class DatabaseConnectionSettings {
 
+    /**
+     * Settings key that stores the user name.
+     */
+    static final String CFG_USER_NAME = "userName";
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DatabaseConnectionSettings.class);
 
@@ -91,6 +96,12 @@ public class DatabaseConnectionSettings {
 
     private static final Version CURRENT_VERSION =
             new Version(KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV);
+
+    /**See AP-7824. This string is stored in the 'user' field to still have a user settings key that can be used
+     * by workflows created in KNIME 3.4.0 and earlier and that filled this field with flow variables. The real user
+     * name starting with 3.4.1 is stored in the new 'userName' field.
+     */
+    private static final String USER_INDICATOR = "[Workflows edited with 3.4.1, will not work in older versions]";
 
     /** Config for SQL statement. */
     public static final String CFG_STATEMENT = "statement";
@@ -461,11 +472,11 @@ public class DatabaseConnectionSettings {
         settings.addString("driver", m_driver);
         settings.addString("database", m_jdbcUrl);
         if (m_credName == null) {
-//            settings.addString("user", m_user); //this was the key prior 3.4.1
-            //we use the new settings key starting with 3.4.1 in order to provoke an exception when a 3.4.1 or
-        	//later workflow is opened in KNIME 3.4.0 or earlier to prevent problems with the missing password
             //see JIRA AP-7824
-            settings.addString("userName", m_user);
+            //we use the new settings key starting with 3.4.1 in order to provoke an exception when a 3.4.1 or
+            settings.addString("user", USER_INDICATOR); //indicate that this settings was saved with 3.4.1 and later
+        	//later workflow is opened in KNIME 3.4.0 or earlier to prevent problems with the missing password
+            settings.addString(CFG_USER_NAME, m_user);
             //always save the password encrypted...
             settings.addPassword("passwordEncrypted", ";Op5~pK{31AIN^eH~Ab`:YaiKM8CM`8_Dw:1Kl4_WHrvuAXO", m_pass);
             ///... and set the password to null to indicate for the loadConection method that the password is saved encrypted (introduced with KNIME 3.4)
@@ -550,14 +561,12 @@ public class DatabaseConnectionSettings {
                 }
             }
         } else {
-            // user and password
-        	if (settings.containsKey("userName")) {
-        		//this is the new user name setting starting with KNIME 3.4.1
-        	    user = settings.getString("userName");
-        	} else {
-        		//this is the old user name setting in KNIME 3.4.0 and earlier
-    	    	user = settings.getString("user");
-    	    }
+            user = settings.getString("user");
+            if (USER_INDICATOR.equals(user) && settings.containsKey(CFG_USER_NAME)) {
+        		//this is the new user name setting starting with KNIME 3.4.1 and no flow variables where used to set
+                //the old 'user' setting
+        	    user = settings.getString(CFG_USER_NAME);
+        	}
             final String pw = settings.getString("password", null);
             if (pw != null) {
                 //these settings where either created prior KNIME 3.4 or flow variables are used to set the password
