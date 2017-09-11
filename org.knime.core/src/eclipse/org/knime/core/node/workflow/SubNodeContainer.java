@@ -115,6 +115,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
@@ -1890,7 +1891,45 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
     }
 
+    /** Sets a flag on a given {@link WizardNode}, whether or not it is hidden from wizard execution
+     * @param id the node to set the flag on
+     * @param hide true if the node is supposed to be hidden from WebPortal or wizard execution, false otherwise
+     * @since 3.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void setHideNodeFromWizard(final NodeID id, final boolean hide) {
+        try (WorkflowLock lock = lock()) {
+            NativeNodeContainer nnc = m_wfm.getNodeContainer(id, NativeNodeContainer.class, true);
+            NodeModel model = nnc.getNodeModel();
+            CheckUtils.checkArgument(model instanceof WizardNode, "Can't set hide in wizard flag on non-wizard nodes.");
+            WizardNode<?,?> wn = (WizardNode<?,?>)model;
+            if (hide != wn.isHideInWizard()) {
+                wn.setHideInWizard(hide);
+                nnc.saveNodeSettingsToDefault();
+                nnc.setDirty();
+            }
+        }
+    }
 
+    /** Sets a flag on a given {@link DialogNode}, whether or not it is hidden from a containing metanode dialog
+     * @param id the node to set the flag on
+     * @param hide true if the node is supposed to be hidden from a containing metanode dialog, false otherwise
+     * @since 3.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void setHideNodeFromDialog(final NodeID id, final boolean hide) {
+        try (WorkflowLock lock = lock()) {
+            NativeNodeContainer nnc = m_wfm.getNodeContainer(id, NativeNodeContainer.class, true);
+            NodeModel model = nnc.getNodeModel();
+            CheckUtils.checkArgument(model instanceof DialogNode, "Can't set hide in dialog flag on non-dialog nodes.");
+            DialogNode<?,?> dn = (DialogNode<?,?>)model;
+            if (hide != dn.isHideInDialog()) {
+                dn.setHideInDialog(hide);
+                nnc.saveNodeSettingsToDefault();
+                nnc.setDirty();
+            }
+        }
+    }
 
     /* -------------- SingleNodeContainer methods without meaningful equivalent --------- */
 

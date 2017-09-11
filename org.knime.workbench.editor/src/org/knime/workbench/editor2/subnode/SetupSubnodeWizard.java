@@ -68,6 +68,7 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -223,26 +224,27 @@ public class SetupSubnodeWizard extends Wizard {
     }
 
     private boolean applyUsageChanges() {
-        WorkflowManager wfManager = m_subNode.getWorkflowManager();
-        for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
-            NodeID id = wUsage.getKey();
-            boolean hide = !wUsage.getValue().getSelection();
-            try {
-                wfManager.hideNodeFromWizard(m_subNode, id, hide);
-            } catch (IllegalArgumentException e) {
-                LOGGER.error("Unable to set hide in wizard flag on node: " + e.getMessage(), e);
-                return false;
+        try (WorkflowLock lock = m_subNode.lock()) { // each node will cause lock acquisition, do it as bulk
+            for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
+                NodeID id = wUsage.getKey();
+                boolean hide = !wUsage.getValue().getSelection();
+                try {
+                    m_subNode.setHideNodeFromWizard(id, hide);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Unable to set hide in wizard flag on node: " + e.getMessage(), e);
+                    return false;
+                }
             }
-        }
 
-        for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
-            NodeID id = dUsage.getKey();
-            boolean hide = !dUsage.getValue().getSelection();
-            try {
-                wfManager.hideNodeFromDialog(m_subNode, id, hide);
-            } catch (IllegalArgumentException e) {
-                LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
-                return false;
+            for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
+                NodeID id = dUsage.getKey();
+                boolean hide = !dUsage.getValue().getSelection();
+                try {
+                    m_subNode.setHideNodeFromDialog(id, hide);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
+                    return false;
+                }
             }
         }
 
