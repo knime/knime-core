@@ -83,6 +83,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNodeSurrogateCon
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeColumnCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -97,12 +98,14 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
 
     private final AbstractTreeModel<T> m_treeModel;
     private int m_nodeIndex;
+    private String m_warning;
 
     public AbstractTreeModelExporter(final AbstractTreeModel<T> treeModel) {
         m_treeModel = treeModel;
     }
 
     public SchemaType writeModelToPMML(final TreeModel treeModel, final PMMLPortObjectSpec spec) {
+        checkColumnTypes(spec);
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, treeModel);
         treeModel.setModelName("DecisionTree");
         treeModel.setFunctionName(getMiningFunction());
@@ -127,6 +130,18 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
         NodeDocument.Node rootPMMLNode = treeModel.addNewNode();
         addTreeNode(rootPMMLNode, rootNode);
         return TreeModelDocument.TreeModel.type;
+    }
+
+    private void checkColumnTypes(final PMMLPortObjectSpec spec) {
+        if (!spec.getLearningCols().stream().allMatch(this::canSavelyBeExported)) {
+            m_warning = "The model was learned on a vector column. "
+                + "It's possible to export the model to PMML but won't be possible"
+                + " to import it from the exported PMML.";
+        }
+    }
+
+    private boolean canSavelyBeExported(final DataColumnSpec colSpec) {
+        return !colSpec.getName().matches("(Bit|(Byte|Double) \\d+");
     }
 
     protected abstract MININGFUNCTION.Enum getMiningFunction();
