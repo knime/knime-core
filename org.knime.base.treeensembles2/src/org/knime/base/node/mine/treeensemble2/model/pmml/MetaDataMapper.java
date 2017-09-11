@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
@@ -110,4 +111,10 @@ interface MetaDataMapper {
      * @return the meta data information for the target column
      */
     public TreeTargetColumnMetaData getTargetColumnMetaData();
+
+    /**
+     *
+     * @return the meta data information for the tree (learning and target columns)
+     */
+    public TreeMetaData getTreeMetaData();
 }

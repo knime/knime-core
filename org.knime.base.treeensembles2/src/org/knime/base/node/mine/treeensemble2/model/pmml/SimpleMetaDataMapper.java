@@ -55,6 +55,7 @@ import java.util.Set;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
@@ -65,9 +66,9 @@ import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 import org.knime.core.node.util.CheckUtils;
 
@@ -103,9 +104,9 @@ class SimpleMetaDataMapper implements MetaDataMapper {
     }
 
     private static TreeTargetColumnMetaData createTargetMetaDataFromSpec(final DataColumnSpec targetSpec) {
-        if (targetSpec.getType().isCompatible(DoubleCell.class)) {
+        if (targetSpec.getType().isCompatible(DoubleValue.class)) {
             return new TreeTargetNumericColumnMetaData(targetSpec.getName());
-        } else if (targetSpec.getType().isCompatible(StringCell.class)) {
+        } else if (targetSpec.getType().isCompatible(StringValue.class)) {
             return new TreeTargetNominalColumnMetaData(targetSpec.getName(), extractNomValReps(targetSpec));
         }
         throw new IllegalArgumentException("The target column is of incompatible type \"" + targetSpec.getType()
@@ -117,15 +118,15 @@ class SimpleMetaDataMapper implements MetaDataMapper {
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
             DataType colType = colSpec.getType();
-            if (colType.isCompatible(StringCell.class)) {
+            if (colType.isCompatible(StringValue.class)) {
                 map.put(colSpec.getName(), createNominalMetaData(colSpec, i));
-            } else if (colType.isCompatible(DoubleCell.class)) {
+            } else if (colType.isCompatible(DoubleValue.class)) {
                 map.put(colSpec.getName(), createNumericMetaData(colSpec, i));
             } else {
                 throw new IllegalStateException("Only default KNIME types are supported right now.");
             }
         }
-        return null;
+        return map;
     }
 
     /**
@@ -214,6 +215,15 @@ class SimpleMetaDataMapper implements MetaDataMapper {
     @Override
     public TreeTargetColumnMetaData getTargetColumnMetaData() {
         return m_targetColumnMetaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeMetaData getTreeMetaData() {
+        return TreeMetaData.createTreeMetaData(m_metaDataMap.values().toArray(
+            new TreeAttributeColumnMetaData[m_metaDataMap.size()]), m_targetColumnMetaData);
     }
 
 }
