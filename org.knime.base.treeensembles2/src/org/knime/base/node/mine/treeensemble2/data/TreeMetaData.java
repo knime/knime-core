@@ -65,7 +65,8 @@ public final class TreeMetaData {
      * @param attributesMetaData
      * @param targetMetaData
      */
-    TreeMetaData(final TreeAttributeColumnMetaData[] attributesMetaData, final TreeTargetColumnMetaData targetMetaData) {
+    TreeMetaData(final TreeAttributeColumnMetaData[] attributesMetaData,
+        final TreeTargetColumnMetaData targetMetaData) {
         m_attributesMetaData = attributesMetaData;
         for (int i = 0; i < attributesMetaData.length; i++) {
             final TreeAttributeColumnMetaData t = attributesMetaData[i];
@@ -76,6 +77,18 @@ public final class TreeMetaData {
             }
         }
         m_targetMetaData = targetMetaData;
+    }
+
+    /**
+     * Creates a new TreeMetaData object.
+     *
+     * @param attributesMetaData meta information on learning columns
+     * @param targetMetaData meta information on target column
+     * @return a {@link TreeMetaData} object
+     */
+    public static TreeMetaData createTreeMetaData(final TreeAttributeColumnMetaData[] attributesMetaData,
+        final TreeTargetColumnMetaData targetMetaData) {
+        return new TreeMetaData(attributesMetaData, targetMetaData);
     }
 
     /** @param index
