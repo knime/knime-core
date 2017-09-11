@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -239,11 +240,11 @@ final class LiteralConditionParser implements ConditionParser {
     private static BigInteger parseValuesMask(final SimpleSetPredicate simpleSetPred,
         final TreeNominalColumnMetaData metaData) {
         String[] array = parseArrayType(simpleSetPred.getArray());
-        BigInteger mask = new BigInteger("0");
+        BitSet bs = new BitSet();
         for (String val : array) {
-            mask.setBit(getValueIndex(metaData, val));
+            bs.set(getValueIndex(metaData, val));
         }
-        return mask;
+        return new BigInteger(bs.toByteArray());
     }
 
     private static String[] parseArrayType(final ArrayType array) {
