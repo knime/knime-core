@@ -55,6 +55,7 @@ import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.PMMLDocument.PMML;
 import org.dmg.pmml.TreeModelDocument;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
+import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -67,6 +68,8 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
 abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> implements PMMLTranslator {
 
     private AbstractTreeModel<T> m_treeModel;
+    private TreeMetaData m_treeMetaData;
+    private String m_warning;
 
     /**
      * @param treeModel
@@ -74,6 +77,10 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
      */
     public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<T> treeModel) {
         m_treeModel = treeModel;
+    }
+
+    public AbstractTreeModelPMMLTranslator() {
+
     }
 
     /**
@@ -90,7 +97,9 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
         }
 
         MetaDataMapper metaDataMapper = new SimpleMetaDataMapper(pmmlDoc);
-
+        TreeModelImporter<T> importer = getImporter(metaDataMapper);
+        m_treeModel = importer.importFromPMML(trees.get(0));
+        m_treeMetaData = metaDataMapper.getTreeMetaData();
     }
 
     /**
@@ -101,15 +110,37 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
         PMML pmml = pmmlDoc.getPMML();
         TreeModelDocument.TreeModel treeModel = pmml.addNewTreeModel();
         AbstractTreeModelExporter<T> exporter = getExporter();
-        return exporter.writeModelToPMML(treeModel, spec);
+        SchemaType st = exporter.writeModelToPMML(treeModel, spec);
+        if (exporter.hasWarning()) {
+            m_warning = exporter.getWarning();
+        }
+        return st;
     }
 
     public AbstractTreeModel<T> getTree() {
         return m_treeModel;
     }
 
+    public TreeMetaData getTreeMetaData() {
+        return m_treeMetaData;
+    }
+
     protected abstract AbstractTreeModelExporter<T> getExporter();
 
     protected abstract TreeModelImporter<T> getImporter(final MetaDataMapper metaDataMapper);
+
+    /**
+     * @return true if a warning is present
+     */
+    public boolean hasWarning() {
+        return m_warning != null;
+    }
+
+    /**
+     * @return the warning message or null if there is not warning present
+     */
+    public String getWarning() {
+        return m_warning;
+    }
 
 }

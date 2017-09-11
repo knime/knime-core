@@ -60,7 +60,15 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 public class RegressionTreeModelPMMLTranslator extends AbstractTreeModelPMMLTranslator<TreeNodeRegression> {
 
     /**
-     * @param treeModel
+     * Constructor to be called when the model should be initialized from PMML.
+     */
+    public RegressionTreeModelPMMLTranslator() {
+        // nothing to do
+    }
+
+    /**
+     * Constructor to be called when a model should be exported to PMML.
+     * @param treeModel the tree model that should be written to PMML
      */
     public RegressionTreeModelPMMLTranslator(final AbstractTreeModel<TreeNodeRegression> treeModel) {
         super(treeModel);

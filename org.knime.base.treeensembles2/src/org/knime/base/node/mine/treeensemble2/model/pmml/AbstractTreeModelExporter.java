@@ -141,7 +141,23 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
     }
 
     private boolean canSavelyBeExported(final DataColumnSpec colSpec) {
-        return !colSpec.getName().matches("(Bit|(Byte|Double) \\d+");
+        return !colSpec.getName().matches("(Bit|Byte|Double) \\d+");
+    }
+
+    /**
+     * Checks if a warning has been set.
+     * @return true if a warning has been set
+     */
+    public boolean hasWarning() {
+        return m_warning != null;
+    }
+
+    /**
+     *
+     * @return the warning or null if no warning has been set
+     */
+    public String getWarning() {
+        return m_warning;
     }
 
     protected abstract MININGFUNCTION.Enum getMiningFunction();
