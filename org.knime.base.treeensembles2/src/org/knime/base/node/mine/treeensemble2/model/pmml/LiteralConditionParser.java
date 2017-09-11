@@ -95,7 +95,11 @@ final class LiteralConditionParser implements ConditionParser {
 
     private static final int OR_COMPOUND_SIMPLESETPREDICATE_LIMIT = 1;
 
-    private MetaDataMapper m_metaDataMapper;
+    private final MetaDataMapper m_metaDataMapper;
+
+    LiteralConditionParser(final MetaDataMapper metaDataMapper) {
+        m_metaDataMapper = metaDataMapper;
+    }
 
     /**
      * {@inheritDoc}

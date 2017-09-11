@@ -93,6 +93,8 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  */
 abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
 
+    private static final int BINARY = 2;
+
     private final AbstractTreeModel<T> m_treeModel;
     private int m_nodeIndex;
 
@@ -170,13 +172,16 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
     private static void handleColumnCondition(final TreeNodeColumnCondition condition, final Node pmmlNode) {
         final PMMLPredicate knimePredicate = condition.toPMMLPredicate();
         if (knimePredicate instanceof PMMLCompoundPredicate) {
-            setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), (PMMLCompoundPredicate)knimePredicate);
+            setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(),
+                (PMMLCompoundPredicate)knimePredicate);
         } else if (knimePredicate instanceof PMMLSimplePredicate) {
             setValuesFromPMMLSimplePredicate(pmmlNode.addNewSimplePredicate(), (PMMLSimplePredicate)knimePredicate);
         } else if (knimePredicate instanceof PMMLSimpleSetPredicate) {
-            setValuesFromPMMLSimpleSetPredicate(pmmlNode.addNewSimpleSetPredicate(), (PMMLSimpleSetPredicate)knimePredicate);
+            setValuesFromPMMLSimpleSetPredicate(pmmlNode.addNewSimpleSetPredicate(),
+                (PMMLSimpleSetPredicate)knimePredicate);
         } else {
-            throw new IllegalArgumentException("A column condition can only contain compound, simple or simple set predicates.");
+            throw new IllegalArgumentException(
+                "A column condition can only contain compound, simple or simple set predicates.");
         }
     }
 
@@ -221,7 +226,8 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
         to.setOperator(operator);
     }
 
-    private static void setValuesFromPMMLSimpleSetPredicate(final SimpleSetPredicate to, final PMMLSimpleSetPredicate from) {
+    private static void setValuesFromPMMLSimpleSetPredicate(final SimpleSetPredicate to,
+        final PMMLSimpleSetPredicate from) {
         to.setField(from.getSplitAttribute());
         final Enum operator;
         final PMMLSetOperator setOp = from.getSetOperator();
@@ -259,7 +265,8 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
         array.setType(type);
     }
 
-    private static void setValuesFromPMMLCompoundPredicate(final CompoundPredicate to, final PMMLCompoundPredicate from) {
+    private static void setValuesFromPMMLCompoundPredicate(final CompoundPredicate to,
+        final PMMLCompoundPredicate from) {
         final PMMLBooleanOperator boolOp = from.getBooleanOperator();
         switch (boolOp) {
             case AND:
@@ -311,7 +318,7 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
 
     private static boolean isMultiSplitRecursive(final AbstractTreeNode node) {
         final int nrChildren = node.getNrChildren();
-        if (nrChildren > 2) {
+        if (nrChildren > BINARY) {
             return true;
         }
         for (int i = 0; i < nrChildren; i++) {

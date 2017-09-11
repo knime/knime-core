@@ -44,72 +44,52 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.09.2017 (Adrian): created
+ *   11.09.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
-import java.util.List;
-
-import org.apache.xmlbeans.SchemaType;
-import org.dmg.pmml.PMMLDocument;
-import org.dmg.pmml.PMMLDocument.PMML;
-import org.dmg.pmml.TreeModelDocument;
-import org.dmg.pmml.TreeModelDocument.TreeModel;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
-import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLTranslator;
+import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 
 /**
  *
  * @author Adrian Nembach, KNIME
  */
-abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> implements PMMLTranslator {
-
-    private AbstractTreeModel<T> m_treeModel;
+public class RegressionTreeModelPMMLTranslator extends AbstractTreeModelPMMLTranslator<TreeNodeRegression> {
 
     /**
      * @param treeModel
-     *
      */
-    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<T> treeModel) {
-        m_treeModel = treeModel;
+    public RegressionTreeModelPMMLTranslator(final AbstractTreeModel<TreeNodeRegression> treeModel) {
+        super(treeModel);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void initializeFrom(final PMMLDocument pmmlDoc) {
-        PMML pmml = pmmlDoc.getPMML();
-        List<TreeModel> trees = pmml.getTreeModelList();
-        if (trees.size() > 1) {
-            throw new IllegalArgumentException("This translator handles only single trees.");
-        } else if (trees.isEmpty()) {
-            throw new IllegalArgumentException("The provided PMMLDocument contains no tree models.");
-        }
-
-        MetaDataMapper metaDataMapper = new SimpleMetaDataMapper(pmmlDoc);
-
+    public TreeModelRegression getTree() {
+        return (TreeModelRegression)super.getTree();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
-        PMML pmml = pmmlDoc.getPMML();
-        TreeModelDocument.TreeModel treeModel = pmml.addNewTreeModel();
-        AbstractTreeModelExporter<T> exporter = getExporter();
-        return exporter.writeModelToPMML(treeModel, spec);
+    protected AbstractTreeModelExporter<TreeNodeRegression> getExporter() {
+        return new RegressionTreeModelExporter(getTree());
     }
 
-    public AbstractTreeModel<T> getTree() {
-        return m_treeModel;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TreeModelImporter<TreeNodeRegression> getImporter(final MetaDataMapper metaDataMapper) {
+        return new TreeModelImporter<TreeNodeRegression>(metaDataMapper, new LiteralConditionParser(metaDataMapper),
+                new TreeNodeSignatureFactory(), RegressionContentParser.INSTANCE, RegressionTreeFactory.INSTANCE);
     }
 
-    protected abstract AbstractTreeModelExporter<T> getExporter();
-
-    protected abstract TreeModelImporter<T> getImporter(final MetaDataMapper metaDataMapper);
 
 }

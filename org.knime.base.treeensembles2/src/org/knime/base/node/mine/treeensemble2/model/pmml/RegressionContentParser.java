@@ -61,7 +61,10 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  *
  * @author Adrian Nembach, KNIME.com
  */
-class RegressionContentParser implements ContentParser<TreeNodeRegression> {
+enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
+
+    INSTANCE;
+
     private static final String TOTALSUM_IDENTIFIER = "totalSum";
     private static final String SUM_SQUARED_DEVIATION_IDENTIFIER = "sumSquaredDeviation";
 
