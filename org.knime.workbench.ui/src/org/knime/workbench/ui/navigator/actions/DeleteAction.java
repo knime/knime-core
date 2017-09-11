@@ -67,8 +67,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.ui.node.workflow.UINodeContainer;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
@@ -77,7 +77,7 @@ import org.knime.workbench.ui.navigator.WorkflowEditorAdapter;
 /**
  *
  * @author ohl, University of Konstanz
- *
+ * 
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -163,8 +163,8 @@ public class DeleteAction extends SelectionListenerAction {
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                         .getActivePage();
         for (IContainer wf : allWorkflows) {
-            UINodeContainer wfm =
-                    ProjectWorkflowMap.getUIWorkflow(wf.getLocationURI());
+            NodeContainer wfm =
+                    ProjectWorkflowMap.getWorkflow(wf.getLocationURI());
             if (wfm != null) {
                 for (IEditorReference editRef : page.getEditorReferences()) {
                     IEditorPart editor = editRef.getEditor(false);
@@ -173,9 +173,9 @@ public class DeleteAction extends SelectionListenerAction {
                         continue;
                     }
                     WorkflowEditorAdapter wea =
-                            editor
-                            .getAdapter(WorkflowEditorAdapter.class);
-                    UINodeContainer editWFM = null;
+                            (WorkflowEditorAdapter)editor
+                                    .getAdapter(WorkflowEditorAdapter.class);
+                    NodeContainer editWFM = null;
                     if (wea != null) {
                         editWFM = wea.getWorkflowManager();
                     }
