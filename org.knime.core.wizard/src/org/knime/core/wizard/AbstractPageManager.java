@@ -63,13 +63,18 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WebResourceController;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
+import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.JSONViewContent;
 import org.knime.js.core.JSONWebNode;
+import org.knime.js.core.JSONWebNodeInfo;
+import org.knime.js.core.JSONWebNodeInfo.JSONNodeState;
 import org.knime.js.core.JSONWebNodePage;
 import org.knime.js.core.JSONWebNodePageConfiguration;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
@@ -146,31 +151,57 @@ public abstract class AbstractPageManager {
             selectionTranslators = null;
         }
         JSONWebNodePageConfiguration pageConfig = new JSONWebNodePageConfiguration(layout, null, selectionTranslators);
-
         Map<String, JSONWebNode> nodes = new HashMap<String, JSONWebNode>();
-        for (@SuppressWarnings("rawtypes") Map.Entry<NodeIDSuffix, WizardNode> e : page.getPageMap().entrySet()) {
-            WizardNode<?, ?> node = e.getValue();
-            WebTemplate template =
-                WebResourceController.getWebTemplateFromJSObjectID(node.getJavascriptObjectID());
-            List<String> jsList = new ArrayList<String>();
-            List<String> cssList = new ArrayList<String>();
-            for (WebResourceLocator locator : template.getWebResources()) {
-                if (locator.getType() == WebResourceType.JAVASCRIPT) {
-                    jsList.add(locator.getRelativePathTarget());
-                } else if (locator.getType() == WebResourceType.CSS) {
-                    cssList.add(locator.getRelativePathTarget());
-                }
-            }
+        for (Map.Entry<NodeIDSuffix, WizardPageNodeInfo> e : page.getInfoMap().entrySet()) {
             JSONWebNode jsonNode = new JSONWebNode();
-            jsonNode.setJavascriptLibraries(jsList);
-            jsonNode.setStylesheets(cssList);
-            jsonNode.setNamespace(template.getNamespace());
-            jsonNode.setInitMethodName(template.getInitMethodName());
-            jsonNode.setValidateMethodName(template.getValidateMethodName());
-            jsonNode.setSetValidationErrorMethodName(template.getSetValidationErrorMethodName());
-            jsonNode.setGetViewValueMethodName(template.getPullViewContentMethodName());
-            jsonNode.setViewRepresentation((JSONViewContent)node.getViewRepresentation());
-            jsonNode.setViewValue((JSONViewContent)node.getViewValue());
+            JSONWebNodeInfo info = new JSONWebNodeInfo();
+            NodeContainerState state = e.getValue().getNodeState();
+            if (state.isIdle()) {
+                info.setNodeState(JSONNodeState.IDLE);
+            }
+            if (state.isConfigured()) {
+                info.setNodeState(JSONNodeState.CONFIGURED);
+            }
+            if (state.isExecutionInProgress() || state.isExecutingRemotely()) {
+                info.setNodeState(JSONNodeState.EXECUTING);
+            }
+            if (state.isExecuted()) {
+                info.setNodeState(JSONNodeState.EXECUTED);
+            }
+            NodeMessage message = e.getValue().getNodeMessage();
+            if (org.knime.core.node.workflow.NodeMessage.Type.ERROR.equals(message.getMessageType())) {
+                info.setNodeErrorMessage(message.getMessage());
+            }
+            if (org.knime.core.node.workflow.NodeMessage.Type.WARNING.equals(message.getMessageType())) {
+                info.setNodeWarnMessage(message.getMessage());
+            }
+            WizardNode<?, ?> wizardNode = page.getPageMap().get(e.getKey());
+            if (wizardNode == null) {
+                info.setDisplayPossible(false);
+            } else {
+                info.setDisplayPossible(true);
+                WebTemplate template =
+                        WebResourceController.getWebTemplateFromJSObjectID(wizardNode.getJavascriptObjectID());
+                    List<String> jsList = new ArrayList<String>();
+                    List<String> cssList = new ArrayList<String>();
+                    for (WebResourceLocator locator : template.getWebResources()) {
+                        if (locator.getType() == WebResourceType.JAVASCRIPT) {
+                            jsList.add(locator.getRelativePathTarget());
+                        } else if (locator.getType() == WebResourceType.CSS) {
+                            cssList.add(locator.getRelativePathTarget());
+                        }
+                    }
+                    jsonNode.setJavascriptLibraries(jsList);
+                    jsonNode.setStylesheets(cssList);
+                    jsonNode.setNamespace(template.getNamespace());
+                    jsonNode.setInitMethodName(template.getInitMethodName());
+                    jsonNode.setValidateMethodName(template.getValidateMethodName());
+                    jsonNode.setSetValidationErrorMethodName(template.getSetValidationErrorMethodName());
+                    jsonNode.setGetViewValueMethodName(template.getPullViewContentMethodName());
+                    jsonNode.setViewRepresentation((JSONViewContent)wizardNode.getViewRepresentation());
+                    jsonNode.setViewValue((JSONViewContent)wizardNode.getViewValue());
+            }
+            jsonNode.setNodeInfo(info);
             nodes.put(e.getKey().toString(), jsonNode);
         }
         return new JSONWebNodePage(pageConfig, nodes);

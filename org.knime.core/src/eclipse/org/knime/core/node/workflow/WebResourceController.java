@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -84,6 +86,7 @@ import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
@@ -385,18 +388,30 @@ public abstract class WebResourceController {
         //        final NodeID subNodeID = toNodeID(currentSubnodeIDSuffix);
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, WizardNode> executedWizardNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
-        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
+        Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
+        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
+        //LinkedHashMap<NodeIDSuffix, WizardNode> errorMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
+        LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
-        for (Map.Entry<NodeID, WizardNode> entry : executedWizardNodeMap.entrySet()) {
-            if (!subWFM.getNodeContainer(entry.getKey(), NativeNodeContainer.class, true).isInactive()) {
-                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
+        for (Map.Entry<NodeID, WizardNode> entry : wizardNodeMap.entrySet()) {
+            NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
+            if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
+                //skip nodes in inactive branches
+                continue;
+            }
+            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
+            WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
+            nodeInfo.setNodeState(nc.getInternalState());
+            nodeInfo.setNodeMessage(nc.getNodeMessage());
+            infoMap.put(idSuffix, nodeInfo);
+            if (EXECUTED.equals(nc.getInternalState())) {
+                //regular viewable nodes need the node model to be executed
                 resultMap.put(idSuffix, entry.getValue());
-                for (int i = 0; i < subWFM.getNodeContainer(entry.getKey()).getNrInPorts() - 1; i++) {
-                    HiLiteHandler hiLiteHandler = ((NodeModel)entry.getValue()).getInHiLiteHandler(i);
-                    if (hiLiteHandler != null) {
-                        initialHiliteHandlerSet.add(hiLiteHandler);
-                    }
+            }
+            for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
+                HiLiteHandler hiLiteHandler = ((NodeModel)entry.getValue()).getInHiLiteHandler(i);
+                if (hiLiteHandler != null) {
+                    initialHiliteHandlerSet.add(hiLiteHandler);
                 }
             }
         }
@@ -418,7 +433,9 @@ public abstract class WebResourceController {
         List<HiLiteTranslator> translatorList =
             knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
-        return new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+        WizardPageContent page = new WizardPageContent(pageID, resultMap, pageLayout, translatorList, managerList);
+        page.setInfoMap(infoMap);
+        return page;
     }
 
     protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
@@ -683,6 +700,9 @@ public abstract class WebResourceController {
         @SuppressWarnings("rawtypes")
         private final Map<NodeIDSuffix, WizardNode> m_pageMap;
 
+        @SuppressWarnings("rawtypes")
+        private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
+
         private final String m_layoutInfo;
 
         private final List<HiLiteTranslator> m_hiLiteTranslators;
@@ -700,6 +720,7 @@ public abstract class WebResourceController {
             final List<HiLiteManager> hiLiteManagers) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
+            m_infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
             m_layoutInfo = layoutInfo;
             m_hiLiteTranslators = hiLiteTranslators;
             m_hiliteManagers = hiLiteManagers;
@@ -743,6 +764,62 @@ public abstract class WebResourceController {
          */
         public List<HiLiteManager> getHiliteManagers() {
             return m_hiliteManagers;
+        }
+
+        /**
+         * @param infoMap the infoMap to set
+         * @since 3.5
+         */
+        public void setInfoMap(final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap) {
+            m_infoMap = infoMap;
+        }
+
+        /**
+         * @return the infoMap
+         * @since 3.5
+         */
+        public Map<NodeIDSuffix, WizardPageNodeInfo> getInfoMap() {
+            return m_infoMap;
+        }
+
+        /**
+         * Info object for individual nodes, containing e.g. node state
+         * and possible warn/error messages.
+         * @since 3.5
+         */
+        public static final class WizardPageNodeInfo {
+
+            private NodeContainerState m_nodeState;
+            private NodeMessage m_nodeMessage;
+
+            /**
+             * @return the nodeState
+             */
+            public NodeContainerState getNodeState() {
+                return m_nodeState;
+            }
+
+            /**
+             * @param nodeState the nodeState to set
+             */
+            public void setNodeState(final NodeContainerState nodeState) {
+                m_nodeState = nodeState;
+            }
+
+            /**
+             * @return the nodeMessage
+             */
+            public NodeMessage getNodeMessage() {
+                return m_nodeMessage;
+            }
+
+            /**
+             * @param nodeMessage the nodeMessage to set
+             */
+            public void setNodeMessage(final NodeMessage nodeMessage) {
+                m_nodeMessage = nodeMessage;
+            }
+
         }
 
     }
