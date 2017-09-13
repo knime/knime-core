@@ -139,9 +139,7 @@ public class JarListPanel extends JPanel {
         add(southP, BorderLayout.SOUTH);
 
         final JPanel northP = new JPanel(new FlowLayout());
-        final JLabel label = new JLabel(
-            "<html><body>Specify additional jar files " + "that are necessary for the snippet to run</body></html>");
-        northP.add(label);
+        northP.add(new JLabel("Specify additional jar files that are necessary for the snippet to run"));
         add(northP, BorderLayout.NORTH);
     }
 
