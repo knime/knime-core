@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.OptionalDouble;
 
 import org.dmg.pmml.NodeDocument.Node;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 
@@ -61,7 +61,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  *
  * @author Adrian Nembach, KNIME.com
  */
-enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
+enum RegressionContentParser implements ContentParser<TreeNodeRegression, TreeTargetNumericColumnMetaData> {
 
     INSTANCE;
 
@@ -69,7 +69,8 @@ enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
      * {@inheritDoc}
      */
     @Override
-    public TreeNodeRegression createNode(final Node node, final TreeTargetColumnMetaData targetMetaData,
+    public TreeNodeRegression createNode(final Node node,
+        final TargetColumnHelper<TreeTargetNumericColumnMetaData> targetHelper,
         final TreeNodeSignature signature, final List<TreeNodeRegression> children) {
         double mean = Double.parseDouble(node.getScore());
         OptionalDouble totalSum = node.getExtensionList().stream()
@@ -78,7 +79,7 @@ enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
         OptionalDouble sumSquaredDeviation = node.getExtensionList().stream()
                 .filter(e -> e.getName().equals(TranslationUtil.SUM_SQUARED_DEVIATION_KEY))
                 .mapToDouble(e -> Double.parseDouble(e.getValue())).findFirst();
-        return new TreeNodeRegression(targetMetaData, signature, mean, totalSum.orElse(-1),
+        return new TreeNodeRegression(targetHelper.getMetaData(), signature, mean, totalSum.orElse(-1),
             sumSquaredDeviation.orElse(-1), children.toArray(new TreeNodeRegression[children.size()]));
     }
 

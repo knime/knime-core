@@ -60,16 +60,16 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  *
  * @author Adrian Nembach, KNIME
  */
-interface ContentParser <T extends AbstractTreeNode>{
+interface ContentParser <N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>{
 
     /**
      * Takes the signature of the node, as well as its children and creates a new node from it.
-     * @param node the pmml node from which to parse the content of the node
+     * @param node the PMML node from which to parse the content of the node
      * @param targetMetaData the meta data information of the target column
      * @param signature the {@link TreeNodeSignature} used to identify the tree node
      * @param children the children of this tree node
      * @return a new tree node
      */
-    public T createNode( final Node node, final TreeTargetColumnMetaData targetMetaData,
-        final TreeNodeSignature signature, final List<T> children);
+    public N createNode(final Node node, final TargetColumnHelper<T> targetMetaData,
+        final TreeNodeSignature signature, final List<N> children);
 }
