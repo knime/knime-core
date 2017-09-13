@@ -153,9 +153,12 @@ public abstract class AbstractPageManager {
         JSONWebNodePageConfiguration pageConfig = new JSONWebNodePageConfiguration(layout, null, selectionTranslators);
         Map<String, JSONWebNode> nodes = new HashMap<String, JSONWebNode>();
         for (Map.Entry<NodeIDSuffix, WizardPageNodeInfo> e : page.getInfoMap().entrySet()) {
+            WizardPageNodeInfo pInfo = e.getValue();
             JSONWebNode jsonNode = new JSONWebNode();
             JSONWebNodeInfo info = new JSONWebNodeInfo();
-            NodeContainerState state = e.getValue().getNodeState();
+            info.setNodeName(pInfo.getNodeName());
+            info.setNodeAnnotation(pInfo.getNodeAnnotation());
+            NodeContainerState state = pInfo.getNodeState();
             if (state.isIdle()) {
                 info.setNodeState(JSONNodeState.IDLE);
             }
@@ -168,7 +171,7 @@ public abstract class AbstractPageManager {
             if (state.isExecuted()) {
                 info.setNodeState(JSONNodeState.EXECUTED);
             }
-            NodeMessage message = e.getValue().getNodeMessage();
+            NodeMessage message = pInfo.getNodeMessage();
             if (org.knime.core.node.workflow.NodeMessage.Type.ERROR.equals(message.getMessageType())) {
                 info.setNodeErrorMessage(message.getMessage());
             }

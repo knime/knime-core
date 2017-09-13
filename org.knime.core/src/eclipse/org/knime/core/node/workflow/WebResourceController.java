@@ -401,11 +401,13 @@ public abstract class WebResourceController {
             }
             NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
             WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
+            nodeInfo.setNodeName(nc.getName());
+            nodeInfo.setNodeAnnotation(nc.getNodeAnnotation().toString());
             nodeInfo.setNodeState(nc.getInternalState());
             nodeInfo.setNodeMessage(nc.getNodeMessage());
             infoMap.put(idSuffix, nodeInfo);
             if (EXECUTED.equals(nc.getInternalState())) {
-                //regular viewable nodes need the node model to be executed
+                //regular viewable nodes need to be executed
                 resultMap.put(idSuffix, entry.getValue());
             }
             for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
@@ -789,8 +791,38 @@ public abstract class WebResourceController {
          */
         public static final class WizardPageNodeInfo {
 
+            private String m_nodeName;
+            private String m_nodeAnnotation;
             private NodeContainerState m_nodeState;
             private NodeMessage m_nodeMessage;
+
+            /**
+             * @return the nodeName
+             */
+            public String getNodeName() {
+                return m_nodeName;
+            }
+
+            /**
+             * @param nodeName the nodeName to set
+             */
+            public void setNodeName(final String nodeName) {
+                m_nodeName = nodeName;
+            }
+
+            /**
+             * @return the nodeAnnotation
+             */
+            public String getNodeAnnotation() {
+                return m_nodeAnnotation;
+            }
+
+            /**
+             * @param nodeAnnotation the nodeAnnotation to set
+             */
+            public void setNodeAnnotation(final String nodeAnnotation) {
+                m_nodeAnnotation = nodeAnnotation;
+            }
 
             /**
              * @return the nodeState
