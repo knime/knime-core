@@ -428,6 +428,16 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             }
         }
 
+        for (final String b : m_settings.getBundles()) {
+            final Bundle bundle = Platform.getBundle(b.split(" ")[0]);
+
+            try {
+                result.add(FileLocator.getBundleFile(bundle));
+            } catch (IOException e) {
+                LOGGER.warn("Failed to get bundle file of \"" + b + "\"");
+            }
+        }
+
         return result.toArray(new File[result.size()]);
     }
 
