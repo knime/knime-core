@@ -59,6 +59,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
 import org.knime.base.node.mine.treeensemble2.data.ClassificationPriors;
 import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
@@ -132,6 +133,22 @@ public final class TreeNodeClassification extends AbstractTreeNode {
             m_targetDistribution = null;
         }
         m_majorityIndex = targetPriors.getMajorityIndex();
+    }
+
+    /**
+     * Constructor that is for example used to read from PMML.
+     *
+     * @param signature
+     * @param targetMetaData
+     * @param majorityIndex
+     * @param targetDistribution
+     * @param childNodes
+     */
+    public TreeNodeClassification(final TreeNodeSignature signature, final TreeTargetColumnMetaData targetMetaData,
+        final int majorityIndex, final float[] targetDistribution, final TreeNodeClassification[] childNodes) {
+        super(signature, targetMetaData, childNodes);
+        m_targetDistribution = targetDistribution;
+        m_majorityIndex = majorityIndex;
     }
 
     private TreeNodeClassification(final TreeModelDataInputStream in, final TreeMetaData metaData,
