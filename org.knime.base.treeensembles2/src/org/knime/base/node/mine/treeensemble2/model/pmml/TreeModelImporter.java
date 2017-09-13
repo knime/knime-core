@@ -82,6 +82,12 @@ class TreeModelImporter<T extends AbstractTreeNode> {
         m_treeFactory = treeFactory;
     }
 
+    /**
+     * Imports an {@link AbstractTreeModel} from PMML.
+     *
+     * @param treeModel PMML tree model to import
+     * @return a {@link AbstractTreeModel} initialized from <b>treeModel</b>
+     */
     public AbstractTreeModel<T> importFromPMML(final TreeModel treeModel) {
         Node rootNode = treeModel.getNode();
         T root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());

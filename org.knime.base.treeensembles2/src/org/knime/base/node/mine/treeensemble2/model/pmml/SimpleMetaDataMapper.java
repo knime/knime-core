@@ -117,6 +117,7 @@ class SimpleMetaDataMapper implements MetaDataMapper {
         Map<String, TreeAttributeColumnMetaData> map = new HashMap<>();
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
+            checkForVectorColumn(colSpec);
             DataType colType = colSpec.getType();
             if (colType.isCompatible(StringValue.class)) {
                 map.put(colSpec.getName(), createNominalMetaData(colSpec, i));
@@ -127,6 +128,26 @@ class SimpleMetaDataMapper implements MetaDataMapper {
             }
         }
         return map;
+    }
+
+    /**
+     * Checks if <b>colSpec</b> could originate from a vector column.
+     * If it does, this method throws an exception.
+     * @param colSpec {@link DataColumnSpec} to check
+     * @throws IllegalArgumentException if <b>colSpec</b> could originate from a vector column
+     */
+    private static void checkForVectorColumn(final DataColumnSpec colSpec) {
+        final boolean possibleVectorName = TranslationUtil.isVectorFieldName(colSpec.getName());
+        DataType type = colSpec.getType();
+        DataColumnDomain domain = colSpec.getDomain();
+        boolean domainInformationIsMissing = false;
+        if (type.isCompatible(StringValue.class)) {
+            domainInformationIsMissing = !domain.hasValues();
+        } else if (type.isCompatible(DoubleValue.class)) {
+            domainInformationIsMissing = !domain.hasBounds();
+        }
+        CheckUtils.checkArgument(!(possibleVectorName && domainInformationIsMissing), "The column %s seems to "
+            + "originate from a vector column. A model learned on a vector can currently not be imported.");
     }
 
     /**
