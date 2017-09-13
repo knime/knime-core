@@ -48,16 +48,22 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import org.dmg.pmml.PMMLDocument;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 
 /**
+ * Translates tree models to and from PMML.
+ * Node that exporting a model learned on a vector columns will result in a warning because
+ * it is not possible to import such a model again.
  *
  * @author Adrian Nembach, KNIME
  */
-public class RegressionTreeModelPMMLTranslator extends AbstractTreeModelPMMLTranslator<TreeNodeRegression> {
+public class RegressionTreeModelPMMLTranslator
+extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeTargetNumericColumnMetaData> {
 
     /**
      * Constructor to be called when the model should be initialized from PMML.
@@ -86,7 +92,7 @@ public class RegressionTreeModelPMMLTranslator extends AbstractTreeModelPMMLTran
      * {@inheritDoc}
      */
     @Override
-    protected AbstractTreeModelExporter<TreeNodeRegression> getExporter() {
+    protected AbstractTreeModelExporter<TreeNodeRegression> createExporter() {
         return new RegressionTreeModelExporter(getTree());
     }
 
@@ -94,10 +100,20 @@ public class RegressionTreeModelPMMLTranslator extends AbstractTreeModelPMMLTran
      * {@inheritDoc}
      */
     @Override
-    protected TreeModelImporter<TreeNodeRegression> getImporter(final MetaDataMapper metaDataMapper) {
-        return new TreeModelImporter<TreeNodeRegression>(metaDataMapper, new LiteralConditionParser(metaDataMapper),
+    protected TreeModelImporter<TreeNodeRegression, TreeTargetNumericColumnMetaData> createImporter(
+        final MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper) {
+        return new TreeModelImporter<>(metaDataMapper, new LiteralConditionParser(metaDataMapper),
                 new TreeNodeSignatureFactory(), RegressionContentParser.INSTANCE, RegressionTreeFactory.INSTANCE);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected MetaDataMapper<TreeTargetNumericColumnMetaData> createMetaDataMapper(final PMMLDocument pmmlDoc) {
+        return new RegressionMetaDataMapper(pmmlDoc);
+    }
+
 
 
 }

@@ -56,6 +56,7 @@ import org.dmg.pmml.PMMLDocument.PMML;
 import org.dmg.pmml.TreeModelDocument;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -64,10 +65,14 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
 /**
  *
  * @author Adrian Nembach, KNIME
+ * @param <N> the type of node the trees handled by this translator consist of
+ * @param <T> the type of meta data information of the target column
+ *
  */
-abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> implements PMMLTranslator {
+abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>
+implements PMMLTranslator {
 
-    private AbstractTreeModel<T> m_treeModel;
+    private AbstractTreeModel<N> m_treeModel;
     private TreeMetaData m_treeMetaData;
     private String m_warning;
 
@@ -75,7 +80,7 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
      * @param treeModel
      *
      */
-    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<T> treeModel) {
+    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<N> treeModel) {
         m_treeModel = treeModel;
     }
 
@@ -96,8 +101,8 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
             throw new IllegalArgumentException("The provided PMMLDocument contains no tree models.");
         }
 
-        MetaDataMapper metaDataMapper = new SimpleMetaDataMapper(pmmlDoc);
-        TreeModelImporter<T> importer = getImporter(metaDataMapper);
+        MetaDataMapper<T> metaDataMapper = createMetaDataMapper(pmmlDoc);
+        TreeModelImporter<N, T> importer = createImporter(metaDataMapper);
         m_treeModel = importer.importFromPMML(trees.get(0));
         m_treeMetaData = metaDataMapper.getTreeMetaData();
     }
@@ -109,7 +114,7 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         PMML pmml = pmmlDoc.getPMML();
         TreeModelDocument.TreeModel treeModel = pmml.addNewTreeModel();
-        AbstractTreeModelExporter<T> exporter = getExporter();
+        AbstractTreeModelExporter<N> exporter = createExporter();
         SchemaType st = exporter.writeModelToPMML(treeModel, spec);
         if (exporter.hasWarning()) {
             m_warning = exporter.getWarning();
@@ -117,7 +122,7 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
         return st;
     }
 
-    public AbstractTreeModel<T> getTree() {
+    public AbstractTreeModel<N> getTree() {
         return m_treeModel;
     }
 
@@ -125,9 +130,11 @@ abstract class AbstractTreeModelPMMLTranslator<T extends AbstractTreeNode> imple
         return m_treeMetaData;
     }
 
-    protected abstract AbstractTreeModelExporter<T> getExporter();
+    protected abstract AbstractTreeModelExporter<N> createExporter();
 
-    protected abstract TreeModelImporter<T> getImporter(final MetaDataMapper metaDataMapper);
+    protected abstract MetaDataMapper<T> createMetaDataMapper(PMMLDocument pmmlDoc);
+
+    protected abstract TreeModelImporter<N, T> createImporter(final MetaDataMapper<T> metaDataMapper);
 
     /**
      * @return true if a warning is present
