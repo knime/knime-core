@@ -534,11 +534,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         }
     }
 
-
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public GuardedDocument getDocument() {
         // Lazy initialization of the document
