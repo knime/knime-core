@@ -11,18 +11,18 @@
 			that are used by the learner model. This node appends a new column
 			to the input table containing the prediction for each row.
 			<br/><br/>
-			*You can use nodes like the linear regression and polynomial regression node to create regression models.
+			*You can use the Linear Regression Learner node or the Polynomial Regression Learner node to create regression models.
 		</intro>
 
 		<option name="Custom prediction column name">
-			Allows to specify a customized name for the prediction column that is appended to the input table. 
+			Allows you to specify a customized name for the prediction column that is appended to the input table. 
 			If the checkbox is not checked, "Prediction (target)" (where target is the name
 			of the target column of the provided regression model) is used as default.
 		</option>
           		
 	</fullDescription>
     <ports>
-        <inPort index="0" name="Regression Model">The regression model</inPort>
+        <inPort index="0" name="Regression model">The regression model</inPort>
         <inPort index="1" name="Data for prediction">Table for prediction. Missing values will give missing values in the output.</inPort>
         <outPort index="0" name="Predicted data">Table from input with an additional prediction column.</outPort>
 	</ports>
