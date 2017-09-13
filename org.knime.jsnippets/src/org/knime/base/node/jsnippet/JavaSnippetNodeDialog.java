@@ -193,7 +193,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         if (!isPreview) {
             panel.setPreferredSize(new Dimension(800, 600));
         }
-        addTab("Additional Libraries", createJarPanel());
+        addTab("Additional Libraries", createAdditionalLibsPanel());
         if (!isPreview) {
             // The preview does not have the templates tab
             addTab("Templates", createTemplatesPanel());
@@ -336,7 +336,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         return templateInfoPanel;
     }
 
-    private JPanel createJarPanel() {
+    private JPanel createAdditionalLibsPanel() {
         m_jarPanel = new JarListPanel();
         m_jarPanel.addListDataListener(new ListDataListener() {
             private void updateSnippet() {
