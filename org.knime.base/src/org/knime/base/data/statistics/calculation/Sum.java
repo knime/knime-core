@@ -49,15 +49,14 @@
 package org.knime.base.data.statistics.calculation;
 
 /**
- *
- * @author Anastasia Zhukova
+ * Calculates the sum
+ * @author Anastasia Zhukova, KNIME GmbH, Konstanz, Germany
  * @since 3.5
  */
 public class Sum extends ApacheMathStatistic {
 
     /**
-     * @param statistic
-     * @param columns
+     * @param columns the columns
      */
     public Sum(final String... columns) {
         super(new org.apache.commons.math3.stat.descriptive.summary.Sum(), columns);

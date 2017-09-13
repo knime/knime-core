@@ -55,15 +55,16 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.DoubleCell;
 
 /**
+ * Calculates the count of values equal zero.
  *
- * @author Anastasia Zhukova
+ * @author Anastasia Zhukova, KNIME GmbH, Konstanz, Germany
  * @since 3.5
  */
 public class ZeroNumber extends Statistic {
     private int[] m_zeros;
 
     /**
-     * @param columns
+     * @param columns the columns
      */
     public ZeroNumber(final String... columns) {
         super(DataValue.class, columns);
