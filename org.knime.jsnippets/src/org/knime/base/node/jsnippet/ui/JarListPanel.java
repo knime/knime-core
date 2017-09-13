@@ -105,9 +105,11 @@ public class JarListPanel extends JPanel {
         @Override
         protected void processComponentKeyEvent(final KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_A && e.isControlDown()) {
+                // Ctrl+A => Select All
                 final int end = getModel().getSize() - 1;
                 getSelectionModel().setSelectionInterval(0, end);
             } else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                // Remove selection on DEL key.
                 onJarRemove();
             }
         }
@@ -144,8 +146,7 @@ public class JarListPanel extends JPanel {
     }
 
     private void onJarFileAdd() {
-        final DefaultListModel<String> model = (DefaultListModel<String>)m_addJarList.getModel();
-        final Set<String> hash = new HashSet<>(Collections.list(model.elements()));
+        final Set<String> hash = new HashSet<>(Collections.list(m_listModel.elements()));
         final StringHistory history = StringHistory.getInstance("java_snippet_jar_dirs");
         if (m_jarFileChooser == null) {
             File dir = null;
@@ -166,7 +167,7 @@ public class JarListPanel extends JPanel {
             for (final File f : m_jarFileChooser.getSelectedFiles()) {
                 final String s = f.getAbsolutePath();
                 if (hash.add(s)) {
-                    model.addElement(s);
+                    m_listModel.addElement(s);
                 }
             }
             history.add(m_jarFileChooser.getCurrentDirectory().getAbsolutePath());
