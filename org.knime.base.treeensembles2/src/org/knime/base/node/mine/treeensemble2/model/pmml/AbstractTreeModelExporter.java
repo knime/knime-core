@@ -124,7 +124,7 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
     }
 
     private boolean canSavelyBeExported(final DataColumnSpec colSpec) {
-        return !colSpec.getName().matches("(Bit|Byte|Double) \\d+");
+        return !TranslationUtil.isVectorFieldName(colSpec.getName());
     }
 
     /**
