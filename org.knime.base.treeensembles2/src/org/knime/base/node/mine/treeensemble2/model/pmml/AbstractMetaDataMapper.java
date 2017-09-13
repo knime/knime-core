@@ -50,18 +50,11 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.dmg.pmml.PMMLDocument;
-import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
-import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
-import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnMetaData;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -78,11 +71,11 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Adrian Nembach, KNIME
  */
-class SimpleMetaDataMapper implements MetaDataMapper {
+abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> implements MetaDataMapper<T> {
 
     private final DataTableSpec m_learnSpec;
-    private final Map<String, TreeAttributeColumnMetaData> m_metaDataMap;
-    private final TreeTargetColumnMetaData m_targetColumnMetaData;
+    private final Map<String, ColumnHelper<?>> m_colHelperMap;
+    private final TargetColumnHelper<T> m_targetColumnHelper;
 
     /**
      * Creates a SimpleMetaDataMapper by extracting the meta data information from the data dictionary of the provided
@@ -90,7 +83,7 @@ class SimpleMetaDataMapper implements MetaDataMapper {
      * @param pmmlDoc PMMLDocument from whose data dictionary meta data information is to be extracted
      *
      */
-    public SimpleMetaDataMapper(final PMMLDocument pmmlDoc) {
+    public AbstractMetaDataMapper(final PMMLDocument pmmlDoc) {
         PMMLDataDictionaryTranslator dataDictTrans = new PMMLDataDictionaryTranslator();
         dataDictTrans.initializeFrom(pmmlDoc);
         DataTableSpec tableSpec = dataDictTrans.getDataTableSpec();
@@ -99,30 +92,22 @@ class SimpleMetaDataMapper implements MetaDataMapper {
         // Remove the target column (assumes that the last column is the target)
         final int targetIdx = tableSpec.getNumColumns() - 1;
         cr.remove(targetIdx);
-        m_metaDataMap = createMetaDataMapFromSpec(cr.createSpec());
-        m_targetColumnMetaData = createTargetMetaDataFromSpec(tableSpec.getColumnSpec(targetIdx));
+        m_colHelperMap = createColumnHelperMapFromSpec(cr.createSpec());
+        m_targetColumnHelper = createTargetColumnHelper(tableSpec.getColumnSpec(targetIdx));
     }
 
-    private static TreeTargetColumnMetaData createTargetMetaDataFromSpec(final DataColumnSpec targetSpec) {
-        if (targetSpec.getType().isCompatible(DoubleValue.class)) {
-            return new TreeTargetNumericColumnMetaData(targetSpec.getName());
-        } else if (targetSpec.getType().isCompatible(StringValue.class)) {
-            return new TreeTargetNominalColumnMetaData(targetSpec.getName(), extractNomValReps(targetSpec));
-        }
-        throw new IllegalArgumentException("The target column is of incompatible type \"" + targetSpec.getType()
-        + "\".");
-    }
+    protected abstract TargetColumnHelper<T> createTargetColumnHelper(final DataColumnSpec targetSpec);
 
-    private static Map<String, TreeAttributeColumnMetaData> createMetaDataMapFromSpec(final DataTableSpec tableSpec) {
-        Map<String, TreeAttributeColumnMetaData> map = new HashMap<>();
+    private static Map<String, ColumnHelper<?>> createColumnHelperMapFromSpec(final DataTableSpec tableSpec) {
+        Map<String, ColumnHelper<?>> map = new HashMap<>();
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
             checkForVectorColumn(colSpec);
             DataType colType = colSpec.getType();
             if (colType.isCompatible(StringValue.class)) {
-                map.put(colSpec.getName(), createNominalMetaData(colSpec, i));
+                map.put(colSpec.getName(), new NominalAttributeColumnHelper(colSpec, i));
             } else if (colType.isCompatible(DoubleValue.class)) {
-                map.put(colSpec.getName(), createNumericMetaData(colSpec, i));
+                map.put(colSpec.getName(), new NumericAttributeColumnHelper(colSpec, i));
             } else {
                 throw new IllegalStateException("Only default KNIME types are supported right now.");
             }
@@ -150,45 +135,15 @@ class SimpleMetaDataMapper implements MetaDataMapper {
             + "originate from a vector column. A model learned on a vector can currently not be imported.");
     }
 
-    /**
-     * @param colSpec the {@link DataColumnSpec} for which to create the {@link TreeNumericColumnMetaData} object.
-     * @return a {@link TreeNumericColumnMetaData} object for the provided colSpec
-     */
-    private static TreeNumericColumnMetaData createNumericMetaData(final DataColumnSpec colSpec, final int colIdx) {
-        TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(colSpec.getName());
-        metaData.setAttributeIndex(colIdx);
-        return metaData;
-    }
-
-    private static TreeNominalColumnMetaData createNominalMetaData(final DataColumnSpec colSpec, final int colIdx) {
-        TreeNominalColumnMetaData metaData = new TreeNominalColumnMetaData(colSpec.getName(),
-            extractNomValReps(colSpec));
-        metaData.setAttributeIndex(colIdx);
-        return metaData;
-    }
-
-    private static NominalValueRepresentation[] extractNomValReps(final DataColumnSpec colSpec) {
-        DataColumnDomain domain = colSpec.getDomain();
-        CheckUtils.checkArgument(domain.hasValues(),
-            "The data dictionary of the field \"%s\" has no possible values assigned.", colSpec.getName());
-        Set<DataCell> kvalues = domain.getValues();
-        int assignedInteger = 0;
-        NominalValueRepresentation[] values = new NominalValueRepresentation[kvalues.size()];
-        for (DataCell cell : kvalues) {
-            values[assignedInteger] = new NominalValueRepresentation(cell.toString(), assignedInteger);
-            assignedInteger++;
-        }
-        return values;
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TreeAttributeColumnMetaData getMetaData(final String field) {
-        TreeAttributeColumnMetaData metaData = m_metaDataMap.get(field);
+    public ColumnHelper<?> getColumnHelper(final String field) {
+        ColumnHelper<?> metaData = m_colHelperMap.get(field);
         CheckUtils.checkNotNull(metaData, "The provided field \"%s\" is not part of the data dictionary.", field);
-        return m_metaDataMap.get(field);
+        return m_colHelperMap.get(field);
     }
 
     /**
@@ -204,38 +159,38 @@ class SimpleMetaDataMapper implements MetaDataMapper {
      */
     @Override
     public boolean isNominal(final String field) {
-        TreeAttributeColumnMetaData metaData = getMetaData(field);
-        return metaData instanceof TreeNominalColumnMetaData;
+        ColumnHelper<?> colHelper = getColumnHelper(field);
+        return colHelper instanceof NominalAttributeColumnHelper;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TreeNominalColumnMetaData getNominalColumnMetaData(final String field) {
-        TreeAttributeColumnMetaData metaData = getMetaData(field);
-        CheckUtils.checkArgument(metaData instanceof TreeNominalColumnMetaData,
+    public NominalAttributeColumnHelper getNominalColumnHelper(final String field) {
+        ColumnHelper<?> colHelper = getColumnHelper(field);
+        CheckUtils.checkArgument(colHelper instanceof NominalAttributeColumnHelper,
             "The provided field \"%s\" is not nominal.", field);
-        return (TreeNominalColumnMetaData)metaData;
+        return (NominalAttributeColumnHelper)colHelper;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TreeNumericColumnMetaData getNumericColumnMetaData(final String field) {
-        TreeAttributeColumnMetaData metaData = getMetaData(field);
-        CheckUtils.checkArgument(metaData instanceof TreeNumericColumnMetaData,
+    public NumericAttributeColumnHelper getNumericColumnHelper(final String field) {
+        ColumnHelper<?> metaData = getColumnHelper(field);
+        CheckUtils.checkArgument(metaData instanceof NumericAttributeColumnHelper,
             "The provided field \"%s\" is not numeric.", field);
-        return (TreeNumericColumnMetaData)metaData;
+        return (NumericAttributeColumnHelper)metaData;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TreeTargetColumnMetaData getTargetColumnMetaData() {
-        return m_targetColumnMetaData;
+    public TargetColumnHelper<T> getTargetColumnHelper() {
+        return m_targetColumnHelper;
     }
 
     /**
@@ -243,8 +198,10 @@ class SimpleMetaDataMapper implements MetaDataMapper {
      */
     @Override
     public TreeMetaData getTreeMetaData() {
-        return TreeMetaData.createTreeMetaData(m_metaDataMap.values().toArray(
-            new TreeAttributeColumnMetaData[m_metaDataMap.size()]), m_targetColumnMetaData);
+        TreeAttributeColumnMetaData[] attributes = m_colHelperMap.values().stream()
+                .map(c -> c.getMetaData())
+                .toArray(s -> new TreeAttributeColumnMetaData[s]);
+        return TreeMetaData.createTreeMetaData(attributes, m_targetColumnHelper.getMetaData());
     }
 
 }
