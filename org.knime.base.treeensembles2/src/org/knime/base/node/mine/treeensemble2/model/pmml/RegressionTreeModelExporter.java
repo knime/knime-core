@@ -89,10 +89,10 @@ class RegressionTreeModelExporter extends AbstractTreeModelExporter<TreeNodeRegr
 
     protected void addExtension(final Node pmmlNode, final TreeNodeRegression node) {
         Extension ext = pmmlNode.addNewExtension();
-        ext.setName("sumSquaredDeviation");
+        ext.setName(TranslationUtil.SUM_SQUARED_DEVIATION_KEY);
         ext.setValue(Double.toString(node.getSumSquaredDeviation()));
         ext = pmmlNode.addNewExtension();
-        ext.setName("totalSum");
+        ext.setName(TranslationUtil.TOTAL_SUM_KEY);
         ext.setValue(Double.toString(node.getTotalSum()));
     }
 

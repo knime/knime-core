@@ -55,6 +55,9 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
  */
 final class TranslationUtil {
 
+    static final String SUM_SQUARED_DEVIATION_KEY = "sumSquaredDeviation";
+    static final String TOTAL_SUM_KEY = "totalSum";
+
     private TranslationUtil() {
         // this is a utility class that can't be initialized
     }

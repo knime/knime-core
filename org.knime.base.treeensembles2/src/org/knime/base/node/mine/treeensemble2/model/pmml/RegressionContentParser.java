@@ -65,9 +65,6 @@ enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
 
     INSTANCE;
 
-    private static final String TOTALSUM_IDENTIFIER = "totalSum";
-    private static final String SUM_SQUARED_DEVIATION_IDENTIFIER = "sumSquaredDeviation";
-
     /**
      * {@inheritDoc}
      */
@@ -76,10 +73,10 @@ enum RegressionContentParser implements ContentParser<TreeNodeRegression> {
         final TreeNodeSignature signature, final List<TreeNodeRegression> children) {
         double mean = Double.parseDouble(node.getScore());
         OptionalDouble totalSum = node.getExtensionList().stream()
-                .filter(e -> e.getName().equals(TOTALSUM_IDENTIFIER))
+                .filter(e -> e.getName().equals(TranslationUtil.TOTAL_SUM_KEY))
                 .mapToDouble(e -> Double.parseDouble(e.getValue())).findFirst();
         OptionalDouble sumSquaredDeviation = node.getExtensionList().stream()
-                .filter(e -> e.getName().equals(SUM_SQUARED_DEVIATION_IDENTIFIER))
+                .filter(e -> e.getName().equals(TranslationUtil.SUM_SQUARED_DEVIATION_KEY))
                 .mapToDouble(e -> Double.parseDouble(e.getValue())).findFirst();
         return new TreeNodeRegression(targetMetaData, signature, mean, totalSum.orElse(-1),
             sumSquaredDeviation.orElse(-1), children.toArray(new TreeNodeRegression[children.size()]));
