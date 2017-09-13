@@ -71,6 +71,7 @@ public class JavaSnippetSettings {
     private static final String SCRIPT_FIELDS = "scriptFields";
     private static final String SCRIPT_BODY = "scriptBody";
     private static final String JAR_FILES = "jarFiles";
+    private static final String BUNDLES = "bundles";
     private static final String OUT_COLS = "outCols";
     private static final String OUT_VARS = "outVars";
     private static final String IN_COLS = "inCols";
@@ -88,6 +89,9 @@ public class JavaSnippetSettings {
 
     /** Custom jar files. */
     private String[] m_jarFiles;
+
+    /** Additional bundles. */
+    private String[] m_bundles;
 
     /** Input columns definition. */
     private InColList m_inCols;
@@ -123,6 +127,7 @@ public class JavaSnippetSettings {
         m_scriptFields = "// Your custom variables:\n";
         m_scriptBody = "// Enter your code here:\n\n\t\t" + defaultContent + "\n\n";
         m_jarFiles = new String[0];
+        m_bundles = new String[0];
         m_outCols = new OutColList();
         m_outVars = new OutVarList();
         m_inCols = new InColList();
@@ -194,6 +199,21 @@ public class JavaSnippetSettings {
      */
     public void setJarFiles(final String[] jarFiles) {
         m_jarFiles = jarFiles;
+    }
+
+    /**
+     * @return the bundles
+     */
+    public String[] getBundles() {
+        return m_bundles;
+    }
+
+
+    /**
+     * @param bundles the jarFiles to set
+     */
+    public void setBundles(final String[] bundles) {
+        m_bundles = bundles;
     }
 
 
@@ -277,6 +297,9 @@ public class JavaSnippetSettings {
         settings.addString(VERSION, m_version);
         settings.addString(TEMPLATE_UUID, m_templateUUID);
         settings.addBoolean(RUN_ON_EXECUTE, m_runOnExecute);
+
+        // added in 3.5
+        settings.addStringArray(BUNDLES, m_bundles);
     }
 
     /** Loads parameters in NodeModel.
@@ -299,6 +322,9 @@ public class JavaSnippetSettings {
         }
         // added in 2.8 (only java edit variable) -- 2.7 scripts were always run on execute()
         m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, true);
+
+        // added in 3.5
+        m_bundles = settings.getStringArray(BUNDLES, new String[0]);
     }
 
 
@@ -331,5 +357,8 @@ public class JavaSnippetSettings {
         m_templateUUID = settings.getString(TEMPLATE_UUID, null);
         // added in 2.8 (only java edit variable)
         m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, false);
+
+        // added in 3.5
+        m_bundles = settings.getStringArray(BUNDLES, new String[0]);
     }
 }

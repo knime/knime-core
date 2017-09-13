@@ -95,6 +95,7 @@ import org.knime.base.node.jsnippet.template.JavaSnippetTemplateProvider;
 import org.knime.base.node.jsnippet.template.TemplateNodeDialog;
 import org.knime.base.node.jsnippet.template.TemplateProvider;
 import org.knime.base.node.jsnippet.template.TemplatesPanel;
+import org.knime.base.node.jsnippet.ui.BundleListPanel;
 import org.knime.base.node.jsnippet.ui.ColumnList;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
@@ -148,6 +149,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
     private JarListPanel m_jarPanel;
 
+    private BundleListPanel m_bundleListPanel;
+
     private DefaultTemplateController<JavaSnippetTemplate> m_templatesController;
 
     private boolean m_isEnabled;
@@ -190,7 +193,12 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         if (!isPreview) {
             panel.setPreferredSize(new Dimension(800, 600));
         }
+
         addTab("Additional Libraries", createAdditionalLibsPanel());
+
+        m_bundleListPanel = new BundleListPanel();
+        addTab("Additional Bundles", m_bundleListPanel);
+
         if (!isPreview) {
             // The preview does not have the templates tab
             addTab("Templates", createTemplatesPanel());
@@ -396,8 +404,6 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
      * Create the panel with the snippet.
      */
     private JComponent createSnippetPanel() {
-        updateAutocompletion();
-
         m_snippetTextArea = new JSnippetTextArea(m_snippet);
 
         // reset style which causes a recreation of the folds
@@ -511,6 +517,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
             m_inFieldsTable.setEnabled(enabled);
             m_outFieldsTable.setEnabled(enabled);
             m_jarPanel.setEnabled(enabled);
+            m_bundleListPanel.setEnabled(enabled);
             m_snippetTextArea.setEnabled(enabled);
 
             m_isEnabled = enabled;
@@ -543,6 +550,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_flowVarsList.setFlowVariables(getAvailableFlowVariables().values());
         m_snippet.setSettings(m_settings);
         m_jarPanel.setJarFiles(m_settings.getJarFiles());
+        m_bundleListPanel.setBundles(m_settings.getBundles());
 
         m_fieldsController.updateData(m_settings, specs[0], getAvailableFlowVariables());
 
@@ -556,6 +564,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
 
         // update template info panel
         m_templateLocation.setText(getTemplateLocation());
+
+        updateAutocompletion();
     }
 
     /**
@@ -586,6 +596,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         m_flowVarsList.setFlowVariables(flowVariables.values());
         m_snippet.setSettings(m_settings);
         m_jarPanel.setJarFiles(m_settings.getJarFiles());
+        m_bundleListPanel.setBundles(m_settings.getBundles());
 
         m_fieldsController.updateData(m_settings, spec, flowVariables);
         // update template info panel
@@ -660,6 +671,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNod
         }
         // give subclasses the chance to modify settings
         preSaveSettings(s);
+
+        s.setBundles(m_bundleListPanel.getBundles());
 
         s.saveSettings(settings);
     }
