@@ -2202,7 +2202,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 parentEditor = parentEditor.m_parentEditor;
             }
             workflowFigure.setMessage("  This is a temporary copy of \"" + URIUtil.toDecodedString(origRemoteLocation)
-                + "\".\n  Use \"Save\" to upload it back to its original location the server or \"Save As...\" to "
+                + "\".\n  Use \"Save\" to upload it back to its original location on the server or \"Save As...\" to "
                 + "store it in a different location.");
         } else {
             workflowFigure.setMessage(null);
