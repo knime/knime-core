@@ -53,6 +53,7 @@ import java.util.List;
 
 import org.dmg.pmml.NodeDocument.Node;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
@@ -65,16 +66,16 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  *
  * @author Adrian Nembach, KNIME
  */
-class TreeModelImporter<T extends AbstractTreeNode> {
-    private final MetaDataMapper m_metaDataMapper;
+class TreeModelImporter<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData> {
+    private final MetaDataMapper<T> m_metaDataMapper;
     private final ConditionParser m_conditionParser;
     private final TreeNodeSignatureFactory m_signatureFactory;
-    private final ContentParser<T> m_contentParser;
-    private final TreeFactory<T> m_treeFactory;
+    private final ContentParser<N, T> m_contentParser;
+    private final TreeFactory<N> m_treeFactory;
 
-    public TreeModelImporter(final MetaDataMapper metaDataMapper, final ConditionParser conditionParser,
+    public TreeModelImporter(final MetaDataMapper<T> metaDataMapper, final ConditionParser conditionParser,
         final TreeNodeSignatureFactory signatureFactory,
-        final ContentParser<T> contentParser, final TreeFactory<T> treeFactory) {
+        final ContentParser<N, T> contentParser, final TreeFactory<N> treeFactory) {
         m_metaDataMapper = metaDataMapper;
         m_conditionParser = conditionParser;
         m_signatureFactory = signatureFactory;
@@ -88,14 +89,14 @@ class TreeModelImporter<T extends AbstractTreeNode> {
      * @param treeModel PMML tree model to import
      * @return a {@link AbstractTreeModel} initialized from <b>treeModel</b>
      */
-    public AbstractTreeModel<T> importFromPMML(final TreeModel treeModel) {
+    public AbstractTreeModel<N> importFromPMML(final TreeModel treeModel) {
         Node rootNode = treeModel.getNode();
-        T root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());
+        N root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());
         return m_treeFactory.createTree(root);
     }
 
-    private T createNodeFromPMML(final Node pmmlNode, final TreeNodeSignature signature) {
-        List<T> children = new ArrayList<>();
+    private N createNodeFromPMML(final Node pmmlNode, final TreeNodeSignature signature) {
+        List<N> children = new ArrayList<>();
         byte i = 0;
         for (Node child : pmmlNode.getNodeList()) {
             TreeNodeSignature childSignature = m_signatureFactory.getChildSignatureFor(signature, i);
@@ -103,7 +104,7 @@ class TreeModelImporter<T extends AbstractTreeNode> {
             children.add(createNodeFromPMML(child, childSignature));
         }
         TreeNodeCondition condition = m_conditionParser.parseCondition(pmmlNode);
-        T node = m_contentParser.createNode(pmmlNode, m_metaDataMapper.getTargetColumnMetaData(), signature, children);
+        N node = m_contentParser.createNode(pmmlNode, m_metaDataMapper.getTargetColumnHelper(), signature, children);
         node.setTreeNodeCondition(condition);
         return node;
     }
