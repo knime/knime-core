@@ -73,8 +73,6 @@ import org.eclipse.swt.widgets.Label;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.InputNode;
-import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -98,7 +96,6 @@ public class ConfigureNodeUsagePage extends WizardPage {
     private Map<NodeID, NodeModel> m_viewNodes;
     private Map<NodeID, Button> m_wizardUsageMap;
     private Map<NodeID, Button> m_dialogUsageMap;
-    private Map<NodeID, Button> m_interfaceUsageMap;
 
     /**
      * @param pageName
@@ -111,7 +108,6 @@ public class ConfigureNodeUsagePage extends WizardPage {
         m_viewNodes = new LinkedHashMap<NodeID, NodeModel>();
         m_wizardUsageMap = new LinkedHashMap<NodeID, Button>();
         m_dialogUsageMap = new LinkedHashMap<NodeID, Button>();
-        m_interfaceUsageMap = new LinkedHashMap<NodeID, Button>();
     }
 
     /**
@@ -159,7 +155,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
         Composite composite = new Composite(scrollPane, SWT.NONE);
         scrollPane.setContent(composite);
         scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
-        composite.setLayout(new GridLayout(4, false));
+        composite.setLayout(new GridLayout(3, false));
         composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
 
         //titles
@@ -173,16 +169,12 @@ public class ConfigureNodeUsagePage extends WizardPage {
         Label dialogLabel = new Label(composite, SWT.CENTER);
         dialogLabel.setText("Dialog");
         dialogLabel.setFont(boldFont);
-        Label interfaceLabel = new Label(composite, SWT.CENTER);
-        interfaceLabel.setText("Interface");
-        interfaceLabel.setFont(boldFont);
 
         //select all checkboxes
         Label selectAllLabel = new Label(composite, SWT.LEFT);
         selectAllLabel.setText("Enable/Disable");
         Button selectAllWizard = new Button(composite, SWT.CHECK | SWT.CENTER);
         Button selectAllDialog = new Button(composite, SWT.CHECK | SWT.CENTER);
-        Button selectAllInterface = new Button(composite, SWT.CHECK | SWT.CENTER);
 
         //individual nodes
         for (Entry<NodeID, NodeModel> entry : m_viewNodes.entrySet()) {
@@ -219,26 +211,9 @@ public class ConfigureNodeUsagePage extends WizardPage {
             } else {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
-            if (model instanceof InputNode || model instanceof OutputNode) {
-                Button interfaceButton = new Button(composite, SWT.CHECK | SWT.CENTER);
-                interfaceButton.addSelectionListener(new SelectionAdapter() {
-                    @Override
-                    public void widgetSelected(final SelectionEvent e) {
-                        checkAllSelected(m_interfaceUsageMap, selectAllInterface);
-                    }
-                });
-                //TODO: remove once interface status can be configured in nodes
-                interfaceButton.setEnabled(false);
-                interfaceButton.setToolTipText("Interface usage not configurable yet.");
-                interfaceButton.setSelection(true);
-                m_interfaceUsageMap.put(id, interfaceButton);
-            } else {
-                new Composite(composite, SWT.NONE); /* Placeholder */
-            }
         }
         checkAllSelected(m_wizardUsageMap, selectAllWizard);
         checkAllSelected(m_dialogUsageMap, selectAllDialog);
-        checkAllSelected(m_interfaceUsageMap, selectAllInterface);
 
         selectAllWizard.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -264,20 +239,6 @@ public class ConfigureNodeUsagePage extends WizardPage {
         if (m_dialogUsageMap.size() < 1) {
             selectAllDialog.setEnabled(false);
         }
-        selectAllInterface.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                selectAllInterface.setGrayed(false);
-                for (Button b : m_interfaceUsageMap.values()) {
-                    b.setSelection(selectAllInterface.getSelection());
-                }
-            }
-        });
-        if (m_interfaceUsageMap.size() < 1) {
-            selectAllInterface.setEnabled(false);
-        }
-        //TODO: remove once interface status can be configured in nodes
-        selectAllInterface.setEnabled(false);
     }
 
     private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
@@ -345,13 +306,6 @@ public class ConfigureNodeUsagePage extends WizardPage {
      */
     Map<NodeID, Button> getDialogUsageMap() {
         return m_dialogUsageMap;
-    }
-
-    /**
-     * @return the interfaceUsageMap
-     */
-    Map<NodeID, Button> getInterfaceUsageMap() {
-        return m_interfaceUsageMap;
     }
 
 }

@@ -62,8 +62,6 @@ import org.eclipse.swt.widgets.Button;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.InputNode;
-import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
@@ -138,12 +136,7 @@ public class SetupSubnodeWizard extends Wizard {
    }
 
    private boolean considerNodeForUsage(final NodeModel model) {
-       boolean consider = false;
-       consider |= model instanceof WizardNode;
-       consider |= model instanceof DialogNode;
-       consider |= model instanceof InputNode;
-       consider |= model instanceof OutputNode;
-       return consider;
+       return model instanceof WizardNode || model instanceof DialogNode;
    }
 
    /**
@@ -245,18 +238,6 @@ public class SetupSubnodeWizard extends Wizard {
                     LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
                     return false;
                 }
-            }
-        }
-
-        for (Entry<NodeID, Button> iUsage : m_usagePage.getInterfaceUsageMap().entrySet()) {
-            NodeID id = iUsage.getKey();
-            boolean hide = !iUsage.getValue().getSelection();
-            try {
-                //TODO: implement once nodes can be enabled/disabled for interface use
-                //wfManager.hideNodeFromInterface(id, hide);
-            } catch (IllegalArgumentException e) {
-                LOGGER.error("Unable to set hide in interface flag on node: " + e.getMessage(), e);
-                return false;
             }
         }
 
