@@ -127,12 +127,16 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
         DataColumnDomain domain = colSpec.getDomain();
         boolean domainInformationIsMissing = false;
         if (type.isCompatible(StringValue.class)) {
-            domainInformationIsMissing = !domain.hasValues();
+            if (domain.hasValues()) {
+                domainInformationIsMissing = domain.getValues().isEmpty();
+            } else {
+                domainInformationIsMissing = true;
+            }
         } else if (type.isCompatible(DoubleValue.class)) {
             domainInformationIsMissing = !domain.hasBounds();
         }
         CheckUtils.checkArgument(!(possibleVectorName && domainInformationIsMissing), "The column %s seems to "
-            + "originate from a vector column. A model learned on a vector can currently not be imported.");
+            + "originate from a vector column. A model learned on a vector can currently not be imported.", colSpec);
     }
 
 
