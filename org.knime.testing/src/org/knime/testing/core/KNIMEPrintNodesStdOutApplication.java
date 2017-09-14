@@ -270,11 +270,11 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                 } catch (Exception e) {
                     nodeModel = "n/a"; // some nodesfactorys don't have nodemodels. e.g.
                 }
-                writer.append(hist + ','
-                    + t.getCategoryPath()  + ','
-                    + t.getName()  + ','
-                    + t.getFactory().toString() + ','
-                    + nodeModel);
+                writer.append("\"" + hist + "\","
+                        + "\"" + t.getCategoryPath()  + "\","
+                        + "\"" + t.getName() + "\","
+                        + "\"" + t.getFactory().toString() + "\","
+                        + "\"" + nodeModel + "\"");
                 writer.newLine();
             }
 
