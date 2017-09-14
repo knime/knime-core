@@ -2219,7 +2219,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 + "store it in a different location.");
         } else if (!getWorkflowManager().isPresent()) {
             workflowFigure.setMessage(
-                "This is a remotely opened workflow job. It can neither be stored locally nor can it be edited.");
+                "This is a remotely opened workflow job. It can neither be stored locally nor edited."
+                + " It also just represents a static snapshot of the workflow job and won't get updated automatically.");
         } else {
             workflowFigure.setMessage(null);
         }
