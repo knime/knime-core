@@ -1915,7 +1915,7 @@
             factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory"
+            after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory2"
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopEndNodeFactory">
       </node>
@@ -1923,6 +1923,12 @@
             after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopEndNodeFactory"
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionFilterNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory"
+            category-path="/analytics/mining/featureselection"
+            deprecated="false"
+            factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory2">
       </node>
    </extension>
    
