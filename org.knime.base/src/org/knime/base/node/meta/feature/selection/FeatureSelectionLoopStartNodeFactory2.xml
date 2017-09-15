@@ -8,7 +8,7 @@
 	<fullDescription>
 		<intro>
 			This node is the start of the feature selection loop.  The feature selection loop allows you to select, from all the features in the input data set, the subset of features that is best for model construction.  With this node you determine (i) which features/columns are to be held fixed in the selection process.  These constant or "static" features/columns are included in each loop iteration and are exempt from elimination; (ii) which selection strategy is to be used on the other (variable) features/columns; and (iii) at which threshold number of variable features the selection process is to terminate.
-			This node has two in and out ports. The respective first port is intended for training data and the second port for test data.
+			This node has two in and out ports. The respective first port is intended for training data and the second port for test data. The same filter is applied to both tables and they will therefore always contain the same columns.
 		</intro>
 
 		<option name="Static and Variable Features">Columns can be selected manually or by means of regular expressions.  The columns in the left pane are the static columns, those in the right pane the variable columns.  Since a feature selection process always has a target feature and a set of features to select from, there will always be at least one static column and more than one variable column.  If you leave the left pane empty and run the node, you will get a warning.  Columns can be moved from one pane to the other by clicking on the appropriate button in the middle.
