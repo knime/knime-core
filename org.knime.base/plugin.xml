@@ -1188,28 +1188,28 @@
             >
       </node>
       <node
+            after="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            
-            after="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory">
+            deprecated="true"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
             category-path="/analytics/mining/featureselection"
-            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
        <node
              after="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
