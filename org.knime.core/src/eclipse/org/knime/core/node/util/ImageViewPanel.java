@@ -52,7 +52,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
@@ -76,7 +75,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
         ScaleToFit,
     }
 
-    private BufferedImage m_image;
+    private Image m_image;
     private ScaleType m_scaleType;
 
     /** Panel with no current image and scaling {@link ScaleType#ShrinkAsNeeded}. */
@@ -86,7 +85,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
 
     /** Panel displaying given image and scaling {@link ScaleType#ShrinkAsNeeded}.
      * @param image The image (may be null). */
-    public ImageViewPanel(final BufferedImage image) {
+    public ImageViewPanel(final Image image) {
         m_image = image;
         m_scaleType = ScaleType.ShrinkAsNeeded;
     }
@@ -94,7 +93,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
     /** Set image to draw (or null) and repaint.
      * @param image The image
      */
-    public void setImage(final BufferedImage image) {
+    public void setImage(final Image image) {
         m_image = image;
         repaint();
     }
@@ -116,7 +115,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
         if (isPreferredSizeSet() || m_image == null) {
             return super.getPreferredSize();
         } else {
-            return new Dimension(m_image.getWidth(), m_image.getHeight());
+            return new Dimension(m_image.getWidth(this), m_image.getHeight(this));
         }
     }
 
@@ -131,7 +130,7 @@ public class ImageViewPanel extends JPanel implements Scrollable {
             int panelWidth = getWidth() - x - insets.right;
             int panelHeight = getHeight() - y - insets.bottom;
             final Rectangle drawingRectangle = new Rectangle(x, y, panelWidth, panelHeight);
-            drawInto(g, m_image, m_image.getWidth(), m_image.getHeight(), drawingRectangle, m_scaleType);
+            drawInto(g, m_image, m_image.getWidth(this), m_image.getHeight(this), drawingRectangle, m_scaleType);
         }
     }
 
