@@ -56,6 +56,7 @@ import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -82,13 +83,14 @@ import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Panel for adding Bundles to the Java Snippet node for compilation.
  *
- * @author Jonathan Hale
+ * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.5
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
@@ -163,7 +165,7 @@ public class BundleListPanel extends JPanel {
         addBundleButton.addActionListener(e -> addBundle(m_listModel));
 
         final JButton removeBundleButton = new JButton("Remove");
-        removeBundleButton.addActionListener(e -> removeBundle());
+        removeBundleButton.addActionListener(e -> removeBundles());
 
         final JPanel southPane = new JPanel(new FlowLayout());
         southPane.add(addBundleButton);
@@ -236,8 +238,14 @@ public class BundleListPanel extends JPanel {
                         final List<BundleWire> requiredWires =
                             wiring.getRequiredWires(BundleNamespace.BUNDLE_NAMESPACE);
 
+                        System.out.println("-----------------------");
                         for (final BundleWire w : requiredWires) {
+                            for(final BundleRequirement o : w.getProviderWiring().getRequirements(BundleNamespace.BUNDLE_NAMESPACE)) {
+                                System.out.println(o);
+                            }
                             pending.add(w.getProviderWiring().getBundle());
+
+                            w.getRequirerWiring().getRequirements(BundleNamespace.BUNDLE_NAMESPACE);
                         }
                     }
 
@@ -270,8 +278,8 @@ public class BundleListPanel extends JPanel {
 
             void update(final DocumentEvent e) {
                 try {
-                    final Document d = e.getDocument();
-                    bundleModel.setFilter(d.getText(0, d.getLength()));
+                    final Document doc = e.getDocument();
+                    bundleModel.setFilter(doc.getText(0, doc.getLength()));
                 } catch (BadLocationException e1) {
                     // Will never happen
                 }
@@ -283,10 +291,12 @@ public class BundleListPanel extends JPanel {
         frame.setVisible(true);
     }
 
-    private void removeBundle() {
-        final int sel = m_list.getSelectedIndex();
-        if (sel != -1) {
-            m_listModel.remove(sel);
+    private void removeBundles() {
+        final int[] selections = m_list.getSelectedIndices();
+
+        Collections.reverse(Arrays.asList(selections));
+        for (final int index : selections) {
+            m_listModel.remove(index);
         }
     }
 
