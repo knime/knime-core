@@ -1943,14 +1943,6 @@
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/analytics/mining/featureselection/meta"
-             description="Backward Feature Elimination"
-             icon="icons/meta_nodes/feature_elimination_flow.png"
-             id="feature_elimination"
-             name="Feature Elimination"
-             workflowDir="metanode_templates/Feature Elimination/">
-       </PersistedMetaNode>
-       <PersistedMetaNode
              category-path="/flowcontrol/meta"
              icon="icons/meta_nodes/variables_looper_flow.png"
              id="variables_loop"
