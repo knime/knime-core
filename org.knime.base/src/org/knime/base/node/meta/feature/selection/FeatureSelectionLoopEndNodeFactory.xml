@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="featureselection-end.png" type="LoopEnd">
+	<name>Feature Selection Loop End</name>
+
+	<shortDescription>End node for a feature selection loop</shortDescription>
+
+	<fullDescription>
+		<intro>
+			This is the end of a feature selection loop which selects features according to a feature selection
+			strategy. It allows you to select a flow variable that contains a prediction score (usually from a
+			preceding <i>Scorer</i> node). You then need to specify whether the score variable should be minimized or
+			maximized.
+		</intro>
+
+		<option name="Score variable">The flow variable that contains the score for the model</option>
+		<option name="Minimize">Check this option if you want to minimize the score (if you use error as score, for example, and you want to minimize error).  If the option is left unchecked, the score will be maximized.</option>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Flow variable with score">Flow variable connection that contains the variable you want
+		      to use as score.
+		</inPort>
+		<outPort name="Result Table" index="0">Table containing details on the selection</outPort>
+		<outPort index="1" name="Feature Selection Model">A model that represents the different
+			feature sets with the associated scores.
+		</outPort>
+	</ports>
+</knimeNode>
