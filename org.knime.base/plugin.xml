@@ -1910,6 +1910,20 @@
             deprecated="false"
             factory-class="org.knime.base.node.mine.regression.predict3.RegressionPredictorNodeFactory2">
       </node>
+      <node
+            category-path="/analytics/mining/featureselection"
+            factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopStartNodeFactory"
+            category-path="/analytics/mining/featureselection"
+            factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopEndNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.meta.feature.selection.FeatureSelectionLoopEndNodeFactory"
+            category-path="/analytics/mining/featureselection"
+            factory-class="org.knime.base.node.meta.feature.selection.FeatureSelectionFilterNodeFactory">
+      </node>
    </extension>
    
       
