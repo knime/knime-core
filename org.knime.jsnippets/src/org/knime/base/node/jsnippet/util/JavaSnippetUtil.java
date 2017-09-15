@@ -48,9 +48,14 @@
 package org.knime.base.node.jsnippet.util;
 
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
@@ -58,7 +63,8 @@ import org.knime.core.util.FileUtil;
 
 /**
  * Utility method for the Java Snippet nodes.
- * <p>This class might change and is not meant as public API.
+ * <p>
+ * This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
  * @since 2.12
@@ -71,28 +77,81 @@ public final class JavaSnippetUtil {
         // private constructor to prevent instantiation.
     }
 
-    /** Convert file location to File. Also accepts file in URL format
-     * (e.g. local drop files as URL).
+    private static File cacheDir = null;
+
+    /**
+     * Create a temporary directory for all urls from all javasnippets. Downloaded jars are saved in a subfolder named
+     * by the hexadecimal of the hashCode of the URL.
+     */
+    private static final void initCache() {
+        if (cacheDir == null) {
+            try {
+                cacheDir = FileUtil.createTempDir("javasnippet-jar-download-cache");
+            } catch (IOException e) {
+                throw new IllegalStateException("Unable to create temporary directory.", e);
+            }
+        }
+    }
+
+    /**
+     * Resolve a remote .jar URL (e.g. file relative to "local-copy-from-server" workflow. File still on server.),
+     * potentially downloading the file to a temporary directory, if not done so already.
+     *
+     * @param url URL of the .jar file.
+     * @return The downloaded file or file from cache.
+     * @throws InvalidSettingsException If the URL is invalid or could not be opened or downloaded.
+     */
+    private static final File resolveRemoteFile(final URL url) throws InvalidSettingsException {
+        initCache();
+
+        String file = url.getFile(); // knime://knime.workflow/../foo/bar.jar -> "/../foo/bar.jar"
+        CheckUtils.checkSetting(StringUtils.endsWithIgnoreCase(file, ".jar"), "Not a .jar URL: %s", url.toString());
+        String filename = FilenameUtils.getName(file); // "/../foo/bar.jar" -> "bar.jar"
+
+        final File cacheForUrl = new File(cacheDir, Integer.toString(url.hashCode(), 16));
+        final File jarFile = new File(cacheForUrl, filename);
+        if (jarFile.exists()) {
+            // already downloaded
+            return jarFile;
+        }
+
+        /* File not in cache, download it to cache */
+        try (InputStream urlIn = FileUtil.openStreamWithTimeout(url)) {
+            FileUtils.copyToFile(urlIn, jarFile);
+        } catch (IOException e) {
+            throw new InvalidSettingsException("Cannot download jar from URL: " + url.toString(), e);
+        }
+
+        return jarFile;
+    }
+
+    /**
+     * Convert file location to File. Also accepts file in URL format (e.g. local drop files as URL).
+     *
      * @param location The location string.
      * @return The file to the location
-     * @throws InvalidSettingsException if argument is null, empty or the file
-     * does not exist.
+     * @throws InvalidSettingsException if argument is null, empty or the file does not exist.
      */
     public static final File toFile(final String location) throws InvalidSettingsException {
         CheckUtils.checkSetting(StringUtils.isNotEmpty(location), "Invalid (empty) jar file location");
         File result;
-        URL url = null;
         try {
-            url = new URL(location);
-        } catch (MalformedURLException mue) {
-        }
-        if (url != null) {
-            result = FileUtil.getFileFromURL(url);
-        } else {
+            final URL url = new URL(location);
+            final Path p = FileUtil.resolveToPath(url);
+
+            if (p == null) {
+                // not a local path (see javadoc of resolveToPath)
+                result = resolveRemoteFile(url);
+            } else {
+                result = p.toFile();
+            }
+        } catch (IOException | URISyntaxException mue) {
+            // (especially MalformedURLException)
             result = new File(location);
         }
-        CheckUtils.checkSetting(result != null && result.exists(),
-                "Can't read file \"%s\"; invalid class path", location);
+        CheckUtils.checkSetting(result != null && result.exists(), "Can't read file \"%s\"; invalid class path",
+            location);
+
         return result;
     }
 
