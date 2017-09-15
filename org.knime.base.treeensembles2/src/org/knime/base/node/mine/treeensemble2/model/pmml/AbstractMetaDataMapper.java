@@ -84,9 +84,10 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
      *
      */
     public AbstractMetaDataMapper(final PMMLDocument pmmlDoc) {
-        PMMLDataDictionaryTranslator dataDictTrans = new PMMLDataDictionaryTranslator();
-        dataDictTrans.initializeFrom(pmmlDoc);
-        DataTableSpec tableSpec = dataDictTrans.getDataTableSpec();
+        this(extractTableSpecFromPMMLDoc(pmmlDoc));
+    }
+
+    public AbstractMetaDataMapper(final DataTableSpec tableSpec) {
         m_learnSpec = tableSpec;
         ColumnRearranger cr = new ColumnRearranger(tableSpec);
         // Remove the target column (assumes that the last column is the target)
@@ -94,6 +95,23 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
         cr.remove(targetIdx);
         m_colHelperMap = createColumnHelperMapFromSpec(cr.createSpec());
         m_targetColumnHelper = createTargetColumnHelper(tableSpec.getColumnSpec(targetIdx));
+    }
+
+    static AbstractMetaDataMapper<?> createMetaDataMapper(final DataTableSpec tableSpec) {
+        DataColumnSpec targetCol = tableSpec.getColumnSpec(tableSpec.getNumColumns() - 1);
+        DataType targetType = targetCol.getType();
+        if (targetType.isCompatible(StringValue.class)) {
+            return new ClassificationMetaDataMapper(tableSpec);
+        } else if (targetType.isCompatible(DoubleValue.class)) {
+            return new RegressionMetaDataMapper(tableSpec);
+        }
+        throw new IllegalArgumentException("The target column \"" + targetCol + "\" is not numeric or nominal.");
+    }
+
+    private static DataTableSpec extractTableSpecFromPMMLDoc(final PMMLDocument pmmlDoc) {
+        PMMLDataDictionaryTranslator dataDictTrans = new PMMLDataDictionaryTranslator();
+        dataDictTrans.initializeFrom(pmmlDoc);
+        return dataDictTrans.getDataTableSpec();
     }
 
     protected abstract TargetColumnHelper<T> createTargetColumnHelper(final DataColumnSpec targetSpec);

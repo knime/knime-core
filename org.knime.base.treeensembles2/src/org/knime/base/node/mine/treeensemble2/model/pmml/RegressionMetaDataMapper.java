@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 
 /**
  * MetaDataMapper for regression tree reconstruction.
@@ -64,6 +65,10 @@ final class RegressionMetaDataMapper extends AbstractMetaDataMapper<TreeTargetNu
      */
     public RegressionMetaDataMapper(final PMMLDocument pmmlDoc) {
         super(pmmlDoc);
+    }
+
+    public RegressionMetaDataMapper(final DataTableSpec tableSpec) {
+        super(tableSpec);
     }
 
     /**

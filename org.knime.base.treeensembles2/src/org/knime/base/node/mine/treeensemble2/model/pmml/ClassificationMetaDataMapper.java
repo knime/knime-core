@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnMetaData;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 
 /**
  * MetaDataMapper for classification tree reconstruction.
@@ -66,11 +67,16 @@ final class ClassificationMetaDataMapper extends AbstractMetaDataMapper<TreeTarg
         super(pmmlDoc);
     }
 
+    public ClassificationMetaDataMapper(final DataTableSpec tableSpec) {
+        super(tableSpec);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected TargetColumnHelper<TreeTargetNominalColumnMetaData> createTargetColumnHelper(final DataColumnSpec targetSpec) {
+    protected TargetColumnHelper<TreeTargetNominalColumnMetaData> createTargetColumnHelper(
+        final DataColumnSpec targetSpec) {
         return new NominalTargetColumnHelper(targetSpec);
     }
 

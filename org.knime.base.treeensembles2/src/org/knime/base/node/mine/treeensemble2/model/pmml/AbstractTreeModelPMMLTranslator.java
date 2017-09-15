@@ -69,7 +69,7 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  * @param <T> the type of meta data information of the target column
  *
  */
-abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>
+public abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>
 implements PMMLTranslator {
 
     private AbstractTreeModel<N> m_treeModel;
@@ -105,6 +105,15 @@ implements PMMLTranslator {
         TreeModelImporter<N, T> importer = createImporter(metaDataMapper);
         m_treeModel = importer.importFromPMML(trees.get(0));
         m_treeMetaData = metaDataMapper.getTreeMetaData();
+    }
+
+    /**
+     * Checks if the provided spec is a valid spec for a model translatable with this translator.
+     * @param pmmlSpec the {@link PMMLPortObjectSpec} of a tree that should be imported
+     */
+    public static void checkPMMLSpec(final PMMLPortObjectSpec pmmlSpec) {
+        // it won't be possible to construct a meta data mapper from an incompatible spec
+        AbstractMetaDataMapper.createMetaDataMapper(pmmlSpec.getDataTableSpec());
     }
 
     /**
