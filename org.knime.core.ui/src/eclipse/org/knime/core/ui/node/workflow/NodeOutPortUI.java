@@ -53,7 +53,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.ui.UI;
 
 /**
- * Interface for a node's output port (mainly for the {@link UINodeContainer}). A variable number of input ports can
+ * Interface for a node's output port (mainly for the {@link NodeContainerUI}). A variable number of input ports can
  * be connected to it (which are part of the next nodes in the workflow).
  *
  * UI-interface that mirrors the {@link NodeOutPort} interface.
@@ -65,7 +65,7 @@ import org.knime.core.ui.UI;
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UINodeOutPort extends UINodePort, NodeStateChangeListener, NodeContainerStateObservable, UI {
+public interface NodeOutPortUI extends NodePortUI, NodeStateChangeListener, NodeContainerStateObservable, UI {
 
 //    /**
 //     * Returns the <code>DataTableSpec</code> or null if not available.

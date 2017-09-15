@@ -40,35 +40,27 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   18.09.2007 (mb): created
+ * ------------------------------------------------------------------------
  */
 package org.knime.core.ui.node.workflow;
 
-import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.ui.UI;
 
 /**
- * Represents a node out-port of a workflow (e.g. a metanode).
+ * Represents a node in-port of a {@link NodeContainerUI}.
  *
- * UI-interface that mirrors the {@link WorkflowOutPort}.
+ * UI-interface that mirrors the {@link NodeInPort}.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  * @author Martin Horn, KNIME.com
+ *
+ * @see NodeOutPortUI
  *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UIWorkflowOutPort extends UINodeOutPort, UI  {
-
-
-    /**
-     * @param portIndex the new portIndex to set
-     * @since 2.6
-     */
-    public void setPortIndex(final int portIndex);
+public interface NodeInPortUI extends NodePortUI, UI {
 
 }

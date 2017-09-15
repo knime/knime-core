@@ -73,10 +73,10 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UISingleNodeContainer;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -235,10 +235,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                UINodeContainer container =
-                        (UINodeContainer)((NodeContainerEditPart)p).getModel();
-                if (container instanceof UISingleNodeContainer) {
-                    UISingleNodeContainer snc = (UISingleNodeContainer)container;
+                NodeContainerUI container =
+                        (NodeContainerUI)((NodeContainerEditPart)p).getModel();
+                if (container instanceof SingleNodeContainerUI) {
+                    SingleNodeContainerUI snc = (SingleNodeContainerUI)container;
                     Wrapper.unwrapOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
                         if (sncImpl.isModelCompatibleTo(LoopEndNode.class)) {
                             // pause loop execution
@@ -288,12 +288,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 addSelectLoop = false;
                 break;
             }
-            UINodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
-            if (!(nc instanceof UISingleNodeContainer)) {
+            NodeContainerUI nc = ((NodeContainerEditPart)p).getNodeContainer();
+            if (!(nc instanceof SingleNodeContainerUI)) {
                 addSelectLoop = false;
                 break;
             }
-            if (!((UISingleNodeContainer)nc).isMemberOfScope()) {
+            if (!((SingleNodeContainerUI)nc).isMemberOfScope()) {
                 addSelectLoop = false;
                 break;
             }
@@ -333,10 +333,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             }
             if (p instanceof NodeContainerEditPart) {
 
-                UINodeContainer container = null;
-                container = (UINodeContainer)((NodeContainerEditPart)p).getModel();
+                NodeContainerUI container = null;
+                container = (NodeContainerUI)((NodeContainerEditPart)p).getModel();
 
-                if (!(container instanceof UIWorkflowManager)) {
+                if (!(container instanceof WorkflowManagerUI)) {
                     action = m_actionRegistry.getAction(ToggleFlowVarPortsAction.ID);
                     manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
                     ((AbstractNodeAction)action).update();
@@ -369,7 +369,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     }
                 }
 
-                if (container instanceof UIWorkflowManager) {
+                if (container instanceof WorkflowManagerUI) {
                     metanodeMenuMgr = getMetaNodeMenuManager(metanodeMenuMgr, manager);
 
                     // OPEN META NODE
@@ -396,7 +396,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // SUBNODE
-                if (container instanceof UISubNodeContainer) {
+                if (container instanceof SubNodeContainerUI) {
 
                     subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
 
@@ -430,7 +430,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
                 int numOutPorts = container.getNrOutPorts();
                 for (int i = 0; i < numOutPorts; i++) {
-                    if (i == 0 && !(container instanceof UIWorkflowManager)) {
+                    if (i == 0 && !(container instanceof WorkflowManagerUI)) {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
@@ -447,10 +447,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         boolean addSubNodeActions = false;
         for (Object p : parts) {
             if (p instanceof NodeContainerEditPart) {
-                UINodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
-                if (model instanceof UIWorkflowManager) {
+                NodeContainerUI model = ((NodeContainerEditPart)p).getNodeContainer();
+                if (model instanceof WorkflowManagerUI) {
                     addMetaNodeActions = true;
-                } else if (model instanceof UISubNodeContainer) {
+                } else if (model instanceof SubNodeContainerUI) {
                     addSubNodeActions = true;
                 }
             }

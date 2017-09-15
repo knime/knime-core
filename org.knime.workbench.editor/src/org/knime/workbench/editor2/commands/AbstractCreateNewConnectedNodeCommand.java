@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and
@@ -189,8 +189,8 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     private Map<Integer, Integer> getMatchingPorts(final NodeContainer left,
             final NodeContainer right) {
         // don't auto connect to flow var ports - start with port index 1
-        int leftFirst = (left instanceof UIWorkflowManager) ? 0 : 1;
-        int rightFirst = (right instanceof UIWorkflowManager) ? 0 : 1;
+        int leftFirst = (left instanceof WorkflowManagerUI) ? 0 : 1;
+        int rightFirst = (right instanceof WorkflowManagerUI) ? 0 : 1;
         Map<Integer, Integer> matchingPorts = new TreeMap<Integer, Integer>();
         Map<Integer, Integer> possibleMatches = new TreeMap<Integer, Integer>();
         Set<Integer> assignedRight = new HashSet<Integer>();

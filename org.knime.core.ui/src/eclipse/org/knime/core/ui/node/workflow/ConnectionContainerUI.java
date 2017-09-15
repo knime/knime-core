@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,52 +41,108 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Aug 30, 2016 (wiswedel): created
  */
 package org.knime.core.ui.node.workflow;
 
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionProgressListener;
+import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.ui.UI;
 
-
 /**
- * Node port interface which keeps an index and a port name.
- * Represents a node port of a {@link UINodeContainer}.
+ * UI-interface that mirrors the {@link ConnectionContainer}.
  *
- * UI-interface that mirrors the {@link NodePort} interface.
- *
- * @author Michael Berthold &amp; B. Wiswedel, University of Konstanz
- * @author Martin Horn, KNIME.com
+ * @author wiswedel
+ * @author Martin Horn
  *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UINodePort extends UI {
+public interface ConnectionContainerUI extends ConnectionProgressListener, UI {
 
     /**
-     * @return The port index.
+     * @return the uiInfo
      */
-    public int getPortIndex();
+    ConnectionUIInformation getUIInfo();
 
     /**
-     * @return The port type.
+     * @return the dest
      */
-    public PortType getPortType();
+    NodeID getDest();
 
     /**
-     * @return The port name.
+     * @return the destPort
      */
-    public String getPortName();
+    int getDestPort();
 
     /**
-     * Sets a new name for this port. If null or an empty string is passed, the
-     * default name will be generated: "Port [" + portID + "]".
-     *
-     * @param portName The new name for this port. If null is passed, the
-     *            default name will be generated.
+     * @return the source
      */
-    public void setPortName(final String portName);
+    NodeID getSource();
+
+    /**
+     * @return the sourcePort
+     */
+    int getSourcePort();
+
+    /**
+     * @return the isDeletable
+     */
+    boolean isDeletable();
+
+    /**
+     * @return whether the connection connects two flow variable ports
+     */
+    boolean isFlowVariablePortConnection();
+
+    /**
+     * @return type of the connection
+     */
+    ConnectionType getType();
+
+    /**
+     * @return the ID for this connection.
+     */
+    ConnectionID getID();
+
+    /**
+     * @param uiInfo the uiInfo to set
+     */
+    void setUIInfo(ConnectionUIInformation uiInfo);
+
+    /** Add a listener to the list of registered listeners.
+     * @param l The listener to add, must not be null.
+     */
+    void addUIInformationListener(ConnectionUIInformationListener l);
+
+    /** Remove a registered listener from the listener list.
+     * @param l The listener to remove.
+     */
+    void removeUIInformationListener(ConnectionUIInformationListener l);
+
+    /**
+     * Adds a listener to the list of registered progress listeners.
+     * @param listener The listener to add, must not be null.
+     */
+    void addProgressListener(ConnectionProgressListener listener);
+
+    /**
+     * Removes a listener from the list of registered progress listeners.
+     * @param listener The listener to remove
+     */
+    void removeProgressListener(ConnectionProgressListener listener);
+
+    /** Removes all registered listeners in order to release references on
+     * this object. */
+    public void cleanup();
 
 }

@@ -49,8 +49,9 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.core.ui.wrapper.Wrapper;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to
@@ -60,62 +61,55 @@ import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
  */
 public abstract class AbstractKNIMECommand extends Command {
 
-   private UIWorkflowManager m_hostUIWFM;
-   private WorkflowManager m_hostWFM;
+   private WorkflowManagerUI m_hostWFM;
 
    /** @param hostWFM The host workflow, must not be null. */
     public AbstractKNIMECommand(final WorkflowManager hostWFM) {
         if (hostWFM == null) {
-            //allow for a null hostWFM -> there might be only a UI host WFM available
-            //throw new IllegalArgumentException("Argument must not be null.");
-            m_hostUIWFM = null;
-            m_hostWFM = null;
+            throw new IllegalArgumentException("Argument must not be null.");
         } else {
-            m_hostUIWFM = WorkflowManagerWrapper.wrap(hostWFM);
-            m_hostWFM = hostWFM;
+            m_hostWFM = WorkflowManagerWrapper.wrap(hostWFM);
         }
     }
 
     /**
      * If this constructor is used, the {@link #getHostWFM()}-method will return <code>null</code> and the
-     * {@link #getHostUIWFM()} must be used instead.
+     * {@link #getHostWFMUI()} must be used instead.
      *
      * @param hostWFM The host UI(!) workflow, must not be null.
      */
-    public AbstractKNIMECommand(final UIWorkflowManager hostWFM) {
+    public AbstractKNIMECommand(final WorkflowManagerUI hostWFM) {
         if (hostWFM == null) {
             throw new IllegalArgumentException("Argument must not be null.");
         }
-        m_hostUIWFM = hostWFM;
-        m_hostWFM = null;
+        m_hostWFM = hostWFM;
     }
 
     /**
      * @return the hostWFM, not null unless this command is disposed or the derived command works on the
-     *         {@link UIWorkflowManager}.
+     *         {@link WorkflowManagerUI}.
      */
     protected final WorkflowManager getHostWFM() {
-        return m_hostWFM;
+        return m_hostWFM == null ? null : Wrapper.unwrapWFMOptional(m_hostWFM).orElse(null);
     }
 
     /**
-     * @return the hostUIWFM, not null unless the command is disposed.
+     * @return the hostWFMUI, not null unless the command is disposed.
      */
-    protected final UIWorkflowManager getHostUIWFM() {
-        return m_hostUIWFM;
+    protected final WorkflowManagerUI getHostWFMUI() {
+        return m_hostWFM;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return m_hostUIWFM != null && !m_hostUIWFM.isWriteProtected();
+        return m_hostWFM != null && !m_hostWFM.isWriteProtected();
     }
 
     /** {@inheritDoc} */
     @Override
     public void dispose() {
         super.dispose();
-        m_hostUIWFM = null;
         m_hostWFM = null;
     }
 }

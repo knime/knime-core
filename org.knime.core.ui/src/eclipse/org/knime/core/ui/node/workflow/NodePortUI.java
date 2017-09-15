@@ -40,40 +40,52 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   26.09.2007 (mb/bw): created
+ * ------------------------------------------------------------------------
  */
 package org.knime.core.ui.node.workflow;
 
-import org.knime.core.node.workflow.WorkflowInPort;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.core.ui.UI;
 
+
 /**
- * Represents an in-port of a workflow (e.g. a metanode).
+ * Node port interface which keeps an index and a port name.
+ * Represents a node port of a {@link NodeContainerUI}.
  *
- * UI-interface that mirrors {@link WorkflowInPort}.
+ * UI-interface that mirrors the {@link NodePort} interface.
  *
- * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
+ * @author Michael Berthold &amp; B. Wiswedel, University of Konstanz
  * @author Martin Horn, KNIME.com
  *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UIWorkflowInPort extends UINodeInPort, UI {
-
-
-    /**
-     * @param portIndex the new portIndex to set
-     * @since 2.6
-     */
-    public void setPortIndex(final int portIndex);
+public interface NodePortUI extends UI {
 
     /**
-     * @return the underlyingOutPort
+     * @return The port index.
      */
-    public UINodeOutPort getUnderlyingPort();
+    public int getPortIndex();
+
+    /**
+     * @return The port type.
+     */
+    public PortType getPortType();
+
+    /**
+     * @return The port name.
+     */
+    public String getPortName();
+
+    /**
+     * Sets a new name for this port. If null or an empty string is passed, the
+     * default name will be generated: "Port [" + portID + "]".
+     *
+     * @param portName The new name for this port. If null is passed, the
+     *            default name will be generated.
+     */
+    public void setPortName(final String portName);
 
 }

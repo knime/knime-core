@@ -44,7 +44,7 @@
  */
 package org.knime.workbench.repository.model;
 
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
  *
@@ -52,7 +52,7 @@ import org.knime.core.ui.node.workflow.UIWorkflowManager;
  */
 public class MetaNodeTemplate extends AbstractNodeTemplate {
 
-    private final UIWorkflowManager m_manager;
+    private final WorkflowManagerUI m_manager;
 
     private String m_description;
 
@@ -66,7 +66,7 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
      * @param manager the metanode's workflow manager
      */
     public MetaNodeTemplate(final String id, final String name,
-            final String categoryPath, final String contributingPlugin, final UIWorkflowManager manager) {
+            final String categoryPath, final String contributingPlugin, final WorkflowManagerUI manager) {
         super(id, name, contributingPlugin);
         m_manager = manager;
         setAfterID("");
@@ -89,7 +89,7 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
      *
      * @return a workflow manager
      */
-    public UIWorkflowManager getManager() {
+    public WorkflowManagerUI getManager() {
         return m_manager;
     }
 

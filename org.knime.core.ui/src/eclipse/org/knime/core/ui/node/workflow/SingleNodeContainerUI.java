@@ -61,7 +61,7 @@ import org.w3c.dom.Element;
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UISingleNodeContainer extends UINodeContainer, UI {
+public interface SingleNodeContainerUI extends NodeContainerUI, UI {
 
 //    /** Name of the sub-directory containing node-local files. These files
 //     * manually copied by the user and the node will automatically list those

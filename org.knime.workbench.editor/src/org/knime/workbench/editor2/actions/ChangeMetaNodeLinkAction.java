@@ -74,8 +74,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -150,11 +150,11 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        UINodeContainer nc = nodes[0].getNodeContainer();
-        if (!(nc instanceof UIWorkflowManager)) {
+        NodeContainerUI nc = nodes[0].getNodeContainer();
+        if (!(nc instanceof WorkflowManagerUI)) {
             return false;
         }
-        UIWorkflowManager metaNode = (UIWorkflowManager)nc;
+        WorkflowManagerUI metaNode = (WorkflowManagerUI)nc;
         if (!Role.Link.equals(unwrapWFM(metaNode).getTemplateInformation().getRole()) || metaNode.getParent().isWriteProtected()) {
             // metanode must be linked and parent must not forbid the change
             return false;

@@ -105,7 +105,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -126,7 +126,7 @@ public class NodeMonitorView extends ViewPart
 
     private IStructuredSelection m_lastSelection;
     private IStructuredSelection m_lastSelectionWhilePinned;
-    private UINodeContainer m_lastNode;
+    private NodeContainerUI m_lastNode;
     private boolean m_pinned = false;
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS }
@@ -321,7 +321,7 @@ public class NodeMonitorView extends ViewPart
      */
     @Override
     public void dispose() {
-        UINodeContainer cont = m_lastNode;
+        NodeContainerUI cont = m_lastNode;
         if (cont != null) {
             cont.removeNodeStateChangeListener(this);
             m_lastNode = null;
@@ -370,7 +370,7 @@ public class NodeMonitorView extends ViewPart
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            UINodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
+            NodeContainerUI nc = ((NodeContainerEditPart)sel).getNodeContainer();
             updateNodeContainerInfo(nc);
         } else {
             // unsupported selection
@@ -388,7 +388,7 @@ public class NodeMonitorView extends ViewPart
      * Also de-register previous node and register with the new one if
      * the underlying NC changed.
      */
-    private void updateNodeContainerInfo(final UINodeContainer nc) {
+    private void updateNodeContainerInfo(final NodeContainerUI nc) {
         if (nc == null) {
             return;
         }
@@ -606,7 +606,7 @@ public class NodeMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final UINodeContainer nc,
+    private void updateSettingsTable(final NodeContainerUI nc,
                                      final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Node Configuration");

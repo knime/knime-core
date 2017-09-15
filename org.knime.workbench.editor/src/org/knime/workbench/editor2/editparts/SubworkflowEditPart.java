@@ -46,7 +46,7 @@
 package org.knime.workbench.editor2.editparts;
 
 import org.eclipse.draw2d.IFigure;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.editor2.figures.SubworkflowFigure;
 
@@ -72,8 +72,8 @@ public class SubworkflowEditPart extends NodeContainerEditPart {
 
     /** {@inheritDoc} */
     @Override
-    public UIWorkflowManager getNodeContainer() {
-        return (UIWorkflowManager)super.getNodeContainer();
+    public WorkflowManagerUI getNodeContainer() {
+        return (WorkflowManagerUI)super.getNodeContainer();
     }
 
 }

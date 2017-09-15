@@ -1377,7 +1377,6 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     void cleanup() {
         if (m_annotation != null) {
-            m_annotation.unregisterFromNodeContainer();
             removeUIInformationListener(m_annotation);
         }
         closeAllJobManagerViews();

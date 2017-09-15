@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -44,105 +43,37 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 30, 2016 (wiswedel): created
+ *   26.09.2007 (mb/bw): created
  */
 package org.knime.core.ui.node.workflow;
 
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
-import org.knime.core.node.workflow.ConnectionID;
-import org.knime.core.node.workflow.ConnectionProgressListener;
-import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.ConnectionUIInformationListener;
-import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.ui.UI;
 
 /**
- * UI-interface that mirrors the {@link ConnectionContainer}.
+ * Represents an in-port of a workflow (e.g. a metanode).
  *
- * @author wiswedel
- * @author Martin Horn
+ * UI-interface that mirrors {@link WorkflowInPort}.
+ *
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
+ * @author Martin Horn, KNIME.com
  *
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UIConnectionContainer extends ConnectionProgressListener, UI {
+public interface WorkflowInPortUI extends NodeInPortUI, UI {
+
 
     /**
-     * @return the uiInfo
+     * @param portIndex the new portIndex to set
+     * @since 2.6
      */
-    ConnectionUIInformation getUIInfo();
+    public void setPortIndex(final int portIndex);
 
     /**
-     * @return the dest
+     * @return the underlyingOutPort
      */
-    NodeID getDest();
-
-    /**
-     * @return the destPort
-     */
-    int getDestPort();
-
-    /**
-     * @return the source
-     */
-    NodeID getSource();
-
-    /**
-     * @return the sourcePort
-     */
-    int getSourcePort();
-
-    /**
-     * @return the isDeletable
-     */
-    boolean isDeletable();
-
-    /**
-     * @return whether the connection connects two flow variable ports
-     */
-    boolean isFlowVariablePortConnection();
-
-    /**
-     * @return type of the connection
-     */
-    ConnectionType getType();
-
-    /**
-     * @return the ID for this connection.
-     */
-    ConnectionID getID();
-
-    /**
-     * @param uiInfo the uiInfo to set
-     */
-    void setUIInfo(ConnectionUIInformation uiInfo);
-
-    /** Add a listener to the list of registered listeners.
-     * @param l The listener to add, must not be null.
-     */
-    void addUIInformationListener(ConnectionUIInformationListener l);
-
-    /** Remove a registered listener from the listener list.
-     * @param l The listener to remove.
-     */
-    void removeUIInformationListener(ConnectionUIInformationListener l);
-
-    /**
-     * Adds a listener to the list of registered progress listeners.
-     * @param listener The listener to add, must not be null.
-     */
-    void addProgressListener(ConnectionProgressListener listener);
-
-    /**
-     * Removes a listener from the list of registered progress listeners.
-     * @param listener The listener to remove
-     */
-    void removeProgressListener(ConnectionProgressListener listener);
-
-    /** Removes all registered listeners in order to release references on
-     * this object. */
-    public void cleanup();
+    public NodeOutPortUI getUnderlyingPort();
 
 }

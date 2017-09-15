@@ -74,21 +74,21 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UIConnectionContainer;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowInPort;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
-import org.knime.core.ui.node.workflow.UIWorkflowOutPort;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowInPortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
 import org.knime.core.util.Pair;
 
 /**
- * Implements the {@link UIWorkflowManager} interface by simply wrapping the {@link WorkflowManager} implementation.
+ * Implements the {@link WorkflowManagerUI} interface by simply wrapping the {@link WorkflowManager} implementation.
  *
  * For all return types that implement an interface (from core.api), another wrapper instance is returned.
  *
  * @author Martin Horn, University of Konstanz
  */
-public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowManager> implements UIWorkflowManager{
+public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowManager> implements WorkflowManagerUI{
 
     private final WorkflowManager m_delegate;
 
@@ -100,8 +100,14 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param wfm the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final WorkflowManagerWrapper wrap(final WorkflowManager wfm) {
-        return (WorkflowManagerWrapper)Wrapper.wrapOrGet(wfm, wfm, o -> new WorkflowManagerWrapper(o));
+        return (WorkflowManagerWrapper)Wrapper.wrapOrGet(wfm, o -> new WorkflowManagerWrapper(o));
     }
 
     /**
@@ -127,7 +133,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getProjectWFM()
      */
     @Override
-    public UIWorkflowManager getProjectWFM() {
+    public WorkflowManagerUI getProjectWFM() {
         return WorkflowManagerWrapper.wrap(m_delegate.getProjectWFM());
     }
 
@@ -168,7 +174,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#addConnection(org.knime.core.node.workflow.NodeID, int, org.knime.core.node.workflow.NodeID, int)
      */
     @Override
-    public UIConnectionContainer addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
+    public ConnectionContainerUI addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
         return ConnectionContainerWrapper.wrap(m_delegate.addConnection(source, sourcePort, dest, destPort));
     }
 
@@ -201,19 +207,19 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     /**
      * @param cc
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#canRemoveConnection(org.knime.core.UIConnectionContainer.node.workflow.IConnectionContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#canRemoveConnection(org.knime.core.ConnectionContainerUI.node.workflow.IConnectionContainer)
      */
     @Override
-    public boolean canRemoveConnection(final UIConnectionContainer cc) {
+    public boolean canRemoveConnection(final ConnectionContainerUI cc) {
         return m_delegate.canRemoveConnection(Wrapper.unwrapCC(cc));
     }
 
     /**
      * @param cc
-     * @see org.knime.core.node.workflow.WorkflowManager#removeConnection(org.knime.core.UIConnectionContainer.node.workflow.IConnectionContainer)
+     * @see org.knime.core.node.workflow.WorkflowManager#removeConnection(org.knime.core.ConnectionContainerUI.node.workflow.IConnectionContainer)
      */
     @Override
-    public void removeConnection(final UIConnectionContainer cc) {
+    public void removeConnection(final ConnectionContainerUI cc) {
         m_delegate.removeConnection(Wrapper.unwrapCC(cc));
     }
 
@@ -224,7 +230,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getOutgoingConnectionsFor(org.knime.core.node.workflow.NodeID, int)
      */
     @Override
-    public Set<UIConnectionContainer> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
+    public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
         return m_delegate.getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
@@ -234,7 +240,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getOutgoingConnectionsFor(org.knime.core.node.workflow.NodeID)
      */
     @Override
-    public Set<UIConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
+    public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id) {
         return m_delegate.getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
@@ -245,7 +251,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getIncomingConnectionFor(org.knime.core.node.workflow.NodeID, int)
      */
     @Override
-    public UIConnectionContainer getIncomingConnectionFor(final NodeID id, final int portIdx) {
+    public ConnectionContainerUI getIncomingConnectionFor(final NodeID id, final int portIdx) {
         return ConnectionContainerWrapper.wrap(m_delegate.getIncomingConnectionFor(id, portIdx));
     }
 
@@ -255,7 +261,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getIncomingConnectionsFor(org.knime.core.node.workflow.NodeID)
      */
     @Override
-    public Set<UIConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
+    public Set<ConnectionContainerUI> getIncomingConnectionsFor(final NodeID id) {
         return m_delegate.getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
@@ -265,7 +271,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getConnection(org.knime.core.def.node.workflow.ConnectionID)
      */
     @Override
-    public UIConnectionContainer getConnection(final ConnectionID id) {
+    public ConnectionContainerUI getConnection(final ConnectionID id) {
         return ConnectionContainerWrapper.wrap(m_delegate.getConnection(id));
     }
 
@@ -595,7 +601,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * {@inheritDoc}
      */
     @Override
-    public Collection<UINodeContainer> getNodeContainers() {
+    public Collection<NodeContainerUI> getNodeContainers() {
         return m_delegate.getNodeContainers().stream().map(nc -> wrap(nc)).collect(Collectors.toList());
     }
 
@@ -604,7 +610,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getConnectionContainers()
      */
     @Override
-    public Collection<UIConnectionContainer> getConnectionContainers() {
+    public Collection<ConnectionContainerUI> getConnectionContainers() {
         return m_delegate.getConnectionContainers().stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toList());
     }
 
@@ -614,7 +620,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @see org.knime.core.node.workflow.WorkflowManager#getNodeContainer(org.knime.core.node.workflow.NodeID)
      */
     @Override
-    public UINodeContainer getNodeContainer(final NodeID id) {
+    public NodeContainerUI getNodeContainer(final NodeID id) {
         return wrap(m_delegate.getNodeContainer(id));
     }
 
@@ -919,7 +925,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * {@inheritDoc}
      */
     @Override
-    public UIWorkflowInPort getInPort(final int index) {
+    public WorkflowInPortUI getInPort(final int index) {
         return WorkflowInPortWrapper.wrap(m_delegate.getInPort(index));
     }
 
@@ -927,7 +933,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * {@inheritDoc}
      */
     @Override
-    public UIWorkflowOutPort getOutPort(final int index) {
+    public WorkflowOutPortUI getOutPort(final int index) {
         return WorkflowOutPortWrapper.wrap(m_delegate.getOutPort(index));
     }
 

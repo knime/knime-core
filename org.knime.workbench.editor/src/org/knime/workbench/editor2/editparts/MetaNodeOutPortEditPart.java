@@ -58,10 +58,10 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.ui.node.workflow.UIConnectionContainer;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UINodeOutPort;
-import org.knime.core.ui.node.workflow.UIWorkflowOutPort;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
 import org.knime.workbench.editor2.figures.MetaNodeOutPortFigure;
 
 /**
@@ -91,17 +91,17 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      */
     @Override
     protected IFigure createFigure() {
-        UINodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         LOGGER.debug("returning new sub metanode out port figure "
                 + " with type " + getType() + " index " + getIndex()
                 + " nr outports " + nc.getNrOutPorts()
                 + " and tooltip " + nc.getOutPort(getIndex())
                 .getPortName());
-        UIWorkflowOutPort model = (UIWorkflowOutPort)getModel();
+        WorkflowOutPortUI model = (WorkflowOutPortUI)getModel();
         LOGGER.debug("model: " + getModel()
                 + " state: " + model.getNodeState());
 
-        UINodeOutPort port = nc.getOutPort(getIndex());
+        NodeOutPortUI port = nc.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
 
         MetaNodeOutPortFigure f = new MetaNodeOutPortFigure(
@@ -116,7 +116,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     public void activate() {
         super.activate();
-        UIWorkflowOutPort model = (UIWorkflowOutPort)getModel();
+        WorkflowOutPortUI model = (WorkflowOutPortUI)getModel();
         model.addNodeStateChangeListener(this);
     }
 
@@ -124,7 +124,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     public void deactivate() {
         // TODO remove the figure from the model
-        ((UIWorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
+        ((WorkflowOutPortUI)getModel()).removeNodeStateChangeListener(this);
         super.deactivate();
     }
 
@@ -137,15 +137,15 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      * {@inheritDoc}
      */
     @Override
-    public List<UIConnectionContainer> getModelSourceConnections() {
+    public List<ConnectionContainerUI> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<UIConnectionContainer> containers =
+        Set<ConnectionContainerUI> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
                         getIndex());
-        List<UIConnectionContainer>conns = new ArrayList<UIConnectionContainer>();
+        List<ConnectionContainerUI>conns = new ArrayList<ConnectionContainerUI>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -159,7 +159,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      * {@inheritDoc}
      */
     @Override
-    protected List<UIConnectionContainer> getModelTargetConnections() {
+    protected List<ConnectionContainerUI> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 
@@ -184,10 +184,10 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
                         return;
                     }
                     MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
-                    UIWorkflowOutPort model = (UIWorkflowOutPort)getModel();
+                    WorkflowOutPortUI model = (WorkflowOutPortUI)getModel();
                     fig.setState(model.getNodeState());
                     rebuildTooltip();
-                    UIWorkflowOutPort outPort = (UIWorkflowOutPort)getModel();
+                    WorkflowOutPortUI outPort = (WorkflowOutPortUI)getModel();
                     fig.setInactive(outPort.isInactive());
                     fig.repaint();
                 }

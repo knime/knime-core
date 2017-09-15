@@ -129,23 +129,17 @@ public interface Wrapper<W> {
      *
      * The global wrapper map caches object instances (weak references) for look up with the dedicated key.
      *
-     * @param object
-     * @param key
+     * @param object the object to be wrapped that also at the same time serves as the key to look for already existing
+     *            wrapper
      * @param wrap function that does the wrapping if necessary
      * @return a new or already existing wrapper instance that wraps an object of the given type
      */
-    public static <W> Wrapper<W> wrapOrGet(final Object key, final W object, final Function<W, Wrapper<W>> wrap) {
-        if(object == null) {
+    @SuppressWarnings("unchecked")
+    public static <W> Wrapper<W> wrapOrGet(final W object, final Function<W, Wrapper<W>> wrap) {
+        if (object == null) {
             return null;
         }
-        if(WRAPPER_MAP.containsKey(key)) {
-            return WRAPPER_MAP.get(key);
-        } else {
-            //wrap the object and add it to the map
-            Wrapper<W> wrapper = wrap.apply(object);
-            WRAPPER_MAP.put(key, wrapper);
-            return wrapper;
-        }
+        return WRAPPER_MAP.computeIfAbsent(object, o -> wrap.apply((W)o));
     }
 
     /**

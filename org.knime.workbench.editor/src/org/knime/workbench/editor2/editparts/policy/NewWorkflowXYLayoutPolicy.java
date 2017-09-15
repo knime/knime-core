@@ -63,8 +63,8 @@ import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.swt.graphics.Cursor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
@@ -112,8 +112,8 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         Command command = null;
 
         Rectangle rect = ((Rectangle)constraint).getCopy();
-        if (child.getModel() instanceof UINodeContainer) {
-            UINodeContainer container = (UINodeContainer)child.getModel();
+        if (child.getModel() instanceof NodeContainerUI) {
+            NodeContainerUI container = (NodeContainerUI)child.getModel();
 
             if (!Wrapper.wraps(container, NodeContainer.class)) {
                 //not supported for others than ordinary NodeContainers
@@ -133,7 +133,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
             // TODO the workflow annotation could know what its WFM is?
             WorkflowRootEditPart root =
                     (WorkflowRootEditPart)annoPart.getParent();
-            UIWorkflowManager wm = root.getWorkflowManager();
+            WorkflowManagerUI wm = root.getWorkflowManager();
 
             if(!Wrapper.wraps(wm, WorkflowManager.class)) {
                 //not supported for others than an ordinary workflow manager

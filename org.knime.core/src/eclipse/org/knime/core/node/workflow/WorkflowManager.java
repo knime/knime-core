@@ -6803,17 +6803,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 loadRes.addError(msg);
                 return loadRes;
             }
-            NodeSettings ncSettings = null;
-            if (needsUpdate) { // don't need to apply old settings as the metanode link is still up-to-date
-                ncSettings = new NodeSettings("metanode_settings");
-                try {
-                    saveNodeSettings(id, ncSettings);
-                } catch (InvalidSettingsException e1) {
-                    String error = "Unable to store metanode settings: " + e1.getMessage();
-                    LOGGER.warn(error, e1);
-                    loadRes.addError(error);
-                }
-            }
             WorkflowCopyContent.Builder oldContent = WorkflowCopyContent.builder();
             oldContent.setNodeIDs(id);
             oldContent.setIncludeInOutConnections(true);

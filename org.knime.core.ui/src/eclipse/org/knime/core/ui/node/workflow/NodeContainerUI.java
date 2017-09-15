@@ -83,12 +83,12 @@ import org.knime.core.ui.UI;
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UINodeContainer extends NodeProgressListener, NodeContainerStateObservable, UI {
+public interface NodeContainerUI extends NodeProgressListener, NodeContainerStateObservable, UI {
 
     /**
      * @return parent workflowmanager holding this node (or null if root).
      */
-    UIWorkflowManager getParent();
+    WorkflowManagerUI getParent();
 
 //    /** Returns the {@linkplain #getParent() parent workflow manager}. A {@link WorkflowManager} instance contained
 //     * in a {@link SubNodeContainer} overrides it to return the subnode (which then is responsible for all the actions).
@@ -265,9 +265,9 @@ public interface UINodeContainer extends NodeProgressListener, NodeContainerStat
 
     int getNrInPorts();
 
-    UINodeInPort getInPort(int index);
+    NodeInPortUI getInPort(int index);
 
-    UINodeOutPort getOutPort(int index);
+    NodeOutPortUI getOutPort(int index);
 
     int getNrOutPorts();
 

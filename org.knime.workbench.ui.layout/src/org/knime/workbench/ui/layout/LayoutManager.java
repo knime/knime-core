@@ -62,9 +62,9 @@ import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.ui.node.workflow.UIConnectionContainer;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
@@ -79,19 +79,19 @@ public class LayoutManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(LayoutManager.class);
 
-    private UIWorkflowManager m_wfm;
+    private WorkflowManagerUI m_wfm;
 
     private long m_initPlacementSeed;
 
-    private HashMap<UINodeContainer, Node> m_workbenchToGraphNodes;
+    private HashMap<NodeContainerUI, Node> m_workbenchToGraphNodes;
 
-    private HashMap<UIConnectionContainer, Edge> m_workbenchToGraphEdges;
-
-    // nodes not laid out - but connected to nodes being laid out
-    private HashMap<UINodeContainer, Node> m_workbenchIncomingNodes;
+    private HashMap<ConnectionContainerUI, Edge> m_workbenchToGraphEdges;
 
     // nodes not laid out - but connected to nodes being laid out
-    private HashMap<UINodeContainer, Node> m_workbenchOutgoingNodes;
+    private HashMap<NodeContainerUI, Node> m_workbenchIncomingNodes;
+
+    // nodes not laid out - but connected to nodes being laid out
+    private HashMap<NodeContainerUI, Node> m_workbenchOutgoingNodes;
 
     // Meta node incoming port indices connected to nodes being laid out
     private HashMap<Integer, Node> m_workbenchWFMInports;
@@ -102,7 +102,7 @@ public class LayoutManager {
     /* the graph stores only one edge between two nodes. The connections
      * represented are in the list.
      */
-    private HashMap<Edge, List<UIConnectionContainer>> m_parallelConns;
+    private HashMap<Edge, List<ConnectionContainerUI>> m_parallelConns;
 
     private Graph m_g;
 
@@ -115,18 +115,18 @@ public class LayoutManager {
      *
      * @param wfManager contains the flow being laid out
      */
-    public LayoutManager(final UIWorkflowManager wfManager,
+    public LayoutManager(final WorkflowManagerUI wfManager,
             final long initialPlacementSeed) {
         m_wfm = wfManager;
         m_initPlacementSeed = initialPlacementSeed;
-        m_workbenchToGraphNodes = new HashMap<UINodeContainer, Graph.Node>();
+        m_workbenchToGraphNodes = new HashMap<NodeContainerUI, Graph.Node>();
         m_workbenchToGraphEdges =
-                new HashMap<UIConnectionContainer, Graph.Edge>();
-        m_workbenchIncomingNodes = new HashMap<UINodeContainer, Graph.Node>();
-        m_workbenchOutgoingNodes = new HashMap<UINodeContainer, Graph.Node>();
+                new HashMap<ConnectionContainerUI, Graph.Edge>();
+        m_workbenchIncomingNodes = new HashMap<NodeContainerUI, Graph.Node>();
+        m_workbenchOutgoingNodes = new HashMap<NodeContainerUI, Graph.Node>();
         m_workbenchWFMInports = new HashMap<Integer, Graph.Node>();
         m_workbenchWFMOutports = new HashMap<Integer, Graph.Node>();
-        m_parallelConns = new HashMap<Edge, List<UIConnectionContainer>>();
+        m_parallelConns = new HashMap<Edge, List<ConnectionContainerUI>>();
         m_g = new Graph();
     }
 
@@ -135,7 +135,7 @@ public class LayoutManager {
      *            workflow manager passed to the constructor are laid out.
      *
      */
-    public void doLayout(final Collection<UINodeContainer> nodes) {
+    public void doLayout(final Collection<NodeContainerUI> nodes) {
 
         int X_STRETCH = 100;
         int Y_STRETCH = 120;
@@ -149,7 +149,7 @@ public class LayoutManager {
             Y_STRETCH = WorkflowEditor.getActiveEditorGridYOffset(Y_STRETCH);
         }
         // add all nodes that should be laid out to the graph
-        Collection<UINodeContainer> allNodes = nodes;
+        Collection<NodeContainerUI> allNodes = nodes;
         if (allNodes == null || allNodes.size() <= 1) {
             allNodes = m_wfm.getNodeContainers();
         }
@@ -158,7 +158,7 @@ public class LayoutManager {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         // add all nodes that are to be laid out
-        for (UINodeContainer nc : allNodes) {
+        for (NodeContainerUI nc : allNodes) {
             Node gNode = createGraphNodeForNC(nc);
             m_workbenchToGraphNodes.put(nc, gNode);
             NodeUIInformation ui = nc.getUIInformation();
@@ -173,9 +173,9 @@ public class LayoutManager {
 
         // find all connections that connect from/to our nodes,
         // keep a flag that states: isClusterInternal
-        HashMap<UIConnectionContainer, Boolean> allConns =
-                new HashMap<UIConnectionContainer, Boolean>();
-        for (UIConnectionContainer conn : m_wfm.getConnectionContainers()) {
+        HashMap<ConnectionContainerUI, Boolean> allConns =
+                new HashMap<ConnectionContainerUI, Boolean>();
+        for (ConnectionContainerUI conn : m_wfm.getConnectionContainers()) {
             Node src = null;
             if (!conn.getSource().equals(m_wfm.getID())) {
                 // if it's not a meta node incoming connection
@@ -201,7 +201,7 @@ public class LayoutManager {
         // Add all connections (internal and leading in/out the cluster)
         // to the graph
         Edge gEdge;
-        for (UIConnectionContainer conn : allConns.keySet()) {
+        for (ConnectionContainerUI conn : allConns.keySet()) {
             Node srcGraphNode;
             Node destGraphNode;
             if (conn.getSource().equals(m_wfm.getID())) {
@@ -215,7 +215,7 @@ public class LayoutManager {
                     m_workbenchWFMInports.put(portIdx, srcGraphNode);
                 }
             } else {
-                UINodeContainer s = m_wfm.getNodeContainer(conn.getSource());
+                NodeContainerUI s = m_wfm.getNodeContainer(conn.getSource());
                 srcGraphNode = m_workbenchToGraphNodes.get(s);
                 if (srcGraphNode == null) {
                     // then it connects to an "outside" node
@@ -237,7 +237,7 @@ public class LayoutManager {
                     m_workbenchWFMOutports.put(portIdx, destGraphNode);
                 }
             } else {
-                UINodeContainer d = m_wfm.getNodeContainer(conn.getDest());
+                NodeContainerUI d = m_wfm.getNodeContainer(conn.getDest());
                 destGraphNode = m_workbenchToGraphNodes.get(d);
                 if (destGraphNode == null) {
                     // then it connects to an "outside" node
@@ -252,7 +252,7 @@ public class LayoutManager {
             gEdge = m_g.createEdge(srcGraphNode, destGraphNode);
             if (gEdge != null) {
                 m_workbenchToGraphEdges.put(conn, gEdge);
-                m_parallelConns.put(gEdge, new LinkedList<UIConnectionContainer>(
+                m_parallelConns.put(gEdge, new LinkedList<ConnectionContainerUI>(
                         Collections.singletonList(conn)));
             } else {
                 // a connection between these node already exists in the graph
@@ -301,12 +301,12 @@ public class LayoutManager {
         // start at 0.
         double coordOffsetX = Integer.MAX_VALUE;
         double coordOffsetY = Integer.MAX_VALUE;
-        for (UINodeContainer nc : allNodes) {
+        for (NodeContainerUI nc : allNodes) {
             Node gNode = m_workbenchToGraphNodes.get(nc);
             coordOffsetX = Math.min(coordOffsetX, m_g.getX(gNode));
             coordOffsetY = Math.min(coordOffsetY, m_g.getY(gNode));
         }
-        for (UINodeContainer nc : allNodes) {
+        for (NodeContainerUI nc : allNodes) {
 
             NodeUIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null) {
@@ -330,7 +330,7 @@ public class LayoutManager {
         }
 
         // delete old bendpoints - transfer new ones
-        for (UIConnectionContainer conn : allConns.keySet()) {
+        for (ConnectionContainerUI conn : allConns.keySet()) {
 
             // store old bendpoint for undo
             ConnectionUIInformation ui = conn.getUIInfo();
@@ -347,7 +347,7 @@ public class LayoutManager {
                 continue;
             }
 
-            List<UIConnectionContainer> conns = m_parallelConns.get(e);
+            List<ConnectionContainerUI> conns = m_parallelConns.get(e);
             assert conns.size() > 0;
             assert conns.get(0) == conn; // that is how we created it!
 
@@ -366,7 +366,7 @@ public class LayoutManager {
 
             // compute bendpoints for parallel connections (slightly offset)
             for (int i = 1; i < conns.size(); i++) { // idx 0 == conn!
-                UIConnectionContainer parConn = conns.get(i);
+                ConnectionContainerUI parConn = conns.get(i);
                 // destination port determines offset
                 int yOffset = (parConn.getDestPort() - conn.getDestPort()) * 10;
                 ConnectionUIInformation parUI =
@@ -384,7 +384,7 @@ public class LayoutManager {
      * @param nc
      * @return
      */
-    private Node createGraphNodeForNC(final UINodeContainer nc) {
+    private Node createGraphNodeForNC(final NodeContainerUI nc) {
         NodeUIInformation uiInfo = nc.getUIInformation();
         int x = 0;
         int y = 0;

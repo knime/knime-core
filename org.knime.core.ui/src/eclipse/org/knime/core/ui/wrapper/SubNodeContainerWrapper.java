@@ -50,14 +50,15 @@ package org.knime.core.ui.wrapper;
 
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
+ * UI-interface implementation that wraps a {@link SubNodeContainer}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<SubNodeContainer> implements UISubNodeContainer {
+public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<SubNodeContainer> implements SubNodeContainerUI {
 
     private SubNodeContainer m_delegate;
 
@@ -69,8 +70,14 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param snc the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final SubNodeContainerWrapper wrap(final SubNodeContainer snc) {
-        return (SubNodeContainerWrapper)Wrapper.wrapOrGet(snc, snc, o -> new SubNodeContainerWrapper(o));
+        return (SubNodeContainerWrapper)Wrapper.wrapOrGet(snc, o -> new SubNodeContainerWrapper(o));
     }
 
     /**
@@ -101,7 +108,7 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      * {@inheritDoc}
      */
     @Override
-    public UIWorkflowManager getWorkflowManager() {
+    public WorkflowManagerUI getWorkflowManager() {
         return WorkflowManagerWrapper.wrap(m_delegate.getWorkflowManager());
     }
 

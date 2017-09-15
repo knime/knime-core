@@ -83,8 +83,8 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
@@ -135,8 +135,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * @return The <code>WorkflowManager</code> that is used as model for this
      *         edit part
      */
-    public UIWorkflowManager getWorkflowManager() {
-        return (UIWorkflowManager)getModel();
+    public WorkflowManagerUI getWorkflowManager() {
+        return (WorkflowManagerUI)getModel();
     }
 
     /**
@@ -172,7 +172,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    public UINodeContainer getNodeContainer() {
+    public NodeContainerUI getNodeContainer() {
         return getWorkflowManager();
     }
 
@@ -186,7 +186,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {
         List modelChildren = new ArrayList();
-        UIWorkflowManager wfm = getWorkflowManager();
+        WorkflowManagerUI wfm = getWorkflowManager();
         // sequence here determines z-order of edit parts
 
         // Add workflow annotations as children of the workflow manager.

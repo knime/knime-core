@@ -56,7 +56,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -127,8 +127,8 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof UIWorkflowManager) {
-                UIWorkflowManager wm = (UIWorkflowManager)model;
+            if (model instanceof WorkflowManagerUI) {
+                WorkflowManagerUI wm = (WorkflowManagerUI)model;
                 MetaNodeTemplateInformation i = unwrapWFM(wm).getTemplateInformation();
                 if (Role.Link.equals(i.getRole())) {
                     return true;
@@ -144,8 +144,8 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
         List<NodeID> idList = new ArrayList<NodeID>();
         for (NodeContainerEditPart p : nodeParts) {
             Object model = p.getModel();
-            if (model instanceof UIWorkflowManager) {
-                UIWorkflowManager wm = (UIWorkflowManager)model;
+            if (model instanceof WorkflowManagerUI) {
+                WorkflowManagerUI wm = (WorkflowManagerUI)model;
                 MetaNodeTemplateInformation i = unwrapWFM(wm).getTemplateInformation();
                 if (Role.Link.equals(i.getRole())) {
                     idList.add(wm.getID());

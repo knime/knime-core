@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -152,7 +152,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             return false;
         }
         for (int i = 0; i < parts.length; i++) {
-            UINodeContainer nc = parts[i].getNodeContainer();
+            NodeContainerUI nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
             if (Wrapper.wraps(nc, NodeContainer.class)) {
                 hasView |= nc.hasInteractiveView() || unwrapNC(nc).getInteractiveWebViews().size() > 0;

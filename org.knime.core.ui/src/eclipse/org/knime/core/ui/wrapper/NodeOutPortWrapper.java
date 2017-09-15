@@ -53,13 +53,14 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.ui.node.workflow.UINodeOutPort;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
 
 /**
+ * UI-interface implementation that wraps a {@link NodeOutPort}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements UINodeOutPort {
+public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements NodeOutPortUI {
 
     private NodeOutPort m_delegate;
 
@@ -71,8 +72,14 @@ public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements 
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param nop the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final NodeOutPortWrapper wrap(final NodeOutPort nop) {
-        return (NodeOutPortWrapper)Wrapper.wrapOrGet(nop, nop, o -> new NodeOutPortWrapper(o));
+        return (NodeOutPortWrapper)Wrapper.wrapOrGet(nop, o -> new NodeOutPortWrapper(o));
     }
 
     @Override

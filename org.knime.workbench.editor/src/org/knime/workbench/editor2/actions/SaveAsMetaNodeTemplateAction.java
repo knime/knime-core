@@ -58,7 +58,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -135,8 +135,8 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof UIWorkflowManager) {
-            UIWorkflowManager wm = (UIWorkflowManager)model;
+        if (model instanceof WorkflowManagerUI) {
+            WorkflowManagerUI wm = (WorkflowManagerUI)model;
             switch (Wrapper.unwrapWFM(wm).getTemplateInformation().getRole()) {
             case None:
                 break;

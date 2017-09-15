@@ -58,8 +58,8 @@ import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.gef.commands.UnexecutableCommand;
 import org.eclipse.gef.tools.DragEditPartsTracker;
 import org.eclipse.swt.SWT;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -103,8 +103,8 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         EditPart part = getSourceEditPart();
         if (part instanceof NodeContainerEditPart && getCurrentInput().isModKeyDown(SWT.MOD1)) {
             NodeContainerEditPart ncPart = ((NodeContainerEditPart)part);
-            UINodeContainer container = (UINodeContainer)ncPart.getModel();
-            if (container instanceof UISubNodeContainer) {
+            NodeContainerUI container = (NodeContainerUI)ncPart.getModel();
+            if (container instanceof SubNodeContainerUI) {
                 ncPart.openSubWorkflowEditor();
                 return false;
             }

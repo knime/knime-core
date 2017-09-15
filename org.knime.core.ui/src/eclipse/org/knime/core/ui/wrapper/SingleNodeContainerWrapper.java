@@ -49,14 +49,15 @@
 package org.knime.core.ui.wrapper;
 
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.w3c.dom.Element;
 
 /**
+ * UI-interface implementation that wraps a {@link SingleNodeContainer}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends NodeContainerWrapper<W> implements UISingleNodeContainer {
+public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends NodeContainerWrapper<W> implements SingleNodeContainerUI {
 
     private SingleNodeContainer m_delegate;
 
@@ -68,8 +69,14 @@ public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends N
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param snc the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final SingleNodeContainerWrapper wrap(final SingleNodeContainer snc) {
-        return (SingleNodeContainerWrapper)Wrapper.wrapOrGet(snc, snc, o -> new SingleNodeContainerWrapper(o));
+        return (SingleNodeContainerWrapper)Wrapper.wrapOrGet(snc, o -> new SingleNodeContainerWrapper(o));
     }
 
     @Override

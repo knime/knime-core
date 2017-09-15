@@ -52,7 +52,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy;
 import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.ReconnectRequest;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.commands.ReconnectConnectionCommand;
@@ -96,7 +96,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         ConnectableEditPart nodePart =
             (ConnectableEditPart)getHost().getParent();
 
-        UIWorkflowManager wm;
+        WorkflowManagerUI wm;
         // TODO: if NodeContainerEditPart -> getParent
         if (nodePart instanceof NodeContainerEditPart) {
             NodeContainerEditPart p = (NodeContainerEditPart)nodePart;

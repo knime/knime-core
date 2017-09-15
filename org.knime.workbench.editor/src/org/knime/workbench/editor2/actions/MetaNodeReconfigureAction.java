@@ -52,8 +52,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -121,9 +121,9 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        UINodeContainer nc = nodes[0].getNodeContainer();
-        if (nc instanceof UIWorkflowManager) {
-            UIWorkflowManager metaNode = (UIWorkflowManager)nc;
+        NodeContainerUI nc = nodes[0].getNodeContainer();
+        if (nc instanceof WorkflowManagerUI) {
+            WorkflowManagerUI metaNode = (WorkflowManagerUI)nc;
             return !metaNode.isWriteProtected();
         }
         return false;

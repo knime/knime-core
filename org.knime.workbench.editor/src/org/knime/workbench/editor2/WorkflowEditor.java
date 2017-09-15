@@ -185,9 +185,9 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pointer;
@@ -300,7 +300,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 
     /** root model object (=editor input) that is handled by the editor. * */
-    private UIWorkflowManager m_manager;
+    private WorkflowManagerUI m_manager;
 
     /** the editor's action registry. */
     private ActionRegistry m_actionRegistry;
@@ -467,7 +467,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private List<IEditorPart> getSubEditors() {
         List<IEditorPart> result = new ArrayList<IEditorPart>();
-        for (UINodeContainer nc : m_manager.getNodeContainers()) {
+        for (NodeContainerUI nc : m_manager.getNodeContainers()) {
             result.addAll(getSubEditors(nc.getID()));
         }
         return result;
@@ -487,18 +487,18 @@ public class WorkflowEditor extends GraphicalEditor implements
             // no workflow, no sub editors
             return editors;
         }
-        UINodeContainer child = null;
-        UIWorkflowManager child_mgr = null;
+        NodeContainerUI child = null;
+        WorkflowManagerUI child_mgr = null;
         try {
             child = m_manager.getNodeContainer(id);
         } catch (IllegalArgumentException iae) {
             // if node doesn't exist - or just got deleted, then there are no sub editors
             return editors;
         }
-        if (child instanceof UISubNodeContainer) {
-            child_mgr = ((UISubNodeContainer)child).getWorkflowManager();
-        } else if (child instanceof UIWorkflowManager) {
-            child_mgr = (UIWorkflowManager)child;
+        if (child instanceof SubNodeContainerUI) {
+            child_mgr = ((SubNodeContainerUI)child).getWorkflowManager();
+        } else if (child instanceof WorkflowManagerUI) {
+            child_mgr = (WorkflowManagerUI)child;
         } else {
             return editors;
         }
@@ -510,7 +510,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     editors.add(child_editor);
                     if (child_editor instanceof WorkflowEditor) {
                         // recursively add sub editors (to get sub/metanodes in sub/metanodes)
-                        for (UINodeContainer nc : child_mgr.getNodeContainers()) {
+                        for (NodeContainerUI nc : child_mgr.getNodeContainers()) {
                             editors.addAll(((WorkflowEditor)child_editor).getSubEditors(nc.getID()));
                         }
                     }
@@ -565,7 +565,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(this);
         if (m_parentEditor != null && m_manager != null) {
             // Store the editor settings with the metanode
-            if (getUIWorkflowManager().isDirty()) {
+            if (getWorkflowManagerUI().isDirty()) {
                 saveEditorSettingsToWorkflowManager(); // doesn't persist settings to disk
             }
             // bug fix 2051: Possible memory leak related to sub-flow editor.
@@ -1000,7 +1000,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
 
             URI oldFileResource = m_fileResource;
-            UIWorkflowManager oldManager = m_manager;
+            WorkflowManagerUI oldManager = m_manager;
 
             final File wfDir = wfFile.getParentFile();
             m_fileResource = wfDir.toURI();
@@ -1010,8 +1010,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             try {
                 if (oldManager != null) { // doSaveAs called
                     assert oldFileResource != null;
-                    UIWorkflowManager managerForOldResource =
-                            (UIWorkflowManager)ProjectWorkflowMap.getUIWorkflow(oldFileResource);
+                    WorkflowManagerUI managerForOldResource =
+                            (WorkflowManagerUI)ProjectWorkflowMap.getWorkflowUI(oldFileResource);
                     if (m_manager != managerForOldResource) {
                         throw new IllegalStateException(String.format("Cannot set new input for workflow editor "
                                 + "as there was already a workflow manager set (old resource: \"%s\", "
@@ -1021,7 +1021,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     ProjectWorkflowMap.replace(m_fileResource, oldManager, oldFileResource);
                     isEnableAutoSave = m_isAutoSaveAllowed;
                 } else {
-                    m_manager = (UIWorkflowManager)ProjectWorkflowMap.getUIWorkflow(m_fileResource);
+                    m_manager = (WorkflowManagerUI)ProjectWorkflowMap.getWorkflowUI(m_fileResource);
                 }
 
                 if (m_manager != null) {
@@ -1138,7 +1138,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                             throw new RuntimeException(loadWorkflowRunnable.getThrowable());
                         }
                     }
-                    ProjectWorkflowMap.putUIWorkflow(m_fileResource, m_manager);
+                    ProjectWorkflowMap.putWorkflowUI(m_fileResource, m_manager);
                 }
                 if (oldManager == null) { // not null if via doSaveAs
                     // in any case register as client (also if the workflow was already loaded by another client
@@ -1274,8 +1274,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_parentEditor = input.getParentEditor();
         m_fileResource = input.getWorkflowLocation();
 
-        UIWorkflowManager wfm = input.getWorkflowManager();
-        setUIWorkflowManager(wfm);
+        WorkflowManagerUI wfm = input.getWorkflowManager();
+        setWorkflowManagerUI(wfm);
         setPartName(input.getName());
         if (getGraphicalViewer() != null) {
             loadProperties();
@@ -1356,7 +1356,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * @return The WFM that is edited by this editor ("root model object") or an empty optional if there is only a
-     *         UIWorkflowManager (see {@link #getUIWorkflowManager()}).
+     *         UIWorkflowManager (see {@link #getWorkflowManagerUI()}).
      */
     public Optional<WorkflowManager> getWorkflowManager() {
         return Wrapper.unwrapOptional(m_manager, WorkflowManager.class);
@@ -1365,7 +1365,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * @return The UI-WFM that is edited by this editor
      */
-    public UIWorkflowManager getUIWorkflowManager() {
+    public WorkflowManagerUI getWorkflowManagerUI() {
         return m_manager;
     }
 
@@ -1418,7 +1418,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
                 Boolean.TRUE);
 
-        if (getUIWorkflowManager() != null) {
+        if (getWorkflowManagerUI() != null) {
             applyEditorSettingsFromWorkflowManager();
         }
     }
@@ -2107,7 +2107,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     private void saveEditorSettingsToWorkflowManager() {
         // overwriting any existing editor settings in the ui info
-        getUIWorkflowManager().setEditorUIInformation(getCurrentEditorSettings());
+        getWorkflowManagerUI().setEditorUIInformation(getCurrentEditorSettings());
     }
 
     /**
@@ -2143,7 +2143,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void applyEditorSettingsFromWorkflowManager() {
-        final UIWorkflowManager wfm = getUIWorkflowManager();
+        final WorkflowManagerUI wfm = getWorkflowManagerUI();
         EditorUIInformation settings = wfm.getEditorUIInformation();
         if (settings == null || settings.getGridX() == -1) {
             // if this is a metanode - derive settings from parent
@@ -2293,7 +2293,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // track the dirty state of the edit domain
         boolean b = m_editDomain.getCommandStack().isDirty();
-        if (b || getUIWorkflowManager().isDirty()) {
+        if (b || getWorkflowManagerUI().isDirty()) {
             markDirty();
         } else {
             unmarkDirty();
@@ -3100,7 +3100,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    void setUIWorkflowManager(final UIWorkflowManager manager) {
+    void setWorkflowManagerUI(final WorkflowManagerUI manager) {
         if (manager == m_manager) {
             return;
         }
@@ -3125,7 +3125,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param manager the workflow manager to set
      */
     void setWorkflowManager(final WorkflowManager manager) {
-        setUIWorkflowManager(WorkflowManagerWrapper.wrap(manager));
+        setWorkflowManagerUI(WorkflowManagerWrapper.wrap(manager));
     }
 
     /**

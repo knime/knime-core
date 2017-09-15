@@ -69,7 +69,7 @@ import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -164,7 +164,7 @@ public final class RepositoryFactory {
                 configuration.getDeclaringExtension().getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
 
-        UIWorkflowManager manager = loadMetaNode(pluginId, workflowDir);
+        WorkflowManagerUI manager = loadMetaNode(pluginId, workflowDir);
         if (manager == null) {
             LOGGER.error("MetaNode  " + name + " could not be loaded. "
                     + "Skipped.");
@@ -194,7 +194,7 @@ public final class RepositoryFactory {
         return template;
     }
 
-    private static UIWorkflowManager loadMetaNode(final String pluginId,
+    private static WorkflowManagerUI loadMetaNode(final String pluginId,
             final String workflowDir) {
         LOGGER.debug("found pre-installed template " + workflowDir);
 

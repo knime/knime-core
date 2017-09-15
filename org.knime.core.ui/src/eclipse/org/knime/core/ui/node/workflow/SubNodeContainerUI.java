@@ -61,7 +61,7 @@ import org.knime.core.ui.UI;
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UISubNodeContainer extends UISingleNodeContainer, UI {
+public interface SubNodeContainerUI extends SingleNodeContainerUI, UI {
 
 //    /** Called from virtual input node when executed - in possibly executes nodes in the parent wfm and then
 //     * fetches the data from it.
@@ -105,7 +105,7 @@ public interface UISubNodeContainer extends UISingleNodeContainer, UI {
     /**
      * @return underlying workflow.
      */
-    UIWorkflowManager getWorkflowManager();
+    WorkflowManagerUI getWorkflowManager();
 
 //    /**
 //     * {@inheritDoc}

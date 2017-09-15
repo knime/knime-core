@@ -88,14 +88,16 @@ public class ConnectionContainer implements ConnectionProgressListener {
     private final ConnectionType m_type;
     private boolean m_isFlowVariablePortConnection;
 
-    /** Creates new connection.
+    /**
+     * Creates new connection.
      *
      * @param src source node
      * @param srcPort port of source node
      * @param dest destination node
      * @param destPort port of destination node
      * @param type of connection
-     * @param isFlowVariablePortConnection whether it's a connection between two flow variable ports
+     * @param isFlowVariablePortConnection whether it's a connection between two flow variable ports - see
+     *            {@link #isFlowVariablePortConnection()}
      * @since 3.5
      */
     public ConnectionContainer(final NodeID src, final int srcPort, final NodeID dest, final int destPort,
@@ -158,7 +160,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     }
 
     /**
-     * @return whether the connection connects two flow variable ports
+     * @return whether the connection connects two flow variable ports - mainly used to determine the connection color
      * @since 3.5
      */
     public boolean isFlowVariablePortConnection() {

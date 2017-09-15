@@ -68,8 +68,8 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.ThreadUtils;
@@ -172,12 +172,12 @@ public final class ProjectWorkflowMap {
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
      * (This map contains only open workflows.)
      */
-    private static final Map<MapWFKey, UINodeContainer> PROJECTS
-        = new LinkedHashMap<MapWFKey, UINodeContainer>() {
+    private static final Map<MapWFKey, NodeContainerUI> PROJECTS
+        = new LinkedHashMap<MapWFKey, NodeContainerUI>() {
 
         @Override
-        public UINodeContainer put(final MapWFKey key, final UINodeContainer value) {
-            UINodeContainer old = super.put(key, value);
+        public NodeContainerUI put(final MapWFKey key, final NodeContainerUI value) {
+            NodeContainerUI old = super.put(key, value);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key + "\" from project map");
             }
@@ -189,8 +189,8 @@ public final class ProjectWorkflowMap {
         };
 
         @Override
-        public UINodeContainer remove(final Object key) {
-            UINodeContainer old = super.remove(key);
+        public NodeContainerUI remove(final Object key) {
+            NodeContainerUI old = super.remove(key);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key
                         + "\" from project map (" + size() + " remaining)");
@@ -355,18 +355,18 @@ public final class ProjectWorkflowMap {
      *  {@link WorkflowManager} is stored in the map
      */
     public static void replace(final URI newPath,
-            final UIWorkflowManager nc, final URI oldPath) {
+            final WorkflowManagerUI nc, final URI oldPath) {
         if (oldPath == null) {
             throw new IllegalArgumentException("Old path must not be null (old is null, new is " + newPath + ")");
         }
         final MapWFKey oldKey = new MapWFKey(oldPath);
-        UINodeContainer removed = PROJECTS.remove(oldKey);
+        NodeContainerUI removed = PROJECTS.remove(oldKey);
         if (removed == null) {
             throw new IllegalArgumentException("No project registered on URI " + oldPath);
         }
         Set<Object> clientList = WORKFLOW_CLIENTS.remove(oldKey);
         WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, removed.getID(), Wrapper.unwrapNC(removed), null));
-        putUIWorkflow(newPath, nc);
+        putWorkflowUI(newPath, nc);
         if (clientList != null) {
             WORKFLOW_CLIENTS.put(new MapWFKey(newPath), clientList);
         }
@@ -382,7 +382,7 @@ public final class ProjectWorkflowMap {
      */
     public static void remove(final URI path) {
         MapWFKey p = new MapWFKey(path);
-        final UIWorkflowManager manager = (UIWorkflowManager)PROJECTS.get(p);
+        final WorkflowManagerUI manager = (WorkflowManagerUI)PROJECTS.get(p);
         // workflow is only in client map if there is at least one client
         if (manager != null && !WORKFLOW_CLIENTS.containsKey(p)) {
             Wrapper.unwrapWFMOptional(manager).ifPresent(wm -> NodeContext.pushContext(wm));
@@ -437,22 +437,22 @@ public final class ProjectWorkflowMap {
      */
     public static void putWorkflow(final URI path,
             final WorkflowManager manager) {
-        putUIWorkflow(path, WorkflowManagerWrapper.wrap(manager));
+        putWorkflowUI(path, WorkflowManagerWrapper.wrap(manager));
     }
 
     /**
-     * Adds a {@link UIWorkflowManager} of an opened workflow with the URI of
+     * Adds a {@link WorkflowManagerUI} of an opened workflow with the URI of
      * the workflow directory to the map. Used by the WorkflowEditor.
      *
      * @param path URI of the directory containing the workflow.knime file
-     * @param manager {@link UIWorkflowManager} in memory holding the workflow
+     * @param manager {@link WorkflowManagerUI} in memory holding the workflow
      */
-    public static void putUIWorkflow(final URI path,
-            final UIWorkflowManager manager) {
+    public static void putWorkflowUI(final URI path,
+            final WorkflowManagerUI manager) {
         MapWFKey p = new MapWFKey(path);
         // in case the manager is replaced
         // -> unregister listeners from the old one
-        UINodeContainer oldOne = PROJECTS.get(p);
+        NodeContainerUI oldOne = PROJECTS.get(p);
         if (oldOne != null) {
             oldOne.removeNodeStateChangeListener(NSC_LISTENER);
             Wrapper.unwrapWFM(oldOne).removeListener(WF_LISTENER);
@@ -473,7 +473,7 @@ public final class ProjectWorkflowMap {
      * Returns the {@link WorkflowManager} instance which is registered under
      * the workflow URI. Might be <code>null</code> if the
      * {@link WorkflowManager} was not registered with this URI, is closed OR
-     * thre is only a UIWorkflowManager (see {@link #getUIWorkflow(URI)}).
+     * there is only a WorkflowManagerUI (see {@link #getWorkflowUI(URI)}).
      *
      * @see KnimeResourceContentProvider
      * @see KnimeResourceLabelProvider
@@ -483,11 +483,11 @@ public final class ProjectWorkflowMap {
      * if the workflow manager is not registered with the passed URI
      */
     public static NodeContainer getWorkflow(final URI path) {
-        return Wrapper.unwrapOptionalNC(getUIWorkflow(path)).orElse(null);
+        return Wrapper.unwrapOptionalNC(getWorkflowUI(path)).orElse(null);
     }
 
     /**
-     * Returns the {@link UIWorkflowManager} instance which is registered under
+     * Returns the {@link WorkflowManagerUI} instance which is registered under
      * the workflow URI. Might be <code>null</code> if the
      * {@link WorkflowManager} was not registered with this URI or
      * is closed.
@@ -499,7 +499,7 @@ public final class ProjectWorkflowMap {
      * @return the corresponding {@link WorkflowManager} or <code>null</code>
      * if the workflow manager is not registered with the passed URI
      */
-    public static UINodeContainer getUIWorkflow(final URI path) {
+    public static NodeContainerUI getWorkflowUI(final URI path) {
         return PROJECTS.get(new MapWFKey(path));
     }
 
@@ -513,7 +513,7 @@ public final class ProjectWorkflowMap {
      *         null, if the workflow is not registered (not opened).
      */
     public static URI findProjectFor(final NodeID workflowID) {
-        for (Map.Entry<MapWFKey, UINodeContainer> entry : PROJECTS.entrySet()) {
+        for (Map.Entry<MapWFKey, NodeContainerUI> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
                 return entry.getKey().getURI();
             }

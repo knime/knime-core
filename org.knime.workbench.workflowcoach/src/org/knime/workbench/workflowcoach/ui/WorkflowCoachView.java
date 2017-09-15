@@ -100,7 +100,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.KNIMEJob;
 import org.knime.core.util.Pair;
@@ -386,7 +386,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             Object sel = selIt.next();
             nodeSelected &= (sel instanceof NodeContainerEditPart);
             if (nodeSelected) {
-                UINodeContainer uinc = ((NodeContainerEditPart)sel).getNodeContainer();
+                NodeContainerUI uinc = ((NodeContainerEditPart)sel).getNodeContainer();
                 if (!Wrapper.wraps(uinc, NodeContainer.class)) {
                     updateInput("Worklfow coach only supports native nodes, so far.\nBut the selected one is of type '"
                         + uinc.getClass().getSimpleName() + "'.");

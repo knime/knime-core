@@ -71,16 +71,18 @@ import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UINodeInPort;
-import org.knime.core.ui.node.workflow.UINodeOutPort;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeInPortUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
+ * UI-interface implementation that wraps a {@link NodeContainer}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public abstract class NodeContainerWrapper<W extends NodeContainer> extends AbstractWrapper<W> implements UINodeContainer {
+public abstract class NodeContainerWrapper<W extends NodeContainer> extends AbstractWrapper<W>
+    implements NodeContainerUI {
 
     protected final NodeContainer m_delegate;
 
@@ -93,6 +95,13 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
         m_delegate = delegate;
     }
 
+    /**
+    * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+    * It also checks for sub-types of the node container and uses the more specific wrappers.
+    *
+    * @param nc the object to be wrapped
+    * @return a new wrapper or a already existing one
+    */
     public static final NodeContainerWrapper wrap(final NodeContainer nc) {
         if (nc instanceof SubNodeContainer) {
             return SubNodeContainerWrapper.wrap((SubNodeContainer)nc);
@@ -111,7 +120,7 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     @Override
-    public UIWorkflowManager getParent() {
+    public WorkflowManagerUI getParent() {
         return WorkflowManagerWrapper.wrap(m_delegate.getParent());
     }
 
@@ -130,7 +139,6 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     public NodeExecutionJobManager findJobManager() {
         return m_delegate.findJobManager();
     }
-
 
     @Override
     public boolean addNodePropertyChangedListener(final NodePropertyChangedListener l) {
@@ -259,12 +267,12 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     @Override
-    public UINodeInPort getInPort(final int index) {
+    public NodeInPortUI getInPort(final int index) {
         return new NodeInPortWrapper(m_delegate.getInPort(index));
     }
 
     @Override
-    public UINodeOutPort getOutPort(final int index) {
+    public NodeOutPortUI getOutPort(final int index) {
         return new NodeOutPortWrapper(m_delegate.getOutPort(index));
     }
 

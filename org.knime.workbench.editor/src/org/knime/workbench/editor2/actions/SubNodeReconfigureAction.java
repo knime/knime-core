@@ -53,7 +53,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -135,7 +135,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
         NodeContainerEditPart ep = nodeParts[0];
-        UISubNodeContainer subnodeNC = (UISubNodeContainer)ep.getModel();
+        SubNodeContainerUI subnodeNC = (SubNodeContainerUI)ep.getModel();
         if (!Wrapper.unwrap(subnodeNC, SubNodeContainer.class).getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }

@@ -52,7 +52,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UISubNodeContainer;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -126,7 +126,7 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
             return false;
         }
         if (Wrapper.wraps(parts[0].getNodeContainer(), SubNodeContainer.class)) {
-            UISubNodeContainer subnode = (UISubNodeContainer)parts[0].getNodeContainer();
+            SubNodeContainerUI subnode = (SubNodeContainerUI)parts[0].getNodeContainer();
             return !Wrapper.unwrap(subnode, SubNodeContainer.class).isWriteProtected();
         }
         return false;

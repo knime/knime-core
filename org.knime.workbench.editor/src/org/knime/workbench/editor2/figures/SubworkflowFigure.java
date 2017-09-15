@@ -50,7 +50,7 @@ package org.knime.workbench.editor2.figures;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
@@ -94,7 +94,7 @@ public class SubworkflowFigure extends NodeContainerFigure {
      * Only reflects three different states: idle, executing, executed.
      */
     @Override
-    public void setStateFromNC(final UINodeContainer nc) {
+    public void setStateFromNC(final NodeContainerUI nc) {
         NodeContainerState state = nc.getNodeContainerState();
         Image image;
         if (state.isExecuted()) {

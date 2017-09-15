@@ -639,6 +639,12 @@ public final class RepositoryManager {
     /**
      * Creates the node factory instance for the given fully-qualified factory class name.
      * Otherwise a respective exception will be thrown.
+     * @param factoryClassName 
+     * @return a new node factory instance
+     * @throws InvalidSettingsException 
+     * @throws InstantiationException 
+     * @throws IllegalAccessException 
+     * @throws ClassNotFoundException 
      *
      * @since 3.5
      */

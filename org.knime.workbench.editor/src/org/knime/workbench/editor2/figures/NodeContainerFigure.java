@@ -74,8 +74,8 @@ import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.ui.node.workflow.UINodeContainer;
-import org.knime.core.ui.node.workflow.UISingleNodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -536,11 +536,11 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @param nc new state of underlying node
      */
-    public void setStateFromNC(final UINodeContainer nc) {
+    public void setStateFromNC(final NodeContainerUI nc) {
         boolean isInactive = false;
         LoopStatus loopStatus = LoopStatus.NONE;
-        if (nc instanceof UISingleNodeContainer) {
-            UISingleNodeContainer snc = (UISingleNodeContainer)nc;
+        if (nc instanceof SingleNodeContainerUI) {
+            SingleNodeContainerUI snc = (SingleNodeContainerUI)nc;
             isInactive = snc.isInactive();
             if (Wrapper.wraps(snc, NativeNodeContainer.class)) {
                 NativeNodeContainer nnc = Wrapper.unwrap(snc, NativeNodeContainer.class);

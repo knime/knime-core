@@ -51,7 +51,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -135,7 +135,7 @@ public class ExecuteAction extends AbstractNodeAction {
             return false;
         }
         for (int i = 0; i < parts.length; i++) {
-            UINodeContainer nc = parts[i].getNodeContainer();
+            NodeContainerUI nc = parts[i].getNodeContainer();
             if (wm.canExecuteNode(nc.getID())) {
                 return true;
             }

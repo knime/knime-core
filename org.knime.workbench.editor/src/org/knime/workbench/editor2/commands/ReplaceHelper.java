@@ -62,7 +62,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -165,7 +165,7 @@ public class ReplaceHelper {
         int inShift;
         int outShift;
 
-        if (m_oldNode instanceof UIWorkflowManager && !(container instanceof WorkflowManager)) {
+        if (m_oldNode instanceof WorkflowManager && !(container instanceof WorkflowManager)) {
             inShift = 0;
             // replacing a metanode (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
             if (m_oldNode.getNrInPorts() > 0 && container.getNrInPorts() > 1) {
@@ -185,7 +185,7 @@ public class ReplaceHelper {
                     outShift = 1;
                 }
             }
-        } else if (!(m_oldNode instanceof UIWorkflowManager) && container instanceof WorkflowManager) {
+        } else if (!(m_oldNode instanceof WorkflowManager) && container instanceof WorkflowManager) {
             // replacing a "normal" node with a metanode
             inShift = -1;
             for (ConnectionContainer cc : m_incomingConnections) {

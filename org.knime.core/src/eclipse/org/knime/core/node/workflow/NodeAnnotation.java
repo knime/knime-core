@@ -76,12 +76,6 @@ public final class NodeAnnotation extends Annotation implements NodeUIInformatio
         m_nodeID = nodeID;
     }
 
-    void unregisterFromNodeContainer() {
-        assert m_nodeID != null;
-        m_nodeID = null;
-        m_changeListener = null;
-    }
-
     /**
      * @return the id of the node associated with this annotation
      * @since 3.5

@@ -48,25 +48,19 @@
  */
 package org.knime.core.ui.wrapper;
 
-import java.awt.Rectangle;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowOutPort;
-import org.knime.core.ui.node.workflow.UIWorkflowOutPort;
+import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
 
 /**
+ * UI-interface implementation that wraps a {@link WorkflowOutPort}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> implements UIWorkflowOutPort {
+public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> implements WorkflowOutPortUI {
 
     private WorkflowOutPort m_delegate;
 
@@ -79,16 +73,12 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
     }
 
     public static final WorkflowOutPortWrapper wrap(final WorkflowOutPort wop) {
-        return (WorkflowOutPortWrapper)Wrapper.wrapOrGet(wop, wop, o -> new WorkflowOutPortWrapper(o));
+        return (WorkflowOutPortWrapper)Wrapper.wrapOrGet(wop, o -> new WorkflowOutPortWrapper(o));
     }
 
     @Override
     public final int getPortIndex() {
         return m_delegate.getPortIndex();
-    }
-
-    public PortObject getPortObject() {
-        return m_delegate.getPortObject();
     }
 
     @Override
@@ -111,14 +101,6 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
         m_delegate.setPortName(portName);
     }
 
-    public HiLiteHandler getHiLiteHandler() {
-        return m_delegate.getHiLiteHandler();
-    }
-
-    public FlowObjectStack getFlowObjectStack() {
-        return m_delegate.getFlowObjectStack();
-    }
-
     @Override
     public String getPortSummary() {
         return m_delegate.getPortSummary();
@@ -129,29 +111,9 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
         return m_delegate.getNodeState();
     }
 
-    public SingleNodeContainer getConnectedNodeContainer() {
-        return m_delegate.getConnectedNodeContainer();
-    }
-
-    public PortObjectSpec getPortObjectSpec() {
-        return m_delegate.getPortObjectSpec();
-    }
-
     @Override
     public boolean isInactive() {
         return m_delegate.isInactive();
-    }
-
-    public void openPortView(final String name) {
-        m_delegate.openPortView(name);
-    }
-
-    public void openPortView(final String name, final Rectangle knimeWindowBounds) {
-        m_delegate.openPortView(name, knimeWindowBounds);
-    }
-
-    public void disposePortView() {
-        m_delegate.disposePortView();
     }
 
     @Override

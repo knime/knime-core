@@ -124,7 +124,7 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
- *
+ * 
  * @deprecated since AP 3.0
  */
 @Deprecated

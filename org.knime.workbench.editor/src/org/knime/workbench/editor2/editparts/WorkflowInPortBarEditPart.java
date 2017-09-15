@@ -53,8 +53,8 @@ import java.util.List;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.ui.node.workflow.UINodePort;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.NodePortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.figures.WorkflowInPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -68,11 +68,11 @@ public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected List<UINodePort> getModelChildren() {
-        UIWorkflowManager manager = ((WorkflowPortBar)getModel())
+    protected List<NodePortUI> getModelChildren() {
+        WorkflowManagerUI manager = ((WorkflowPortBar)getModel())
             .getWorkflowManager();
-        List<UINodePort> ports
-            = new ArrayList<UINodePort>();
+        List<NodePortUI> ports
+            = new ArrayList<NodePortUI>();
         for (int i = 0; i < manager.getNrWorkflowIncomingPorts(); i++) {
             ports.add(manager.getInPort(i));
         }

@@ -50,14 +50,15 @@ package org.knime.core.ui.wrapper;
 
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowInPort;
-import org.knime.core.ui.node.workflow.UINodeOutPort;
-import org.knime.core.ui.node.workflow.UIWorkflowInPort;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.WorkflowInPortUI;
 
 /**
+ * UI-interface implementation that wraps a {@link WorkflowInPort}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> implements UIWorkflowInPort {
+public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> implements WorkflowInPortUI {
 
     private WorkflowInPort m_delegate;
 
@@ -70,8 +71,14 @@ public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> imple
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param wip the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final WorkflowInPortWrapper wrap(final WorkflowInPort wip) {
-        return (WorkflowInPortWrapper)Wrapper.wrapOrGet(wip, wip, o -> new WorkflowInPortWrapper(o));
+        return (WorkflowInPortWrapper)Wrapper.wrapOrGet(wip, o -> new WorkflowInPortWrapper(o));
     }
 
     @Override
@@ -80,7 +87,7 @@ public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> imple
     }
 
     @Override
-    public UINodeOutPort getUnderlyingPort() {
+    public NodeOutPortUI getUnderlyingPort() {
         return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort());
     }
 

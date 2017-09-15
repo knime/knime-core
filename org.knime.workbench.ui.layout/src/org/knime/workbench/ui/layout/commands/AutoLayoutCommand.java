@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.ui.node.workflow.UINodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
 import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
 import org.knime.workbench.editor2.commands.AbstractKNIMECommand;
 import org.knime.workbench.ui.layout.LayoutManager;
@@ -71,7 +71,7 @@ public class AutoLayoutCommand extends AbstractKNIMECommand {
 
     private final WorkflowManager m_wfm;
 
-    private final Collection<UINodeContainer> m_nodes;
+    private final Collection<NodeContainerUI> m_nodes;
 
     private LayoutManager m_layoutMgr;
 
@@ -84,7 +84,7 @@ public class AutoLayoutCommand extends AbstractKNIMECommand {
      * @param nodes if null, all nodes are laid out
      */
     public AutoLayoutCommand(final WorkflowManager wfm,
-            final Collection<UINodeContainer> nodes) {
+            final Collection<NodeContainerUI> nodes) {
         super(wfm);
         m_wfm = wfm;
         m_nodes = nodes;

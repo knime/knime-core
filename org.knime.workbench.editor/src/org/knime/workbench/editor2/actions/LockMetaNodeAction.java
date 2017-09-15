@@ -57,7 +57,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.ui.node.workflow.UIWorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -132,8 +132,8 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof UIWorkflowManager) {
-            UIWorkflowManager metaNode = (UIWorkflowManager)model;
+        if (model instanceof WorkflowManagerUI) {
+            WorkflowManagerUI metaNode = (WorkflowManagerUI)model;
             if (metaNode.isWriteProtected()) {
                 return false;
             }
@@ -150,10 +150,10 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return;
         }
         Object model = nodes[0].getModel();
-        if (!(model instanceof UIWorkflowManager)) {
+        if (!(model instanceof WorkflowManagerUI)) {
             return;
         }
-        UIWorkflowManager metaNodeWFM = (UIWorkflowManager)model;
+        WorkflowManagerUI metaNodeWFM = (WorkflowManagerUI)model;
         final Shell shell = Display.getCurrent().getActiveShell();
         if (!unwrapWFM(metaNodeWFM).unlock(new GUIWorkflowCipherPrompt())) {
             return;

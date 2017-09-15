@@ -50,13 +50,14 @@ package org.knime.core.ui.wrapper;
 
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.ui.node.workflow.UINodeInPort;
+import org.knime.core.ui.node.workflow.NodeInPortUI;
 
 /**
+ * UI-interface implementation that wraps a {@link NodeInPort}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements UINodeInPort {
+public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements NodeInPortUI {
 
     private final NodeInPort m_delegate;
 
@@ -68,8 +69,14 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements UI
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param nip the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static final NodeInPortWrapper wrap(final NodeInPort nip) {
-        return (NodeInPortWrapper)Wrapper.wrapOrGet(nip, nip, o -> new NodeInPortWrapper(o));
+        return (NodeInPortWrapper)Wrapper.wrapOrGet(nip, o -> new NodeInPortWrapper(o));
     }
 
     /**

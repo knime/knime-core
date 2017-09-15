@@ -56,13 +56,15 @@ import org.knime.core.node.workflow.ConnectionProgressListener;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.ui.node.workflow.UIConnectionContainer;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 
 /**
+ * UI-interface implementation that wraps a {@link ConnectionContainer}.
  *
  * @author Martin Horn, University of Konstanz
  */
-public final class ConnectionContainerWrapper extends AbstractWrapper<ConnectionContainer> implements UIConnectionContainer {
+public final class ConnectionContainerWrapper extends AbstractWrapper<ConnectionContainer>
+    implements ConnectionContainerUI {
 
     private final ConnectionContainer m_delegate;
 
@@ -74,8 +76,14 @@ public final class ConnectionContainerWrapper extends AbstractWrapper<Connection
         m_delegate = delegate;
     }
 
+    /**
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
+     *
+     * @param cc the object to be wrapped
+     * @return a new wrapper or a already existing one
+     */
     public static ConnectionContainerWrapper wrap(final ConnectionContainer cc) {
-        return (ConnectionContainerWrapper)Wrapper.wrapOrGet(cc, cc, o -> new ConnectionContainerWrapper(o));
+        return (ConnectionContainerWrapper)Wrapper.wrapOrGet(cc, o -> new ConnectionContainerWrapper(o));
     }
 
     @Override

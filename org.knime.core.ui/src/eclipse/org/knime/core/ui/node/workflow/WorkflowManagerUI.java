@@ -95,7 +95,7 @@ import org.knime.core.util.Pair;
  * @noextend This interface is not intended to be extended by clients.
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface UIWorkflowManager extends UINodeContainer, UI {
+public interface WorkflowManagerUI extends NodeContainerUI, UI {
 
 //    /** The root of everything, a workflow with no in- or outputs.
 //     * This workflow holds the top level projects. */
@@ -138,7 +138,7 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * {@inheritDoc}
      * @since 2.10
      */
-    UIWorkflowManager getProjectWFM();
+    WorkflowManagerUI getProjectWFM();
 
 //    /** Create new project - which is the same as creating a new subworkflow
 //     * at this level with no in- or outports.
@@ -222,7 +222,7 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */
-    UIConnectionContainer addConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
+    ConnectionContainerUI addConnection(NodeID source, int sourcePort, NodeID dest, int destPort);
 
     /** Check if a new connection can be added.
      *
@@ -249,13 +249,13 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @param cc connection
      * @return true if connection cc is removable.
      */
-    boolean canRemoveConnection(UIConnectionContainer cc);
+    boolean canRemoveConnection(ConnectionContainerUI cc);
 
     /** Remove connection.
      *
      * @param cc connection
      */
-    void removeConnection(UIConnectionContainer cc);
+    void removeConnection(ConnectionContainerUI cc);
 
     /**
      * Returns the set of outgoing connections for the node with the passed id
@@ -266,14 +266,14 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @return all outgoing connections for the passed node at the specified
      *  port
      */
-    Set<UIConnectionContainer> getOutgoingConnectionsFor(NodeID id, int portIdx);
+    Set<ConnectionContainerUI> getOutgoingConnectionsFor(NodeID id, int portIdx);
 
     /** Get all outgoing connections for a node.
      * @param id The requested node
      * @return All current outgoing connections in a new set.
      * @throws IllegalArgumentException If the node is unknown or null.
      */
-    Set<UIConnectionContainer> getOutgoingConnectionsFor(NodeID id);
+    Set<ConnectionContainerUI> getOutgoingConnectionsFor(NodeID id);
 
     /**
      * Returns the incoming connection of the node with the passed node id at
@@ -283,21 +283,21 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @return incoming connection at that port of the given node or null if it
      *     doesn't exist
      */
-    UIConnectionContainer getIncomingConnectionFor(NodeID id, int portIdx);
+    ConnectionContainerUI getIncomingConnectionFor(NodeID id, int portIdx);
 
     /** Get all incoming connections for a node.
      * @param id The requested node
      * @return All current incoming connections in a new set.
      * @throws IllegalArgumentException If the node is unknown or null.
      */
-    Set<UIConnectionContainer> getIncomingConnectionsFor(NodeID id);
+    Set<ConnectionContainerUI> getIncomingConnectionsFor(NodeID id);
 
     /**
      * Gets a connection by id.
      * @param id of the connection to return
      * @return the connection with the specified id
      */
-    UIConnectionContainer getConnection(ConnectionID id);
+    ConnectionContainerUI getConnection(ConnectionID id);
 
     /** Get information on input ports of the argument (meta) node. It's used
      * by the routines that allow the user to change the port information
@@ -710,18 +710,18 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
     /**
      * @return all node containers within this workflow manager
      */
-    Collection<UINodeContainer> getNodeContainers();
+    Collection<NodeContainerUI> getNodeContainers();
 
     /**
      * @return collection of ConnectionContainer in this WFM
      */
-    Collection<UIConnectionContainer> getConnectionContainers();
+    Collection<ConnectionContainerUI> getConnectionContainers();
 
     /**
      * @param id node ID
      * @return NodeContainer for given ID
      */
-    UINodeContainer getNodeContainer(NodeID id);
+    NodeContainerUI getNodeContainer(NodeID id);
 
     /** Get contained node container and cast to argument class. Throws exception if it not exists or not implementing
      * requested class unless the flag is false.
@@ -1085,11 +1085,11 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
 
     /** {@inheritDoc} */
     @Override
-    UIWorkflowInPort getInPort(int index);
+    WorkflowInPortUI getInPort(int index);
 
     /** {@inheritDoc} */
     @Override
-    UIWorkflowOutPort getOutPort(int index);
+    WorkflowOutPortUI getOutPort(int index);
 
     /** {@inheritDoc} */
     @Override
@@ -1199,13 +1199,13 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @param i Index of the port
      * @return The incoming port at the given index
      */
-    UINodeOutPort getWorkflowIncomingPort(int i);
+    NodeOutPortUI getWorkflowIncomingPort(int i);
 
     /**
      * @param i Index of the port
      * @return The outgoing port at the given index
      */
-    UINodeInPort getWorkflowOutgoingPort(int i);
+    NodeInPortUI getWorkflowOutgoingPort(int i);
 
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
@@ -1357,7 +1357,7 @@ public interface UIWorkflowManager extends UINodeContainer, UI {
      * @throws IllegalArgumentException If the node is not contained in
      * this workflow.
      * @since 2.6 */
-    UINodeContainer findNodeContainer(NodeID id);
+    NodeContainerUI findNodeContainer(NodeID id);
 
 //    /**
 //     * Find all nodes of a certain type that are currently ready to be executed (= node is configured, all predecessors
