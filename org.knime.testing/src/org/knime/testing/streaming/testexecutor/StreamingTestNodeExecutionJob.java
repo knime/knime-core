@@ -661,10 +661,10 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     /** Creates the given number of copies of the given node */
     private NativeNodeContainer[] createNodeCopies(final NodeContainer nodeContainer, final int numCopies) {
         WorkflowManager workflowManager = nodeContainer.getParent();
-        WorkflowCopyContent sourceContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder sourceContent = WorkflowCopyContent.builder();
         sourceContent.setNodeIDs(nodeContainer.getID());
         sourceContent.setIncludeInOutConnections(false);
-        WorkflowPersistor workflowPersistor = workflowManager.copy(sourceContent);
+        WorkflowPersistor workflowPersistor = workflowManager.copy(sourceContent.build());
         NativeNodeContainer[] nodeContainers = new NativeNodeContainer[numCopies];
         NodeID[] nodeIDs = new NodeID[numCopies];
         NodeUIInformation uiInf = nodeContainer.getUIInformation();
@@ -673,7 +673,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
             nodeContainers[i]
-                .setUIInformation(uiInf.createNewWithOffsetPosition(new int[]{0, (i + 1) * uiInf.getBounds()[3]}));
+                .setUIInformation(NodeUIInformation.builder(uiInf).translate(new int[]{0, (i + 1) * uiInf.getBounds()[3]}).build());
             nodeIDs[i] = nodeContainers[i].getID();
 
             //set all incoming connections
