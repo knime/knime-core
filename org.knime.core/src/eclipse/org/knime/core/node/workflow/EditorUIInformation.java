@@ -44,10 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Stores workflow editor specific settings (like grid settings and zoom level, etc.).
@@ -56,49 +53,30 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
-public class EditorUIInformation implements UIInformation {
+public class EditorUIInformation {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(EditorUIInformation.class);
+    private final boolean m_snapToGrid;
 
-    private static final String KEY_SNAP_GRID = "workflow.editor.snapToGrid";
+    private final boolean m_showGrid;
 
-    private static final String KEY_SHOW_GRID = "workflow.editor.ShowGrid";
+    private final int m_gridX;
 
-    private static final String KEY_X_GRID = "workflow.editor.gridX";
+    private final int m_gridY;
 
-    private static final String KEY_Y_GRID = "workflow.editor.gridY";
+    private final double m_zoomLevel;
 
-    private static final String KEY_ZOOM = "workflow.editor.zoomLevel";
+    private final boolean m_hasCurvedConnections;
 
-    private static final String KEY_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
+    private final int m_connectionLineWidth;
 
-    private static final String KEY_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
-
-    private boolean m_snapToGrid;
-
-    private boolean m_showGrid;
-
-    private int m_gridX;
-
-    private int m_gridY;
-
-    private double m_zoomLevel;
-
-    private boolean m_hasCurvedConnections;
-
-    private int m_connectionLineWidth;
-
-    /**
-     * Constructor with defaults.
-     */
-    public EditorUIInformation() {
-        m_snapToGrid = false;
-        m_showGrid = false;
-        m_gridX = -1;
-        m_gridY = -1;
-        m_zoomLevel = 1.0;
-        m_hasCurvedConnections = false;
-        m_connectionLineWidth = 1;
+    EditorUIInformation(final Builder editorUIInfo) {
+        m_snapToGrid = editorUIInfo.m_snapToGrid;
+        m_showGrid = editorUIInfo.m_showGrid;
+        m_gridX = editorUIInfo.m_gridX;
+        m_gridY = editorUIInfo.m_gridY;
+        m_zoomLevel = editorUIInfo.m_zoomLevel;
+        m_hasCurvedConnections = editorUIInfo.m_hasCurvedConnections;
+        m_connectionLineWidth = editorUIInfo.m_connectionLineWidth;
     }
 
     /**
@@ -106,55 +84,10 @@ public class EditorUIInformation implements UIInformation {
      */
     @Override
     public EditorUIInformation clone() {
-        EditorUIInformation clone = new EditorUIInformation();
-        clone.m_snapToGrid = m_snapToGrid;
-        clone.m_showGrid = m_showGrid;
-        clone.m_gridX = m_gridX;
-        clone.m_gridY = m_gridY;
-        clone.m_zoomLevel = m_zoomLevel;
-        clone.m_hasCurvedConnections = m_hasCurvedConnections;
-        clone.m_connectionLineWidth = m_connectionLineWidth;
-        return clone;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void save(final NodeSettingsWO config) {
-        config.addBoolean(KEY_SNAP_GRID, m_snapToGrid);
-        config.addBoolean(KEY_SHOW_GRID, m_showGrid);
-        config.addInt(KEY_X_GRID, m_gridX);
-        config.addInt(KEY_Y_GRID, m_gridY);
-        config.addDouble(KEY_ZOOM, m_zoomLevel);
-        config.addBoolean(KEY_CURVED_CONNECTIONS, m_hasCurvedConnections);
-        config.addInt(KEY_CONNECTION_WIDTH, m_connectionLineWidth);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion) throws InvalidSettingsException {
-        if (loadVersion.ordinal() < FileWorkflowPersistor.LoadVersion.V260.ordinal()) {
-            m_snapToGrid = false;
-            m_showGrid = false;
-            m_gridX = -1;
-            m_gridY = -1;
-            m_zoomLevel = 1.0;
-        } else {
-            m_snapToGrid = config.getBoolean(KEY_SNAP_GRID);
-            m_showGrid = config.getBoolean(KEY_SHOW_GRID);
-            m_gridX = config.getInt(KEY_X_GRID);
-            m_gridY = config.getInt(KEY_Y_GRID);
-            m_zoomLevel = config.getDouble(KEY_ZOOM);
-        }
-        if(config.containsKey(KEY_CURVED_CONNECTIONS)) {
-            m_hasCurvedConnections = config.getBoolean(KEY_CURVED_CONNECTIONS);
-        }
-        if(config.containsKey(KEY_CONNECTION_WIDTH)) {
-            m_connectionLineWidth = config.getInt(KEY_CONNECTION_WIDTH);
-        }
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -165,24 +98,10 @@ public class EditorUIInformation implements UIInformation {
     }
 
     /**
-     * @param snapToGrid the snapToGrid to set
-     */
-    public void setSnapToGrid(final boolean snapToGrid) {
-        m_snapToGrid = snapToGrid;
-    }
-
-    /**
      * @return the showGrid
      */
     public boolean getShowGrid() {
         return m_showGrid;
-    }
-
-    /**
-     * @param showGrid the showGrid to set
-     */
-    public void setShowGrid(final boolean showGrid) {
-        m_showGrid = showGrid;
     }
 
     /**
@@ -193,24 +112,10 @@ public class EditorUIInformation implements UIInformation {
     }
 
     /**
-     * @param gridX the gridX to set
-     */
-    public void setGridX(final int gridX) {
-        m_gridX = gridX;
-    }
-
-    /**
      * @return the gridY
      */
     public int getGridY() {
         return m_gridY;
-    }
-
-    /**
-     * @param gridY the gridY to set
-     */
-    public void setGridY(final int gridY) {
-        m_gridY = gridY;
     }
 
     /**
@@ -221,34 +126,11 @@ public class EditorUIInformation implements UIInformation {
     }
 
     /**
-     * @param zoomLevel the zoomLevel to set
-     */
-    public void setZoomLevel(final double zoomLevel) {
-        m_zoomLevel = zoomLevel;
-    }
-
-    /**
      * @return whether connections are rendered as curves
      * @since 3.3
      */
     public boolean getHasCurvedConnections() {
         return m_hasCurvedConnections;
-    }
-
-    /**
-     * @param curved if <code>true</code> connections are rendered as curves, otherwise as straight lines
-     * @since 3.3
-     */
-    public void setHasCurvedConnections(final boolean curved) {
-        m_hasCurvedConnections = curved;
-    }
-
-    /**
-     * @param width the width of the line connection two nodes
-     * @since 3.3
-     */
-    public void setConnectionLineWidth(final int width) {
-        m_connectionLineWidth = width;
     }
 
     /**
@@ -325,6 +207,113 @@ public class EditorUIInformation implements UIInformation {
         return true;
     }
 
+    /** @return new Builder with defaults.
+     * @since 3.5*/
+    public static final Builder builder() {
+        return new Builder();
+    }
 
+    /**
+     * @param editorUIInfo the instance to take the initial values from
+     * @return a new {@link Builder} initialized with all the values copied from the passed argument
+     * @since 3.5
+     */
+    public static final Builder builder(final EditorUIInformation editorUIInfo) {
+        return new Builder().copyFrom(editorUIInfo);
+    }
+
+
+    /** Builder pattern for {@link EditorUIInformation}.
+     * @since 3.5*/
+    public static final class Builder {
+
+        private boolean m_snapToGrid = false;
+        private boolean m_showGrid = false;
+        private int m_gridX = -1;
+        private int m_gridY = -1;
+        private double m_zoomLevel = 1.0;
+        private boolean m_hasCurvedConnections = false;
+        private int m_connectionLineWidth = 1;
+
+        /** Builder with defaults. */
+        Builder() {
+        }
+
+        /** Copy all fields from argument and return this.
+         * @param editorUIInfo to copy from, not null.
+         * @return this
+         */
+        public Builder copyFrom(final EditorUIInformation editorUIInfo) {
+            m_snapToGrid = editorUIInfo.m_snapToGrid;
+            m_showGrid = editorUIInfo.m_showGrid;
+            m_gridX = editorUIInfo.m_gridX;
+            m_gridY = editorUIInfo.m_gridY;
+            m_zoomLevel = editorUIInfo.m_zoomLevel;
+            m_hasCurvedConnections = editorUIInfo.m_hasCurvedConnections;
+            m_connectionLineWidth = editorUIInfo.m_connectionLineWidth;
+            return this;
+        }
+
+        /** @param snapToGrid the snapToGrid to set
+         * @return this */
+        public Builder setSnapToGrid(final boolean snapToGrid) {
+            m_snapToGrid = snapToGrid;
+            return this;
+        }
+
+        /** @param showGrid the showGrid to set
+         * @return this */
+        public Builder setShowGrid(final boolean showGrid) {
+            m_showGrid = showGrid;
+            return this;
+        }
+
+        /** @param gridX the gridX to set
+         * @return this */
+        public Builder setGridX(final int gridX) {
+            m_gridX = gridX;
+            return this;
+        }
+
+        /** @param gridY the gridY to set
+         * @return this */
+        public Builder setGridY(final int gridY) {
+            m_gridY = gridY;
+            return this;
+        }
+
+        /** @param zoomLevel the zoomLevel to set
+         * @return this */
+        public Builder setZoomLevel(final double zoomLevel) {
+            m_zoomLevel = zoomLevel;
+            return this;
+        }
+
+        /**@param hasCurvedConnections the hasCurvedConnections to set
+         * @return this */
+        public Builder setHasCurvedConnections(final boolean hasCurvedConnections) {
+            m_hasCurvedConnections = hasCurvedConnections;
+            return this;
+        }
+
+        /** @param connectionLineWidth the connectionLineWidth to set
+         * @return this */
+        public Builder setConnectionLineWidth(final int connectionLineWidth) {
+            m_connectionLineWidth = connectionLineWidth;
+            return this;
+        }
+
+        /** @return {@link EditorUIInformation} with current values. */
+        public EditorUIInformation build() {
+            return new EditorUIInformation(this);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return ToStringBuilder.reflectionToString(this);
+        }
+
+    }
 
 }

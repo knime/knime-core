@@ -111,9 +111,9 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
-        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
         copyContent.setNodeIDs(metaNode.getID());
-        WorkflowCopyContent pasteContent = manager.copyFromAndPasteHere(manager, copyContent);
+        WorkflowCopyContent pasteContent = manager.copyFromAndPasteHere(manager, copyContent.build());
         NodeID copyID = pasteContent.getNodeIDs()[0];
         manager.addConnection(metaNode.getID(), 0, copyID, 0);
         checkListenerAndStateAfterExecAll(manager);

@@ -179,13 +179,15 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
+     * @since 3.5
      */
-    public UIInformation getInPortsBarUIInfo();
+    public NodeUIInformation getInPortsBarUIInfo();
 
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
+     * @since 3.5
      */
-    public UIInformation getOutPortsBarUIInfo();
+    public NodeUIInformation getOutPortsBarUIInfo();
 
     /** @return editor UI infos.
      * @since 2.6  */
@@ -281,7 +283,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             }
             m_isDeletable = !preserveDeletableFlag || original.isDeletable();
             ConnectionUIInformation origUIInfo = original.getUIInfo();
-            m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
+            m_uiInfo = origUIInfo == null ? null : ConnectionUIInformation.builder(origUIInfo).build();
         }
 
         /** @return the source identifier */

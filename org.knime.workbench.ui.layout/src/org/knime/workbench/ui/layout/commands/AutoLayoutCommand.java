@@ -51,7 +51,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -59,17 +58,20 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.workbench.editor2.commands.AbstractKNIMECommand;
 import org.knime.workbench.ui.layout.LayoutManager;
 
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AutoLayoutCommand extends Command {
+public class AutoLayoutCommand extends AbstractKNIMECommand {
 
     private final WorkflowManager m_wfm;
 
-    private final Collection<NodeContainer> m_nodes;
+    private final Collection<NodeContainerUI> m_nodes;
 
     private LayoutManager m_layoutMgr;
 
@@ -82,7 +84,8 @@ public class AutoLayoutCommand extends Command {
      * @param nodes if null, all nodes are laid out
      */
     public AutoLayoutCommand(final WorkflowManager wfm,
-            final Collection<NodeContainer> nodes) {
+            final Collection<NodeContainerUI> nodes) {
+        super(wfm);
         m_wfm = wfm;
         m_nodes = nodes;
     }
@@ -97,7 +100,7 @@ public class AutoLayoutCommand extends Command {
     }
 
     private void doLayout(final long seed) {
-        m_layoutMgr = new LayoutManager(m_wfm, seed);
+        m_layoutMgr = new LayoutManager(WorkflowManagerWrapper.wrap(m_wfm), seed);
         m_layoutMgr.doLayout(m_nodes);
     }
 

@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
@@ -101,11 +102,12 @@ public class SnapIconToGrid extends SnapToGrid {
             } else if (refPart instanceof NodeAnnotationEditPart) {
                 // the rect is the annotation outline - adjust it to snap the center of the corresponding node icon
                 NodeAnnotationEditPart annoPart = (NodeAnnotationEditPart)refPart;
+                WorkflowRootEditPart parent = (WorkflowRootEditPart)annoPart.getParent();
                 IFigure annoFig = annoPart.getFigure();
                 NodeAnnotation anno = (NodeAnnotation)annoPart.getModel();
                 NodeContainerEditPart nodePart =
                         (NodeContainerEditPart)m_container.getViewer().getEditPartRegistry()
-                                .get(anno.getNodeContainer());
+                                .get(parent.getWorkflowManager().getNodeContainer(anno.getNodeID()));
                 NodeContainerFigure nodeFig = (NodeContainerFigure)nodePart.getFigure();
                 Point iconOffset = getIconOffset(nodeFig);
                 int xOff = nodeFig.getBounds().x - annoFig.getBounds().x;
@@ -159,7 +161,7 @@ public class SnapIconToGrid extends SnapToGrid {
      * @return the point in the figure that should be placed onto the grid points
      */
     public static Point getGridRefPointOffset(final NodeContainerFigure nodeFig) {
-        Point iconOffset = nodeFig.getOffsetToRefPoint(new NodeUIInformation());
+        Point iconOffset = nodeFig.getOffsetToRefPoint(NodeUIInformation.builder().build());
         iconOffset.translate(nodeFig.getSymbolFigure().getPreferredSize().width / 2,
                 nodeFig.getSymbolFigure().getPreferredSize().height / 2 - 1);
         return iconOffset;

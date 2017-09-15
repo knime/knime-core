@@ -254,9 +254,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** ports of this Metanode (both arrays can have 0 length!). */
     private WorkflowInPort[] m_inPorts;
-    private UIInformation m_inPortsBarUIInfo;
+    private NodeUIInformation m_inPortsBarUIInfo;
     private WorkflowOutPort[] m_outPorts;
-    private UIInformation m_outPortsBarUIInfo;
+    private NodeUIInformation m_outPortsBarUIInfo;
 
     /** editor specific settings are stored with the workflow.
      * @since 2.6 */
@@ -973,18 +973,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // cleaned up - now add new connection
             sourceNC = m_workflow.getNode(source);
             destNC = m_workflow.getNode(dest);
+            boolean isFlowVariablePortConnection = false;
             // determine type of new connection:
             if ((sourceNC == null) && (destNC == null)) {
                 newConnType = ConnectionType.WFMTHROUGH;
             } else if (sourceNC == null) {
                 newConnType = ConnectionType.WFMIN;
+                isFlowVariablePortConnection =
+                    destNC.getInPort(destPort).getPortType().equals(FlowVariablePortObject.TYPE);
             } else if (destNC == null) {
                 newConnType = ConnectionType.WFMOUT;
+                isFlowVariablePortConnection =
+                    sourceNC.getOutPort(sourcePort).getPortType().equals(FlowVariablePortObject.TYPE);
             } else {
                 newConnType = ConnectionType.STD;
+                isFlowVariablePortConnection =
+                    sourceNC.getOutPort(sourcePort).getPortType().equals(FlowVariablePortObject.TYPE);
             }
             // create new connection
-            newConn = new ConnectionContainer(source, sourcePort, dest, destPort, newConnType);
+            newConn =
+                new ConnectionContainer(source, sourcePort, dest, destPort, newConnType, isFlowVariablePortConnection);
             m_workflow.addConnection(newConn);
             // handle special cases with port reference chains (WFM border
             // crossing connections:
@@ -1632,9 +1640,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn =
-                    new ConnectionContainer(snc.getVirtualInNodeID(), p.getSecond().getSourcePort(), p.getSecond()
-                        .getDest(), p.getSecond().getDestPort(), p.getSecond().getType());
+                ConnectionContainer newConn = new ConnectionContainer(snc.getVirtualInNodeID(),
+                    p.getSecond().getSourcePort(), p.getSecond().getDest(), p.getSecond().getDestPort(),
+                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
                 subFlow.addConnection(newConn);
                 snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
@@ -1685,9 +1693,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
-                ConnectionContainer newConn =
-                    new ConnectionContainer(p.getSecond().getSource(), p.getSecond().getSourcePort(),
-                        snc.getVirtualOutNodeID(), p.getSecond().getDestPort(), p.getSecond().getType());
+                ConnectionContainer newConn = new ConnectionContainer(p.getSecond().getSource(),
+                    p.getSecond().getSourcePort(), snc.getVirtualOutNodeID(), p.getSecond().getDestPort(),
+                    p.getSecond().getType(), p.getSecond().isFlowVariablePortConnection());
                 subFlow.addConnection(newConn);
                 snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
@@ -3359,7 +3367,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 subwfm = createAndAddSubWorkflow(exposedInportTypes, new PortType[0], "Parallel Chunks");
                 NodeUIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
                 if (startUIPlain != null) {
-                    NodeUIInformation startUI = startUIPlain.createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
+                    NodeUIInformation startUI =
+                        NodeUIInformation.builder(startUIPlain).translate(new int[]{60, -60, 0, 0}).build();
                     subwfm.setUIInformation(startUI);
                 }
                 // connect outside(!) nodes to new sub metanode
@@ -3457,8 +3466,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 new VirtualParallelizedChunkPortObjectInNodeFactory(outTypes));
         NodeUIInformation startUIPlain = startNode.getUIInformation();
         if (startUIPlain != null) {
-            NodeUIInformation startUI = startUIPlain.
-                createNewWithOffsetPosition(moveUIDist);
+            NodeUIInformation startUI = NodeUIInformation.builder(startUIPlain).translate(moveUIDist).build();
             subWFM.getNodeContainer(virtualStartID).setUIInformation(startUI);
         }
         // create virtual end node
@@ -3473,15 +3481,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 new VirtualParallelizedChunkPortObjectOutNodeFactory(realInTypes));
         NodeUIInformation endUIPlain = endNode.getUIInformation();
         if (endUIPlain != null) {
-            NodeUIInformation endUI = endUIPlain.
-                createNewWithOffsetPosition(moveUIDist);
+            NodeUIInformation endUI = NodeUIInformation.builder(endUIPlain).translate(moveUIDist).build();
             subWFM.getNodeContainer(virtualEndID).setUIInformation(endUI);
         }
         // copy nodes in loop body
-        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
         copyContent.setNodeIDs(oldIDs);
         WorkflowCopyContent newBody
-            = subWFM.copyFromAndPasteHere(this, copyContent);
+            = subWFM.copyFromAndPasteHere(this, copyContent.build());
         NodeID[] newIDs = newBody.getNodeIDs();
         Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
         for (int i = 0; i < oldIDs.length; i++) {
@@ -3489,7 +3496,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainer nc = subWFM.getNodeContainer(newIDs[i]);
             NodeUIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null) {
-                nc.setUIInformation(uiInfo.createNewWithOffsetPosition(moveUIDist));
+                nc.setUIInformation(NodeUIInformation.builder(uiInfo).translate(moveUIDist).build());
             }
         }
         // restore connections to nodes outside the loop body (only incoming)
@@ -3647,10 +3654,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public ExpandSubnodeResult expandSubWorkflow(final NodeID nodeID) throws IllegalStateException {
         try (WorkflowLock lock = lock()) {
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
             cnt.setNodeIDs(nodeID);
             cnt.setIncludeInOutConnections(true);
-            WorkflowPersistor undoCopyPersistor = copy(true, cnt);
+            WorkflowPersistor undoCopyPersistor = copy(true, cnt.build());
 
             final NodeContainer node = getNodeContainer(nodeID);
             final WorkflowManager subWFM;
@@ -3681,10 +3688,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             WorkflowAnnotation[] orgAnnos = annos.toArray(
                     new WorkflowAnnotation[annos.size()]);
             // copy the nodes from the sub workflow manager:
-            WorkflowCopyContent orgContent = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder orgContent = WorkflowCopyContent.builder();
             orgContent.setNodeIDs(orgIDs);
             orgContent.setAnnotation(orgAnnos);
-            WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent);
+            WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent.build());
             NodeID[] newIDs = newContent.getNodeIDs();
             Annotation[] newAnnos = newContent.getAnnotations();
             // create map and set of quick lookup/search
@@ -3784,9 +3791,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = getNodeContainer(newIDs[i]);
                     uii = nc.getUIInformation();
                     if (uii != null) {
-                        NodeUIInformation newUii
-                           = uii.createNewWithOffsetPosition(
-                                   new int[]{xShift, yShift});
+                        NodeUIInformation newUii =
+                            NodeUIInformation.builder(uii).translate(new int[]{xShift, yShift}).build();
                         nc.setUIInformation(newUii);
                     }
                 }
@@ -3799,9 +3805,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             && (newIDsHashSet.contains(cc.getDest()))) {
                         ConnectionUIInformation cuii = cc.getUIInfo();
                         if (cuii != null) {
-                            ConnectionUIInformation newUI =
-                                cuii.createNewWithOffsetPosition(
-                                        new int[] {xShift, yShift});
+                            ConnectionUIInformation newUI = ConnectionUIInformation.builder(cuii)
+                                .translate(new int[]{xShift, yShift}).build();
                             cc.setUIInfo(newUI);
                         }
                     }
@@ -3834,10 +3839,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     new LinkedHashSet<>(m_workflow.getConnectionsBySource(subWFM.getID()));
             NodeUIInformation uii = subWFM.getUIInformation();
 
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
             cnt.setNodeIDs(subWFM.getID());
             cnt.setIncludeInOutConnections(true);
-            WorkflowPersistor undoPersistor = copy(true, cnt);
+            WorkflowPersistor undoPersistor = copy(true, cnt.build());
 
             removeNode(wfmID);
 
@@ -3878,10 +3883,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             checkState(!subnode.getInternalState().isExecutionInProgress(), "Can't unwrap; node is executing");
             checkState(canRemoveNode(subnodeID), "Cannot unwrap; node can't be removed");
 
-            WorkflowCopyContent undoCopyCnt = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder undoCopyCnt = WorkflowCopyContent.builder();
             undoCopyCnt.setNodeIDs(subnode.getID());
             undoCopyCnt.setIncludeInOutConnections(true);
-            WorkflowPersistor undoPersistor = copy(true, undoCopyCnt);
+            WorkflowPersistor undoPersistor = copy(true, undoCopyCnt.build());
 
             WorkflowPersistor fromSubnodePersistor = subnode.getConvertToMetaNodeCopyPersistor();
 
@@ -4167,18 +4172,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             if (count >= 1) {
-                NodeUIInformation newUii = new NodeUIInformation(x / count, y / count, -1, -1, true);
+                NodeUIInformation newUii =
+                    NodeUIInformation.builder().setNodeLocation(x / count, y / count, -1, -1).build();
                 newWFM.setUIInformation(newUii);
             }
             // copy the nodes into the newly create WFM:
-            WorkflowCopyContent orgContent = new WorkflowCopyContent();
-            orgContent.setNodeIDs(orgIDs);
-            orgContent.setAnnotation(orgAnnos);
-            orgContent.setIncludeInOutConnections(true);
-            final WorkflowPersistor undoPersistor = copy(true, orgContent);
+            WorkflowCopyContent.Builder orgContentBuilder = WorkflowCopyContent.builder();
+            orgContentBuilder.setNodeIDs(orgIDs);
+            orgContentBuilder.setAnnotation(orgAnnos);
+            orgContentBuilder.setIncludeInOutConnections(true);
+            final WorkflowPersistor undoPersistor = copy(true, orgContentBuilder.build());
 
-            orgContent.setIncludeInOutConnections(false);
-            WorkflowCopyContent newContent = newWFM.copyFromAndPasteHere(this, orgContent);
+            orgContentBuilder.setIncludeInOutConnections(false);
+            WorkflowCopyContent newContent = newWFM.copyFromAndPasteHere(this, orgContentBuilder.build());
             NodeID[] newIDs = newContent.getNodeIDs();
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             for (int i = 0; i < orgIDs.length; i++) {
@@ -4210,7 +4216,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     NodeUIInformation uii = nc.getUIInformation();
                     if (uii != null) {
-                        NodeUIInformation newUii = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
+                        NodeUIInformation newUii =
+                            NodeUIInformation.builder(uii).translate(new int[]{xshift, yshift}).build();
                         nc.setUIInformation(newUii);
                     }
                 }
@@ -4223,7 +4230,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if ((!cc.getSource().equals(newWFM.getID())) && (!cc.getDest().equals(newWFM.getID()))) {
                         ConnectionUIInformation uii = cc.getUIInfo();
                         if (uii != null) {
-                            ConnectionUIInformation newUI = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
+                            ConnectionUIInformation newUI = ConnectionUIInformation.builder(uii)
+                                .translate(new int[]{xshift, yshift}).build();
                             cc.setUIInfo(newUI);
                         }
                     }
@@ -5436,13 +5444,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Map<NodeID, MetaNodeDialogNode> nodes =
                 findNodes(MetaNodeDialogNode.class, false);
         ((MetaNodeDialogPane) dialogPane).setQuickformNodes(nodes);
-        NodeSettings settings = new NodeSettings("wfm_settings");
-        saveSettings(settings);
+        NodeSettings settings = getNodeSettings();
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
                 new FlowObjectStack(getID()),
                 new CredentialsProvider(this, m_credentialsStore),
                 getDirectNCParent().isWriteProtected());
         return dialogPane;
+    }
+
+    /** @return user settings for this node, possibly empty but not <code>null</code>.
+     * @since 3.5*/
+    @Override
+    public NodeSettings getNodeSettings() {
+        NodeSettings settings = new NodeSettings("wfm_settings");
+        saveSettings(settings);
+        return settings;
     }
 
     /** {@inheritDoc} */
@@ -6787,10 +6803,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 loadRes.addError(msg);
                 return loadRes;
             }
-            WorkflowCopyContent oldContent = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder oldContent = WorkflowCopyContent.builder();
             oldContent.setNodeIDs(id);
             oldContent.setIncludeInOutConnections(true);
-            WorkflowPersistor copy = copy(true, oldContent);
+            WorkflowPersistor copy = copy(true, oldContent.build());
             NodeContainerTemplate updatedTemplate = null;
             try {
                 NodeContainerTemplate recursionManager;
@@ -6880,14 +6896,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
             NodeUIInformation oldUI = oldLinkMN.getUIInformation();
 
-            NodeUIInformation newUI = oldUI != null ? oldUI.clone() : null;
+            NodeUIInformation newUI = oldUI != null ? NodeUIInformation.builder(oldUI).build() : null;
             // keep old in/out connections to later relink them
             Set<ConnectionContainer> inConns = getIncomingConnectionsFor(id);
             Set<ConnectionContainer> outConns = getOutgoingConnectionsFor(id);
 
             removeNode(id);
             WorkflowCopyContent pasteResult = copyFromAndPasteHere(tempLink.getParent(),
-                new WorkflowCopyContent().setNodeID(tempLink.getID(), id.getIndex(), newUI));
+                WorkflowCopyContent.builder().setNodeID(tempLink.getID(), id.getIndex(), newUI).build());
             newLinkMN = getNodeContainer(pasteResult.getNodeIDs()[0], NodeContainerTemplate.class, true);
             if (oldAnnoData != null && !oldAnnoData.isDefault()) {
                 ((NodeContainer)newLinkMN).getNodeAnnotation().getData().copyFrom(oldAnnoData, true);
@@ -6913,7 +6929,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     ConnectionContainer c = addConnection(s, sourcePort, id, destPort);
                     c.setDeletable(cc.isDeletable());
                     ConnectionUIInformation uiInfo = cc.getUIInfo();
-                    c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
+                    c.setUIInfo(uiInfo != null ? ConnectionUIInformation.builder(uiInfo).build() : null);
                 }
             }
             for (ConnectionContainer cc : outConns) {
@@ -6927,7 +6943,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     ConnectionContainer c = addConnection(id, sourcePort, des, destPort);
                     c.setDeletable(cc.isDeletable());
                     ConnectionUIInformation uiInfo = cc.getUIInfo();
-                    c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
+                    c.setUIInfo(uiInfo != null ? ConnectionUIInformation.builder(uiInfo).build() : null);
                 }
             }
             return newLinkMN;
@@ -7015,8 +7031,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         workflowDirRef.lock();
         try {
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
-            cnt.setNodeIDs(getID());
+            WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
+            cntBuilder.setNodeIDs(getID());
+            WorkflowCopyContent cnt = cntBuilder.build();
             try (WorkflowLock lock = lock()) {
                 cnt = tempParent.copyFromAndPasteHere(getParent(), cnt);
             }
@@ -7742,10 +7759,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
         WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
         addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
-        WorkflowCopyContent result = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder result = WorkflowCopyContent.builder();
         result.setAnnotation(newAnnotations);
         result.setNodeIDs(newIDs);
-        return result;
+        return result.build();
     }
 
     private void postLoad(final Map<NodeID, NodeContainerPersistor> persistorMap,
@@ -8603,7 +8620,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
-        if (!ConvenienceMethods.areEqual(editorInfo, m_editorInfo)) {
+        if (!Objects.equals(editorInfo, m_editorInfo)) {
             m_editorInfo = editorInfo;
             setDirty();
         }
@@ -8795,8 +8812,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
      * @param inPortsBarUIInfo The new UI info.
+     * @since 3.5
      */
-    public void setInPortsBarUIInfo(final UIInformation inPortsBarUIInfo) {
+    public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
             m_inPortsBarUIInfo = inPortsBarUIInfo;
             setDirty();
@@ -8806,8 +8824,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Set UI information for workflow's output ports
      * (typically aligned as a bar).
      * @param outPortsBarUIInfo The new UI info.
+     * @since 3.5
      */
-    public void setOutPortsBarUIInfo(final UIInformation outPortsBarUIInfo) {
+    public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(
                 m_outPortsBarUIInfo, outPortsBarUIInfo)) {
             m_outPortsBarUIInfo = outPortsBarUIInfo;
@@ -8818,16 +8837,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
      * @see #setInPortsBarUIInfo(UIInformation)
+     * @since 3.5
      */
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
      * @see #setOutPortsBarUIInfo(UIInformation)
+     * @since 3.5
      */
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
 
@@ -8931,9 +8952,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return Collections.unmodifiableList(m_annotations);
     }
 
-    /** Add new workflow annotation, fire events.
-     * @param annotation to add
-     * @throws IllegalArgumentException If annotation already registered. */
     /** Add new workflow annotation, fire events.
      * @param annotation to add
      * @throws IllegalArgumentException If annotation already registered. */

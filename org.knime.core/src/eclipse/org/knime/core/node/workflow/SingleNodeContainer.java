@@ -797,6 +797,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
         saveSettings(settings, false);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettings getNodeSettings() {
+        NodeSettings settings = new NodeSettings("configuration");
+        saveSettings(settings, true);
+        return settings;
+    }
+
     /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
      * @param settings To save to.
      * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto

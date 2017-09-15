@@ -65,30 +65,19 @@ public final class MetaPortInfo {
     private int m_oldIndex;
     private int m_newIndex;
 
-    /** Created from the WFM. Fills the object according the arguments. A port
-     * may be connected or not.
-     * @param type ...
-     * @param isConnected .. if connected somewhere in (or outside) the flow
-     * @param message The tooltip (only if isConnected)
-     * @param oldIndex the port index. */
-    public MetaPortInfo(final PortType type, final boolean isConnected,
-            final String message, final int oldIndex) {
-        m_type = type;
-        m_isConnected = isConnected;
-        m_message = message;
-        m_oldIndex = oldIndex;
-        m_newIndex = -1;
-    }
 
-    /** Called from the UI to define a new port (not connected).
-     * @param type ...
-     * @param newIndex Index of port. */
-    public MetaPortInfo(final PortType type, final int newIndex) {
-        m_type = type;
-        m_newIndex = newIndex;
-        m_oldIndex = -1;
-        m_isConnected = false;
-        m_message = null;
+    /**
+     * Creates a new instance from the passed builder.
+     */
+    private MetaPortInfo(final Builder builder) {
+        if(builder.m_type == null) {
+            throw new IllegalArgumentException("No port type set.");
+        }
+        m_type = builder.m_type;
+        m_isConnected = builder.m_isConnected;
+        m_message = builder.m_message;
+        m_oldIndex = builder.m_oldIndex;
+        m_newIndex = builder.m_newIndex;
     }
 
     /** @return the type */
@@ -116,9 +105,97 @@ public final class MetaPortInfo {
         return m_newIndex;
     }
 
-    /** @param newIndex the newIndex to set */
-    public void setNewIndex(final int newIndex) {
-        m_newIndex = newIndex;
+    /**
+     * @return a new builder with default values
+     * @since 3.5
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * @param mpi the object to take the initial values from
+     * @return a new builder with the values initialized by the ones given by the passed {@link MetaPortInfo}
+     * @since 3.5
+     */
+    public static Builder builder(final MetaPortInfo mpi) {
+        return new Builder().copyFrom(mpi);
+    }
+
+    /**
+     * Builder to create immutable instances of the {@link MetaPortInfo}-class.
+     * @since 3.5
+     */
+    public static final class Builder {
+
+        private PortType m_type;
+        private boolean m_isConnected = false;
+        private String m_message = null;
+        private int m_oldIndex = -1;
+        private int m_newIndex = -1;
+
+        private Builder() {
+            //
+        }
+
+        private Builder copyFrom(final MetaPortInfo mpi) {
+            m_type = mpi.m_type;
+            m_isConnected = mpi.m_isConnected;
+            m_message = mpi.m_message;
+            m_oldIndex = mpi.m_oldIndex;
+            m_newIndex = mpi.m_newIndex;
+            return this;
+        }
+
+        /**
+         * @param type the port type
+         * @return this
+         */
+        public Builder setPortType(final PortType type) {
+            m_type = type;
+            return this;
+        }
+
+        /**
+         * @param isConnected .. if connected somewhere in (or outside) the flow
+         * @return this
+         */
+        public Builder setIsConnected(final boolean isConnected) {
+            m_isConnected = isConnected;
+            return this;
+        }
+
+        /**
+         * @param message The tooltip (only if isConnected)
+         * @return this
+         */
+        public Builder setMessage(final String message) {
+            m_message = message;
+            return this;
+        }
+
+        /**
+         * @param oldIndex the port index
+         * @return this
+         */
+        public Builder setOldIndex(final int oldIndex) {
+            m_oldIndex = oldIndex;
+            return this;
+        }
+
+        /** @param newIndex the newIndex to set
+         * @return this*/
+        public Builder setNewIndex(final int newIndex) {
+            m_newIndex = newIndex;
+            return this;
+        }
+
+        /**
+         * @return a new {@link MetaPortInfo}-instance from this builder
+         */
+        public MetaPortInfo build() {
+            return new MetaPortInfo(this);
+        }
     }
 
 }

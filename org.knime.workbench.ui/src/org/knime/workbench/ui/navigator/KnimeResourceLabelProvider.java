@@ -75,12 +75,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -181,7 +182,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     protected ImageDescriptor decorateImage(final ImageDescriptor input,
             final Object element) {
         if (element instanceof IContainer) {
-            NodeContainer cont = ProjectWorkflowMap.getWorkflow(
+            NodeContainerUI cont = ProjectWorkflowMap.getWorkflowUI(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
                 URL iconURL = cont.findJobManager().getIcon();
@@ -234,7 +235,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (!(o instanceof IAdaptable)) {
             return null;
         }
-        return (IWorkbenchAdapter)((IAdaptable)o)
+        return ((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter.class);
     }
 
@@ -249,7 +250,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (!(o instanceof IAdaptable)) {
             return null;
         }
-        return (IWorkbenchAdapter2)((IAdaptable)o)
+        return ((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter2.class);
     }
 
@@ -259,12 +260,12 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public Image getImage(final Object element) {
         Image img = super.getImage(element);
-        NodeContainer projectNode = null;
+        NodeContainerUI projectNode = null;
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
             if (container.exists(WORKFLOW_FILE)) {
                 // in any case a knime workflow or meta node (!)
-                projectNode = ProjectWorkflowMap.getWorkflow(
+                projectNode = ProjectWorkflowMap.getWorkflowUI(
                         container.getLocationURI());
                 if (projectNode == null && !isMetaNode(container)) {
                     return CLOSED_WORKFLOW;
@@ -277,16 +278,16 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     return WORKFLOW_GROUP;
                 }
             }
-        } else if (element instanceof NodeContainer) {
-                projectNode = (NodeContainer)element;
+        } else if (element instanceof NodeContainerUI) {
+                projectNode = (NodeContainerUI)element;
         }
         if (projectNode != null) {
-            if (projectNode instanceof WorkflowManager
+            if (projectNode instanceof WorkflowManagerUI
                     // display state only for projects
                     // with this check only projects (
                     // direct children of the ROOT
                     // are displayed with state
-                    && ((WorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                    && ((WorkflowManagerUI)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
                 NodeContainerState state = projectNode.getNodeContainerState();
                 if (projectNode.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR)) {
                     return ERROR;
@@ -317,9 +318,9 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public String getText(final Object element) {
 
-        if (element instanceof NodeContainer) {
-            String output =  ((NodeContainer)element).getName()
-                + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
+        if (element instanceof NodeContainerUI) {
+            String output =  ((NodeContainerUI)element).getName()
+                + " (#" + ((NodeContainerUI)element).getID().getIndex() + ")";
             // meta nodes are as object (workflow open) represented with ":"
             // then it cannot be found
             return output.replace(":", "_");

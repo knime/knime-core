@@ -49,6 +49,7 @@ package org.knime.workbench.editor2.meta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.jface.wizard.WizardPage;
@@ -255,12 +256,14 @@ public class AddMetaNodePage extends WizardPage {
         // add the ports to the lists
         for (int i = 0; i < nrInPorts; i++) {
             // the "new index" is not maintained in this wizard page
-            MetaPortInfo info = new MetaPortInfo(BufferedDataTable.TYPE, -1);
+            MetaPortInfo info = MetaPortInfo.builder()
+                .setPortType(BufferedDataTable.TYPE).setNewIndex(-1).build();
             m_inPortList.add(info);
         }
         for (int i = 0; i < nrOutPorts; i++) {
             // the "new index" is not maintained in this wizard page
-            MetaPortInfo info = new MetaPortInfo(BufferedDataTable.TYPE, -1);
+            MetaPortInfo info = MetaPortInfo.builder()
+                    .setPortType(BufferedDataTable.TYPE).setNewIndex(-1).build();
             m_outPortList.add(info);
         }
     }
@@ -281,17 +284,37 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     /**
-     * @return list of entered out ports
+     * @return read-only list of entered out ports
      */
     public java.util.List<MetaPortInfo> getOutPorts() {
-        return m_outPortList;
+        return Collections.unmodifiableList(m_outPortList);
     }
 
     /**
-     * @return list of entered in ports
+     * Replaces the given port at the given index.
+     *
+     * @param idx
+     * @param mpi
      */
-    public java.util.List<MetaPortInfo>getInports() {
+    public void replaceOutPortAtIndex(final int idx, final MetaPortInfo mpi) {
+        m_outPortList.set(idx, mpi);
+    }
+
+    /**
+     * @return read-only list of entered in ports
+     */
+    public java.util.List<MetaPortInfo>getInPorts() {
         return m_inPortList;
+    }
+
+    /**
+     * Replaces the given port at the given index.
+     *
+     * @param idx
+     * @param mpi
+     */
+    public void replaceInPortAtIndex(final int idx, final MetaPortInfo mpi) {
+        m_inPortList.set(idx, mpi);
     }
 
 
@@ -609,7 +632,8 @@ public class AddMetaNodePage extends WizardPage {
         MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
         PortType port = dialog.open();
         if (port != null) {
-            MetaPortInfo info = new MetaPortInfo(port, infoList.size());
+            MetaPortInfo info = MetaPortInfo.builder().setPortType(port)
+                .setNewIndex(infoList.size()).build();
             infoList.add(info);
             populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
             portList.select(portList.getItemCount() - 1);

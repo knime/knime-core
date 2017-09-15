@@ -52,9 +52,9 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodePortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.figures.WorkflowOutPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -70,10 +70,10 @@ public class WorkflowOutPortBarEditPart
      * {@inheritDoc}
      */
     @Override
-    protected List<NodePort> getModelChildren() {
-        WorkflowManager manager = ((WorkflowPortBar)getModel())
+    protected List<NodePortUI> getModelChildren() {
+        WorkflowManagerUI manager = ((WorkflowPortBar)getModel())
             .getWorkflowManager();
-        List<NodePort> ports = new ArrayList<NodePort>();
+        List<NodePortUI> ports = new ArrayList<NodePortUI>();
         for (int i = 0; i < manager.getNrWorkflowOutgoingPorts(); i++) {
             ports.add(manager.getOutPort(i));
         }
@@ -86,7 +86,7 @@ public class WorkflowOutPortBarEditPart
     @Override
     protected IFigure createFigure() {
         NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
-        if (uiInfo != null && uiInfo.isFilledProperly()) {
+        if (uiInfo != null) {
             int[] bounds = uiInfo.getBounds();
             Rectangle newBounds = new Rectangle(
                     bounds[0], bounds[1], bounds[2], bounds[3]);

@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -135,7 +136,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             } else if (p instanceof ConnectionContainerEditPart) {
                 ConnectionContainerEditPart ccep =
                     (ConnectionContainerEditPart)p;
-                conSet.add(ccep.getModel());
+                conSet.add(Wrapper.unwrapCC(ccep.getModel()));
                 if (viewer == null && ccep.getParent() != null) {
                     viewer = ccep.getViewer();
                 }
@@ -199,10 +200,10 @@ public class DeleteCommand extends AbstractKNIMECommand {
         // The WFM removes all connections for us, before the node is
         // removed.
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
-            WorkflowCopyContent content = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
             content.setNodeIDs(m_nodeIDs);
             content.setAnnotation(m_annotations);
-            m_undoPersitor = hostWFM.copy(true, content);
+            m_undoPersitor = hostWFM.copy(true, content.build());
         }
         for (WorkflowAnnotation anno : m_annotations) {
             hostWFM.removeAnnotation(anno);

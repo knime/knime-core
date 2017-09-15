@@ -57,10 +57,10 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.GraphicalEditPart;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -106,14 +106,14 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final NodeContainer getNodeContainer() {
+    protected final NodeContainerUI getNodeContainer() {
         if (getParent() == null) {
             return null;
         }
         // if the referring WorkflowManager is displayed as a metanode, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
-            return (NodeContainer) getParent().getModel();
+            return (NodeContainerUI) getParent().getModel();
         }
         // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
@@ -126,8 +126,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final WorkflowManager getManager() {
-        return (WorkflowManager)getNodeContainer();
+    protected final WorkflowManagerUI getManager() {
+        return (WorkflowManagerUI)getNodeContainer();
     }
 
     /**
@@ -153,11 +153,11 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
     @Override
-    public List<ConnectionContainer> getModelTargetConnections() {
+    public List<ConnectionContainerUI> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        ConnectionContainer container = getManager().getIncomingConnectionFor(
+        ConnectionContainerUI container = getManager().getIncomingConnectionFor(
                 getNodeContainer().getID(), getIndex());
 
         if (container != null) {
@@ -175,7 +175,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      *      #getModelSourceConnections()
      */
     @Override
-    protected List<ConnectionContainer> getModelSourceConnections() {
+    protected List<ConnectionContainerUI> getModelSourceConnections() {
         return EMPTY_LIST;
     }
 

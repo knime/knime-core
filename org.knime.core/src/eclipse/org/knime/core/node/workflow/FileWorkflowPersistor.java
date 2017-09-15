@@ -221,6 +221,27 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
+    private static final String CFG_EDITOR_SNAP_GRID = "workflow.editor.snapToGrid";
+
+    private static final String CFG_EDITOR_SHOW_GRID = "workflow.editor.ShowGrid";
+
+    private static final String CFG_EDITOR_X_GRID = "workflow.editor.gridX";
+
+    private static final String CFG_EDITOR_Y_GRID = "workflow.editor.gridY";
+
+    private static final String CFG_EDITOR_ZOOM = "workflow.editor.zoomLevel";
+
+    private static final String CFG_EDITOR_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
+
+    private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
+
+    /** The key under which the bounds to store the {@link ConnectionUIInformation} are registered. *
+     * @since 3.5*/
+    public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
+
+    /** The key under which the bounds are registered. * */
+    private static final String KEY_BOUNDS = "extrainfo.node.bounds";
+
     private static final PortType FALLBACK_PORTTYPE = PortObject.TYPE;
 
     private static final NodeSettingsRO EMPTY_SETTINGS = new NodeSettings("<<empty>>");
@@ -244,9 +265,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private WorkflowPortTemplate[] m_outPortTemplates;
 
-    private UIInformation m_inPortsBarUIInfo;
+    private NodeUIInformation m_inPortsBarUIInfo;
 
-    private UIInformation m_outPortsBarUIInfo;
+    private NodeUIInformation m_outPortsBarUIInfo;
 
     private EditorUIInformation m_editorUIInfo;
 
@@ -500,15 +521,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return m_outPortTemplates;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
 
@@ -818,7 +841,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         NodeSettingsRO inPorts = EMPTY_SETTINGS;
-        UIInformation inPortsBarUIInfo = null;
+        NodeUIInformation inPortsBarUIInfo = null;
         String uiInfoClassName = null;
         try {
             inPorts = loadInPortsSetting(m_workflowSett);
@@ -832,25 +855,25 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             loadResult.addError(error);
         }
         if (uiInfoClassName != null) {
-            inPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
-            if (inPortsBarUIInfo != null) {
-                try {
-                    loadInPortsBarUIInfo(inPortsBarUIInfo, inPorts);
-                } catch (InvalidSettingsException e) {
-                    String error = "Unable to load inport bar's UI information: " + e.getMessage();
-                    getLogger().debug(error, e);
-                    setDirtyAfterLoad();
-                    loadResult.addError(error);
-                    inPortsBarUIInfo = null;
+            try {
+                if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
+                    inPortsBarUIInfo = loadNodeUIInformation(inPorts);
                 }
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load inport bar's UI information: " + e.getMessage();
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                loadResult.addError(error);
+                inPortsBarUIInfo = null;
             }
         }
 
         NodeSettingsRO outPorts = null;
         m_inPortsBarUIInfo = inPortsBarUIInfo;
-        UIInformation outPortsBarUIInfo = null;
+        NodeUIInformation outPortsBarUIInfo = null;
         uiInfoClassName = null;
         try {
+            //TODO probably not necessary anymore to store the ui information class name (it's node ui information anyway)
             outPorts = loadOutPortsSetting(m_workflowSett);
             if (outPorts != null) {
                 uiInfoClassName = loadOutPortsBarUIInfoClassName(outPorts);
@@ -864,17 +887,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             loadResult.addError(error);
         }
         if (uiInfoClassName != null) {
-            outPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
-            if (outPortsBarUIInfo != null) {
-                try {
-                    loadOutPortsBarUIInfo(outPortsBarUIInfo, outPorts);
-                } catch (InvalidSettingsException e) {
-                    String error = "Unable to load outport bar's UI information: " + e.getMessage();
-                    getLogger().debug(error, e);
-                    setDirtyAfterLoad();
-                    loadResult.addError(error);
-                    outPortsBarUIInfo = null;
+            try {
+                if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
+                    outPortsBarUIInfo = loadNodeUIInformation(outPorts);
                 }
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load outport bar's UI information: " + e.getMessage();
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                loadResult.addError(error);
+                outPortsBarUIInfo = null;
             }
         }
         m_outPortsBarUIInfo = outPortsBarUIInfo;
@@ -974,32 +996,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 uiInfoClassName = null;
             }
             if (uiInfoClassName != null) {
-                UIInformation uiInfo = loadUIInfoInstance(uiInfoClassName);
-                if (uiInfo != null) {
-                    if (!(uiInfo instanceof NodeUIInformation)) {
-                        String error =
-                            "UI information to node with ID suffix " + nodeIDSuffix + " is not of class "
-                                + NodeUIInformation.class.getSimpleName() + " but " + uiInfo.getClass().getName();
-                        getLogger().debug(error);
-                        setDirtyAfterLoad();
-                        loadResult.addError(error);
-                        uiInfo = null;
-                    } else {
-                        try {
-                            loadUIInfoSettings(uiInfo, nodeSetting);
-                        } catch (InvalidSettingsException e) {
-                            String error =
-                                "Unable to load UI information to " + "node with ID suffix " + nodeIDSuffix
-                                    + ", no UI information available: " + e.getMessage();
-                            getLogger().debug(error, e);
-                            setDirtyAfterLoad();
-                            loadResult.addError(error);
-                            uiInfo = null;
-                        }
-                    }
+                try {
+                    //load node ui info
+                    nodeUIInfo = loadNodeUIInformation(nodeSetting);
+                } catch (InvalidSettingsException e) {
+                    String error = "Unable to load UI information to " + "node with ID suffix " + nodeIDSuffix
+                        + ", no UI information available: " + e.getMessage();
+                    getLogger().debug(error, e);
+                    setDirtyAfterLoad();
+                    loadResult.addError(error);
                 }
-                nodeUIInfo = (NodeUIInformation)uiInfo;
             }
+
             ReferencedFile nodeFile;
             try {
                 nodeFile = loadNodeFile(nodeSetting, workflowDirRef);
@@ -1172,6 +1180,21 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 downstreamNodes);
         }
         exec.setProgress(1.0);
+    }
+
+    private NodeUIInformation loadNodeUIInformation(final NodeSettingsRO nodeSetting) throws InvalidSettingsException {
+        // in previous releases, the settings were directly written to the
+        // top-most node settings object; since 2.0 they are put into a
+        // separate sub-settings object
+        NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? nodeSetting
+            : nodeSetting.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
+        final int loadOrdinal = getLoadVersion().ordinal();
+        int[] bounds = subSettings.getIntArray(KEY_BOUNDS);
+        boolean symbolRelative = loadOrdinal >= FileWorkflowPersistor.LoadVersion.V230.ordinal();
+        NodeUIInformation nodeUIInfo = NodeUIInformation.builder()
+            .setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3])
+            .setIsSymbolRelative(symbolRelative).build();
+        return nodeUIInfo;
     }
 
     /** Fills the list with null so that list.get(index) doesn't throw an exception. */
@@ -1360,20 +1383,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /**
      * Sub-class hook to load port bar info.
      *
-     * @param uiInfo Ignored.
-     * @param settings Ignored.
-     * @throws InvalidSettingsException Not actually thrown
-     */
-    void loadInPortsBarUIInfo(final UIInformation uiInfo, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            loadUIInfoSettings(uiInfo, settings);
-        }
-    }
-
-    /**
-     * Sub-class hook to load port bar info.
-     *
      * @param settings Ignored.
      * @return null
      * @throws InvalidSettingsException Not actually thrown
@@ -1383,20 +1392,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             return loadUIInfoClassName(settings);
         }
         return null;
-    }
-
-    /**
-     * Load output port bars. This implementation does nothing, sub-classes override this method.
-     *
-     * @param uiInfo Ignored here.
-     * @param settings Ignored here.
-     * @throws InvalidSettingsException Not actually thrown here.
-     */
-    void loadOutPortsBarUIInfo(final UIInformation uiInfo, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            loadUIInfoSettings(uiInfo, settings);
-        }
     }
 
     /**
@@ -1410,12 +1405,22 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     EditorUIInformation loadEditorUIInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
         final LoadVersion loadVersion = getLoadVersion();
         if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey(CFG_EDITOR_INFO)) {
-            return new EditorUIInformation();
+            return EditorUIInformation.builder().build();
         }
         NodeSettingsRO editorCfg = settings.getNodeSettings(CFG_EDITOR_INFO);
-        EditorUIInformation editorInfo = new EditorUIInformation();
-        editorInfo.load(editorCfg, loadVersion);
-        return editorInfo;
+        EditorUIInformation.Builder builder = EditorUIInformation.builder();
+        builder.setSnapToGrid(editorCfg.getBoolean(CFG_EDITOR_SNAP_GRID));
+        builder.setShowGrid(editorCfg.getBoolean(CFG_EDITOR_SHOW_GRID));
+        builder.setGridX(editorCfg.getInt(CFG_EDITOR_X_GRID));
+        builder.setGridY(editorCfg.getInt(CFG_EDITOR_Y_GRID));
+        builder.setZoomLevel(editorCfg.getDouble(CFG_EDITOR_ZOOM));
+        if (editorCfg.containsKey(CFG_EDITOR_CURVED_CONNECTIONS)) {
+            builder.setHasCurvedConnections(editorCfg.getBoolean(CFG_EDITOR_CURVED_CONNECTIONS));
+        }
+        if (editorCfg.containsKey(CFG_EDITOR_CONNECTION_WIDTH)) {
+            builder.setConnectionLineWidth(editorCfg.getInt(CFG_EDITOR_CONNECTION_WIDTH));
+        }
+        return builder.build();
     }
 
     ReferencedFile loadNodeFile(final NodeSettingsRO settings, final ReferencedFile workflowDirRef)
@@ -1484,16 +1489,25 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         ConnectionUIInformation connUIInfo = null;
         try {
             String uiInfoClass = loadUIInfoClassName(settings);
-            UIInformation uiInfo = loadUIInfoInstance(uiInfoClass);
-            if (uiInfo != null) {
-                if (!(uiInfo instanceof ConnectionUIInformation)) {
-                    getLogger().debug(
-                        "Could not load UI information for " + "connection between nodes " + sourceID + " and "
-                            + destID + ": expected " + ConnectionUIInformation.class.getName() + " but got "
-                            + uiInfoClass.getClass().getName());
+            if (uiInfoClass != null) {
+                if (!uiInfoClass.equals(ConnectionUIInformation.class.getName())) {
+                    getLogger().debug("Could not load UI information for " + "connection between nodes " + sourceID
+                        + " and " + destID + ": expected " + ConnectionUIInformation.class.getName() + " but got "
+                        + uiInfoClass.getClass().getName());
                 } else {
-                    loadUIInfoSettings(uiInfo, settings);
-                    connUIInfo = (ConnectionUIInformation)uiInfo;
+                    ConnectionUIInformation.Builder builder = ConnectionUIInformation.builder();
+                    // in previous releases, the settings were directly written to the
+                    // top-most node settings object; since 2.0 they are put into a
+                    // separate sub-settings object
+                    NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? settings
+                        : settings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
+                    int size = subSettings.getInt(KEY_BENDPOINTS + "_size");
+                    for (int i = 0; i < size; i++) {
+                        int[] tmp = subSettings.getIntArray(KEY_BENDPOINTS + "_" + i);
+                        //TODO add bendpoint directly as int array
+                        builder.addBendpoint(tmp[0], tmp[1], i);
+                    }
+                    connUIInfo = builder.build();
                 }
             }
         } catch (InvalidSettingsException ise) {
@@ -2016,6 +2030,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             NodeSettingsWO inPortsSetts = inCount > 0 ? saveInPortsSetting(preFilledSettings) : null;
             NodeSettingsWO inPortsSettsEnum = null;
             if (inPortsSetts != null) {
+                //TODO actually not neccessary to save the class name
                 saveInportsBarUIInfoClassName(inPortsSetts, wm.getInPortsBarUIInfo());
                 saveInportsBarUIInfoSettings(inPortsSetts, wm.getInPortsBarUIInfo());
                 inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
@@ -2139,8 +2154,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     static void saveEditorUIInformation(final WorkflowManager wfm, final NodeSettings settings) {
         EditorUIInformation editorInfo = wfm.getEditorUIInformation();
         if (editorInfo != null) {
-            NodeSettingsWO editorCfg = settings.addNodeSettings(CFG_EDITOR_INFO);
-            editorInfo.save(editorCfg);
+            NodeSettingsWO editorConfig = settings.addNodeSettings(CFG_EDITOR_INFO);
+            editorConfig.addBoolean(CFG_EDITOR_SNAP_GRID, editorInfo.getSnapToGrid());
+            editorConfig.addBoolean(CFG_EDITOR_SHOW_GRID, editorInfo.getShowGrid());
+            editorConfig.addInt(CFG_EDITOR_X_GRID, editorInfo.getGridX());
+            editorConfig.addInt(CFG_EDITOR_Y_GRID, editorInfo.getGridY());
+            editorConfig.addDouble(CFG_EDITOR_ZOOM, editorInfo.getZoomLevel());
+            editorConfig.addBoolean(CFG_EDITOR_CURVED_CONNECTIONS, editorInfo.getHasCurvedConnections());
+            editorConfig.addInt(CFG_EDITOR_CONNECTION_WIDTH, editorInfo.getConnectionLineWidth());
         }
     }
 
@@ -2235,8 +2256,23 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
         saveNodeType(settings, container);
-        saveUIInfoClassName(settings, container.getUIInformation());
-        saveUIInfoSettings(settings, container.getUIInformation());
+
+        //save node UI info
+        saveNodeUIInformation(settings, container.getUIInformation());
+    }
+
+    /**
+     * Helper to save a {@link NodeUIInformation} object.
+     */
+    private static void saveNodeUIInformation(final NodeSettingsWO settings, final NodeUIInformation nodeUIInfo) {
+        //save UI info class name (TODO: for historical reasons, probably not needed anymore)
+        settings.addString(CFG_UIINFO_CLASS, nodeUIInfo != null ? nodeUIInfo.getClass().getName() : null);
+        //save UI info settings
+        //nest into separate sub config
+        if (nodeUIInfo != null) {
+            NodeSettingsWO subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
+            subConfig.addIntArray(KEY_BOUNDS, nodeUIInfo.getBounds());
+        }
     }
 
     protected static void saveNodeIDSuffix(final NodeSettingsWO settings, final NodeContainer nc) {
@@ -2277,12 +2313,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return settings.addNodeSettings("inport_" + portIndex);
     }
 
-    protected static void saveInportsBarUIInfoClassName(final NodeSettingsWO settings, final UIInformation info) {
-        saveUIInfoClassName(settings, info);
+    /**
+     * @since 3.5
+     */
+    protected static void saveInportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
+        settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
     }
 
-    protected static void saveInportsBarUIInfoSettings(final NodeSettingsWO settings, final UIInformation uiInfo) {
-        saveUIInfoSettings(settings, uiInfo);
+    /**
+     * @since 3.5
+     */
+    protected static void saveInportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
+        saveNodeUIInformation(settings, uiInfo);
     }
 
     protected static void saveInPort(final NodeSettingsWO settings, final WorkflowManager wm, final int portIndex) {
@@ -2301,12 +2343,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return settings.addNodeSettings("port_enum");
     }
 
-    protected static void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings, final UIInformation info) {
-        saveUIInfoClassName(settings, info);
+    /**
+     * @since 3.5
+     */
+    protected static void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
+        settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
     }
 
-    protected static void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings, final UIInformation uiInfo) {
-        saveUIInfoSettings(settings, uiInfo);
+    /**
+     * @since 3.5
+     */
+    protected static void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
+        saveNodeUIInformation(settings, uiInfo);
     }
 
     protected static NodeSettingsWO saveOutPortSetting(final NodeSettingsWO settings, final int portIndex) {
@@ -2344,10 +2392,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         settings.addInt("sourcePort", sourcePort);
         int targetPort = connection.getDestPort();
         settings.addInt("destPort", targetPort);
-        UIInformation uiInfo = connection.getUIInfo();
+        ConnectionUIInformation uiInfo = connection.getUIInfo();
         if (uiInfo != null) {
-            saveUIInfoClassName(settings, uiInfo);
-            saveUIInfoSettings(settings, uiInfo);
+            //TODO there is actually no need to store the class name - just keep it for now for backwards compatibility
+            settings.addString(CFG_UIINFO_CLASS, uiInfo.getClass().getName());
+            // nest into separate sub config
+            NodeSettingsWO subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
+            int[][] allBendpoints = uiInfo.getAllBendpoints();
+            subConfig.addInt(KEY_BENDPOINTS + "_size", allBendpoints.length);
+            for (int i = 0; i < allBendpoints.length; i++) {
+                subConfig.addIntArray(KEY_BENDPOINTS + "_" + i, allBendpoints[i]);
+            }
         }
         if (!connection.isDeletable()) {
             settings.addBoolean("isDeletable", false);

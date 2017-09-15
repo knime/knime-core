@@ -111,6 +111,7 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowEvent.Type;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
@@ -434,12 +435,12 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            NodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
+            NodeContainer nc = Wrapper.unwrapNC(((NodeContainerEditPart)sel).getNodeContainer());
             WorkflowManager wfm = nc.getParent();
             checkWorkflowManagerListener(wfm);
             updateNodeContainerInfo(nc.getID());
         } else if (sel instanceof WorkflowInPortBarEditPart) {
-            WorkflowManager wfm = ((WorkflowInPortBarEditPart)sel).getNodeContainer();
+            WorkflowManager wfm = Wrapper.unwrapWFM(((WorkflowInPortBarEditPart)sel).getNodeContainer());
             checkWorkflowManagerListener(wfm);
 
         } else {
@@ -663,7 +664,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         }
         // add information about plugin and version to list (in show all/expert mode only)
         if ((nc instanceof NativeNodeContainer) && showAll) {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+            NativeNodeContainer nnc = (NativeNodeContainer) nc;
 
             TableItem item4 = new TableItem(m_table, SWT.NONE);
             item4.setText(0, "Node's feature name");

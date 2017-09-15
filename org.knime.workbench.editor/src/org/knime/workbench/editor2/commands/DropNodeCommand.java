@@ -116,10 +116,11 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                     hostWFM.addNodeAndApplyContext(m_factory, m_dropContext);
             m_container = hostWFM.getNodeContainer(id);
             // create extra info and set it
-            NodeUIInformation info =
-                new NodeUIInformation(m_location.x, m_location.y, -1, -1, false);
-            info.setSnapToGrid(m_snapToGrid);
-            info.setIsDropLocation(true);
+            NodeUIInformation info = NodeUIInformation.builder()
+                    .setNodeLocation(m_location.x, m_location.y, -1, -1)
+                    .setHasAbsoluteCoordinates(false)
+                    .setSnapToGrid(m_snapToGrid)
+                    .setIsDropLocation(true).build();
             m_container.setUIInformation(info);
 
             // Open the dialog. Some times.

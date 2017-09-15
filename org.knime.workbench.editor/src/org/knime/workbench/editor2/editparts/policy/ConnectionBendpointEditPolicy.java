@@ -66,6 +66,7 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import org.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
 import org.knime.workbench.editor2.commands.NewBendpointMoveCommand;
@@ -468,8 +469,8 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         // This is a bit tricky here, as the parent of the connection's edit
         // part is the ScalableFreefromEditPart. We need to get the first (and
         // only) child to get a reference to "our" root (WorkflowRootEditPart)
-        return ((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
-            .getWorkflowManager();
+        return Wrapper.unwrapWFM(((WorkflowRootEditPart) getHost().getRoot().getChildren().get(0))
+            .getWorkflowManager());
     }
 
     /**

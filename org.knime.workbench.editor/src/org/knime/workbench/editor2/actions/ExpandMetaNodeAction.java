@@ -51,6 +51,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -126,8 +128,8 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
         if (parts.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)parts[0].getNodeContainer();
+        if (parts[0].getNodeContainer() instanceof WorkflowManagerUI) {
+            WorkflowManagerUI wm = (WorkflowManagerUI)parts[0].getNodeContainer();
             return !wm.isWriteProtected();
         }
         return false;
@@ -148,9 +150,9 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
-            WorkflowManager metaNode =
-                (WorkflowManager)nodeParts[0].getNodeContainer();
-            if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
+            WorkflowManagerUI metaNode =
+                (WorkflowManagerUI)nodeParts[0].getNodeContainer();
+            if (!Wrapper.unwrapWFM(metaNode).unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
             // before we do anything, let's see if an expand will

@@ -56,10 +56,10 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -148,7 +148,7 @@ public final class DynamicNodeDescriptionCreator {
                     MetaNodeTemplate templ = (MetaNodeTemplate)child;
                     if (!idsDisplayed.contains(templ.getID())) {
                         idsDisplayed.add(templ.getID());
-                        NodeContainer manager =
+                        NodeContainerUI manager =
                                 ((MetaNodeTemplate)child).getManager();
                         addDescription(manager, /* useSingleLine */true, bld);
                     }
@@ -218,13 +218,13 @@ public final class DynamicNodeDescriptionCreator {
      *            otherwise the entire full description is added
      * @param bld the buffer to add the one line strings to.
      */
-    public void addDescription(final NodeContainer nc,
+    public void addDescription(final NodeContainerUI nc,
             final boolean useSingleLine, final StringBuilder bld) {
 
-        if (!(nc instanceof SingleNodeContainer)) {
+        if (!(nc instanceof SingleNodeContainerUI)) {
             addSubWorkflowDescription(nc, useSingleLine, bld);
         } else {
-            SingleNodeContainer singleNC = (SingleNodeContainer)nc;
+            SingleNodeContainerUI singleNC = (SingleNodeContainerUI)nc;
             if (useSingleLine) {
                 bld.append("<dt><b>");
                 bld.append(nc.getName());
@@ -262,7 +262,7 @@ public final class DynamicNodeDescriptionCreator {
      */
     public void addDescription(final MetaNodeTemplate template,
             final boolean useSingleLine, final StringBuilder builder) {
-        WorkflowManager manager = template.getManager();
+        WorkflowManagerUI manager = template.getManager();
         if (!useSingleLine) {
             builder.append(getHeader());
             builder.append("<h1>");
@@ -271,7 +271,7 @@ public final class DynamicNodeDescriptionCreator {
             builder.append("<h2>Description:</h2>");
             builder.append("<p>" + template.getDescription() + "</p>");
             builder.append("<h2>Contained nodes: </h2>");
-            for (NodeContainer child : manager.getNodeContainers()) {
+            for (NodeContainerUI child : manager.getNodeContainers()) {
                 addDescription(child, true, builder);
             }
             builder.append("</body></html>");
@@ -281,13 +281,13 @@ public final class DynamicNodeDescriptionCreator {
         }
     }
 
-    private void addSubWorkflowDescription(final NodeContainer nc,
+    private void addSubWorkflowDescription(final NodeContainerUI nc,
             final boolean useSingleLine, final StringBuilder bld) {
-        WorkflowManager wfm;
-        if (nc instanceof SubNodeContainer) {
-            wfm = ((SubNodeContainer)nc).getWorkflowManager();
+        WorkflowManagerUI wfm;
+        if (nc instanceof SubNodeContainerUI) {
+            wfm = ((SubNodeContainerUI)nc).getWorkflowManager();
         } else {
-            wfm = (WorkflowManager)nc;
+            wfm = (WorkflowManagerUI)nc;
         }
         if (!useSingleLine) {
             bld.append(getHeader());
@@ -299,7 +299,7 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append("<p>" + nc.getCustomDescription() + "</p>");
             }
             bld.append("<h2>Contained nodes: </h2>");
-            for (NodeContainer child : wfm.getNodeContainers()) {
+            for (NodeContainerUI child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</body></html>");
@@ -309,7 +309,7 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("</b></dt>");
             bld.append("<dd>");
             bld.append("<dl>");
-            for (NodeContainer child : wfm.getNodeContainers()) {
+            for (NodeContainerUI child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</dl>");

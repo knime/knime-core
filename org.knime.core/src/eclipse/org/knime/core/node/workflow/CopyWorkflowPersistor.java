@@ -73,9 +73,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     private final Map<Integer, NodeContainerPersistor> m_ncs;
     private final Set<ConnectionContainerTemplate> m_cons;
-    private final UIInformation m_inportUIInfo;
+    private final NodeUIInformation m_inportUIInfo;
     private final WorkflowPortTemplate[] m_inportTemplates;
-    private final UIInformation m_outportUIInfo;
+    private final NodeUIInformation m_outportUIInfo;
     private final WorkflowPortTemplate[] m_outportTemplates;
     private final EditorUIInformation m_editorUIInformation;
     private final String m_name;
@@ -106,9 +106,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
-            ? original.getInPortsBarUIInfo().clone() : null;
+            ? NodeUIInformation.builder(original.getInPortsBarUIInfo()).build() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
-            ? original.getOutPortsBarUIInfo().clone() : null;
+            ? NodeUIInformation.builder(original.getOutPortsBarUIInfo()).build() : null;
         m_isProject = original.isProject();
         m_inportTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         m_outportTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
@@ -123,7 +123,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_editorUIInformation = original.getEditorUIInformation() != null
-            ? original.getEditorUIInformation().clone() : null;
+            ? EditorUIInformation.builder(original.getEditorUIInformation()).build() : null;
         m_name = original.getNameField();
         m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
@@ -204,7 +204,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         return m_inportUIInfo;
     }
 
@@ -272,7 +272,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outportUIInfo;
     }
 

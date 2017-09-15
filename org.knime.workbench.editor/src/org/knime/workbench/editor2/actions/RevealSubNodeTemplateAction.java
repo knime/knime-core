@@ -50,6 +50,9 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrap;
+import static org.knime.core.ui.wrapper.Wrapper.wraps;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +65,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.ui.UI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -133,8 +138,8 @@ public class RevealSubNodeTemplateAction extends AbstractNodeAction {
         }
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof SubNodeContainer) {
-                SubNodeContainer snc = (SubNodeContainer)model;
+            if (wraps(model, SubNodeContainer.class)) {
+                SubNodeContainer snc = unwrap((UI)model, SubNodeContainer.class);
                 if (snc.getTemplateInformation().getRole().equals(Role.Link)) {
                     return true;
                 }
@@ -151,10 +156,10 @@ public class RevealSubNodeTemplateAction extends AbstractNodeAction {
                 = new ArrayList<AbstractExplorerFileStore>();
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof SubNodeContainer) {
-                NodeContext.pushContext(p.getNodeContainer());
+            if (wraps(model, SubNodeContainer.class)) {
+                NodeContext.pushContext(Wrapper.unwrapNC(p.getNodeContainer()));
                 try {
-                    SubNodeContainer snc = (SubNodeContainer)model;
+                    SubNodeContainer snc = unwrap((UI)model, SubNodeContainer.class);
                     MetaNodeTemplateInformation i = snc.getTemplateInformation();
                     if (Role.Link.equals(i.getRole())) {
                         candidateList.add(snc.getID());

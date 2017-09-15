@@ -50,8 +50,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -134,14 +135,14 @@ public class StepLoopAction extends AbstractNodeAction {
         }
         // enabled if the one selected node is a configured and "in progress"
         // LoopEndNode
-        NodeContainer nc = parts[0].getNodeContainer();
-        if (nc instanceof NativeNodeContainer) {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+        NodeContainerUI nc = parts[0].getNodeContainer();
+        if (Wrapper.wraps(nc, NativeNodeContainer.class)) {
+            NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
             if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                 // either the node is paused...
                 return true;
             }
-            WorkflowManager wm = getEditor().getWorkflowManager();
+            WorkflowManager wm = getEditor().getWorkflowManager().get();
             if (wm.canExecuteNodeDirectly(nc.getID())) {
                 // ...or we can execute it (then this will be the first step)
                 return true;
@@ -161,14 +162,14 @@ public class StepLoopAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         WorkflowManager manager = getManager();
         for (NodeContainerEditPart p : nodeParts) {
-            NodeContainer nc = p.getNodeContainer();
-            if (nc instanceof NativeNodeContainer) {
-                NativeNodeContainer nnc = (NativeNodeContainer)nc;
+            NodeContainerUI nc = p.getNodeContainer();
+            if (Wrapper.wraps(nc, NativeNodeContainer.class)) {
+                NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
                 if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(nnc, /*oneStep=*/true);
                 } else if (manager.canExecuteNodeDirectly(nc.getID())) {
                     manager.executeUpToHere(nc.getID());
-                    manager.pauseLoopExecution(nc);
+                    manager.pauseLoopExecution(nnc);
                 }
             }
         }

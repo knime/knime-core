@@ -66,7 +66,11 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.DynamicNodeTemplate;
@@ -630,5 +634,23 @@ public final class RepositoryManager {
             readRepository(new NullProgressMonitor());
         }
         return m_nodesById.get(id);
+    }
+
+    /**
+     * Creates the node factory instance for the given fully-qualified factory class name.
+     * Otherwise a respective exception will be thrown.
+     * @param factoryClassName 
+     * @return a new node factory instance
+     * @throws InvalidSettingsException 
+     * @throws InstantiationException 
+     * @throws IllegalAccessException 
+     * @throws ClassNotFoundException 
+     *
+     * @since 3.5
+     */
+    @SuppressWarnings("unchecked")
+    public synchronized final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
+        InstantiationException, IllegalAccessException, ClassNotFoundException {
+        return FileNativeNodeContainerPersistor.loadNodeFactory(factoryClassName);
     }
 }

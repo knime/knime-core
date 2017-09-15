@@ -130,6 +130,9 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
     @Override
     protected boolean internalCalculateEnabled() {
         final WorkflowManager manager = getManager();
+        if(manager == null) {
+            return false;
+        }
         if (manager.isWriteProtected()) {
             return false;
         }

@@ -50,6 +50,7 @@ package org.knime.workbench.editor2.actions;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.Command;
@@ -105,39 +106,40 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         NodeContainerEditPart[] nodeParts = AbstractNodeAction.filterObjects(
                 NodeContainerEditPart.class, objects);
 
-        WorkflowManager manager =
-            ((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
-        DeleteCommand cmd = new DeleteCommand(objects, manager);
-        int nodeCount = cmd.getNodeCount();
-        int connCount = cmd.getConnectionCount();
-        int annoCount = cmd.getAnnotationCount();
+        Optional<WorkflowManager> manager =((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
 
-        StringBuilder dialogText =
-            new StringBuilder("Do you really want to delete ");
-        if (nodeCount > 0) {
-            dialogText.append(nodeCount).append(" node");
-            dialogText.append(nodeCount > 1 ? "s" : "");
-            if (annoCount > 0 && connCount > 0) {
-                dialogText.append(" , ");
-            } else if (annoCount > 0 || connCount > 0) {
-                dialogText.append(" and ");
+        if (manager.isPresent()) {
+            DeleteCommand cmd = new DeleteCommand(objects, manager.get());
+            int nodeCount = cmd.getNodeCount();
+            int connCount = cmd.getConnectionCount();
+            int annoCount = cmd.getAnnotationCount();
+
+            StringBuilder dialogText = new StringBuilder("Do you really want to delete ");
+            if (nodeCount > 0) {
+                dialogText.append(nodeCount).append(" node");
+                dialogText.append(nodeCount > 1 ? "s" : "");
+                if (annoCount > 0 && connCount > 0) {
+                    dialogText.append(" , ");
+                } else if (annoCount > 0 || connCount > 0) {
+                    dialogText.append(" and ");
+                }
             }
-        }
-        if (connCount > 0) {
-            dialogText.append(connCount).append(" connection");
-            dialogText.append(connCount > 1 ? "s" : "");
-            dialogText.append(annoCount > 0 ? " and " : "");
-        }
-        if (annoCount > 0) {
-            dialogText.append(annoCount).append(" annotation");
-            dialogText.append(annoCount > 1 ? "s" : "");
-        }
-        dialogText.append("?");
-        compoundCmd.setDialogDisplayText(dialogText.toString());
+            if (connCount > 0) {
+                dialogText.append(connCount).append(" connection");
+                dialogText.append(connCount > 1 ? "s" : "");
+                dialogText.append(annoCount > 0 ? " and " : "");
+            }
+            if (annoCount > 0) {
+                dialogText.append(annoCount).append(" annotation");
+                dialogText.append(annoCount > 1 ? "s" : "");
+            }
+            dialogText.append("?");
+            compoundCmd.setDialogDisplayText(dialogText.toString());
 
-        // set the parts into the compound command (for unmarking after cancel)
-        compoundCmd.setNodeParts(Arrays.asList(nodeParts));
-        compoundCmd.add(cmd);
+            // set the parts into the compound command (for unmarking after cancel)
+            compoundCmd.setNodeParts(Arrays.asList(nodeParts));
+            compoundCmd.add(cmd);
+        }
 
         return compoundCmd;
     }

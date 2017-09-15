@@ -40,30 +40,35 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   28.06.2012 (Peter Ohl): created
+ *   18.09.2007 (mb): created
  */
-package org.knime.workbench.editor2.actions.delegates;
+package org.knime.core.ui.node.workflow;
 
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.ChangeGridAction;
+import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.core.ui.UI;
 
 /**
- * Editor action for opening the Grid Settings dialog.
+ * Represents a node out-port of a workflow (e.g. a metanode).
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland.
- * @deprecated replaced by {@link ChangeEditorUIEditorAction}
+ * UI-interface that mirrors the {@link WorkflowOutPort}.
+ *
+ * @author M. Berthold, University of Konstanz
+ * @author Martin Horn, KNIME.com
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-@Deprecated
-public class ChangeGridEditorAction extends AbstractEditorAction {
+public interface WorkflowOutPortUI extends NodeOutPortUI, UI  {
+
+
     /**
-     * {@inheritDoc}
+     * @param portIndex the new portIndex to set
+     * @since 2.6
      */
-    @Override
-    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
-        return new ChangeGridAction(editor);
-    }
+    public void setPortIndex(final int portIndex);
+
 }

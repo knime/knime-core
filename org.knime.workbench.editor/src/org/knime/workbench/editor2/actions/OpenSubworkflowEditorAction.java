@@ -49,7 +49,7 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -112,7 +112,7 @@ public class OpenSubworkflowEditorAction extends Action {
      *         <code>WorkflowManager</code>, otherwise false
      */
     protected boolean calculateEnabled() {
-        if (m_nodeContainer.getModel() instanceof WorkflowManager) {
+        if (m_nodeContainer.getModel() instanceof WorkflowManagerUI) {
             return true;
         }
         return false;

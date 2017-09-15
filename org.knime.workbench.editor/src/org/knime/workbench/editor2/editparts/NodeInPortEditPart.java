@@ -52,10 +52,10 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.workbench.editor2.figures.NodeInPortFigure;
 
 /**
@@ -80,8 +80,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     protected IFigure createFigure() {
         // Create the figure, we need the number of ports from the parent
         // container
-        NodeContainer container = getNodeContainer();
-        boolean isMetaNode = !(container instanceof SingleNodeContainer);
+        NodeContainerUI container = getNodeContainer();
+        boolean isMetaNode = !(container instanceof SingleNodeContainerUI);
         NodeInPortFigure portFigure =
                 new NodeInPortFigure(getType(), getIndex(), container
                         .getNrInPorts(), isMetaNode, container.getInPort(
@@ -99,11 +99,11 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    public List<ConnectionContainer> getModelTargetConnections() {
+    public List<ConnectionContainerUI> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        ConnectionContainer container =
+        ConnectionContainerUI container =
                 getManager().getIncomingConnectionFor(
                         getNodeContainer().getID(), getIndex());
 
@@ -120,7 +120,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    protected List<ConnectionContainer> getModelSourceConnections() {
+    protected List<ConnectionContainerUI> getModelSourceConnections() {
         return EMPTY_LIST;
     }
 

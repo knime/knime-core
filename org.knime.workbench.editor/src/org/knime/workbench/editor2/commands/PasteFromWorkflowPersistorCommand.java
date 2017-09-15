@@ -93,7 +93,7 @@ public final class PasteFromWorkflowPersistorCommand
     public PasteFromWorkflowPersistorCommand(final WorkflowEditor editor,
             final ClipboardObject clipboardObject,
             final ShiftCalculator shiftCalculator) {
-        super(editor.getWorkflowManager());
+        super(editor.getWorkflowManager().get());
         m_editor = editor;
         m_clipboardObject = clipboardObject;
         m_shiftCalculator = shiftCalculator;
@@ -121,7 +121,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager manager = m_editor.getWorkflowManager();
+        WorkflowManager manager = m_editor.getWorkflowManager().get();
         WorkflowPersistor copyPersistor = m_clipboardObject.getCopyPersistor();
         m_pastedContent = manager.paste(copyPersistor);
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
@@ -147,8 +147,7 @@ public final class PasteFromWorkflowPersistorCommand
             newIDs.add(id);
             NodeContainer nc = manager.getNodeContainer(id);
             NodeUIInformation oldUI = nc.getUIInformation();
-            NodeUIInformation newUI =
-                oldUI.createNewWithOffsetPosition(moveDist);
+            NodeUIInformation newUI = NodeUIInformation.builder(oldUI).translate(moveDist).build();
             nc.setUIInformation(newUI);
         }
         for (ConnectionContainer conn : manager.getConnectionContainers()) {
@@ -159,7 +158,7 @@ public final class PasteFromWorkflowPersistorCommand
                     conn.getUIInfo();
                 if (oldUI != null) {
                     ConnectionUIInformation newUI =
-                        oldUI.createNewWithOffsetPosition(moveDist);
+                        ConnectionUIInformation.builder(oldUI).translate(moveDist).build();
                     conn.setUIInfo(newUI);
                 }
             }
@@ -186,7 +185,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        WorkflowManager manager = m_editor.getWorkflowManager();
+        WorkflowManager manager = m_editor.getWorkflowManager().get();
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
         Annotation[] pastedAnnos = m_pastedContent.getAnnotations();
         if ((pastedNodes == null || pastedNodes.length == 0)
@@ -204,7 +203,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public void undo() {
-        WorkflowManager manager = m_editor.getWorkflowManager();
+        WorkflowManager manager = m_editor.getWorkflowManager().get();
         for (NodeID id : m_pastedContent.getNodeIDs()) {
             manager.removeNode(id);
         }

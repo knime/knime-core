@@ -45,97 +45,167 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 
 /**
- * Class representing node IDs and workflow annotations that need to be
- * copied from a workflow. Both IDs and annotation must be contained in the
+ * Class representing node IDs and workflow annotations (rather it's ids) that need to be
+ * copied from a workflow. Both, node IDs and annotation IDs must be contained in the
  * workflow that is copied from.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class WorkflowCopyContent {
 
-    private NodeID[] m_nodeIDs;
-    private WorkflowAnnotation[] m_annotations;
+    private final List<NodeID> m_nodeIDs;
+    private final List<WorkflowAnnotation> m_annotations;
     /** see {@link #setIncludeInOutConnections(boolean)}. */
-    private boolean m_isIncludeInOutConnections;
+    private final boolean m_isIncludeInOutConnections;
     /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
-    private Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
+    private final Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
     /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
-    private Map<NodeID, NodeUIInformation> m_uiInfoMap;
+    private final Map<NodeID, NodeUIInformation> m_uiInfoMap;
 
-    /** @return the ids */
-    public NodeID[] getNodeIDs() {
-        return m_nodeIDs;
-    }
-
-    /** @param ids the ids to set */
-    public void setNodeIDs(final NodeID... ids) {
-        m_nodeIDs = ids;
-    }
-
-    /** Used when copying from metanode template space.
-     * @param id The ID of the metanode in the template root workflow
-     * @param suggestedNodeIDSuffix The suffix to be used in the target workflow (overwrite it)
-     * @param uiInfo The UIInfo the in the target workflow (also overwritten)
-     * @return this
+    /**
+     * Creates a new object from the given builder. All mutable fields from the builder are copied!
      */
-    WorkflowCopyContent setNodeID(final NodeID id, final int suggestedNodeIDSuffix, final NodeUIInformation uiInfo) {
-        m_nodeIDs = new NodeID[] {id};
-        m_suggestedNodeIDSuffixMap = Collections.singletonMap(id, suggestedNodeIDSuffix);
-        m_uiInfoMap = Collections.singletonMap(id, uiInfo);
-        return this;
+    private WorkflowCopyContent(final Builder builder) {
+        if (builder.m_nodeIDs != null) {
+            m_nodeIDs = Collections.unmodifiableList(Arrays.asList(builder.m_nodeIDs));
+        } else {
+            m_nodeIDs = Collections.emptyList();
+        }
+        if (builder.m_annotations != null) {
+            m_annotations = Collections.unmodifiableList(Arrays.asList(builder.m_annotations));
+        } else {
+            m_annotations = Collections.emptyList();
+        }
+        m_isIncludeInOutConnections = builder.m_isIncludeInOutConnections;
+        if (builder.m_suggestedNodeIDSuffixMap != null) {
+            m_suggestedNodeIDSuffixMap = new HashMap<NodeID, Integer>(builder.m_suggestedNodeIDSuffixMap);
+        } else {
+            m_suggestedNodeIDSuffixMap = new HashMap<NodeID, Integer>(0);
+        }
+        if (builder.m_uiInfoMap != null) {
+            m_uiInfoMap = new HashMap<NodeID, NodeUIInformation>(builder.m_uiInfoMap);
+        } else {
+            m_uiInfoMap = new HashMap<NodeID, NodeUIInformation>(0);
+        }
+    }
+
+    /** @return the ids as a newly created array */
+    public NodeID[] getNodeIDs() {
+        return m_nodeIDs.toArray(new NodeID[m_nodeIDs.size()]);
     }
 
     /** The overwritten NodeID suffix to the given node or null if not overwritten.
      * @param id The ID in question.
-     * @return Null or the suffix. */
-    Integer getSuggestedNodIDSuffix(final NodeID id) {
+     * @return Null or the suffix.
+     * @since 3.5*/
+    public Integer getSuggestedNodIDSuffix(final NodeID id) {
         return m_suggestedNodeIDSuffixMap == null ? null : m_suggestedNodeIDSuffixMap.get(id);
     }
 
     /** Get overwritten UIInfo to node with given ID or null.
      * @param id ...
      * @return ...
+     * @since 3.5
      */
-    NodeUIInformation getOverwrittenUIInfo(final NodeID id) {
+    public NodeUIInformation getOverwrittenUIInfo(final NodeID id) {
         return m_uiInfoMap == null ? null : m_uiInfoMap.get(id);
     }
 
-    /** see {@link #setIncludeInOutConnections(boolean)}.
+    /** see {@link Builder#setIncludeInOutConnections(boolean)}.
      * @return the isIncludeInOutConnections */
     public boolean isIncludeInOutConnections() {
         return m_isIncludeInOutConnections;
     }
 
-    /** Set whether connections that link to or from any of the contained nodes
-     * should be included in the copy content. Connections whose source and
-     * destination are part of the {@link #getNodeIDs() NodeIDs set} are
-     * automatically included, this property determines whether connections
-     * connecting to this island are included as well.
-     * @param isIncludeInOutConnections the isIncludeInOutConnections to set */
-    public void setIncludeInOutConnections(
-            final boolean isIncludeInOutConnections) {
-        m_isIncludeInOutConnections = isIncludeInOutConnections;
-    }
-
-    /** @return the annotations, never null */
+    /** @return the annotations as a newly created array, never null
+     * @since 3.5*/
     public WorkflowAnnotation[] getAnnotations() {
-        if (m_annotations == null) {
-            return new WorkflowAnnotation[0];
-        } else {
-            return m_annotations;
-        }
+    	return m_annotations.toArray(new WorkflowAnnotation[m_annotations.size()]);
     }
 
-    /** Sets annotation references.
-     * @param annotations The annotations references.
+    /**
+     * @return a new {@link Builder} with default values.
+     * @since 3.5
      */
-    public void setAnnotation(final WorkflowAnnotation... annotations) {
-        m_annotations = annotations;
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder to create immutable objects of {@link WorkflowCopyContent}.
+     * @since 3.5
+     */
+    public static class Builder {
+
+        private NodeID[] m_nodeIDs;
+        private WorkflowAnnotation[] m_annotations;
+        /** see {@link #setIncludeInOutConnections(boolean)}. */
+        private boolean m_isIncludeInOutConnections;
+        /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
+        private Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
+        /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
+        private Map<NodeID, NodeUIInformation> m_uiInfoMap;
+
+        private Builder() {
+            //
+        }
+
+        /** @param ids the ids to set
+         * @return this*/
+        public Builder setNodeIDs(final NodeID... ids) {
+            m_nodeIDs = ids;
+            return this;
+        }
+
+        /** Used when copying from metanode template space.
+         * @param id The ID of the metanode in the template root workflow
+         * @param suggestedNodeIDSuffix The suffix to be used in the target workflow (overwrite it)
+         * @param uiInfo The UIInfo the in the target workflow (also overwritten)
+         * @return this
+         */
+        public Builder setNodeID(final NodeID id, final int suggestedNodeIDSuffix, final NodeUIInformation uiInfo) {
+            m_nodeIDs = new NodeID[] {id};
+            m_suggestedNodeIDSuffixMap = Collections.singletonMap(id, suggestedNodeIDSuffix);
+            m_uiInfoMap = Collections.singletonMap(id, uiInfo);
+            return this;
+        }
+
+        /** Set whether connections that link to or from any of the contained nodes
+         * should be included in the copy content. Connections whose source and
+         * destination are part of the {@link #getNodeIDs() NodeIDs set} are
+         * automatically included, this property determines whether connections
+         * connecting to this island are included as well.
+         * @param isIncludeInOutConnections the isIncludeInOutConnections to set
+         * @return this*/
+        public Builder setIncludeInOutConnections(
+                final boolean isIncludeInOutConnections) {
+            m_isIncludeInOutConnections = isIncludeInOutConnections;
+            return this;
+        }
+
+        /** Sets annotations.
+         * @param annotations the annotations
+         * @return this;
+         */
+        public Builder setAnnotation(final WorkflowAnnotation... annotations) {
+            m_annotations = annotations;
+            return this;
+        }
+
+        /** Creates a new instance of {@link WorkflowCopyContent} from the builder. All immutable fields are copied!
+         * @return the new instance*/
+        public WorkflowCopyContent build() {
+            return new WorkflowCopyContent(this);
+        }
+
     }
 
 }

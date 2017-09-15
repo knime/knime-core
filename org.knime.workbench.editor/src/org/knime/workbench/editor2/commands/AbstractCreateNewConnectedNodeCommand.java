@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and
@@ -127,12 +128,10 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
             NodeUIInformation uiInfo = newNode.getUIInformation();
             // create extra info and set it
             if (uiInfo == null) {
-                uiInfo =
-                        new NodeUIInformation(m_location.x, m_location.y, -1,
-                                -1, true);
+                uiInfo = NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1).build();
             } else {
-                uiInfo.setNodeLocation(m_location.x, m_location.y,
-                        uiInfo.getBounds()[2], uiInfo.getBounds()[3]);
+                uiInfo = NodeUIInformation.builder(uiInfo)
+                    .setNodeLocation(m_location.x, m_location.y, uiInfo.getBounds()[2], uiInfo.getBounds()[3]).build();
             }
             newNode.setUIInformation(uiInfo);
         }
@@ -190,8 +189,8 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
     private Map<Integer, Integer> getMatchingPorts(final NodeContainer left,
             final NodeContainer right) {
         // don't auto connect to flow var ports - start with port index 1
-        int leftFirst = (left instanceof WorkflowManager) ? 0 : 1;
-        int rightFirst = (right instanceof WorkflowManager) ? 0 : 1;
+        int leftFirst = (left instanceof WorkflowManagerUI) ? 0 : 1;
+        int rightFirst = (right instanceof WorkflowManagerUI) ? 0 : 1;
         Map<Integer, Integer> matchingPorts = new TreeMap<Integer, Integer>();
         Map<Integer, Integer> possibleMatches = new TreeMap<Integer, Integer>();
         Set<Integer> assignedRight = new HashSet<Integer>();

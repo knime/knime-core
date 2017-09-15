@@ -57,6 +57,18 @@ public class NodeStateEvent extends EventObject {
 
     private final InternalNodeContainerState m_internalNCState;
 
+    /**
+     * A new event from node container with the given id.
+     *
+     * The internally kept (and deprecated) {@link InternalNodeContainerState} state will be set to <code>null</code>!
+     *
+     * @param nodeID the node container the state has changed for (not null)
+     * @since 3.5
+     */
+    public NodeStateEvent(final NodeID nodeID) {
+        this(nodeID, null);
+    }
+
     /** A new event from the current node container ID and state.
      * @param nc A node container to derive the state from (not null).
      */

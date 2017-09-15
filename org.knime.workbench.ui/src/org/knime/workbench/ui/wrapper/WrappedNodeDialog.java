@@ -92,6 +92,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.wrapper.NodeContainerWrapper;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -427,7 +428,7 @@ public class WrappedNodeDialog extends Dialog {
                         - (HelpWindow.instance.getShell().getBounds().height - bounds.height)
                         / 2;
         HelpWindow.instance.getShell().setLocation(x, y);
-        HelpWindow.instance.showDescriptionForNode(m_nodeContainer);
+        HelpWindow.instance.showDescriptionForNode(NodeContainerWrapper.wrap(m_nodeContainer));
     }
 
     private void doCancel() {

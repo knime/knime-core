@@ -71,11 +71,12 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.editparts.FontStore;
@@ -535,14 +536,14 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @param nc new state of underlying node
      */
-    public void setStateFromNC(final NodeContainer nc) {
+    public void setStateFromNC(final NodeContainerUI nc) {
         boolean isInactive = false;
         LoopStatus loopStatus = LoopStatus.NONE;
-        if (nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (nc instanceof SingleNodeContainerUI) {
+            SingleNodeContainerUI snc = (SingleNodeContainerUI)nc;
             isInactive = snc.isInactive();
-            if (snc instanceof NativeNodeContainer) {
-                NativeNodeContainer nnc = (NativeNodeContainer)snc;
+            if (Wrapper.wraps(snc, NativeNodeContainer.class)) {
+                NativeNodeContainer nnc = Wrapper.unwrap(snc, NativeNodeContainer.class);
                 loopStatus = nnc.getLoopStatus();
             }
         }

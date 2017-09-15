@@ -64,14 +64,16 @@ import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.node.workflow.NodeOutPort;
-import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeInPortUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.NodePortUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.anchor.InPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
@@ -106,8 +108,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @see WorkflowOutPortEditPart#getModelTargetConnections()
      *
      */
-    protected static final List<ConnectionContainer> EMPTY_LIST =
-            new LinkedList<ConnectionContainer>();
+    protected static final List<ConnectionContainerUI> EMPTY_LIST =
+            new LinkedList<ConnectionContainerUI>();
 
     /**
      * Subclasses must call this with the appropriate port type, port index and
@@ -177,7 +179,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return true, if the underlying port is connected.
      */
     public boolean isConnected() {
-        WorkflowManager manager = getManager();
+        WorkflowManagerUI manager = getManager();
         if (manager == null) {
             return false;
         }
@@ -195,12 +197,12 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @return the container
      */
-    protected NodeContainer getNodeContainer() {
+    protected NodeContainerUI getNodeContainer() {
         if (getParent().getModel() instanceof WorkflowPortBar) {
             return ((WorkflowPortBar)getParent().getModel())
                     .getWorkflowManager();
         }
-        return (NodeContainer)getParent().getModel();
+        return (NodeContainerUI)getParent().getModel();
     }
 
     /**
@@ -208,7 +210,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      *
      * @return the workflow manager
      */
-    protected WorkflowManager getManager() {
+    protected WorkflowManagerUI getManager() {
         // should be no problem to return null
         // but avoid NullPointerException by calling methods on null object
         if (getParent() != null && getParent().getParent() != null) {
@@ -420,15 +422,15 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return tooltip text for the port (with number of columns and rows)
      */
     protected String getTooltipText(final String portName,
-            final NodePort port) {
+            final NodePortUI port) {
         String name = portName;
         if (portName == null) {
             name = port.getPortName();
         }
         StringBuilder sb = new StringBuilder();
         sb.append(name);
-        if (port instanceof NodeOutPort) {
-            String portSummary = ((NodeOutPort)port).getPortSummary();
+        if (port instanceof NodeOutPortUI) {
+            String portSummary = ((NodeOutPortUI)port).getPortSummary();
             if (portSummary != null && portSummary.length() > 0) {
                 sb.append(" (");
                 sb.append(portSummary);
@@ -446,13 +448,13 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public void rebuildTooltip() {
         if (isInPort()) {
             if (getIndex() < getNodeContainer().getNrInPorts()) {
-                NodeInPort port = getNodeContainer().getInPort(getIndex());
+                NodeInPortUI port = getNodeContainer().getInPort(getIndex());
                 String tooltip = getTooltipText(port.getPortName(), port);
                 ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
             }
         } else {
             if (getIndex() < getNodeContainer().getNrOutPorts()) {
-                NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+                NodeOutPortUI port = getNodeContainer().getOutPort(getIndex());
                 String tooltip = getTooltipText(port.getPortName(), port);
                 ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
             }

@@ -51,7 +51,7 @@ package org.knime.core.node.workflow;
  *
  * @author ohl, University of Konstanz
  */
-public class ConnectionID {
+public final class ConnectionID {
 
     private final NodeID m_destinationNode;
 

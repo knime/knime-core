@@ -49,7 +49,6 @@ package org.knime.workbench.ui.layout.commands;
 
 import java.util.Map;
 
-import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -57,6 +56,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.workbench.editor2.commands.AbstractKNIMECommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.layout.align.HorizAlignManager;
 
@@ -64,7 +65,7 @@ import org.knime.workbench.ui.layout.align.HorizAlignManager;
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class HorizAlignCommand extends Command {
+public class HorizAlignCommand extends AbstractKNIMECommand {
 
     private final WorkflowManager m_wfm;
 
@@ -78,6 +79,7 @@ public class HorizAlignCommand extends Command {
      */
     public HorizAlignCommand(final WorkflowManager wfm,
             final NodeContainerEditPart[] nodes) {
+        super(wfm);
         m_wfm = wfm;
         m_nodes = nodes.clone();
     }
@@ -87,7 +89,7 @@ public class HorizAlignCommand extends Command {
      */
     @Override
     public void execute() {
-        m_alignMgr = new HorizAlignManager(m_wfm, m_nodes);
+        m_alignMgr = new HorizAlignManager(WorkflowManagerWrapper.wrap(m_wfm), m_nodes);
         m_alignMgr.doLayout();
     }
 

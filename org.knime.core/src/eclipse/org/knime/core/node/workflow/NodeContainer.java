@@ -216,7 +216,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_state = InternalNodeContainerState.IDLE;
         m_nodeLocks = new NodeLocks(false, false, false);
         m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
-        m_annotation.registerOnNodeContainer(this);
+        m_annotation.registerOnNodeContainer(getID(), () -> setDirty());
+        addUIInformationListener(m_annotation);
     }
 
     /**
@@ -1032,6 +1033,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     public abstract boolean areDialogAndNodeSettingsEqual();
 
+    /** @return user settings for this node, possibly empty but not <code>null</code>.
+     * @since 3.5*/
+    public NodeSettings getNodeSettings() {
+        NodeSettings settings = new NodeSettings("node_settings");
+        saveSettings(settings);
+        return settings;
+    }
+
     void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         /*
          * see #loadCommonSettings
@@ -1368,7 +1377,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     void cleanup() {
         if (m_annotation != null) {
-            m_annotation.unregisterFromNodeContainer();
+            removeUIInformationListener(m_annotation);
         }
         closeAllJobManagerViews();
         for (int i = 0; i < getNrOutPorts(); i++) {
@@ -1675,7 +1684,10 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         private boolean m_hasResetLock;
         private boolean m_hasConfigureLock;
 
-        NodeLocks(final boolean hasDeleteLock, final boolean hasResetLock, final boolean hasConfigureLock) {
+        /**
+         * @since 3.5
+         */
+        public NodeLocks(final boolean hasDeleteLock, final boolean hasResetLock, final boolean hasConfigureLock) {
             m_hasDeleteLock = hasDeleteLock;
             m_hasResetLock = hasResetLock;
             m_hasConfigureLock = hasConfigureLock;

@@ -136,10 +136,10 @@ public class CopyAction extends AbstractClipboardAction {
         WorkflowAnnotation[] annotations =
             AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts);
 
-        WorkflowCopyContent content = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(ids);
         content.setAnnotation(annotations);
-        WorkflowPersistor copyPersistor = getManager().copy(false, content);
+        WorkflowPersistor copyPersistor = getManager().copy(false, content.build());
 
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files

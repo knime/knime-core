@@ -93,7 +93,7 @@ public class NewBendpointDeleteCommand extends Command {
     private ConnectionUIInformation getUIInfo(final ConnectionContainer conn) {
         ConnectionUIInformation uiInfo = conn.getUIInfo();
         if (uiInfo == null) {
-            uiInfo = new ConnectionUIInformation();
+            uiInfo = ConnectionUIInformation.builder().build();
         }
         return uiInfo;
     }
@@ -106,7 +106,7 @@ public class NewBendpointDeleteCommand extends Command {
         ConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         m_point = uiInfo.getBendpoint(m_index);
-        uiInfo.removeBendpoint(m_index);
+        uiInfo = ConnectionUIInformation.builder(uiInfo).removeBendpoint(m_index).build();
 
         // issue notification
         connection.setUIInfo(uiInfo);
@@ -119,7 +119,7 @@ public class NewBendpointDeleteCommand extends Command {
     public void redo() {
         ConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
-        uiInfo.removeBendpoint(m_index);
+        uiInfo = ConnectionUIInformation.builder(uiInfo).removeBendpoint(m_index).build();
         // issue notification
         connection.setUIInfo(uiInfo);
     }
@@ -131,7 +131,7 @@ public class NewBendpointDeleteCommand extends Command {
     public void undo() {
         ConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
-        uiInfo.addBendpoint(m_point[0], m_point[1], m_index);
+        uiInfo = ConnectionUIInformation.builder(uiInfo).addBendpoint(m_point[0], m_point[1], m_index).build();
         // issue notification
         connection.setUIInfo(uiInfo);
     }

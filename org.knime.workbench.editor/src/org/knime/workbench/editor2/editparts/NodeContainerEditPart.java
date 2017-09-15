@@ -125,9 +125,12 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodePortUI;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -199,8 +202,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @return The <code>NodeContainer</code>(= model)
      */
     @Override
-    public NodeContainer getNodeContainer() {
-        return (NodeContainer)getModel();
+    public NodeContainerUI getNodeContainer() {
+        return (NodeContainerUI)getModel();
     }
 
     /**
@@ -208,8 +211,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      * @return The hosting WFM
      */
-    public WorkflowManager getWorkflowManager() {
-        return (WorkflowManager)getParent().getModel();
+    public WorkflowManagerUI getWorkflowManager() {
+        return (WorkflowManagerUI)getParent().getModel();
     }
 
     public boolean getShowImplFlowVarPorts() {
@@ -232,15 +235,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         initFigure();
 
         // If we already have extra info, init figure now
-        NodeContainer cont = getNodeContainer();
+        NodeContainerUI cont = getNodeContainer();
         NodeUIInformation uiInfo = cont.getUIInformation();
         if (uiInfo != null) {
             // takes over all info except the coordinates
             updateFigureFromUIinfo(uiInfo);
         } else {
             // set a new empty UI info
-            NodeUIInformation info = new NodeUIInformation();
-            info.setNodeLocation(0, 0, -1, -1);
+            NodeUIInformation info = NodeUIInformation.builder().setNodeLocation(0, 0, -1, -1).build();
             // not yet a listener -- no event received
             cont.setUIInformation(info);
         }
@@ -282,7 +284,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      */
     @Override
     public void deactivate() {
-        NodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.removePropertyChangeListener(this);
         nc.removeNodeStateChangeListener(this);
@@ -367,9 +369,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * {@inheritDoc}
      */
     @Override
-    protected List<NodePort> getModelChildren() {
-        ArrayList<NodePort> ports = new ArrayList<NodePort>();
-        NodeContainer container = getNodeContainer();
+    protected List<NodePortUI> getModelChildren() {
+        ArrayList<NodePortUI> ports = new ArrayList<NodePortUI>();
+        NodeContainerUI container = getNodeContainer();
 
         for (int i = 0; i < container.getNrInPorts(); i++) {
             ports.add(container.getInPort(i));
@@ -401,7 +403,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
                     NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                     m_updateInProgress.set(false);
                     if (isActive()) {
-                        NodeContainer nc = getNodeContainer();
+                        NodeContainerUI nc = getNodeContainer();
                         fig.setStateFromNC(nc);
                         updateNodeMessage();
                         // reset the tooltip text of the outports
@@ -500,7 +502,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         }
 
         // for sub node refresh all tooltips
-        if (getNodeContainer() instanceof SubNodeContainer) {
+        if (getNodeContainer() instanceof SubNodeContainerUI) {
             for (Object part : getChildren()) {
                 if (part instanceof NodeInPortEditPart) {
                     NodeInPortEditPart inPortPart = (NodeInPortEditPart)part;
@@ -560,8 +562,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         if (newBounds) {
             // don't trigger another event here, when updating ui info
             m_uiListenerActive = false;
-            getNodeContainer()
-                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer().setUIInformation(
+                NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build());
             m_uiListenerActive = true;
         }
         // since v2.5 we ignore any width and height and keep bounds minimal
@@ -591,8 +593,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         if (set) {
             // notify uiInfo listeners (e.g. node annotations)
             m_uiListenerActive = false;
-            getNodeContainer()
-                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer().setUIInformation(
+                NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build());
             m_uiListenerActive = true;
         }
 
@@ -630,7 +632,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * is set. Otherwise the currently displayed message is removed.
      */
     private void updateNodeMessage() {
-        NodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = nc.getNodeMessage();
         containerFigure.setMessage(nodeMessage);
@@ -722,8 +724,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      */
     public void openDialog() {
-        NodeContainer container = (NodeContainer)getModel();
-        if (container instanceof WorkflowManager) {
+        NodeContainerUI container = (NodeContainerUI)getModel();
+        if (container instanceof WorkflowManagerUI) {
             openSubWorkflowEditor();
         } else {
             openNodeDialog();
@@ -736,7 +738,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @since 2.6
      */
     public void openNodeDialog() {
-        final NodeContainer container = (NodeContainer)getModel();
+        final NodeContainerUI container = (NodeContainerUI)getModel();
         // if this node does not have a dialog
         if (!container.hasDialog()) {
             LOGGER.debug("No dialog for " + container.getNameWithID());
@@ -817,8 +819,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
-                dlg.open();
+                if (Wrapper.wraps(container, NodeContainer.class)) {
+                    WrappedNodeDialog dlg = new WrappedNodeDialog(shell, Wrapper.unwrapNC(container));
+                    dlg.open();
+                }
             } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
                 mb.setText("Dialog cannot be opened");
@@ -836,16 +840,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     public void openSubWorkflowEditor() {
         WorkflowCipherPrompt prompt = new GUIWorkflowCipherPrompt();
         Object obj = getModel();
-        WorkflowManager wm;
-        if (obj instanceof WorkflowManager) {
-            wm = (WorkflowManager)getModel();
-        } else if (obj instanceof SubNodeContainer) {
-            wm = ((SubNodeContainer)obj).getWorkflowManager();
+        WorkflowManagerUI wm;
+        if (obj instanceof WorkflowManagerUI) {
+            wm = (WorkflowManagerUI)getModel();
+        } else if (obj instanceof SubNodeContainerUI) {
+            wm = ((SubNodeContainerUI)obj).getWorkflowManager();
         } else {
             return;
         }
-        if (!wm.unlock(prompt)) {
-            return;
+
+        //if workflow manager is encrypted, try unlocking it
+        if (wm.isEncrypted()) {
+            if (!Wrapper.unwrapWFM(wm).unlock(prompt)) {
+                return;
+            }
         }
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
@@ -931,7 +939,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void updateJobManagerIcon() {
-        NodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         NodeExecutionJobManager jobManager = nc.getJobManager();
         URL iconURL;
         if (jobManager != null) {
@@ -939,7 +947,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         } else {
             NodeExecutionJobManager parentJobManager = nc.findJobManager();
             if (parentJobManager instanceof AbstractNodeExecutionJobManager) {
-                iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(nc);
+                if (Wrapper.wraps(nc, NodeContainer.class)) {
+                    iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(Wrapper.unwrapNC(nc));
+                } else {
+                    iconURL = null;
+                }
             } else {
                 iconURL = null;
             }
@@ -952,7 +964,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkMetaNodeTemplateIcon() {
-        NodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         MetaNodeTemplateInformation templInfo = null;
         if (nc instanceof NodeContainerTemplate) {
             NodeContainerTemplate t = (NodeContainerTemplate)nc;
@@ -982,9 +994,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkMetaNodeLockIcon() {
-        NodeContainer nc = getNodeContainer();
-        if (nc instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)nc;
+        NodeContainerUI nc = getNodeContainer();
+        if (nc instanceof WorkflowManagerUI) {
+            WorkflowManagerUI wm = (WorkflowManagerUI)nc;
             Image i;
             if (wm.isEncrypted()) {
                 if (wm.isUnlocked()) {
@@ -1001,7 +1013,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     private void checkNodeLockIcon() {
-        NodeContainer nc = getNodeContainer();
+        NodeContainerUI nc = getNodeContainer();
         Image i;
         StringBuilder toolTip = new StringBuilder();
         //node is considered being locked if it is either lock from being reseted, it's not deletable, or the dialog is locked
@@ -1142,7 +1154,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @SuppressWarnings("rawtypes")
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
-            return new NodeContainerProperties(getNodeContainer());
+            return new NodeContainerProperties(Wrapper.unwrapNC(getNodeContainer()));
         }
         return super.getAdapter(adapter);
     }
@@ -1153,14 +1165,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @return the first free port the specified port could be connected to. Or -1 if there is none.
      */
     public int getFreeInPort(final ConnectableEditPart sourceNode, final int srcPortIdx) {
-        WorkflowManager wm = getWorkflowManager();
+        WorkflowManagerUI wm = getWorkflowManager();
         if (wm == null || sourceNode == null || srcPortIdx < 0) {
             return -1;
         }
         int startPortIdx = 1; // skip variable ports
         int connPortIdx = -1;
-        NodeContainer nc = getNodeContainer();
-        if (nc instanceof WorkflowManager) {
+        NodeContainerUI nc = getNodeContainer();
+        if (nc instanceof WorkflowManagerUI) {
             startPortIdx = 0;
         }
         for (int i = startPortIdx; i < nc.getNrInPorts(); i++) {

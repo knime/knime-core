@@ -53,13 +53,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -75,7 +75,7 @@ public class HorizAlignManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(HorizAlignManager.class);
 
-    private WorkflowManager m_wfm;
+    private WorkflowManagerUI m_wfm;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
 
@@ -90,7 +90,7 @@ public class HorizAlignManager {
      * @param nodes the nodes to align
      *
      */
-    public HorizAlignManager(final WorkflowManager wfManager,
+    public HorizAlignManager(final WorkflowManagerUI wfManager,
             final NodeContainerEditPart[] nodes) {
         m_wfm = wfManager;
         m_nodeParts = nodes.clone();
@@ -118,12 +118,12 @@ public class HorizAlignManager {
         // transfer new coordinates into nodes
         for (Map.Entry<NodeContainerEditPart, Integer> e : offsets.entrySet()) {
             NodeContainerEditPart node = e.getKey();
-            NodeContainer nc = node.getNodeContainer();
-            NodeUIInformation uiInfo = (NodeUIInformation)nc.getUIInformation();
+            NodeContainerUI nc = node.getNodeContainer();
+            NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
-            NodeUIInformation newCoord =
-                    new NodeUIInformation(b[0], b[1] + e.getValue(), b[2],
-                            b[3], uiInfo.hasAbsoluteCoordinates());
+            NodeUIInformation newCoord = NodeUIInformation.builder()
+                    .setNodeLocation(b[0], b[1] + e.getValue(), b[2], b[3])
+                    .setHasAbsoluteCoordinates(uiInfo.hasAbsoluteCoordinates()).build();
             LOGGER.debug("Node " + nc + " gets alignment coordinates "
                     + newCoord);
             // save old coordinates for undo
@@ -139,14 +139,14 @@ public class HorizAlignManager {
 
     private void adjustBendPoints(final NodeContainerEditPart node,
             final int offset) {
-        NodeContainer nc = node.getNodeContainer();
+        NodeContainerUI nc = node.getNodeContainer();
 
-        Set<ConnectionContainer> inConns =
+        Set<ConnectionContainerUI> inConns =
                 m_wfm.getIncomingConnectionsFor(nc.getID());
 
-        for (ConnectionContainer conn : inConns) {
+        for (ConnectionContainerUI conn : inConns) {
             ConnectionUIInformation ui =
-                    (ConnectionUIInformation)conn.getUIInfo();
+                    conn.getUIInfo();
             if (ui == null) {
                 // easy: no bend points
                 continue;
@@ -174,20 +174,20 @@ public class HorizAlignManager {
             if (m_oldBendpoints.get(conn.getID()) == null) {
                 m_oldBendpoints.put(conn.getID(), ui);
             }
-            ConnectionUIInformation newUI = ui.clone();
-            newUI.removeBendpoint(bendPointIdx);
-            newUI.addBendpoint(newBendPnt[0], newBendPnt[1], bendPointIdx);
+            ConnectionUIInformation.Builder newUIBuilder = ConnectionUIInformation.builder(ui);
+            newUIBuilder.removeBendpoint(bendPointIdx);
+            newUIBuilder.addBendpoint(newBendPnt[0], newBendPnt[1], bendPointIdx);
             LOGGER.debug("Node: " + nc + ", replacing bendpoint " + bendPointIdx
                     + " " + bendPnt[0] + "," + bendPnt[1] + " with "
                     + newBendPnt[0] + "," + newBendPnt[1]);
-            conn.setUIInfo(newUI);
+            conn.setUIInfo(newUIBuilder.build());
         }
 
-        Set<ConnectionContainer> outConns =
+        Set<ConnectionContainerUI> outConns =
                 m_wfm.getOutgoingConnectionsFor(nc.getID());
-        for (ConnectionContainer conn : outConns) {
+        for (ConnectionContainerUI conn : outConns) {
             ConnectionUIInformation ui =
-                    (ConnectionUIInformation)conn.getUIInfo();
+                    conn.getUIInfo();
             if (ui == null || ui.getAllBendpoints().length == 0) {
                 // easy: no bend points
                 continue;
@@ -213,13 +213,13 @@ public class HorizAlignManager {
             if (m_oldBendpoints.get(conn.getID()) == null) {
                 m_oldBendpoints.put(conn.getID(), ui);
             }
-            ConnectionUIInformation newUI = ui.clone();
-            newUI.removeBendpoint(bendPointIdx);
-            newUI.addBendpoint(newBendPnt[0], newBendPnt[1], bendPointIdx);
+            ConnectionUIInformation.Builder newUIBuilder = ConnectionUIInformation.builder(ui);
+            newUIBuilder.removeBendpoint(bendPointIdx);
+            newUIBuilder.addBendpoint(newBendPnt[0], newBendPnt[1], bendPointIdx);
             LOGGER.debug("Node: " + nc + ", replacing bendpoint " + bendPointIdx
                     + " " + bendPnt[0] + "," + bendPnt[1] + " with "
                     + newBendPnt[0] + "," + newBendPnt[1]);
-            conn.setUIInfo(newUI);
+            conn.setUIInfo(newUIBuilder.build());
         }
 
     }

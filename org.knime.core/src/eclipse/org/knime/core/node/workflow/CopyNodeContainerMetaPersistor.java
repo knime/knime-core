@@ -110,7 +110,7 @@ implements NodeContainerMetaPersistor {
         }
         m_nodeMessage = original.getNodeMessage();
         if (original.getUIInformation() != null) {
-            m_uiInformation = original.getUIInformation().clone();
+            m_uiInformation = NodeUIInformation.builder(original.getUIInformation()).build();
         } else {
             m_uiInformation = null;
         }

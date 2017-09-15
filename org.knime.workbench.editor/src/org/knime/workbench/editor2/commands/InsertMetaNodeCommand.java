@@ -52,6 +52,7 @@ import org.eclipse.gef.RootEditPart;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
@@ -80,7 +81,7 @@ public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
         super(manager, persistor, location, snapToGrid);
         m_root = edge.getRoot();
-        m_edge = edge.getModel();
+        m_edge = Wrapper.unwrapCC(edge.getModel());
         m_ih = new InsertHelper(getHostWFM(), m_edge);
 
         // delete command handles undo and restores all connections and node correctly

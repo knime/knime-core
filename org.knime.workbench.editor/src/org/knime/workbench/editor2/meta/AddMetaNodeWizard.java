@@ -210,17 +210,17 @@ public class AddMetaNodeWizard extends Wizard {
         } while (ep instanceof NodeContainerEditPart);
 
         AddNewMetaNodeCommand cmd =
-                new AddNewMetaNodeCommand(m_wfEditor.getWorkflowManager(), inPorts, outPorts, name, location);
+                new AddNewMetaNodeCommand(m_wfEditor.getWorkflowManager().get(), inPorts, outPorts, name, location);
         m_wfEditor.getViewer().getEditDomain().getCommandStack().execute(cmd);
     }
 
     private void performCustomizedFinish() {
         // create subworkflow with the number and types
         // of the entered in- and out ports
-        PortType[] inPorts = new PortType[m_addPage.getInports().size()];
+        PortType[] inPorts = new PortType[m_addPage.getInPorts().size()];
         PortType[] outPorts = new PortType[m_addPage.getOutPorts().size()];
         int i = 0;
-        for (MetaPortInfo p : m_addPage.getInports()) {
+        for (MetaPortInfo p : m_addPage.getInPorts()) {
             inPorts[i++] = p.getType();
         }
         i = 0;

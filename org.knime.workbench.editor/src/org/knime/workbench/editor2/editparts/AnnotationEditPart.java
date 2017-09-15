@@ -362,10 +362,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             return t.getText();
         }
         String text;
-        if (((NodeAnnotation)t).getNodeContainer() == null) {
+        if (((NodeAnnotation)t).getNodeID() == null) {
             return "";
         }
-        int id = ((NodeAnnotation)t).getNodeContainer().getID().getIndex();
+        int id = ((NodeAnnotation)t).getNodeID().getIndex();
         String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore().
             getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
         if (prefix == null || prefix.isEmpty()) {

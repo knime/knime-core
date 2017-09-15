@@ -140,7 +140,7 @@ public class BringAnnotationToFrontAction extends AbstractNodeAction {
         if (sel.length != 1) {
             return;
         }
-        getEditor().getWorkflowManager().bringAnnotationToFront((WorkflowAnnotation)sel[0].getModel());
+        getEditor().getWorkflowManager().get().bringAnnotationToFront((WorkflowAnnotation)sel[0].getModel());
         getEditor().getViewer().getRootEditPart().getContents().refresh();
     }
 }

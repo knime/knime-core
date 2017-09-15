@@ -204,8 +204,11 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
                 int revNewIdx = newInfo.getOldIndex();
                 PortType revType = currentPortList[newInfo.getOldIndex()].getType();
                 boolean revConn = currentPortList[newInfo.getOldIndex()].isConnected();
-                MetaPortInfo revInfo = new MetaPortInfo(revType, revConn, null, revOldIdx);
-                revInfo.setNewIndex(revNewIdx);
+                MetaPortInfo revInfo = MetaPortInfo.builder()
+                        .setPortType(revType)
+                        .setIsConnected(revConn)
+                        .setOldIndex(revOldIdx)
+                        .setNewIndex(revNewIdx).build();
                 reverse[revNewIdx] = revInfo;
             }
         }
@@ -216,8 +219,11 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
                 continue;
             }
             MetaPortInfo currentInfo = currentPortList[i];
-            MetaPortInfo revInfo = new MetaPortInfo(currentInfo.getType(), false, null, -1);
-            revInfo.setNewIndex(i);
+            MetaPortInfo revInfo = MetaPortInfo.builder(currentInfo)
+                    .setIsConnected(false)
+                    .setMessage(null)
+                    .setOldIndex(-1)
+                    .setNewIndex(i).build();
             reverse[i] = revInfo;
         }
         return new ArrayList<MetaPortInfo>(Arrays.asList(reverse));

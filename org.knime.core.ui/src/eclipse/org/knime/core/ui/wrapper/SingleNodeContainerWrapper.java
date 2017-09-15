@@ -1,5 +1,6 @@
-/* Created on Jun 27, 2006 3:54:35 PM by thor
+/*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,91 +41,56 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 18, 2016 (hornm): created
  */
-package org.knime.core.util;
+package org.knime.core.ui.wrapper;
 
-import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
+import org.w3c.dom.Element;
 
 /**
- * This class is a simple pair of objects.
+ * UI-interface implementation that wraps a {@link SingleNodeContainer}.
  *
- * @param <T> class of the first object
- * @param <M> class of the second object
- * @author Thorsten Meinl, University of Konstanz
+ * @author Martin Horn, University of Konstanz
  */
-public final class Pair<T, M> {
-    private final T m_first;
-    private final M m_second;
+public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends NodeContainerWrapper<W> implements SingleNodeContainerUI {
+
+    private SingleNodeContainer m_delegate;
 
     /**
-     * Creates a new pair.
      *
-     * @param first the first object
-     * @param second the second object
      */
-    public Pair(final T first, final M second) {
-        m_first = first;
-        m_second = second;
+    protected SingleNodeContainerWrapper(final W delegate) {
+        super(delegate);
+        m_delegate = delegate;
     }
 
     /**
-     * Returns the first object.
+     * Wraps the object via {@link Wrapper#wrapOrGet(Object, java.util.function.Function)}.
      *
-     * @return the first object
+     * @param snc the object to be wrapped
+     * @return a new wrapper or a already existing one
      */
-    public T getFirst() { return m_first; }
-
-    /**
-     * Returns the second object.
-     *
-     * @return the second object
-     */
-    public M getSecond() { return m_second; }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(final Object o) {
-        if (!(o instanceof Pair)) { return false; }
-
-        Pair<?, ?> p = (Pair<?, ?>) o;
-        if (!ConvenienceMethods.areEqual(m_first, p.m_first)) {
-            return false;
-        }
-        if (!ConvenienceMethods.areEqual(m_second, p.m_second)) {
-            return false;
-        }
-        return true;
+    public static final SingleNodeContainerWrapper wrap(final SingleNodeContainer snc) {
+        return (SingleNodeContainerWrapper)Wrapper.wrapOrGet(snc, o -> new SingleNodeContainerWrapper(o));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public int hashCode() {
-        int firstHash = m_first == null ? 0 : m_first.hashCode();
-        int secondHash = m_second == null ? 0 : m_second.hashCode();
-        return firstHash ^ (secondHash << 2);
+    public boolean isMemberOfScope() {
+        return m_delegate.isMemberOfScope();
     }
 
-    /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return "<" + m_first +  ";" + m_second + ">";
+    public boolean isInactive() {
+        return m_delegate.isInactive();
     }
 
-    /** Factory method that infers the generic arguments, equivalent to {@link #Pair(Object, Object) constructor}.
-     * @param first The first element
-     * @param second The second element
-     * @return a new pair
-     * @param <T> Type of first element
-     * @param <M> Type of second element
-     * @since 2.9
-     */
-    public static final <T, M> Pair<T, M> create(final T first, final M second) {
-        return new Pair<T, M>(first, second);
+    @Override
+    public Element getXMLDescription() {
+        return m_delegate.getXMLDescription();
     }
 }

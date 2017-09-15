@@ -48,9 +48,10 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -131,9 +132,9 @@ public class PauseLoopExecutionAction extends AbstractNodeAction {
             return false;
         }
         // enabled if the one selected node is an executing LoopEndNode
-        NodeContainer nc = parts[0].getNodeContainer();
-        if (nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)nc;
+        NodeContainerUI nc = parts[0].getNodeContainer();
+        if (Wrapper.wraps(nc, SingleNodeContainer.class)) {
+            SingleNodeContainer snc = Wrapper.unwrap(nc, SingleNodeContainer.class);
             if ((snc.isModelCompatibleTo(LoopEndNode.class)) && (nc.getNodeContainerState().isExecutionInProgress())) {
                 return true;
             }
@@ -152,7 +153,7 @@ public class PauseLoopExecutionAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         WorkflowManager manager = getManager();
         for (NodeContainerEditPart p : nodeParts) {
-            manager.pauseLoopExecution(p.getNodeContainer());
+            manager.pauseLoopExecution(Wrapper.unwrapNC(p.getNodeContainer()));
         }
         try {
             // Give focus to the editor again. Otherwise the actions (selection)

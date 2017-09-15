@@ -311,11 +311,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
-        WorkflowCopyContent c = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder c = WorkflowCopyContent.builder();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
         c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
         c.setIncludeInOutConnections(false);
-        WorkflowPersistor wp = content.copy(c);
+        WorkflowPersistor wp = content.copy(c.build());
         WorkflowCopyContent wcc = m_wfm.paste(wp);
         // create map of NodeIDs for quick lookup/search
         Collection<NodeContainer> ncs = content.getNodeContainers();
@@ -381,7 +381,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         int[] maxCoordinates = minMaxCoordinates.getSecond();
         int x = minCoordinates[0] - 100;
         int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
-        inNodeNC.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+        inNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
         return inNodeID;
     }
 
@@ -395,7 +395,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         int[] maxCoordinates = minMaxCoordinates.getSecond();
         int x = maxCoordinates[0] + 100;
         int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
-        outNodeNC.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+        outNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
         return outNodeID;
     }
 
@@ -1767,11 +1767,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 .filter(id -> id.getIndex() != m_virtualInNodeIDSuffix)
                 .filter(id -> id.getIndex() != m_virtualOutNodeIDSuffix)
                 .toArray(NodeID[]::new);
-        WorkflowCopyContent cnt = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
         cnt.setNodeIDs(nodes);
         cnt.setAnnotation(workflowAnnotations.toArray(new WorkflowAnnotation[workflowAnnotations.size()]));
         cnt.setIncludeInOutConnections(true);
-        WorkflowPersistor persistor = m_wfm.copy(true, cnt);
+        WorkflowPersistor persistor = m_wfm.copy(true, cnt.build());
         final Set<ConnectionContainerTemplate> additionalConnectionSet = persistor.getAdditionalConnectionSet();
         for (Iterator<ConnectionContainerTemplate> it = additionalConnectionSet.iterator(); it.hasNext();) {
             ConnectionContainerTemplate c = it.next();
@@ -1955,7 +1955,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 isConnected = false;
                 message = null;
             }
-            result.add(new MetaPortInfo(portType, isConnected, message, i));
+            result.add(MetaPortInfo.builder()
+                .setPortType(portType)
+                .setIsConnected(isConnected)
+                .setMessage(message)
+                .setOldIndex(i).build());
         }
         return result.toArray(new MetaPortInfo[result.size()]);
     }
@@ -1999,7 +2003,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 isConnected = false;
                 message = null;
             }
-            result.add(new MetaPortInfo(portType, isConnected, message, i));
+            result.add(MetaPortInfo.builder()
+                .setPortType(portType)
+                .setIsConnected(isConnected)
+                .setMessage(message)
+                .setOldIndex(i).build());
         }
         return result.toArray(new MetaPortInfo[result.size()]);
     }
@@ -2123,11 +2131,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         directory.mkdir();
         workflowDirRef.lock();
-        try (WorkflowLock lock = lock()) {
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
-            cnt.setNodeIDs(getID());
+        try {
+            WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
+            cntBuilder.setNodeIDs(getID());
+            WorkflowCopyContent cnt;
             synchronized (m_nodeMutex) {
-                cnt = tempParent.copyFromAndPasteHere(getParent(), cnt);
+                cnt = tempParent.copyFromAndPasteHere(getParent(), cntBuilder.build());
             }
             NodeID cID = cnt.getNodeIDs()[0];
             copy = ((SubNodeContainer)tempParent.getNodeContainer(cID));

@@ -93,7 +93,7 @@ abstract class AbstractSaveRunnable extends PersistWorkflowRunnable {
     public final void run(final IProgressMonitor pm) {
         File workflowDir = getSaveLocation();
         try {
-            final WorkflowManager wfm = m_editor.getWorkflowManager();
+            final WorkflowManager wfm = m_editor.getWorkflowManager().get();
             ProgressHandler progressHandler =
                 new ProgressHandler(pm, wfm.getNodeContainers().size(), "Saving workflow... (cannot be canceled)");
             final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);

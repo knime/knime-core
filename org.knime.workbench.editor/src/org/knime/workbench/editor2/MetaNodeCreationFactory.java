@@ -70,9 +70,9 @@ public class MetaNodeCreationFactory implements CreationFactory {
     public Object getNewObject() {
         NodeID id = m_template.getManager().getID();
         WorkflowManager sourceManager = WorkflowManager.META_NODE_ROOT;
-        WorkflowCopyContent content = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(id);
-        return sourceManager.copy(content);
+        return sourceManager.copy(content.build());
     }
 
     /**

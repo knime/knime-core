@@ -216,7 +216,7 @@ abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
 
     protected IStatus createMultiStatus(
             final String message, final IStatus[] stats) {
-        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK,
+        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, IStatus.OK,
                 stats, message, null);
     }
 

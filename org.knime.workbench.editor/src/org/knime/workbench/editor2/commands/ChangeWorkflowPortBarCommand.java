@@ -51,6 +51,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -73,7 +74,7 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     public ChangeWorkflowPortBarCommand(
             final AbstractWorkflowPortBarEditPart portBar,
             final Rectangle newBounds) {
-        super(portBar.getNodeContainer());
+        super(Wrapper.unwrapWFM(portBar.getNodeContainer()));
         WorkflowPortBar barModel = (WorkflowPortBar)portBar.getModel();
         NodeUIInformation uiInfo = barModel.getUIInfo();
         if (uiInfo != null) {
@@ -111,9 +112,8 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        NodeUIInformation uiInfo = new NodeUIInformation(
-                m_newBounds.x, m_newBounds.y,
-                m_newBounds.width, m_newBounds.height, true);
+        NodeUIInformation uiInfo = NodeUIInformation.builder()
+            .setNodeLocation(m_newBounds.x, m_newBounds.y, m_newBounds.width, m_newBounds.height).build();
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
         IFigure fig = m_bar.getFigure();
@@ -130,9 +130,8 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        NodeUIInformation uiInfo = new NodeUIInformation(
-                m_oldBounds.x, m_oldBounds.y,
-                m_oldBounds.width, m_oldBounds.height, true);
+        NodeUIInformation uiInfo = NodeUIInformation.builder()
+            .setNodeLocation(m_oldBounds.x, m_oldBounds.y, m_oldBounds.width, m_oldBounds.height).build();
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
         IFigure fig = m_bar.getFigure();

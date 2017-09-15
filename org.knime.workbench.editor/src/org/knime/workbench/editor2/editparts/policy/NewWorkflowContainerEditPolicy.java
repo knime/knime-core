@@ -61,6 +61,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.CreateDropRequest;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.ReaderNodeSettings;
@@ -106,7 +107,15 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
 
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this.getHost();
-        WorkflowManager manager = workflowPart.getWorkflowManager();
+
+        if(!Wrapper.wraps(workflowPart.getWorkflowManager(), WorkflowManager.class)) {
+            //adding new nodes not supported yet by UI-interfaces and implemenations
+            LOGGER.error("Adding new nodes not supported by '"
+                + workflowPart.getWorkflowManager().getClass().getSimpleName() + "'.");
+            return null;
+        }
+
+        WorkflowManager manager = Wrapper.unwrapWFM(workflowPart.getWorkflowManager());
 
         if (request instanceof CreateDropRequest) {
             Object obj = request.getNewObject();

@@ -54,9 +54,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -77,7 +77,7 @@ public final class HorizAlignmentCenter {
      * @param nodeParts the nodes to align
      * @return a map with offsets for the nodes
      */
-    static Map<NodeContainerEditPart, Integer> doLayout(final WorkflowManager wfm,
+    static Map<NodeContainerEditPart, Integer> doLayout(final WorkflowManagerUI wfm,
             final NodeContainerEditPart[] nodeParts) {
 
         if (nodeParts.length == 0) {
@@ -120,7 +120,7 @@ public final class HorizAlignmentCenter {
         int refY = nui.getBounds()[1];
 
         for (int i = 1 /* idx 0 is anchor */; i < nodes.length; i++) {
-            NodeContainer nc = nodes[i].getNodeContainer();
+            NodeContainerUI nc = nodes[i].getNodeContainer();
             NodeUIInformation ui = nc.getUIInformation();
             if (ui.getBounds()[1] != refY) {
                 offsets.put(nodes[i], refY - ui.getBounds()[1]);

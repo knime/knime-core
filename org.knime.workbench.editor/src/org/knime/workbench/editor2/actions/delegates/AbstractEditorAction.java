@@ -87,7 +87,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
         if (targetEditor instanceof WorkflowEditor) {
 
             m_editor = (WorkflowEditor)targetEditor;
-            m_editor.getWorkflowManager().addNodeStateChangeListener(this);
+            m_editor.getWorkflowManager().ifPresent(wfm -> wfm.addNodeStateChangeListener(this));
             m_decoratedAction = createAction(m_editor);
 
         } else {
@@ -96,8 +96,8 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
             }
             m_decoratedAction = null;
             if (m_editor != null) {
-                m_editor.getWorkflowManager().removeNodeStateChangeListener(
-                        this);
+                m_editor.getWorkflowManager().ifPresent(wfm -> wfm.removeNodeStateChangeListener(
+                        this));
             }
             m_editor = null;
         }

@@ -49,6 +49,9 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.WorkflowManagerWrapper;
+import org.knime.core.ui.wrapper.Wrapper;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to
@@ -58,25 +61,49 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public abstract class AbstractKNIMECommand extends Command {
 
-   private WorkflowManager m_hostWFM;
+   private WorkflowManagerUI m_hostWFM;
 
    /** @param hostWFM The host workflow, must not be null. */
     public AbstractKNIMECommand(final WorkflowManager hostWFM) {
+        if (hostWFM == null) {
+            throw new IllegalArgumentException("Argument must not be null.");
+        } else {
+            m_hostWFM = WorkflowManagerWrapper.wrap(hostWFM);
+        }
+    }
+
+    /**
+     * If this constructor is used, the {@link #getHostWFM()}-method will return <code>null</code> and the
+     * {@link #getHostWFMUI()} must be used instead.
+     *
+     * @param hostWFM The host UI(!) workflow, must not be null.
+     */
+    public AbstractKNIMECommand(final WorkflowManagerUI hostWFM) {
         if (hostWFM == null) {
             throw new IllegalArgumentException("Argument must not be null.");
         }
         m_hostWFM = hostWFM;
     }
 
-    /** @return the hostWFM, not null unless this command is disposed. */
+    /**
+     * @return the hostWFM, not null unless this command is disposed or the derived command works on the
+     *         {@link WorkflowManagerUI}.
+     */
     protected final WorkflowManager getHostWFM() {
+        return m_hostWFM == null ? null : Wrapper.unwrapWFMOptional(m_hostWFM).orElse(null);
+    }
+
+    /**
+     * @return the hostWFMUI, not null unless the command is disposed.
+     */
+    protected final WorkflowManagerUI getHostWFMUI() {
         return m_hostWFM;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return !m_hostWFM.isWriteProtected();
+        return m_hostWFM != null && !m_hostWFM.isWriteProtected();
     }
 
     /** {@inheritDoc} */
@@ -85,5 +112,4 @@ public abstract class AbstractKNIMECommand extends Command {
         super.dispose();
         m_hostWFM = null;
     }
-
 }

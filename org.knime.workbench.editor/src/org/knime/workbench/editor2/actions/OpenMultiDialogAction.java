@@ -48,10 +48,10 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -123,7 +123,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
             return false;
         }
         for (NodeContainerEditPart ep : selected) {
-            NodeContainer nc = ep.getNodeContainer();
+            NodeContainerUI nc = ep.getNodeContainer();
             if (nc.getParent().isWriteProtected()) {
                 // don't do it in write protected metanodes.
                 return false;
@@ -144,9 +144,9 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
         NodeID[] nodes = new NodeID[nodeParts.length];
         SplitType splitType = SplitType.USER;
         for (int i = 0; i < nodeParts.length; i++) {
-            NodeContainer nc = nodeParts[i].getNodeContainer();
+            NodeContainerUI nc = nodeParts[i].getNodeContainer();
             nodes[i] = nc.getID();
-            if (nc instanceof WorkflowManager) {
+            if (nc instanceof WorkflowManagerUI) {
                 // one metanode disables splitting
                 splitType = SplitType.DISALLOWED;
             }

@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapNC;
+
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -311,8 +313,8 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             m_connection = wm.addConnection(
                     m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
                     m_targetNode.getNodeContainer().getID(), m_targetPortID);
-            NodeTimer.GLOBAL_TIMER.addConnectionCreation(m_sourceNode.getNodeContainer(),
-                                                         m_targetNode.getNodeContainer());
+            NodeTimer.GLOBAL_TIMER.addConnectionCreation(unwrapNC(m_sourceNode.getNodeContainer()),
+                                                         unwrapNC(m_targetNode.getNodeContainer()));
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
             }

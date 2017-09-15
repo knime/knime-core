@@ -54,6 +54,7 @@ import org.eclipse.gef.RootEditPart;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -82,7 +83,7 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
         super(manager, factory, location, snapToGrid);
         m_node = nodeToReplace;
         m_root = nodeToReplace.getRoot();
-        m_rh = new ReplaceHelper(manager, m_node.getNodeContainer());
+        m_rh = new ReplaceHelper(manager, Wrapper.unwrapNC(m_node.getNodeContainer()));
 
         // delete command handles undo action (restoring connections and positions)
         m_delete = new DeleteCommand(Collections.singleton(m_node), manager);

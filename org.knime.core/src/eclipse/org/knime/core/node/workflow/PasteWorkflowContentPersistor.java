@@ -137,9 +137,10 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         throwUnsupportedOperationException();
         return null;
     }
@@ -212,9 +213,10 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.5*/
     @Override
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         throwUnsupportedOperationException();
         return null;
     }

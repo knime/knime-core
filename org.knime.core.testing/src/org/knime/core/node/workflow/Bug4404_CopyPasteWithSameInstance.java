@@ -70,9 +70,9 @@ public class Bug4404_CopyPasteWithSameInstance extends WorkflowTestCase {
     @Test
     public void testCopyAndPasteTwice() throws Exception {
         WorkflowManager manager = getManager();
-        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
         copyContent.setNodeIDs(m_meta100_5);
-        WorkflowPersistor copyPersistor = manager.copy(copyContent); // copy once but paste twice
+        WorkflowPersistor copyPersistor = manager.copy(copyContent.build()); // copy once but paste twice
         WorkflowCopyContent paste1 = manager.paste(copyPersistor);
         NodeID meta200 = paste1.getNodeIDs()[0];
         WorkflowCopyContent paste2 = manager.paste(copyPersistor);

@@ -59,6 +59,9 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.UI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -130,9 +133,9 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
         }
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)model;
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
+            if (model instanceof WorkflowManagerUI) {
+                WorkflowManagerUI wm = (WorkflowManagerUI)model;
+                if (Wrapper.unwrapWFM(wm).getTemplateInformation().getRole().equals(Role.Link)) {
                     return true;
                 }
             }
@@ -148,10 +151,10 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
                 = new ArrayList<AbstractExplorerFileStore>();
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof WorkflowManager) {
-                NodeContext.pushContext(p.getNodeContainer());
+            if (model instanceof WorkflowManagerUI) {
+                NodeContext.pushContext(Wrapper.unwrapNC(p.getNodeContainer()));
                 try {
-                    WorkflowManager wm = (WorkflowManager)model;
+                    WorkflowManager wm = Wrapper.unwrapWFM((UI)model);
                     MetaNodeTemplateInformation i = wm.getTemplateInformation();
                     if (Role.Link.equals(i.getRole())) {
                         candidateList.add(wm.getID());

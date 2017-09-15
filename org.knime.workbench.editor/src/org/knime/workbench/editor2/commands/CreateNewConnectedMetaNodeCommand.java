@@ -98,11 +98,11 @@ public class CreateNewConnectedMetaNodeCommand extends
      */
     @Override
     protected NodeID createNewNode() {
-        WorkflowCopyContent content = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(m_sourceID);
         WorkflowManager hostWFM = getHostWFM();
         NodeID[] copied =
-                hostWFM.copyFromAndPasteHere(m_source, content).getNodeIDs();
+                hostWFM.copyFromAndPasteHere(m_source, content.build()).getNodeIDs();
         assert copied.length == 1;
         return copied[0];
     }

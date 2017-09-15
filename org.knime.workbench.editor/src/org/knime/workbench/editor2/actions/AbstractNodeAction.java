@@ -60,6 +60,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.keys.IBindingService;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -104,7 +106,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return shortcut sequence or empty string if no shortcut sequence is available
      */
     public String getHotkey(final String commandID) {
-        IBindingService bindingService = (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+        IBindingService bindingService = PlatformUI.getWorkbench().getAdapter(IBindingService.class);
         if (bindingService == null) {
             return "";
         }
@@ -122,8 +124,22 @@ public abstract class AbstractNodeAction extends SelectionAction {
      *
      */
     protected final WorkflowManager getManager() {
-        return m_editor.getWorkflowManager();
+        if (canHandleWorklfowManagerUI()) {
+            throw new IllegalStateException(
+                "This action can supposedly handle the WorkflowManagerUI but tries to retrieve the WorkflowManager.");
+        }
+        return m_editor.getWorkflowManager().get();
+    }
 
+    /**
+     * @return The manager that is edited by the current editor. Subclasses that can handle a {@link WorkflowManagerUI}
+     *         (see {@link #canHandleWorklfowManagerUI()}) may want to have a reference to this.
+     *
+     * Note that this value may be <code>null</code> if the editor has not
+     * already been created completely !
+     */
+    protected final WorkflowManagerUI getManagerUI() {
+        return m_editor.getWorkflowManagerUI();
     }
 
     /**
@@ -254,7 +270,29 @@ public abstract class AbstractNodeAction extends SelectionAction {
      */
     @Override
     protected final boolean calculateEnabled() {
+        if (getManagerUI() != null && !Wrapper.wraps(getManagerUI(), WorkflowManager.class)
+            && !canHandleWorklfowManagerUI()) {
+            //if the WorkflowManagerUI is NOT just a wrapper the WorkflowManager
+            //and the action cannot deal with the WorkflowManagerUI-interface itself, it is disabled
+            return false;
+        }
         return getManager() != null && internalCalculateEnabled();
+    }
+
+    /**
+     * Subclasses override this method and return <code>true</code> if they can handle, i.e., work on the
+     * {@link WorkflowManagerUI} interface. If the current {@link WorkflowManagerUI} is NOT just a wrapper of {@link WorkflowManager}
+     * and the derived action cannot deal with the {@link WorkflowManagerUI}-interface only, the respective action will be
+     * disabled!
+     *
+     * If the methods returns <code>true</code> the action MUST only work on the {@link WorkflowManagerUI}, returned by
+     * the {@link #getManagerUI()}-method.
+     *
+     * @return whether the action can handle the {@link WorkflowManagerUI}.
+     *
+     */
+    protected boolean canHandleWorklfowManagerUI() {
+        return false;
     }
 
     /**

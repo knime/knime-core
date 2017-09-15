@@ -86,17 +86,23 @@ public class ConnectionContainer implements ConnectionProgressListener {
     }
 
     private final ConnectionType m_type;
+    private boolean m_isFlowVariablePortConnection;
 
-    /** Creates new connection.
+    /**
+     * Creates new connection.
      *
      * @param src source node
      * @param srcPort port of source node
      * @param dest destination node
      * @param destPort port of destination node
      * @param type of connection
+     * @param isFlowVariablePortConnection whether it's a connection between two flow variable ports - see
+     *            {@link #isFlowVariablePortConnection()}
+     * @since 3.5
      */
-    public ConnectionContainer(final NodeID src, final int srcPort,
-            final NodeID dest, final int destPort, final ConnectionType type) {
+    public ConnectionContainer(final NodeID src, final int srcPort, final NodeID dest, final int destPort,
+        final ConnectionType type, final boolean isFlowVariablePortConnection) {
+        m_isFlowVariablePortConnection = isFlowVariablePortConnection;
         CheckUtils.checkArgument(srcPort >= 0 && destPort >= 0,
                 "Port index must not be < 0: %d", Math.min(srcPort, destPort));
         m_source = CheckUtils.checkArgumentNotNull(src);
@@ -151,6 +157,14 @@ public class ConnectionContainer implements ConnectionProgressListener {
      */
     public boolean isDeletable() {
         return m_isDeletable;
+    }
+
+    /**
+     * @return whether the connection connects two flow variable ports - mainly used to determine the connection color
+     * @since 3.5
+     */
+    public boolean isFlowVariablePortConnection() {
+        return m_isFlowVariablePortConnection;
     }
 
     /**

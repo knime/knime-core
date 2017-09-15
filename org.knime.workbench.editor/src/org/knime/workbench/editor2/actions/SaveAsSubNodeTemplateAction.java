@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrap;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +64,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.UI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -137,8 +141,8 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (model instanceof SubNodeContainer) {
-            SubNodeContainer snc = (SubNodeContainer)model;
+        if (Wrapper.wraps(model, SubNodeContainer.class)) {
+            SubNodeContainer snc = unwrap((UI)model, SubNodeContainer.class);
             switch (snc.getTemplateInformation().getRole()) {
             case None:
                 break;
@@ -162,7 +166,7 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
             return;
         }
 
-        SubNodeContainer snc = (SubNodeContainer)nodes[0].getModel();
+        SubNodeContainer snc = unwrap(nodes[0].getNodeContainer(), SubNodeContainer.class);
         WorkflowManager wm = snc.getWorkflowManager();
 
         List<String> validMountPointList = new ArrayList<String>();

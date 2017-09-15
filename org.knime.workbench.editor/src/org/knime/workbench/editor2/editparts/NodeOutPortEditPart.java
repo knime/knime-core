@@ -55,12 +55,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.node.workflow.ConnectionContainerUI;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.NodeOutPortUI;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
@@ -87,10 +88,10 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     protected IFigure createFigure() {
         // Create the figure, we need the number of ports from the parent
         // container
-        NodeContainer container = getNodeContainer();
-        NodeOutPort port = container.getOutPort(getIndex());
+        NodeContainerUI container = getNodeContainer();
+        NodeOutPortUI port = container.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
-        boolean isMetaNode = !(container instanceof SingleNodeContainer);
+        boolean isMetaNode = !(container instanceof SingleNodeContainerUI);
         NodeOutPortFigure portFigure =
                 new NodeOutPortFigure(getType(), getIndex(),
                         container.getNrOutPorts(), isMetaNode, tooltip);
@@ -105,7 +106,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     @Override
     public void activate() {
         super.activate();
-        NodeOutPort outPort = (NodeOutPort)getModel();
+        NodeOutPortUI outPort = (NodeOutPortUI)getModel();
         outPort.addNodeStateChangeListener(this);
     }
 
@@ -114,7 +115,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      */
     @Override
     public void deactivate() {
-        NodeOutPort outPort = (NodeOutPort)getModel();
+        NodeOutPortUI outPort = (NodeOutPortUI)getModel();
         outPort.removeNodeStateChangeListener(this);
         super.deactivate();
     }
@@ -128,14 +129,14 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      *         {@inheritDoc}
      */
     @Override
-    public List<ConnectionContainer> getModelSourceConnections() {
+    public List<ConnectionContainerUI> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<ConnectionContainer> containers =
+        Set<ConnectionContainerUI> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(), getIndex());
-        List<ConnectionContainer> conns = new ArrayList<ConnectionContainer>();
+        List<ConnectionContainerUI> conns = new ArrayList<ConnectionContainerUI>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -149,7 +150,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
      *         {@inheritDoc}
      */
     @Override
-    protected List<ConnectionContainer> getModelTargetConnections() {
+    protected List<ConnectionContainerUI> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 
@@ -172,7 +173,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
                         return;
                     }
                     m_updateInProgressFlag.set(false);
-                    NodeOutPort outPort = (NodeOutPort)getModel();
+                    NodeOutPortUI outPort = (NodeOutPortUI)getModel();
                     NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();
                     rebuildTooltip();
                     fig.setInactive(outPort.isInactive());

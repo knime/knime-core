@@ -75,7 +75,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
@@ -84,6 +83,8 @@ import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
@@ -134,8 +135,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * @return The <code>WorkflowManager</code> that is used as model for this
      *         edit part
      */
-    public WorkflowManager getWorkflowManager() {
-        return (WorkflowManager)getModel();
+    public WorkflowManagerUI getWorkflowManager() {
+        return (WorkflowManagerUI)getModel();
     }
 
     /**
@@ -171,7 +172,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    public NodeContainer getNodeContainer() {
+    public NodeContainerUI getNodeContainer() {
         return getWorkflowManager();
     }
 
@@ -185,7 +186,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {
         List modelChildren = new ArrayList();
-        WorkflowManager wfm = getWorkflowManager();
+        WorkflowManagerUI wfm = getWorkflowManager();
         // sequence here determines z-order of edit parts
 
         // Add workflow annotations as children of the workflow manager.
@@ -204,9 +205,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
                 NodeUIInformation uiInfo =
-                        (NodeUIInformation)wfm.getInPortsBarUIInfo();
-                if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_inBar.setUIInfo((NodeUIInformation)wfm
+                        wfm.getInPortsBarUIInfo();
+                if (uiInfo != null) {
+                    m_inBar.setUIInfo(wfm
                             .getInPortsBarUIInfo());
                 }
             }
@@ -216,10 +217,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
                 NodeUIInformation uiInfo =
-                        (NodeUIInformation)wfm.getOutPortsBarUIInfo();
-                if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((NodeUIInformation)
-                            wfm.getOutPortsBarUIInfo());
+                        wfm.getOutPortsBarUIInfo();
+                if (uiInfo != null) {
+                    m_outBar.setUIInfo(wfm.getOutPortsBarUIInfo());
                 }
             }
             modelChildren.add(m_outBar);

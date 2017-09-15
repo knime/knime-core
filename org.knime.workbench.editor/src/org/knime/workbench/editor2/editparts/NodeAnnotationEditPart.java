@@ -54,7 +54,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
@@ -87,12 +87,12 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
                 annoFig.newContent(anno);
                 // node annotation ignores its x/y ui info and hooks itself to its node
-                NodeContainer node = anno.getNodeContainer();
-                if (node == null) {
+                NodeID nodeID = anno.getNodeID();
+                if (nodeID == null) {
                     // may happen if the node is disposed before this runnable is executed
                     return;
                 }
-                NodeUIInformation nodeUI = node.getUIInformation();
+                NodeUIInformation nodeUI = parent.getWorkflowManager().getNodeContainer(nodeID).getUIInformation();
                 int x = anno.getX();
                 int y = anno.getY();
                 int w = anno.getWidth();
@@ -129,7 +129,7 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 }
                 if (nodeUI != null) {
                     NodeContainerEditPart nodePart =
-                        (NodeContainerEditPart)getViewer().getEditPartRegistry().get(node);
+                        (NodeContainerEditPart)getViewer().getEditPartRegistry().get(parent.getWorkflowManager().getNodeContainer(nodeID));
                     Point offset;
                     int nodeHeight;
                     int symbFigWidth;

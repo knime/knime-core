@@ -58,6 +58,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.ui.UI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -128,8 +130,8 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof SubNodeContainer) {
-                SubNodeContainer snc = (SubNodeContainer)model;
+            if (Wrapper.wraps(model, SubNodeContainer.class)) {
+                SubNodeContainer snc = Wrapper.unwrap((UI)model, SubNodeContainer.class);
                 MetaNodeTemplateInformation i = snc.getTemplateInformation();
                 if (Role.Link.equals(i.getRole())) {
                     return true;
@@ -145,8 +147,8 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
         List<NodeID> idList = new ArrayList<NodeID>();
         for (NodeContainerEditPart p : nodeParts) {
             Object model = p.getModel();
-            if (model instanceof SubNodeContainer) {
-                SubNodeContainer snc = (SubNodeContainer)model;
+            if (Wrapper.wraps(model, SubNodeContainer.class)) {
+                SubNodeContainer snc = Wrapper.unwrap((UI)model, SubNodeContainer.class);
                 MetaNodeTemplateInformation i = snc.getTemplateInformation();
                 if (Role.Link.equals(i.getRole())) {
                     idList.add(snc.getID());

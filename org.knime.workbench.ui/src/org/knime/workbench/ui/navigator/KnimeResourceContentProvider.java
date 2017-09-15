@@ -66,6 +66,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 
 /**
  *
@@ -89,16 +91,16 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
-            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+            NodeContainerUI workflow = ProjectWorkflowMap.getWorkflowUI(
                     project.getLocationURI());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
-                return ((WorkflowManager)workflow).getNodeContainers()
+                return ((WorkflowManagerUI)workflow).getNodeContainers()
                     .size() > 0;
             }
-        } else if (element instanceof WorkflowManager) {
-            return ((WorkflowManager)element).getNodeContainers().size() > 0;
+        } else if (element instanceof WorkflowManagerUI) {
+            return ((WorkflowManagerUI)element).getNodeContainers().size() > 0;
         }
         // check if parent is a KNIME workflow
         // then it is a node and has no children
@@ -152,16 +154,16 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
         }
         if (isKNIMEWorkflow(element)) {
             IContainer project = (IContainer)element;
-            NodeContainer workflow = ProjectWorkflowMap.getWorkflow(
+            NodeContainerUI workflow = ProjectWorkflowMap.getWorkflowUI(
                     project.getLocationURI());
             if (workflow != null) {
                 // if the workflow is open then it is regsitered and
                 // the number of contained nodes is returned
                 return getSortedNodeContainers(
-                        ((WorkflowManager)workflow).getNodeContainers());
+                        ((WorkflowManagerUI)workflow).getNodeContainers());
             }
         } else if (element instanceof WorkflowManager) {
-            return getSortedNodeContainers(((WorkflowManager)element)
+            return getSortedNodeContainers(((WorkflowManagerUI)element)
                     .getNodeContainers());
         }
         return getFolders(element);
@@ -169,15 +171,15 @@ public class KnimeResourceContentProvider implements ITreeContentProvider {
 
     // bugfix: 1474 (now nodes are always sorted lexicographically)
     private Object[] getSortedNodeContainers(
-            final Collection<NodeContainer> nodes) {
-        Set<NodeContainer>copy = new TreeSet<NodeContainer>(
-                new Comparator<NodeContainer>() {
+            final Collection<NodeContainerUI> nodes) {
+        Set<NodeContainerUI>copy = new TreeSet<NodeContainerUI>(
+                new Comparator<NodeContainerUI>() {
             /**
              * {@inheritDoc}
              */
             @Override
-            public int compare(final NodeContainer o1,
-                    final NodeContainer o2) {
+            public int compare(final NodeContainerUI o1,
+                    final NodeContainerUI o2) {
                 return o1.getNameWithID().compareTo(o2.getNameWithID());
             }
 

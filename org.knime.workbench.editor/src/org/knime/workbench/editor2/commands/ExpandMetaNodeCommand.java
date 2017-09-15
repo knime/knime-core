@@ -108,10 +108,10 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             for (IEditorPart child : m_editor.getSubEditors(m_id)) {
                 child.getEditorSite().getPage().closeEditor(child, false);
             }
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
             cnt.setNodeIDs(m_id);
             cnt.setIncludeInOutConnections(true);
-            m_undoCopyPersistor = hostWFM.copy(true, cnt);
+            m_undoCopyPersistor = hostWFM.copy(true, cnt.build());
             WorkflowCopyContent wcc = hostWFM.expandMetaNode(m_id);
             m_pastedNodes = wcc.getNodeIDs();
             m_pastedAnnotations = wcc.getAnnotations();

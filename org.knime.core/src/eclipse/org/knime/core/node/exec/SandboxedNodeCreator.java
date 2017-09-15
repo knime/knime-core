@@ -282,9 +282,9 @@ public final class SandboxedNodeCreator {
                 throw new RuntimeException(error);
             }
             // add the target node to the workflow
-            WorkflowCopyContent content = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
             content.setNodeIDs(m_nc.getID());
-            final NodeID targetNodeID = tempWFM.copyFromAndPasteHere(parent, content).getNodeIDs()[0];
+            final NodeID targetNodeID = tempWFM.copyFromAndPasteHere(parent, content.build()).getNodeIDs()[0];
             NodeContainer targetNode = tempWFM.getNodeContainer(targetNodeID);
             // connect target node to inPort object nodes, skipping unconnected (optional) inputs
             IntStream.range(0, inCnt).filter(i -> ins[i] != null)

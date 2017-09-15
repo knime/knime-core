@@ -138,17 +138,21 @@ public class ReconfigureMetaNodeWizard extends Wizard {
     @Override
     public boolean performFinish() {
         NodeContainer node = m_metaNode != null ? m_metaNode : m_subNode;
-        List<MetaPortInfo> inPorts = m_addPage.getInports();
+        List<MetaPortInfo> inPorts = m_addPage.getInPorts();
         List<MetaPortInfo> outPorts = m_addPage.getOutPorts();
         String name = m_addPage.getMetaNodeName();
 
         // fix the indicies
         for (int i = 0; i < inPorts.size(); i++) {
-            inPorts.get(i).setNewIndex(i);
+            m_addPage.replaceInPortAtIndex(i, MetaPortInfo.builder(inPorts.get(i)).setNewIndex(i).build());
         }
         for (int i = 0; i < outPorts.size(); i++) {
-            outPorts.get(i).setNewIndex(i);
+            m_addPage.replaceOutPortAtIndex(i, MetaPortInfo.builder(outPorts.get(i)).setNewIndex(i).build());
         }
+
+        inPorts = m_addPage.getInPorts();
+        outPorts = m_addPage.getOutPorts();
+
         // determine what has changed
         boolean inPortChanges = node.getNrInPorts() != inPorts.size();
         for (MetaPortInfo inInfo : inPorts) {
@@ -179,8 +183,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
         infoStr.append("of MetaNode " + node.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(),
-                node.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(), node.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }

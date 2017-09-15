@@ -97,9 +97,9 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 
     @Test
     public void testCopyPasteExecuteFlow() throws Exception {
-        WorkflowCopyContent cnt = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
         cnt.setNodeIDs(m_credentialsInput_1, m_credentialsValidate_2);
-        WorkflowCopyContent pasteCNT = getManager().copyFromAndPasteHere(getManager(), cnt);
+        WorkflowCopyContent pasteCNT = getManager().copyFromAndPasteHere(getManager(), cnt.build());
 
         executeAndWait(pasteCNT.getNodeIDs());
         checkStateOfMany(EXECUTED, pasteCNT.getNodeIDs());

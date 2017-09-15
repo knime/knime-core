@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
+
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -56,8 +58,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeContainerTemplate;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.UpdateMetaNodeTemplateRunnable;

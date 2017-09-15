@@ -49,8 +49,9 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -131,10 +132,10 @@ public class CancelAction extends AbstractNodeAction {
 
         // enable if we have at least one executing or queued node in our
         // selection
-        WorkflowManager wm = getEditor().getWorkflowManager();
+        WorkflowManager wm = getEditor().getWorkflowManager().get();
         for (int i = 0; i < parts.length; i++) {
             // bugfix 1478
-            NodeContainer nc = parts[i].getNodeContainer();
+            NodeContainerUI nc = parts[i].getNodeContainer();
             if (wm.canCancelNode(nc.getID())) {
                 return true;
             }
@@ -156,7 +157,7 @@ public class CancelAction extends AbstractNodeAction {
         WorkflowManager manager = getManager();
 
         for (NodeContainerEditPart p : nodeParts) {
-            manager.cancelExecution(p.getNodeContainer());
+            manager.cancelExecution(Wrapper.unwrapNC(p.getNodeContainer()));
         }
 
         try {

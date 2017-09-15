@@ -82,7 +82,7 @@ public class EditorGridSettingsDialog extends Dialog {
     private static final ImageDescriptor IMG_PERMS = AbstractUIPlugin.imageDescriptorFromPlugin(
             KNIMEEditorPlugin.PLUGIN_ID, "icons/grid2_55.png");
 
-    private EditorUIInformation m_settings;
+    private EditorUIInformation.Builder m_settings;
 
     private Label m_error;
 
@@ -104,7 +104,7 @@ public class EditorGridSettingsDialog extends Dialog {
      */
     public EditorGridSettingsDialog(final Shell parentShell, final EditorUIInformation currentSettings) {
         super(parentShell);
-        m_settings = currentSettings;
+        m_settings = EditorUIInformation.builder(currentSettings);
     }
 
     /**
@@ -124,10 +124,11 @@ public class EditorGridSettingsDialog extends Dialog {
     }
 
     private void setValues() {
-        m_snap.setSelection(m_settings.getSnapToGrid());
-        m_show.setSelection(m_settings.getShowGrid());
-        m_xGrid.setText("" + m_settings.getGridX());
-        m_yGrid.setText("" + m_settings.getGridY());
+        EditorUIInformation build = m_settings.build();
+        m_snap.setSelection(build.getSnapToGrid());
+        m_show.setSelection(build.getShowGrid());
+        m_xGrid.setText("" + build.getGridX());
+        m_yGrid.setText("" + build.getGridY());
         settingsChanged();
     }
 
@@ -135,7 +136,7 @@ public class EditorGridSettingsDialog extends Dialog {
      * @return the settings currently (or lastly) entered in the dialog
      */
     public EditorUIInformation getSettings() {
-        return m_settings;
+        return m_settings.build();
     }
 
     /**

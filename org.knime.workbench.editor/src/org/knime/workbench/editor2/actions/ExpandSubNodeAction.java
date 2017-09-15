@@ -52,6 +52,9 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.SubNodeContainerUI;
+import org.knime.core.ui.node.workflow.WorkflowManagerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -126,8 +129,8 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
         if (parts.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof SubNodeContainer) {
-            WorkflowManager wm = ((SubNodeContainer)parts[0].getNodeContainer()).getWorkflowManager();
+        if (parts[0].getNodeContainer() instanceof SubNodeContainerUI) {
+            WorkflowManagerUI wm = ((SubNodeContainerUI)parts[0].getNodeContainer()).getWorkflowManager();
             return !wm.isWriteProtected();
         }
         return false;
@@ -147,7 +150,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
         LOGGER.debug("Creating 'Expand Wrapped Metanode' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
-            SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
+            SubNodeContainer subNode = Wrapper.unwrap(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
             if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
