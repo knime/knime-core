@@ -1977,6 +1977,24 @@
              after="iterate_list_of_files"
             workflowDir="metanode_templates/Looper/">
        </PersistedMetaNode>
+       <PersistedMetaNode
+            category-path="/analytics/mining/featureselection/meta"
+            description="Backward Feature Elimination"
+            expert-flag="false"
+            icon="icons/meta_nodes/feature_elimination_flow.png"
+            id="backward_feature_elimination"
+            name="Backward Feature Elimination"
+            workflowDir="metanode_templates/Backward Feature Elimination/">
+      </PersistedMetaNode>
+      <PersistedMetaNode
+            category-path="/analytics/mining/featureselection/meta"
+            description="Forward Feature Selection"
+            expert-flag="false"
+            icon="icons/meta_nodes/feature_elimination_flow.png"
+            id="forward_feature_selection"
+            name="Forward Feature Selection"
+            workflowDir="metanode_templates/Forward Feature Selection/">
+      </PersistedMetaNode>
     </extension>
      <extension
            point="org.knime.workbench.repository.registeredFileExtensions">
