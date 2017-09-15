@@ -51,7 +51,17 @@ package org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmltranslato
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
+import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
+import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionTreeModelPMMLTranslator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -63,6 +73,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  *
@@ -71,8 +83,6 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
 
     /**
-     * @param inPortTypes
-     * @param outPortTypes
      */
     protected RegressionTreePMMLTranslatorNodeModel() {
         super(new PortType[]{RegressionTreeModelPortObject.TYPE}, new PortType[]{PMMLPortObject.TYPE});
@@ -84,7 +94,56 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         final RegressionTreeModelPortObject treePO = (RegressionTreeModelPortObject)inObjects[0];
-        return new PortObject[]{treePO.createDecisionTreePMMLPortObject()};
+        final RegressionTreeModel model = treePO.getModel();
+        final RegressionTreeModelPortObjectSpec treeSpec = treePO.getSpec();
+        PMMLPortObjectSpec pmmlSpec = createPMMLSpec(treeSpec, model);
+        PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
+        final TreeModelRegression tree = model.getTreeModel();
+        final RegressionTreeModelPMMLTranslator translator = new RegressionTreeModelPMMLTranslator(tree);
+        portObject.addModelTranslater(translator);
+        if (translator.hasWarning()) {
+            setWarningMessage(translator.getWarning());
+        }
+        return new PortObject[]{portObject};
+    }
+
+    private PMMLPortObjectSpec createPMMLSpec(final RegressionTreeModelPortObjectSpec treeSpec,
+        final RegressionTreeModel model) {
+        DataColumnSpec targetSpec = treeSpec.getTargetColumn();
+        DataTableSpec learnFeatureSpec = treeSpec.getLearnTableSpec();
+        if (model == null && containsVector(learnFeatureSpec)) {
+            setWarningMessage("The model was learned on a vector column. It's possible to export the model "
+                + "to PMML but it won't be possible to import it from the exported PMML.");
+            return null;
+        } else if (model != null) {
+            // possibly expand vectors with model
+            learnFeatureSpec = model.getLearnAttributeSpec(learnFeatureSpec);
+        }
+        DataTableSpec completeLearnSpec = new DataTableSpec(learnFeatureSpec, new DataTableSpec(targetSpec));
+        PMMLPortObjectSpecCreator pmmlSpecCreator =
+                new PMMLPortObjectSpecCreator(completeLearnSpec);
+        try {
+            pmmlSpecCreator.setLearningCols(learnFeatureSpec);
+        } catch (InvalidSettingsException e) {
+            // this exception is not actually thrown in the code
+            // (as of KNIME v2.5.1)
+            throw new IllegalStateException(e);
+        }
+        pmmlSpecCreator.setTargetCol(targetSpec);
+        return pmmlSpecCreator.createSpec();
+    }
+
+    private static boolean containsVector(final DataTableSpec learnFeatureSpec) {
+        for (DataColumnSpec colSpec : learnFeatureSpec) {
+            DataType type = colSpec.getType();
+            boolean isVector = type.isCompatible(BitVectorValue.class) ||
+                    type.isCompatible(DoubleVectorValue.class) ||
+                    type.isCompatible(ByteVectorValue.class);
+            if (isVector) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -92,7 +151,8 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return null;
+        RegressionTreeModelPortObjectSpec treeSpec = (RegressionTreeModelPortObjectSpec)inSpecs[0];
+        return new PortObjectSpec[] {createPMMLSpec(treeSpec, null)};
     }
 
     /**
@@ -101,8 +161,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internals to load
     }
 
     /**
@@ -111,8 +170,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internals to save
     }
 
     /**
@@ -120,8 +178,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+        // no settings to save
     }
 
     /**
@@ -129,8 +186,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        // not settings to validate
     }
 
     /**
@@ -138,8 +194,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        // no settings to load
     }
 
     /**
@@ -147,8 +202,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
-
+        // no settings to reset
     }
 
 }

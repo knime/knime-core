@@ -53,6 +53,7 @@ import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 
+import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionTreeModelPMMLTranslator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
@@ -116,7 +117,7 @@ public class RegressionTreeModelPortObject extends AbstractPortObject {
         PMMLPortObjectSpec pmmlSpec = pmmlSpecCreator.createSpec();
         PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
         final TreeModelRegression tree = model.getTreeModel();
-        portObject.addModelTranslater(new TreeModelPMMLTranslator(tree));
+        portObject.addModelTranslater(new RegressionTreeModelPMMLTranslator(tree));
         return portObject;
     }
 
