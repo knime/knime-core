@@ -84,7 +84,7 @@ public final class RegressionTreeModel extends AbstractTreeEnsembleModel {
     /**
      * @param models
      */
-    private RegressionTreeModel(final TreeMetaData metaData, final TreeModelRegression model, final TreeType treeType) {
+    public RegressionTreeModel(final TreeMetaData metaData, final TreeModelRegression model, final TreeType treeType) {
         super(metaData, treeType);
         m_model = model;
     }

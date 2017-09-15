@@ -108,6 +108,11 @@
             factory-class="org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmltranslator.RegressionTreePMMLTranslatorNodeFactory"
             >
       </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmlimporter.RegressionTreePMMLImporterNodeFactory">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
