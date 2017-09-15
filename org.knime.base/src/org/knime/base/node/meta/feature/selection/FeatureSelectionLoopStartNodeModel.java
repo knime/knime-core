@@ -105,7 +105,7 @@ public class FeatureSelectionLoopStartNodeModel extends NodeModel implements Loo
         final String[] constantColumns;
         // check if no feature columns are selected (e.g. before the dialog is opened the first time)
         if (filterResult.getIncludes().length == 0) {
-            throw new InvalidSettingsException("No feature columns selected. Please specifiy the feature columns in the dialog.");
+            throw new InvalidSettingsException("No feature columns selected. Please specify the feature columns in the dialog.");
         }
 
         if (filterResult.getExcludes().length == 0) {
