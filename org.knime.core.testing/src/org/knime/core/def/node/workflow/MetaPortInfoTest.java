@@ -104,7 +104,7 @@ public class MetaPortInfoTest {
     @Test
     public void testUIDNotSet() throws IllegalArgumentException {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("No port type uid set");
+        thrown.expectMessage("No port type set");
         MetaPortInfo mpi = MetaPortInfo.builder().build();
     }
 
