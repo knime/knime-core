@@ -164,17 +164,17 @@ public class ConfigureNodeUsagePage extends WizardPage {
         FontData fontData = wizardLabel.getFont().getFontData()[0];
         Font boldFont = new Font(Display.getCurrent(),
             new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
-        wizardLabel.setText("WebPortal");
+        wizardLabel.setText("WebPortal /\nWrapped Metanode View");
         wizardLabel.setFont(boldFont);
         Label dialogLabel = new Label(composite, SWT.CENTER);
-        dialogLabel.setText("Dialog");
+        dialogLabel.setText("\nWrapped Metanode Dialog");
         dialogLabel.setFont(boldFont);
 
         //select all checkboxes
         Label selectAllLabel = new Label(composite, SWT.LEFT);
         selectAllLabel.setText("Enable/Disable");
-        Button selectAllWizard = new Button(composite, SWT.CHECK | SWT.CENTER);
-        Button selectAllDialog = new Button(composite, SWT.CHECK | SWT.CENTER);
+        Button selectAllWizard = createCheckbox(composite);
+        Button selectAllDialog = createCheckbox(composite);
 
         //individual nodes
         for (Entry<NodeID, NodeModel> entry : m_viewNodes.entrySet()) {
@@ -184,7 +184,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
 
             NodeModel model = entry.getValue();
             if (model instanceof WizardNode) {
-                Button wizardButton = new Button(composite, SWT.CHECK | SWT.CENTER);
+                Button wizardButton = createCheckbox(composite);
                 wizardButton.addSelectionListener(new SelectionAdapter() {
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
@@ -198,7 +198,7 @@ public class ConfigureNodeUsagePage extends WizardPage {
                 new Composite(composite, SWT.NONE); /* Placeholder */
             }
             if (model instanceof DialogNode) {
-                Button dialogButton = new Button(composite, SWT.CHECK | SWT.CENTER);
+                Button dialogButton = createCheckbox(composite);
                 dialogButton.addSelectionListener(new SelectionAdapter() {
                     @Override
                     public void widgetSelected(final SelectionEvent e) {
@@ -239,6 +239,12 @@ public class ConfigureNodeUsagePage extends WizardPage {
         if (m_dialogUsageMap.size() < 1) {
             selectAllDialog.setEnabled(false);
         }
+    }
+
+    private Button createCheckbox(final Composite parent) {
+        Button checkbox = new Button(parent, SWT.CHECK);
+        checkbox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        return checkbox;
     }
 
     private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
