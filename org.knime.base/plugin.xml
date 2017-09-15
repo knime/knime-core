@@ -2184,5 +2184,13 @@
               specClass="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec"
               specSerializer="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec$SpecSerializer">
         </portType>
+        <portType
+            hidden="true"
+            name="Feature Selection Model"
+            objectClass="org.knime.base.node.meta.feature.selection.FeatureSelectionModel"
+            objectSerializer="org.knime.base.node.meta.feature.selection.FeatureSelectionModel$ModelSerializer"
+            specClass="org.knime.base.node.meta.feature.selection.FeatureSelectionModel"
+            specSerializer="org.knime.base.node.meta.feature.selection.FeatureSelectionModel$NewSpecSerializer">
+      </portType>
      </extension>   
 </plugin>
