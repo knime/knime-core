@@ -140,7 +140,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
 
-        SetupSubnodeWizard wizard = new SetupSubnodeWizard(ep.getViewer(), subnodeNC);
+        SetupSubnodeWizard wizard = new SetupSubnodeWizard(ep.getViewer(), Wrapper.unwrap(subnodeNC, SubNodeContainer.class));
         SubnodeWizardDialog dlg = new SubnodeWizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();
         dlg.open();

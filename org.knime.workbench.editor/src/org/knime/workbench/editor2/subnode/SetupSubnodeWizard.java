@@ -160,18 +160,22 @@ public class SetupSubnodeWizard extends Wizard {
     }
 
     private boolean applyPortChanges() {
-        List<MetaPortInfo> inPorts = m_portsPage.getInports();
+        List<MetaPortInfo> inPorts = m_portsPage.getInPorts();
         List<MetaPortInfo> outPorts = m_portsPage.getOutPorts();
         String name = m_portsPage.getMetaNodeName();
 
         // fix the indicies
         for (int i = 0; i < inPorts.size(); i++) {
-            inPorts.get(i).setNewIndex(i);
+            m_portsPage.replaceInPortAtIndex(i, MetaPortInfo.builder(inPorts.get(i)).setNewIndex(i).build());
         }
         for (int i = 0; i < outPorts.size(); i++) {
-            outPorts.get(i).setNewIndex(i);
+            m_portsPage.replaceOutPortAtIndex(i, MetaPortInfo.builder(outPorts.get(i)).setNewIndex(i).build());
         }
-        // determine what has changed
+
+        inPorts = m_portsPage.getInPorts();
+        outPorts = m_portsPage.getOutPorts();
+
+     // determine what has changed
         boolean inPortChanges = m_subNode.getNrInPorts() != inPorts.size();
         for (MetaPortInfo inInfo : inPorts) {
             // new port types would create a new info object - which would have an unspecified old index -> change
@@ -194,15 +198,14 @@ public class SetupSubnodeWizard extends Wizard {
             infoStr.append("the name - ");
         }
         if (infoStr.length() == 0) {
-            LOGGER.debug("No changes made in the port configuration wizard page. Nothing to do.");
+            LOGGER.info("No changes made in the configuration wizard. Nothing to do.");
             return true;
         }
         infoStr.insert(0, "Changing - ");
         infoStr.append("of MetaNode " + m_subNode.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(m_subNode.getParent(),
-            m_subNode.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(m_subNode.getParent(), m_subNode.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }
