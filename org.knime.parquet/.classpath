@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.2.jar" sourcepath="lib/commons-logging-1.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-common-2.7.1.jar" sourcepath="lib/hadoop-common-2.7.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/avro-1.7.7.jar" sourcepath="lib/avro-1.7.7-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-configuration-1.10.jar" sourcepath="lib/commons-configuration-1.10-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-core-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jackson-core-asl-1.9.13.jar" sourcepath="lib/jackson-core-asl-1.9.13-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jackson-mapper-asl-1.9.13.jar" sourcepath="lib/jackson-mapper-asl-1.9.13-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-avro-1.8.1.jar" sourcepath="lib/parquet-avro-1.8.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-column-1.8.1.jar" sourcepath="lib/parquet-column-1.8.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-common-1.8.1.jar" sourcepath="lib/parquet-common-1.8.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-encoding-1.8.1.jar" sourcepath="lib/parquet-encoding-1.8.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-format-2.3.1.jar" sourcepath="lib/parquet-format-2.3.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-hadoop-1.8.1.jar" sourcepath="lib/parquet-hadoop-1.8.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/parquet-tools-1.8.1.jar" sourcepath="lib/parquet-tools-1.8.1-sources.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
