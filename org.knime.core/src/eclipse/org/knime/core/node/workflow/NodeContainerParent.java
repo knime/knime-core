@@ -140,4 +140,7 @@ public interface NodeContainerParent {
      */
     public abstract WorkflowManager getProjectWFM();
 
+    /** Called by children when they are set dirty. */
+    public void setDirty();
+
 }

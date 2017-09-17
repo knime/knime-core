@@ -1429,8 +1429,9 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             LOGGER.debug("Setting dirty flag on " + getNameWithID());
         }
         setDirty(getAutoSaveDirectory());
-        if (m_parent != null) {
-            m_parent.setDirty();
+        NodeContainerParent directNCParent = getDirectNCParent();
+        if (directNCParent != null) {
+            directNCParent.setDirty();
         }
     }
 

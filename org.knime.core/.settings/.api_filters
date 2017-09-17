@@ -416,6 +416,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="setDirty()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setDirty()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeUIInformation.java" type="org.knime.core.node.workflow.NodeUIInformation">
         <filter id="337682486">
             <message_arguments>
