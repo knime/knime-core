@@ -1,0 +1,35 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Columnar Data Storage using Apache ORC
+Bundle-SymbolicName: org.knime.orc;singleton:=true
+Bundle-Version: 3.2.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: knime-orc.jar,
+ lib/hive-apache-0.16.jar,
+ lib/protobuf-java-2.6.1.jar,
+ lib/hadoop-mapred-0.22.0.jar,
+ lib/commons-collections-3.2.2.jar,
+ lib/commons-configuration-1.10.jar,
+ lib/hadoop-auth-2.7.2.jar,
+ lib/hadoop-common-2.7.1.jar,
+ lib/hadoop-core-1.2.1.jar,
+ lib/slf4j-api-1.7.14.jar,
+ lib/commons-logging-1.2.jar,
+ lib/snappy-0.4.jar,
+ lib/slice-0.19.jar,
+ lib/units-0.124.jar,
+ lib/log-0.124.jar,
+ lib/jol-cli-0.4.jar,
+ lib/jol-core-0.4.jar,
+ lib/presto-hive-0.136.jar,
+ lib/presto-orc-0.136.jar,
+ lib/presto-spi-0.136.jar
+Export-Package: org.knime.orc.tableformat
+Require-Bundle: com.google.guava;bundle-version="[19.0.0,20.0.0)",
+ org.apache.commons.lang;bundle-version="[2.6.0,3.0.0)",
+ org.apache.commons.logging;bundle-version="[1.1.1,2.0.0)",
+ org.apache.log4j;bundle-version="[1.2.15,2.0.0)",
+ joda-time;bundle-version="[2.5.0,3.0.0)",
+ org.knime.core;bundle-version="[3.2.0,4.0.0)"

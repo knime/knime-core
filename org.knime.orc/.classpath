@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="lib" path="lib/hive-apache-0.16.jar" sourcepath="lib/hive-apache-0.16-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/presto-hive-0.136.jar" sourcepath="lib/presto-hive-0.136-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/presto-orc-0.136.jar" sourcepath="lib/presto-orc-0.136-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/presto-spi-0.136.jar" sourcepath="lib/presto-spi-0.136-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jol-core-0.4.jar" sourcepath="lib/jol-core-0.4-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jol-cli-0.4.jar" sourcepath="lib/jol-cli-0.4-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/log-0.124.jar" sourcepath="lib/log-0.124-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/units-0.124.jar" sourcepath="lib/units-0.124-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/slice-0.19.jar" sourcepath="lib/slice-0.19-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/snappy-0.4.jar" sourcepath="lib/snappy-0.4-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.2.jar" sourcepath="lib/commons-logging-1.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/slf4j-api-1.7.14.jar" sourcepath="lib/slf4j-api-1.7.14-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-common-2.7.1.jar" sourcepath="lib/hadoop-common-2.7.1-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-auth-2.7.2.jar" sourcepath="lib/hadoop-auth-2.7.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-core-1.2.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-configuration-1.10.jar" sourcepath="lib/commons-configuration-1.10-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-collections-3.2.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hadoop-mapred-0.22.0.jar" sourcepath="lib/hadoop-mapred-0.22.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/protobuf-java-2.6.1.jar" sourcepath="lib/protobuf-java-2.6.1-sources.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
