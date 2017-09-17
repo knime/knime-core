@@ -162,10 +162,18 @@ public final class OrcKNIMEUtil {
         }
 
         public PrestoDrivenRowIterator createRowIterator() throws IOException {
+            // unclear what these values mean, values taken from com.facebook.presto.hive.HiveClientConfig
+            DataSize orcMaxMergeDistance = new DataSize(1, MEGABYTE);
+            DataSize orcMaxBufferSize = new DataSize(8, MEGABYTE);
+            DataSize orcStreamBufferSize = new DataSize(8, MEGABYTE);
+            DataSize orcMaxReadBlockSize = new DataSize(16, MEGABYTE);
+
+
             FileOrcDataSource orcDataSource = new FileOrcDataSource(
-                m_file, new DataSize(1, MEGABYTE), new DataSize(8, MEGABYTE), new DataSize(8, MEGABYTE));
+                m_file, orcMaxMergeDistance, orcMaxReadBlockSize, orcStreamBufferSize);
+
             OrcReader orcReader = new OrcReader(orcDataSource, new OrcMetadataReader(),
-                new DataSize(1, MEGABYTE), new DataSize(8, MEGABYTE));
+                 orcMaxMergeDistance, orcMaxBufferSize, orcMaxReadBlockSize);
 
             OrcKNIMEType[] orcKNIMETypes = m_fieldMap.values().toArray(new OrcKNIMEType[m_fieldMap.size()]);
             Map<Integer, Type> colMap = IntStream.range(0, orcKNIMETypes.length).boxed().collect(
