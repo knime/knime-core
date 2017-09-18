@@ -59,14 +59,11 @@ import org.w3c.dom.Element;
  */
 public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends NodeContainerWrapper<W> implements SingleNodeContainerUI {
 
-    private SingleNodeContainer m_delegate;
-
     /**
      *
      */
     protected SingleNodeContainerWrapper(final W delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -81,16 +78,16 @@ public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends N
 
     @Override
     public boolean isMemberOfScope() {
-        return m_delegate.isMemberOfScope();
+        return unwrap().isMemberOfScope();
     }
 
     @Override
     public boolean isInactive() {
-        return m_delegate.isInactive();
+        return unwrap().isInactive();
     }
 
     @Override
     public Element getXMLDescription() {
-        return m_delegate.getXMLDescription();
+        return unwrap().getXMLDescription();
     }
 }

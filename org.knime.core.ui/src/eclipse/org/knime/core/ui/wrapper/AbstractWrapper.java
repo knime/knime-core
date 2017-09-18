@@ -63,11 +63,9 @@ public abstract class AbstractWrapper<W> implements Wrapper<W> {
         m_wrappedObj = wrappedObj;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public W unwrap() {
+    public final W unwrap() {
         return m_wrappedObj;
     }
 

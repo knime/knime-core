@@ -84,7 +84,6 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 public abstract class NodeContainerWrapper<W extends NodeContainer> extends AbstractWrapper<W>
     implements NodeContainerUI {
 
-    protected final NodeContainer m_delegate;
 
     /**
      * @param delegate the implementation to delegate to
@@ -92,7 +91,6 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
      */
     protected NodeContainerWrapper(final W delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -116,12 +114,12 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
 
     @Override
     public void progressChanged(final NodeProgressEvent pe) {
-        m_delegate.progressChanged(pe);
+        unwrap().progressChanged(pe);
     }
 
     @Override
     public WorkflowManagerUI getParent() {
-        return WorkflowManagerWrapper.wrap(m_delegate.getParent());
+        return WorkflowManagerWrapper.wrap(unwrap().getParent());
     }
 
     /**
@@ -129,7 +127,7 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
      */
     @Override
     public NodeExecutionJobManager getJobManager() {
-        return m_delegate.getJobManager();
+        return unwrap().getJobManager();
     }
 
     /**
@@ -137,107 +135,107 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
      */
     @Override
     public NodeExecutionJobManager findJobManager() {
-        return m_delegate.findJobManager();
+        return unwrap().findJobManager();
     }
 
     @Override
     public boolean addNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        return m_delegate.addNodePropertyChangedListener(l);
+        return unwrap().addNodePropertyChangedListener(l);
     }
 
     @Override
     public boolean removeNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        return m_delegate.removeNodePropertyChangedListener(l);
+        return unwrap().removeNodePropertyChangedListener(l);
     }
 
     @Override
     public void clearWaitingLoopList() {
-        m_delegate.clearWaitingLoopList();
+        unwrap().clearWaitingLoopList();
     }
 
     @Override
     public boolean addProgressListener(final NodeProgressListener listener) {
-        return m_delegate.addProgressListener(listener);
+        return unwrap().addProgressListener(listener);
     }
 
     @Override
     public boolean removeNodeProgressListener(final NodeProgressListener listener) {
-        return m_delegate.removeNodeProgressListener(listener);
+        return unwrap().removeNodeProgressListener(listener);
     }
 
     @Override
     public boolean addNodeMessageListener(final NodeMessageListener listener) {
-        return m_delegate.addNodeMessageListener(listener);
+        return unwrap().addNodeMessageListener(listener);
     }
 
     @Override
     public boolean removeNodeMessageListener(final NodeMessageListener listener) {
-        return m_delegate.removeNodeMessageListener(listener);
+        return unwrap().removeNodeMessageListener(listener);
     }
 
     @Override
     public NodeMessage getNodeMessage() {
-        return m_delegate.getNodeMessage();
+        return unwrap().getNodeMessage();
     }
 
     @Override
     public void setNodeMessage(final NodeMessage newMessage) {
-        m_delegate.setNodeMessage(newMessage);
+        unwrap().setNodeMessage(newMessage);
     }
 
     @Override
     public void addUIInformationListener(final NodeUIInformationListener l) {
-        m_delegate.addUIInformationListener(l);
+        unwrap().addUIInformationListener(l);
     }
 
     @Override
     public void removeUIInformationListener(final NodeUIInformationListener l) {
-        m_delegate.removeUIInformationListener(l);
+        unwrap().removeUIInformationListener(l);
     }
 
     @Override
     public NodeUIInformation getUIInformation() {
-        return m_delegate.getUIInformation();
+        return unwrap().getUIInformation();
     }
 
     @Override
     public void setUIInformation(final NodeUIInformation uiInformation) {
-        m_delegate.setUIInformation(uiInformation);
+        unwrap().setUIInformation(uiInformation);
     }
 
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.addNodeStateChangeListener(listener);
+        return unwrap().addNodeStateChangeListener(listener);
     }
 
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.removeNodeStateChangeListener(listener);
+        return unwrap().removeNodeStateChangeListener(listener);
     }
 
     @Override
     public NodeContainerState getNodeContainerState() {
-        return m_delegate.getNodeContainerState();
+        return unwrap().getNodeContainerState();
     }
 
     @Override
     public boolean hasDataAwareDialogPane() {
-        return m_delegate.hasDataAwareDialogPane();
+        return unwrap().hasDataAwareDialogPane();
     }
 
     @Override
     public boolean isAllInputDataAvailable() {
-        return m_delegate.isAllInputDataAvailable();
+        return unwrap().isAllInputDataAvailable();
     }
 
     @Override
     public boolean canExecuteUpToHere() {
-        return m_delegate.canExecuteUpToHere();
+        return unwrap().canExecuteUpToHere();
     }
 
     @Override
     public void applySettingsFromDialog() throws InvalidSettingsException {
-        m_delegate.applySettingsFromDialog();
+        unwrap().applySettingsFromDialog();
     }
 
     /** {@inheritDoc} */
@@ -248,152 +246,152 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
 
     @Override
     public boolean areDialogSettingsValid() {
-        return m_delegate.areDialogSettingsValid();
+        return unwrap().areDialogSettingsValid();
     }
 
     @Override
     public boolean hasDialog() {
-        return m_delegate.hasDialog();
+        return unwrap().hasDialog();
     }
 
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
-        return m_delegate.areDialogAndNodeSettingsEqual();
+        return unwrap().areDialogAndNodeSettingsEqual();
     }
 
     @Override
     public int getNrInPorts() {
-        return m_delegate.getNrInPorts();
+        return unwrap().getNrInPorts();
     }
 
     @Override
     public NodeInPortUI getInPort(final int index) {
-        return new NodeInPortWrapper(m_delegate.getInPort(index));
+        return new NodeInPortWrapper(unwrap().getInPort(index));
     }
 
     @Override
     public NodeOutPortUI getOutPort(final int index) {
-        return new NodeOutPortWrapper(m_delegate.getOutPort(index));
+        return new NodeOutPortWrapper(unwrap().getOutPort(index));
     }
 
     @Override
     public int getNrOutPorts() {
-        return m_delegate.getNrOutPorts();
+        return unwrap().getNrOutPorts();
     }
 
     @Override
     public int getNrViews() {
-        return m_delegate.getNrViews();
+        return unwrap().getNrViews();
     }
 
     @Override
     public int getNrNodeViews() {
-        return m_delegate.getNrNodeViews();
+        return unwrap().getNrNodeViews();
     }
 
     @Override
     public String getViewName(final int i) {
-        return m_delegate.getViewName(i);
+        return unwrap().getViewName(i);
     }
 
     @Override
     public String getNodeViewName(final int i) {
-        return m_delegate.getNodeViewName(i);
+        return unwrap().getNodeViewName(i);
     }
 
     @Override
     public boolean hasInteractiveView() {
-        return m_delegate.hasInteractiveView();
+        return unwrap().hasInteractiveView();
     }
 
     @Override
     public String getInteractiveViewName() {
-        return m_delegate.getInteractiveViewName();
+        return unwrap().getInteractiveViewName();
     }
 
     @Override
     public URL getIcon() {
-        return m_delegate.getIcon();
+        return unwrap().getIcon();
     }
 
     @Override
     public NodeType getType() {
-        return m_delegate.getType();
+        return unwrap().getType();
     }
 
     @Override
     public NodeID getID() {
-        return m_delegate.getID();
+        return unwrap().getID();
     }
 
     @Override
     public String getName() {
-        return m_delegate.getName();
+        return unwrap().getName();
     }
 
     @Override
     public String getNameWithID() {
-        return m_delegate.getNameWithID();
+        return unwrap().getNameWithID();
     }
 
     @Override
     public String toString() {
-        return m_delegate.toString();
+        return unwrap().toString();
     }
 
     @Override
     public String getDisplayLabel() {
-        return m_delegate.getDisplayLabel();
+        return unwrap().getDisplayLabel();
     }
 
     @Override
     public String getCustomName() {
-        return m_delegate.getCustomName();
+        return unwrap().getCustomName();
     }
 
     @Override
     public NodeAnnotation getNodeAnnotation() {
-        return m_delegate.getNodeAnnotation();
+        return unwrap().getNodeAnnotation();
     }
 
     @Override
     public String getCustomDescription() {
-        return m_delegate.getCustomDescription();
+        return unwrap().getCustomDescription();
     }
 
     @Override
     public void setCustomDescription(final String customDescription) {
-        m_delegate.setCustomDescription(customDescription);
+        unwrap().setCustomDescription(customDescription);
     }
 
     @Override
     public void setDeletable(final boolean value) {
-        m_delegate.setDeletable(value);
+        unwrap().setDeletable(value);
     }
 
     @Override
     public boolean isDeletable() {
-        return m_delegate.isDeletable();
+        return unwrap().isDeletable();
     }
 
     @Override
     public boolean isDirty() {
-        return m_delegate.isDirty();
+        return unwrap().isDirty();
     }
 
     @Override
     public void setDirty() {
-        m_delegate.setDirty();
+        unwrap().setDirty();
     }
 
     @Override
     public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
-        m_delegate.changeNodeLocks(setLock, locks);
+        unwrap().changeNodeLocks(setLock, locks);
     }
 
     @Override
     public NodeLocks getNodeLocks() {
-        return m_delegate.getNodeLocks();
+        return unwrap().getNodeLocks();
     }
 
 }

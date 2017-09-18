@@ -62,14 +62,12 @@ import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
  */
 public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> implements WorkflowOutPortUI {
 
-    private WorkflowOutPort m_delegate;
 
     /**
      * @param delegate the implementation to delegate to
      */
     public WorkflowOutPortWrapper(final WorkflowOutPort delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     public static final WorkflowOutPortWrapper wrap(final WorkflowOutPort wop) {
@@ -78,81 +76,81 @@ public class WorkflowOutPortWrapper extends AbstractWrapper<WorkflowOutPort> imp
 
     @Override
     public final int getPortIndex() {
-        return m_delegate.getPortIndex();
+        return unwrap().getPortIndex();
     }
 
     @Override
     public final PortType getPortType() {
-        return m_delegate.getPortType();
+        return unwrap().getPortType();
     }
 
     @Override
     public void setPortIndex(final int portIndex) {
-        m_delegate.setPortIndex(portIndex);
+        unwrap().setPortIndex(portIndex);
     }
 
     @Override
     public final String getPortName() {
-        return m_delegate.getPortName();
+        return unwrap().getPortName();
     }
 
     @Override
     public final void setPortName(final String portName) {
-        m_delegate.setPortName(portName);
+        unwrap().setPortName(portName);
     }
 
     @Override
     public String getPortSummary() {
-        return m_delegate.getPortSummary();
+        return unwrap().getPortSummary();
     }
 
     @Override
     public NodeContainerState getNodeState() {
-        return m_delegate.getNodeState();
+        return unwrap().getNodeState();
     }
 
     @Override
     public boolean isInactive() {
-        return m_delegate.isInactive();
+        return unwrap().isInactive();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return m_delegate.equals(obj);
+        return unwrap().equals(obj);
     }
 
     @Override
     public int hashCode() {
-        return m_delegate.hashCode();
+        return unwrap().hashCode();
     }
 
     @Override
     public String toString() {
-        return m_delegate.toString();
+        return unwrap().toString();
     }
 
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.addNodeStateChangeListener(listener);
+        return unwrap().addNodeStateChangeListener(listener);
     }
 
     @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
-        m_delegate.notifyNodeStateChangeListener(e);
+        unwrap().notifyNodeStateChangeListener(e);
     }
 
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.removeNodeStateChangeListener(listener);
+        return unwrap().removeNodeStateChangeListener(listener);
     }
 
     @Override
     public NodeContainerState getNodeContainerState() {
-        return m_delegate.getNodeContainerState();
+        return unwrap().getNodeContainerState();
     }
 
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        m_delegate.stateChanged(state);
+        unwrap().stateChanged(state);
     }
 }

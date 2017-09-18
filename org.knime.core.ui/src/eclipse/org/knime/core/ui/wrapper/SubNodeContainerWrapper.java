@@ -60,14 +60,11 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
  */
 public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<SubNodeContainer> implements SubNodeContainerUI {
 
-    private SubNodeContainer m_delegate;
-
     /**
      * @param delegate
      */
     private SubNodeContainerWrapper(final SubNodeContainer delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -84,16 +81,8 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      * {@inheritDoc}
      */
     @Override
-    public SubNodeContainer unwrap() {
-        return m_delegate;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public NodeID getVirtualInNodeID() {
-        return m_delegate.getVirtualInNodeID();
+        return unwrap().getVirtualInNodeID();
     }
 
     /**
@@ -101,7 +90,7 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      */
     @Override
     public NodeID getVirtualOutNodeID() {
-        return m_delegate.getVirtualOutNodeID();
+        return unwrap().getVirtualOutNodeID();
     }
 
     /**
@@ -109,7 +98,7 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      */
     @Override
     public WorkflowManagerUI getWorkflowManager() {
-        return WorkflowManagerWrapper.wrap(m_delegate.getWorkflowManager());
+        return WorkflowManagerWrapper.wrap(unwrap().getWorkflowManager());
     }
 
     /**
@@ -117,7 +106,7 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      */
     @Override
     public String getLayoutJSONString() {
-        return m_delegate.getLayoutJSONString();
+        return unwrap().getLayoutJSONString();
     }
 
     /**
@@ -125,7 +114,7 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      */
     @Override
     public void setLayoutJSONString(final String layoutJSONString) {
-        m_delegate.setLayoutJSONString(layoutJSONString);
+        unwrap().setLayoutJSONString(layoutJSONString);
     }
 
     /**
@@ -133,6 +122,6 @@ public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<Su
      */
     @Override
     public boolean isWriteProtected() {
-        return m_delegate.isWriteProtected();
+        return unwrap().isWriteProtected();
     }
 }
