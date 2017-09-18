@@ -60,15 +60,12 @@ import org.knime.core.ui.node.workflow.WorkflowInPortUI;
  */
 public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> implements WorkflowInPortUI {
 
-    private WorkflowInPort m_delegate;
-
     /**
      * @param delegate the implementation to delegate to
      *
      */
     private WorkflowInPortWrapper(final WorkflowInPort delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -83,47 +80,47 @@ public class WorkflowInPortWrapper extends AbstractWrapper<WorkflowInPort> imple
 
     @Override
     public int hashCode() {
-        return m_delegate.hashCode();
+        return unwrap().hashCode();
     }
 
     @Override
     public NodeOutPortUI getUnderlyingPort() {
-        return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort());
+        return NodeOutPortWrapper.wrap(unwrap().getUnderlyingPort());
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return m_delegate.equals(obj);
+        return unwrap().equals(obj);
     }
 
     @Override
     public void setPortIndex(final int portIndex) {
-        m_delegate.setPortIndex(portIndex);
+        unwrap().setPortIndex(portIndex);
     }
 
     @Override
     public final int getPortIndex() {
-        return m_delegate.getPortIndex();
+        return unwrap().getPortIndex();
     }
 
     @Override
     public final PortType getPortType() {
-        return m_delegate.getPortType();
+        return unwrap().getPortType();
     }
 
     @Override
     public final String getPortName() {
-        return m_delegate.getPortName();
+        return unwrap().getPortName();
     }
 
     @Override
     public final void setPortName(final String portName) {
-        m_delegate.setPortName(portName);
+        unwrap().setPortName(portName);
     }
 
     @Override
     public String toString() {
-        return m_delegate.toString();
+        return unwrap().toString();
     }
 
 }

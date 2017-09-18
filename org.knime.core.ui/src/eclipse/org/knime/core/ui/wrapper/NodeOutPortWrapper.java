@@ -62,14 +62,11 @@ import org.knime.core.ui.node.workflow.NodeOutPortUI;
  */
 public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements NodeOutPortUI {
 
-    private NodeOutPort m_delegate;
-
     /**
      * @param delegate the implementation to delegate to
      */
     protected NodeOutPortWrapper(final NodeOutPort delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -84,62 +81,62 @@ public class NodeOutPortWrapper extends AbstractWrapper<NodeOutPort> implements 
 
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        m_delegate.stateChanged(state);
+        unwrap().stateChanged(state);
     }
 
     @Override
     public NodeContainerState getNodeContainerState() {
-        return m_delegate.getNodeContainerState();
+        return unwrap().getNodeContainerState();
     }
 
     @Override
     public int getPortIndex() {
-        return m_delegate.getPortIndex();
+        return unwrap().getPortIndex();
     }
 
     @Override
     public String getPortSummary() {
-        return m_delegate.getPortSummary();
+        return unwrap().getPortSummary();
     }
 
     @Override
     public PortType getPortType() {
-        return m_delegate.getPortType();
+        return unwrap().getPortType();
     }
 
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.addNodeStateChangeListener(listener);
+        return unwrap().addNodeStateChangeListener(listener);
     }
 
     @Override
     public String getPortName() {
-        return m_delegate.getPortName();
+        return unwrap().getPortName();
     }
 
     @Override
     public void setPortName(final String portName) {
-        m_delegate.setPortName(portName);
+        unwrap().setPortName(portName);
     }
 
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.removeNodeStateChangeListener(listener);
+        return unwrap().removeNodeStateChangeListener(listener);
     }
 
     @Override
     public boolean isInactive() {
-        return m_delegate.isInactive();
+        return unwrap().isInactive();
     }
 
     @Override
     public NodeContainerState getNodeState() {
-        return m_delegate.getNodeState();
+        return unwrap().getNodeState();
     }
 
     @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
-        m_delegate.notifyNodeStateChangeListener(e);
+        unwrap().notifyNodeStateChangeListener(e);
     }
 
 }

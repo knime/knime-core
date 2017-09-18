@@ -90,14 +90,11 @@ import org.knime.core.util.Pair;
  */
 public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowManager> implements WorkflowManagerUI{
 
-    private final WorkflowManager m_delegate;
-
     /**
      * @param delegate the wfm to delegate all the calls to
      */
     private WorkflowManagerWrapper(final WorkflowManager delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -116,7 +113,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public ReentrantLock getReentrantLockInstance() {
-        return m_delegate.getReentrantLockInstance();
+        return unwrap().getReentrantLockInstance();
     }
 
     /**
@@ -125,7 +122,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean isLockedByCurrentThread() {
-        return m_delegate.isLockedByCurrentThread();
+        return unwrap().isLockedByCurrentThread();
     }
 
     /**
@@ -134,7 +131,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public WorkflowManagerUI getProjectWFM() {
-        return WorkflowManagerWrapper.wrap(m_delegate.getProjectWFM());
+        return WorkflowManagerWrapper.wrap(unwrap().getProjectWFM());
     }
 
     /**
@@ -143,7 +140,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void removeProject(final NodeID id) {
-        m_delegate.removeProject(id);
+        unwrap().removeProject(id);
     }
 
     /**
@@ -153,7 +150,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canRemoveNode(final NodeID nodeID) {
-        return m_delegate.canRemoveNode(nodeID);
+        return unwrap().canRemoveNode(nodeID);
     }
 
     /**
@@ -162,7 +159,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean isProject() {
-        return m_delegate.isProject();
+        return unwrap().isProject();
     }
 
     /**
@@ -175,7 +172,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public ConnectionContainerUI addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        return ConnectionContainerWrapper.wrap(m_delegate.addConnection(source, sourcePort, dest, destPort));
+        return ConnectionContainerWrapper.wrap(unwrap().addConnection(source, sourcePort, dest, destPort));
     }
 
     /**
@@ -188,7 +185,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canAddConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        return m_delegate.canAddConnection(source, sourcePort, dest, destPort);
+        return unwrap().canAddConnection(source, sourcePort, dest, destPort);
     }
 
     /**
@@ -201,7 +198,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canAddNewConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
-        return m_delegate.canAddNewConnection(source, sourcePort, dest, destPort);
+        return unwrap().canAddNewConnection(source, sourcePort, dest, destPort);
     }
 
     /**
@@ -211,7 +208,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canRemoveConnection(final ConnectionContainerUI cc) {
-        return m_delegate.canRemoveConnection(Wrapper.unwrapCC(cc));
+        return unwrap().canRemoveConnection(Wrapper.unwrapCC(cc));
     }
 
     /**
@@ -220,7 +217,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void removeConnection(final ConnectionContainerUI cc) {
-        m_delegate.removeConnection(Wrapper.unwrapCC(cc));
+        unwrap().removeConnection(Wrapper.unwrapCC(cc));
     }
 
     /**
@@ -231,7 +228,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
-        return m_delegate.getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -241,7 +238,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id) {
-        return m_delegate.getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -252,7 +249,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public ConnectionContainerUI getIncomingConnectionFor(final NodeID id, final int portIdx) {
-        return ConnectionContainerWrapper.wrap(m_delegate.getIncomingConnectionFor(id, portIdx));
+        return ConnectionContainerWrapper.wrap(unwrap().getIncomingConnectionFor(id, portIdx));
     }
 
     /**
@@ -262,7 +259,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Set<ConnectionContainerUI> getIncomingConnectionsFor(final NodeID id) {
-        return m_delegate.getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
     }
 
     /**
@@ -272,7 +269,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public ConnectionContainerUI getConnection(final ConnectionID id) {
-        return ConnectionContainerWrapper.wrap(m_delegate.getConnection(id));
+        return ConnectionContainerWrapper.wrap(unwrap().getConnection(id));
     }
 
     /**
@@ -282,7 +279,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
-        return m_delegate.getMetanodeInputPortInfo(metaNodeID);
+        return unwrap().getMetanodeInputPortInfo(metaNodeID);
     }
 
     /**
@@ -292,7 +289,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
-        return m_delegate.getMetanodeOutputPortInfo(metaNodeID);
+        return unwrap().getMetanodeOutputPortInfo(metaNodeID);
     }
 
     /**
@@ -302,7 +299,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
-        return m_delegate.getSubnodeInputPortInfo(subNodeID);
+        return unwrap().getSubnodeInputPortInfo(subNodeID);
     }
 
     /**
@@ -312,7 +309,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
-        return m_delegate.getSubnodeOutputPortInfo(subNodeID);
+        return unwrap().getSubnodeOutputPortInfo(subNodeID);
     }
 
     /**
@@ -322,7 +319,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        m_delegate.changeMetaNodeInputPorts(subFlowID, newPorts);
+        unwrap().changeMetaNodeInputPorts(subFlowID, newPorts);
     }
 
     /**
@@ -332,7 +329,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        m_delegate.changeMetaNodeOutputPorts(subFlowID, newPorts);
+        unwrap().changeMetaNodeOutputPorts(subFlowID, newPorts);
     }
 
     /**
@@ -342,7 +339,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        m_delegate.changeSubNodeInputPorts(subFlowID, newPorts);
+        unwrap().changeSubNodeInputPorts(subFlowID, newPorts);
     }
 
     /**
@@ -352,7 +349,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        m_delegate.changeSubNodeOutputPorts(subFlowID, newPorts);
+        unwrap().changeSubNodeOutputPorts(subFlowID, newPorts);
     }
 
     /**
@@ -362,7 +359,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Deprecated
     @Override
     public void resetAll() {
-        m_delegate.resetAll();
+        unwrap().resetAll();
     }
 
     /**
@@ -371,7 +368,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void resetAndConfigureAll() {
-        m_delegate.resetAndConfigureAll();
+        unwrap().resetAndConfigureAll();
     }
 
     /**
@@ -380,7 +377,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void executeUpToHere(final NodeID... ids) {
-        m_delegate.executeUpToHere(ids);
+        unwrap().executeUpToHere(ids);
     }
 
     /**
@@ -390,7 +387,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canReExecuteNode(final NodeID id) {
-        return m_delegate.canReExecuteNode(id);
+        return unwrap().canReExecuteNode(id);
     }
 
     /**
@@ -399,7 +396,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void saveNodeSettingsToDefault(final NodeID id) {
-        m_delegate.saveNodeSettingsToDefault(id);
+        unwrap().saveNodeSettingsToDefault(id);
     }
 
     /**
@@ -409,7 +406,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
-        m_delegate.executePredecessorsAndWait(id);
+        unwrap().executePredecessorsAndWait(id);
     }
 
     /**
@@ -419,7 +416,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String canExpandSubNode(final NodeID subNodeID) {
-        return m_delegate.canExpandSubNode(subNodeID);
+        return unwrap().canExpandSubNode(subNodeID);
     }
 
     /**
@@ -429,7 +426,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String canExpandMetaNode(final NodeID wfmID) {
-        return m_delegate.canExpandMetaNode(wfmID);
+        return unwrap().canExpandMetaNode(wfmID);
     }
 
     /**
@@ -439,7 +436,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
-        return m_delegate.canCollapseNodesIntoMetaNode(orgIDs);
+        return unwrap().canCollapseNodesIntoMetaNode(orgIDs);
     }
 
     /**
@@ -449,7 +446,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canResetNode(final NodeID nodeID) {
-        return m_delegate.canResetNode(nodeID);
+        return unwrap().canResetNode(nodeID);
     }
 
     /**
@@ -458,7 +455,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canResetContainedNodes() {
-        return m_delegate.canResetContainedNodes();
+        return unwrap().canResetContainedNodes();
     }
 
     /**
@@ -467,7 +464,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void resetAndConfigureNode(final NodeID id) {
-        m_delegate.resetAndConfigureNode(id);
+        unwrap().resetAndConfigureNode(id);
     }
 
     /**
@@ -476,7 +473,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canConfigureNodes() {
-        return m_delegate.canConfigureNodes();
+        return unwrap().canConfigureNodes();
     }
 
     /**
@@ -486,7 +483,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canExecuteNodeDirectly(final NodeID nodeID) {
-        return m_delegate.canExecuteNodeDirectly(nodeID);
+        return unwrap().canExecuteNodeDirectly(nodeID);
     }
 
     /**
@@ -496,7 +493,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canExecuteNode(final NodeID nodeID) {
-        return m_delegate.canExecuteNode(nodeID);
+        return unwrap().canExecuteNode(nodeID);
     }
 
     /**
@@ -506,7 +503,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canCancelNode(final NodeID nodeID) {
-        return m_delegate.canCancelNode(nodeID);
+        return unwrap().canCancelNode(nodeID);
     }
 
     /**
@@ -515,7 +512,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canCancelAll() {
-        return m_delegate.canCancelAll();
+        return unwrap().canCancelAll();
     }
 
     /**
@@ -525,7 +522,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canSetJobManager(final NodeID nodeID) {
-        return m_delegate.canSetJobManager(nodeID);
+        return unwrap().canSetJobManager(nodeID);
     }
 
     /**
@@ -534,7 +531,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void shutdown() {
-        m_delegate.shutdown();
+        unwrap().shutdown();
     }
 
     /**
@@ -543,7 +540,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean executeAllAndWaitUntilDone() {
-        return m_delegate.executeAllAndWaitUntilDone();
+        return unwrap().executeAllAndWaitUntilDone();
     }
 
     /**
@@ -553,7 +550,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean executeAllAndWaitUntilDoneInterruptibly() throws InterruptedException {
-        return m_delegate.executeAllAndWaitUntilDoneInterruptibly();
+        return unwrap().executeAllAndWaitUntilDoneInterruptibly();
     }
 
     /**
@@ -565,7 +562,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean waitWhileInExecution(final long time, final TimeUnit unit) throws InterruptedException {
-        return m_delegate.waitWhileInExecution(time, unit);
+        return unwrap().waitWhileInExecution(time, unit);
     }
 
     /**
@@ -574,7 +571,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canExecuteAll() {
-        return m_delegate.canExecuteAll();
+        return unwrap().canExecuteAll();
     }
 
     /**
@@ -583,7 +580,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void executeAll() {
-        m_delegate.executeAll();
+        unwrap().executeAll();
     }
 
     /**
@@ -594,7 +591,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String printNodeSummary(final NodeID prefix, final int indent) {
-        return m_delegate.printNodeSummary(prefix, indent);
+        return unwrap().printNodeSummary(prefix, indent);
     }
 
     /**
@@ -602,7 +599,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Collection<NodeContainerUI> getNodeContainers() {
-        return m_delegate.getNodeContainers().stream().map(nc -> wrap(nc)).collect(Collectors.toList());
+        return unwrap().getNodeContainers().stream().map(nc -> wrap(nc)).collect(Collectors.toList());
     }
 
     /**
@@ -611,7 +608,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Collection<ConnectionContainerUI> getConnectionContainers() {
-        return m_delegate.getConnectionContainers().stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toList());
+        return unwrap().getConnectionContainers().stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toList());
     }
 
     /**
@@ -621,7 +618,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeContainerUI getNodeContainer(final NodeID id) {
-        return wrap(m_delegate.getNodeContainer(id));
+        return wrap(unwrap().getNodeContainer(id));
     }
 
     /**
@@ -633,7 +630,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
-        return m_delegate.getNodeContainer(id, subclass, failOnError);
+        return unwrap().getNodeContainer(id, subclass, failOnError);
     }
 
     /**
@@ -643,7 +640,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean containsNodeContainer(final NodeID id) {
-        return m_delegate.containsNodeContainer(id);
+        return unwrap().containsNodeContainer(id);
     }
 
     /**
@@ -652,7 +649,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean containsExecutedNode() {
-        return m_delegate.containsExecutedNode();
+        return unwrap().containsExecutedNode();
     }
 
     /**
@@ -663,7 +660,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     @Deprecated
     @Override
     public List<NodeMessage> getNodeErrorMessages() {
-        return m_delegate.getNodeErrorMessages();
+        return unwrap().getNodeErrorMessages();
     }
 
     /**
@@ -673,7 +670,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public List<Pair<String, NodeMessage>> getNodeMessages(final Type... types) {
-        return m_delegate.getNodeMessages(types);
+        return unwrap().getNodeMessages(types);
     }
 
     /**
@@ -682,7 +679,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean isWriteProtected() {
-        return m_delegate.isWriteProtected();
+        return unwrap().isWriteProtected();
     }
 
     /**
@@ -692,7 +689,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
-        return m_delegate.getLinkedMetaNodes(recurse);
+        return unwrap().getLinkedMetaNodes(recurse);
     }
 
     /**
@@ -702,7 +699,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean canUpdateMetaNodeLink(final NodeID id) {
-        return m_delegate.canUpdateMetaNodeLink(id);
+        return unwrap().canUpdateMetaNodeLink(id);
     }
 
     /**
@@ -712,7 +709,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
-        return m_delegate.hasUpdateableMetaNodeLink(id);
+        return unwrap().hasUpdateableMetaNodeLink(id);
     }
 
     /**
@@ -723,7 +720,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setWorkflowPassword(final String password, final String hint) throws NoSuchAlgorithmException {
-        m_delegate.setWorkflowPassword(password, hint);
+        unwrap().setWorkflowPassword(password, hint);
     }
 
     /**
@@ -732,7 +729,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean isUnlocked() {
-        return m_delegate.isUnlocked();
+        return unwrap().isUnlocked();
     }
 
     /**
@@ -741,7 +738,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String getPasswordHint() {
-        return m_delegate.getPasswordHint();
+        return unwrap().getPasswordHint();
     }
 
     /**
@@ -750,7 +747,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean isEncrypted() {
-        return m_delegate.isEncrypted();
+        return unwrap().isEncrypted();
     }
 
     /**
@@ -761,7 +758,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public OutputStream cipherOutput(final OutputStream out) throws IOException {
-        return m_delegate.cipherOutput(out);
+        return unwrap().cipherOutput(out);
     }
 
     /**
@@ -771,7 +768,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String getCipherFileName(final String fileName) {
-        return m_delegate.getCipherFileName(fileName);
+        return unwrap().getCipherFileName(fileName);
     }
 
     /**
@@ -780,7 +777,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void addListener(final WorkflowListener listener) {
-        m_delegate.addListener(listener);
+        unwrap().addListener(listener);
     }
 
     /**
@@ -789,7 +786,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void removeListener(final WorkflowListener listener) {
-        m_delegate.removeListener(listener);
+        unwrap().removeListener(listener);
     }
 
     /**
@@ -798,7 +795,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setAutoSaveDirectoryDirtyRecursivly() {
-        m_delegate.setAutoSaveDirectoryDirtyRecursivly();
+        unwrap().setAutoSaveDirectoryDirtyRecursivly();
     }
 
     /**
@@ -807,7 +804,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setName(final String name) {
-        m_delegate.setName(name);
+        unwrap().setName(name);
     }
 
     /**
@@ -817,7 +814,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public boolean renameWorkflowDirectory(final String newName) {
-        return m_delegate.renameWorkflowDirectory(newName);
+        return unwrap().renameWorkflowDirectory(newName);
     }
 
     /**
@@ -826,7 +823,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public String getNameField() {
-        return m_delegate.getNameField();
+        return unwrap().getNameField();
     }
 
     /**
@@ -835,7 +832,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
-        m_delegate.setEditorUIInformation(editorInfo);
+        unwrap().setEditorUIInformation(editorInfo);
     }
 
     /**
@@ -844,7 +841,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public EditorUIInformation getEditorUIInformation() {
-        return m_delegate.getEditorUIInformation();
+        return unwrap().getEditorUIInformation();
     }
 
     /**
@@ -853,7 +850,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public int getNrWorkflowIncomingPorts() {
-        return m_delegate.getNrWorkflowIncomingPorts();
+        return unwrap().getNrWorkflowIncomingPorts();
     }
 
     /**
@@ -862,7 +859,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public int getNrWorkflowOutgoingPorts() {
-        return m_delegate.getNrWorkflowOutgoingPorts();
+        return unwrap().getNrWorkflowOutgoingPorts();
     }
 
     /**
@@ -872,7 +869,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeOutPortWrapper getWorkflowIncomingPort(final int i) {
-        return NodeOutPortWrapper.wrap(m_delegate.getWorkflowIncomingPort(i));
+        return NodeOutPortWrapper.wrap(unwrap().getWorkflowIncomingPort(i));
     }
 
     /**
@@ -882,7 +879,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeInPortWrapper getWorkflowOutgoingPort(final int i) {
-        return NodeInPortWrapper.wrap(m_delegate.getWorkflowOutgoingPort(i));
+        return NodeInPortWrapper.wrap(unwrap().getWorkflowOutgoingPort(i));
     }
 
     /**
@@ -891,7 +888,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
-        m_delegate.setInPortsBarUIInfo(inPortsBarUIInfo);
+        unwrap().setInPortsBarUIInfo(inPortsBarUIInfo);
     }
 
     /**
@@ -900,7 +897,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
-        m_delegate.setOutPortsBarUIInfo(outPortsBarUIInfo);
+        unwrap().setOutPortsBarUIInfo(outPortsBarUIInfo);
     }
 
     /**
@@ -909,7 +906,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeUIInformation getInPortsBarUIInfo() {
-        return m_delegate.getInPortsBarUIInfo();
+        return unwrap().getInPortsBarUIInfo();
     }
 
     /**
@@ -918,7 +915,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
-        return m_delegate.getOutPortsBarUIInfo();
+        return unwrap().getOutPortsBarUIInfo();
     }
 
     /**
@@ -926,7 +923,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public WorkflowInPortUI getInPort(final int index) {
-        return WorkflowInPortWrapper.wrap(m_delegate.getInPort(index));
+        return WorkflowInPortWrapper.wrap(unwrap().getInPort(index));
     }
 
     /**
@@ -934,7 +931,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public WorkflowOutPortUI getOutPort(final int index) {
-        return WorkflowOutPortWrapper.wrap(m_delegate.getOutPort(index));
+        return WorkflowOutPortWrapper.wrap(unwrap().getOutPort(index));
     }
 
     /**
@@ -943,7 +940,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Collection<WorkflowAnnotation> getWorkflowAnnotations() {
-        return m_delegate.getWorkflowAnnotations();
+        return unwrap().getWorkflowAnnotations();
     }
 
 
@@ -954,7 +951,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void addWorkflowAnnotation(final WorkflowAnnotation annotation) {
-        m_delegate.addWorkflowAnnotation(annotation);
+        unwrap().addWorkflowAnnotation(annotation);
     }
 
     /**
@@ -963,7 +960,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
-        m_delegate.bringAnnotationToFront(annotation);
+        unwrap().bringAnnotationToFront(annotation);
     }
 
     /**
@@ -972,7 +969,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
-        m_delegate.sendAnnotationToBack(annotation);
+        unwrap().sendAnnotationToBack(annotation);
     }
 
     /**
@@ -981,7 +978,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        m_delegate.nodeUIInformationChanged(evt);
+        unwrap().nodeUIInformationChanged(evt);
     }
 
     /**
@@ -990,7 +987,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public List<NodeAnnotation> getNodeAnnotations() {
-        return m_delegate.getNodeAnnotations();
+        return unwrap().getNodeAnnotations();
     }
 
     /**
@@ -1001,7 +998,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public <T> T castNodeModel(final NodeID id, final Class<T> cl) {
-        return m_delegate.castNodeModel(id, cl);
+        return unwrap().castNodeModel(id, cl);
     }
 
     /**
@@ -1012,7 +1009,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
-        return m_delegate.findNodes(nodeModelClass, recurse);
+        return unwrap().findNodes(nodeModelClass, recurse);
     }
 
     /**
@@ -1022,7 +1019,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public NodeContainerWrapper findNodeContainer(final NodeID id) {
-        return NodeContainerWrapper.wrap(m_delegate.findNodeContainer(id));
+        return NodeContainerWrapper.wrap(unwrap().findNodeContainer(id));
     }
 
     /**
@@ -1031,7 +1028,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Map<String, ExternalNodeData> getInputNodes() {
-        return m_delegate.getInputNodes();
+        return unwrap().getInputNodes();
     }
 
     /**
@@ -1041,7 +1038,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        m_delegate.setInputNodes(input);
+        unwrap().setInputNodes(input);
     }
 
     /**
@@ -1050,7 +1047,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public Map<String, ExternalNodeData> getExternalOutputs() {
-        return m_delegate.getExternalOutputs();
+        return unwrap().getExternalOutputs();
     }
 
     /**
@@ -1059,7 +1056,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void removeWorkflowVariable(final String name) {
-        m_delegate.removeWorkflowVariable(name);
+        unwrap().removeWorkflowVariable(name);
     }
 
     /**
@@ -1068,7 +1065,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public WorkflowContext getContext() {
-        return m_delegate.getContext();
+        return unwrap().getContext();
     }
 
     /**
@@ -1077,7 +1074,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public void notifyTemplateConnectionChangedListener() {
-        m_delegate.notifyTemplateConnectionChangedListener();
+        unwrap().notifyTemplateConnectionChangedListener();
     }
 
 }

@@ -66,14 +66,11 @@ import org.knime.core.ui.node.workflow.ConnectionContainerUI;
 public final class ConnectionContainerWrapper extends AbstractWrapper<ConnectionContainer>
     implements ConnectionContainerUI {
 
-    private final ConnectionContainer m_delegate;
-
     /**
      * @param delegate
      */
     protected ConnectionContainerWrapper(final ConnectionContainer delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -88,92 +85,92 @@ public final class ConnectionContainerWrapper extends AbstractWrapper<Connection
 
     @Override
     public ConnectionUIInformation getUIInfo() {
-        return m_delegate.getUIInfo();
+        return unwrap().getUIInfo();
     }
 
     @Override
     public NodeID getDest() {
-        return m_delegate.getDest();
+        return unwrap().getDest();
     }
 
     @Override
     public int getDestPort() {
-        return m_delegate.getDestPort();
+        return unwrap().getDestPort();
     }
 
     @Override
     public NodeID getSource() {
-        return m_delegate.getSource();
+        return unwrap().getSource();
     }
 
     @Override
     public int getSourcePort() {
-        return m_delegate.getSourcePort();
+        return unwrap().getSourcePort();
     }
 
     @Override
     public boolean isDeletable() {
-        return m_delegate.isDeletable();
+        return unwrap().isDeletable();
     }
 
     @Override
     public ConnectionType getType() {
-        return m_delegate.getType();
+        return unwrap().getType();
     }
 
     @Override
     public ConnectionID getID() {
-        return m_delegate.getID();
+        return unwrap().getID();
     }
 
     @Override
     public void setUIInfo(final ConnectionUIInformation uiInfo) {
-        m_delegate.setUIInfo(uiInfo);
+        unwrap().setUIInfo(uiInfo);
     }
 
     @Override
     public void addUIInformationListener(final ConnectionUIInformationListener l) {
-        m_delegate.addUIInformationListener(l);
+        unwrap().addUIInformationListener(l);
     }
 
     @Override
     public void removeUIInformationListener(final ConnectionUIInformationListener l) {
-        m_delegate.removeUIInformationListener(l);
+        unwrap().removeUIInformationListener(l);
     }
 
     @Override
     public void addProgressListener(final ConnectionProgressListener listener) {
-        m_delegate.addProgressListener(listener);
+        unwrap().addProgressListener(listener);
     }
 
     @Override
     public void removeProgressListener(final ConnectionProgressListener listener) {
-        m_delegate.removeProgressListener(listener);
+        unwrap().removeProgressListener(listener);
     }
 
     @Override
     public void progressChanged(final ConnectionProgressEvent pe) {
-        m_delegate.progressChanged(pe);
+        unwrap().progressChanged(pe);
     }
 
     @Override
     public void cleanup() {
-        m_delegate.cleanup();
+        unwrap().cleanup();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return m_delegate.equals(obj);
+        return unwrap().equals(obj);
     }
 
     @Override
     public int hashCode() {
-        return m_delegate.hashCode();
+        return unwrap().hashCode();
     }
 
     @Override
     public String toString() {
-        return m_delegate.toString();
+        return unwrap().toString();
     }
 
     /**
@@ -181,6 +178,6 @@ public final class ConnectionContainerWrapper extends AbstractWrapper<Connection
      */
     @Override
     public boolean isFlowVariablePortConnection() {
-        return m_delegate.isFlowVariablePortConnection();
+        return unwrap().isFlowVariablePortConnection();
     }
 }

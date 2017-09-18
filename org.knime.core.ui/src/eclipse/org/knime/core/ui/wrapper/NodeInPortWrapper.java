@@ -59,14 +59,12 @@ import org.knime.core.ui.node.workflow.NodeInPortUI;
  */
 public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements NodeInPortUI {
 
-    private final NodeInPort m_delegate;
 
     /**
      * @param delegate the implementation to delegate to
      */
     protected NodeInPortWrapper(final NodeInPort delegate) {
         super(delegate);
-        m_delegate = delegate;
     }
 
     /**
@@ -84,7 +82,7 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements No
      */
     @Override
     public int getPortIndex() {
-        return m_delegate.getPortIndex();
+        return unwrap().getPortIndex();
     }
 
     /**
@@ -92,7 +90,7 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements No
      */
     @Override
     public PortType getPortType() {
-        return m_delegate.getPortType();
+        return unwrap().getPortType();
     }
 
     /**
@@ -100,7 +98,7 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements No
      */
     @Override
     public String getPortName() {
-        return m_delegate.getPortName();
+        return unwrap().getPortName();
     }
 
     /**
@@ -108,7 +106,7 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements No
      */
     @Override
     public void setPortName(final String portName) {
-        m_delegate.setPortName(portName);
+        unwrap().setPortName(portName);
     }
 
 }
