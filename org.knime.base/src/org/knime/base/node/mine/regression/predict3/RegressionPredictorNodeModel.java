@@ -154,7 +154,7 @@ public final class RegressionPredictorNodeModel extends NodeModel {
         PMMLPortObject port = (PMMLPortObject)inData[0];
         List<Node> models = port.getPMMLValue().getModels(PMMLModelType.GeneralRegressionModel);
         if (models.isEmpty()) {
-            LOGGER.warn("No regression models in the input PMML.");
+            // KNIME currently (Sep '17) still uses the 'Regression' Model Type in the PolyReg learner
             @SuppressWarnings("deprecation")
             org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel regrPredictor =
                     new org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel();
