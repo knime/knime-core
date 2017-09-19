@@ -54,6 +54,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -79,6 +80,8 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
@@ -1669,14 +1672,15 @@ class Buffer implements KNIMEStreamConstants {
             }
             FromFileIterator f;
             try {
+                LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
+                        + m_nrOpenInputStreams + " open streams");
+
                 if (getReadVersion() <= 5) { // 2.0 tech preview and before
                     f = new BufferFromFileIteratorVersion1x(this);
                 } else {
                     f = new BufferFromFileIteratorVersion20(this);
                 }
                 m_nrOpenInputStreams.incrementAndGet();
-                LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
-                        + m_nrOpenInputStreams + " open streams");
                 synchronized (m_openIteratorSet) {
                     m_openIteratorSet.put(f, DUMMY);
                 }
@@ -1684,11 +1688,31 @@ class Buffer implements KNIMEStreamConstants {
                 StringBuilder b = new StringBuilder("Cannot read file \"");
                 b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
                 b.append("\"");
+                checkAndReportOpenFiles(ioe);
                 throw new RuntimeException(b.toString(), ioe);
             }
             return f;
         } else {
             return new FromListIterator();
+        }
+    }
+
+    /** prints debug output to catch random failures on test system, see AP-7978. */
+    private static void checkAndReportOpenFiles(final IOException ex) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
+            if (ex.getMessage().contains("Too many") || ex.getMessage().contains("Zu viele")) {
+                String pid = ManagementFactory.getRuntimeMXBean().getName();
+                pid = pid.substring(0, pid.indexOf('@'));
+                ProcessBuilder pb = new ProcessBuilder("lsof", "-p", pid);
+                try {
+                    Process lsof = pb.start();
+                    try (InputStream is = lsof.getInputStream()) {
+                        LOGGER.debug("Currently open files: " + IOUtils.toString(is, "US-ASCII"));
+                    }
+                } catch (IOException e) {
+                    LOGGER.debug("Could not list open files: " + e.getMessage(), e);
+                }
+            }
         }
     }
 
