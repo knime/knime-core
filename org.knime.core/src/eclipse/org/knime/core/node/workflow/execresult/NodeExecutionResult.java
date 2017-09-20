@@ -49,6 +49,7 @@ package org.knime.core.node.workflow.execresult;
 
 import java.util.Arrays;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeContentPersistor;
@@ -125,11 +126,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
      */
     @JsonProperty("nrPortObjects")
     public int getNrOfPortObjects() {
-        if (m_portObjects != null) {
-            return m_portObjects.length;
-        } else {
-            return 0;
-        }
+        return ArrayUtils.getLength(m_portObjects);
     }
 
 
@@ -141,11 +138,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
      */
     @JsonProperty("nrInternalPortObjects")
     public int getNrOfInternalHeldPortObjects() {
-        if (m_internalHeldPortObjects != null) {
-            return m_internalHeldPortObjects.length;
-        } else {
-            return 0;
-        }
+        return ArrayUtils.getLength(m_internalHeldPortObjects);
     }
 
     /** {@inheritDoc} */
