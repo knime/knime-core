@@ -834,7 +834,7 @@ div.container {
 }
 
 tt, pre {
-	font-family: "Roboto",sans-serif; 
+	font-family: monospace; 
 	color: #3E3A39;
 }
 
