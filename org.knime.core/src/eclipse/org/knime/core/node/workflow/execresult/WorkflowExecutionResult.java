@@ -48,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -96,16 +97,22 @@ public class WorkflowExecutionResult extends NodeContainerExecutionResult {
         for (Entry<NodeID, NodeContainerExecutionResult> entry : toCopy.m_execResultMap.entrySet()) {
             final NodeContainerExecutionResult subresultToCopy = entry.getValue();
             if (subresultToCopy instanceof NativeNodeContainerExecutionResult) {
-                m_execResultMap.put(entry.getKey(), new NativeNodeContainerExecutionResult((NativeNodeContainerExecutionResult) subresultToCopy));
+                m_execResultMap.put(entry.getKey(),
+                    new NativeNodeContainerExecutionResult((NativeNodeContainerExecutionResult)subresultToCopy));
             } else if (subresultToCopy instanceof SubnodeContainerExecutionResult) {
-                m_execResultMap.put(entry.getKey(), new SubnodeContainerExecutionResult((SubnodeContainerExecutionResult) subresultToCopy));
+                m_execResultMap.put(entry.getKey(),
+                    new SubnodeContainerExecutionResult((SubnodeContainerExecutionResult)subresultToCopy));
             } else if (subresultToCopy instanceof WorkflowExecutionResult) {
-                m_execResultMap.put(entry.getKey(), new WorkflowExecutionResult((WorkflowExecutionResult) subresultToCopy));
+                m_execResultMap.put(entry.getKey(),
+                    new WorkflowExecutionResult((WorkflowExecutionResult)subresultToCopy));
+            } else {
+                throw new IllegalStateException(
+                    "Unknown ExecutionResult class: " + ClassUtils.getShortCanonicalName(subresultToCopy, "<null>"));
             }
         }
     }
 
-    /**@return The base id of the workflow. Used to amend the node ids in
+    /** @return The base id of the workflow. Used to amend the node ids in
      * {@link #getExecutionResultMap()}. */
     public NodeID getBaseID() {
         return m_baseID;

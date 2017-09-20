@@ -53,11 +53,13 @@ import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.Test;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -112,7 +114,8 @@ public class NodeIDTest {
         ObjectMapper mapper = new ObjectMapper();
 
         String serialized = mapper.writeValueAsString(NodeID.ROOTID);
-        assertThat("JSON (de)serialization respects singleton property of root NodeID", mapper.readValue(serialized, NodeID.class), sameInstance(NodeID.ROOTID));
+        assertThat("JSON (de)serialization respects singleton property of root NodeID",
+            mapper.readValue(serialized, NodeID.class), sameInstance(NodeID.ROOTID));
     }
 
     /**
