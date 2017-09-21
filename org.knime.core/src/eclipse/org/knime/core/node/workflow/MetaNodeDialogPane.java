@@ -62,6 +62,7 @@ import javax.swing.JScrollPane;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -86,14 +87,12 @@ import org.knime.core.util.Pair;
 @SuppressWarnings({"unchecked", "rawtypes" })
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
+    private static NodeLogger LOGGER = NodeLogger.getLogger(MetaNodeDialogPane.class);
+
     private final Map<NodeID, MetaNodeDialogNode> m_nodes;
-
     private final Map<NodeID, QuickFormConfigurationPanel> m_quickFormInputNodePanels;
-
     private final Map<NodeID, DialogNodePanel> m_dialogNodePanels;
-
     private final JPanel m_panel;
-
     private final boolean m_usedInSubnode;
 
     /** Constructor. */
@@ -172,14 +171,17 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     // no valid representation
                     continue;
                 }
-                DialogNodePanel dialogPanel = representation.createDialogPanel();
-//                dialogPanel.loadNodeValue(((DialogNode)e.getValue()).getDialogValue());
-                m_nodes.put(e.getKey(), e.getValue());
-                m_dialogNodePanels.put(e.getKey(), dialogPanel);
-                Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
-                        new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
-                                Integer.MAX_VALUE, new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
-                sortedNodeList.add(weightNodePair);
+                try {
+                    DialogNodePanel dialogPanel = representation.createDialogPanel();
+                    m_nodes.put(e.getKey(), e.getValue());
+                    m_dialogNodePanels.put(e.getKey(), dialogPanel);
+                    Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
+                            new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
+                                    Integer.MAX_VALUE, new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
+                    sortedNodeList.add(weightNodePair);
+                } catch (Exception ex) {
+                    LOGGER.error("The dialog pane for node " + e.getKey() + " could not be created.", ex);
+                }
             }
         }
 
