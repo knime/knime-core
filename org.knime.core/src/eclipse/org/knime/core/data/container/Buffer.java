@@ -1701,16 +1701,19 @@ class Buffer implements KNIMEStreamConstants {
     private static void checkAndReportOpenFiles(final IOException ex) {
         if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
             if (ex.getMessage().contains("Too many") || ex.getMessage().contains("Zu viele")) {
+                // during nightly tests only INFO message from the Buffer are logged, therefore we use a new logger
+                NodeLogger log = NodeLogger.getLogger("org.knime.core.data.container.BufferDebug");
+
                 String pid = ManagementFactory.getRuntimeMXBean().getName();
                 pid = pid.substring(0, pid.indexOf('@'));
                 ProcessBuilder pb = new ProcessBuilder("lsof", "-p", pid);
                 try {
                     Process lsof = pb.start();
                     try (InputStream is = lsof.getInputStream()) {
-                        LOGGER.debug("Currently open files: " + IOUtils.toString(is, "US-ASCII"));
+                        log.debug("Currently open files: " + IOUtils.toString(is, "US-ASCII"));
                     }
                 } catch (IOException e) {
-                    LOGGER.debug("Could not list open files: " + e.getMessage(), e);
+                    log.debug("Could not list open files: " + e.getMessage(), e);
                 }
             }
         }
