@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -82,7 +82,7 @@ public class ToggleFlowVarPortsAction extends AbstractNodeAction {
         NodeContainerEditPart[] sels =
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : sels) {
-            if (p.getNodeContainer() instanceof SingleNodeContainer) {
+            if (p.getNodeContainer() instanceof SingleNodeContainerUI) {
                 return true;
             }
         }
