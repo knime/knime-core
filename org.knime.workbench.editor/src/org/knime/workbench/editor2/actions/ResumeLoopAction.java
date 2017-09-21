@@ -156,8 +156,8 @@ public class ResumeLoopAction extends AbstractNodeAction {
         WorkflowManager manager = getManager();
         for (NodeContainerEditPart p : nodeParts) {
             NodeContainerUI nc = p.getNodeContainer();
-            if (nc instanceof NativeNodeContainer) {
-                NativeNodeContainer nnc = (NativeNodeContainer) nc;
+            if (Wrapper.wraps(nc, NativeNodeContainer.class)) {
+                NativeNodeContainer nnc = Wrapper.unwrap(nc, NativeNodeContainer.class);
                 if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(nnc, /*oneStep=*/false);
                 }
