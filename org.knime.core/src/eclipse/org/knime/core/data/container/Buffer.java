@@ -54,7 +54,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.management.ManagementFactory;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -80,8 +79,6 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
@@ -1688,34 +1685,11 @@ class Buffer implements KNIMEStreamConstants {
                 StringBuilder b = new StringBuilder("Cannot read file \"");
                 b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
                 b.append("\"");
-                checkAndReportOpenFiles(ioe);
                 throw new RuntimeException(b.toString(), ioe);
             }
             return f;
         } else {
             return new FromListIterator();
-        }
-    }
-
-    /** prints debug output to catch random failures on test system, see AP-7978. */
-    private static void checkAndReportOpenFiles(final IOException ex) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED && Platform.OS_LINUX.equals(Platform.getOS())) {
-            if (ex.getMessage().contains("Too many") || ex.getMessage().contains("Zu viele")) {
-                // during nightly tests only INFO message from the Buffer are logged, therefore we use a new logger
-                NodeLogger log = NodeLogger.getLogger("org.knime.core.data.container.BufferDebug");
-
-                String pid = ManagementFactory.getRuntimeMXBean().getName();
-                pid = pid.substring(0, pid.indexOf('@'));
-                ProcessBuilder pb = new ProcessBuilder("lsof", "-p", pid);
-                try {
-                    Process lsof = pb.start();
-                    try (InputStream is = lsof.getInputStream()) {
-                        log.debug("Currently open files: " + IOUtils.toString(is, "US-ASCII"));
-                    }
-                } catch (IOException e) {
-                    log.debug("Could not list open files: " + e.getMessage(), e);
-                }
-            }
         }
     }
 
