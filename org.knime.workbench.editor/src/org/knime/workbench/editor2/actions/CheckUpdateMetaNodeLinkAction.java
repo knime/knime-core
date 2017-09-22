@@ -72,6 +72,8 @@ import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.ui.node.workflow.NodeContainerUI;
+import org.knime.core.ui.wrapper.Wrapper;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -160,9 +162,9 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     protected List<NodeID> getMetaNodesToCheck() {
         List<NodeID> list = new ArrayList<NodeID>();
         for (NodeContainerEditPart p : getSelectedParts(NodeContainerEditPart.class)) {
-            Object model = p.getModel();
-            if (model instanceof NodeContainerTemplate) {
-                NodeContainerTemplate tnc = (NodeContainerTemplate)model;
+            NodeContainerUI model = p.getNodeContainer();
+            if (Wrapper.wraps(model, NodeContainerTemplate.class)) {
+                NodeContainerTemplate tnc = Wrapper.unwrap(model, NodeContainerTemplate.class);
                 if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
                     if (!getManager().canUpdateMetaNodeLink(tnc.getID())) {
                         return Collections.emptyList();
