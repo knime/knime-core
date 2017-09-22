@@ -65,6 +65,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.util.Version;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -77,6 +78,17 @@ public class WorkflowLoadHelper {
 
     /** Default (pessimistic) default load helper. */
     public static final WorkflowLoadHelper INSTANCE = new WorkflowLoadHelper();
+
+    /** Workflow version, indicates the "oldest" version that is compatible to the current workflow format. */
+    static final String CFG_VERSION = "version";
+
+    /** Version of KNIME that has written the workflow. */
+    static final String CFG_CREATED_BY = "created_by";
+
+    /** Whether the workflow was saved with a nightly build ({@link KNIMEConstants#isNightlyBuild()}.
+     * @since 3.5 */
+    static final String CFG_NIGHTLY = "created_by_nightly";
+
 
     private final boolean m_isTemplate;
 
@@ -151,14 +163,26 @@ public class WorkflowLoadHelper {
         return credentials;
     }
 
-    /** Callback if an unknown version string is encountered in the KNIME
-     * workflow.
-     * @param workflowVersionString The version string as in the workflow file
-     *        (possibly null or otherwise meaningless).
-     * @return A non-null policy (this implementation return "Abort").
+    /**
+     * Callback if an unknown version string is encountered in the KNIME workflow. This method gets only called if
+     * either
+     * <ol>
+     * <li>the version of the workflow comes from the future (like loading a 5.x workflow in KNIME 3.5)</li>
+     * <li>the workflow was created using a {@linkplain KNIMEConstants#isNightlyBuild() NIGHTLY build} and the current
+     * instance is not a NIGHTLY build</li>
+     * </ol>
+     *
+     * @param workflowKNIMEVersion The load version of the workflow(.knime) itself (includes table formats, workflow
+     *            connection table etc), not null.
+     * @param createdByKNIMEVersion The version that created the workflow, corresponds to
+     *            {@link KNIMEConstants#VERSION}. This may be null in case the workflow.knime file is corrupt.
+     * @param isNightlyBuild Whether the workflow was saved using a nightly build
+     *            {@link KNIMEConstants#isNightlyBuild()}.
+     * @return A non-null policy (this implementation returns "Abort").
      */
-    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-            final String workflowVersionString) {
+    // see also org.knime.core.node.workflow.FileWorkflowPersistor.saveHeader(NodeSettings)
+    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
+        final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
         return UnknownKNIMEVersionLoadPolicy.Abort;
     }
 
@@ -237,31 +261,49 @@ public class WorkflowLoadHelper {
         NodeSettingsRO settings = NodeSettings.loadFromXML(new BufferedInputStream(new FileInputStream(dotKNIME)));
         // CeBIT 2006 version did not contain a version string.
         String versionString;
-        if (settings.containsKey(WorkflowManager.CFG_VERSION)) {
+        if (settings.containsKey(WorkflowLoadHelper.CFG_VERSION)) {
             try {
-                versionString = settings.getString(WorkflowManager.CFG_VERSION);
+                versionString = settings.getString(WorkflowLoadHelper.CFG_VERSION);
             } catch (InvalidSettingsException e) {
                 throw new IOException("Can't read version number from \"" + dotKNIME.getAbsolutePath() + "\"", e);
             }
         } else {
             versionString = "0.9.0";
         }
-        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString);
-        boolean needsResetAfterLoad = false;
-        if (version == null) { // future version
-            StringBuilder versionDetails = new StringBuilder(versionString);
-            String createdBy = settings.getString(WorkflowManager.CFG_CREATED_BY, null);
-            if (createdBy != null) {
-                versionDetails.append(" (created by KNIME ").append(createdBy).append(")");
+        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString); // might also be FUTURE
+        boolean isSetDirtyAfterLoad = false;
+        StringBuilder versionDetails = new StringBuilder(versionString);
+        String createdBy = settings.getString(WorkflowLoadHelper.CFG_CREATED_BY, null);
+        Version createdByVersion = null;
+        if (createdBy != null) {
+            versionDetails.append(" (created by KNIME ").append(createdBy).append(")");
+            try {
+                createdByVersion = new Version(createdBy);
+            } catch (IllegalArgumentException e) {
+                // ideally this goes into the 'LoadResult' but it's not instantiated yet
+                LOGGER.warn(String.format("Unable to parse version string \"%s\" (file \"%s\"): %s", createdBy,
+                    dotKNIME.getAbsolutePath(), e.getMessage()), e);
             }
-            String v = versionDetails.toString();
-            switch (getUnknownKNIMEVersionLoadPolicy(v)) {
+        }
+        boolean isNightly = settings.getBoolean(CFG_NIGHTLY, false); // added 3.5.0
+        boolean isRunningNightly = KNIMEConstants.isNightlyBuild();
+        boolean isFutureWorkflow = createdByVersion != null &&
+                !new Version(KNIMEConstants.VERSION).isSameOrNewer(createdByVersion);
+        if (version == LoadVersion.FUTURE || isFutureWorkflow || (!isRunningNightly && isNightly)) {
+            switch (getUnknownKNIMEVersionLoadPolicy(version, createdByVersion, isNightly)) {
             case Abort:
-                throw new UnsupportedWorkflowVersionException(String.format("Unable to load %s, version string \"%s\" "
-                        + "is unknown", isTemplateFlow() ? "template" : "workflow", v));
+                StringBuilder e = new StringBuilder("Unable to load ");
+                e.append(isTemplateFlow() ? "template, " : "workflow, ");
+                if (version == LoadVersion.FUTURE || isFutureWorkflow) {
+                    e.append("it was created with a future version of KNIME (").append(createdBy).append("). ");
+                    e.append("You are running ").append(KNIMEConstants.VERSION).append(".");
+                } else {
+                    e.append("it was created with a nightly build of KNIME (version ").append(createdBy).append("). ");
+                    e.append("You are running ").append(KNIMEConstants.VERSION).append(".");
+                }
+                throw new UnsupportedWorkflowVersionException(e.toString());
             default:
-                version = LoadVersion.FUTURE;
-                needsResetAfterLoad = true;
+                isSetDirtyAfterLoad = true;
             }
         } else if (version.isOlderThan(LoadVersion.V200)) {
             LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
@@ -324,7 +366,7 @@ public class WorkflowLoadHelper {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI));
             persistor.setNameOverwrite(directory.getName());
         }
-        if (needsResetAfterLoad) {
+        if (isSetDirtyAfterLoad) {
             persistor.setDirtyAfterLoad();
         }
         return persistor;
