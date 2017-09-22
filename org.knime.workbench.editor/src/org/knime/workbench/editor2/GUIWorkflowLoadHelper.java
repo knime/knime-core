@@ -57,9 +57,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Credentials;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.util.Version;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 /**
@@ -67,6 +71,8 @@ import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(GUIWorkflowLoadHelper.class);
 
     private final Display m_display;
     private final String m_workflowName;
@@ -159,14 +165,31 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         return newCredentialsList;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-            final String workflowVersionString) {
-        final String message =
-            "You are trying to load a workflow with an unknown "
-            + "version: " + workflowVersionString + "\n\n"
-            + "How do you want to proceed?";
+    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
+        final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
+        Version currentVersion = new Version(KNIMEConstants.VERSION);
+        StringBuilder e = new StringBuilder("Your version of KNIME Analytics Platform (");
+        e.append(currentVersion);
+        e.append(") is very likely incompatible with the workflow you are trying to load (which was created using ");
+        if (isNightlyBuild) {
+            e.append("a NIGHTLY build of ");
+        }
+        if (createdByKNIMEVersion != null) {
+            e.append(createdByKNIMEVersion);
+        } else {
+            e.append("<unknown>");
+        }
+        e.append(")\n\n");
+
+        if (createdByKNIMEVersion != null && !currentVersion.isSameOrNewer(createdByKNIMEVersion)) {
+            e.append("We highly recommend updating before proceeding.\n\n");
+        }
+
+        e.append("If you decide to load it anyway, the workflow might not load at all, miss ");
+        e.append("some nodes, or loose partial configurations now or later when you save it.\n\n");
+
+        e.append("How do you want to proceed?");
         String tryAnyway = "&Try Anyway";
         String cancel = "&Cancel";
         final String[] labels = new String[] {tryAnyway, cancel};
@@ -178,7 +201,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
             public void run() {
                 MessageDialog dialog = new MessageDialog(
                         m_display.getActiveShell(), "Unknown workflow version",
-                        null, message, MessageDialog.WARNING, labels, 0);
+                        null, e.toString(), MessageDialog.WARNING, labels, 0);
                 if (dialog.open() == 0) {
                     result.set(UnknownKNIMEVersionLoadPolicy.Try);
                 } else {

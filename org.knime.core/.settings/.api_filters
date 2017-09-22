@@ -573,6 +573,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowLoadHelper.java" type="org.knime.core.node.workflow.WorkflowLoadHelper">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowLoadHelper"/>
+                <message_argument value="getUnknownKNIMEVersionLoadPolicy(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getUnknownKNIMEVersionLoadPolicy(FileWorkflowPersistor.LoadVersion, Version, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
@@ -622,6 +635,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getOutPortsBarUIInfo()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult">
+        <filter comment="Removed getLogger()" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult"/>
+                <message_argument value="getLogger()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -888,14 +909,6 @@
         <filter id="1110441988">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Views"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult">
-        <filter comment="Removed getLogger()" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult"/>
-                <message_argument value="getLogger()"/>
             </message_arguments>
         </filter>
     </resource>

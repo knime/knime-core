@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -162,18 +163,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         /**
-         * Get the load version for the version string or null if unknown.
+         * Get the load version for the version string or an empty optional if unknown.
          *
          * @param string Version string (as in workflow.knime).
-         * @return The LoadVersion or null.
+         * @return The LoadVersion as Optional
          */
-        static LoadVersion get(final String string) {
+        static Optional<LoadVersion> get(final String string) {
             for (LoadVersion e : values()) {
                 if (e.m_versionString.equals(string)) {
-                    return e;
+                    return Optional.of(e);
                 }
             }
-            return null;
+            return Optional.empty();
         }
 
     }
@@ -307,6 +308,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private final List<ReferencedFile> m_obsoleteNodeDirectories;
 
+    /** Parse the version string, return {@link LoadVersion#FUTURE} if it can't be parsed. */
     static LoadVersion parseVersion(final String versionString) {
         boolean isBeforeV2 = versionString.equals("0.9.0");
         isBeforeV2 |= versionString.equals("1.0");
@@ -314,7 +316,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         if (isBeforeV2) {
             return LoadVersion.UNKNOWN;
         }
-        return LoadVersion.get(versionString);
+        return LoadVersion.get(versionString).orElse(LoadVersion.FUTURE);
     }
 
     /**
@@ -2096,8 +2098,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /** Add version field. */
     static void saveHeader(final NodeSettings settings) {
-        settings.addString(WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
-        settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion().getVersionString());
+        settings.addString(WorkflowLoadHelper.CFG_CREATED_BY, KNIMEConstants.VERSION);
+        settings.addBoolean(WorkflowLoadHelper.CFG_NIGHTLY, KNIMEConstants.isNightlyBuild());
+        settings.addString(WorkflowLoadHelper.CFG_VERSION, getSaveVersion().getVersionString());
     }
 
     /** Saves the status of the wizard if set so in the save-helper.
