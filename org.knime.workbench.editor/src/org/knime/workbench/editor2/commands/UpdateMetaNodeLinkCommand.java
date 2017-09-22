@@ -47,8 +47,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.ui.wrapper.Wrapper.unwrapWFM;
-
 import java.util.List;
 
 import org.eclipse.jface.dialogs.MessageDialog;

@@ -966,8 +966,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     private void checkMetaNodeTemplateIcon() {
         NodeContainerUI nc = getNodeContainer();
         MetaNodeTemplateInformation templInfo = null;
-        if (nc instanceof NodeContainerTemplate) {
-            NodeContainerTemplate t = (NodeContainerTemplate)nc;
+        if (Wrapper.wraps(nc, NodeContainerTemplate.class)) {
+            NodeContainerTemplate t = Wrapper.unwrap(nc, NodeContainerTemplate.class);
             templInfo = t.getTemplateInformation();
         }
         if (templInfo != null) {
