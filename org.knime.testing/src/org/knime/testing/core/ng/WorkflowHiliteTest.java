@@ -51,16 +51,17 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import junit.framework.TestResult;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+
+import junit.framework.TestResult;
 
 /**
  * Testcase that hilites rows in all output tables from every node. Errors will very likely not occur in this test but
@@ -111,6 +112,9 @@ public class WorkflowHiliteTest extends WorkflowTest {
 
     private void hiliteRows(final TestResult result, final SingleNodeContainer node,
                             final TestflowConfiguration flowConfiguration) {
+
+        // "flush" the EDT -- attempt to address random assertions in test case (further details in commit comment)
+        ViewUtils.invokeAndWaitInEDT(() -> {});
         for (int i = 0; i < node.getNrOutPorts(); i++) {
             if (node.getOutputObject(i) instanceof BufferedDataTable) {
                 int max = flowConfiguration.getMaxHiliteRows();
