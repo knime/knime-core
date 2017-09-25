@@ -63,7 +63,7 @@ import org.knime.testing.node.blocking.BlockingRepository;
 public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
 
     /**  */
-    private static final long MAX_TIME_MS = 250L;
+    private static final long MAX_TIME_MS = 500L;
     private static final String LOCK_ID = "myLock";
     private NodeID m_dataGen1;
     private NodeID m_firstSplitter2;
