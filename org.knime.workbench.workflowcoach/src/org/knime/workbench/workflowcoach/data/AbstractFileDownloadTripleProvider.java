@@ -59,6 +59,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -166,7 +167,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
         //check the download and rename the file
         try {
             checkDownloadedFile(m_tmpFile);
-            Files.move(m_tmpFile, m_file);
+            Files.move(m_tmpFile, m_file, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             //delete temporary file
             Files.deleteIfExists(m_tmpFile);
