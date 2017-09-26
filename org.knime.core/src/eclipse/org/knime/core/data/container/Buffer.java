@@ -1852,7 +1852,9 @@ class Buffer implements KNIMEStreamConstants {
         } else {
             // no need for BufferedInputStream here as the copy method
             // does the buffering itself
-            FileUtil.copy(new FileInputStream(m_binFile), zipOut);
+            try (InputStream is = new FileInputStream(m_binFile)) {
+                FileUtil.copy(is, zipOut);
+            }
             shortCutsLookup = m_shortCutsLookup;
             if (m_blobDir != null) {
                 addToZip(ZIP_ENTRY_BLOBS, zipOut, m_blobDir);
