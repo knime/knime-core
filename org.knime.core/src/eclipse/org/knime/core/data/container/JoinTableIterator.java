@@ -85,7 +85,9 @@ class JoinTableIterator extends CloseableRowIterator {
      */
     @Override
     public boolean hasNext() {
-        return m_itReference.hasNext();
+        // the single & is on purpose because we want to call hasNext on both iterators, so that they can close
+        // resources if the end of the stream has been reached; see AP-8055
+        return m_itReference.hasNext() & m_itAppended.hasNext();
     }
 
     /**
