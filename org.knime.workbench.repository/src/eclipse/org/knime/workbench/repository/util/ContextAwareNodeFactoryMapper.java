@@ -47,6 +47,7 @@ package org.knime.workbench.repository.util;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -119,7 +120,7 @@ public final class ContextAwareNodeFactoryMapper {
      public static Class<? extends ContextAwareNodeFactory<?>> getNodeFactory(final String url) {
         for (Map.Entry<String, Pair<Class<? extends ContextAwareNodeFactory<?>>, Image>> e : EXTENSION_REGISTRY
             .entrySet()) {
-            if (url.endsWith(e.getKey())) {
+            if (StringUtils.endsWithIgnoreCase(url, e.getKey())) {
                 return e.getValue().getFirst();
             }
         }
