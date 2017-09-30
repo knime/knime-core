@@ -50,9 +50,11 @@ package org.knime.base.node.flowvariable.createfilename;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -306,22 +308,21 @@ public class CreateFilenameNodeModel extends NodeModel {
 
     }
 
-    private static File getDir(final String file) throws InvalidSettingsException {
-        File f = null;
+    private static URL getDir(final String file) throws InvalidSettingsException {
         try {
             // first try if file string is an URL (files in drop dir come as URLs)
-            final URL url = new URL(file);
-            f = FileUtil.getFileFromURL(url);
-        } catch (MalformedURLException e) {
-            // if no URL try string as path to file
-            f = new File(file);
-        }
+            final URL url = FileUtil.toURL(file);
+            final Path path = FileUtil.resolveToPath(url);
 
-        if (!f.isDirectory() || !f.exists() || !f.canRead()) {
-            throw new InvalidSettingsException("Selected dir: " + file + " cannot be accessed!");
-        }
+            // Some sanity checks for local files
+            if ((path != null) && (!Files.isDirectory(path) || !Files.isReadable(path))) {
+                throw new InvalidSettingsException("Selected directory '" + file + "' cannot be accessed!");
+            }
 
-        return f;
+            return url;
+        } catch (IOException | URISyntaxException e) {
+            throw new InvalidSettingsException("Selected directory is not valid!");
+        }
     }
 
     /**
