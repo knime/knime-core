@@ -79,8 +79,8 @@ public final class OrcTableStoreFormat extends AbstractTableStoreFormat {
         SUPPORTED_TYPES_MAP = new HashMap<>();
         SUPPORTED_TYPES_MAP.put(StringCell.TYPE, OrcKNIMEType.STRING);
         SUPPORTED_TYPES_MAP.put(DoubleCell.TYPE, OrcKNIMEType.DOUBLE);
-        SUPPORTED_TYPES_MAP.put(IntCell.TYPE, OrcKNIMEType.LONG);
-        SUPPORTED_TYPES_MAP.put(LongCell.TYPE, OrcKNIMEType.BYTE_ARRAY);
+        SUPPORTED_TYPES_MAP.put(IntCell.TYPE, OrcKNIMEType.INT);
+        SUPPORTED_TYPES_MAP.put(LongCell.TYPE, OrcKNIMEType.LONG);
     }
 
     /** {@inheritDoc} */

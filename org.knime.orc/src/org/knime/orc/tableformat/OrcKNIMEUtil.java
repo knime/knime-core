@@ -48,52 +48,32 @@
  */
 package org.knime.orc.tableformat;
 
-import static io.airlift.units.DataSize.Unit.MEGABYTE;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.io.orc.CompressionKind;
-import org.apache.hadoop.hive.ql.io.orc.OrcFile;
-import org.apache.hadoop.hive.ql.io.orc.Writer;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.joda.time.DateTimeZone;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcFile;
+import org.apache.orc.Reader;
+import org.apache.orc.RecordReader;
+import org.apache.orc.TypeDescription;
+import org.apache.orc.Writer;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.def.DefaultCellIterator;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.orc.tableformat.OrcKNIMEType.StringOrcKNIMEType;
-import org.knime.orc.tableformat.OrcWriter.OrcField;
-import org.knime.orc.tableformat.OrcWriter.OrcRow;
-import org.knime.orc.tableformat.OrcWriter.OrcRowInspector;
-
-import com.facebook.presto.orc.FileOrcDataSource;
-import com.facebook.presto.orc.OrcPredicate;
-import com.facebook.presto.orc.OrcReader;
-import com.facebook.presto.orc.OrcRecordReader;
-import com.facebook.presto.orc.memory.AggregatedMemoryContext;
-import com.facebook.presto.orc.metadata.OrcMetadataReader;
-import com.facebook.presto.spi.block.Block;
-import com.facebook.presto.spi.type.Type;
-
-import io.airlift.units.DataSize;
 
 /**
  *
@@ -129,6 +109,44 @@ public final class OrcKNIMEUtil {
             return this;
         }
 
+        public OrcKNIMEWriter create() throws IOException {
+            TypeDescription schema = TypeDescription.createStruct();
+            for (Map.Entry<String, OrcKNIMEType> colEntry : m_fieldMap.entrySet()) {
+                schema.addField(colEntry.getKey(), colEntry.getValue().getTypeDescription());
+            }
+            Configuration conf = new Configuration();
+            Writer writer = OrcFile.createWriter(new Path(m_file.getAbsolutePath()),
+                OrcFile.writerOptions(conf)
+                  .setSchema(schema)
+                  .stripeSize(100000)
+                  .bufferSize(10000)
+                  .compress(CompressionKind.SNAPPY)
+                  .version(OrcFile.Version.V_0_12));
+            VectorizedRowBatch rowBatch = schema.createRowBatch();
+            return new OrcKNIMEWriter(writer, m_hasRowKey, rowBatch, getOrcKNIMETypes());
+        }
+
+        /**
+         * @return
+         */
+        private OrcKNIMEType[] getOrcKNIMETypes() {
+            return m_fieldMap.values().toArray(new OrcKNIMEType[m_fieldMap.size()]);
+        }
+
+        public OrcRowIterator createRowIterator() throws IOException {
+            Reader reader = OrcFile.createReader(new Path(m_file.getAbsolutePath()),
+                OrcFile.readerOptions(new Configuration()));
+            return new OrcRowIterator(reader, m_hasRowKey, getOrcKNIMETypes());
+        }
+
+        public void writeSettings(final NodeSettingsWO settings) {
+            NodeSettingsWO columnsSettings = settings.addNodeSettings("columns");
+            for (Map.Entry<String, OrcKNIMEType> entry : m_fieldMap.entrySet()) {
+                NodeSettingsWO colSetting = columnsSettings.addNodeSettings(entry.getKey());
+                entry.getValue().save(colSetting);
+            }
+        }
+
         public OrcWriterBuilder fromSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
             NodeSettingsRO columnsSettings = settings.getNodeSettings("columns");
             for (String colString : columnsSettings.keySet()) {
@@ -139,323 +157,161 @@ public final class OrcKNIMEUtil {
             return this;
         }
 
-
-        public OrcKNIMEWriter create() throws IllegalArgumentException, IOException {
-            Configuration conf = new Configuration();
-
-            AtomicInteger index = new AtomicInteger(0);
-            OrcField[] orcFields = m_fieldMap.entrySet().stream().map(e -> new OrcField(e.getKey(),
-                e.getValue().getObjectInspectorFactory(), index.getAndIncrement())).toArray(OrcField[]::new);
-
-            ObjectInspector ObjInspector = new OrcRowInspector(orcFields);
-            return new OrcKNIMEWriter(OrcFile.createWriter(new Path(m_file.getAbsolutePath()),
-                OrcFile.writerOptions(conf)
-                .inspector(ObjInspector)
-                .stripeSize(100000)
-                .bufferSize(10000)
-                .compress(CompressionKind.SNAPPY)
-                .version(OrcFile.Version.V_0_12)));
-        }
-
-        public OrcKNIMEWritableRow createOrcKNIMEWritableRow() {
-            return new OrcKNIMEWritableRow(m_fieldMap.values().toArray(new OrcKNIMEType[m_fieldMap.size()]), m_hasRowKey);
-        }
-
-        public PrestoDrivenRowIterator createRowIterator() throws IOException {
-            // unclear what these values mean, values taken from com.facebook.presto.hive.HiveClientConfig
-            DataSize orcMaxMergeDistance = new DataSize(1, MEGABYTE);
-            DataSize orcMaxBufferSize = new DataSize(8, MEGABYTE);
-            DataSize orcStreamBufferSize = new DataSize(8, MEGABYTE);
-            DataSize orcMaxReadBlockSize = new DataSize(16, MEGABYTE);
-
-
-            FileOrcDataSource orcDataSource = new FileOrcDataSource(
-                m_file, orcMaxMergeDistance, orcMaxReadBlockSize, orcStreamBufferSize);
-
-            OrcReader orcReader = new OrcReader(orcDataSource, new OrcMetadataReader(),
-                 orcMaxMergeDistance, orcMaxBufferSize, orcMaxReadBlockSize);
-
-            OrcKNIMEType[] orcKNIMETypes = m_fieldMap.values().toArray(new OrcKNIMEType[m_fieldMap.size()]);
-            Map<Integer, Type> colMap = IntStream.range(0, orcKNIMETypes.length).boxed().collect(
-                Collectors.toMap(i -> i, i -> orcKNIMETypes[i].getPrestoType()));
-            OrcRecordReader recordReader = orcReader.createRecordReader(colMap,
-                OrcPredicate.TRUE, DateTimeZone.getDefault(), new AggregatedMemoryContext());
-            return new PrestoDrivenRowIterator(orcKNIMETypes, recordReader, m_hasRowKey);
-        }
-
-        public void writeSettings(final NodeSettingsWO settings) {
-            NodeSettingsWO columnsSettings = settings.addNodeSettings("columns");
-            for (Map.Entry<String, OrcKNIMEType> entry : m_fieldMap.entrySet()) {
-                NodeSettingsWO colSetting = columnsSettings.addNodeSettings(entry.getKey());
-                entry.getValue().save(colSetting);
-            }
-        }
     }
 
     public static final class OrcKNIMEWriter implements AutoCloseable {
         private final Writer m_writer;
+        private final OrcKNIMEType[] m_columnTypes;
+        private final VectorizedRowBatch m_rowBatch;
+        private final boolean m_hasRowKey;
+        private final int m_batchSize;
 
-        OrcKNIMEWriter(final Writer writer) {
+        OrcKNIMEWriter(final Writer writer, final boolean hasRowKey, final VectorizedRowBatch rowBatch,
+            final OrcKNIMEType[] columnTypes) {
             m_writer = writer;
+            m_hasRowKey = hasRowKey;
+            m_columnTypes = columnTypes;
+            m_rowBatch = rowBatch;
+            m_batchSize = rowBatch.getMaxSize();
         }
 
-        public void addRow(final OrcKNIMEWritableRow row) throws IOException {
-            m_writer.addRow(row.getOrcRow());
+        public void addRow(final DataRow row) throws IOException {
+            final int rowInBatch = m_rowBatch.size;
+            int c = 0;
+            if (m_hasRowKey) {
+                ((StringOrcKNIMEType)m_columnTypes[0]).writeValue(
+                    m_rowBatch.cols[0], rowInBatch, row.getKey().getString());
+                c += 1;
+            }
+            for (; c < m_rowBatch.numCols; c++) {
+                DataCell cell = row.getCell(m_hasRowKey ? c - 1 : c);
+                m_columnTypes[c].writeValue(m_rowBatch.cols[c], rowInBatch, cell);
+            }
+            if (rowInBatch == m_batchSize - 1) {
+                m_writer.addRowBatch(m_rowBatch);
+                m_rowBatch.reset();
+            }
         }
 
         @Override
         public void close() throws IOException {
+            if (m_rowBatch.size != 0) {
+                m_writer.addRowBatch(m_rowBatch);
+                m_rowBatch.reset();
+            }
             m_writer.close();
         }
 
     }
 
-    public static final class OrcKNIMEWritableRow {
+    static final class OrcRowIterator extends TableStoreCloseableRowIterator {
 
-        private final OrcKNIMEType[] m_knimeTypes;
-        private final Field[] m_fields;
-        private final OrcRow m_orcRow;
-        private boolean m_hasRowKey;
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(OrcRowIterator.class);
 
-        /**
-         * @param hasRowKey TODO
-         *
-         */
-        OrcKNIMEWritableRow(final OrcKNIMEType[] knimeTypes, final boolean hasRowKey) {
-            m_knimeTypes = knimeTypes;
-            m_hasRowKey = hasRowKey;
-            m_fields = Arrays.stream(knimeTypes).map(e -> new Field(e)).toArray(Field[]::new);
-            m_orcRow = new OrcRow(m_fields.length);
-            IntStream.range(0, m_fields.length).forEach(i -> m_orcRow.setFieldValue(i, m_fields[i].getHadoopValue()));
-        }
-
-        public OrcKNIMEWritableRow set(final DataRow row) {
-            int start = 0;
-            int length = row.getNumCells();
-            if (m_hasRowKey) {
-                ((StringOrcKNIMEType)m_knimeTypes[0]).set(row.getKey().getString(), m_fields[0].getHadoopValue());
-                start = 1;
-                length += 1;
-            }
-            for (int i = start; i < length; i++) {
-                DataCell c = row.getCell(i - start);
-                Field f = m_fields[i];
-                if (c.isMissing()) {
-                    setHadoopValue(i, null);
-                } else {
-                    Object hadoopValue = f.getHadoopValue();
-                    m_knimeTypes[i].set(c, hadoopValue);
-                    setHadoopValue(i, hadoopValue);
-                }
-            }
-            return this;
-        }
-
-        public void set(final int index, final String value) {
-            Field f = getField(index, OrcKNIMEType.STRING);
-            if (value == null) {
-                setHadoopValue(index, null);
-            } else {
-                Text t = (Text)f.getHadoopValue();
-                t.set(value);
-                setHadoopValue(index, t);
-            }
-        }
-
-        public void set(final int index, final Double value) {
-            Field f = getField(index, OrcKNIMEType.DOUBLE);
-            if (value == null) {
-                setHadoopValue(index, null);
-            } else {
-                DoubleWritable t = (DoubleWritable)f.getHadoopValue();
-                t.set(value);
-                setHadoopValue(index, t);
-            }
-        }
-
-        public void set(final int index, final Integer value) {
-            Field f = getField(index, OrcKNIMEType.LONG);
-            if (value == null) {
-                setHadoopValue(index, (Object)null);
-            } else {
-                LongWritable t = (LongWritable)f.getHadoopValue();
-                t.set(value);
-                setHadoopValue(index, t);
-            }
-        }
-
-        public void set(final int index, final byte[] value) {
-            Field f = getField(index, OrcKNIMEType.BYTE_ARRAY);
-            if (value == null) {
-                setHadoopValue(index, null);
-            } else {
-                BytesWritable t = (BytesWritable)f.getHadoopValue();
-                t.set(value, 0, value.length);
-                setHadoopValue(index, t);
-            }
-        }
-
-        private void setHadoopValue(final int index, final Object hadoopValue) {
-            m_orcRow.setFieldValue(index, hadoopValue);
-        }
-
-        private Field getField(final int index, final OrcKNIMEType clientType) {
-            final Field field = m_fields[index];
-            if (!Objects.equals(clientType, field.getType())) {
-                throw new IllegalArgumentException(
-                    String.format("Expected type \"%s\", got \"%s\"", field.getType(), clientType));
-            }
-            return field;
-        }
-
-        OrcRow getOrcRow() {
-            return m_orcRow;
-        }
-
-    }
-
-    static final class Field {
-        private final OrcKNIMEType m_type;
-        private final Object m_hadoopValue;
-        /**
-         * @param type
-         * @param hadoopValue
-         */
-        Field(final OrcKNIMEType type) {
-            m_type = type;
-            m_hadoopValue = m_type.createHadoopObject();
-        }
-
-        OrcKNIMEType getType() {
-            return m_type;
-        }
-
-        Object getHadoopValue() {
-            return m_hadoopValue;
-        }
-
-    }
-
-    public static final class PrestoDrivenRowIterator implements AutoCloseable {
-
-        private final OrcRecordReader m_recordReader;
-        private final OrcKNIMEType[] m_colTypes;
+        private final OrcKNIMEType[] m_columnTypes;
+        private final VectorizedRowBatch m_rowBatch;
         private final boolean m_hasRowKey;
-        private Block[] m_currentBlocks;
-        private int m_indexInBatch;
-        private int m_batchSize;
+        private final RecordReader m_rows;
 
-        PrestoDrivenRowIterator(final OrcKNIMEType[] colTypes, final OrcRecordReader recordReader, final boolean hasRowKey) {
-            m_colTypes = colTypes;
-            m_recordReader = recordReader;
+        private int m_rowInBatch;
+        private boolean m_isClosed;
+
+        /**
+         * @param reader
+         * @throws IOException
+         */
+        OrcRowIterator(final Reader reader, final boolean hasRowKey, final OrcKNIMEType[] columnTypes) throws IOException {
             m_hasRowKey = hasRowKey;
-        }
-
-        public PrestoDrivenRow next(final PrestoDrivenRow r) {
-            if (m_indexInBatch >= m_batchSize) {
-                if (m_batchSize >= 0) {
-                    try {
-                        m_batchSize = m_recordReader.nextBatch();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                if (m_batchSize <= 0) {
-                    return null;
-                }
-                m_indexInBatch = 0;
-                m_currentBlocks = new Block[m_colTypes.length];
-                for (int i = 0; i < m_colTypes.length; i++) {
-                    final int finalI = i;
-//                    // TODO this may be called too late (when on new batch already)
-//                    m_currentBlocks[i] = new LazyBlock(m_batchSize, new LazyBlockLoader<LazyBlock>() {
-//                        volatile boolean isLoaded = false;
-//                        @Override
-//                        public void load(final LazyBlock block) {
-//                            if (isLoaded) {
-//                                return;
-//                            }
-//                            isLoaded = true;
-//                            try {
-//                                block.setBlock(m_recordReader.readBlock(m_colTypes[finalI].getPrestoType(), finalI));
-//                            } catch (IOException e) {
-//                                throw new RuntimeException(e);
-//                            }
-//                        }
-//                    });
-                    try {
-                        m_currentBlocks[i] = m_recordReader.readBlock(m_colTypes[finalI].getPrestoType(), i);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            PrestoDrivenRow row = r == null ? new PrestoDrivenRow(m_colTypes, m_hasRowKey) : r;
-            row.set(m_currentBlocks, m_indexInBatch++);
-            return row;
+            m_columnTypes = columnTypes;
+            m_rows = reader.rows();
+            m_rowBatch = reader.getSchema().createRowBatch();
+            internalNext();
         }
 
         /** {@inheritDoc} */
         @Override
-        public void close() throws IOException {
-            m_recordReader.close();
-        }
-
-    }
-
-    public static final class PrestoDrivenRow implements DataRow {
-
-        private final OrcKNIMEType[] m_colTypes;
-        private Block[] m_blocks;
-        private int m_position;
-        private boolean m_hasRowKey;
-
-        PrestoDrivenRow(final OrcKNIMEType[] colTypes, final boolean hasRowKey) {
-            m_colTypes = colTypes;
-            m_hasRowKey = hasRowKey;
-        }
-
-        void set(final Block[] blocks, final int position) {
-            m_blocks = blocks;
-            m_position = position;
-        }
-
-        public Object getValue(final int colIndex) {
-            return m_colTypes[colIndex].getPrestoType().getObjectValue(null, m_blocks[colIndex], m_position);
-        }
-        private static final RowKey NO_KEY = new RowKey("no-key");
-
-        /** {@inheritDoc} */
-        @Override
-        public RowKey getKey() {
-            if (m_hasRowKey) {
-                Object value = getValue(0);
-                return new RowKey(((StringOrcKNIMEType)m_colTypes[0]).getString(value));
-            } else {
-                return NO_KEY;
-            }
+        public boolean hasNext() {
+            return m_rowInBatch >= 0;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public DataCell getCell(final int index) {
-            final int orcIndex = m_hasRowKey ? index + 1 : index;
-            return m_colTypes[orcIndex].get(m_blocks[orcIndex], m_position);
+        public DataRow next() {
+            OrcRow orcRow = new OrcRow(this, m_rowInBatch);
+            try {
+                internalNext();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return orcRow;
         }
 
-        /** {@inheritDoc} */
+        private void internalNext() throws IOException {
+            if (m_rows.nextBatch(m_rowBatch)) {
+                m_rowInBatch = 0;
+            } else {
+                m_rowInBatch = -1;
+            }
+        }
+
+        @Override
+        public boolean performClose() throws IOException {
+            if (m_isClosed) {
+                return false;
+            }
+            m_rows.close();
+            m_rowInBatch = -1;
+            m_isClosed = true;
+            return true;
+        }
+    }
+
+
+    static final class OrcRow implements DataRow {
+
+        private static final RowKey NO_KEY = new RowKey("no-key");
+
+        private final OrcRowIterator m_iterator;
+        private final int m_rowInBatch;
+        /**
+         * @param iterator
+         * @param rowInBatch
+         */
+        OrcRow(final OrcRowIterator iterator, final int rowInBatch) {
+            m_iterator = iterator;
+            m_rowInBatch = rowInBatch;
+        }
+
+        @Override
+        public RowKey getKey() {
+            if (m_iterator.m_hasRowKey) {
+                String str = ((StringOrcKNIMEType)m_iterator.m_columnTypes[0]).readString(
+                    m_iterator.m_rowBatch.cols[0], m_rowInBatch);
+                return new RowKey(str);
+            } else {
+                return NO_KEY;
+            }
+        }
+
+        @Override
+        public DataCell getCell(final int index) {
+            // TODO do not eval lazy as m_rowBatch may have been updated
+            int c = index + (m_iterator.m_hasRowKey ? 1 : 0);
+            return m_iterator.m_columnTypes[c].readValue(m_iterator.m_rowBatch.cols[c], m_rowInBatch);
+        }
+
+        @Override
+        public int getNumCells() {
+            return m_iterator.m_columnTypes.length - (m_iterator.m_hasRowKey ? 1 : 0);
+        }
+
         @Override
         public Iterator<DataCell> iterator() {
             return new DefaultCellIterator(this);
         }
 
-        /** {@inheritDoc} */
-        @Override
-        public int getNumCells() {
-            return m_hasRowKey ? m_colTypes.length - 1 : m_colTypes.length;
-        }
 
     }
 

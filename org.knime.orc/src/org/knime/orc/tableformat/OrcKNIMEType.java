@@ -48,84 +48,91 @@
  */
 package org.knime.orc.tableformat;
 
-import java.io.IOException;
-import java.nio.charset.CharacterCodingException;
-import java.util.function.Supplier;
+import java.nio.charset.Charset;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.AbstractPrimitiveWritableObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
+import org.apache.orc.TypeDescription;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.blob.BinaryObjectCellFactory;
-import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import com.facebook.presto.spi.block.Block;
-import com.facebook.presto.spi.type.BigintType;
-import com.facebook.presto.spi.type.DoubleType;
-import com.facebook.presto.spi.type.Type;
-import com.facebook.presto.spi.type.VarbinaryType;
-import com.facebook.presto.spi.type.VarcharType;
-
 /**
  *
  * @author wiswedel
  */
-public abstract class OrcKNIMEType {
-    public static final DoubleOrcKNIMEType DOUBLE = new DoubleOrcKNIMEType();
-    public static final LongOrcKNIMEType LONG = new LongOrcKNIMEType();
-    public static final StringOrcKNIMEType STRING = new StringOrcKNIMEType();
-    public static final ByteArrayOrcKNIMEType BYTE_ARRAY = new ByteArrayOrcKNIMEType();
+public abstract class OrcKNIMEType<C extends ColumnVector> {
 
-    private final AbstractPrimitiveWritableObjectInspector m_factory;
-    private final Type m_prestoType;
-    private final Supplier<Object> m_hadoopObjectSupplier;
+    public static final DoubleOrcKNIMEType DOUBLE = new DoubleOrcKNIMEType();
+    public static final StringOrcKNIMEType STRING = new StringOrcKNIMEType();
+    public static final IntOrcKNIMEType INT = new IntOrcKNIMEType();
+    public static final LongOrcKNIMEType LONG = new LongOrcKNIMEType();
+
+//    private final AbstractPrimitiveWritableObjectInspector m_factory;
+//    private final Type m_prestoType;
+//    private final Supplier<Object> m_hadoopObjectSupplier;
+    private final TypeDescription m_orcTypeDescription;
 
     /**
      * @param factory
      */
-    OrcKNIMEType(final AbstractPrimitiveWritableObjectInspector factory, final Type prestoType,
-        final Supplier<Object> hadoopObjectSupplier) {
-        m_factory = factory;
-        m_prestoType = prestoType;
-        m_hadoopObjectSupplier = hadoopObjectSupplier;
+    OrcKNIMEType(final TypeDescription typeDescription) {
+        m_orcTypeDescription = typeDescription;
     }
 
-    AbstractPrimitiveWritableObjectInspector getObjectInspectorFactory() {
-        return m_factory;
+    void writeValue(final ColumnVector columnVector, final int rowInBatch, final DataCell cell) {
+        if (cell.isMissing()) {
+            columnVector.isNull[rowInBatch] = true;
+        } else {
+            writeValueNonNull((C)columnVector, rowInBatch, cell);
+        }
     }
 
-    final Type getPrestoType() {
-        return m_prestoType;
+    abstract void writeValueNonNull(final C columnVector, final int rowInBatch, final DataCell cell);
+
+    @SuppressWarnings("unchecked")
+    DataCell readValue(final ColumnVector columnVector, final int rowInBatch) {
+        if (columnVector.noNulls) {
+            if (columnVector.isRepeating) {
+                return readValueNonNull((C)columnVector, 0);
+            } else if (columnVector.isNull[rowInBatch]) {
+                return DataType.getMissingCell();
+            } else {
+                return readValueNonNull((C)columnVector, rowInBatch);
+            }
+        } else {
+            return DataType.getMissingCell();
+        }
     }
 
-    Object createHadoopObject() {
-        return m_hadoopObjectSupplier.get();
+    abstract DataCell readValueNonNull(final C columnVector, int rowInBatchOrZero);
+
+    final TypeDescription getTypeDescription() {
+        return m_orcTypeDescription;
     }
 
     void save(final NodeSettingsWO settings) {
         String value;
         if (this == OrcKNIMEType.DOUBLE) {
             value = "double";
-        } else if (this == OrcKNIMEType.LONG) {
-            value = "long";
         } else if (this == OrcKNIMEType.STRING) {
             value = "string";
-        } else if (this == OrcKNIMEType.BYTE_ARRAY) {
-            value = "bytearray";
+        } else if (this == OrcKNIMEType.INT) {
+            value = "int";
+        } else if (this == OrcKNIMEType.LONG) {
+            value = "long";
         } else {
             throw new IllegalStateException("Not support orc type");
         }
@@ -137,110 +144,118 @@ public abstract class OrcKNIMEType {
         switch (value) {
             case "double":
                 return OrcKNIMEType.DOUBLE;
+            case "int":
+                return OrcKNIMEType.INT;
             case "long":
                 return OrcKNIMEType.LONG;
             case "string":
                 return OrcKNIMEType.STRING;
-            case "bytearray":
-                return OrcKNIMEType.BYTE_ARRAY;
             default:
-                throw new InvalidSettingsException("Not support orc type");
+                throw new InvalidSettingsException("Unsupported ORC type: " + value);
         }
     }
 
-    abstract void set(final DataCell knimeValue, final Object hadoopValue);
 
-    final DataCell get(final Block block, final int position) {
-        if (block.isNull(position)) {
-            return DataType.getMissingCell();
-        }
-        return getNonMissing(block, position);
-    }
-
-    abstract DataCell getNonMissing(final Block block, final int position);
-
-    static final class DoubleOrcKNIMEType extends OrcKNIMEType {
+    static final class DoubleOrcKNIMEType extends OrcKNIMEType<DoubleColumnVector> {
         private DoubleOrcKNIMEType() {
-            super(PrimitiveObjectInspectorFactory.writableDoubleObjectInspector, DoubleType.DOUBLE, () -> new DoubleWritable());
+            super(TypeDescription.createDouble());
         }
+
         @Override
-        void set(final DataCell knimeValue, final Object hadoopValue) {
-            ((DoubleWritable)hadoopValue).set(((DoubleValue)knimeValue).getDoubleValue());
+        void writeValueNonNull(final DoubleColumnVector columnVector, final int rowInBatch, final DataCell cell) {
+            columnVector.vector[rowInBatch] = ((DoubleValue)cell).getDoubleValue();
         }
+
         @Override
-        DataCell getNonMissing(final Block block, final int position) {
-            return new DoubleCell(getPrestoType().getDouble(block, position));
+        DataCell readValueNonNull(final DoubleColumnVector columnVector, final int rowInBatchOrZero) {
+            return new DoubleCell(columnVector.vector[rowInBatchOrZero]);
+        }
+
+    }
+
+    static final class IntOrcKNIMEType extends OrcKNIMEType<LongColumnVector> {
+        private IntOrcKNIMEType() {
+            super(TypeDescription.createInt());
+        }
+
+        @Override
+        void writeValueNonNull(final LongColumnVector columnVector, final int rowInBatch, final DataCell cell) {
+            columnVector.vector[rowInBatch] = ((IntValue)cell).getIntValue();
+        }
+
+        @Override
+        DataCell readValueNonNull(final LongColumnVector columnVector, final int rowInBatchOrZero) {
+            long valueL = columnVector.vector[rowInBatchOrZero];
+            int valueI = (int)valueL;
+            if (valueI != valueL) {
+                throw new RuntimeException(String.format(
+                    "Written as int but read as a long (overflow): (long)%d != (int)%d", valueL, valueI));
+            }
+            return new IntCell(valueI);
         }
     }
 
-    static final class LongOrcKNIMEType extends OrcKNIMEType {
+    static final class LongOrcKNIMEType extends OrcKNIMEType<LongColumnVector> {
         private LongOrcKNIMEType() {
-            super(PrimitiveObjectInspectorFactory.writableLongObjectInspector, BigintType.BIGINT, () -> new LongWritable());
+            super(TypeDescription.createLong());
+        }
 
-        }
         @Override
-        void set(final DataCell knimeValue, final Object hadoopValue) {
-            ((LongWritable)hadoopValue).set(((LongValue)knimeValue).getLongValue());
+        void writeValueNonNull(final LongColumnVector columnVector, final int rowInBatch, final DataCell cell) {
+            columnVector.vector[rowInBatch] = ((LongValue)cell).getLongValue();
         }
+
         @Override
-        DataCell getNonMissing(final Block block, final int position) {
-            return new IntCell((int)getPrestoType().getLong(block, position));
+        DataCell readValueNonNull(final LongColumnVector columnVector, final int rowInBatchOrZero) {
+            return new LongCell(columnVector.vector[rowInBatchOrZero]);
         }
     }
 
-    static final class StringOrcKNIMEType extends OrcKNIMEType {
+    static final class StringOrcKNIMEType extends OrcKNIMEType<BytesColumnVector> {
+        private static final Charset UTF_8 = Charset.forName("UTF-8");
         private StringOrcKNIMEType() {
-            super(PrimitiveObjectInspectorFactory.writableStringObjectInspector, VarcharType.VARCHAR, () -> new Text());
+            super(TypeDescription.createString());
         }
-        @Override
-        void set(final DataCell knimeValue, final Object hadoopValue) {
-            ((Text)hadoopValue).set(((StringValue)knimeValue).getStringValue());
-        }
-        @Override
-        DataCell getNonMissing(final Block block, final int position) {
-            return new StringCell(decode(getPrestoType().getObjectValue(null, block, position)));
-        }
-        private String decode(final Object hadoopValue) {
-            try {
-                if (true) {
-                    return (String)hadoopValue;
-                }
-                return Text.decode(((Text)hadoopValue).getBytes());
-            } catch (CharacterCodingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        void set(final String str, final Object hadoopValue) {
-            ((Text)hadoopValue).set(str);
-        }
-        public String getString(final Object value) {
-            return decode(value);
-        }
-    }
 
-    static final class ByteArrayOrcKNIMEType extends OrcKNIMEType {
-        private ByteArrayOrcKNIMEType() {
-            super(PrimitiveObjectInspectorFactory.writableBinaryObjectInspector, VarbinaryType.VARBINARY , () -> new BytesWritable());
-        }
         @Override
-        void set(final DataCell knimeValue, final Object hadoopValue) {
-            byte[] bytes;
-            try {
-                bytes = IOUtils.toByteArray(((BinaryObjectDataValue)knimeValue).openInputStream());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            ((BytesWritable)hadoopValue).set(bytes, 0, bytes.length);
+        void writeValueNonNull(final BytesColumnVector columnVector, final int rowInBatch, final DataCell cell) {
+            byte[] b = ((StringValue)cell).getStringValue().getBytes(UTF_8);
+            columnVector.setRef(rowInBatch, b, 0, b.length);
         }
+
         @Override
-        DataCell getNonMissing(final Block block, final int position) {
-            try {
-                return new BinaryObjectCellFactory().create(
-                    ((BytesWritable)getPrestoType().getObjectValue(null, block, position)).getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        DataCell readValueNonNull(final BytesColumnVector columnVector, final int rowInBatchOrZero) {
+            return new StringCell(new String(columnVector.vector[rowInBatchOrZero], UTF_8));
+        }
+
+        // TODO new method with byte[]
+        final void writeValue(final ColumnVector columnVector, final int rowInBatch, final String string) {
+            final BytesColumnVector byteVectorColumn = (BytesColumnVector)columnVector;
+            if (string == null) {
+                byteVectorColumn.isNull[rowInBatch] = true;
+            } else {
+                byte[] b = string.getBytes(UTF_8);
+                byteVectorColumn.setRef(rowInBatch, b, 0, b.length);
             }
         }
+
+        /**
+         * @param columnVector
+         * @param rowInBatch
+         * @return
+         */
+        public String readString(final ColumnVector columnVector, final int rowInBatch) {
+            final BytesColumnVector byteVectorColumn = (BytesColumnVector)columnVector;
+            if (byteVectorColumn.noNulls) {
+                if (byteVectorColumn.isRepeating) {
+                    return new String(byteVectorColumn.vector[0], UTF_8);
+                } else if (byteVectorColumn.isNull[rowInBatch]) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
     }
 
 }

@@ -57,7 +57,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.orc.tableformat.OrcKNIMEUtil.OrcKNIMEWritableRow;
 import org.knime.orc.tableformat.OrcKNIMEUtil.OrcKNIMEWriter;
 import org.knime.orc.tableformat.OrcKNIMEUtil.OrcWriterBuilder;
 
@@ -68,9 +67,7 @@ import org.knime.orc.tableformat.OrcKNIMEUtil.OrcWriterBuilder;
 final class OrcTableStoreWriter extends AbstractTableStoreWriter {
 
     private final File m_binFile;
-    private final int m_bufferID;
     private final OrcKNIMEWriter m_orcKNIMEWriter;
-    private final OrcKNIMEWritableRow m_writableRow;
     private final NodeSettings m_orcSettings;
 
 
@@ -87,7 +84,6 @@ final class OrcTableStoreWriter extends AbstractTableStoreWriter {
         super(spec, writeRowKey);
         m_binFile = binFile;
         m_binFile.delete();
-        m_bufferID = bufferID;
         OrcWriterBuilder builder = new OrcWriterBuilder(binFile, writeRowKey);
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);
@@ -95,7 +91,6 @@ final class OrcTableStoreWriter extends AbstractTableStoreWriter {
             builder.addField(name, OrcTableStoreFormat.SUPPORTED_TYPES_MAP.get(colSpec.getType()));
         }
         m_orcKNIMEWriter = builder.create();
-        m_writableRow = builder.createOrcKNIMEWritableRow();
         NodeSettings s = new NodeSettings("orc-settings");
         builder.writeSettings(s);
         m_orcSettings = s;
@@ -104,7 +99,7 @@ final class OrcTableStoreWriter extends AbstractTableStoreWriter {
     /** {@inheritDoc} */
     @Override
     public void writeRow(final DataRow row) throws IOException {
-        m_orcKNIMEWriter.addRow(m_writableRow.set(row));
+        m_orcKNIMEWriter.addRow(row);
     }
 
     /** {@inheritDoc} */

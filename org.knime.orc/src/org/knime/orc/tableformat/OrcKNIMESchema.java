@@ -44,49 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 18, 2016 (wiswedel): created
+ *   Sep 22, 2017 (wiswedel): created
  */
 package org.knime.orc.tableformat;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.storage.AbstractTableStoreReader;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.orc.tableformat.OrcKNIMEUtil.OrcWriterBuilder;
 
 /**
  *
  * @author wiswedel
  */
-final class OrcTableStoreReader extends AbstractTableStoreReader {
+final class OrcKNIMESchema {
 
-    private OrcWriterBuilder m_builder;
-
-    /**
-     * @param binFile
-     * @param spec
-     * @param settings
-     * @param bufferID
-     * @param tblRep
-     * @param version
-     * @param isReadRowKey
-     * @throws InvalidSettingsException
-     */
-    public OrcTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings, final int bufferID,
-        final Map<Integer, ContainerTable> tblRep, final int version, final boolean isReadRowKey) throws InvalidSettingsException {
-        m_builder = new OrcWriterBuilder(binFile, isReadRowKey);
-        m_builder.fromSettings(settings);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public TableStoreCloseableRowIterator iterator() throws IOException {
-        return m_builder.createRowIterator();
-    }
 
 }
