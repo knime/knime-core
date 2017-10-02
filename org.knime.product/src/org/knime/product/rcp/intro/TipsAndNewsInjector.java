@@ -154,7 +154,9 @@ class TipsAndNewsInjector extends AbstractInjector {
         NodeList nl = (NodeList)xpath.evaluate(".//*[@src]", element, XPathConstants.NODESET);
         for (int i = 0; i < nl.getLength(); i++) {
             Element e = (Element)nl.item(i);
-            if (!e.getAttribute("src").startsWith("http")) {
+            if (e.getAttribute("src").startsWith("//")) {
+                e.setAttribute("src", "https:" + e.getAttribute("src"));
+            } else if (!e.getAttribute("src").startsWith("http")) {
                 e.setAttribute("src", "https://www.knime.com/" + e.getAttribute("src"));
             }
         }
@@ -162,7 +164,9 @@ class TipsAndNewsInjector extends AbstractInjector {
         nl = (NodeList)xpath.evaluate(".//*[@href]", element, XPathConstants.NODESET);
         for (int i = 0; i < nl.getLength(); i++) {
             Element e = (Element)nl.item(i);
-            if (!e.getAttribute("href").startsWith("http")) {
+            if (e.getAttribute("href").startsWith("//")) {
+                e.setAttribute("href", "https:" + e.getAttribute("href"));
+            } else if (!e.getAttribute("href").startsWith("http")) {
                 e.setAttribute("href", "https://www.knime.com/" + e.getAttribute("href"));
             }
         }
