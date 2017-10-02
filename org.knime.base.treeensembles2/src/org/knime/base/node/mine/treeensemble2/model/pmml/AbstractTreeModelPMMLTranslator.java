@@ -71,11 +71,10 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  *
  */
 public abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, M extends AbstractTreeModel<N>,
-T extends TreeTargetColumnMetaData> implements PMMLTranslator {
+T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMMLTranslator {
 
     private AbstractTreeModel<N> m_treeModel;
     private TreeMetaData m_treeMetaData;
-    private String m_warning;
 
     /**
      * @param treeModel a tree model that should be translated to pmml
@@ -134,7 +133,7 @@ T extends TreeTargetColumnMetaData> implements PMMLTranslator {
         AbstractTreeModelExporter<N> exporter = createExporter();
         SchemaType st = exporter.writeModelToPMML(treeModel, spec);
         if (exporter.hasWarning()) {
-            m_warning = exporter.getWarning();
+            addWarning(exporter.getWarning());
         }
         return st;
     }
@@ -181,18 +180,5 @@ T extends TreeTargetColumnMetaData> implements PMMLTranslator {
      */
     protected abstract TreeModelImporter<N, M, T> createImporter(final MetaDataMapper<T> metaDataMapper);
 
-    /**
-     * @return true if a warning is present
-     */
-    public boolean hasWarning() {
-        return m_warning != null;
-    }
-
-    /**
-     * @return the warning message or null if there is not warning present
-     */
-    public String getWarning() {
-        return m_warning;
-    }
 
 }

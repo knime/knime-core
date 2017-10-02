@@ -69,13 +69,12 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Adrian Nembach, KNIME
  */
-abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
+abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends AbstractWarningHolder {
 
     private static final int BINARY = 2;
 
     private final AbstractTreeModel<T> m_treeModel;
     private int m_nodeIndex;
-    private String m_warning;
 
     public AbstractTreeModelExporter(final AbstractTreeModel<T> treeModel) {
         m_treeModel = treeModel;
@@ -117,9 +116,9 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
 
     private void checkColumnTypes(final PMMLPortObjectSpec spec) {
         if (!spec.getLearningCols().stream().allMatch(this::canSavelyBeExported)) {
-            m_warning = "The model was learned on a vector column. "
+            addWarning("The model was learned on a vector column. "
                 + "It's possible to export the model to PMML but won't be possible"
-                + " to import it from the exported PMML.";
+                + " to import it from the exported PMML.");
         }
     }
 
@@ -127,21 +126,6 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> {
         return !TranslationUtil.isVectorFieldName(colSpec.getName());
     }
 
-    /**
-     * Checks if a warning has been set.
-     * @return true if a warning has been set
-     */
-    public boolean hasWarning() {
-        return m_warning != null;
-    }
-
-    /**
-     *
-     * @return the warning or null if no warning has been set
-     */
-    public String getWarning() {
-        return m_warning;
-    }
 
     protected abstract MININGFUNCTION.Enum getMiningFunction();
 

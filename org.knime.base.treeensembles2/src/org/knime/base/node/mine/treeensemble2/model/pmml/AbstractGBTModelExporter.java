@@ -70,7 +70,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Adrian Nembach, KNIME
  */
-abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel> {
+abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel> extends AbstractWarningHolder {
     private final M m_gbtModel;
     private PMMLPortObjectSpec m_pmmlSpec;
 
@@ -115,6 +115,9 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
         final Map<TreeNodeSignature, Double> coefficientMap) {
         assert m_pmmlSpec != null : "The pmml spec is null, this indicates an implementation mistake.";
         GBTRegressionTreeModelExporter exporter = new GBTRegressionTreeModelExporter(tree, coefficientMap);
+        if (exporter.hasWarning()) {
+            addWarning(exporter.getWarning());
+        }
         TreeModel treeModel = segment.addNewTreeModel();
         exporter.writeModelToPMML(treeModel, m_pmmlSpec);
     }
