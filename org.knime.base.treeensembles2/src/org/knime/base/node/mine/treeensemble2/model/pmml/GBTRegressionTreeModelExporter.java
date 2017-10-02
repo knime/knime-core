@@ -44,34 +44,70 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.09.2017 (Adrian Nembach): created
+ *   02.10.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import java.util.Map;
+
+import org.dmg.pmml.ExtensionDocument.Extension;
+import org.dmg.pmml.NodeDocument.Node;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
+import org.knime.core.node.util.CheckUtils;
+
 /**
- * Contains utility functions for exporting and importing models to PMML.
+ * Handles the export of regression trees used in gradient boosted trees.
  *
  * @author Adrian Nembach, KNIME
  */
-final class TranslationUtil {
+final class GBTRegressionTreeModelExporter extends RegressionTreeModelExporter {
 
-    static final String SUM_SQUARED_DEVIATION_KEY = "sumSquaredDeviation";
-    static final String TOTAL_SUM_KEY = "totalSum";
-    static final String GBT_COEFFICIENT_KEY = "gbtCoefficient";
+    private final Map<TreeNodeSignature, Double> m_coefficientMap;
 
-    private TranslationUtil() {
-        // this is a utility class that can't be initialized
+    /**
+     * @param treeModel the tree model to export (must be a regression model)
+     * @param coefficientMap must contain the coefficients for all leafs in <b>treeModel</b>
+     */
+    public GBTRegressionTreeModelExporter(final AbstractTreeModel<TreeNodeRegression> treeModel,
+        final Map<TreeNodeSignature, Double> coefficientMap) {
+        super(treeModel);
+        m_coefficientMap = coefficientMap;
     }
 
     /**
-     * Returns true if <b>colName</b> matches a name of a column that is extracted
-     * from a vector column.
-     *
-     * @param colName the name of a column
-     * @return true if <b>colName</b> could be the name of a vector field
+     * {@inheritDoc}
      */
-    static boolean isVectorFieldName(final String colName) {
-        return colName.matches("(Bit|Byte|Double) \\d+");
+    @Override
+    protected void addNodeContent(final int nodeId, final Node pmmlNode, final TreeNodeRegression node) {
+        // overwrite method of super type as we potentially need to alter the score that is saved (for leaf nodes)
+        addExtension(pmmlNode, node);
+        // pull coefficient into score for leaf nodes
+        double score = node.getMean();
+        if (node.getNrChildren() == 0) {
+            CheckUtils.checkArgument(m_coefficientMap.containsKey(node.getSignature()),
+                "The GBT model contains no coefficient for the leaf %s.", node);
+            score *= m_coefficientMap.get(node.getSignature());
+        }
+        pmmlNode.setScore(Double.toString(score));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addExtension(final Node pmmlNode, final TreeNodeRegression node) {
+        super.addExtension(pmmlNode, node);
+        // store the gbt coefficient for leafs
+        if (node.getNrChildren() == 0) {
+            Extension ext = pmmlNode.addNewExtension();
+            ext.setName(TranslationUtil.GBT_COEFFICIENT_KEY);
+            CheckUtils.checkArgument(m_coefficientMap.containsKey(node.getSignature()),
+                "The GBT model contains no coefficient for the leaf %s.", node);
+            ext.setValue(m_coefficientMap.get(node.getSignature()).toString());
+        }
+    }
+
 
 }
