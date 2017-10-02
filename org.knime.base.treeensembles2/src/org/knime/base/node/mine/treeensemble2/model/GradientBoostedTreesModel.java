@@ -78,12 +78,15 @@ public class GradientBoostedTreesModel extends AbstractGradientBoostingModel {
      * @param coefficientMaps
      */
     public GradientBoostedTreesModel(final TreeEnsembleLearnerConfiguration configuration, final TreeMetaData metaData,
-        final TreeModelRegression[] models, final TreeType treeType, final double initialValue, final List<Map<TreeNodeSignature, Double>> coefficientMaps) {
+        final TreeModelRegression[] models, final TreeType treeType, final double initialValue,
+        final List<Map<TreeNodeSignature, Double>> coefficientMaps) {
         super(configuration, metaData, models, treeType, initialValue);
         m_coefficientMaps = coefficientMaps;
     }
 
     /**
+     * Constructor to be used only for serialization.
+     *
      * @param metaData
      * @param models
      * @param type
@@ -92,6 +95,19 @@ public class GradientBoostedTreesModel extends AbstractGradientBoostingModel {
     public GradientBoostedTreesModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType type,
         final boolean containsClassDistribution) {
         super(metaData, models, type, containsClassDistribution);
+    }
+
+    /**
+     * Constructor to be used when reading a {@link GradientBoostedTreesModel} from PMML.
+     * @param metaData the meta information of the model
+     * @param trees the tree models
+     * @param type the tree type
+     * @param coefficientMaps a list with the coefficient maps for all trees
+     */
+    public GradientBoostedTreesModel(final TreeMetaData metaData, final TreeModelRegression[] trees, final TreeType type,
+        final List<Map<TreeNodeSignature, Double>> coefficientMaps) {
+        super(metaData, trees, type, false);
+        m_coefficientMaps = coefficientMaps;
     }
 
     @Override

@@ -44,70 +44,61 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.09.2017 (Adrian): created
+ *   02.10.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.dmg.pmml.NodeDocument.Node;
-import org.dmg.pmml.TreeModelDocument.TreeModel;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
+import org.dmg.pmml.MULTIPLEMODELMETHOD;
+import org.dmg.pmml.MiningModelDocument.MiningModel;
+import org.dmg.pmml.SegmentationDocument.Segmentation;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
-import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
-import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
+import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.Pair;
 
 /**
- * Handles the import of {@link AbstractTreeModel} objects from PMML.
- * This includes the handling of conditions as those are independent of the node type.
+ * Handles the import of Gradient Boosted Trees for regression.
  *
  * @author Adrian Nembach, KNIME
  */
-class TreeModelImporter<N extends AbstractTreeNode, M extends AbstractTreeModel<N>,
-T extends TreeTargetColumnMetaData> {
-    private final MetaDataMapper<T> m_metaDataMapper;
-    private final ConditionParser m_conditionParser;
-    private final TreeNodeSignatureFactory m_signatureFactory;
-    private final ContentParser<N, T> m_contentParser;
-    private final TreeFactory<N, M> m_treeFactory;
+final class RegressionGBTModelImporter extends AbstractGBTModelImporter<GradientBoostedTreesModel> {
 
-    public TreeModelImporter(final MetaDataMapper<T> metaDataMapper, final ConditionParser conditionParser,
+    /**
+     * @param conditionParser
+     * @param signatureFactory
+     * @param treeFactory
+     * @param metaDataMapper
+     */
+    public RegressionGBTModelImporter(final ConditionParser conditionParser,
         final TreeNodeSignatureFactory signatureFactory,
-        final ContentParser<N, T> contentParser, final TreeFactory<N, M> treeFactory) {
-        m_metaDataMapper = metaDataMapper;
-        m_conditionParser = conditionParser;
-        m_signatureFactory = signatureFactory;
-        m_contentParser = contentParser;
-        m_treeFactory = treeFactory;
+        final TreeFactory<TreeNodeRegression, TreeModelRegression> treeFactory,
+        final MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper) {
+        super(conditionParser, signatureFactory, treeFactory, metaDataMapper);
     }
 
     /**
-     * Imports an {@link AbstractTreeModel} from PMML.
-     *
-     * @param treeModel PMML tree model to import
-     * @return a {@link AbstractTreeModel} initialized from <b>treeModel</b>
+     * {@inheritDoc}
      */
-    public M importFromPMML(final TreeModel treeModel) {
-        Node rootNode = treeModel.getNode();
-        N root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());
-        return m_treeFactory.createTree(root);
-    }
-
-    private N createNodeFromPMML(final Node pmmlNode, final TreeNodeSignature signature) {
-        List<N> children = new ArrayList<>();
-        byte i = 0;
-        for (Node child : pmmlNode.getNodeList()) {
-            TreeNodeSignature childSignature = m_signatureFactory.getChildSignatureFor(signature, i);
-            i++;
-            children.add(createNodeFromPMML(child, childSignature));
-        }
-        TreeNodeCondition condition = m_conditionParser.parseCondition(pmmlNode);
-        N node = m_contentParser.createNode(pmmlNode, m_metaDataMapper.getTargetColumnHelper(), signature, children);
-        node.setTreeNodeCondition(condition);
-        return node;
+    @Override
+    public GradientBoostedTreesModel importFromPMML(final MiningModel miningModel) {
+        Segmentation segmentation = miningModel.getSegmentation();
+        CheckUtils.checkArgument(segmentation.getMultipleModelMethod() == MULTIPLEMODELMETHOD.SUM,
+                "The provided segmentation has not the required sum as multiple model method but '%s' instead.",
+                segmentation.getMultipleModelMethod());
+        Pair<List<TreeModelRegression>, List<Map<TreeNodeSignature, Double>>> treesCoeffientMapsPair =
+                readSumSegmentation(segmentation);
+        List<TreeModelRegression> trees = treesCoeffientMapsPair.getFirst();
+        return new GradientBoostedTreesModel(getMetaDataMapper().getTreeMetaData(),
+            trees.toArray(new TreeModelRegression[trees.size()]), TreeType.Ordinary,
+            treesCoeffientMapsPair.getSecond());
     }
 
 }
