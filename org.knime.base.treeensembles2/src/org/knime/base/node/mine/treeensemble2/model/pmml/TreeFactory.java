@@ -56,7 +56,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
  *
  * @author Adrian Nembach, KNIME
  */
-interface TreeFactory <T extends AbstractTreeNode>{
+interface TreeFactory <N extends AbstractTreeNode, M extends AbstractTreeModel<N>>{
 
     /**
      * Takes the root node and creates a new tree object from it.
@@ -64,5 +64,5 @@ interface TreeFactory <T extends AbstractTreeNode>{
      * @param rootNode the root of the tree
      * @return the created tree
      */
-    public AbstractTreeModel<T> createTree(final T rootNode);
+    public M createTree(final N rootNode);
 }

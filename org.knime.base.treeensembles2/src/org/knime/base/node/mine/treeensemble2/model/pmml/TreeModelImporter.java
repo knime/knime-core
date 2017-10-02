@@ -66,16 +66,16 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  *
  * @author Adrian Nembach, KNIME
  */
-class TreeModelImporter<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData> {
+class TreeModelImporter<N extends AbstractTreeNode, M extends AbstractTreeModel<N>, T extends TreeTargetColumnMetaData> {
     private final MetaDataMapper<T> m_metaDataMapper;
     private final ConditionParser m_conditionParser;
     private final TreeNodeSignatureFactory m_signatureFactory;
     private final ContentParser<N, T> m_contentParser;
-    private final TreeFactory<N> m_treeFactory;
+    private final TreeFactory<N, M> m_treeFactory;
 
     public TreeModelImporter(final MetaDataMapper<T> metaDataMapper, final ConditionParser conditionParser,
         final TreeNodeSignatureFactory signatureFactory,
-        final ContentParser<N, T> contentParser, final TreeFactory<N> treeFactory) {
+        final ContentParser<N, T> contentParser, final TreeFactory<N, M> treeFactory) {
         m_metaDataMapper = metaDataMapper;
         m_conditionParser = conditionParser;
         m_signatureFactory = signatureFactory;
@@ -89,7 +89,7 @@ class TreeModelImporter<N extends AbstractTreeNode, T extends TreeTargetColumnMe
      * @param treeModel PMML tree model to import
      * @return a {@link AbstractTreeModel} initialized from <b>treeModel</b>
      */
-    public AbstractTreeModel<N> importFromPMML(final TreeModel treeModel) {
+    public M importFromPMML(final TreeModel treeModel) {
         Node rootNode = treeModel.getNode();
         N root = createNodeFromPMML(rootNode, m_signatureFactory.getRootSignature());
         return m_treeFactory.createTree(root);

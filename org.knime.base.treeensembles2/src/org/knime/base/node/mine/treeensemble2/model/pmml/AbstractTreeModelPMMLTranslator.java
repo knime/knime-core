@@ -66,11 +66,12 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  *
  * @author Adrian Nembach, KNIME
  * @param <N> the type of node the trees handled by this translator consist of
+ * @param <M> the type of tree this translator handles
  * @param <T> the type of meta data information of the target column
  *
  */
-public abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>
-implements PMMLTranslator {
+public abstract class AbstractTreeModelPMMLTranslator<N extends AbstractTreeNode, M extends AbstractTreeModel<N>,
+T extends TreeTargetColumnMetaData> implements PMMLTranslator {
 
     private AbstractTreeModel<N> m_treeModel;
     private TreeMetaData m_treeMetaData;
@@ -109,7 +110,7 @@ implements PMMLTranslator {
         }
 
         MetaDataMapper<T> metaDataMapper = createMetaDataMapper(pmmlDoc);
-        TreeModelImporter<N, T> importer = createImporter(metaDataMapper);
+        TreeModelImporter<N, M, T> importer = createImporter(metaDataMapper);
         m_treeModel = importer.importFromPMML(trees.get(0));
         m_treeMetaData = metaDataMapper.getTreeMetaData();
     }
@@ -178,7 +179,7 @@ implements PMMLTranslator {
      *  obtained from the PMML document from which to import the tree model
      * @return an importer that handles the import of tree models from PMML
      */
-    protected abstract TreeModelImporter<N, T> createImporter(final MetaDataMapper<T> metaDataMapper);
+    protected abstract TreeModelImporter<N, M, T> createImporter(final MetaDataMapper<T> metaDataMapper);
 
     /**
      * @return true if a warning is present

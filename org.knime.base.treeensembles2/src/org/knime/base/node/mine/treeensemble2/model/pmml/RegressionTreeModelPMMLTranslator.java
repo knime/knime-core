@@ -64,7 +64,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
  * @author Adrian Nembach, KNIME
  */
 public class RegressionTreeModelPMMLTranslator
-extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeTargetNumericColumnMetaData> {
+extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeModelRegression, TreeTargetNumericColumnMetaData> {
 
     /**
      * Constructor to be called when the model should be initialized from PMML.
@@ -103,8 +103,8 @@ extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeTargetNumericCol
      * {@inheritDoc}
      */
     @Override
-    protected TreeModelImporter<TreeNodeRegression, TreeTargetNumericColumnMetaData> createImporter(
-        final MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper) {
+    protected TreeModelImporter<TreeNodeRegression, TreeModelRegression, TreeTargetNumericColumnMetaData>
+    createImporter( final MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper) {
         return new TreeModelImporter<>(metaDataMapper, new LiteralConditionParser(metaDataMapper),
                 new TreeNodeSignatureFactory(), RegressionContentParser.INSTANCE, RegressionTreeFactory.INSTANCE);
     }

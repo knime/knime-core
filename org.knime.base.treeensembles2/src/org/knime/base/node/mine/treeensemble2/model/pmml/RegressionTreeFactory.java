@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
  *
  * @author Adrian Nembach, KNIME
  */
-enum RegressionTreeFactory implements TreeFactory<TreeNodeRegression> {
+enum RegressionTreeFactory implements TreeFactory<TreeNodeRegression, TreeModelRegression> {
     INSTANCE;
 
     /**
