@@ -44,9 +44,12 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   06.09.2017 (Adrian Nembach): created
+ *   02.10.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
+
+import java.util.List;
+import java.util.OptionalDouble;
 
 import org.dmg.pmml.NodeDocument.Node;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
@@ -54,26 +57,29 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 
 /**
- * Parses the content for {@link TreeNodeRegression} objects.
+ * Handles the general parsing of regression tree node content.
  *
- * @author Adrian Nembach, KNIME.com
+ * @author Adrian Nembach, KNIME
  */
-final class RegressionContentParser extends AbstractRegressionContentParser {
+abstract class AbstractRegressionContentParser implements
+ContentParser<TreeNodeRegression, TreeTargetNumericColumnMetaData> {
 
-    static RegressionContentParser INSTANCE = new RegressionContentParser();
-
-    private RegressionContentParser() {
-        // this class is a singleton
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    protected TreeNodeRegression createNodeInternal(final Node node, final TreeTargetNumericColumnMetaData metaData,
-        final TreeNodeSignature signature, final double mean, final double totalSum, final double sumSquaredDeviation,
-        final TreeNodeRegression[] children) {
-        return new TreeNodeRegression(metaData, signature, mean, totalSum, sumSquaredDeviation, children);
+    public final TreeNodeRegression createNode(final Node node,
+        final TargetColumnHelper<TreeTargetNumericColumnMetaData> targetHelper,
+        final TreeNodeSignature signature, final List<TreeNodeRegression> children) {
+        double mean = Double.parseDouble(node.getScore());
+        OptionalDouble totalSum = node.getExtensionList().stream()
+                .filter(e -> e.getName().equals(TranslationUtil.TOTAL_SUM_KEY))
+                .mapToDouble(e -> Double.parseDouble(e.getValue())).findFirst();
+        OptionalDouble sumSquaredDeviation = node.getExtensionList().stream()
+                .filter(e -> e.getName().equals(TranslationUtil.SUM_SQUARED_DEVIATION_KEY))
+                .mapToDouble(e -> Double.parseDouble(e.getValue())).findFirst();
+        return createNodeInternal(node, targetHelper.getMetaData(), signature, mean, totalSum.orElse(-1),
+            sumSquaredDeviation.orElse(-1), children.toArray(new TreeNodeRegression[children.size()]));
     }
 
+    protected abstract TreeNodeRegression createNodeInternal(final Node node,
+        final TreeTargetNumericColumnMetaData metaData, final TreeNodeSignature signature, final double mean,
+        final double totalSum, final double sumSquaredDeviation, final TreeNodeRegression[] children);
 }

@@ -44,9 +44,12 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   06.09.2017 (Adrian Nembach): created
+ *   02.10.2017 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.dmg.pmml.NodeDocument.Node;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
@@ -54,16 +57,15 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 
 /**
- * Parses the content for {@link TreeNodeRegression} objects.
+ * Handles the content parsing for Gradient Boosted Trees regression tree models.
  *
- * @author Adrian Nembach, KNIME.com
+ * @author Adrian Nembach, KNIME
  */
-final class RegressionContentParser extends AbstractRegressionContentParser {
+final class GBTRegressionContentParser extends AbstractRegressionContentParser {
+    private final Map<TreeNodeSignature, Double> m_coefficientMap = new HashMap<>();
 
-    static RegressionContentParser INSTANCE = new RegressionContentParser();
-
-    private RegressionContentParser() {
-        // this class is a singleton
+    public GBTRegressionContentParser() {
+        // all fields are already initialized
     }
 
     /**
@@ -73,7 +75,23 @@ final class RegressionContentParser extends AbstractRegressionContentParser {
     protected TreeNodeRegression createNodeInternal(final Node node, final TreeTargetNumericColumnMetaData metaData,
         final TreeNodeSignature signature, final double mean, final double totalSum, final double sumSquaredDeviation,
         final TreeNodeRegression[] children) {
+        // leaf nodes are handled differently as we there have to pull out the coefficient of the score
+        if (children.length == 0) {
+            double coefficient = node.getExtensionList().stream()
+                    .filter(e -> e.getName().equals(TranslationUtil.GBT_COEFFICIENT_KEY))
+                    .mapToDouble(e -> Double.parseDouble(e.getValue()))
+                    .findFirst().orElseThrow(
+                        () -> new IllegalArgumentException(
+                            "PMML does not contain coefficient for leaf node '" + node + "'."
+                            ));
+            m_coefficientMap.put(signature, coefficient);
+            return new TreeNodeRegression(metaData, signature, mean / coefficient, totalSum, sumSquaredDeviation);
+        }
         return new TreeNodeRegression(metaData, signature, mean, totalSum, sumSquaredDeviation, children);
+    }
+
+    public Map<TreeNodeSignature, Double> getCoefficientMap() {
+        return m_coefficientMap;
     }
 
 }

@@ -106,7 +106,7 @@ public final class TreeNodeRegression extends AbstractTreeNode {
      * @param signature the signature of this tree node
      * @param mean the mean of the rows falling into this tree node
      * @param totalSum the total sum of the rows falling into this tree node
-     * @param sumSquaredDeviation the sum of the squared deviation of the row falling into this tree node
+     * @param sumSquaredDeviation the sum of the squared deviation of the rows falling into this tree node
      * @param childNodes the children of this tree node
      */
     public TreeNodeRegression(final TreeTargetColumnMetaData targetMetaData, final TreeNodeSignature signature,
@@ -116,6 +116,20 @@ public final class TreeNodeRegression extends AbstractTreeNode {
             m_mean = mean;
             m_totalSum = totalSum;
             m_sumSquaredDeviation = sumSquaredDeviation;
+    }
+
+    /**
+     * Constructor for leaf nodes when reading from PMML.
+     *
+     * @param targetMetaData the meta data information for the target column
+     * @param signature the signature of this tree node
+     * @param mean the mean of the rows falling into this tree node
+     * @param totalSum the total sum of the rows falling into this tree node
+     * @param sumSquaredDeviation the sum of the squared deviation of the rows falling into this tree node
+     */
+    public TreeNodeRegression(final TreeTargetColumnMetaData targetMetaData, final TreeNodeSignature signature,
+        final double mean, final double totalSum, final double sumSquaredDeviation) {
+        this(targetMetaData, signature, mean, totalSum, sumSquaredDeviation, EMPTY_CHILD_ARRAY);
     }
 
     /**
