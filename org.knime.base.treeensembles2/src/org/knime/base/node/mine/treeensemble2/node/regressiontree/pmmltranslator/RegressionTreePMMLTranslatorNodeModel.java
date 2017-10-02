@@ -99,7 +99,7 @@ public class RegressionTreePMMLTranslatorNodeModel extends NodeModel {
         PMMLPortObjectSpec pmmlSpec = createPMMLSpec(treeSpec, model);
         PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
         final TreeModelRegression tree = model.getTreeModel();
-        final RegressionTreeModelPMMLTranslator translator = new RegressionTreeModelPMMLTranslator(tree);
+        final RegressionTreeModelPMMLTranslator translator = new RegressionTreeModelPMMLTranslator(tree, model.getMetaData());
         portObject.addModelTranslater(translator);
         if (translator.hasWarning()) {
             setWarningMessage(translator.getWarning());

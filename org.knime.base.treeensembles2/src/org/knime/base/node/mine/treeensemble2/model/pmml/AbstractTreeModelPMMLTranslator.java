@@ -77,13 +77,20 @@ implements PMMLTranslator {
     private String m_warning;
 
     /**
-     * @param treeModel
+     * @param treeModel a tree model that should be translated to pmml
+     * @param metaData the meta data associated with the tree model
      *
      */
-    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<N> treeModel) {
+    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<N> treeModel, final TreeMetaData metaData) {
         m_treeModel = treeModel;
+        m_treeMetaData = metaData;
     }
 
+    /**
+     * Default constructor to be used if a tree model should be initialized from PMML.
+     * Note that the getTree and getTreeMetaData methods will throw a IllegalStateException as long as the tree model
+     * has not been initialized from PMML.
+     */
     public AbstractTreeModelPMMLTranslator() {
 
     }
@@ -131,18 +138,46 @@ implements PMMLTranslator {
         return st;
     }
 
+    /**
+     * @return the tree model that this translator operates on
+     */
     public AbstractTreeModel<N> getTree() {
+        if (m_treeModel == null) {
+            throw new IllegalStateException(
+                "This translator has no tree model yet. Please read one from PMML or initialize a"
+                + " new translator with a tree model.");
+        }
         return m_treeModel;
     }
 
+    /**
+     * @return the meta data associated with the tree model
+     */
     public TreeMetaData getTreeMetaData() {
+        if (m_treeMetaData == null) {
+            throw new IllegalStateException(
+                "This translator has no tree meta data yet. "
+                + "Please read a tree model from PMML or create a new translator with the model and its meta data.");
+        }
         return m_treeMetaData;
     }
 
+    /**
+     * @return an exporter that is used to export the tree model to PMML
+     */
     protected abstract AbstractTreeModelExporter<N> createExporter();
 
+    /**
+     * @param pmmlDoc the PMML Document from which to read a tree model
+     * @return a MetaDataMapper that is used in the translation process
+     */
     protected abstract MetaDataMapper<T> createMetaDataMapper(PMMLDocument pmmlDoc);
 
+    /**
+     * @param metaDataMapper the MetaDataMapper that holds meta information
+     *  obtained from the PMML document from which to import the tree model
+     * @return an importer that handles the import of tree models from PMML
+     */
     protected abstract TreeModelImporter<N, T> createImporter(final MetaDataMapper<T> metaDataMapper);
 
     /**

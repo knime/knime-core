@@ -117,7 +117,7 @@ public class RegressionTreeModelPortObject extends AbstractPortObject {
         PMMLPortObjectSpec pmmlSpec = pmmlSpecCreator.createSpec();
         PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
         final TreeModelRegression tree = model.getTreeModel();
-        portObject.addModelTranslater(new RegressionTreeModelPMMLTranslator(tree));
+        portObject.addModelTranslater(new RegressionTreeModelPMMLTranslator(tree, model.getMetaData()));
         return portObject;
     }
 

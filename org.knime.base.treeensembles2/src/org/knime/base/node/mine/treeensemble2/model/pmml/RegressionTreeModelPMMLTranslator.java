@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import org.dmg.pmml.PMMLDocument;
+import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
@@ -75,9 +76,11 @@ extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeTargetNumericCol
     /**
      * Constructor to be called when a model should be exported to PMML.
      * @param treeModel the tree model that should be written to PMML
+     * @param metaData the meta data associated with the tree model
      */
-    public RegressionTreeModelPMMLTranslator(final AbstractTreeModel<TreeNodeRegression> treeModel) {
-        super(treeModel);
+    public RegressionTreeModelPMMLTranslator(final AbstractTreeModel<TreeNodeRegression> treeModel,
+        final TreeMetaData metaData) {
+        super(treeModel, metaData);
     }
 
     /**
