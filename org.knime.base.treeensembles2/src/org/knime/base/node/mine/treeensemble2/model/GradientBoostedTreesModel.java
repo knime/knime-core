@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,6 +139,13 @@ public class GradientBoostedTreesModel extends AbstractGradientBoostingModel {
             }
             m_coefficientMaps.add(map);
         }
+    }
+
+    /**
+     * @return the coefficient maps for all trees
+     */
+    public Collection<Map<TreeNodeSignature, Double>> getCoeffientMaps() {
+        return m_coefficientMaps;
     }
 
 }
