@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.dmg.pmml.MININGFUNCTION;
+import org.dmg.pmml.MININGFUNCTION.Enum;
 import org.dmg.pmml.MiningModelDocument.MiningModel;
 import org.dmg.pmml.SegmentationDocument.Segmentation;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
@@ -76,12 +78,23 @@ final class RegressionGBTModelExporter extends AbstractGBTModelExporter<Gradient
      */
     @Override
     protected void doWrite(final MiningModel model) {
+        // set mining function to regression
+
+        // write the model
         Segmentation segmentation = model.addNewSegmentation();
         GradientBoostedTreesModel gbtModel = getGBTModel();
         List<TreeModelRegression> trees = IntStream.range(0, gbtModel.getNrModels())
                 .mapToObj(i -> gbtModel.getTreeModelRegression(i))
                 .collect(Collectors.toList());
         writeSumSegmentation(segmentation, trees, gbtModel.getCoeffientMaps());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Enum getMiningFunction() {
+        return MININGFUNCTION.REGRESSION;
     }
 
 }

@@ -53,6 +53,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.xmlbeans.SchemaType;
+import org.dmg.pmml.MININGFUNCTION.Enum;
 import org.dmg.pmml.MULTIPLEMODELMETHOD;
 import org.dmg.pmml.MiningModelDocument.MiningModel;
 import org.dmg.pmml.SegmentDocument.Segment;
@@ -87,9 +88,12 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
     public SchemaType writeModelToPMML(final MiningModel model, final PMMLPortObjectSpec pmmlSpec) {
         PMMLMiningSchemaTranslator.writeMiningSchema(pmmlSpec, model);
         m_pmmlSpec = pmmlSpec;
-
+        model.setFunctionName(getMiningFunction());
+        doWrite(model);
         return MiningModel.type;
     }
+
+    protected abstract Enum getMiningFunction();
 
     protected abstract void doWrite(final MiningModel model);
 
