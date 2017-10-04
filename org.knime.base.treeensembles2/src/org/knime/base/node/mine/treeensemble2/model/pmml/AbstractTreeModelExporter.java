@@ -48,6 +48,10 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.xmlbeans.SchemaType;
 import org.dmg.pmml.MININGFUNCTION;
 import org.dmg.pmml.MISSINGVALUESTRATEGY;
@@ -59,10 +63,13 @@ import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.dmg.pmml.TreeModelDocument.TreeModel.SplitCharacteristic;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
+import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNodeSurrogateCondition;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeColumnCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  * Handles the export of {@link AbstractTreeModel} objects to PMML.
@@ -88,7 +95,7 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends Abs
      */
     public SchemaType writeModelToPMML(final TreeModel treeModel, final PMMLPortObjectSpec spec) {
         checkColumnTypes(spec);
-        PMMLMiningSchemaTranslator.writeMiningSchema(spec, treeModel);
+        PMMLMiningSchemaTranslator.writeMiningSchema(reduceSpec(spec), treeModel);
         treeModel.setModelName("DecisionTree");
         treeModel.setFunctionName(getMiningFunction());
         T rootNode = m_treeModel.getRootNode();
@@ -119,6 +126,46 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends Abs
             addWarning("The model was learned on a vector column. "
                 + "It's possible to export the model to PMML but won't be possible"
                 + " to import it from the exported PMML.");
+        }
+    }
+
+    /**
+     * Recursively goes through the tree and only keeps those learning cols that are actually used
+     * by the model.
+     * The target is always retained since we currently need to be able to set a target in segmentations
+     * (this could change if we update to PMML 4.3).
+     *
+     * @param pmmlSpec the full spec
+     * @return a spec that only contains those learn columns that actually appear in the model
+     */
+    private PMMLPortObjectSpec reduceSpec(final PMMLPortObjectSpec pmmlSpec) {
+        assert m_treeModel != null;
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(pmmlSpec);
+        Set<String> usedFields = new HashSet<>();
+        recursivelyCheckUsedFields(m_treeModel.getRootNode(), pmmlSpec.getLearningFields().size(), usedFields);
+        creator.setLearningCols(pmmlSpec.getLearningCols().stream()
+            .filter(s -> usedFields.contains(s.getName())).collect(Collectors.toList()));
+        return creator.createSpec();
+    }
+
+    private void recursivelyCheckUsedFields(final AbstractTreeNode node, final int numLearnCols,
+        final Set<String> usedLearningFields) {
+        if (usedLearningFields.size() == numLearnCols) {
+            return;
+        }
+        TreeNodeCondition cond = node.getCondition();
+        addAllFieldsInCondition(cond, usedLearningFields);
+        node.getChildren().forEach(c -> recursivelyCheckUsedFields(c, numLearnCols, usedLearningFields));
+    }
+
+    private void addAllFieldsInCondition(final TreeNodeCondition condition, final Set<String> usedLearningFields) {
+        if (condition instanceof TreeNodeColumnCondition) {
+            usedLearningFields.add(((TreeNodeColumnCondition)condition).getAttributeName());
+        } else if (condition instanceof AbstractTreeNodeSurrogateCondition) {
+            AbstractTreeNodeSurrogateCondition sc = (AbstractTreeNodeSurrogateCondition)condition;
+            for (int i = 0; i < sc.getNumSurrogates() + 1; i++) {
+                addAllFieldsInCondition(sc.getColumnCondition(i), usedLearningFields);
+            }
         }
     }
 
