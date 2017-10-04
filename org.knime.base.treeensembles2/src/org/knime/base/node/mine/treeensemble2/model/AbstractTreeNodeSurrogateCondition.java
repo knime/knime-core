@@ -113,7 +113,7 @@ public abstract class AbstractTreeNodeSurrogateCondition extends TreeNodeConditi
      * @param index
      * @return TreeNodeColumnCondition at <b>index</b>
      */
-    protected abstract TreeNodeColumnCondition getColumnCondition(final int index);
+    public abstract TreeNodeColumnCondition getColumnCondition(final int index);
 
     /**
      *
@@ -127,14 +127,19 @@ public abstract class AbstractTreeNodeSurrogateCondition extends TreeNodeConditi
     @Override
     public PMMLCompoundPredicate toPMMLPredicate() {
         PMMLCompoundPredicate compound = new PMMLCompoundPredicate("surrogate");
-        for (int i = 0; i < getNumSurrogates() + 1; i++) {
-            TreeNodeCondition condition = getColumnCondition(i);
-            compound.addPredicate(condition.toPMMLPredicate());
+        PMMLCompoundPredicate cc = compound;
+        cc.addPredicate(getFirstCondition().toPMMLPredicate());
+        for (int i = 0; i < getNumSurrogates(); i++) {
+            TreeNodeCondition condition = getColumnCondition(i + 1);
+            PMMLCompoundPredicate nc = new PMMLCompoundPredicate("surrogate");
+            nc.addPredicate(condition.toPMMLPredicate());
+            cc.addPredicate(nc);
+            cc = nc;
         }
         if (m_defaultResponse) {
-            compound.addPredicate(new PMMLTruePredicate());
+            cc.addPredicate(new PMMLTruePredicate());
         } else {
-            compound.addPredicate(new PMMLFalsePredicate());
+            cc.addPredicate(new PMMLFalsePredicate());
         }
         return compound;
     }

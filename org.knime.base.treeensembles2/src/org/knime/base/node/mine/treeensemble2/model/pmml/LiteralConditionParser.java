@@ -138,6 +138,7 @@ final class LiteralConditionParser implements ConditionParser {
     }
 
     private AbstractTreeNodeSurrogateCondition parseSurrogateCompound(final CompoundPredicate compound) {
+        // TODO adapt to recursive surrogat formulation (pain in the ass but necessary)
         CheckUtils.checkArgument(compound.getCompoundPredicateList().isEmpty(),
             "Compound predicates inside surrogate-compounds are currently not supported.");
         List<TreeNodeColumnCondition> conds = new ArrayList<>();

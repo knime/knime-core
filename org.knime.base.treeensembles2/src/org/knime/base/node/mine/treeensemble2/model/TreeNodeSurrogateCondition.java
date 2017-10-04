@@ -97,7 +97,7 @@ public class TreeNodeSurrogateCondition extends AbstractTreeNodeSurrogateConditi
      * {@inheritDoc}
      */
     @Override
-    protected TreeNodeColumnCondition getColumnCondition(final int index) {
+    public TreeNodeColumnCondition getColumnCondition(final int index) {
         if (index < 0 || index >= m_conditions.length) {
             throw new IndexOutOfBoundsException();
         }
