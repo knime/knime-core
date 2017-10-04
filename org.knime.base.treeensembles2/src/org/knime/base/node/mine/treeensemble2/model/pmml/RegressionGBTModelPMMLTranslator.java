@@ -60,6 +60,22 @@ import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 public final class RegressionGBTModelPMMLTranslator extends AbstractGBTModelPMMLTranslator<GradientBoostedTreesModel> {
 
     /**
+     * Constructor to be used if a model should be initialized from PMML.
+     */
+    public RegressionGBTModelPMMLTranslator() {
+        // empty constructor
+    }
+
+    /**
+     * Constructor to be used if a model should be written to PMML.
+     *
+     * @param gbtModel the Gradient Boosted Trees model that should be written to PMML
+     */
+    public RegressionGBTModelPMMLTranslator(final GradientBoostedTreesModel gbtModel) {
+        super(gbtModel);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

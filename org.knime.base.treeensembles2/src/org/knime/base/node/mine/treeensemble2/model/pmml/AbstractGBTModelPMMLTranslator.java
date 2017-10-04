@@ -60,11 +60,29 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  * Abstract implementation for the translation of gradient boosted trees model from and to PMML.
  *
  * @author Adrian Nembach, KNIME
+ * @param <M> The model type that is handled by the translator
  */
-abstract class AbstractGBTModelPMMLTranslator <M extends AbstractGradientBoostingModel> extends AbstractWarningHolder
-implements PMMLTranslator {
+public abstract class AbstractGBTModelPMMLTranslator <M extends AbstractGradientBoostingModel>
+extends AbstractWarningHolder implements PMMLTranslator {
 
     private M m_gbtModel;
+
+    /**
+     * Default constructor to be used if a model should be read from PMML.
+     */
+    public AbstractGBTModelPMMLTranslator() {
+        // nothing to do
+    }
+
+    /**
+     * Default constructor to be used if a model should be written to PMML.
+     *
+     * @param gbtModel
+     */
+    public AbstractGBTModelPMMLTranslator(final M gbtModel) {
+        m_gbtModel = gbtModel;
+    }
+
 
     /**
      * {@inheritDoc}
@@ -77,9 +95,16 @@ implements PMMLTranslator {
         m_gbtModel = importer.importFromPMML(pmml.getMiningModelList().get(0));
     }
 
+    /**
+     * @param metaDataMapper the initialized mapper for meta information
+     * @return the corresponding model importer
+     */
     protected abstract AbstractGBTModelImporter<M> createImporter(
         final MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper);
 
+    /**
+     * @return the exporter for the current model type
+     */
     protected abstract AbstractGBTModelExporter<M> createExporter();
 
     /**
@@ -97,6 +122,10 @@ implements PMMLTranslator {
         return st;
     }
 
+    /**
+     * @return the Gradient Boosted Trees model this translator holds
+     * @throws IllegalStateException if the model is not initialized yet
+     */
     public M getGBTModel() {
         if (m_gbtModel == null) {
             throw new IllegalStateException("This translator currently holds no Gradient Boosted Trees model. "
