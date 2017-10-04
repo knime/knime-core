@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.dmg.pmml.ArrayType;
 import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate;
@@ -233,7 +234,7 @@ final class ConditionExporter {
 
     private static String setToWhitspaceSeparatedString(final Set<String> set) {
         final StringBuilder sb = new StringBuilder();
-        for (final String string : set) {
+        for (final String string : set.stream().sorted().collect(Collectors.toList())) {
             sb.append("\"");
             sb.append(string);
             sb.append("\"");
