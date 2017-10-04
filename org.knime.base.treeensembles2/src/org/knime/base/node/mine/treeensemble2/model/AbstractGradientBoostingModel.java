@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
 public abstract class AbstractGradientBoostingModel extends TreeEnsembleModel {
 
@@ -85,6 +85,21 @@ public abstract class AbstractGradientBoostingModel extends TreeEnsembleModel {
     public AbstractGradientBoostingModel(final TreeMetaData metaData, final AbstractTreeModel[] models,
         final TreeType type, final boolean containsClassDistribution) {
         super(metaData, models, type, containsClassDistribution);
+    }
+
+    /**
+     * Constructor to be used when reading from PMML.
+     *
+     * @param metaData
+     * @param models
+     * @param type
+     * @param containsClassDistribution
+     * @param initialValue the initial value of the boosting model
+     */
+    public AbstractGradientBoostingModel(final TreeMetaData metaData, final TreeModelRegression[] models,
+        final TreeType type, final boolean containsClassDistribution, final double initialValue) {
+        super(metaData, models, type, containsClassDistribution);
+        m_initialValue = initialValue;
     }
 
     public abstract double predict(final PredictorRecord record);

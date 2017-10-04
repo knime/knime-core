@@ -102,11 +102,12 @@ public class GradientBoostedTreesModel extends AbstractGradientBoostingModel {
      * @param metaData the meta information of the model
      * @param trees the tree models
      * @param type the tree type
+     * @param intialValue the initial value for the boosting model
      * @param coefficientMaps a list with the coefficient maps for all trees
      */
     public GradientBoostedTreesModel(final TreeMetaData metaData, final TreeModelRegression[] trees, final TreeType type,
-        final List<Map<TreeNodeSignature, Double>> coefficientMaps) {
-        super(metaData, trees, type, false);
+        final double initialValue, final List<Map<TreeNodeSignature, Double>> coefficientMaps) {
+        super(metaData, trees, type, false, initialValue);
         m_coefficientMaps = coefficientMaps;
     }
 
