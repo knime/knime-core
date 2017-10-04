@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
-import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
@@ -112,7 +111,7 @@ class GBTPMMLImporterNodeModel extends NodeModel {
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[0];
         // check if the spec is compatible
         AbstractTreeModelPMMLTranslator.checkPMMLSpec(pmmlSpec);
-        return new PortObjectSpec[] {new RegressionTreeModelPortObjectSpec(pmmlSpec.getDataTableSpec())};
+        return new PortObjectSpec[] {new TreeEnsembleModelPortObjectSpec(pmmlSpec.getDataTableSpec())};
     }
 
     /**

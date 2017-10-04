@@ -17,7 +17,7 @@
 	<ports>
 	    <inPort index="0" name="PMML">The PMML from which to initialize the Gradient Boosted Trees model
 	    </inPort>
-		<outPort index="0" name="Simple Regression Tree">
+		<outPort index="0" name="Gradient Boosted Trees">
 		  The Gradient Boosted Trees model</outPort>
 	</ports>
 </knimeNode>
