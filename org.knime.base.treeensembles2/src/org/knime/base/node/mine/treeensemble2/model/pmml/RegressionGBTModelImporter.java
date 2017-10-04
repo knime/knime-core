@@ -96,8 +96,11 @@ final class RegressionGBTModelImporter extends AbstractGBTModelImporter<Gradient
         Pair<List<TreeModelRegression>, List<Map<TreeNodeSignature, Double>>> treesCoeffientMapsPair =
                 readSumSegmentation(segmentation);
         List<TreeModelRegression> trees = treesCoeffientMapsPair.getFirst();
+        // TODO user should be warned if there is no initial value or anything else is fishy
+        double initialValue = miningModel.getTargets().getTargetList().get(0).getRescaleConstant();
+        // currently only models learned on "ordinary" columns can be read back in
         return new GradientBoostedTreesModel(getMetaDataMapper().getTreeMetaData(),
-            trees.toArray(new TreeModelRegression[trees.size()]), TreeType.Ordinary,
+            trees.toArray(new TreeModelRegression[trees.size()]), TreeType.Ordinary, initialValue,
             treesCoeffientMapsPair.getSecond());
     }
 
