@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="RegressionTreeToPMML.png" type="Other">
+	<name>Gradient Boosted Trees to PMML</name>
+
+	<shortDescription>
+		Writes a Gradient Boosted Trees model to PMML.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+            Writes a Gradient Boosted Trees model to PMML.
+		</intro>
+	    
+	</fullDescription>
+
+	<ports>
+	    <inPort index="0" name="PMML">The Gradient Boosted Trees model that should be written to PMML
+	    </inPort>
+		<outPort index="0" name="Simple Regression Tree">
+		  The PMML containing the Gradient Boosted Trees model</outPort>
+	</ports>
+</knimeNode>
