@@ -107,6 +107,7 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
         for (int i = 1; i <= trees.size(); i++) {
             Segment segment = segmentation.addNewSegment();
             segment.setId(Integer.toString(i));
+            segment.addNewTrue();
             writeTreeIntoSegment(segment, treeIterator.next(), coefficientMapIterator.next());
         }
     }

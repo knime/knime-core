@@ -56,6 +56,8 @@ import org.dmg.pmml.MININGFUNCTION;
 import org.dmg.pmml.MININGFUNCTION.Enum;
 import org.dmg.pmml.MiningModelDocument.MiningModel;
 import org.dmg.pmml.SegmentationDocument.Segmentation;
+import org.dmg.pmml.TargetDocument.Target;
+import org.dmg.pmml.TargetsDocument.Targets;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 
@@ -78,11 +80,15 @@ final class RegressionGBTModelExporter extends AbstractGBTModelExporter<Gradient
      */
     @Override
     protected void doWrite(final MiningModel model) {
-        // set mining function to regression
+        // write the initial value
+        Targets targets = model.addNewTargets();
+        Target target = targets.addNewTarget();
+        GradientBoostedTreesModel gbtModel = getGBTModel();
+        target.setField(gbtModel.getMetaData().getTargetMetaData().getAttributeName());
+        target.setRescaleConstant(gbtModel.getInitialValue());
 
         // write the model
         Segmentation segmentation = model.addNewSegmentation();
-        GradientBoostedTreesModel gbtModel = getGBTModel();
         List<TreeModelRegression> trees = IntStream.range(0, gbtModel.getNrModels())
                 .mapToObj(i -> gbtModel.getTreeModelRegression(i))
                 .collect(Collectors.toList());
