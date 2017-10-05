@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -72,8 +72,8 @@ import org.w3c.dom.Node;
 
 /**
  * Scans the node repository and creates an html file listing all available
- * nodes. Usefult to fill the features list on <a href="http://www.knime.org">
- * http://www.knime.org</a>.
+ * nodes. Usefult to fill the features list on <a href="http://www.knime.com">
+ * http://www.knime.com</a>.
  * @author wiswedel, University of Konstanz
  */
 public class KNIMEPrintNodesStdOutApplication implements IApplication {
