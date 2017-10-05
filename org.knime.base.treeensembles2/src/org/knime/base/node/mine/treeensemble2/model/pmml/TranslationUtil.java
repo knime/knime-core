@@ -57,7 +57,7 @@ final class TranslationUtil {
 
     static final String SUM_SQUARED_DEVIATION_KEY = "sumSquaredDeviation";
     static final String TOTAL_SUM_KEY = "totalSum";
-    static final String GBT_COEFFICIENT_KEY = "gbtCoefficient";
+    static final String MEAN_KEY = "mean";
 
     private TranslationUtil() {
         // this is a utility class that can't be initialized

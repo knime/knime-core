@@ -88,7 +88,7 @@ final class GBTRegressionTreeModelExporter extends RegressionTreeModelExporter {
         if (node.getNrChildren() == 0) {
             CheckUtils.checkArgument(m_coefficientMap.containsKey(node.getSignature()),
                 "The GBT model contains no coefficient for the leaf %s.", node);
-            score *= m_coefficientMap.get(node.getSignature());
+            score = m_coefficientMap.get(node.getSignature());
         }
         pmmlNode.setScore(Double.toString(score));
     }
@@ -102,10 +102,10 @@ final class GBTRegressionTreeModelExporter extends RegressionTreeModelExporter {
         // store the gbt coefficient for leafs
         if (node.getNrChildren() == 0) {
             Extension ext = pmmlNode.addNewExtension();
-            ext.setName(TranslationUtil.GBT_COEFFICIENT_KEY);
+            ext.setName(TranslationUtil.MEAN_KEY);
             CheckUtils.checkArgument(m_coefficientMap.containsKey(node.getSignature()),
                 "The GBT model contains no coefficient for the leaf %s.", node);
-            ext.setValue(m_coefficientMap.get(node.getSignature()).toString());
+            ext.setValue(Double.toString(node.getMean()));
         }
     }
 

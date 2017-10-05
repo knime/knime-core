@@ -73,21 +73,21 @@ final class GBTRegressionContentParser extends AbstractRegressionContentParser {
      */
     @Override
     protected TreeNodeRegression createNodeInternal(final Node node, final TreeTargetNumericColumnMetaData metaData,
-        final TreeNodeSignature signature, final double mean, final double totalSum, final double sumSquaredDeviation,
+        final TreeNodeSignature signature, final double score, final double totalSum, final double sumSquaredDeviation,
         final TreeNodeRegression[] children) {
         // leaf nodes are handled differently as we there have to pull out the coefficient of the score
         if (children.length == 0) {
-            double coefficient = node.getExtensionList().stream()
-                    .filter(e -> e.getName().equals(TranslationUtil.GBT_COEFFICIENT_KEY))
+            double mean = node.getExtensionList().stream()
+                    .filter(e -> e.getName().equals(TranslationUtil.MEAN_KEY))
                     .mapToDouble(e -> Double.parseDouble(e.getValue()))
                     .findFirst().orElseThrow(
                         () -> new IllegalArgumentException(
                             "PMML does not contain coefficient for leaf node '" + node + "'."
                             ));
-            m_coefficientMap.put(signature, coefficient);
-            return new TreeNodeRegression(metaData, signature, mean / coefficient, totalSum, sumSquaredDeviation);
+            m_coefficientMap.put(signature, score);
+            return new TreeNodeRegression(metaData, signature, mean, totalSum, sumSquaredDeviation);
         }
-        return new TreeNodeRegression(metaData, signature, mean, totalSum, sumSquaredDeviation, children);
+        return new TreeNodeRegression(metaData, signature, score, totalSum, sumSquaredDeviation, children);
     }
 
     public Map<TreeNodeSignature, Double> getCoefficientMap() {
