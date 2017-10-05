@@ -138,26 +138,54 @@ final class LiteralConditionParser implements ConditionParser {
     }
 
     private AbstractTreeNodeSurrogateCondition parseSurrogateCompound(final CompoundPredicate compound) {
-        // TODO adapt to recursive surrogat formulation (pain in the ass but necessary)
-        CheckUtils.checkArgument(compound.getCompoundPredicateList().isEmpty(),
-            "Compound predicates inside surrogate-compounds are currently not supported.");
+        // PMML requires us to realize surrogates as a chain of compound condition because it doesn't enforce an order
+        // among the predicates in the surrogate condition
         List<TreeNodeColumnCondition> conds = new ArrayList<>();
-        for (SimplePredicate simplePred : compound.getSimplePredicateList()) {
-            conds.add(handleSimplePredicate(simplePred, false));
-        }
-        for (SimpleSetPredicate simpleSetPred : compound.getSimpleSetPredicateList()) {
-            conds.add(handleSimpleSetPredicate(simpleSetPred, false));
-        }
-        CheckUtils.checkArgument(!conds.isEmpty(),
-            "The surrogate-compound \"%s\" contains no SimplePredicates or SimpleSetPredicates.", compound);
-        boolean defaultResponse = !compound.getTrueList().isEmpty();
+        boolean defaultResponse = unpackSurrogateChainIntoList(compound, conds);
+        CheckUtils.checkArgument(!conds.isEmpty(), "The surrogate conditon '%s' contains no column conditions.", compound);
+        return conds.size() > 1 ?
+            new TreeNodeSurrogateCondition(conds.toArray(new TreeNodeColumnCondition[conds.size()]), defaultResponse) :
+                new TreeNodeSurrogateOnlyDefDirCondition(conds.get(0), defaultResponse);
+    }
 
-        if (conds.size() == 1) {
-            return new TreeNodeSurrogateOnlyDefDirCondition(conds.get(0), defaultResponse);
-        } else {
-            return new TreeNodeSurrogateCondition(conds.toArray(new TreeNodeColumnCondition[conds.size()]),
-                defaultResponse);
+    /**
+     *
+     * @param compound the current compound we are looking at
+     * @param conds the list of conditions of the KNIME surrogate condition
+     * @return the default response
+     */
+    private boolean unpackSurrogateChainIntoList(final CompoundPredicate compound,
+        final List<TreeNodeColumnCondition> conds) {
+        CheckUtils.checkArgument(compound.getBooleanOperator() == CompoundPredicate.BooleanOperator.SURROGATE,
+                "The compound '%s' that is part of a surrogate chain must be a surrogate itself.", compound);
+        List<SimpleSetPredicate> simpleSetPreds = compound.getSimpleSetPredicateList();
+        CheckUtils.checkArgument(simpleSetPreds.size() <= 1,
+            "The surrogate condition '%s' contains more than one simple set predicate.", compound);
+        List<SimplePredicate> simplePreds = compound.getSimplePredicateList();
+        CheckUtils.checkArgument(simpleSetPreds.size() <= 1,
+            "The surrogate condition '%s' contains more than one simple predicate.", compound);
+        CheckUtils.checkArgument(!(simpleSetPreds.isEmpty() && simplePreds.isEmpty()),
+            "The surrogate condition '%s' contains no column conditions.", compound);
+        CheckUtils.checkArgument(simpleSetPreds.isEmpty() ^ simplePreds.isEmpty(),
+            "The surrogate condition '%s' contains more than one column condition.", compound);
+        if (!simpleSetPreds.isEmpty()) {
+            conds.add(handleSimpleSetPredicate(simpleSetPreds.get(0), false));
         }
+        if (!simplePreds.isEmpty()) {
+            conds.add(handleSimplePredicate(simplePreds.get(0), false));
+        }
+        List<CompoundPredicate> compoundPredicates = compound.getCompoundPredicateList();
+        CheckUtils.checkArgument(compoundPredicates.size() <= 1,
+            "The surrogate condition '%s' contains more than one compound predicate.");
+        if (!compoundPredicates.isEmpty()) {
+            // go to next level of surrogate chain
+            return unpackSurrogateChainIntoList(compoundPredicates.get(0), conds);
+        } else {
+            // we reached the end of the surrogate chain
+            return !compound.getTrueList().isEmpty();
+        }
+
+
     }
 
     private TreeNodeColumnCondition parseOrCompound(final CompoundPredicate compound) {

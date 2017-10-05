@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
  * This class represents the frequent case that there is no good surrogate and only the default response (direction) is
  * used as Surrogate
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
 public class TreeNodeSurrogateOnlyDefDirCondition extends AbstractTreeNodeSurrogateCondition {
 
@@ -91,7 +91,7 @@ public class TreeNodeSurrogateOnlyDefDirCondition extends AbstractTreeNodeSurrog
      * {@inheritDoc}
      */
     @Override
-    protected TreeNodeColumnCondition getColumnCondition(final int index) {
+    public TreeNodeColumnCondition getColumnCondition(final int index) {
         if (index != 0) {
             throw new IndexOutOfBoundsException("This kind of surrogate condition has only 1 column condition.");
         }
