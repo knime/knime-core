@@ -68,6 +68,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
@@ -1908,13 +1909,16 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
+     * Returns the name of the interactive view if such a view exists. If it exists and no name is defined it will
+     * return some error string (indicating a coding problem).
      *
-     * @return name of the interactive view or <code>null</code>
+     * @return name of the interactive view.
      * @since 2.8
      */
     public String getInteractiveViewName() {
-        return m_factory.getInteractiveViewName();
+        return hasInteractiveView() || hasWizardView()
+            ? StringUtils.defaultIfEmpty(m_factory.getInteractiveViewName(), "MISSING VIEW NAME IN NODE DESCRIPTION")
+            : null;
     }
 
     /**
