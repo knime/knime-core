@@ -11,6 +11,14 @@ http://update.knime.org/community-contributions/trusted/3.4,remove
 http://update.knime.org/community-contributions/3.4,remove
 http://tech.knime.org/update/community-contributions/trusted/3.4,remove
 http://tech.knime.org/update/community-contributions/3.4,remove
+
+# Remove .org links, only required for workspaces used with nightly builds of 3.5
+http://update.knime.org/analytics-platform/3.5,remove
+http://update.knime.org/store/3.5,remove
+http://update.knime.org/partner/3.5,remove
+http://update.knime.org/community-contributions/trusted/3.5,remove
+http://update.knime.org/community-contributions/3.5,remove
+
 http://update.knime.com/analytics-platform/3.5,add,enabled,KNIME Analytics Platform Update Site
 http://update.knime.com/store/3.5,add,enabled,KNIME Store Update Site
 http://update.knime.com/partner/3.5,add,disabled,KNIME Partner Update Site
