@@ -7,7 +7,7 @@
       plugin="org.knime.product"
       image="icons/knime64.gif">
 
-   <description url="http://www.knime.org/">
+   <description url="http://www.knime.com/">
       This features contains KNIME. All plugins needed to run the information mining workbench are included. Note that there are additional features available.
    </description>
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -135,7 +135,7 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent, "Improve KNIME", SWT.BOLD));
         addField(new LabelField(parent, "Help us improve KNIME by sending anonymous usage data."));
-        addField(new LabelField(parent, "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted."));
+        addField(new LabelField(parent, "Click <a href=\"https://www.knime.com/faq#usage_data\">here</a> to find out what is being transmitted."));
         BooleanFieldEditor sendAnonymousStatisticsEditor =
             new BooleanFieldEditor(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS,
                 "Yes, help improve KNIME.", parent);

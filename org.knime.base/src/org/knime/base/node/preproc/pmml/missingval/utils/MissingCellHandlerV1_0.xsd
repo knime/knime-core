@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- =============================================================================== 
-	* This source code, its documentation and all appendant files * are protected 
-	by copyright law. All rights reserved. * * Copyright by * University of Konstanz, 
-	Germany * Chair for Bioinformatics and Information Mining (Prof. M. Berthold) 
-	* and KNIME GmbH, Konstanz, Germany * * You may not modify, publish, transmit, 
-	transfer or sell, reproduce, * create derivative works from, distribute, 
-	perform, display, or in * any way exploit any of the content, in whole or 
-	in part, except as * otherwise expressly permitted in writing by the copyright 
-	owner or * as specified in the license file distributed with this product. 
-	* * If you have any questions please contact the copyright holder: * website: 
-	www.knime.org * email: contact@knime.org =============================================================================== 
-	This XSD describes missing cell handler description introduced with KNIME 2.12. -->
+<!-- This XSD describes missing cell handler description introduced with KNIME 2.12. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://knime.org/missingval/v1.0"
 	targetNamespace="http://knime.org/missingval/v1.0">
 	<xs:element name="missingcellhandler">

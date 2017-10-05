@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -111,7 +111,7 @@ public class BrowserInitializer {
                 } else {
                     // Disable xulrunner
                     System.setProperty(XUL, "/dev/null");
-                    logger.error("No browser integration found! Please visit http://tech.knime.org/faq#q6 for details.");
+                    logger.error("No browser integration found! Please visit https://www.knime.com/faq#q6 for details.");
                 }
             } catch (IOException e) {
                 // Disable xulrunner

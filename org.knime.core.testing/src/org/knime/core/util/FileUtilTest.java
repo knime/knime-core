@@ -2,7 +2,7 @@
  * ------------------------------------------------------------------------
  *
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -153,7 +153,7 @@ public class FileUtilTest {
         url = new URL("file:///tmp/with%25percent");
         assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("/tmp/with%percent"));
 
-        url = new URL("http://www.knime.org");
+        url = new URL("http://www.knime.com");
         assertThat("Unexpected path", FileUtil.resolveToPath(url), is(nullValue()));
     }
 
@@ -183,7 +183,7 @@ public class FileUtilTest {
         url = new URL("file:/C:/tmp/with%25percent");
         assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with%percent"));
 
-        url = new URL("http://www.knime.org");
+        url = new URL("http://www.knime.com");
         assertThat("Unexpected path", FileUtil.resolveToPath(url), is(nullValue()));
     }
 

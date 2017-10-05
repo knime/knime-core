@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -273,7 +273,7 @@ public class IntroPage implements LocationListener {
             MessageDialogWithToggle dialog = MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
                 "Missing browser integration",
                 "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
-                    + "system libraries. Please visit http://tech.knime.org/faq#q6 for details.\n"
+                    + "system libraries. Please visit https://www.knime.com/faq#q6 for details.\n"
                     + "Some web pages may open in an external browser.",
                 "Do not show again", false, prefStore, PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
             if (dialog.getToggleState()) {

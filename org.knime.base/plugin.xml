@@ -294,7 +294,7 @@
       </category>
       <category
             after="toolintegration"
-            description="Nodes provided on labs.knime.org"
+            description="Nodes from KNIME Labs"
             icon="icons/16x16/category_knime_labs.png"
             level-id="labs"
             name="KNIME Labs"

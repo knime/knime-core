@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -209,7 +209,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         }
         String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
                 + "The data collected is used for recommendations of the new built-in Workflow Coach. "
-                + "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted. "
+                + "Click <a href=\"https://www.knime.com/faq#usage_data\">here</a> to find out what is being transmitted. "
                 + "You can also change this setting in the KNIME preferences later.\n\n"
                 + "Do you allow KNIME to collect and send anonymous usage data? "
                 + "This will also enable the Workflow Coach.";

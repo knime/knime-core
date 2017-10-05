@@ -2,7 +2,7 @@
  * ------------------------------------------------------------------------
  *
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -94,7 +94,7 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
      * Creates a new provider that fetched recommendation from the KNIME web page.
      */
     public CommunityTripleProvider() {
-        super("http://update.knime.org/community_recommendations.json", "community_recommendations.json");
+        super("https://update.knime.com/community_recommendations.json", "community_recommendations.json");
     }
 
     /**

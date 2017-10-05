@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -58,12 +58,12 @@ import org.eclipse.core.runtime.Platform;
 
 /**
  * Checks for updates to new feature releases. The information is extract from a file "newRelease.txt" on the update
- * site (e.g. http://www.knime.org/update/2.9/newRelease.txt). The contents of the file are as follow:
+ * site (e.g. http://update.knime.com/analytics-platform/3.4/newRelease.txt). The contents of the file are as follows:
  *
  * <pre>
- * http://www.knime.org/update/2.10   linux   x86_64   true   KNIME 2.10
- * http://www.knime.org/update/2.10   macosx  x86      true   KNIME 2.10
- * http://www.knime.org/update/2.10   win32   x86      false  KNIME 2.10
+ * http://update.knime.org/analytics-platform/3.5   linux   x86_64   true   KNIME 3.5
+ * http://update.knime.org/analytics-platform/3.5   macosx  x86      true   KNIME 3.5
+ * http://update.knime.org/analytics-platform/3.5   win32   x86      false  KNIME 3.5
  *  ...
  * </pre>
  *
