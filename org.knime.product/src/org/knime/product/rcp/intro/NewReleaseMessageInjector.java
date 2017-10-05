@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -111,7 +111,7 @@ class NewReleaseMessageInjector extends AbstractInjector {
         List<UpdateInfo> updateList = new ArrayList<>();
         for (URI uri : tracker.getKnownRepositories(provUI.getSession())) {
             if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                && uri.getHost().endsWith(".knime.org")) {
+                && (uri.getHost().endsWith(".knime.org") || uri.getHost().endsWith(".knime.com"))) {
                 UpdateInfo newRelease = UpdateChecker.checkForNewRelease(uri);
                 if (newRelease != null) {
                     updateList.add(newRelease);

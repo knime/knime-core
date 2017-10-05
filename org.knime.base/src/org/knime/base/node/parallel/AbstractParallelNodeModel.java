@@ -1,7 +1,7 @@
 /* Created on Apr 19, 2006 2:00:23 PM by thor
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as

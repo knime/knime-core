@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -486,8 +486,8 @@ public final class NodeLogger {
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("# Copyright by KNIME GmbH, Konstanz, Germany and others.                                #");
-        l.info("# Website: http://www.knime.org                                                         #");
-        l.info("# E-mail: contact@knime.org                                                             #");
+        l.info("# Website: http://www.knime.com                                                         #");
+        l.info("# E-mail: contact@knime.com                                                             #");
     }
 
     /** The Log4J logger to which all messages are logged. Do not access it directly if you want to log a message

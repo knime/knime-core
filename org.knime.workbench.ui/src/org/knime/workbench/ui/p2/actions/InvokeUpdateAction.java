@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -100,7 +100,7 @@ public class InvokeUpdateAction extends AbstractP2Action {
                     break;
                 }
                 if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) && (uri.getHost() != null)
-                    && uri.getHost().endsWith(".knime.org")) {
+                    && (uri.getHost().endsWith(".knime.org") || uri.getHost().endsWith(".knime.com"))) {
                     try {
                         monitor.subTask("Checking " + uri.toString());
                         UpdateInfo newRelease = UpdateChecker.checkForNewRelease(uri);
