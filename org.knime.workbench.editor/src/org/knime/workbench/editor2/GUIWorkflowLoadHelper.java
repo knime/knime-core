@@ -171,26 +171,33 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         Version currentVersion = new Version(KNIMEConstants.VERSION);
         StringBuilder e = new StringBuilder("Your version of KNIME Analytics Platform (");
         e.append(currentVersion);
-        e.append(") is very likely incompatible with the workflow you are trying to load (which was created using ");
+
+        e.append(") version does not support reading workflows created by a ");
         if (isNightlyBuild) {
-            e.append("a NIGHTLY build of ");
+            e.append("nightly build version");
+        } else {
+            e.append("newer release");
         }
+        e.append(" of KNIME Analytics Platform (");
         if (createdByKNIMEVersion != null) {
             e.append(createdByKNIMEVersion);
         } else {
             e.append("<unknown>");
         }
+        if (isNightlyBuild) {
+            e.append("-nightly");
+        }
         e.append(").\n\n");
 
         if (createdByKNIMEVersion != null && !currentVersion.isSameOrNewer(createdByKNIMEVersion)) {
-            e.append("We highly recommend updating before proceeding.\n\n");
+            e.append("You should upgrade to the latest version of KNIME Analytics Platform to open this workflow.\n\n");
         }
 
-        e.append("If you decide to load it anyway, the workflow might not load at all, miss ");
-        e.append("some nodes, or loose partial configurations now or later when you save it.\n\n");
+        e.append("If you choose to proceed you may have issues loading the workflow, it may miss some nodes or ")
+            .append("connections, or node configurations may not be correct either now or when you save it later.\n\n");
 
         e.append("How do you want to proceed?");
-        String tryAnyway = "&Try Anyway";
+        String tryAnyway = "&Load Anyway";
         String cancel = "&Cancel";
         final String[] labels = new String[] {tryAnyway, cancel};
         final AtomicReference<UnknownKNIMEVersionLoadPolicy> result =
