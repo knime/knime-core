@@ -197,23 +197,21 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
             .append("connections, or node configurations may not be correct either now or when you save it later.\n\n");
 
         e.append("How do you want to proceed?");
-        String tryAnyway = "&Load Anyway";
         String cancel = "&Cancel";
-        final String[] labels = new String[] {tryAnyway, cancel};
+        String loadAnyway = "&Load Anyway";
+        final String[] labels = new String[] {cancel, loadAnyway};
         final AtomicReference<UnknownKNIMEVersionLoadPolicy> result =
-            new AtomicReference<UnknownKNIMEVersionLoadPolicy>(
-                    UnknownKNIMEVersionLoadPolicy.Abort);
+                new AtomicReference<>(UnknownKNIMEVersionLoadPolicy.Abort);
         m_display.syncExec(new Runnable() {
             @Override
             public void run() {
-                MessageDialog dialog = new MessageDialog(
-                        m_display.getActiveShell(),
-                        "Workflow version not supported by KNIME Analytics Platform version",
-                        null, e.toString(), MessageDialog.WARNING, labels, 0);
+                MessageDialog dialog = new MessageDialog(m_display.getActiveShell(),
+                    "Workflow version not supported by KNIME Analytics Platform version",
+                    null, e.toString(), MessageDialog.WARNING, labels, 0);
                 if (dialog.open() == 0) {
-                    result.set(UnknownKNIMEVersionLoadPolicy.Try);
-                } else {
                     result.set(UnknownKNIMEVersionLoadPolicy.Abort);
+                } else {
+                    result.set(UnknownKNIMEVersionLoadPolicy.Try);
                 }
             }
         });
