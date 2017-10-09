@@ -48,7 +48,9 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor;
 
-import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
+import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
+import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.LKGradientBoostingPredictorCellFactory;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.regression.GradientBoostingPredictorCellFactory;
@@ -60,10 +62,11 @@ import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
+ * @param <M> The type of gradient boosted trees model this predictor applies
  */
-public class GradientBoostingPredictor {
-    private final GradientBoostingModelPortObject m_model;
+public class GradientBoostingPredictor <M extends AbstractGradientBoostingModel>{
+    private final M m_model;
 
     private final TreeEnsemblePredictorConfiguration m_config;
 
@@ -73,7 +76,15 @@ public class GradientBoostingPredictor {
 
     private final DataTableSpec m_dataSpec;
 
-    public GradientBoostingPredictor(final GradientBoostingModelPortObject model,
+
+    /**
+     * @param model the gradient boosted trees model to use for prediction
+     * @param modelSpec the port object spec of the model
+     * @param dataSpec the spec of the input table for which predictions should be obtained
+     * @param config the predictor config
+     * @throws InvalidSettingsException
+     */
+    public GradientBoostingPredictor(final M model,
         final TreeEnsembleModelPortObjectSpec modelSpec, final DataTableSpec dataSpec,
         final TreeEnsemblePredictorConfiguration config) throws InvalidSettingsException {
         m_model = model;
@@ -84,32 +95,51 @@ public class GradientBoostingPredictor {
         boolean hasPossibleValues = modelSpec.getTargetColumnPossibleValueMap() != null;
         if (modelSpec.getTargetColumn().getType().isCompatible(DoubleValue.class)) {
             m_predictionRearranger = new ColumnRearranger(dataSpec);
-            m_predictionRearranger.append(GradientBoostingPredictorCellFactory.createFactory(this));
+            @SuppressWarnings("unchecked") GradientBoostingPredictor<GradientBoostedTreesModel> pred =
+                    (GradientBoostingPredictor<GradientBoostedTreesModel>)this;
+            m_predictionRearranger.append(GradientBoostingPredictorCellFactory.createFactory(pred));
         } else if (config.isAppendClassConfidences() && !hasPossibleValues) {
             // can't add confidence columns (possible values unknown)
             m_predictionRearranger = null;
         } else {
             m_predictionRearranger = new ColumnRearranger(dataSpec);
-            m_predictionRearranger.append(LKGradientBoostingPredictorCellFactory.createFactory(this));
+            @SuppressWarnings("unchecked") GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> pred =
+                    (GradientBoostingPredictor<MultiClassGradientBoostedTreesModel>)this;
+            m_predictionRearranger.append(LKGradientBoostingPredictorCellFactory.createFactory(pred));
         }
     }
 
+    /**
+     * @return the {@link ColumnRearranger} that should be used to calculate the output table
+     */
     public ColumnRearranger getPredictionRearranger() {
         return m_predictionRearranger;
     }
 
+    /**
+     * @return the table spec of the input table
+     */
     public DataTableSpec getDataSpec() {
         return m_dataSpec;
     }
 
-    public GradientBoostingModelPortObject getModelPO() {
+    /**
+     * @return the gradient boosted trees model
+     */
+    public M getModel() {
         return m_model;
     }
 
+    /**
+     * @return the spec of the gradient boosted trees model
+     */
     public TreeEnsembleModelPortObjectSpec getModelSpec() {
         return m_modelSpec;
     }
 
+    /**
+     * @return the predictor config
+     */
     public TreeEnsemblePredictorConfiguration getConfig() {
         return m_config;
     }

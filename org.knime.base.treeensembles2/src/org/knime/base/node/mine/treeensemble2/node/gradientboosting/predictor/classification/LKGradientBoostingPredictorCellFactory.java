@@ -55,7 +55,6 @@ import java.util.Map;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
-import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
@@ -77,7 +76,7 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory {
 
-    private final GradientBoostingModelPortObject m_modelPO;
+    private final MultiClassGradientBoostedTreesModel m_model;
 
     private final DataTableSpec m_learnSpec;
 
@@ -91,10 +90,10 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
      * @param newColSpec
      */
     private LKGradientBoostingPredictorCellFactory(final DataColumnSpec[] newColSpecs,
-        final GradientBoostingModelPortObject modelPO, final DataTableSpec learnSpec,
+        final MultiClassGradientBoostedTreesModel model, final DataTableSpec learnSpec,
         final int[] learnColumnInRealDataIndices, final TreeEnsemblePredictorConfiguration config, final Map<String, DataCell> targetValueMap) {
         super(newColSpecs);
-        m_modelPO = modelPO;
+        m_model = model;
         m_learnSpec = learnSpec;
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
         m_config = config;
@@ -102,7 +101,7 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
         setParallelProcessing(true);
     }
 
-    public static LKGradientBoostingPredictorCellFactory createFactory(final GradientBoostingPredictor predictor) throws InvalidSettingsException {
+    public static LKGradientBoostingPredictorCellFactory createFactory(final GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> predictor) throws InvalidSettingsException {
         TreeEnsemblePredictorConfiguration config = predictor.getConfig();
         DataTableSpec testSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
@@ -123,7 +122,7 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
         final Map<String, DataCell> targetValueMap = modelSpec.getTargetColumnPossibleValueMap();
 
         return new LKGradientBoostingPredictorCellFactory(newColSpecs.toArray(new DataColumnSpec[newColSpecs.size()]),
-            predictor.getModelPO(), modelSpec.getLearnTableSpec(), modelSpec.calculateFilterIndices(testSpec), config, targetValueMap);
+            predictor.getModel(), modelSpec.getLearnTableSpec(), modelSpec.calculateFilterIndices(testSpec), config, targetValueMap);
     }
 
     /**
@@ -131,18 +130,17 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
      */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        final MultiClassGradientBoostedTreesModel model = (MultiClassGradientBoostedTreesModel)m_modelPO.getEnsembleModel();
         final DataRow filterRow = new FilterColumnRow(row, m_learnColumnInRealDataIndices);
-        final int nrClasses = model.getNrClasses();
-        final int nrLevels = model.getNrLevels();
-        final PredictorRecord record = model.createPredictorRecord(filterRow, m_learnSpec);
+        final int nrClasses = m_model.getNrClasses();
+        final int nrLevels = m_model.getNrLevels();
+        final PredictorRecord record = m_model.createPredictorRecord(filterRow, m_learnSpec);
         final double[] classFunctionPredictions = new double[nrClasses];
-        Arrays.fill(classFunctionPredictions, model.getInitialValue());
+        Arrays.fill(classFunctionPredictions, m_model.getInitialValue());
         for (int i = 0; i < nrLevels; i++) {
             for (int j = 0; j < nrClasses; j++) {
-                final TreeNodeRegression matchingNode = model.getModel(i, j).findMatchingNode(record);
+                final TreeNodeRegression matchingNode = m_model.getModel(i, j).findMatchingNode(record);
                 classFunctionPredictions[j] +=
-                    model.getCoefficientMap(i, j).get(matchingNode.getSignature());
+                    m_model.getCoefficientMap(i, j).get(matchingNode.getSignature());
             }
         }
         final double[] classProbabilities = new double[nrClasses];
@@ -162,7 +160,7 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
         }
 
         final ArrayList<DataCell> cells = new ArrayList<DataCell>();
-        cells.add(new StringCell(model.getClassLabel(classIdx)));
+        cells.add(new StringCell(m_model.getClassLabel(classIdx)));
 
         if (m_config.isAppendPredictionConfidence()) {
             cells.add(new DoubleCell(classProb));
@@ -171,7 +169,7 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
             // the map is necessary to ensure that the probabilities are correctly associated with the column header
             final Map<String, Double> classProbMap = new HashMap<String, Double>((int)(nrClasses * 1.5));
             for (int i = 0; i < nrClasses; i++) {
-                classProbMap.put(model.getClassLabel(i), classProbabilities[i]);
+                classProbMap.put(m_model.getClassLabel(i), classProbabilities[i]);
             }
             for (final String className : m_targetValueMap.keySet()) {
                         cells.add(new DoubleCell(classProbMap.get(className)));

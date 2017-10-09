@@ -49,8 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.regression;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
-import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
-import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
 import org.knime.core.data.DataCell;
@@ -68,7 +67,7 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 public class GradientBoostingPredictorCellFactory extends SingleCellFactory {
 
-    private final GradientBoostingModelPortObject m_modelPO;
+    private final GradientBoostedTreesModel m_model;
 
     private final DataTableSpec m_learnSpec;
 
@@ -78,22 +77,22 @@ public class GradientBoostingPredictorCellFactory extends SingleCellFactory {
      * @param newColSpec
      */
     public GradientBoostingPredictorCellFactory(final DataColumnSpec newColSpec,
-        final GradientBoostingModelPortObject modelPO, final DataTableSpec learnSpec,
+        final GradientBoostedTreesModel model, final DataTableSpec learnSpec,
         final int[] learnColumnInRealDataIndices) {
         super(newColSpec);
-        m_modelPO = modelPO;
+        m_model = model;
         m_learnSpec = learnSpec;
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
     }
 
-    public static GradientBoostingPredictorCellFactory createFactory(final GradientBoostingPredictor predictor)
+    public static GradientBoostingPredictorCellFactory createFactory(final GradientBoostingPredictor<GradientBoostedTreesModel> predictor)
         throws InvalidSettingsException {
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
         DataTableSpec learnSpec = modelSpec.getLearnTableSpec();
         DataTableSpec testSpec = predictor.getDataSpec();
         UniqueNameGenerator nameGen = new UniqueNameGenerator(testSpec);
         DataColumnSpec newColSpec = nameGen.newColumn(predictor.getConfig().getPredictionColumnName(), DoubleCell.TYPE);
-        return new GradientBoostingPredictorCellFactory(newColSpec, predictor.getModelPO(), learnSpec,
+        return new GradientBoostingPredictorCellFactory(newColSpec, predictor.getModel(), learnSpec,
             modelSpec.calculateFilterIndices(testSpec));
     }
 
@@ -102,9 +101,8 @@ public class GradientBoostingPredictorCellFactory extends SingleCellFactory {
      */
     @Override
     public DataCell getCell(final DataRow row) {
-        AbstractGradientBoostingModel model = m_modelPO.getEnsembleModel();
         DataRow filterRow = new FilterColumnRow(row, m_learnColumnInRealDataIndices);
-        double prediction = model.predict(model.createPredictorRecord(filterRow, m_learnSpec));
+        double prediction = m_model.predict(m_model.createPredictorRecord(filterRow, m_learnSpec));
         return new DoubleCell(prediction);
     }
 

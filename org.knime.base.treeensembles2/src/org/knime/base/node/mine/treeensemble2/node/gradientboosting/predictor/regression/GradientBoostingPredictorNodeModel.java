@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.r
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
@@ -119,9 +119,9 @@ public class GradientBoostingPredictorNodeModel extends NodeModel {
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        final AbstractGradientBoostingModel ensembleModel = model.getEnsembleModel();
-        final GradientBoostingPredictor pred =
-            new GradientBoostingPredictor(model, modelSpec, dataSpec, m_configuration);
+        final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
+            new GradientBoostingPredictor<>((GradientBoostedTreesModel)model.getEnsembleModel(),
+                    modelSpec, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
@@ -142,8 +142,9 @@ public class GradientBoostingPredictorNodeModel extends NodeModel {
                     (GradientBoostingModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final GradientBoostingPredictor pred =
-                    new GradientBoostingPredictor(model, modelSpec, dataSpec, m_configuration);
+                final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
+                    new GradientBoostingPredictor<>((GradientBoostedTreesModel)model.getEnsembleModel(),
+                            modelSpec, dataSpec, m_configuration);
                 ColumnRearranger rearranger = pred.getPredictionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);
                 func.runFinal(inputs, outputs, exec);
