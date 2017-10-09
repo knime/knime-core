@@ -74,7 +74,7 @@ import org.knime.core.node.util.CheckUtils;
 abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> implements MetaDataMapper<T> {
 
     private final DataTableSpec m_learnSpec;
-    private final Map<String, ColumnHelper<?>> m_colHelperMap;
+    private final Map<String, AbstractAttributeColumnHelper<?>> m_colHelperMap;
     private final TargetColumnHelper<T> m_targetColumnHelper;
 
     /**
@@ -116,8 +116,9 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
 
     protected abstract TargetColumnHelper<T> createTargetColumnHelper(final DataColumnSpec targetSpec);
 
-    private static Map<String, ColumnHelper<?>> createColumnHelperMapFromSpec(final DataTableSpec tableSpec) {
-        Map<String, ColumnHelper<?>> map = new HashMap<>();
+    private static Map<String, AbstractAttributeColumnHelper<?>> createColumnHelperMapFromSpec(
+        final DataTableSpec tableSpec) {
+        Map<String, AbstractAttributeColumnHelper<?>> map = new HashMap<>();
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
             checkForVectorColumn(colSpec);
@@ -222,6 +223,7 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
     public TreeMetaData getTreeMetaData() {
         TreeAttributeColumnMetaData[] attributes = m_colHelperMap.values().stream()
                 .map(c -> c.getMetaData())
+                .sorted((m1, m2) -> Integer.compare(m1.getAttributeIndex(), m2.getAttributeIndex()))
                 .toArray(s -> new TreeAttributeColumnMetaData[s]);
         return TreeMetaData.createTreeMetaData(attributes, m_targetColumnHelper.getMetaData());
     }
