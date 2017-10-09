@@ -848,6 +848,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 NodeContext.pushContext(this);
                 try {
                     m_node.loadExecutionResult(nodeExecResult, new ExecutionMonitor(), loadResult);
+                    m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
                 } finally {
                     NodeContext.removeLastContext();
                 }
