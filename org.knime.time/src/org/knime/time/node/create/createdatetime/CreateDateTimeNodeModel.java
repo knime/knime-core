@@ -242,15 +242,18 @@ final class CreateDateTimeNodeModel extends NodeModel {
 
         // check and parse duration/period (may be wrong, if controlled by flow variables)
         TemporalAmount durationOrPeriod = null;
-        if (m_duration.getStringValue() != null) {
-            try {
-                durationOrPeriod = DurationPeriodFormatUtils.parseDuration(m_duration.getStringValue());
-            } catch (DateTimeParseException ex1) {
+        if (m_durationOrEnd.getStringValue().equals(EndMode.Duration.name())
+            || m_rowNrOptionSelection.getStringValue().equals(RowNrMode.Variable.name())) {
+            if (m_duration.getStringValue() != null) {
                 try {
-                    durationOrPeriod = DurationPeriodFormatUtils.parsePeriod(m_duration.getStringValue());
-                } catch (DateTimeParseException ex2) {
-                    throw new InvalidSettingsException(
-                        "'" + m_duration.getStringValue() + "' could not be parsed as duration!");
+                    durationOrPeriod = DurationPeriodFormatUtils.parseDuration(m_duration.getStringValue());
+                } catch (DateTimeParseException ex1) {
+                    try {
+                        durationOrPeriod = DurationPeriodFormatUtils.parsePeriod(m_duration.getStringValue());
+                    } catch (DateTimeParseException ex2) {
+                        throw new InvalidSettingsException(
+                            "'" + m_duration.getStringValue() + "' could not be parsed as duration!");
+                    }
                 }
             }
         }
