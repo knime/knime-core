@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.core.data.DataColumnSpec;
 
@@ -72,5 +73,39 @@ abstract class AbstractAttributeColumnHelper <T extends TreeAttributeColumnMetaD
     @Override
     public T getMetaData() {
         return m_metaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_metaData.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass().equals(obj.getClass())) {
+            return m_metaData.equals(((AbstractAttributeColumnHelper<?>)obj).getMetaData());
+        }
+        return super.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        HashCodeBuilder hcb = new HashCodeBuilder();
+        return hcb.append(m_metaData.hashCode()).toHashCode();
     }
 }
