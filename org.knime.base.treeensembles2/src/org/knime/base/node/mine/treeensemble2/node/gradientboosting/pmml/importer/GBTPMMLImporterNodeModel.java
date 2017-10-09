@@ -110,7 +110,11 @@ class GBTPMMLImporterNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[0];
         // check if the spec is compatible
-        AbstractTreeModelPMMLTranslator.checkPMMLSpec(pmmlSpec);
+        try {
+            AbstractTreeModelPMMLTranslator.checkPMMLSpec(pmmlSpec);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage());
+        }
         return new PortObjectSpec[] {new TreeEnsembleModelPortObjectSpec(pmmlSpec.getDataTableSpec())};
     }
 

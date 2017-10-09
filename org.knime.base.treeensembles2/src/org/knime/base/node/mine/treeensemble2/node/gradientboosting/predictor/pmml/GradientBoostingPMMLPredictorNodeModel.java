@@ -54,6 +54,7 @@ import java.io.IOException;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
+import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
@@ -105,6 +106,11 @@ public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[0];
         if (!pmmlSpec.getTargetCols().get(0).getType().isCompatible(DoubleValue.class)) {
             throw new IllegalArgumentException("Currently only regression models are supported.");
+        }
+        try {
+            AbstractTreeModelPMMLTranslator.checkPMMLSpec(pmmlSpec);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage());
         }
         TreeEnsembleModelPortObjectSpec modelSpec = translateSpec(pmmlSpec);
         String targetColName = modelSpec.getTargetColumn().getName();
