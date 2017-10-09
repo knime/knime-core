@@ -180,7 +180,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         } else {
             e.append("<unknown>");
         }
-        e.append(")\n\n");
+        e.append(").\n\n");
 
         if (createdByKNIMEVersion != null && !currentVersion.isSameOrNewer(createdByKNIMEVersion)) {
             e.append("We highly recommend updating before proceeding.\n\n");
@@ -200,7 +200,8 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
             @Override
             public void run() {
                 MessageDialog dialog = new MessageDialog(
-                        m_display.getActiveShell(), "Unknown workflow version",
+                        m_display.getActiveShell(),
+                        "Workflow version not supported by KNIME Analytics Platform version",
                         null, e.toString(), MessageDialog.WARNING, labels, 0);
                 if (dialog.open() == 0) {
                     result.set(UnknownKNIMEVersionLoadPolicy.Try);
