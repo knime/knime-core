@@ -104,6 +104,18 @@ public abstract class FlowVariableField extends AbstractField {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsForDialog(final Config config) {
+        super.loadSettingsForDialog(config);
+        String typeName = config.getString(KNIME_TYPE, null);
+        if (typeName != null) {
+            m_knimeType = Type.valueOf(typeName);
+        }
+    }
+
+    /**
      * A class for a field that represents an input variable.
      */
     public static class InFlowVariableField extends FlowVariableField {
