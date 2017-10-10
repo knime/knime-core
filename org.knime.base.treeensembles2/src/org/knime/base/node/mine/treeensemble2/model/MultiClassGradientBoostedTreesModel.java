@@ -61,8 +61,9 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
+ * Gradient Boosted Trees model for classification tasks.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
 public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostingModel {
 
@@ -95,9 +96,25 @@ public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostin
      * @param type
      * @param containsClassDistribution
      */
-    public MultiClassGradientBoostedTreesModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType type,
-        final boolean containsClassDistribution) {
+    public MultiClassGradientBoostedTreesModel(final TreeMetaData metaData, final AbstractTreeModel[] models,
+        final TreeType type, final boolean containsClassDistribution) {
         super(metaData, models, type, containsClassDistribution);
+    }
+
+    /**
+     * Constructor for import from PMML.
+     *
+     * @param metaData the meta information
+     * @param trees the trees
+     * @param type the type of tree (ordinary or vector)
+     * @param initialValue the initial value for gradient boosting
+     * @param coefficientMaps the coefficient maps for the trees
+     */
+    public MultiClassGradientBoostedTreesModel(final TreeMetaData metaData, final TreeModelRegression[] trees,
+        final TreeType type, final double initialValue,
+        final ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> coefficientMaps) {
+        super(metaData, trees, type, false, initialValue);
+        m_coefficientMaps = coefficientMaps;
     }
 
     public static MultiClassGradientBoostedTreesModel createMultiClassGradientBoostedTreesModel(
@@ -112,6 +129,33 @@ public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostin
         }
         return new MultiClassGradientBoostedTreesModel(config, metaData, modelArray, treeType, initialValue, numClasses,
             coefficientMaps, classLabels);
+    }
+
+    /**
+     * Creates a {@link MultiClassGradientBoostedTreesModel} and ensures that the model order is correct.
+     *
+     * @param metaData the meta information
+     * @param trees as a list of list of trees per class
+     * @param coefficientMaps the coefficient maps
+     * @param initialValue the initial value of the gradient boosted trees model
+     * @param type the tree type (ordinary or vector)
+     * @return a new {@link MultiClassGradientBoostedTreesModel}
+     */
+    public static MultiClassGradientBoostedTreesModel create(final TreeMetaData metaData,
+        final List<List<TreeModelRegression>> trees, final List<List<Map<TreeNodeSignature, Double>>> coefficientMaps,
+        final double initialValue, final TreeType type) {
+        final TreeModelRegression[] treesArray = trees.stream().sequential()
+                .flatMap(l -> l.stream()).sequential().toArray(i -> new TreeModelRegression[i]);
+        ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> cms = coefficientMaps.stream()
+                .map(l -> l.stream().collect(
+                    ArrayList<Map<TreeNodeSignature, Double>>::new,
+                    ArrayList<Map<TreeNodeSignature, Double>>::add,
+                    ArrayList<Map<TreeNodeSignature, Double>>::addAll))
+                .collect(
+                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::new,
+                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::add,
+                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::addAll);
+        return new MultiClassGradientBoostedTreesModel(metaData, treesArray, type, initialValue, cms);
     }
 
     /**
