@@ -112,9 +112,12 @@ class GBTPMMLExporterNodeModel extends NodeModel {
         final AbstractGradientBoostingModel model) {
         DataColumnSpec targetSpec = spec.getTargetColumn();
         DataTableSpec learnFeatureSpec = spec.getLearnTableSpec();
-        if (model == null && containsVector(learnFeatureSpec)) {
+        if (containsVector(learnFeatureSpec)) {
             setWarningMessage("The model was learned on a vector column. It's possible to export the model "
-                + "to PMML but it won't be possible to import it from the exported PMML.");
+                    + "to PMML but it won't be possible to import it from the exported PMML.");
+        }
+        if (model == null && containsVector(learnFeatureSpec)) {
+        	// at this point we don't know how long the vector column is
             return null;
         } else if (model != null) {
             // possibly expand vectors with model
