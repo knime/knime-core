@@ -116,6 +116,10 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
         return m_gbtModel;
     }
 
+    protected PMMLPortObjectSpec getPMMLSpec() {
+        return m_pmmlSpec;
+    }
+
     private void writeTreeIntoSegment(final Segment segment, final TreeModelRegression tree,
         final Map<TreeNodeSignature, Double> coefficientMap) {
         assert m_pmmlSpec != null : "The pmml spec is null, this indicates an implementation mistake.";
