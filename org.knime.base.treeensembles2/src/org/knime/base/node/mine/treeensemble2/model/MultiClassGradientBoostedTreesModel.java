@@ -112,9 +112,11 @@ public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostin
      */
     public MultiClassGradientBoostedTreesModel(final TreeMetaData metaData, final TreeModelRegression[] trees,
         final TreeType type, final double initialValue,
-        final ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> coefficientMaps) {
+        final ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> coefficientMaps, final String[] classLabels) {
         super(metaData, trees, type, false, initialValue);
         m_coefficientMaps = coefficientMaps;
+        m_classLabels = classLabels;
+        m_numClasses = classLabels.length;
     }
 
     public static MultiClassGradientBoostedTreesModel createMultiClassGradientBoostedTreesModel(
@@ -143,19 +145,31 @@ public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostin
      */
     public static MultiClassGradientBoostedTreesModel create(final TreeMetaData metaData,
         final List<List<TreeModelRegression>> trees, final List<List<Map<TreeNodeSignature, Double>>> coefficientMaps,
-        final double initialValue, final TreeType type) {
-        final TreeModelRegression[] treesArray = trees.stream().sequential()
-                .flatMap(l -> l.stream()).sequential().toArray(i -> new TreeModelRegression[i]);
-        ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> cms = coefficientMaps.stream()
-                .map(l -> l.stream().collect(
-                    ArrayList<Map<TreeNodeSignature, Double>>::new,
-                    ArrayList<Map<TreeNodeSignature, Double>>::add,
-                    ArrayList<Map<TreeNodeSignature, Double>>::addAll))
-                .collect(
-                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::new,
-                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::add,
-                    ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>::addAll);
-        return new MultiClassGradientBoostedTreesModel(metaData, treesArray, type, initialValue, cms);
+        final double initialValue, final TreeType type, final List<String> classLabels) {
+        int numClasses = trees.size();
+        int numLevels = trees.get(0).size();
+        TreeModelRegression[] levelOrderedTrees = new TreeModelRegression[numClasses * numLevels];
+        ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> cms = new ArrayList<>();
+        for (int c = 0; c < numClasses; c++) {
+            List<TreeModelRegression> treesForCurrentClass = trees.get(c);
+            List<Map<TreeNodeSignature, Double>> coeffMapsForCurrentClass = coefficientMaps.get(c);
+            assert treesForCurrentClass.size() == numLevels :
+                "Not all models for all classes have the same number of levels.";
+            assert treesForCurrentClass.size() == coeffMapsForCurrentClass.size() :
+                "The number of trees does not match the number of coefficient maps.";
+            for (int l = 0; l < treesForCurrentClass.size(); l++) {
+                if (c == 0) {
+                    cms.add(new ArrayList<>());
+                }
+                cms.get(l).add(coefficientMaps.get(c).get(l));
+                levelOrderedTrees[l * numClasses + c] = trees.get(c).get(l);
+            }
+        }
+
+
+
+        return new MultiClassGradientBoostedTreesModel(metaData, levelOrderedTrees, type, initialValue,
+            cms, classLabels.toArray(new String[classLabels.size()]));
     }
 
     /**
