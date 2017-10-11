@@ -136,7 +136,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
         for (int i = 0; i < getGBTModel().getNrClasses(); i++) {
             RegressionTable regTable = regression.addNewRegressionTable();
             regTable.setIntercept(0);
-            regTable.setTargetCategory(Integer.toString(i));
+            regTable.setTargetCategory(getClassLabel(i));
             NumericPredictor np = regTable.addNewNumericPredictor();
             np.setName(logitName(i));
             np.setCoefficient(1d);
@@ -151,12 +151,16 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
             p.setOptype(OPTYPE.CONTINUOUS);
             p.setDataType(DATATYPE.FLOAT);
             p.setFeature(RESULTFEATURE.PROBABILITY);
-            p.setValue(Integer.toString(i));
+            p.setValue(getClassLabel(i));
         }
     }
 
+    private String getClassLabel(final int classIdx) {
+        return getGBTModel().getClassLabel(classIdx);
+    }
+
     private String probabilityName(final int classIdx) {
-        return "P (" + getGBTModel().getClassLabel(classIdx) + ")";
+        return "P (" + getClassLabel(classIdx) + ")";
     }
 
     private void addAggregationMiningScheme(final RegressionModel regression) {
@@ -173,7 +177,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
     }
 
     private String logitName(final int classIdx) {
-        return "gbtValue(" + getGBTModel().getClassLabel(classIdx) + ")";
+        return "gbtValue(" + getClassLabel(classIdx) + ")";
     }
 
 
