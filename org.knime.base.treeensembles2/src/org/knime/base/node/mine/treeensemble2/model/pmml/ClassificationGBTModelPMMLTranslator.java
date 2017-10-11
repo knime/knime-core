@@ -61,6 +61,22 @@ public final class ClassificationGBTModelPMMLTranslator extends
 AbstractGBTModelPMMLTranslator<MultiClassGradientBoostedTreesModel> {
 
     /**
+     * Constructor to be used if a model should be translated to PMML.
+     *
+     * @param gbtModel the model that should be translated to PMML
+     */
+    public ClassificationGBTModelPMMLTranslator(final MultiClassGradientBoostedTreesModel gbtModel) {
+        super (gbtModel);
+    }
+
+    /**
+     * Constructor to be used if a model should be translated from PMML.
+     */
+    public ClassificationGBTModelPMMLTranslator() {
+        // nothing to do here
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
