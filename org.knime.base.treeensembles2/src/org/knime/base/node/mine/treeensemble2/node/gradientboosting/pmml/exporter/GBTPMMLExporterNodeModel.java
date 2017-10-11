@@ -54,8 +54,10 @@ import java.io.IOException;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
+import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
+import org.knime.base.node.mine.treeensemble2.model.pmml.ClassificationGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -99,8 +101,11 @@ class GBTPMMLExporterNodeModel extends NodeModel {
         AbstractGradientBoostingModel gbtModel = gbtPO.getEnsembleModel();
         if (gbtModel instanceof GradientBoostedTreesModel) {
             translator = new RegressionGBTModelPMMLTranslator((GradientBoostedTreesModel)gbtModel);
+        } else if (gbtModel instanceof MultiClassGradientBoostedTreesModel){
+            translator = new ClassificationGBTModelPMMLTranslator((MultiClassGradientBoostedTreesModel)gbtModel);
         } else {
-            throw new IllegalArgumentException("Currently only regression models are supported.");
+            throw new IllegalArgumentException("Unknown gradient boosted trees model type '" +
+                    gbtModel.getClass().getSimpleName() + "'.");
         }
         PMMLPortObjectSpec pmmlSpec = createPMMLSpec(gbtPO.getSpec(), gbtModel);
         PMMLPortObject pmmlPO = new PMMLPortObject(pmmlSpec);

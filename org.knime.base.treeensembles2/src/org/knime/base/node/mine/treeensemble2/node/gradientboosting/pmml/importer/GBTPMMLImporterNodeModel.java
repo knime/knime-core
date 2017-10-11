@@ -55,8 +55,11 @@ import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObj
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
+import org.knime.base.node.mine.treeensemble2.model.pmml.ClassificationGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -89,10 +92,14 @@ class GBTPMMLImporterNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
         AbstractGBTModelPMMLTranslator<?> pmmlTranslator;
-        if (pmmlPO.getSpec().getTargetCols().get(0).getType().isCompatible(DoubleValue.class)) {
+        DataType targetType = pmmlPO.getSpec().getTargetCols().get(0).getType();
+        if (targetType.isCompatible(DoubleValue.class)) {
             pmmlTranslator = new RegressionGBTModelPMMLTranslator();
+        } else if (targetType.isCompatible(StringValue.class)) {
+            pmmlTranslator = new ClassificationGBTModelPMMLTranslator();
         } else {
-            throw new IllegalArgumentException("Currently only regression models are supported.");
+            throw new IllegalArgumentException(
+                "Only numeric (regression) and nominal (classification) targets are supported.");
         }
         pmmlPO.initializeModelTranslator(pmmlTranslator);
         TreeEnsembleModelPortObjectSpec spec = new TreeEnsembleModelPortObjectSpec(pmmlPO.getSpec().getDataTableSpec());
