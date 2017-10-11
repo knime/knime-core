@@ -156,7 +156,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
     }
 
     private String probabilityName(final int classIdx) {
-        return "P (" + classIdx + ")";
+        return "P (" + getGBTModel().getClassLabel(classIdx) + ")";
     }
 
     private void addAggregationMiningScheme(final RegressionModel regression) {
@@ -173,7 +173,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
     }
 
     private String logitName(final int classIdx) {
-        return "gbtValue(" + classIdx + ")";
+        return "gbtValue(" + getGBTModel().getClassLabel(classIdx) + ")";
     }
 
 
