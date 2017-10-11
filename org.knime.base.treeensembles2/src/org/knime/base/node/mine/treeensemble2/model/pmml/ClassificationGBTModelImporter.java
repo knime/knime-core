@@ -55,6 +55,7 @@ import java.util.Map;
 import org.dmg.pmml.MININGFUNCTION;
 import org.dmg.pmml.MULTIPLEMODELMETHOD;
 import org.dmg.pmml.MiningModelDocument.MiningModel;
+import org.dmg.pmml.OutputFieldDocument.OutputField;
 import org.dmg.pmml.SegmentDocument.Segment;
 import org.dmg.pmml.SegmentationDocument.Segmentation;
 import org.dmg.pmml.TargetDocument.Target;
@@ -99,23 +100,34 @@ final class ClassificationGBTModelImporter extends AbstractGBTModelImporter<Mult
                 MULTIPLEMODELMETHOD.MODEL_CHAIN, modelChain.getMultipleModelMethod());
         List<List<TreeModelRegression>> trees = new ArrayList<>();
         List<List<Map<TreeNodeSignature, Double>>> coefficientMaps = new ArrayList<>();
+        List<String> classLabels = new ArrayList<>();
         List<Segment> segments = modelChain.getSegmentList();
         for (int i = 0; i < segments.size() - 1; i++) {
             Pair<List<TreeModelRegression>, List<Map<TreeNodeSignature, Double>>> gbtPair =
                     processClassSegment(segments.get(i));
             trees.add(gbtPair.getFirst());
             coefficientMaps.add(gbtPair.getSecond());
+            classLabels.add(extractClassLabel(segments.get(i)));
         }
         double initialValue = extractInitialValue(segments.get(0));
         return MultiClassGradientBoostedTreesModel.create(getMetaDataMapper().getTreeMetaData(), trees,
-            coefficientMaps, initialValue, TreeType.Ordinary);
+            coefficientMaps, initialValue, TreeType.Ordinary, classLabels);
     }
 
     private double extractInitialValue(final Segment classSegment) {
         List<Target> ts = classSegment.getMiningModel().getTargets().getTargetList();
         CheckUtils.checkArgument(ts.size() == 1,
-                "There must be exactly one output field in each class segment but there were '%d'", ts.size());
+                "There must be exactly one target field in each class segment but there were %d", ts.size());
         return ts.get(0).getRescaleConstant();
+    }
+
+    private String extractClassLabel(final Segment classSegment) {
+        List<OutputField> ofs = classSegment.getMiningModel().getOutput().getOutputFieldList();
+        CheckUtils.checkArgument(ofs.size() == 1,
+                "There must be exactly one output field in each class segment but there were %d.", ofs.size());
+        String wrappedName = ofs.get(0).getName();
+        String name = wrappedName.replaceFirst("gbtValue\\(", "");
+        return name.substring(0, name.length() - 1);
     }
 
     private Pair<List<TreeModelRegression>, List<Map<TreeNodeSignature, Double>>> processClassSegment(
