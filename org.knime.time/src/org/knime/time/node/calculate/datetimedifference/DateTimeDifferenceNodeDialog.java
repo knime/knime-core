@@ -116,7 +116,7 @@ final class DateTimeDifferenceNodeDialog extends NodeDialogPane {
         m_dialogCompModusSelect = new DialogComponentButtonGroup(modusModel, null, true, ModusOptions.values());
 
         m_dialogComp2ndColSelect = new DialogComponentColumnNameSelection(
-            DateTimeDifferenceNodeModel.createColSelectModel(2), "", 0, true, LocalDateValue.class,
+            DateTimeDifferenceNodeModel.createColSelectModel(2), "", 0, false, LocalDateValue.class,
             LocalTimeValue.class, LocalDateTimeValue.class, ZonedDateTimeValue.class);
 
         final SettingsModelDateTime dateTimeModel = DateTimeDifferenceNodeModel.createDateTimeModel();
