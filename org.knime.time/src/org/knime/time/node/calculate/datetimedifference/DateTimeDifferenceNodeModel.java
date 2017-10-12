@@ -166,21 +166,25 @@ final class DateTimeDifferenceNodeModel extends NodeModel {
             throw new InvalidSettingsException("Node must be configured!");
         }
         if (inSpecs[0].findColumnIndex(colName1) < 0) {
-            throw new InvalidSettingsException("Column " + colName1 + " not found in input table!");
+            throw new InvalidSettingsException("Column '" + colName1 + "' not found in input table!");
         }
         final DataType type1 = inSpecs[0].getColumnSpec(colName1).getType();
         if (!(type1.isCompatible(LocalDateValue.class) || type1.isCompatible(LocalTimeValue.class)
             || type1.isCompatible(LocalDateTimeValue.class) || type1.isCompatible(ZonedDateTimeValue.class))) {
-            throw new InvalidSettingsException("Column " + colName1 + " is not compatible!");
+            throw new InvalidSettingsException("Column '" + colName1 + "' is not compatible!");
         }
         if (m_modusSelectModel.getStringValue().equals(ModusOptions.Use2ndColumn.name())) {
             if (inSpecs[0].findColumnIndex(colName2) < 0) {
-                throw new InvalidSettingsException("Column " + colName2 + " not found in input table!");
+                throw new InvalidSettingsException("Column '" + colName2 + "' not found in input table!");
             }
             final DataType type2 = inSpecs[0].getColumnSpec(colName2).getType();
             if (!(type2.isCompatible(LocalDateValue.class) || type2.isCompatible(LocalTimeValue.class)
                 || type2.isCompatible(LocalDateTimeValue.class) || type2.isCompatible(ZonedDateTimeValue.class))) {
-                throw new InvalidSettingsException("Column " + colName1 + " is not compatible!");
+                throw new InvalidSettingsException("Column '" + colName1 + "' is not compatible!");
+            }
+            if (!type2.isCompatible(type1.getPreferredValueClass())) {
+                throw new InvalidSettingsException(
+                    "Column '" + colName1 + "' and column '" + colName2 + "' must be of the same type!");
             }
         }
         return new DataTableSpec[]{
