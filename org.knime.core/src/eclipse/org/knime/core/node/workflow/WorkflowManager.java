@@ -706,7 +706,6 @@ public final class WorkflowManager extends NodeContainer
      * @param factory NodeFactory used to create the new node
      * @return newly created (unique) NodeID
      */
-    // FIXME: I don't like this type cast warning (and the ? for that matter!)
     public NodeID createAndAddNode(final NodeFactory<?> factory) {
         return internalAddNewNode(factory, null);
     }
@@ -9084,6 +9083,11 @@ public final class WorkflowManager extends NodeContainer
      */
     public static class NodeModelFilter<T> {
 
+        /** A filter matching all nodes (all retained). */
+        static final <T> NodeModelFilter<T> all() {
+            return new NodeModelFilter<T>();
+        }
+
         /**
          * Tests whether the concrete instance is to be included.
          *
@@ -9128,7 +9132,7 @@ public final class WorkflowManager extends NodeContainer
      * @return A (unsorted) list of nodes matching the class criterion
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
-        return findNodes(nodeModelClass, new NodeModelFilter<T>(), recurse);
+        return findNodes(nodeModelClass, NodeModelFilter.all(), recurse);
     }
 
     /**
@@ -9396,11 +9400,11 @@ public final class WorkflowManager extends NodeContainer
                         "Parameter name \"%s\" doesn't match any node " + "in the workflow", userParameter);
                 } else { // short notation, e.g. "param-name"
                     List<Pair<NativeNodeContainer, ExternalNodeData>> matchingNodes = inputNodes.values().stream()
-                        .filter(p -> p.getSecond().getID().equals(userParameter)).collect(Collectors.toList());
+                            .filter(p -> p.getSecond().getID().equals(userParameter)).collect(Collectors.toList());
                     CheckUtils.checkSetting(!matchingNodes.isEmpty(),
-                        "Parameter name \"%s\" doesn't " + "match any node in the workflow", userParameter);
+                        "Parameter name \"%s\" doesn't match any node in the workflow", userParameter);
                     CheckUtils.checkSetting(matchingNodes.size() == 1,
-                        "Duplicate parameter name \"%s\" in workflow. " + "Cannot set parameter without ID notation.",
+                        "Duplicate parameter name \"%s\" in workflow. Cannot set parameter without ID notation.",
                         userParameter);
                     matchingNode = matchingNodes.get(0);
                 }
@@ -9445,37 +9449,38 @@ public final class WorkflowManager extends NodeContainer
         getExternalNodeDataNodes(final Class<T> nodeModelClass, final Function<T, ExternalNodeData> retriever) {
         Map<String, Pair<NativeNodeContainer, ExternalNodeData>> result = new LinkedHashMap<>();
         try (WorkflowLock lock = lock()) {
-            for (NodeContainer nc : getNodeContainers()) {
-                if (nc instanceof NodeContainerParent) {
-                    final WorkflowManager childMgr = nc instanceof SubNodeContainer
-                        ? ((SubNodeContainer)nc).getWorkflowManager() : (WorkflowManager)nc;
-                    final int childMgrIndex = nc.getID().getIndex(); // for subnodes this isn't the index of childMgr
-                    Map<String, Pair<NativeNodeContainer, ExternalNodeData>> childResult =
-                        childMgr.getExternalNodeDataNodes(nodeModelClass, retriever);
-                    for (Entry<String, Pair<NativeNodeContainer, ExternalNodeData>> e : childResult.entrySet()) {
-                        Matcher nameMatcher = INPUT_NODE_NAME_PATTERN.matcher(e.getKey());
-                        // must call nameMatches.matches -- otherwise group() will fail!
-                        CheckUtils.checkState(nameMatcher.matches(), "No match on \"%s\" (regex \"%s\")", e.getKey(),
-                            INPUT_NODE_NAME_PATTERN.pattern());
-                        // old workflows don't have parameter names; null -> ""
-                        String patName = StringUtils.defaultString(nameMatcher.group(1));
-                        assert Objects.equals(patName,
-                            e.getValue().getSecond().getID()) : "Not the same parameter name: " + patName + " vs. "
-                                + e.getValue().getSecond().getID();
-                        result.put(patName + "-" + childMgrIndex + ":" + nameMatcher.group(2), e.getValue());
-                    }
-                } else if (nc instanceof NativeNodeContainer) {
-                    final NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                    if (nnc.isModelCompatibleTo(nodeModelClass)) {
-                        ExternalNodeData nodeData = retriever.apply(nodeModelClass.cast(nnc.getNodeModel()));
-                        String parameterName = StringUtils.defaultString(nodeData.getID());
-                        parameterName = (parameterName.isEmpty() ? "" : parameterName + "-")
-                            + Integer.toString(nnc.getID().getIndex());
-                        result.put(parameterName, Pair.create(nnc, nodeData));
-                    }
+            Map<NodeID, T> externalNodeDataMap = findNodes(nodeModelClass, NodeModelFilter.all(), true, true);
+            // get all "parameter names" from all nodes in the workflow in order to see if there are name conflicts;
+            // occurrence map like {"string-input" -> 1, "foo" -> 1, "bar" -> 3}
+            Map<String, Long> parameterNamesToCountMap = externalNodeDataMap.values().stream()
+                    .map(retriever).map(extNodeData -> extNodeData.getID())
+                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+            parameterNamesToCountMap.values().removeAll(Collections.singleton(Long.valueOf(1L)));
+            Set<String> nonUniqueParameterNames = parameterNamesToCountMap.keySet();
+            if (!nonUniqueParameterNames.isEmpty() ) {
+                LOGGER.warnWithFormat("Workflow contains nodes with duplicate parameter name "
+                    + "(will be made unique by appending node IDs): %s",
+                    ConvenienceMethods.getShortStringFrom(nonUniqueParameterNames, 5));
+            }
+
+            // create result map, make keys unique where needed
+            for (Map.Entry<NodeID, T> entry : externalNodeDataMap.entrySet()) {
+                NodeID nodeID = entry.getKey();
+                ExternalNodeData nodeData = retriever.apply(entry.getValue());
+                String parameterName = nodeData.getID();
+                if (nonUniqueParameterNames.contains(parameterName)) {
+                    // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
+                    String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
+                    // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
+                    nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
+                    parameterName = (parameterName.isEmpty() ? "" : parameterName + "-") + nodeIDRelativePath;
+                    CheckUtils.checkState(INPUT_NODE_NAME_PATTERN.matcher(parameterName).matches(),
+                        "No match on \"%s\" (regex \"%s\")", parameterName, INPUT_NODE_NAME_PATTERN.pattern());
                 }
+                result.put(parameterName, Pair.create((NativeNodeContainer)findNodeContainer(nodeID), nodeData));
             }
             return result;
+
         }
     }
 

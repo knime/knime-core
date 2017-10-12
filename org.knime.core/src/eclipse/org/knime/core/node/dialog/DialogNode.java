@@ -73,7 +73,7 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * "foo-bar-0" - OK
      * "013"       - NOT OK
      * "foo-_bar"  - NOT OK
-     * "foo-bar"-  - NOT OK
+     * "foo-bar-"  - NOT OK
      * </pre>
      * @since 2.12
      */
