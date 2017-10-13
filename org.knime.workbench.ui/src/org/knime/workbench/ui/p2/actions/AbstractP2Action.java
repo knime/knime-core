@@ -48,6 +48,8 @@
 package org.knime.workbench.ui.p2.actions;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -155,7 +157,7 @@ public abstract class AbstractP2Action extends Action {
         try {
             @SuppressWarnings("restriction")
             URL configUrl = Platform.getConfigurationLocation().getDataArea(EquinoxContainer.NAME);
-            Path configPath = Paths.get(configUrl.getPath());
+            Path configPath = Paths.get(new URI(configUrl.toString().replace(" ", "%20")));
 
             // make sure PathUtils is initialized, because it registers a shutdown hook itself and this is not possible
             // while the JVM shuts down
@@ -179,9 +181,9 @@ public abstract class AbstractP2Action extends Action {
                     }
                 }
             });
-        } catch (IOException ex) {
+        } catch (IOException | URISyntaxException ex) {
             NodeLogger.getLogger(AbstractP2Action.this.getClass())
-                .error("Could acquire OSGi configuration area: " + ex.getMessage());
+                .error("Could not acquire OSGi configuration area: " + ex.getMessage());
         }
     }
 
