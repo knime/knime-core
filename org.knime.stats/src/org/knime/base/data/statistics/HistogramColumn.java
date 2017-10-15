@@ -1246,6 +1246,7 @@ public class HistogramColumn implements Cloneable {
             String column = columns[columnIndex];
             assert column != null : Arrays.toString(columns);
             DataColumnSpec colSpec = data.getDataTableSpec().getColumnSpec(column);
+
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 double min = mins[columnIndex];
                 double max = maxs[columnIndex];
@@ -1260,10 +1261,15 @@ public class HistogramColumn implements Cloneable {
             }
         }
         final Set<RowKey> hiLitKeys = hlHandler.getHiLitKeys();
+        String[] columnNames = data.getDataTableSpec().getColumnNames();
+
         for (DataRow dataRow : data) {
             final boolean isHiLited = hiLitKeys.contains(dataRow.getKey());
             for (Entry<Integer, HistogramNumericModel> entry : histograms.entrySet()) {
-                DataCell cell = dataRow.getCell(entry.getKey().intValue());
+                String colName = entry.getValue().getColName();
+                int columnIndexInTable =  Arrays.asList(columnNames).indexOf(colName);
+                //DataCell cell = dataRow.getCell(entry.getKey().intValue());
+                DataCell cell = dataRow.getCell(columnIndexInTable);
                 if (!cell.isMissing()) {
                     final double d = ((DoubleValue)cell).getDoubleValue();
                     if (Double.isNaN(d) || Double.isInfinite(d)) {
