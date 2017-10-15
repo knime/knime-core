@@ -54,6 +54,7 @@ import static org.knime.core.node.util.CheckUtils.checkArgument;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,6 +62,7 @@ import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.MutableInteger;
 
@@ -133,5 +135,28 @@ public class NominalValue extends Statistic {
                 ConvenienceMethods.getShortStringFrom(m_exceededColumns, 5));
         }
         return null;
+    }
+
+    /**
+     * @param colIndex
+     * @return nominal values of the column
+     * @since 3.5
+     */
+    public Map<DataValue, Integer> getNominalValues (final int colIndex) {
+        Iterator it = m_nominalValues[colIndex].entrySet().iterator();
+        Map<DataValue, Integer> output = new HashMap<DataValue, Integer>(m_nominalValues[colIndex].size());
+        while (it.hasNext()) {
+
+            @SuppressWarnings("unchecked")
+            Map.Entry<DataCell, MutableInteger> pair = (Map.Entry<DataCell, MutableInteger>) it.next();
+            //if (!pair.getKey().isMissing()) {
+                output.put(pair.getKey(), pair.getValue().intValue());
+            //} //else {
+//                output.put(((MissingCell)pair.getKey()).toString(), pair.getValue().intValue());
+//            }
+            //System.out.println( + " = " + );
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        return output;
     }
 }

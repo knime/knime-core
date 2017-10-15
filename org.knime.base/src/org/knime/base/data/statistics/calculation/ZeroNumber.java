@@ -52,7 +52,7 @@ import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.DoubleValue;
 
 /**
  * Calculates the count of values equal zero.
@@ -84,8 +84,8 @@ public class ZeroNumber extends Statistic {
     protected void consumeRow(final DataRow dataRow) {
         int index = 0;
         for (int i : getIndices()) {
-            if (dataRow.getCell(i) instanceof DoubleCell) {
-                DoubleCell cell = (DoubleCell) dataRow.getCell(i);
+            if (dataRow.getCell(i) instanceof DoubleValue) {
+                DoubleValue cell = (DoubleValue) dataRow.getCell(i);
                 if (cell.getDoubleValue() == 0) {
                     m_zeros[index]++;
                 }
