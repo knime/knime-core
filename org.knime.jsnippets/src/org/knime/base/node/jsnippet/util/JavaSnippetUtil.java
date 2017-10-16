@@ -48,17 +48,27 @@
 package org.knime.base.node.jsnippet.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -73,24 +83,37 @@ import org.knime.core.util.FileUtil;
  */
 public final class JavaSnippetUtil {
 
+    /* Name of javasnippet jar download cache directories */
+    private static final String JAR_CACHE_DIR_NAME = "javasnippet-jar-download-cache";
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetUtil.class);
+
     private JavaSnippetUtil() {
         // private constructor to prevent instantiation.
     }
-
-    private static File cacheDir = null;
 
     /**
      * Create a temporary directory for all urls from all javasnippets. Downloaded jars are saved in a subfolder named
      * by the hexadecimal of the hashCode of the URL.
      */
-    private static final void initCache() {
-        if (cacheDir == null) {
+    private static final File getCacheDir() {
+        final File workflowTempDir = getTmpDir();
+
+        final File[] dirs = workflowTempDir.listFiles((FileFilter)new PrefixFileFilter(JAR_CACHE_DIR_NAME));
+        if (dirs.length == 0 || !dirs[0].exists()) {
             try {
-                cacheDir = FileUtil.createTempDir("javasnippet-jar-download-cache");
+                return FileUtil.createTempDir(JAR_CACHE_DIR_NAME, workflowTempDir);
             } catch (IOException e) {
-                throw new IllegalStateException("Unable to create temporary directory.", e);
+                throw new IllegalStateException(
+                    "Unable to create temporary directory for caching downloaded jar files.", e);
             }
         }
+
+        if (dirs.length > 1) {
+            LOGGER.warn("Multiple Java Snippet jar download cache directories found, using \"" + dirs[0] + "\".");
+        }
+
+        return dirs[0];
     }
 
     /**
@@ -100,15 +123,16 @@ public final class JavaSnippetUtil {
      * @param url URL of the .jar file.
      * @return The downloaded file or file from cache.
      * @throws InvalidSettingsException If the URL is invalid or could not be opened or downloaded.
+     * @throws UnsupportedEncodingException
      */
-    private static final File resolveRemoteFile(final URL url) throws InvalidSettingsException {
-        initCache();
-
-        String file = url.getFile(); // knime://knime.workflow/../foo/bar.jar -> "/../foo/bar.jar"
+    private static final File resolveRemoteFile(final URL url)
+        throws InvalidSettingsException, UnsupportedEncodingException {
+        final String file = URLDecoder.decode(url.getFile(), Charset.defaultCharset().name()); // knime://knime.workflow/../foo/bar.jar -> "/../foo/bar.jar"
         CheckUtils.checkSetting(StringUtils.endsWithIgnoreCase(file, ".jar"), "Not a .jar URL: %s", url.toString());
-        String filename = FilenameUtils.getName(file); // "/../foo/bar.jar" -> "bar.jar"
 
-        final File cacheForUrl = new File(cacheDir, Integer.toString(url.hashCode(), 16));
+        final String filename = FilenameUtils.getName(file); // "/../foo/bar.jar" -> "bar.jar"
+
+        final File cacheForUrl = new File(getCacheDir(), Integer.toString(url.toString().hashCode(), 16));
         final File jarFile = new File(cacheForUrl, filename);
         if (jarFile.exists()) {
             // already downloaded
@@ -155,4 +179,36 @@ public final class JavaSnippetUtil {
         return result;
     }
 
+    /**
+     * Reads the current temp dir from the workflow context or returns the standard tmp dir, if not set.
+     *
+     * @see FileUtil#getTmpDir()
+     */
+    private static File getTmpDir() {
+        final File fallbackDir = KNIMEConstants.getKNIMETempPath().toFile();
+
+        final NodeContext nodeContext = NodeContext.getContext();
+        if (nodeContext == null) {
+            return fallbackDir;
+        }
+
+        final WorkflowManager wfm = nodeContext.getWorkflowManager();
+        if (wfm == null) {
+            return fallbackDir;
+        }
+
+        final WorkflowContext workflowContext = wfm.getContext();
+        if (workflowContext == null) {
+            return fallbackDir;
+        }
+
+        if (!workflowContext.getTempLocation().isDirectory()) {
+            LOGGER.error("Temp folder \"" + workflowContext.getTempLocation().getAbsolutePath()
+                + "\" does not exist (associated with node context \"" + nodeContext
+                + "\") - using fallback temp folder (\"" + fallbackDir.getAbsolutePath() + "\"");
+            return fallbackDir;
+        } else {
+            return workflowContext.getTempLocation();
+        }
+    }
 }
