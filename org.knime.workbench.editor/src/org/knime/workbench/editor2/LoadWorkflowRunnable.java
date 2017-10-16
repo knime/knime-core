@@ -95,6 +95,11 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  */
 class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
+    /** Message returned by {@link #getLoadingCanceledMessage()} in case the loading has been canceled
+     * due to a (future) version conflict. (See also AP-7982)
+     */
+    static final String INCOMPATIBLE_VERSION_MSG = "Canceled workflow load due to incompatible version";
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LoadWorkflowRunnable.class);
 
     private WorkflowEditor m_editor;
@@ -217,7 +222,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.error("Could not load workflow from: " + m_workflowFile.getName(), ise);
             m_throwable = ise;
         } catch (UnsupportedWorkflowVersionException uve) {
-            m_loadingCanceledMessage = "Canceled workflow load due to incompatible version";
+            m_loadingCanceledMessage = INCOMPATIBLE_VERSION_MSG;
             LOGGER.info(m_loadingCanceledMessage, uve);
             m_editor.setWorkflowManager(null);
         } catch (CanceledExecutionException cee) {
