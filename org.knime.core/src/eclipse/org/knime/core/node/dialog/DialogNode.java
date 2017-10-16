@@ -70,14 +70,22 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * (including '-' and '_') and ends with a word character (no '-' or '_'), for instance:<br>
      * <pre>
      * "abc"       - OK
-     * "foo-bar-0" - OK
+     * "abc-d0-hi" - OK
+     * "foo-bar-0" - NOT OK
      * "013"       - NOT OK
      * "foo-_bar"  - NOT OK
      * "foo-bar-"  - NOT OK
      * </pre>
      * @since 2.12
      */
-    public static final Pattern PARAMETER_NAME_PATTERN = Pattern.compile("^[a-zA-Z](?:[-_]?[a-zA-Z0-9]+)*$");
+    // last segment is a "lookbehind" to disallow the string to end with a digit
+    public static final Pattern PARAMETER_NAME_PATTERN = Pattern.compile("^[a-zA-Z](?:[-_]?[a-zA-Z0-9]+)*(?<![0-9])$");
+
+    /** Similar to {@link #PARAMETER_NAME_PATTERN} but allowing a digit at the end. Left here to be able to load
+     * old workflows (prior KNIME AP 3.5), which may use this legacy format.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 3.5 */
+    public static final Pattern PARAMETER_NAME_PATTERN_LEGACY = Pattern.compile("^[a-zA-Z](?:[-_]?[a-zA-Z0-9]+)*$");
 
     /**
      * Input verifier for swing component, such as text field, that checks against {@link #PARAMETER_NAME_PATTERN}.

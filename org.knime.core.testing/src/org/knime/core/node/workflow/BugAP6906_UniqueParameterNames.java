@@ -123,7 +123,7 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
 
         exception.expect(InvalidSettingsException.class);
-        exception.expectMessage("Duplicate parameter name");
+        exception.expectMessage("doesn't match");
         getManager().setInputNodes(Collections.singletonMap("input-not-unique", inputNodes.get("input-not-unique-2")));
     }
 
