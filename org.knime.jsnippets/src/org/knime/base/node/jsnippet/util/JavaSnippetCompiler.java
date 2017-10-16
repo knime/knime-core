@@ -109,7 +109,7 @@ public class JavaSnippetCompiler {
             throws IOException {
         if (m_compiler == null) {
             m_compileArgs = new ArrayList<>();
-            File[] classpaths = m_snippet.getClassPath();
+            final File[] classpaths = m_snippet.getClassPath();
 
             m_compileArgs.add("-classpath");
             m_compileArgs.add(Arrays.stream(classpaths)
@@ -125,12 +125,14 @@ public class JavaSnippetCompiler {
 
             m_compiler  = new EclipseCompiler();
         }
-        StandardJavaFileManager stdFileMgr = m_compiler.getStandardFileManager(
-                digsCollector, null, null);
+        final StandardJavaFileManager stdFileMgr = m_compiler.getStandardFileManager(digsCollector, null, null);
 
-        CompilationTask compileTask = m_compiler.getTask(out, stdFileMgr,
-                digsCollector, m_compileArgs, null,
-                m_snippet.getCompilationUnits());
+        final CompilationTask compileTask =
+            m_compiler.getTask(out, stdFileMgr, digsCollector, m_compileArgs, null, m_snippet.getCompilationUnits());
+
+        // Release all .jar files that may have been opened
+        stdFileMgr.close();
+
         return compileTask;
     }
 
