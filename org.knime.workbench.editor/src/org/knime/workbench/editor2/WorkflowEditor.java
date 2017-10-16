@@ -166,7 +166,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
@@ -3257,18 +3256,20 @@ public class WorkflowEditor extends GraphicalEditor implements
 
 
     private void openErrorDialogAndCloseEditor(final String message) {
-        final String errorTitle = "Workflow could not be opened";
-        if (Display.getDefault().getThread() == Thread.currentThread()) {
-            MessageDialog.openError(Display.getDefault().getActiveShell(), errorTitle, message);
-        } else {
-            // 20140525 - dunno why we ever use Swing here - keep unmodified to be sure
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    JOptionPane.showMessageDialog(null, message,
-                        errorTitle, JOptionPane.ERROR_MESSAGE);
-                }
-            });
+        if (message != LoadWorkflowRunnable.INCOMPATIBLE_VERSION_MSG) { // string identiy is OK here
+            final String errorTitle = "Workflow could not be opened";
+            if (Display.getDefault().getThread() == Thread.currentThread()) {
+                MessageDialog.openError(Display.getDefault().getActiveShell(), errorTitle, message);
+            } else {
+                // 20140525 - dunno why we ever use Swing here - keep unmodified to be sure
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        JOptionPane.showMessageDialog(null, message,
+                            errorTitle, JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            }
         }
         Display.getDefault().asyncExec(new Runnable() {
             @Override
