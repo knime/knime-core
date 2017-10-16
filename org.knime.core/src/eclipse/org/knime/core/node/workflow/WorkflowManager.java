@@ -99,7 +99,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -9345,13 +9344,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * A pattern to parse a URL or REST parameter or a batch argument. It reads the {@link InputNode} parameter name and
-     * an optional node id suffix, which the user may or may not specify (to guarantee uniqueness). For instance, it
-     * splits "foobar-123-xy-2" into "foobar-123-xy" (parameter name) and 2 (node id suffix).
-     */
-    private static final Pattern INPUT_NODE_NAME_PATTERN = Pattern.compile("^(?:(.+)-)?(\\d+(?:\\:\\d+)*)$");
-
-    /**
      * Get quickform nodes on the root level along with their currently set value. These are all
      * {@link org.knime.core.node.dialog.DialogNode} including special nodes like "JSON Input".
      *
@@ -9362,10 +9354,10 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getInputNodes() {
-        // remove the NodeContainer from the map...
-        final Map<String, Pair<NativeNodeContainer, ExternalNodeData>> inputNodes =
-            getExternalNodeDataNodes(InputNode.class, i -> i.getInputData());
-        return inputNodes.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getSecond()));
+        List<ExternalNodeDataHandle> inputNodes = getExternalNodeDataHandles(InputNode.class, i -> i.getInputData());
+        return inputNodes.stream().collect(Collectors.toMap(
+            ExternalNodeDataHandle::getParameterNameShort,
+            ExternalNodeDataHandle::getExternalNodeData));
     }
 
     /**
@@ -9382,8 +9374,8 @@ public final class WorkflowManager extends NodeContainer
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
                 "Cannot apply new parameters - workflow still in execution");
 
-            Map<String, Pair<NativeNodeContainer, ExternalNodeData>> inputNodes =
-                getExternalNodeDataNodes(InputNode.class, i -> i.getInputData());
+            List<ExternalNodeDataHandle> inputNodes =
+                    getExternalNodeDataHandles(InputNode.class, i -> i.getInputData());
 
             // will contain all nodes that need a new data object
             List<Pair<NativeNodeContainer, ExternalNodeData>> valuesToSetList = new LinkedList<>();
@@ -9391,24 +9383,22 @@ public final class WorkflowManager extends NodeContainer
             // find all the nodes, remember them and do some validation -- do not set new value yet.
             for (Map.Entry<String, ExternalNodeData> entry : input.entrySet()) {
                 final String userParameter = entry.getKey();
-                Matcher parameterNameMatcher = INPUT_NODE_NAME_PATTERN.matcher(userParameter);
+                Matcher parameterNameMatcher = ExternalNodeDataHandle.INPUT_NODE_NAME_PATTERN.matcher(userParameter);
 
-                Pair<NativeNodeContainer, ExternalNodeData> matchingNode;
+                Optional<ExternalNodeDataHandle> matchingNodeOptional;
                 if (parameterNameMatcher.matches()) { // fully qualified (e.g. "param-name-32:34")
-                    matchingNode = inputNodes.get(userParameter);
-                    CheckUtils.checkSettingNotNull(matchingNode,
-                        "Parameter name \"%s\" doesn't match any node " + "in the workflow", userParameter);
+                    matchingNodeOptional = inputNodes.stream()
+                        .filter(e -> e.getParameterNameFullyQualified().equals(userParameter)).findFirst();
                 } else { // short notation, e.g. "param-name"
-                    List<Pair<NativeNodeContainer, ExternalNodeData>> matchingNodes = inputNodes.values().stream()
-                            .filter(p -> p.getSecond().getID().equals(userParameter)).collect(Collectors.toList());
-                    CheckUtils.checkSetting(!matchingNodes.isEmpty(),
-                        "Parameter name \"%s\" doesn't match any node in the workflow", userParameter);
-                    CheckUtils.checkSetting(matchingNodes.size() == 1,
-                        "Duplicate parameter name \"%s\" in workflow. Cannot set parameter without ID notation.",
-                        userParameter);
-                    matchingNode = matchingNodes.get(0);
+                    matchingNodeOptional = inputNodes.stream()
+                            .filter(e -> e.getParameterNameShort().equals(userParameter)).findFirst();
                 }
-                NativeNodeContainer nnc = matchingNode.getFirst();
+                ExternalNodeDataHandle matchingNode =
+                    matchingNodeOptional.orElseThrow(() -> new InvalidSettingsException(String.format(
+                        "Parameter name \"%s\" doesn't match any node in the workflow, valid parameter names are: %s",
+                        userParameter, inputNodes.stream().map(e -> "\"" + e.getParameterNameShort() + "\"")
+                            .collect(Collectors.joining(", ", "[", "]")))));
+                NativeNodeContainer nnc = matchingNode.getOwnerNodeContainer();
                 ((InputNode)nnc.getNodeModel()).validateInputData(entry.getValue());
                 valuesToSetList.add(Pair.create(nnc, entry.getValue()));
             }
@@ -9426,28 +9416,29 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Receive output from workflow by means of {@link org.knime.core.node.dialog.OutputNode}. If the workflow is not
-     * fully executed, the map contains only the keys of the outputs. The values are all <code>null</code> in this case.
+     * fully executed, the map contains only the keys of the outputs. The values are all invalid in this case.
      *
      * @return A map from node's parameter name to its node data
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
-        // remove the NodeContainer from the map...
-        final Map<String, Pair<NativeNodeContainer, ExternalNodeData>> outputNodes =
-            getExternalNodeDataNodes(OutputNode.class, o -> o.getExternalOutput());
-        return outputNodes.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getSecond()));
+        List<ExternalNodeDataHandle> outputNodes =
+                getExternalNodeDataHandles(OutputNode.class, o -> o.getExternalOutput());
+        return outputNodes.stream().collect(Collectors.toMap(
+            ExternalNodeDataHandle::getParameterNameShort,
+            ExternalNodeDataHandle::getExternalNodeData));
     }
 
     /**
-     * Implementation of {@link #getInputNodes()} and {@link #getExternalNodeDataNodes(Class, Function)}.
+     * Implementation of {@link #getInputNodes()} and {@link #getExternalOutputs()}.
      *
      * @param nodeModelClass either {@link InputNode}.class or {@link OutputNode}.class.
      * @param retriever resolves the data object from the input or output.
-     * @return map of nodes.
+     * @return List of nodes with their parameter names unified.
      */
-    private <T> Map<String, Pair<NativeNodeContainer, ExternalNodeData>>
-        getExternalNodeDataNodes(final Class<T> nodeModelClass, final Function<T, ExternalNodeData> retriever) {
-        Map<String, Pair<NativeNodeContainer, ExternalNodeData>> result = new LinkedHashMap<>();
+    private <T> List<ExternalNodeDataHandle> getExternalNodeDataHandles(final Class<T> nodeModelClass,
+        final Function<T, ExternalNodeData> retriever) {
+        List<ExternalNodeDataHandle> result = new ArrayList<>();
         try (WorkflowLock lock = lock()) {
             Map<NodeID, T> externalNodeDataMap = findNodes(nodeModelClass, NodeModelFilter.all(), true, true);
             // get all "parameter names" from all nodes in the workflow in order to see if there are name conflicts;
@@ -9463,24 +9454,24 @@ public final class WorkflowManager extends NodeContainer
                     ConvenienceMethods.getShortStringFrom(nonUniqueParameterNames, 5));
             }
 
-            // create result map, make keys unique where needed
+            // create result list, make keys unique where needed but also retain the fully qualified parameter name
             for (Map.Entry<NodeID, T> entry : externalNodeDataMap.entrySet()) {
                 NodeID nodeID = entry.getKey();
                 ExternalNodeData nodeData = retriever.apply(entry.getValue());
-                String parameterName = nodeData.getID();
-                if (nonUniqueParameterNames.contains(parameterName)) {
-                    // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
-                    String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
-                    // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
-                    nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
-                    parameterName = (parameterName.isEmpty() ? "" : parameterName + "-") + nodeIDRelativePath;
-                    CheckUtils.checkState(INPUT_NODE_NAME_PATTERN.matcher(parameterName).matches(),
-                        "No match on \"%s\" (regex \"%s\")", parameterName, INPUT_NODE_NAME_PATTERN.pattern());
+                String parameterNameShort = nodeData.getID();
+                // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
+                String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
+                // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
+                nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
+                String parameterNameFullyQualified =
+                        (parameterNameShort.isEmpty() ? "" : parameterNameShort + "-") + nodeIDRelativePath;
+                if (nonUniqueParameterNames.contains(parameterNameShort)) {
+                    parameterNameShort = parameterNameFullyQualified;
                 }
-                result.put(parameterName, Pair.create((NativeNodeContainer)findNodeContainer(nodeID), nodeData));
+                result.add(new ExternalNodeDataHandle(parameterNameShort, parameterNameFullyQualified,
+                    (NativeNodeContainer)findNodeContainer(nodeID), nodeData));
             }
             return result;
-
         }
     }
 

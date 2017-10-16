@@ -146,36 +146,36 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         Map<String, ExternalNodeData> inputNodes = manager.getInputNodes();
         assertThat("Wrong number inputs", inputNodes.size(), is(4));
         assertThat("Input parameter list wrong", inputNodes.keySet(), containsInAnyOrder(
-            "top-level-string-input-1",
-            "top-level-credentials-input-2",
-            "metanode-level-string-input-21:10",
-            "metanode-level-credentials-input-21:11"));
+            "top-level-string-input",
+            "top-level-credentials-input",
+            "metanode-level-string-input",
+            "metanode-level-credentials-input"));
 
-        ExternalNodeData topLevelStringInputData = inputNodes.get("top-level-string-input-1");
+        ExternalNodeData topLevelStringInputData = inputNodes.get("top-level-string-input");
         assertThat(topLevelStringInputData.getJSONValue(), is(toJson("{\"string\":\"foo\"}")));
 
-        ExternalNodeData topLevelCredInputData = inputNodes.get("top-level-credentials-input-2");
+        ExternalNodeData topLevelCredInputData = inputNodes.get("top-level-credentials-input");
         assertThat(topLevelCredInputData.getJSONValue(), is(toJson("{\"username\":\"foo-login\", \"password\":null}")));
 
-        ExternalNodeData metanodeLevelStringInputData = inputNodes.get("metanode-level-string-input-21:10");
+        ExternalNodeData metanodeLevelStringInputData = inputNodes.get("metanode-level-string-input");
         assertThat(metanodeLevelStringInputData.getJSONValue(), is(toJson("{\"string\":\"foo\"}")));
 
-        ExternalNodeData metanodeLevelCredInputData = inputNodes.get("metanode-level-credentials-input-21:11");
+        ExternalNodeData metanodeLevelCredInputData = inputNodes.get("metanode-level-credentials-input");
         assertThat(metanodeLevelCredInputData.getJSONValue(),
             is(toJson("{\"username\":\"foo-login\", \"password\":null}")));
 
         Map<String, ExternalNodeData> outputs = manager.getExternalOutputs();
         assertThat(outputs.size(), is(2));
-        assertThat(outputs.keySet(), containsInAnyOrder("top-level-json-output-7", "metanode-level-json-output-21:16"));
+        assertThat(outputs.keySet(), containsInAnyOrder("top-level-json-output", "metanode-level-json-output"));
 
-        ExternalNodeData outputDataTopLevel = outputs.get("top-level-json-output-7");
+        ExternalNodeData outputDataTopLevel = outputs.get("top-level-json-output");
         assertThat(outputDataTopLevel.getID(), is("top-level-json-output"));
 
         assertThat(outputDataTopLevel.getJSONValue(), is(toJson(
             "{\"top-level-string-input\":\"foo\","
             + "\"metanode-level-string-input\":\"foo\"}")));
 
-        ExternalNodeData outputDataMetanodeLevel = outputs.get("metanode-level-json-output-21:16");
+        ExternalNodeData outputDataMetanodeLevel = outputs.get("metanode-level-json-output");
         assertThat(outputDataMetanodeLevel.getID(), is("metanode-level-json-output"));
 
         assertThat(outputDataMetanodeLevel.getJSONValue(), is(toJson(
@@ -224,12 +224,12 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         checkStateOfMany(IDLE, m_javaEditValidateTopLevelFoo_4, m_credValidateTopLevelFoo_5);
 
         Map<String, ExternalNodeData> outputs = manager.getExternalOutputs();
-        ExternalNodeData outputDataTopLevel = outputs.get("top-level-json-output-7");
+        ExternalNodeData outputDataTopLevel = outputs.get("top-level-json-output");
         assertThat(outputDataTopLevel.getJSONValue(), is(toJson(
             "{\"top-level-string-input\":\"bar\","
             + "\"metanode-level-string-input\":\"bar\"}")));
 
-        ExternalNodeData outputDataMetanodeLevel = outputs.get("metanode-level-json-output-21:16");
+        ExternalNodeData outputDataMetanodeLevel = outputs.get("metanode-level-json-output");
         assertThat(outputDataMetanodeLevel.getJSONValue(), is(toJson("{\"metanode-level-string-input\":\"bar\"}")));
 
     }
@@ -282,7 +282,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
             manager.setInputNodes(inputMap);
             fail("Should have failed because parameter node is not uniquely identified");
         } catch (InvalidSettingsException ise) {
-            Assert.assertThat(ise.getMessage(), containsString("Duplicate"));
+            Assert.assertThat(ise.getMessage(), containsString("doesn't match"));
         }
     }
 
@@ -309,7 +309,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         checkStateOfMany(IDLE, m_javaEditValidateTopLevelFoo_4, m_credValidateTopLevelFoo_5);
 
         Map<String, ExternalNodeData> outputs = manager.getExternalOutputs();
-        ExternalNodeData outputData = outputs.get("top-level-json-output-7");
+        ExternalNodeData outputData = outputs.get("top-level-json-output");
         assertThat(outputData.getJSONValue(), is(toJson(
             "{\"top-level-string-input\":\"bar\","
                     + "\"metanode-level-string-input\":\"foo\"}")));

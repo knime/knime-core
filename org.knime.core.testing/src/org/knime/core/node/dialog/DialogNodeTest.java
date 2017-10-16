@@ -65,7 +65,10 @@ public class DialogNodeTest {
     public void testNAMEPattern() {
         Pattern p = DialogNode.PARAMETER_NAME_PATTERN;
         assertTrue(p.matcher("abc").matches());
-        assertTrue(p.matcher("foo-bar-0").matches());
+        assertTrue(p.matcher("a").matches());
+        assertTrue(p.matcher("abc-d0-hi").matches());
+        assertFalse(p.matcher("a0a-").matches());
+        assertFalse(p.matcher("foo-bar-0").matches());
         assertFalse(p.matcher("013").matches());
         assertFalse(p.matcher("foo-_bar").matches());
         assertFalse(p.matcher("foo-bar-").matches());
