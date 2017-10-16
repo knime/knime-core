@@ -52,6 +52,7 @@ import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_B
 import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_FIELDS;
 import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_IMPORTS;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -157,7 +158,7 @@ import org.knime.core.util.FileUtil;
  * @author Heiko Hofer
  */
 @SuppressWarnings("restriction")
-public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
+public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeable {
     private static class SnippetCache {
         private String m_snippetCode;
         private Class<? extends AbstractJSnippet> m_snippetClass;
@@ -232,8 +233,6 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
 
     private static File jSnippetJar;
     private String[] m_jarFiles = new String[0];
-    // caches the jSnippetJar and the jarFiles.
-    private File[] m_jarFileCache;
 
     private JavaFileObject m_snippet;
     private File m_snippetFile;
@@ -247,12 +246,14 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     private JavaSnippetSettings m_settings;
     private JavaSnippetFields m_fields;
 
-
     private final File m_tempClassPathDir;
 
     private NodeLogger m_logger;
 
     private final SnippetCache m_snippetCache = new SnippetCache();
+
+    /* ClassLoader used to load the compiled JavaSnippet class */
+    private URLClassLoader m_classLoader = null;
 
     /**
      * Create a new snippet.
@@ -271,6 +272,24 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         m_tempClassPathDir = tempDir;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * Closes the URLClassLoader used to load the compiled Java Snippet, if open.
+     */
+    @Override
+    public void close() {
+        if(m_classLoader != null) {
+            // The class loader may still have opened some jar files which lie in
+            // temporary directories, because downloaded from an external URL.
+            try {
+                m_classLoader.close();
+                m_classLoader = null;
+            } catch (IOException e) {
+                LOGGER.warn("Could not close Java Snippet URLClassLoader.", e);
+            }
+        }
+    }
 
     /**
      * Create a new snippet with the given settings.
@@ -867,6 +886,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             createSnippetClass();
         } catch (Exception e) {
             errors.add(e.getMessage());
+        } finally {
+            close();
         }
         return new ValidationReport(errors.toArray(new String[errors.size()]),
                 warnings.toArray(new String[warnings.size()]));
@@ -1034,21 +1055,25 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     public void setJarFiles(final String[] jarFiles) {
         if (!Arrays.equals(m_jarFiles, jarFiles)) {
             m_jarFiles = jarFiles.clone();
-            // reset cache
-            m_jarFileCache = null;
             m_snippetCache.invalidate();
         }
     }
 
     /**
      * Create the class file of the snippet.
+     *
+     * Creates a URLClassLoader which may open jar files referenced by the Java Snippet class. Make sure to match every
+     * call to this method with a call to {@link #close()} in order for KNIME to be able to clean up .jar files that
+     * were downloaded from URLs.
+     *
      * @return the compiled snippet
      */
     @SuppressWarnings("unchecked")
     private Class<? extends AbstractJSnippet> createSnippetClass() {
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
 
-        if (m_snippetCache.isValid(getDocument())) {
+        /* Recompile/Reload either if the code changed or the class loader has been closed since */
+        if (m_classLoader != null && m_snippetCache.isValid(getDocument())) {
             if (!m_snippetCache.hasCustomFields()) {
                 return m_snippetCache.getSnippetClass();
             }
@@ -1088,6 +1113,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         }
 
         try {
+            close();
+
             final LinkedHashSet<ClassLoader> customTypeClassLoaders = new LinkedHashSet<>();
             customTypeClassLoaders.add(JavaSnippet.class.getClassLoader());
 
@@ -1106,9 +1133,10 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             final MultiParentClassLoader customTypeLoader = new MultiParentClassLoader(
                 customTypeClassLoaders.stream().toArray(ClassLoader[]::new));
 
-            final ClassLoader loader = compiler.createClassLoader(customTypeLoader);
+            // TODO (Next version bump) change return value of createClassLoader instead of cast
+            m_classLoader = (URLClassLoader)compiler.createClassLoader(customTypeLoader);
             Class<? extends AbstractJSnippet> snippetClass =
-                (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
+                (Class<? extends AbstractJSnippet>)m_classLoader.loadClass("JSnippet");
             m_snippetCache.update(getDocument(), snippetClass, m_settings);
             return snippetClass;
         } catch (ClassNotFoundException e) {
@@ -1128,10 +1156,12 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         try {
             instance = jsnippetClass.newInstance();
         } catch (InstantiationException e) {
-            // cannot happen, but rethrow just in case
+            // cannot happen, but rethrow and close resources just in case
+            close();
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            // cannot happen, but rethrow just in case
+            // cannot happen, but rethrow and close resources just in case
+            close();
             throw new RuntimeException(e);
         }
         if (m_logger != null) {
@@ -1149,12 +1179,15 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         m_logger = logger;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void finalize() throws Throwable {
         FileUtil.deleteRecursively(m_tempClassPathDir);
+
+        if (m_classLoader != null) {
+            LOGGER.coding("Java Snippet URLClassLoader was not closed properly.");
+            close();
+        }
+
         super.finalize();
     }
 
