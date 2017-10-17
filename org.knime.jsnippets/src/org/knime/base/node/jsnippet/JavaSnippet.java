@@ -279,7 +279,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      */
     @Override
     public void close() {
-        if(m_classLoader != null) {
+        if (m_classLoader != null) {
             // The class loader may still have opened some jar files which lie in
             // temporary directories, because downloaded from an external URL.
             try {

@@ -54,7 +54,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
@@ -86,17 +86,13 @@ public final class JavaSnippetUtil {
     /**
      * Create a temporary directory for all urls from all javasnippets. Downloaded jars are saved in a subfolder named
      * by the hexadecimal of the hashCode of the URL.
+     * @throws IOException if the directory for the Jar cache cannot be created
      */
-    private static final File getCacheDir() {
+    private static final File getCacheDir() throws IOException {
         final File workflowTempDir = FileUtil.getWorkflowTempDir();
 
         final File cacheDir = new File(workflowTempDir, JAR_CACHE_DIR_NAME);
-        if (!cacheDir.exists()) {
-            if (!cacheDir.mkdir()) {
-                throw new IllegalStateException(
-                    "Unable to create temporary directory for caching downloaded jar files.");
-            }
-        }
+        Files.createDirectories(cacheDir.toPath());
 
         return cacheDir;
     }
@@ -112,12 +108,19 @@ public final class JavaSnippetUtil {
      */
     private static final File resolveRemoteFile(final URL url)
         throws InvalidSettingsException, UnsupportedEncodingException {
-        final String file = URLDecoder.decode(url.getFile(), Charset.defaultCharset().name()); // knime://knime.workflow/../foo/bar.jar -> "/../foo/bar.jar"
+        // knime://knime.workflow/../foo/bar.jar -> "/../foo/bar.jar"
+        final String file = URLDecoder.decode(url.getFile(), "UTF-8");
         CheckUtils.checkSetting(StringUtils.endsWithIgnoreCase(file, ".jar"), "Not a .jar URL: %s", url.toString());
 
         final String filename = FilenameUtils.getName(file); // "/../foo/bar.jar" -> "bar.jar"
 
-        final File cacheForUrl = new File(getCacheDir(), Integer.toString(url.toString().hashCode(), 16));
+        File cacheForUrl;
+        try {
+            cacheForUrl = new File(getCacheDir(), Integer.toString(url.toString().hashCode(), 16));
+        } catch (IOException ex) {
+            throw new InvalidSettingsException(ex);
+        }
+
         final File jarFile = new File(cacheForUrl, filename);
         if (jarFile.exists()) {
             // already downloaded
