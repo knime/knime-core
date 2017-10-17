@@ -875,7 +875,7 @@ public final class FileUtil {
             throws IOException {
         File rootDir = dir;
         if (rootDir == null) {
-            rootDir = getTmpDir();
+            rootDir = getWorkflowTempDir();
         }
         File tempDir;
         do {
@@ -890,8 +890,14 @@ public final class FileUtil {
         return tempDir;
     }
 
-    /** Reads the current temp dir from the workflow context or returns the standard tmp dir, if not set. */
-    private static File getTmpDir() {
+    /**
+     * Reads the temporary directory associated with the current workflow (set in the {@link WorkflowContext}), or - if
+     * that is <code>null</code> - the global temp dir (see {@link KNIMEConstants#getKNIMETempPath()}).
+     *
+     * @return the temp dir of the current {@link WorkflowContext} or the standard temp dir, if no context is set.
+     * @since 3.4
+     */
+    public static File getWorkflowTempDir() {
         final File fallbackDir = KNIMEConstants.getKNIMETempPath().toFile();
 
         NodeContext nodeContext = NodeContext.getContext();
@@ -953,7 +959,7 @@ public final class FileUtil {
      */
     public static File createTempFile(final String prefix, final String suffix, final boolean deleteOnExit)
         throws IOException {
-        return createTempFile(prefix, suffix, getTmpDir(), deleteOnExit);
+        return createTempFile(prefix, suffix, getWorkflowTempDir(), deleteOnExit);
     }
 
     /**
