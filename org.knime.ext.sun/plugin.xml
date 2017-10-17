@@ -20,5 +20,11 @@
       <node
             category-path="/flowcontrol/switches"
             factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
+      <node
+            category-path="/scripting/java-snippet"
+            deprecated="false"
+            factory-class="org.knime.ext.sun.nodes.script.node.joiner.JavaJoinerNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.joiner.JavaJoinerNodeFactory">
+      </node>
    </extension>
 </plugin>
