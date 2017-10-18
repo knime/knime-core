@@ -1846,6 +1846,7 @@ class Buffer implements KNIMEStreamConstants {
             if (hasOwnFileStoreCells()) {
                 addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
+            zipOut.closeEntry();
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
             copy.writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
@@ -1862,6 +1863,7 @@ class Buffer implements KNIMEStreamConstants {
             if (hasOwnFileStoreCells()) {
                 addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
+            zipOut.closeEntry();
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
             writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
