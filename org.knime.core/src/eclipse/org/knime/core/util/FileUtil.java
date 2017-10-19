@@ -896,7 +896,7 @@ public final class FileUtil {
      * that is <code>null</code> - the global temp dir (see {@link KNIMEConstants#getKNIMETempPath()}).
      *
      * @return the temp dir of the current {@link WorkflowContext} or the standard temp dir, if no context is set.
-     * @since 3.4
+     * @since 3.5
      */
     public static File getWorkflowTempDir() {
         final File fallbackDir = KNIMEConstants.getKNIMETempPath().toFile();
