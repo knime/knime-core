@@ -1,0 +1,33 @@
+{
+  "properties" : {
+    "string-input" : {
+      "type" : "object",
+      "properties" : {
+        "string" : {
+          "type" : "string",
+          "default" : "Default value from the dialog"
+        }
+      },
+      "description" : "Enter a string here"
+    },
+    "int-input" : {
+      "type" : "object",
+      "properties" : {
+        "integer" : {
+          "type" : "integer",
+          "default" : 42
+        }
+      },
+      "description" : "Enter a number for this value"
+    },
+    "json-input" : {
+      "type" : "object",
+      "properties" : {
+        "a" : {
+          "type" : "string",
+          "default" : "b"
+        }
+      }
+    }
+  }
+}
