@@ -48,7 +48,9 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,6 +59,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
+import org.knime.core.node.dialog.OutputNode;
 
 
 /** AP-6906: Usability of Call Workflow Nodes with Respect to Input and Output Parameters
@@ -77,27 +81,50 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     /** Just list the two JSON Output nodes. */
     @Test
     public void testOutputNamesPositive() throws Exception {
-        Map<String, ExternalNodeData> outputNodes = getManager().getExternalOutputs();
-        Assert.assertThat("Wrong number of output nodes", outputNodes.size(), is(2));
-        Assert.assertThat("Wrong 'uniquified' output parameter names", outputNodes.keySet(),
+        List<ExternalNodeDataHandle> outputNodeList =
+                getManager().getExternalNodeDataHandles(OutputNode.class, o -> o.getExternalOutput());
+        Assert.assertThat("Wrong number of output nodes", outputNodeList.size(), is(2));
+        List<String> shortNames = outputNodeList.stream()
+                .map(ExternalNodeDataHandle::getParameterNameShort)
+                .collect(Collectors.toList());
+        Assert.assertThat("Wrong 'uniquified' output parameter names", shortNames,
+            hasItems("output-not-unique-4", "output-not-unique-8"));
+
+        List<String> fullyQualifiedNames = outputNodeList.stream()
+                .map(ExternalNodeDataHandle::getParameterNameFullyQualified)
+                .collect(Collectors.toList());
+        Assert.assertThat("Wrong 'fully qualified' output parameter names", fullyQualifiedNames,
             hasItems("output-not-unique-4", "output-not-unique-8"));
     }
 
-    /** List the various input nodes with their name, either as-is or appened by node id. */
+    /** List the various input nodes with their name, either as-is or appended by node id. */
     @Test
     public void testInputNamesPositive() throws Exception {
-        Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
+        List<ExternalNodeDataHandle> inputNodes =
+                getManager().getExternalNodeDataHandles(InputNode.class, InputNode::getInputData);
         Assert.assertThat("Wrong number of input nodes", inputNodes.size(), is(5));
-        Assert.assertThat("Wrong 'uniquified' input parameter names", inputNodes.keySet(), hasItems("input-unique",
+
+        List<String> shortNames = inputNodes.stream()
+                .map(ExternalNodeDataHandle::getParameterNameShort)
+                .collect(Collectors.toList());
+
+        Assert.assertThat("Wrong 'uniquified' input parameter names", shortNames, hasItems("input-unique",
             // these items are all duplicates, so uniquified with the node id suffix (partly meta or sub nodes)
             "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9", "input-not-unique-7:9:2"));
+
+        List<String> fullyQualifiedNames = inputNodes.stream()
+                .map(ExternalNodeDataHandle::getParameterNameFullyQualified)
+                .collect(Collectors.toList());
+        Assert.assertThat("Wrong 'fully qualifed' input parameter names", fullyQualifiedNames,
+            hasItems("input-unique-1", "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9",
+                "input-not-unique-7:9:2"));
     }
 
     /** Setting a unique parameter. */
     @Test
     public void testSettingSingleUniqueInputNodePositive() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
-        getManager().setInputNodes(Collections.singletonMap("input-unique", inputNodes.get("input-unique")));
+        getManager().setInputNodes(Collections.singletonMap("input-unique", inputNodes.get("input-unique-1")));
     }
 
     /** Setting a non-unique parameter. */

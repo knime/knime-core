@@ -9356,7 +9356,7 @@ public final class WorkflowManager extends NodeContainer
     public Map<String, ExternalNodeData> getInputNodes() {
         List<ExternalNodeDataHandle> inputNodes = getExternalNodeDataHandles(InputNode.class, i -> i.getInputData());
         return inputNodes.stream().collect(Collectors.toMap(
-            ExternalNodeDataHandle::getParameterNameShort,
+            ExternalNodeDataHandle::getParameterNameFullyQualified,
             ExternalNodeDataHandle::getExternalNodeData));
     }
 
@@ -9425,7 +9425,7 @@ public final class WorkflowManager extends NodeContainer
         List<ExternalNodeDataHandle> outputNodes =
                 getExternalNodeDataHandles(OutputNode.class, o -> o.getExternalOutput());
         return outputNodes.stream().collect(Collectors.toMap(
-            ExternalNodeDataHandle::getParameterNameShort,
+            ExternalNodeDataHandle::getParameterNameFullyQualified,
             ExternalNodeDataHandle::getExternalNodeData));
     }
 
@@ -9436,7 +9436,8 @@ public final class WorkflowManager extends NodeContainer
      * @param retriever resolves the data object from the input or output.
      * @return List of nodes with their parameter names unified.
      */
-    private <T> List<ExternalNodeDataHandle> getExternalNodeDataHandles(final Class<T> nodeModelClass,
+    // package scope for tests
+    <T> List<ExternalNodeDataHandle> getExternalNodeDataHandles(final Class<T> nodeModelClass,
         final Function<T, ExternalNodeData> retriever) {
         List<ExternalNodeDataHandle> result = new ArrayList<>();
         try (WorkflowLock lock = lock()) {
