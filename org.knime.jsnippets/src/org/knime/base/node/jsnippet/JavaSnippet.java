@@ -1185,7 +1185,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         FileUtil.deleteRecursively(m_tempClassPathDir);
 
         if (m_classLoader != null) {
-            LOGGER.coding("Java Snippet URLClassLoader was not closed properly.");
+            LOGGER.debug("Java Snippet URLClassLoader was not closed properly.");
             close();
         }
 
