@@ -9385,7 +9385,7 @@ public final class WorkflowManager extends NodeContainer
             // find all the nodes, remember them and do some validation -- do not set new value yet.
             for (Map.Entry<String, ExternalNodeData> entry : input.entrySet()) {
                 final String userParameter = entry.getKey();
-                Matcher parameterNameMatcher = ExternalNodeDataHandle.INPUT_NODE_NAME_PATTERN.matcher(userParameter);
+                Matcher parameterNameMatcher = ExternalNodeData.PARAMETER_NAME_PATTERN.matcher(userParameter);
 
                 Optional<ExternalNodeDataHandle> matchingNodeOptional;
                 if (parameterNameMatcher.matches()) { // fully qualified (e.g. "param-name-32:34")

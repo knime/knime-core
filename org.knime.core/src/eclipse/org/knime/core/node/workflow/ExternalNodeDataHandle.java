@@ -48,8 +48,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -64,14 +62,6 @@ import org.knime.core.node.util.CheckUtils;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 final class ExternalNodeDataHandle {
-
-    /**
-     * A pattern to parse a URL or REST parameter or a batch argument. It reads the
-     * {@link org.knime.core.node.dialog.InputNode} parameter name and an optional node id suffix, which the user may or
-     * may not specify (to guarantee uniqueness). For instance, it splits "foobar-123-xy-2" into "foobar-123-xy"
-     * (parameter name) and 2 (node id suffix).
-     */
-    static final Pattern INPUT_NODE_NAME_PATTERN = Pattern.compile("^(?:(.+)-)?(\\d+(?:\\:\\d+)*)$");
 
     private final String m_parameterNameShort;
 
@@ -94,8 +84,8 @@ final class ExternalNodeDataHandle {
         CheckUtils.checkArgument(StringUtils.startsWith(parameterNameFullyQualified, parameterNameShort),
             "Fully qualified parameter name \"%s\" doesn't start with parameter name (short) \"%s\"",
             parameterNameFullyQualified, parameterNameShort);
-        CheckUtils.checkArgument(INPUT_NODE_NAME_PATTERN.matcher(parameterNameFullyQualified).matches(),
-            "No match on \"%s\" (regex \"%s\")", parameterNameShort, INPUT_NODE_NAME_PATTERN.pattern());
+        CheckUtils.checkArgument(ExternalNodeData.PARAMETER_NAME_PATTERN.matcher(parameterNameFullyQualified).matches(),
+            "No match on \"%s\" (regex \"%s\")", parameterNameShort, ExternalNodeData.PARAMETER_NAME_PATTERN.pattern());
 
         m_ownerNodeContainer = CheckUtils.checkNotNull(ownerNodeContainer);
         m_externalNodeData = CheckUtils.checkNotNull(externalNodeData);
