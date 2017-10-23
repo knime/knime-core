@@ -59,7 +59,7 @@ import org.knime.core.data.DataValue;
  */
 public abstract class HistogramModel<Def> {
     /** A bin of the histogram. */
-    static class Bin<Def> {
+    public static class Bin<Def> {
         Bin(final Def def) {
             this(def, 0, 0);
         }
