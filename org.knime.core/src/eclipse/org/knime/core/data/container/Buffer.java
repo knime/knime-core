@@ -47,6 +47,8 @@ package org.knime.core.data.container;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -79,6 +81,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -144,6 +148,14 @@ class Buffer implements KNIMEStreamConstants {
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Buffer.class);
+
+    /** True if ZipOutputStream / the underlying Zlib library supports changed compression level between entries.
+     * This wasn't a problem for a long time (2004-2017) but broke with MacOX 10.13 (Sep '17). Relevant pointers are:
+     * bugs.knime.org/AP-8083
+     * https://www.knime.com/forum/knime-general/high-sierra-and-node-out-zip-files
+     * https://github.com/madler/zlib/issues/305
+     */
+    private static final boolean ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083;
 
     /**
      * Contains the information whether or not certain blob cell implementations shall be compressed when saved. This
@@ -307,6 +319,10 @@ class Buffer implements KNIMEStreamConstants {
             LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
                     + isUseGzipString + "\"); defaulting to " + DataContainer.DEF_GZIP_COMPRESSION);
             IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
+        }
+        ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083 = isZLIBSupportsLevelSwitchAP8083();
+        if (!ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083) {
+            LOGGER.debug("Zlib library doesn't support compression level switch");
         }
         if (debugLog) {
             LOGGER.debug("Setting table stream compression to " + IS_USE_GZIP);
@@ -1807,7 +1823,9 @@ class Buffer implements KNIMEStreamConstants {
             throw new IOException("Can't save an open Buffer.");
         }
         // binary data is already deflated
-        zipOut.setLevel(Deflater.NO_COMPRESSION);
+        if (ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083) {
+            zipOut.setLevel(Deflater.NO_COMPRESSION);
+        }
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_DATA));
         CellClassInfo[] shortCutsLookup;
         if (!usesOutFile() || m_version < IVERSION) {
@@ -1847,7 +1865,9 @@ class Buffer implements KNIMEStreamConstants {
                 addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
             zipOut.closeEntry();
-            zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
+            if (ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083) {
+                zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
+            }
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
             copy.writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
         } else {
@@ -1864,7 +1884,9 @@ class Buffer implements KNIMEStreamConstants {
                 addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
             zipOut.closeEntry();
-            zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
+            if (ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083) {
+                zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
+            }
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
             writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
         }
@@ -2281,5 +2303,39 @@ class Buffer implements KNIMEStreamConstants {
             }
             return f.delete();
         }
+    }
+
+    /** See {@link #ZLIB_SUPPORTS_LEVEL_SWITCH_AP8083} for details.
+     * @return hopefully mostly true but false in case we are on a broken zlib
+     */
+    private static boolean isZLIBSupportsLevelSwitchAP8083() {
+        ByteArrayOutputStream byteArrayOut;
+        byte[] nullBytes = new byte[1024 * 1024];
+        try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOut = new ByteArrayOutputStream())) {
+            zipOut.setLevel(Deflater.BEST_SPEED);
+            zipOut.putNextEntry(new ZipEntry("deflated.bin"));
+            zipOut.write(nullBytes);
+            zipOut.closeEntry();
+            zipOut.putNextEntry(new ZipEntry("stored.bin"));
+            zipOut.setLevel(Deflater.BEST_COMPRESSION);
+            zipOut.write(nullBytes);
+            zipOut.closeEntry();
+        } catch (IOException e) {
+            LOGGER.error("Unexpected error creating test zipped output", e);
+            return false;
+        }
+        try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(byteArrayOut.toByteArray()))) {
+            for (int i = 0; i < 2; i++) {
+                zipIn.getNextEntry();
+                while (zipIn.read(nullBytes) >= 0) {
+                }
+            }
+        } catch (ZipException e) {
+            return false;
+        } catch (IOException e) {
+            LOGGER.error("Unexpected error creating test zipped output", e);
+            return false;
+        }
+        return true;
     }
 }
