@@ -941,20 +941,21 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
             final FlowVariableRepository flowVariableRepository,
             final ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException  {
-        OutColList outFields = m_fields.getOutColFields();
+        final OutColList outFields = m_fields.getOutColFields();
         if (outFields.size() > 0) {
-            ColumnRearranger rearranger = createRearranger(
-                    table.getDataTableSpec(),
-                    flowVariableRepository, table.getRowCount(), exec);
-
-            return exec.createColumnRearrangeTable(table,
-                    rearranger, exec);
+            final ColumnRearranger rearranger =
+                createRearranger(table.getDataTableSpec(), flowVariableRepository, table.getRowCount(), exec);
+            return exec.createColumnRearrangeTable(table, rearranger, exec);
         } else {
-            CellFactory factory = new JavaSnippetCellFactory(this,
-                    table.getDataTableSpec(),
-                    flowVariableRepository, table.getRowCount(), exec);
-            for (DataRow row : table) {
-                factory.getCells(row);
+            final JavaSnippetCellFactory factory = new JavaSnippetCellFactory(this, table.getDataTableSpec(),
+                flowVariableRepository, table.getRowCount(), exec);
+
+            try {
+                for (final DataRow row : table) {
+                    factory.getCells(row);
+                }
+            } finally {
+                factory.afterProcessing();
             }
             return table;
         }
