@@ -1365,7 +1365,6 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             sumWeightPartition += attVal.m_sumWeight;
             sumYRemaining -= attVal.m_sumY;
             sumWeightRemaining -= attVal.m_sumWeight;
-            assert AbsIsSmallerEpsilon(sumYTotal - (sumYRemaining + sumYPartition)) : "The the Ys left and right of the split do not add up to the total sum of Y.";
             assert AbsIsSmallerEpsilon(sumWeightTotal - sumWeightRemaining - sumWeightPartition) : "The weights left and right of the split do not add up to the total weight.";
             assert sumWeightPartition > 0.0 : "The weight of the partition is zero.";
             assert sumWeightRemaining > 0.0 : "The weight of the remaining is zero.";
