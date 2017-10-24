@@ -51,15 +51,20 @@ package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.p
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
+import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
+import org.knime.base.node.mine.treeensemble2.model.pmml.ClassificationGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -84,28 +89,35 @@ import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperator;
 
 /**
- * Predictor for GBT regression models that imports its model from PMML prior to prediction.
+ * Predictor for GBT models that imports its model from PMML prior to prediction.
  *
  * @author Adrian Nembach, KNIME
+ * @param <M> the model type (usually {@link GradientBoostedTreesModel} or {@link MultiClassGradientBoostedTreesModel})
  */
-public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
+public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientBoostingModel> extends NodeModel {
 
     private TreeEnsemblePredictorConfiguration m_configuration;
+    private final boolean m_isRegression;
 
     /**
      * Default constructor
+     * @param isRegression boolean indicating if the node model expects a regression model
      */
-    public GradientBoostingPMMLPredictorNodeModel() {
+    public GradientBoostingPMMLPredictorNodeModel(final boolean isRegression) {
         super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
+        m_isRegression = isRegression;
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[0];
-        if (!pmmlSpec.getTargetCols().get(0).getType().isCompatible(DoubleValue.class)) {
-            throw new IllegalArgumentException("Currently only regression models are supported.");
+        DataType targetType = extractTargetType(pmmlSpec);
+        if (m_isRegression && !targetType.isCompatible(DoubleValue.class)) {
+            throw new InvalidSettingsException("This node expects a regression model.");
+        } else if (!m_isRegression && !targetType.isCompatible(StringValue.class)) {
+            throw new InvalidSettingsException("This node expectes a classification model.");
         }
         try {
             AbstractTreeModelPMMLTranslator.checkPMMLSpec(pmmlSpec);
@@ -115,12 +127,12 @@ public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
         TreeEnsembleModelPortObjectSpec modelSpec = translateSpec(pmmlSpec);
         String targetColName = modelSpec.getTargetColumn().getName();
         if (m_configuration == null) {
-            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(false, targetColName);
+            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(m_isRegression, targetColName);
         } else if (!m_configuration.isChangePredictionColumnName()) {
             m_configuration
                 .setPredictionColumnName(TreeEnsemblePredictorConfiguration.getPredictColumnName(targetColName));
         }
-        modelSpec.assertTargetTypeMatches(true);
+        modelSpec.assertTargetTypeMatches(m_isRegression);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
             new GradientBoostingPredictor<>(null, modelSpec, dataSpec, m_configuration);
@@ -131,10 +143,10 @@ public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
-        GradientBoostedTreesModel model = importModel(pmmlPO);
+        M model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
+        final GradientBoostingPredictor<M> pred =
             new GradientBoostingPredictor<>(model, translateSpec(pmmlPO.getSpec()), dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
@@ -145,10 +157,18 @@ public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
         return new TreeEnsembleModelPortObjectSpec(pmmlSpec.getDataTableSpec());
     }
 
-    private GradientBoostedTreesModel importModel(final PMMLPortObject pmmlPO) {
-        AbstractGBTModelPMMLTranslator<GradientBoostedTreesModel> pmmlTranslator;
-        if (pmmlPO.getSpec().getTargetCols().get(0).getType().isCompatible(DoubleValue.class)) {
-            pmmlTranslator = new RegressionGBTModelPMMLTranslator();
+    private DataType extractTargetType(final PMMLPortObjectSpec pmmlSpec) {
+        return pmmlSpec.getTargetCols().get(0).getType();
+    }
+
+    @SuppressWarnings("unchecked")
+    private M importModel(final PMMLPortObject pmmlPO) {
+        AbstractGBTModelPMMLTranslator<M> pmmlTranslator;
+        DataType targetType = extractTargetType(pmmlPO.getSpec());
+        if (targetType.isCompatible(DoubleValue.class)) {
+            pmmlTranslator = (AbstractGBTModelPMMLTranslator<M>)new RegressionGBTModelPMMLTranslator();
+        } else if (targetType.isCompatible(StringValue.class)) {
+            pmmlTranslator = (AbstractGBTModelPMMLTranslator<M>)new ClassificationGBTModelPMMLTranslator();
         } else {
             throw new IllegalArgumentException("Currently only regression models are supported.");
         }
@@ -173,7 +193,7 @@ public class GradientBoostingPMMLPredictorNodeModel extends NodeModel {
                 PMMLPortObject model =
                     (PMMLPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final GradientBoostingPredictor<GradientBoostedTreesModel> pred =
+                final GradientBoostingPredictor<M> pred =
                     new GradientBoostingPredictor<>(importModel(model), translateSpec(model.getSpec()),
                             dataSpec, m_configuration);
                 ColumnRearranger rearranger = pred.getPredictionRearranger();
