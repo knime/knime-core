@@ -118,7 +118,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
 
     private void addAggregationSegment(final Segmentation modelChain) {
         Segment seg = modelChain.addNewSegment();
-        seg.setId(Integer.toString(getGBTModel().getNrClasses()));
+        seg.setId(Integer.toString(getGBTModel().getNrClasses() + 1));
         seg.addNewTrue();
         addSoftmaxRegression(seg);
     }
@@ -149,7 +149,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
             OutputField p = output.addNewOutputField();
             p.setName(probabilityName(i));
             p.setOptype(OPTYPE.CONTINUOUS);
-            p.setDataType(DATATYPE.FLOAT);
+            p.setDataType(DATATYPE.DOUBLE);
             p.setFeature(RESULTFEATURE.PROBABILITY);
             p.setValue(getClassLabel(i));
         }
@@ -219,7 +219,7 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
         OutputField f = output.addNewOutputField();
         f.setName(logitName(idx));
         f.setOptype(OPTYPE.CONTINUOUS);
-        f.setDataType(DATATYPE.FLOAT);
+        f.setDataType(DATATYPE.DOUBLE);
         f.setFeature(RESULTFEATURE.PREDICTED_VALUE);
         // in 4.3 isFinalResult should be set to false
     }
