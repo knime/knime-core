@@ -126,7 +126,12 @@
       <node
             category-path="/analytics/mining/treeensemble/gradientboosting/regression"
             deprecated="false"
-            factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingPMMLPredictorNodeFactory">
+            factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingRegressionPMMLPredictorNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/gradientboosting/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingClassificationPMMLPredictorNodeFactory">
       </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
