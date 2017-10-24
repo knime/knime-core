@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingPredictorRegression.png"
 	type="Predictor">
-	<name>Gradient Boosted Trees Predictor (PMML)</name>
+	<name>Gradient Boosted Trees Predictor (Regression PMML)</name>
 
 	<shortDescription>
 		Applies regression from a Gradient Boosted Trees model that is provided in PMML format.
@@ -33,8 +33,8 @@
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Model">Gradient Boosted Trees model as produced by Gradient Boosted Trees Learner (Regression) node.</inPort>
-		<inPort index="1" name="Input Data">The data to predict</inPort>
-		<outPort name="Output Data" index="0">The predicted data</outPort>
+		<inPort index="0" name="Model">Gradient Boosted Trees model in PMML format</inPort>
+		<inPort index="1" name="Input Data">The data to predict.</inPort>
+		<outPort name="Output Data" index="0">The predicted data.</outPort>
 	</ports>
 </knimeNode>

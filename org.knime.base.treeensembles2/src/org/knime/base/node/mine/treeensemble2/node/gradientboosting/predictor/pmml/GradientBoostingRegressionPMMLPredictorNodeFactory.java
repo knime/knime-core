@@ -48,22 +48,24 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml;
 
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
-public class GradientBoostingPMMLPredictorNodeFactory extends NodeFactory<GradientBoostingPMMLPredictorNodeModel> {
+public class GradientBoostingRegressionPMMLPredictorNodeFactory extends
+NodeFactory<GradientBoostingPMMLPredictorNodeModel<GradientBoostedTreesModel>> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public GradientBoostingPMMLPredictorNodeModel createNodeModel() {
-        return new GradientBoostingPMMLPredictorNodeModel();
+    public GradientBoostingPMMLPredictorNodeModel<GradientBoostedTreesModel> createNodeModel() {
+        return new GradientBoostingPMMLPredictorNodeModel<GradientBoostedTreesModel>(true);
     }
 
     /**
@@ -78,8 +80,9 @@ public class GradientBoostingPMMLPredictorNodeFactory extends NodeFactory<Gradie
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GradientBoostingPMMLPredictorNodeModel> createNodeView(final int viewIndex,
-        final GradientBoostingPMMLPredictorNodeModel nodeModel) {
+    public NodeView<GradientBoostingPMMLPredictorNodeModel<GradientBoostedTreesModel>>
+    createNodeView(final int viewIndex,
+        final GradientBoostingPMMLPredictorNodeModel<GradientBoostedTreesModel> nodeModel) {
         return null;
     }
 
@@ -96,7 +99,7 @@ public class GradientBoostingPMMLPredictorNodeFactory extends NodeFactory<Gradie
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GradientBoostingPMMLPredictorNodeDialogPane();
+        return new GradientBoostingPMMLPredictorNodeDialogPane(true);
     }
 
 }
