@@ -65,8 +65,8 @@ public final class GradientBoostingPMMLPredictorNodeDialogPane extends NodeDialo
 
     /**
      *  */
-    public GradientBoostingPMMLPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(true, false);
+    public GradientBoostingPMMLPredictorNodeDialogPane(final boolean isRegression) {
+        m_predictorPanel = new TreeEnsemblePredictorPanel(isRegression, false);
         addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
     }
 
