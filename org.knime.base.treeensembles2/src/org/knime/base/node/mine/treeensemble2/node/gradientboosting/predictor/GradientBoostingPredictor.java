@@ -54,6 +54,7 @@ import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTre
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification.LKGradientBoostingPredictorCellFactory;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.regression.GradientBoostingPredictorCellFactory;
+import org.knime.base.node.mine.treeensemble2.node.predictor.AbstractPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -65,17 +66,8 @@ import org.knime.core.node.InvalidSettingsException;
  * @author Adrian Nembach, KNIME
  * @param <M> The type of gradient boosted trees model this predictor applies
  */
-public class GradientBoostingPredictor <M extends AbstractGradientBoostingModel>{
-    private final M m_model;
-
-    private final TreeEnsemblePredictorConfiguration m_config;
-
-    private final TreeEnsembleModelPortObjectSpec m_modelSpec;
-
-    private final ColumnRearranger m_predictionRearranger;
-
-    private final DataTableSpec m_dataSpec;
-
+public class GradientBoostingPredictor <M extends AbstractGradientBoostingModel>
+extends AbstractPredictor<M, TreeEnsembleModelPortObjectSpec, TreeEnsemblePredictorConfiguration>{
 
     /**
      * @param model the gradient boosted trees model to use for prediction
@@ -87,60 +79,34 @@ public class GradientBoostingPredictor <M extends AbstractGradientBoostingModel>
     public GradientBoostingPredictor(final M model,
         final TreeEnsembleModelPortObjectSpec modelSpec, final DataTableSpec dataSpec,
         final TreeEnsemblePredictorConfiguration config) throws InvalidSettingsException {
-        m_model = model;
-        m_modelSpec = modelSpec;
-        m_dataSpec = dataSpec;
-        m_config = config;
+        super(model, modelSpec, dataSpec, config);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ColumnRearranger createPredictionRearranger() throws InvalidSettingsException {
+        TreeEnsembleModelPortObjectSpec modelSpec = getModelSpec();
+        DataTableSpec dataSpec = getDataSpec();
+        ColumnRearranger predictionRearranger;
         boolean hasPossibleValues = modelSpec.getTargetColumnPossibleValueMap() != null;
         if (modelSpec.getTargetColumn().getType().isCompatible(DoubleValue.class)) {
-            m_predictionRearranger = new ColumnRearranger(dataSpec);
+            predictionRearranger = new ColumnRearranger(dataSpec);
             @SuppressWarnings("unchecked") GradientBoostingPredictor<GradientBoostedTreesModel> pred =
                     (GradientBoostingPredictor<GradientBoostedTreesModel>)this;
-            m_predictionRearranger.append(GradientBoostingPredictorCellFactory.createFactory(pred));
-        } else if (config.isAppendClassConfidences() && !hasPossibleValues) {
+            predictionRearranger.append(GradientBoostingPredictorCellFactory.createFactory(pred));
+        } else if (getConfiguration().isAppendClassConfidences() && !hasPossibleValues) {
             // can't add confidence columns (possible values unknown)
-            m_predictionRearranger = null;
+            predictionRearranger = null;
         } else {
-            m_predictionRearranger = new ColumnRearranger(dataSpec);
+            predictionRearranger = new ColumnRearranger(dataSpec);
             @SuppressWarnings("unchecked") GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> pred =
                     (GradientBoostingPredictor<MultiClassGradientBoostedTreesModel>)this;
-            m_predictionRearranger.append(LKGradientBoostingPredictorCellFactory.createFactory(pred));
+            predictionRearranger.append(LKGradientBoostingPredictorCellFactory.createFactory(pred));
         }
+        return null;
     }
 
-    /**
-     * @return the {@link ColumnRearranger} that should be used to calculate the output table
-     */
-    public ColumnRearranger getPredictionRearranger() {
-        return m_predictionRearranger;
-    }
 
-    /**
-     * @return the table spec of the input table
-     */
-    public DataTableSpec getDataSpec() {
-        return m_dataSpec;
-    }
-
-    /**
-     * @return the gradient boosted trees model
-     */
-    public M getModel() {
-        return m_model;
-    }
-
-    /**
-     * @return the spec of the gradient boosted trees model
-     */
-    public TreeEnsembleModelPortObjectSpec getModelSpec() {
-        return m_modelSpec;
-    }
-
-    /**
-     * @return the predictor config
-     */
-    public TreeEnsemblePredictorConfiguration getConfig() {
-        return m_config;
-    }
 }
