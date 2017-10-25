@@ -1,4 +1,4 @@
-package org.knime.openapi;
+package org.knime.core.openapi;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
