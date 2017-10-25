@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,16 +47,20 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor;
 
+import org.knime.base.node.mine.treeensemble2.node.predictor.AbstractPredictorConfiguration;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
+ * Configuration for a Simple Regression Tree Predictor node.
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME
  */
-public final class RegressionTreePredictorConfiguration {
+public final class RegressionTreePredictorConfiguration extends AbstractPredictorConfiguration {
+
+    private static final String CFG_TARGET_COLUMN_NAME = "targetColumnName";
 
     /**
      * @param targetColName
@@ -74,99 +78,50 @@ public final class RegressionTreePredictorConfiguration {
         return getPredictColumnName("");
     }
 
-    private String m_predictionColumnName;
     private String m_targetColumnName;
-    private boolean m_changePredictionColumnName;
 
     /**
      * @param targetColName name of the target column
      *
      */
     public RegressionTreePredictorConfiguration(final String targetColName) {
-        m_predictionColumnName = getPredictColumnName(targetColName);
+        super(targetColName);
     }
 
-
-    /** @return the predictionColumnName */
-    public String getPredictionColumnName() {
-        return m_predictionColumnName;
-    }
-
-    /** @param predictionColumnName the predictionColumnName to set */
-    public void setPredictionColumnName(final String predictionColumnName) {
-        m_predictionColumnName = predictionColumnName;
-    }
-
-    /**
-     * @return true if the default prediction column name is changed
-     */
-    public boolean isChangePredictionColumnName() {
-        return m_changePredictionColumnName;
-    }
-
-    /**
-     * Sets the prediction column name
-     *
-     * @param changePredictionColumnName
-     */
-    public void setChangePredictionColumnName(final boolean changePredictionColumnName) {
-        m_changePredictionColumnName = changePredictionColumnName;
-    }
-
-
-    /**
-     * Saves the settings
-     *
-     * @param settings
-     */
-    public void save(final NodeSettingsWO settings) {
-        settings.addString("predictionColumnName", m_predictionColumnName);
-        settings.addString("targetColumnName", m_targetColumnName);
-        settings.addBoolean("changePredictionColumnName", m_changePredictionColumnName);
-    }
-
-    /**
-     * Loads the settings.
-     * Use this method to load settings in the NodeDialog.
-     *
-     * @param settings
-     * @throws NotConfigurableException
-     */
-    public void loadInDialog(final NodeSettingsRO settings) throws NotConfigurableException {
-        String defColName = getPredictColumnName("");
-        m_predictionColumnName = settings.getString("predictionColumnName", defColName);
-        m_targetColumnName = settings.getString("targetColumnName", "");
-        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
-            m_predictionColumnName = defColName;
-        }
-        m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
-    }
-
-    /**
-     * Loads the settings.
-     * Use this method to load settings in the NodeModel.
-     *
-     * @param settings
-     * @throws InvalidSettingsException
-     */
-    public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_predictionColumnName = settings.getString("predictionColumnName");
-        m_targetColumnName = settings.getString("targetColumnName");
-        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
-            throw new InvalidSettingsException("Prediction column name must not be empty");
-        }
-        m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
-    }
 
     /**
      * Creates default configuration.
-     * Inteded for the use in configure to enable autoconfiguration of the node.
+     * Intended for the use in configure to enable autoconfiguration of the node.
      *
      * @param targetColName
      * @return default configuration
      */
     public static RegressionTreePredictorConfiguration createDefault(final String targetColName) {
         return new RegressionTreePredictorConfiguration(targetColName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void internalSave(final NodeSettingsWO settings) {
+        settings.addString(CFG_TARGET_COLUMN_NAME, m_targetColumnName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void internalLoadInDialog(final NodeSettingsRO settings) throws NotConfigurableException {
+        m_targetColumnName = settings.getString(CFG_TARGET_COLUMN_NAME, "");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void internalLoadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_targetColumnName = settings.getString(CFG_TARGET_COLUMN_NAME);
     }
 
 }
