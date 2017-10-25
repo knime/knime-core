@@ -269,6 +269,8 @@ public final class ImageRepository {
         ServerUploadWorkflow("icons/server_space/upload_wf.png"),
         /** ServerSpace Explorer Menu Icon: open in web portal. */
         ServerOpenInWebPortal("icons/server_space/open_in_web.png"),
+        /** ServerSpace Explorer Menu Icon: show API definition. */
+        ServerShowAPI("icons/server_space/show_api.png"),
         /** ServerSpace Explorer Menu Icon: edit meta info. */
         ServerPermissions("icons/server_space/key.png"),
         /** ServerSpace Explorer Menu Icon: create a snapshot. */
