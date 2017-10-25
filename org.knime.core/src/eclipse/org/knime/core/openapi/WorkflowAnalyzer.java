@@ -1,13 +1,5 @@
 package org.knime.core.openapi;
 
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.Map;
 
 import javax.json.Json;
@@ -18,31 +10,18 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
 
-import org.eclipse.equinox.app.IApplication;
-import org.eclipse.equinox.app.IApplicationContext;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
-import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.util.LockFailedException;
 
 /**
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
  * workflows when used as REST resources.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 3.5
  */
-public class WorkflowAnalyzer implements IApplication {
-	private final JsonWriterFactory m_writerFactory;
-
+public class WorkflowAnalyzer {
 	private static final WorkflowAnalyzer INSTANCE = new WorkflowAnalyzer();
 
 	/**
@@ -52,14 +31,6 @@ public class WorkflowAnalyzer implements IApplication {
 	 */
 	public static final WorkflowAnalyzer getInstance() {
 		return INSTANCE;
-	}
-
-	/**
-	 * Only used by the Eclipse framework. Use {@link #getInstance()} instead.
-	 */
-	public WorkflowAnalyzer() {
-		Map<String, Object> props = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true);
-		m_writerFactory = Json.createWriterFactory(props);
 	}
 
 	/**
@@ -162,64 +133,5 @@ public class WorkflowAnalyzer implements IApplication {
 		}
 
 		return node;
-	}
-
-	private boolean writeOpenAPIInfo(final Path workflowDir) throws IOException, InvalidSettingsException,
-			CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
-		WorkflowLoadHelper lh = new WorkflowLoadHelper(workflowDir.toFile());
-		WorkflowManager wfm = WorkflowManager.loadProject(workflowDir.toFile(), new ExecutionMonitor(), lh)
-				.getWorkflowManager();
-
-		JsonObject api = createInputParametersDescription(wfm);
-
-		if (!api.isEmpty()) {
-			try (JsonWriter out = m_writerFactory
-					.createWriter(Files.newOutputStream(workflowDir.resolve("input-parameters.json")))) {
-				out.write(api);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public Object start(final IApplicationContext context) throws Exception {
-		String[] args = (String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-
-		if (args.length != 1) {
-		    System.out.println("Usage: OpenAPIWorkflowAnalyzer <dir>");
-		    System.out.println(" <dir>: a directory that is recursivly scanned for workflow");
-		    return IApplication.EXIT_OK;
-		}
-
-		Path root = Paths.get(args[0]);
-		Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException {
-				Path workflowFile = dir.resolve(WorkflowPersistor.WORKFLOW_FILE);
-				if (Files.exists(workflowFile)) {
-					try {
-						if (writeOpenAPIInfo(dir)) {
-							System.out.println("Created OpenAPI information for " + dir);
-						} else {
-							System.out.println("No input node in " + dir);
-						}
-					} catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
-							| LockFailedException ex) {
-						System.err.println("Could not analyze " + dir + ": " + ex.getMessage());
-					}
-					return FileVisitResult.SKIP_SUBTREE;
-				} else {
-					return FileVisitResult.CONTINUE;
-				}
-			}
-		});
-
-		return IApplication.EXIT_OK;
-	}
-
-	@Override
-	public void stop() {
 	}
 }
