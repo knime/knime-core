@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,7 +49,6 @@ package org.knime.base.node.mine.treeensemble2.node.predictor;
 
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -58,9 +57,16 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME
  */
-public final class TreeEnsemblePredictorConfiguration {
+public final class TreeEnsemblePredictorConfiguration extends AbstractPredictorConfiguration {
+
+    private static final String CFG_APPEND_PREDICTION_CONFIDENCE = "appendPredictionConfidence";
+    private static final String CFG_APPEND_CLASS_CONFIDENCES = "appendClassConfidences";
+    private static final String CFG_SUFFIX_FOR_CLASS_PROBABILITIES = "suffixForClassProbabilities";
+    private static final String CFG_APPEND_MODEL_COUNT = "appendModelCount";
+    private static final String CFG_USE_SOFT_VOTING = "useSoftVoting";
 
     /**
      * @param targetColName name of the target column
@@ -89,10 +95,6 @@ public final class TreeEnsemblePredictorConfiguration {
 
     private boolean m_appendModelCount = false;
 
-    private String m_predictionColumnName;
-
-    private boolean m_changePredictionColumnName = false;
-
     private boolean m_useSoftVoting = false;
 
     /**
@@ -101,8 +103,8 @@ public final class TreeEnsemblePredictorConfiguration {
      *
      */
     public TreeEnsemblePredictorConfiguration(final boolean isRegression, final String targetColName) {
+        super(targetColName);
         m_isRegression = isRegression;
-        m_predictionColumnName = getPredictColumnName(targetColName);
     }
 
     /**
@@ -134,20 +136,6 @@ public final class TreeEnsemblePredictorConfiguration {
     }
 
     /**
-     * @return the predictionColumnName
-     */
-    public String getPredictionColumnName() {
-        return m_predictionColumnName;
-    }
-
-    /**
-     * @param predictionColumnName the predictionColumnName to set
-     */
-    public void setPredictionColumnName(final String predictionColumnName) {
-        m_predictionColumnName = predictionColumnName;
-    }
-
-    /**
      * @return the suffix for class probability columns
      */
     public String getSuffixForClassProbabilities() {
@@ -173,20 +161,6 @@ public final class TreeEnsemblePredictorConfiguration {
      */
     public void setAppendModelCount(final boolean appendModelCount) {
         m_appendModelCount = appendModelCount;
-    }
-
-    /**
-     * @return boolean to indicate if the prediction column name is changed
-     */
-    public boolean isChangePredictionColumnName() {
-        return m_changePredictionColumnName;
-    }
-
-    /**
-     * @param changePredictionColumnName boolean that indicates whether the prediction column name is changed
-     */
-    public void setChangePredictionColumnName(final boolean changePredictionColumnName) {
-        m_changePredictionColumnName = changePredictionColumnName;
     }
 
     /**
@@ -220,14 +194,13 @@ public final class TreeEnsemblePredictorConfiguration {
      * Saves the configuration settings
      * @param settings
      */
-    public void save(final NodeSettingsWO settings) {
-        settings.addBoolean("appendPredictionConfidence", m_appendPredictionConfidence);
-        settings.addBoolean("appendClassConfidences", m_appendClassConfidences);
-        settings.addBoolean("appendModelCount", m_appendModelCount);
-        settings.addString("predictionColumnName", m_predictionColumnName);
-        settings.addBoolean("changePredictionColumnName", m_changePredictionColumnName);
-        settings.addString("suffixForClassProbabilities", m_suffixForClassProbabilities);
-        settings.addBoolean("useSoftVoting", m_useSoftVoting);
+    @Override
+    public void internalSave(final NodeSettingsWO settings) {
+        settings.addBoolean(CFG_APPEND_PREDICTION_CONFIDENCE, m_appendPredictionConfidence);
+        settings.addBoolean(CFG_APPEND_CLASS_CONFIDENCES, m_appendClassConfidences);
+        settings.addBoolean(CFG_APPEND_MODEL_COUNT, m_appendModelCount);
+        settings.addString(CFG_SUFFIX_FOR_CLASS_PROBABILITIES, m_suffixForClassProbabilities);
+        settings.addBoolean(CFG_USE_SOFT_VOTING, m_useSoftVoting);
     }
 
     /**
@@ -236,19 +209,14 @@ public final class TreeEnsemblePredictorConfiguration {
      * @param settings
      * @throws NotConfigurableException
      */
-    public void loadInDialog(final NodeSettingsRO settings) throws NotConfigurableException {
-        m_appendPredictionConfidence = settings.getBoolean("appendPredictionConfidence", true);
-        m_appendClassConfidences = settings.getBoolean("appendClassConfidences", false);
-        String defColName = getDefPredictColumnName();
-        m_predictionColumnName = settings.getString("predictionColumnName", defColName);
-        m_appendModelCount = settings.getBoolean("appendModelCount", false);
-        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
-            m_predictionColumnName = defColName;
-        }
+    @Override
+    public void internalLoadInDialog(final NodeSettingsRO settings) throws NotConfigurableException {
+        m_appendPredictionConfidence = settings.getBoolean(CFG_APPEND_PREDICTION_CONFIDENCE, true);
+        m_appendClassConfidences = settings.getBoolean(CFG_APPEND_CLASS_CONFIDENCES, false);
+        m_appendModelCount = settings.getBoolean(CFG_APPEND_MODEL_COUNT, false);
 
-        m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
-        m_suffixForClassProbabilities = settings.getString("suffixForClassProbabilities", "");
-        m_useSoftVoting = settings.getBoolean("useSoftVoting", false);
+        m_suffixForClassProbabilities = settings.getString(CFG_SUFFIX_FOR_CLASS_PROBABILITIES, "");
+        m_useSoftVoting = settings.getBoolean(CFG_USE_SOFT_VOTING, false);
     }
 
     /**
@@ -257,19 +225,15 @@ public final class TreeEnsemblePredictorConfiguration {
      * @param settings
      * @throws InvalidSettingsException
      */
-    public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_appendPredictionConfidence = settings.getBoolean("appendPredictionConfidence");
-        m_appendClassConfidences = settings.getBoolean("appendClassConfidences");
-        m_predictionColumnName = settings.getString("predictionColumnName");
-        m_appendModelCount = settings.getBoolean("appendModelCount");
-        if (StringUtils.isEmpty(m_predictionColumnName)) {
-            throw new InvalidSettingsException("Prediction column name must not be empty");
-        }
+    @Override
+    public void internalLoadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_appendPredictionConfidence = settings.getBoolean(CFG_APPEND_PREDICTION_CONFIDENCE);
+        m_appendClassConfidences = settings.getBoolean(CFG_APPEND_CLASS_CONFIDENCES);
+        m_appendModelCount = settings.getBoolean(CFG_APPEND_MODEL_COUNT);
 
-        m_changePredictionColumnName = settings.getBoolean("changePredictionColumnName", true);
-        m_suffixForClassProbabilities = settings.getString("suffixForClassProbabilities");
+        m_suffixForClassProbabilities = settings.getString(CFG_SUFFIX_FOR_CLASS_PROBABILITIES);
         // added in 3.3
-        m_useSoftVoting = settings.getBoolean("useSoftVoting", false);
+        m_useSoftVoting = settings.getBoolean(CFG_USE_SOFT_VOTING, false);
     }
 
     /**
