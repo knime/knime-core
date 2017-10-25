@@ -377,7 +377,7 @@ public class HistogramColumn implements Cloneable {
              */
             @Override
             public String getTooltip() {
-                return "|[" + num(getDef().getFirst()) + ", " + num(getDef().getSecond()) + ">|= " + getCount()
+                return "|[" + num(getDef().getFirst()) + "; " + num(getDef().getSecond()) + ">|= " + getCount()
                     + " (HiLited: " + getHiLited() + ")";
             }
 
