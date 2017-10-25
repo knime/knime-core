@@ -48,13 +48,14 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.regression;
 
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictorNodeDialogPane;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
 public class GradientBoostingPredictorNodeFactory extends NodeFactory<GradientBoostingPredictorNodeModel> {
 
@@ -96,7 +97,7 @@ public class GradientBoostingPredictorNodeFactory extends NodeFactory<GradientBo
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GradientBoostingPredictorNodeDialogPane();
+        return new GradientBoostingPredictorNodeDialogPane(true);
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
- *  Website: http://www.knime.com; Email: contact@knime.com
+ *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -45,7 +45,7 @@
  * History
  *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification;
+package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor;
 
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorPanel;
 import org.knime.core.node.InvalidSettingsException;
@@ -57,16 +57,17 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class GradientBoostingClassificationPredictorNodeDialogPane extends NodeDialogPane {
+public final class GradientBoostingPredictorNodeDialogPane extends NodeDialogPane {
 
     private final TreeEnsemblePredictorPanel m_predictorPanel;
 
     /**
+     * @param isRegression whether the dialog is for a regression or classification node
      *  */
-    public GradientBoostingClassificationPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(false, false);
+    public GradientBoostingPredictorNodeDialogPane(final boolean isRegression) {
+        m_predictorPanel = new TreeEnsemblePredictorPanel(isRegression, false);
         addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
     }
 

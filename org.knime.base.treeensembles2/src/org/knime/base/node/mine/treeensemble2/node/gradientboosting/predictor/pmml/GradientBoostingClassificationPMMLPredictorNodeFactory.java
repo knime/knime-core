@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml;
 
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictorNodeDialogPane;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -98,7 +99,7 @@ NodeFactory<GradientBoostingPMMLPredictorNodeModel<MultiClassGradientBoostedTree
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GradientBoostingPMMLPredictorNodeDialogPane(false);
+        return new GradientBoostingPredictorNodeDialogPane(false);
     }
 
 }

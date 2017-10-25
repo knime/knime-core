@@ -48,15 +48,17 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification;
 
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictorNodeDialogPane;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME
  */
-public class GradientBoostingClassificationPredictorNodeFactory extends NodeFactory<GradientBoostingClassificationPredictorNodeModel> {
+public class GradientBoostingClassificationPredictorNodeFactory
+extends NodeFactory<GradientBoostingClassificationPredictorNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -96,7 +98,7 @@ public class GradientBoostingClassificationPredictorNodeFactory extends NodeFact
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GradientBoostingClassificationPredictorNodeDialogPane();
+        return new GradientBoostingPredictorNodeDialogPane(false);
     }
 
 }
