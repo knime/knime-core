@@ -64,6 +64,7 @@ import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.data.time.duration.DurationValue;
+import org.knime.core.data.time.period.PeriodValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -104,6 +105,26 @@ final class DurationToNumberNodeModel extends SimpleStreamableFunctionNodeModel 
      * {@inheritDoc}
      */
     @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        final DataColumnSpec columnSpec = inSpecs[0].getColumnSpec(m_colSelectModel.getStringValue());
+        if (columnSpec == null) {
+            throw new InvalidSettingsException(
+                "No column '" + m_colSelectModel.getStringValue() + "' in the input table found!");
+        }
+        if (!columnSpec.getType().isCompatible(DurationValue.class)) {
+            if (columnSpec.getType().isCompatible(PeriodValue.class)) {
+                throw new InvalidSettingsException(
+                    "The selected column is a date-based duration, but must be time-based!");
+            }
+            throw new InvalidSettingsException("The selected column must be a time-based duration!");
+        }
+        return super.configure(inSpecs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
         final ColumnRearranger rearranger = new ColumnRearranger(spec);
 
@@ -119,9 +140,8 @@ final class DurationToNumberNodeModel extends SimpleStreamableFunctionNodeModel 
 
         final DataColumnSpec colSpec = new UniqueNameGenerator(spec)
             .newColumn((m_durationFieldSelectModel.getStringValue()), exact ? DoubleCell.TYPE : LongCell.TYPE);
-        final CellFactory cellFac;
-            cellFac = new ExtractDurationSingleFieldCellFactory(spec.findColumnIndex(m_colSelectModel.getStringValue()),
-                exact, colSpec);
+        final CellFactory cellFac = new ExtractDurationSingleFieldCellFactory(
+            spec.findColumnIndex(m_colSelectModel.getStringValue()), exact, colSpec);
         rearranger.append(cellFac);
         return rearranger;
     }
