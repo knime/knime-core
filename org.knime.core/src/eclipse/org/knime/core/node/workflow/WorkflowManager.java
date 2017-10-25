@@ -8223,12 +8223,14 @@ public final class WorkflowManager extends NodeContainer
                 } else {
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
-                directoryReference.getFile().mkdirs();
+                final File workflowDir = directoryReference.getFile();
+                workflowDir.mkdirs();
                 boolean isTemplate = getTemplateInformation().getRole().equals(Role.Template);
                 if (isTemplate) {
                     FileWorkflowPersistor.saveAsTemplate(this, directoryReference, exec, saveHelper);
                 } else {
                     FileWorkflowPersistor.save(this, directoryReference, exec, saveHelper);
+                    WorkflowSaveHook.runHooks(this, saveHelper.isSaveData(), workflowDir);
                 }
             } finally {
                 directoryReference.writeUnlock();
