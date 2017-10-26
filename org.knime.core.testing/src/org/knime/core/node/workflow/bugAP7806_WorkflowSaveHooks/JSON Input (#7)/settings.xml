@@ -6,27 +6,15 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<config key="rowIndices">
-<entry key="array-size" type="xint" value="0"/>
-</config>
-<config key="columnIndices">
-<entry key="array-size" type="xint" value="0"/>
-</config>
-<config key="values">
-<entry key="array-size" type="xint" value="0"/>
-</config>
-<entry key="rowIdPrefix" type="xstring" value="Row"/>
-<entry key="rowIdSuffix" type="xstring" value=""/>
-<entry key="rowIdStartValue" type="xint" value="0"/>
-<entry key="highlightOutputTable" type="xboolean" value="false"/>
-<config key="columnProperties"/>
+<entry key="parameterName" type="xstring" value="json-input"/>
+<entry key="json" type="xstring" value="{&quot;string&quot;:&quot;value&quot;,&quot;number&quot;:42,&quot;object&quot;:{&quot;a&quot;:&quot;b&quot;},&quot;array&quot;:[1,2,3]}"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="CONFIGURED"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"/>
-<entry key="node-name" type="xstring" value="Table Creator"/>
-<entry key="node-bundle-name" type="xstring" value="KNIME Base Nodes"/>
-<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.base"/>
+<entry key="factory" type="xstring" value="org.knime.json.node.input.JSONInputNodeFactory"/>
+<entry key="node-name" type="xstring" value="JSON Input"/>
+<entry key="node-bundle-name" type="xstring" value="JSON related functionality for KNIME"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.json"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME GmbH, Konstanz, Germany"/>
 <entry key="node-bundle-version" type="xstring" value="3.5.0.qualifier"/>
 <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
@@ -34,7 +22,7 @@
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-version" type="xstring" value="0.0.0"/>
 <config key="factory_settings"/>
-<entry key="name" type="xstring" value="Table Creator"/>
+<entry key="name" type="xstring" value="JSON Input"/>
 <entry key="hasContent" type="xboolean" value="false"/>
 <entry key="isInactive" type="xboolean" value="false"/>
 <config key="ports">

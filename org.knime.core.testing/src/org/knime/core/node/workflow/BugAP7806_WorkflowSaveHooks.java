@@ -45,9 +45,17 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonWriter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -55,26 +63,30 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.openapi.OpenAPIDefinitionGenerator;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.TestWorkflowSaveHook;
 
 /**
  * Runs the workflow save hooks (which counts nodes in a workflow ...)
+ *
  * @author wiswedel, University of Konstanz
  */
 public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
 
     private File m_workflowDir;
+
     private File m_testFile;
-    private NodeID m_tableCreator_3;
+
+    private NodeID m_jsonInput;
 
     @Before
     public void setUp() throws Exception {
         TestWorkflowSaveHook.setEnabled(true);
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
-        m_testFile = new File(new File(m_workflowDir,
-            WorkflowSaveHook.ARTIFACTS_FOLDER_NAME), TestWorkflowSaveHook.OUT_FILE);
+        m_testFile =
+            new File(new File(m_workflowDir, WorkflowSaveHook.ARTIFACTS_FOLDER_NAME), TestWorkflowSaveHook.OUT_FILE);
         initWorkflowFromTemp();
     }
 
@@ -83,19 +95,18 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         WorkflowLoadResult loadResult = loadWorkflow(m_workflowDir, new ExecutionMonitor());
         setManager(loadResult.getWorkflowManager());
         NodeID baseID = getManager().getID();
-        m_tableCreator_3 = new NodeID(baseID, 3);
+        m_jsonInput = new NodeID(baseID, 7);
         return loadResult;
     }
 
     /** Just load and save with basic checks. */
     @Test
     public void testHookUnmodified() throws Exception {
-        Assert.assertFalse("test file '"  + m_testFile.getAbsolutePath()
-            + "' not supposed to exist", m_testFile.isFile());
+        Assert.assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
+            m_testFile.isFile());
         getManager().setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        Assert.assertTrue("test file '"  + m_testFile.getAbsolutePath()
-        + "' supposed to exist", m_testFile.isFile());
+        Assert.assertTrue("test file '" + m_testFile.getAbsolutePath() + "' supposed to exist", m_testFile.isFile());
         Assert.assertThat("Wrong number in test file", readFileContent(), is(3));
     }
 
@@ -104,7 +115,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
     public void testHookAfterNodeDeletion() throws Exception {
         getManager().setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        getManager().removeNode(m_tableCreator_3);
+        getManager().removeNode(m_jsonInput);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
         Assert.assertThat("Wrong number in test file", readFileContent(), is(2));
     }
@@ -114,11 +125,11 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
     public void testBrokenHook() throws Exception {
         getManager().setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        getManager().removeNode(m_tableCreator_3);
+        getManager().removeNode(m_jsonInput);
         TestWorkflowSaveHook.setWillFail(true);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        Assert.assertFalse("test file '"  + m_testFile.getAbsolutePath()
-        + "' not supposed to exist", m_testFile.isFile());
+        Assert.assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
+            m_testFile.isFile());
     }
 
     /** Read the file content and return the number contained in the file. */
@@ -140,4 +151,41 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         FileUtil.deleteRecursively(m_workflowDir);
     }
 
+    /**
+     * Checks if the OpenAPI definition for the input parameters is generated correctly.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testOpenAPIGeneration() throws Exception {
+        getManager().setDirty();
+        getManager().save(m_workflowDir, new ExecutionMonitor(), true);
+
+        Path openApiFragmentFile = m_workflowDir.toPath().resolve(WorkflowSaveHook.ARTIFACTS_FOLDER_NAME)
+                .resolve(OpenAPIDefinitionGenerator.INPUT_PARAMETERS_FILE);
+
+        String actualInputParameters;
+        try (JsonReader reader = Json.createReader(Files.newInputStream(openApiFragmentFile))) {
+            JsonObject o = reader.readObject();
+
+            try (StringWriter sw = new StringWriter(); JsonWriter writer = Json.createWriter(sw)) {
+                writer.write(o);
+                actualInputParameters = sw.toString();
+            }
+        }
+
+        String expectedInputParameters;
+        try (JsonReader reader = Json.createReader(
+            Files.newInputStream(m_workflowDir.toPath().resolve("openapi-input-parameters-reference.json")))) {
+            JsonObject o = reader.readObject();
+
+            try (StringWriter sw = new StringWriter(); JsonWriter writer = Json.createWriter(sw)) {
+                writer.write(o);
+                expectedInputParameters = sw.toString();
+            }
+        }
+
+        assertThat("Unexpected input parameters definition written", actualInputParameters,
+            is(expectedInputParameters));
+    }
 }

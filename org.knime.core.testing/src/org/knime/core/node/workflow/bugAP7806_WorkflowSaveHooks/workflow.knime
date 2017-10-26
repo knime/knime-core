@@ -7,8 +7,8 @@
 <config key="authorInformation">
 <entry key="authored-by" type="xstring" value="wiswedel"/>
 <entry key="authored-when" type="xstring" value="2017-10-25 22:08:44 +0200"/>
-<entry key="lastEdited-by" type="xstring" value="wiswedel"/>
-<entry key="lastEdited-when" type="xstring" value="2017-10-25 22:20:38 +0200"/>
+<entry key="lastEdited-by" type="xstring" value="thor"/>
+<entry key="lastEdited-when" type="xstring" value="2017-10-26 11:38:42 +0200"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="CONFIGURED"/>
@@ -30,9 +30,9 @@
 </config>
 </config>
 <config key="nodes">
-<config key="node_1">
-<entry key="id" type="xint" value="1"/>
-<entry key="node_settings_file" type="xstring" value="Table Creator (#1)/settings.xml"/>
+<config key="node_5">
+<entry key="id" type="xint" value="5"/>
+<entry key="node_settings_file" type="xstring" value="Integer Input (#5)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
@@ -41,14 +41,14 @@
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="184"/>
 <entry key="1" type="xint" value="157"/>
-<entry key="2" type="xint" value="92"/>
-<entry key="3" type="xint" value="82"/>
+<entry key="2" type="xint" value="86"/>
+<entry key="3" type="xint" value="79"/>
 </config>
 </config>
 </config>
-<config key="node_2">
-<entry key="id" type="xint" value="2"/>
-<entry key="node_settings_file" type="xstring" value="Table Creator (#2)/settings.xml"/>
+<config key="node_6">
+<entry key="id" type="xint" value="6"/>
+<entry key="node_settings_file" type="xstring" value="String Input (#6)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
@@ -57,14 +57,14 @@
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="304"/>
 <entry key="1" type="xint" value="277"/>
-<entry key="2" type="xint" value="92"/>
-<entry key="3" type="xint" value="82"/>
+<entry key="2" type="xint" value="81"/>
+<entry key="3" type="xint" value="79"/>
 </config>
 </config>
 </config>
-<config key="node_3">
-<entry key="id" type="xint" value="3"/>
-<entry key="node_settings_file" type="xstring" value="Table Creator (#3)/settings.xml"/>
+<config key="node_7">
+<entry key="id" type="xint" value="7"/>
+<entry key="node_settings_file" type="xstring" value="JSON Input (#7)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
 <entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
@@ -73,8 +73,8 @@
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="424"/>
 <entry key="1" type="xint" value="397"/>
-<entry key="2" type="xint" value="92"/>
-<entry key="3" type="xint" value="82"/>
+<entry key="2" type="xint" value="79"/>
+<entry key="3" type="xint" value="79"/>
 </config>
 </config>
 </config>
