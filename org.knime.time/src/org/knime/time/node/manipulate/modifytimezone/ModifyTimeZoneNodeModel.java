@@ -164,10 +164,13 @@ final class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
         if (!m_hasValidatedConfiguration) {
             throw new InvalidSettingsException("Node must be configured!");
         }
-        DataTableSpec in = inSpecs[0];
-        ColumnRearranger r = createColumnRearranger(in);
-        DataTableSpec out = r.createSpec();
-        return new DataTableSpec[]{out};
+        final String modification = m_modifyAction.getStringValue();
+        if (!(modification.equals(MODIFY_OPTION_SET) || modification.equals(MODIFY_OPTION_SHIFT)
+            || modification.equals(MODIFY_OPTION_REMOVE))) {
+            throw new InvalidSettingsException("Unknow modification operation '" + m_modifyAction.getStringValue()
+                + "'. Most likely the parameter 'modify_select' was controlled by an invalid flow variable.");
+        }
+        return super.configure(inSpecs);
     }
 
     /** {@inheritDoc} */
