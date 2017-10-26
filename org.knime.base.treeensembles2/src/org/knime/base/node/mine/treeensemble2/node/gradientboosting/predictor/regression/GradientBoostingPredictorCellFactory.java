@@ -91,7 +91,7 @@ public class GradientBoostingPredictorCellFactory extends SingleCellFactory {
         DataTableSpec learnSpec = modelSpec.getLearnTableSpec();
         DataTableSpec testSpec = predictor.getDataSpec();
         UniqueNameGenerator nameGen = new UniqueNameGenerator(testSpec);
-        DataColumnSpec newColSpec = nameGen.newColumn(predictor.getConfig().getPredictionColumnName(), DoubleCell.TYPE);
+        DataColumnSpec newColSpec = nameGen.newColumn(predictor.getConfiguration().getPredictionColumnName(), DoubleCell.TYPE);
         return new GradientBoostingPredictorCellFactory(newColSpec, predictor.getModel(), learnSpec,
             modelSpec.calculateFilterIndices(testSpec));
     }

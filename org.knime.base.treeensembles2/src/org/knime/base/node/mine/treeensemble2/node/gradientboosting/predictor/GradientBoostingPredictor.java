@@ -105,7 +105,7 @@ extends AbstractPredictor<M, TreeEnsembleModelPortObjectSpec, TreeEnsemblePredic
                     (GradientBoostingPredictor<MultiClassGradientBoostedTreesModel>)this;
             predictionRearranger.append(LKGradientBoostingPredictorCellFactory.createFactory(pred));
         }
-        return null;
+        return predictionRearranger;
     }
 
 

@@ -102,7 +102,7 @@ public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory 
     }
 
     public static LKGradientBoostingPredictorCellFactory createFactory(final GradientBoostingPredictor<MultiClassGradientBoostedTreesModel> predictor) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config = predictor.getConfig();
+        TreeEnsemblePredictorConfiguration config = predictor.getConfiguration();
         DataTableSpec testSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
         ArrayList<DataColumnSpec> newColSpecs = new ArrayList<DataColumnSpec>();
