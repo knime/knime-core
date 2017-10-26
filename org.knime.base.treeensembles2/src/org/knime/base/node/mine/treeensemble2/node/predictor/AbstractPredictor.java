@@ -107,6 +107,9 @@ implements Predictor<M, S, C> {
 
     @Override
     public M getModel() {
+        if (m_model == null) {
+            throw new IllegalStateException("There is currently no model available.");
+        }
         return m_model;
     }
 
