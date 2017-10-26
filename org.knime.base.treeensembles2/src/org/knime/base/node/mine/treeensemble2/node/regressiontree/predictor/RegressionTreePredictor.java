@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,97 +47,42 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor;
 
-import java.util.Map;
-
-import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
+import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
+import org.knime.base.node.mine.treeensemble2.node.predictor.AbstractPredictor;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME
  */
-public final class RegressionTreePredictor {
-
-    private final RegressionTreeModelPortObjectSpec m_modelSpec;
-
-    private final RegressionTreeModelPortObject m_modelObject;
-
-    private final DataTableSpec m_dataSpec;
-
-    private final RegressionTreePredictorConfiguration m_configuration;
-
-    private final ColumnRearranger m_predictionRearranger;
-
-    private RowSample[] m_modelLearnRowSamples;
-
-    private Map<RowKey, Integer> m_rowKeyToLearnIndex;
+public final class RegressionTreePredictor extends
+AbstractPredictor<RegressionTreeModel, RegressionTreeModelPortObjectSpec, RegressionTreePredictorConfiguration> {
 
     /**
-     * @param modelSpec
-     * @param modelObject
-     * @param dataSpec
-     * @param configuration
+     * @param model the {@link RegressionTreeModel}
+     * @param modelSpec the spec of <b>model</b>
+     * @param dataSpec  of the input table
+     * @param configuration of the predictor
      * @throws InvalidSettingsException
      */
-    public RegressionTreePredictor(final RegressionTreeModelPortObjectSpec modelSpec,
-                                 final RegressionTreeModelPortObject modelObject, final DataTableSpec dataSpec,
-                                 final RegressionTreePredictorConfiguration configuration)
+    public RegressionTreePredictor(final RegressionTreeModel model, final RegressionTreeModelPortObjectSpec modelSpec,
+        final DataTableSpec dataSpec,
+        final RegressionTreePredictorConfiguration configuration)
     throws InvalidSettingsException {
-        m_modelSpec = modelSpec;
-        m_modelObject = modelObject;
-        m_dataSpec = dataSpec;
-        m_configuration = configuration;
-        boolean hasPossibleValues = modelSpec.getTargetColumnPossibleValueMap() != null;
-        m_predictionRearranger = new ColumnRearranger(dataSpec);
-        m_predictionRearranger.append(RegressionTreePredictorCellFactory.createFactory(this));
-
+        super(model, modelSpec, dataSpec, configuration);
     }
-
-//    public void setOutofBagFilter(final RowSample[] modelRowSamples, final TreeTargetColumnData targetColumnData) {
-//        if (modelRowSamples == null || targetColumnData == null) {
-//            throw new NullPointerException("Argument must not be null.");
-//        }
-//        final int nrRows = targetColumnData.getNrRows();
-//        Map<RowKey, Integer> learnItemMap = new HashMap<RowKey, Integer>((int)(nrRows / 0.75 + 1));
-//        for (int i = 0; i < nrRows; i++) {
-//            RowKey key = targetColumnData.getRowKeyFor(i);
-//            learnItemMap.put(key, i);
-//        }
-//        m_modelLearnRowSamples = modelRowSamples;
-//        m_rowKeyToLearnIndex = learnItemMap;
-//    }
 
     /**
-     * @return the rearranger for the appended columns or null if the out spec can't be determined (during configure with
-     *         an unknown number of targets).
+     * {@inheritDoc}
      */
-    public ColumnRearranger getPredictionRearranger() {
-        return m_predictionRearranger;
-    }
-
-    /** @return the configuration */
-    public RegressionTreePredictorConfiguration getConfiguration() {
-        return m_configuration;
-    }
-
-    /** @return the data */
-    public DataTableSpec getDataSpec() {
-        return m_dataSpec;
-    }
-
-    /** @return the modelObject */
-    public RegressionTreeModelPortObject getModelObject() {
-        return m_modelObject;
-    }
-
-    /** @return the modelSpec */
-    public RegressionTreeModelPortObjectSpec getModelSpec() {
-        return m_modelSpec;
+    @Override
+    protected ColumnRearranger createPredictionRearranger() throws InvalidSettingsException {
+        ColumnRearranger  predictionRearranger = new ColumnRearranger(getDataSpec());
+        predictionRearranger.append(RegressionTreePredictorCellFactory.createFactory(this));
+        return predictionRearranger;
     }
 
 }

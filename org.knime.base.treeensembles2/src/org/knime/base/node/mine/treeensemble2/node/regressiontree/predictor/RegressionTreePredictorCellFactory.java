@@ -54,7 +54,6 @@ import java.util.List;
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
-import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
@@ -112,8 +111,7 @@ public final class RegressionTreePredictorCellFactory extends AbstractCellFactor
     /** {@inheritDoc} */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        RegressionTreeModelPortObject modelObject = m_predictor.getModelObject();
-        final RegressionTreeModel treeModel = modelObject.getModel();
+        final RegressionTreeModel treeModel = m_predictor.getModel();
         int size = 1;
         DataCell[] result = new DataCell[size];
         DataRow filterRow = new FilterColumnRow(row, m_learnColumnInRealDataIndices);

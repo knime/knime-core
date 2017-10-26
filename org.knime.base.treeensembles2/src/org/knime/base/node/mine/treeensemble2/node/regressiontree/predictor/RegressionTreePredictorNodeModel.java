@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,7 +68,7 @@ import org.knime.core.node.port.PortType;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME
  */
 final class RegressionTreePredictorNodeModel extends NodeModel {
 
@@ -89,11 +89,11 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
         if (m_configuration == null) {
             m_configuration = RegressionTreePredictorConfiguration.createDefault(targetColName);
         } else if (!m_configuration.isChangePredictionColumnName()) {
-            m_configuration.setPredictionColumnName(RegressionTreePredictorConfiguration.getPredictColumnName(targetColName));
+            m_configuration.setPredictionColumnName(
+                RegressionTreePredictorConfiguration.getPredictColumnName(targetColName));
         }
-//        modelSpec.assertTargetTypeMatches(true);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final RegressionTreePredictor pred = new RegressionTreePredictor(modelSpec, null, dataSpec, m_configuration);
+        final RegressionTreePredictor pred = new RegressionTreePredictor(null, modelSpec, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         // rearranger may be null if confidence values are appended but the
         // model does not have a list of possible target values
@@ -108,7 +108,8 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
         RegressionTreeModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        final RegressionTreePredictor pred = new RegressionTreePredictor(modelSpec, model, dataSpec, m_configuration);
+        final RegressionTreePredictor pred = new RegressionTreePredictor(
+            model.getModel(), modelSpec, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
