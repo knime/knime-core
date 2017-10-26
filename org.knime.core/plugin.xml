@@ -609,4 +609,10 @@
             factoryClass="org.knime.core.data.vector.bytevector.IntArrayToDenseByteVectorCellConverter">
       </JavaToDataCellConverter>
    </extension>
+   <extension
+         point="org.knime.core.WorkflowSaveHook">
+      <WorkflowSaveHook
+            class="org.knime.core.openapi.OpenAPIDefinitionGenerator">
+      </WorkflowSaveHook>
+   </extension>
 </plugin>

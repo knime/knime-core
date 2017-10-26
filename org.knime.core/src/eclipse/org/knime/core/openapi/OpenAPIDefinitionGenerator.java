@@ -1,5 +1,9 @@
 package org.knime.core.openapi;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.json.Json;
@@ -10,9 +14,14 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import javax.json.JsonWriter;
+import javax.json.JsonWriterFactory;
+import javax.json.stream.JsonGenerator;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowSaveHook;
 
 /**
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
@@ -21,15 +30,25 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 3.5
  */
-public class WorkflowAnalyzer {
-	private static final WorkflowAnalyzer INSTANCE = new WorkflowAnalyzer();
+public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(OpenAPIDefinitionGenerator.class);
+
+	private static final OpenAPIDefinitionGenerator INSTANCE = new OpenAPIDefinitionGenerator();
+
+    private JsonWriterFactory m_writerFactory =
+        Json.createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
+
+    /**
+     * Name of the file that contains the input parameter definition: {@value}.
+     */
+    public static final String INPUT_PARAMETERS_FILE = "openapi-input-parameters.json";
 
 	/**
 	 * Returns the singleton instance.
 	 *
 	 * @return the singleton instance
 	 */
-	public static final WorkflowAnalyzer getInstance() {
+	public static final OpenAPIDefinitionGenerator getInstance() {
 		return INSTANCE;
 	}
 
@@ -134,4 +153,20 @@ public class WorkflowAnalyzer {
 
 		return node;
 	}
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onSave(final WorkflowManager workflow, final boolean isSaveData, final File artifactsFolder) throws IOException {
+        JsonObject api = createInputParametersDescription(workflow);
+
+        if (!api.isEmpty()) {
+            LOGGER.debug("Writing OpenAPI definition for parameters of " + workflow.getName());
+            try (JsonWriter out = m_writerFactory
+                .createWriter(new FileOutputStream(new File(artifactsFolder, "openapi-input-parameters.json")))) {
+                out.write(api);
+            }
+        }
+    }
 }
