@@ -347,6 +347,15 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_filesPanel.setAllowRemoteURLs(b);
     }
 
+    /** If set true, it allows files such as "${user.home}/file.txt".
+     * @param b The value to set
+     * @see org.knime.core.node.util.FilesHistoryPanel#setAllowSystemPropertySubstitution(boolean)
+     * @since 3.5
+     */
+    public void setAllowSystemPropertySubstitution(final boolean b) {
+        m_filesPanel.setAllowSystemPropertySubstitution(b);
+    }
+
     /**
      * Sets the dialog type to SAVE {@link JFileChooser#SAVE_DIALOG}, whereby it also forces the given file extension
      * when the user enters a path in the text field that does not end with either the argument extension or any
