@@ -131,7 +131,8 @@ public final class JavaSnippetUtil {
         try (InputStream urlIn = FileUtil.openStreamWithTimeout(url)) {
             FileUtils.copyToFile(urlIn, jarFile);
         } catch (IOException e) {
-            throw new InvalidSettingsException("Cannot download jar from URL: " + url.toString(), e);
+            throw new InvalidSettingsException("Cannot download jar from URL " + url.toString() + ": " + e.getMessage(),
+                e);
         }
 
         return jarFile;
