@@ -236,14 +236,14 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true, "");
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(m_isRegression, "");
         config.loadInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true, "");
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(m_isRegression, "");
         config.loadInModel(settings);
         m_configuration = config;
     }
