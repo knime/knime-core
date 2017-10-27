@@ -85,8 +85,8 @@ implements Predictor<M, S, C> {
         m_model = model;
         m_spec = modelSpec;
         m_dataSpec = dataTableSpec;
-        m_predictionRearranger = createPredictionRearranger();
         m_config = configuration;
+        m_predictionRearranger = createPredictionRearranger();
     }
 
     /**
@@ -107,9 +107,6 @@ implements Predictor<M, S, C> {
 
     @Override
     public M getModel() {
-        if (m_model == null) {
-            throw new IllegalStateException("There is currently no model available.");
-        }
         return m_model;
     }
 
