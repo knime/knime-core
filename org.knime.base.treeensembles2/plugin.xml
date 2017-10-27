@@ -133,6 +133,11 @@
             deprecated="false"
             factory-class="org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.pmml.GradientBoostingClassificationPMMLPredictorNodeFactory">
       </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor.RegressionTreePMMLPredictorNodeFactory">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
