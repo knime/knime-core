@@ -893,6 +893,7 @@ public class HistogramColumn implements Cloneable {
      * @return {@link Pair} of map from col index to bin index to row keys and another map from col index to data values
      *         to row keys.
      */
+    @SuppressWarnings("unchecked")
     public static Pair<Map<Integer, Map<Integer, Set<RowKey>>>, Map<Integer, Map<DataValue, Set<RowKey>>>> construct(
         final Map<Integer, ?> histograms, final DataTable data, final Set<String> nominalColumnNames) {
         for (Entry<Integer, ?> entry : histograms.entrySet()) {
@@ -900,9 +901,9 @@ public class HistogramColumn implements Cloneable {
                 throw new IllegalStateException("Not a histogram data: " + entry.getValue().getClass() + "\n" + entry);
             }
         }
-        @SuppressWarnings("unchecked")
-        Map<Integer, HistogramNumericModel> casted = (Map<Integer, HistogramNumericModel>)histograms;
-        return constructFromDataArray(casted, data, nominalColumnNames);
+        //@SuppressWarnings("unchecked")
+        //Map<Integer, HistogramNumericModel> casted = (Map<Integer, HistogramNumericModel>)histograms;
+        return constructFromDataArray((Map<Integer, HistogramModel<?>>)histograms, data, nominalColumnNames);
     }
 
     /**
@@ -915,7 +916,7 @@ public class HistogramColumn implements Cloneable {
      * @see #construct(Map, DataTable, Set)
      */
     protected static Pair<Map<Integer, Map<Integer, Set<RowKey>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
-        constructFromDataArray(final Map<Integer, HistogramNumericModel> histograms, final DataTable data,
+        constructFromDataArray(final Map<Integer, HistogramModel<?>> histograms, final DataTable data,
             final Set<String> nominalColumnNames) {
         Map<Integer, Map<Integer, Set<RowKey>>> numericMapping = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
         Map<Integer, Map<DataValue, Set<RowKey>>> nominalMapping = new HashMap<Integer, Map<DataValue, Set<RowKey>>>();
@@ -1241,6 +1242,7 @@ public class HistogramColumn implements Cloneable {
 
     private Map<Integer, HistogramNumericModel> histogramsPrivate(final DataTable data, final HiLiteHandler hlHandler,
         final double[] mins, final double[] maxs, final double[] means, final String... columns) {
+
         final Map<Integer, HistogramNumericModel> histograms = new HashMap<Integer, HistogramNumericModel>();
         for (int columnIndex = 0; columnIndex < columns.length; ++columnIndex) {
             String column = columns[columnIndex];
@@ -1257,7 +1259,9 @@ public class HistogramColumn implements Cloneable {
                 int numOfBins = addHistogramNumericModel(histograms, columnIndex, colSpec, min, max, mean);
                 NodeLogger.getLogger(HistogramColumn.class).debug(
                     "Number of bins: " + numOfBins + " for " + colSpec + " [" + mins[columnIndex] + ", "
+
                         + maxs[columnIndex] + "]");
+
             }
         }
         final Set<RowKey> hiLitKeys = hlHandler.getHiLitKeys();
@@ -1772,5 +1776,21 @@ public class HistogramColumn implements Cloneable {
             sum += v.intValue();
         }
         return new HistogramNominalModel(counts, colIndex, colName, sum);
+    }
+
+    /**
+     * @param histograms
+     * @param table
+     * @param hashSet
+     * @return
+     */
+    public static Pair<Map<Integer, Map<Integer, Set<RowKey>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
+        constructNominal(final Map<Integer, HistogramModel<?>> histograms, final DataTable table, final Set<String> nominalColumns) {
+        for (Entry<Integer, ?> entry : histograms.entrySet()) {
+            if (!(entry.getValue() instanceof HistogramNominalModel)) {
+                throw new IllegalStateException("Not a histogram data: " + entry.getValue().getClass() + "\n" + entry);
+            }
+        }
+        return constructFromDataArray(histograms, table, nominalColumns);
     }
 }
