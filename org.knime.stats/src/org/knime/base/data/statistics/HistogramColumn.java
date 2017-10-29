@@ -100,6 +100,7 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
@@ -321,6 +322,8 @@ public class HistogramColumn implements Cloneable {
 
     private static final String NUMERIC_COLUMNS = "numeric column indices";
 
+    private static final String NOMINAL_COLUMNS = "nominal column indices";
+
     private static final String HISTOGRAM = "histogram";
 
     private static final String MIN = "min";
@@ -342,6 +345,8 @@ public class HistogramColumn implements Cloneable {
     private static final String BIN_COUNTS = "bin counts";
 
     private static final String COL_NAME = "column name";
+
+    private static final String BIN_VALUES = "bin values";
 
     /**
      * A class to store the statistics on a numeric column.
@@ -903,7 +908,7 @@ public class HistogramColumn implements Cloneable {
         }
         //@SuppressWarnings("unchecked")
         //Map<Integer, HistogramNumericModel> casted = (Map<Integer, HistogramNumericModel>)histograms;
-        return constructFromDataArray((Map<Integer, HistogramModel<?>>)histograms, data, nominalColumnNames);
+        return constructFromDataArray((Map<Integer, HistogramNumericModel>)histograms, data, nominalColumnNames);
     }
 
     /**
@@ -916,7 +921,7 @@ public class HistogramColumn implements Cloneable {
      * @see #construct(Map, DataTable, Set)
      */
     protected static Pair<Map<Integer, Map<Integer, Set<RowKey>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
-        constructFromDataArray(final Map<Integer, HistogramModel<?>> histograms, final DataTable data,
+        constructFromDataArray(final Map<Integer, HistogramNumericModel> histograms, final DataTable data,
             final Set<String> nominalColumnNames) {
         Map<Integer, Map<Integer, Set<RowKey>>> numericMapping = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
         Map<Integer, Map<DataValue, Set<RowKey>>> nominalMapping = new HashMap<Integer, Map<DataValue, Set<RowKey>>>();
@@ -1479,6 +1484,54 @@ public class HistogramColumn implements Cloneable {
     }
 
     /**
+     * @param histogramsGz The file for the histograms.
+     * @param nominalKeysSize Array with the number of unique values in each nominal column.
+     * @return The {@link Map} from the column indices to the nominal {@link HistogramModel}s.
+     * @throws IOException Problem reading the file.
+     * @throws InvalidSettingsException Number of saved bins (number of unique values) is not the same compared
+     * to the provided array.
+     */
+    public static Map<Integer, ? extends HistogramModel<?>> loadNominalHistograms(final File histogramsGz,
+        final int[] nominalKeysSize) throws IOException, InvalidSettingsException {
+        return loadNominalHistogramsPrivate(histogramsGz, nominalKeysSize);
+    }
+
+    private static Map<Integer, HistogramNominalModel> loadNominalHistogramsPrivate(final File histogramsGz,
+        final int[] nominalKeysSize) throws IOException, InvalidSettingsException {
+        final FileInputStream is = new FileInputStream(histogramsGz);
+        final GZIPInputStream inData = new GZIPInputStream(is);
+        final ConfigRO config = NodeSettings.loadFromXML(inData);
+        Map<Integer, HistogramNominalModel> histograms = new HashMap<Integer, HistogramNominalModel>();
+        ConfigRO hs = config;//.getConfig(HISTOGRAMS);
+        int[] nomColumnIndices = config.getIntArray(NOMINAL_COLUMNS);
+        for (int colIdx : nomColumnIndices) {
+            Config h = hs.getConfig(HISTOGRAM + colIdx);
+            int maxCount = h.getInt(MAX_COUNT);
+            int rowCount = h.getInt(ROW_COUNT);
+            String colName = h.getString(COL_NAME);
+            String[] values = h.getStringArray(BIN_VALUES);
+            int[] binCounts = h.getIntArray(BIN_COUNTS);
+            Map<DataValue, Integer> bins = new HashMap<DataValue, Integer>();
+            for (int i = binCounts.length; i-- > 0;) {
+                if (values[i] == "?") {
+                    bins.put(new MissingCell(null), binCounts[i]);
+                } else {
+                    bins.put(new StringCell(values[i]), binCounts[i]);
+                }
+            }
+            HistogramNominalModel histogramData =
+                    new HistogramNominalModel(bins, colIdx, colName, rowCount);
+            histogramData.setMaxCount(maxCount);
+            histogramData.setRowCount(rowCount);
+            //assert Math.abs(histogramData.m_width - width) < 1e-9: "histogram data width: " + histogramData.m_width + " width: " + width;
+            assert nominalKeysSize[colIdx] == bins.size(): "Saved size of nominal bins: " +
+                    nominalKeysSize[colIdx] + ", restored from the file: " + bins.size();
+            histograms.put(colIdx, histogramData);
+        }
+        return histograms;
+    }
+
+    /**
      * Save the histograms to an internal file.
      *
      * @param histograms The column index to histograms {@link Map}.
@@ -1576,6 +1629,56 @@ public class HistogramColumn implements Cloneable {
             } else {
                 throw new IllegalStateException("Illegal argument: " + colIdx + ": " + object.getClass() + "\n   "
                     + object);
+            }
+        }
+        histogramData.saveToXML(dataOS);
+    }
+
+    /**
+     * @param histograms The nominal histogram models associated to the column indices.
+     * @param histogramsFile The output file.
+     * @throws IOException File write problem.
+     */
+    public static void saveNominalHistogramData(final Map<Integer, HistogramModel<?>> histograms, final File histogramsFile)
+            throws IOException {
+        Config histogramData = new NodeSettings(HISTOGRAMS);
+        final FileOutputStream os = new FileOutputStream(histogramsFile);
+        final GZIPOutputStream dataOS = new GZIPOutputStream(os);
+
+        List<Integer> colIndices = new ArrayList<Integer>(histograms.keySet());
+        Collections.sort(colIndices);
+        int[] nominalColumnIndices = new int[colIndices.size()];
+        for (int i = colIndices.size(); i-- > 0;) {
+            nominalColumnIndices[i] = colIndices.get(i).intValue();
+        }
+        histogramData.addIntArray(NOMINAL_COLUMNS, nominalColumnIndices);
+
+        for (Integer colIdx : colIndices) {
+            Object object = histograms.get(colIdx);
+            if (object instanceof HistogramNominalModel) {
+                HistogramNominalModel hd = (HistogramNominalModel)object;
+                assert hd.getColIndex() == colIdx.intValue() : "colIdx: " + colIdx + ", but: " + hd.getColIndex();
+                Config h = histogramData.addConfig(HISTOGRAM + colIdx);
+                h.addInt(COL_INDEX, hd.getColIndex());
+                h.addString(COL_NAME, hd.getColName());
+                h.addInt(MAX_COUNT, hd.getMaxCount());
+                h.addInt(ROW_COUNT, hd.getRowCount());
+                int[] counts = new int[hd.getBins().size()];
+                String[] values = new String[hd.getBins().size()];
+                for (int c = 0; c < hd.getBins().size(); c++) {
+                    HistogramModel.Bin<DataValue> bin = hd.getBins().get(c);
+                    if (bin.getDef() instanceof StringCell) {
+                        values[c] = ((StringCell)bin.getDef()).getStringValue();
+                    } else {
+                        values[c] = "?";
+                    }
+                    counts[c] = bin.getCount();
+                }
+                h.addStringArray(BIN_VALUES, values);
+                h.addIntArray(BIN_COUNTS, counts);
+            } else {
+                throw new IllegalStateException("Illegal argument: " + colIdx + ": " + object.getClass() + "\n   "
+                        + object);
             }
         }
         histogramData.saveToXML(dataOS);
@@ -1778,19 +1881,4 @@ public class HistogramColumn implements Cloneable {
         return new HistogramNominalModel(counts, colIndex, colName, sum);
     }
 
-    /**
-     * @param histograms
-     * @param table
-     * @param hashSet
-     * @return
-     */
-    public static Pair<Map<Integer, Map<Integer, Set<RowKey>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
-        constructNominal(final Map<Integer, HistogramModel<?>> histograms, final DataTable table, final Set<String> nominalColumns) {
-        for (Entry<Integer, ?> entry : histograms.entrySet()) {
-            if (!(entry.getValue() instanceof HistogramNominalModel)) {
-                throw new IllegalStateException("Not a histogram data: " + entry.getValue().getClass() + "\n" + entry);
-            }
-        }
-        return constructFromDataArray(histograms, table, nominalColumns);
-    }
 }
