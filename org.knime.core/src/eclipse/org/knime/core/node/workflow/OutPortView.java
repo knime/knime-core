@@ -218,26 +218,31 @@ public class OutPortView extends JFrame {
 
         // set update object, run update thread only if there was no previous
         // update object (otherwise an update is currently ongoing)
-        if (m_updateObjectReference.getAndSet(updateObject) == null) {
-            UPDATE_EXECUTOR.execute(new Runnable() {
-                @Override
-                public void run() {
-                    UpdateObject upO;
-                    while ((upO = m_updateObjectReference.get()) != null) {
-                        updateInternal(upO);
-                        // invalidate update reference only if there is no
-                        // new update object in the reference, otherwise
-                        // do a new iteration.
-                        if (m_updateObjectReference.compareAndSet(upO, null)) {
-                            // break out here, do not rely on while() statement
-                            // as new UO may be set (another thread is queued)
-                            break;
-                        }
-                    }
-                }
-            });
+        if (m_updateObjectReference.getAndSet(updateObject) == null && isVisible()) {
+            runUpdateThread();
         }
 
+    }
+
+    /** Queues runnable that consumes the update object(s) that it finds in {@link #m_updateObjectReference}. */
+    private void runUpdateThread() {
+        UPDATE_EXECUTOR.execute(new Runnable() {
+            @Override
+            public void run() {
+                UpdateObject upO;
+                while ((upO = m_updateObjectReference.get()) != null) {
+                    updateInternal(upO);
+                    // invalidate update reference only if there is no
+                    // new update object in the reference, otherwise
+                    // do a new iteration.
+                    if (m_updateObjectReference.compareAndSet(upO, null)) {
+                        // break out here, do not rely on while() statement
+                        // as new UO may be set (another thread is queued)
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     /** Internal update method that creates new tabs and displays them. */
@@ -345,12 +350,23 @@ public class OutPortView extends JFrame {
         menuBar.repaint();
     }
 
+    /** Sets visibility and checks if an update thread needs to run.
+     * {@inheritDoc} */
+    @Override
+    public void setVisible(final boolean b) {
+        super.setVisible(b);
+        if (b && m_updateObjectReference.get() != null) {
+            runUpdateThread();
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void dispose() {
         // release all - identified memory leak via
         // sun.awt.AppContext -> ... Maps -> swing.RepaintManager -> ...> JTabbedPane -> ... -> WFM
         m_tabbedPane.removeAll();
+        m_updateObjectReference.set(null);
         remove(m_tabbedPane);
         super.dispose();
     }
