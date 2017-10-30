@@ -120,6 +120,7 @@ public abstract class AbstractPredictorConfiguration implements PredictorConfigu
             m_predictionColumnName = defColName;
         }
         m_changePredictionColumnName = settings.getBoolean(CFG_CHANGE_PREDICTION_COLUMN_NAME, true);
+        internalLoadInDialog(settings);
     }
 
     /**
@@ -138,6 +139,7 @@ public abstract class AbstractPredictorConfiguration implements PredictorConfigu
             throw new InvalidSettingsException("Prediction column name must not be empty");
         }
         m_changePredictionColumnName = settings.getBoolean(CFG_CHANGE_PREDICTION_COLUMN_NAME, true);
+        internalLoadInModel(settings);
     }
 
     /**
