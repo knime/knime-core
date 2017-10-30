@@ -65,6 +65,14 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
@@ -113,6 +121,46 @@ final class RegressionTreePredictorNodeModel extends NodeModel {
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                RegressionTreeModelPortObject model =
+                    (RegressionTreeModelPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
+                final RegressionTreePredictor pred =
+                    new RegressionTreePredictor(model.getModel(), model.getSpec(),
+                            dataSpec, m_configuration);
+                ColumnRearranger rearranger = pred.getPredictionRearranger();
+                StreamableFunction func = rearranger.createStreamableFunction(1, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /** {@inheritDoc} */
