@@ -94,7 +94,6 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
 
     /**
      * Default constructor
-     * @param isRegression boolean indicating if the node model expects a regression model
      */
     public RegressionTreePMMLPredictorNodeModel() {
         super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE},
@@ -150,7 +149,6 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
         return pmmlSpec.getTargetCols().get(0).getType();
     }
 
-    @SuppressWarnings("unchecked")
     private RegressionTreeModel importModel(final PMMLPortObject pmmlPO) {
         RegressionTreeModelPMMLTranslator pmmlTranslator = new RegressionTreeModelPMMLTranslator();
         pmmlPO.initializeModelTranslator(pmmlTranslator);
