@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  * Image checker that computes pixel-wise color differences (independently for each color channel) and compares it to
  * the maximal possible differences for the reference image.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class PngFullDifferenceChecker extends AbstractDifferenceChecker<PNGImageValue> {
     /**

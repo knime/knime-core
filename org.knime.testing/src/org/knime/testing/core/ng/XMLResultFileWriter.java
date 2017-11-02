@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.w3c.dom.Element;
 /**
  * Result writer that writes all test suites into a single file.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class XMLResultFileWriter extends AbstractXMLResultWriter {
     private final File m_file;

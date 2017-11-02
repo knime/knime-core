@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -79,7 +79,7 @@ import org.knime.testing.node.config.TestConfigSettings;
  * Configuration for a testflow. The configuration is either read from old-style configuration files in the workflows
  * directory for from a testflow configuration node inside the workflow.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class TestflowConfiguration {
     /**

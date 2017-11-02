@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  *
  * http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html and http://www.phash.org/
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class PngPHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
     /**

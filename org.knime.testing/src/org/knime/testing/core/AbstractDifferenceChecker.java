@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  * should take care of calling the superclass implementations when overwriting methods.
  *
  * @param <T> value type that this checker handles
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 public abstract class AbstractDifferenceChecker<T extends DataValue> implements DifferenceChecker<T> {

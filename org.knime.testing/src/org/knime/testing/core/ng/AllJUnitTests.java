@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.testing.core.AbstractTestcaseCollector;
 /**
  * A JUnit4-style Test suite that collects all JUnit tests registered via the extension point.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 @RunWith(AllTests.class)
 public class AllJUnitTests {

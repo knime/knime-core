@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * Interface for a class that executes certain operation before and after all testflows are executed.
  *
  * <b>This class is not part of the API and my change without notice!</b>
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public abstract class TestrunJanitor {

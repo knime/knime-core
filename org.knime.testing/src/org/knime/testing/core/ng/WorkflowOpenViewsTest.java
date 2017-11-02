@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 /**
  * Testcase that open all views of all nodes in the workflow. Exception during opening a view are reported as failures.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowOpenViewsTest extends WorkflowTest {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowOpenViewsTest.class);

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import junit.framework.TestResult;
 /**
  * Testcase that closes all open views of the workflow and checks whether any exceptions are thrown meanwhile.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowCloseViewsTest extends WorkflowTest {
     WorkflowCloseViewsTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {

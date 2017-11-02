@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@ import junit.framework.TestResult;
  * Test that loads the workflow, saves it (potentially converting it into a new format), and finally loading it again.
  * The workflow manager of the second load is then put into the test context for further use.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowLoadSaveLoadTest extends WorkflowTest {
     private final static NodeLogger LOGGER = NodeLogger.getLogger(WorkflowLoadSaveLoadTest.class);

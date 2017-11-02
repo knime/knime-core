@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import org.knime.testing.core.TestrunConfiguration;
  * Shared context for all testcases. It is used to exchange information that is needed by several testcases, such as the
  * workflow manager, a list of pre-executed nodes, etc.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class WorkflowTestContext {
     private final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> m_views =

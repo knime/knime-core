@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import junit.framework.TestResult;
  * Executed a workflows and checks if all nodes are executed (except nodes that are supposed to fail). The workflow is
  * canceled if it still running after the configured timeout.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowExecuteTest extends WorkflowTest {
     private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import junit.framework.TestResult;
  * while the test is {@link #run(TestResult)}. The appender is unregistered after the test has run once. Therefore it
  * cannot be re-used.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowLogMessagesTest extends WorkflowTest {
     private final List<LoggingEvent> m_logEvents = new ArrayList<LoggingEvent>();

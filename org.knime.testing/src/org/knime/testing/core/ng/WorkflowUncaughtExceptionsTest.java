@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,7 @@ import org.knime.core.util.Pair;
  * records all uncaught exception and reports them as errors when the test is run. The exception handler is removed
  * after the test has run.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowUncaughtExceptionsTest.class);

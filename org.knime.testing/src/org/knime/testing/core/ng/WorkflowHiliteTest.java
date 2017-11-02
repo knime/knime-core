@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -67,7 +67,7 @@ import junit.framework.TestResult;
  * Testcase that hilites rows in all output tables from every node. Errors will very likely not occur in this test but
  * be reported in the log file or result in exceptions in views.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class WorkflowHiliteTest extends WorkflowTest {
     WorkflowHiliteTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {

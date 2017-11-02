@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -62,7 +62,7 @@ import junit.framework.TestResult;
 /**
  * Testcase that check all node messages after execution. Unexpected or wrong messages are reported as failures.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class WorkflowNodeMessagesTest extends WorkflowTest {
     WorkflowNodeMessagesTest(final String workflowName, final IProgressMonitor monitor,
