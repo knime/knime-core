@@ -10,6 +10,8 @@
 	<fullDescription>
 		<intro>
             Writes a Gradient Boosted Trees model to PMML.
+            Models learned on bit-, byte- or double-vector columns can be translated but the node will show a warning that the
+            models can't be read in the corresponding PMML Predictor node.
 		</intro>
 	    
 	</fullDescription>

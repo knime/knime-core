@@ -11,6 +11,8 @@
 	<fullDescription>
 		<intro>
 			Applies classification from a Gradient Boosted Trees model that is provided in PMML format.
+			Note that it is currently not possible to load models that were learned on a bit-, byte- or double-vector column
+			and then written to PMML because PMML does not support vector columns.
 			The implementation
 			follows the algorithms described in
 			"Greedy Function
