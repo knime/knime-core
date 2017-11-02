@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Wizard Execution
 Bundle-SymbolicName: org.knime.core.wizard;singleton:=true
 Bundle-Version: 3.5.0.qualifier
-Bundle-Vendor: KNIME.com GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.core.wizard
 Require-Bundle: org.knime.core;bundle-version="[3.4.0,4.0.0)",
  org.knime.js.core;bundle-version="[3.4.0,4.0.0)",

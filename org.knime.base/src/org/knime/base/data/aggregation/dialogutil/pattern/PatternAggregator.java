@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -69,7 +69,7 @@ import org.knime.core.node.NodeSettingsWO;
  * {@link AggregationMethodDecorator} that stores a {@link DataType} in addition to the {@link AggregationMethod}
  * information.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public class PatternAggregator extends AggregationMethodDecorator {

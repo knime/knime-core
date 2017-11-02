@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
  * {@link TableCellRenderer} that checks if the value being renderer is of type {@link AggregationFunction}
  * or {@link AggregationFunctionRow} in either case it will renderer the name of the function or the function returned
  * by the row.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @see AggregationFunctionRowTableCellRenderer
  * @since 2.11
  */

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -485,7 +485,7 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyright by KNIME GmbH, Konstanz, Germany and others.                                #");
+        l.info("# Copyright by KNIME AG, Zurich, Switzerland and others.                                #");
         l.info("# Website: http://www.knime.com                                                         #");
         l.info("# E-mail: contact@knime.com                                                             #");
     }

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -48,7 +48,7 @@ package org.knime.core.node.workflow;
  * Annotation associated with a node. Moves with the node. Can't be moved
  * separately.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  */
 public final class NodeAnnotation extends Annotation implements NodeUIInformationListener {
 

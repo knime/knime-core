@@ -59,7 +59,7 @@ import org.knime.core.util.FileUtil;
 /** Tests fix for bug 6339: "Loop End (Column Append)" may generate too long file path:
  * workflow can't be saved - problem on some Windows systems
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
 

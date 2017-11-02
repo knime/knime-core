@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -343,7 +343,7 @@ public final class KNIMEConstants {
         String spaces = "                                    ";
 
         String line1 = "***       Welcome to the KNIME Analytics Platform v" + VERSION + "       ***";
-        String line2 = "Copyright by KNIME GmbH, Konstanz, Germany";
+        String line2 = "Copyright by KNIME AG, Zurich, Switzerland";
         line2 =
             "***" + spaces.substring(0, (line1.length() - line2.length() - 6) / 2) + line2
                 + spaces.substring(0, (int)Math.ceil((line1.length() - line2.length() - 6) / 2.0)) + "***";

@@ -27,7 +27,7 @@ import org.knime.core.node.workflow.WorkflowSaveHook;
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
  * workflows when used as REST resources.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.5
  */
 public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {

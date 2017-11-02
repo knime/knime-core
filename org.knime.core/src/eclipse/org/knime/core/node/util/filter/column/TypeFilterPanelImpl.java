@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 10, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * Created on Oct 10, 2013 by Patrick Winter, KNIME AG, Zurich, Switzerland
  */
 package org.knime.core.node.util.filter.column;
 
@@ -84,7 +84,7 @@ import org.knime.core.node.util.filter.InputFilter;
 /**
  * Filters based on the DataValues of columns.
  *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 @SuppressWarnings("serial")

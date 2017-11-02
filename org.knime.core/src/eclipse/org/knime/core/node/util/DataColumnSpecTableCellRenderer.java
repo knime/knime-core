@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ import org.knime.core.data.DataColumnSpec;
  * Renderer that checks if the value being renderer is of type {@link DataColumnSpec} if so it will renderer the
  * name of the column spec and also the type's icon. If not, the passed value's toString() method is used for rendering.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 public class DataColumnSpecTableCellRenderer extends DefaultTableCellRenderer {

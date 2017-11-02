@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -124,7 +124,7 @@ public final class FilesHistoryPanel extends JPanel {
     /**
      * Enum for whether and which location validation should be performed.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     public static enum LocationValidation {
@@ -211,7 +211,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the destination location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class FileWriterCheckLabel extends LocationCheckLabel {
@@ -263,7 +263,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the destination location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class DirectoryWriterCheckLabel extends LocationCheckLabel {
@@ -316,7 +316,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the source location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. file does not exist, file is not readable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class FileReaderCheckLabel extends LocationCheckLabel {
@@ -357,7 +357,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the source location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, is not readable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class DirectoryReaderCheckLabel extends LocationCheckLabel {

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,7 @@ import org.knime.core.node.config.Config;
  * False predicate as specified in PMML
  * (<a>http://www.dmg.org/v4-0/TreeModel.html</a>).
  *
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  */
 public class PMMLFalsePredicate extends PMMLPredicate {
     /** The string representation of the predicate's XML-element. */

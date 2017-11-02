@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -79,7 +79,7 @@ import org.osgi.framework.ServiceReference;
  * Singleton class that updates artifact repository URIs to include the instance ID. The singleton registers itself as a
  * listener to the p2 event bus so that it can react on changes to repository URIs immediately.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
 @SuppressWarnings("restriction")

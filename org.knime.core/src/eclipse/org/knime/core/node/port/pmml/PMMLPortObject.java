@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -112,7 +112,7 @@ import org.xml.sax.SAXException;
 /**
  *
  * @author Fabian Dill, University of Konstanz
- * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  */
 public final class PMMLPortObject implements PortObject {
 

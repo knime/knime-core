@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -50,7 +50,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * Stores workflow editor specific settings (like grid settings and zoom level, etc.).
  * Can be attached to the node UI info object of workflow managers.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  * @since 2.6
  */
 public class EditorUIInformation {

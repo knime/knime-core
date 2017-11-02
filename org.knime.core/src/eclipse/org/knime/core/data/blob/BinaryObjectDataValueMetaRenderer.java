@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
 /** Shows size of {@link BinaryObjectDataValue}. For instance:
  * 11MB (12383389 bytes) -- /tmp/knime_fs-Files_to_Binary_Objects-12349183/000/000/binaryObject-0
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 @SuppressWarnings("serial")

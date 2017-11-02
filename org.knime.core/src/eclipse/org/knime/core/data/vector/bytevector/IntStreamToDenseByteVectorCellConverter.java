@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,7 @@ import org.knime.core.data.convert.datacell.SimpleJavaToDataCellConverterFactory
  * A converter that will accept an {@link IntStream} and convert it to a {@link DenseByteVectorCell}.
  * The values in the stream need to be in [0-255]. This class is registered via extension point.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.4
  */
 public final class IntStreamToDenseByteVectorCellConverter extends SimpleJavaToDataCellConverterFactory<IntStream> {

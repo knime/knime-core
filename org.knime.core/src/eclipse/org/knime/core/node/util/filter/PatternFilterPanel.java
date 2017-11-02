@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 4, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * Created on Oct 4, 2013 by Patrick Winter, KNIME AG, Zurich, Switzerland
  */
 package org.knime.core.node.util.filter;
 
@@ -76,7 +76,7 @@ import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterT
  * Filters based on the given regular expression or wildcard pattern.
  *
  * @param <T> The type of object that this filter is filtering
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 3.4
  */
 @SuppressWarnings("serial")

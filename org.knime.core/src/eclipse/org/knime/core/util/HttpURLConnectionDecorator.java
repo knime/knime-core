@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@ import java.util.Map;
  * this decorator returns a custom output stream through {@link #getOutputStream()} that queries the HTTP status code
  * when the stream is closed. All other operations are simply delegate to the original instances.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class HttpURLConnectionDecorator extends HttpURLConnection {
     private class OutputStreamDecorator extends OutputStream {

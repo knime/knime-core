@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 /**
  * Action to select all of the nodes contained within the surrounding loop.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  */
 public class SelectLoopAction extends AbstractNodeAction {
 

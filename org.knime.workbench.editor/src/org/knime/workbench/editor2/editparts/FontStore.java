@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -73,7 +73,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * set name and attributes or reusing a default font. This class scales the font according to the system zoom level
  * (for high dpi displays) - that is, it downscales (!) the size by the corresponding factor!
  *
- * @author ohl, KNIME.com, Zurich, Switzerland
+ * @author ohl, KNIME AG, Zurich, Switzerland
  */
 public class FontStore {
 

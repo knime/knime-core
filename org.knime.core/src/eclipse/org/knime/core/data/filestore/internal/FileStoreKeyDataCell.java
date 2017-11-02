@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ import org.knime.core.data.DataType;
  * A data cell used internally to save the file store keys generated in a loop to a buffered data table.
  * This cell is not used in client code.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class FileStoreKeyDataCell extends DataCell implements FileStoreKeyDataValue {

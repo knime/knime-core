@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import org.junit.Test;
 /** Problems with nested scope nodes and exceptions while dragging connection.
  * 6374: nested scopes of different type with wrong wiring can result in NPE
  * https://bugs.knime.org/show_bug.cgi?id=6374
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase {
 

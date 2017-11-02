@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -93,7 +93,7 @@ import org.xml.sax.helpers.AttributesImpl;
 /**
  * A NeuralNetwork translator class between KNIME and PMML.
  *
- * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  * @author wenlin, Zementis, May 2011
  * <p><strike>Despite being public no official API.</strike>
  * @since 2.10 (since 2.9 really)

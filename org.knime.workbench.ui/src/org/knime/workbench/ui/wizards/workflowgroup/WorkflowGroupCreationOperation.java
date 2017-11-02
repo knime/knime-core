@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.workbench.ui.nature.KNIMEWorkflowSetProjectNature;
  * Operation which actually creates the workflow group with its meta info file
  * at the given workspace relative path.
  * 
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 public class WorkflowGroupCreationOperation extends WorkspaceModifyOperation {
     

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.core.node.dialog.OutputNode;
 /** AP-6906: Usability of Call Workflow Nodes with Respect to Input and Output Parameters
  * https://knime-com.atlassian.net/browse/AP-6906
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
 

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -69,7 +69,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * Base class for Predicate as specified in PMML
  * (<a>http://www.dmg.org/v4-0/TreeModel.html</a>).
  *
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  * @noextend
  */
 @JsonAutoDetect
@@ -345,7 +345,7 @@ public abstract class PMMLPredicate {
      * be added here for being able to instantiate the correct subclass when
      * loading from predictor params.
      *
-     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     * @author Dominik Morent, KNIME AG, Zurich, Switzerland
      */
     enum PMMLPredicates {
         /** @see org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate */

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ import org.eclipse.core.runtime.Platform;
  * mapping. Used when a persisted workflow is referencing an outdated (and refactored) node implementation.
  *
  * <p>Further details are in the corresponding extension point definition.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 public abstract class NodeFactoryClassMapper {

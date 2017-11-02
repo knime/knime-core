@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by KNIME.com, Zurich, Switzerland
+ * Copyright by KNIME AG, Zurich, Switzerland
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -24,8 +24,8 @@ package org.knime.core.node.dialog;
 /**
  * Interface for nodes that produce results that can be queried externally, e.g. web services.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.12
  * @noimplement This interface is not intended to be implemented by clients, it may change without notice
  */

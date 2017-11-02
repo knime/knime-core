@@ -140,7 +140,7 @@ A DataCellFactory is optional, however generic input nodes won&apos;t be able to
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         (C) KNIME GmbH, Konstanz, Germany.
+         KNIME AG, Zurich, Switzerland
       </documentation>
    </annotation>
 

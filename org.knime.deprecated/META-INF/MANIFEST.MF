@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Deprecated Nodes
 Bundle-SymbolicName: org.knime.deprecated;singleton:=true
 Bundle-Version: 2.9.2.qualifier
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.base;bundle-version="2.6.0"
 Export-Package: org.knime.base.node.image.writepng,
  org.knime.base.node.io.filereader,

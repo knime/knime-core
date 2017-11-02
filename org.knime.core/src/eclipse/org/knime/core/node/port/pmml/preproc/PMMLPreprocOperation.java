@@ -1,7 +1,7 @@
 /*
  *
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@ import org.xml.sax.SAXException;
  * it obsolete. Please implement a {@link PMMLPreprocTranslator} instead.
  *
  * Abstract base class for all preprocessing operations in KNIME.
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public abstract class PMMLPreprocOperation {
@@ -134,7 +134,7 @@ public abstract class PMMLPreprocOperation {
      * Enumeration of the PMML elements the preprocessing operation can be
      * written to.
      *
-     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     * @author Dominik Morent, KNIME AG, Zurich, Switzerland
      */
     public enum PMMLTransformElement {
         /** The LocalTransformation element. */

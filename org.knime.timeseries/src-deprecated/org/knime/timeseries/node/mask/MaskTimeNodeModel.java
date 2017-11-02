@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -77,7 +77,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * Node to mask/remove time or date fields of existing
  * {@link DateAndTimeValue}s.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public class MaskTimeNodeModel extends NodeModel {

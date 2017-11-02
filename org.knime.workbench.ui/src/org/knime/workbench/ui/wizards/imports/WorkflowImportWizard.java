@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -69,7 +69,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  * Wizard for importing workflows and workflow groups from a directory or an
  * archive file into the workspace.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  * 
  * @deprecated since AP 3.0
  */

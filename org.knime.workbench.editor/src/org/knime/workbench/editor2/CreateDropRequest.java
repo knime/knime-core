@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,14 +56,14 @@ import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirectio
  * The drop request with all information about the drop action. This request is used for the node replace/insert/create
  * drop action.
  *
- * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class CreateDropRequest extends CreateRequest {
 
     /**
      * The type of the drop action.
      *
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
      */
     public enum RequestType {
         /**

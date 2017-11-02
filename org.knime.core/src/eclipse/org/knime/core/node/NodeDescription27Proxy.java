@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -71,7 +71,7 @@ import org.w3c.dom.Element;
  * against the XML schema and reports errors via the logger.
  *
  * <p>No API!
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public final class NodeDescription27Proxy extends NodeDescription {
     private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription27Proxy.class);

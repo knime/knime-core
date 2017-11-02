@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ import org.knime.core.node.util.StringHistory;
  * {@link org.knime.core.data.def.StringCell}s into {@link DateAndTimeCell}s.
  *
  * @author Rosaria Silipo
- * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public class String2DateNodeModel extends

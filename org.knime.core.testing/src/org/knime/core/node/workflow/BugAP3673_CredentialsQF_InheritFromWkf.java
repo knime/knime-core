@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 /**
  * Test for workaround described as part of AP-5974. Credentials QF nodes should inherit the info from workflow
  * credentials (for same identifier).
- * @author wiswedel, KNIME.com, Zurich, Switzerland
+ * @author wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
 

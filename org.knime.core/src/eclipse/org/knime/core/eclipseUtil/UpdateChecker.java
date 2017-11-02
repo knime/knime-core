@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import org.eclipse.core.runtime.Platform;
  * the five columns <b>must</b> be a tab and not spaces. This also means the name must not contain tabs, only spaces.
  *
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.2
  */
 public class UpdateChecker {
@@ -89,7 +89,7 @@ public class UpdateChecker {
     /**
      * Information about an available update.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public static class UpdateInfo {
         private final URI m_uri;

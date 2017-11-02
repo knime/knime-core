@@ -1,7 +1,7 @@
 /*
  *
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -83,7 +83,7 @@ import org.xml.sax.SAXException;
  * The PMML preprocessing operations can now be included directly in the
  * {@link PMMLPortObject} instead of handling them in a special port type.
  *
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public class PMMLPreprocPortObject extends AbstractPortObject {
@@ -295,7 +295,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
      * Wraps an PortObjectZipOutputStream and collects all data that is written
      * to the stream in a string.
      *
-     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     * @author Dominik Morent, KNIME AG, Zurich, Switzerland
      */
     private static class PortObjectZipOutputStreamAndString extends OutputStream {
         private final StringBuilder m_buffer;

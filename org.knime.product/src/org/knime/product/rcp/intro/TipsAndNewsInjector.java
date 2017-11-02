@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -87,7 +87,7 @@ import org.xml.sax.XMLReader;
  * parallel to the startup process. If the KNIME server is not reachable it will just not replace the already existing
  * copy of the template and nothing will be shown.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class TipsAndNewsInjector extends AbstractInjector {
     private final URL m_tipsAndNewsUrl;

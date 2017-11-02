@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -76,7 +76,7 @@ import org.knime.core.node.NodeLogger;
  * types together with their table names and column names (requested on
  * demand).
  *
- * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
  */
 public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
 

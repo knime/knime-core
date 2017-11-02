@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@ import org.knime.core.util.Pair;
  * Extended {@link RowInput} that pulls its data from an array of argument {@link RowInput}. For duplicate Row-ID
  * handling, column mis-matches etc. see {@link AppendedRowsTable} for details.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.1
  */
 public class AppendedRowsRowInput extends RowInput {

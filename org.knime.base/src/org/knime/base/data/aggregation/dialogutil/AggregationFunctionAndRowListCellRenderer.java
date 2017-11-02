@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ import org.knime.core.node.port.database.aggregation.AggregationFunction;
  * or {@link AggregationFunctionRow} if so it will renderer the name of the function.
  * If not, the passed value's toString() method is used for rendering.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public class AggregationFunctionAndRowListCellRenderer extends DefaultListCellRenderer {

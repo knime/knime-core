@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  * GEF command for adding a <code>metanode</code> to a connection. The new metanode will be connected to the source
  * and target node of the passed connection.
  *
- * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
     private ConnectionContainer m_edge;

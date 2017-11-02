@@ -3,5 +3,5 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench
 Bundle-SymbolicName: org.knime.workbench;singleton:=true
 Bundle-Version: 3.5.0.qualifier
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -50,7 +50,7 @@ package org.knime.core.node.workflow;
  * Possible status values of a NodeContainer. The actual implementation is an enum but is hidden to client
  * (e.g. GUI) code so that new states can be added as needed.
  *
- * @author Bernd Wiswedel, Michael Berthold, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, Michael Berthold, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 public interface NodeContainerState {

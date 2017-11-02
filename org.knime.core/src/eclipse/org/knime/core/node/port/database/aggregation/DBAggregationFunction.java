@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ import org.knime.core.node.port.database.StatementManipulator;
  * function have a look at the already existing implementations and reuse them. This allows the user to
  * switch seamlessly between databases that support the same aggregation functions. Otherwise the user needs
  * to adapt the aggregation function after each db switch.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public interface DBAggregationFunction extends AggregationFunction {

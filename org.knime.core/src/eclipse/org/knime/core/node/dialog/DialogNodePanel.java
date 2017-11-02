@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 08.10.2013 by Christian Albrecht, KNIME AG, Zurich, Switzerland
  */
 package org.knime.core.node.dialog;
 
@@ -58,7 +58,7 @@ import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @param <VAL> The node value implementation of the dialog node.
  * @since 2.9
  */

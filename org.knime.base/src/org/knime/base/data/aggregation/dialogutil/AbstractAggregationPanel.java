@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -89,7 +89,7 @@ import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
  * of type {@link AggregationTableModel} that contains the selected options
  * from the left with additional information on the right.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @param <T> the {@link AggregationTableModel} implementation to work with
  * @param <R> the {@link AggregationFunctionRow} implementation to work with
  * @param <L> the class of the list elements the user can choose from

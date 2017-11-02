@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ import org.knime.core.data.DataCellSerializer;
  * Serializes a {@link DateAndTimeCell} by writing the long representing the UTC
  * time and the booleans whether date, time, or milliseconds are available.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  * @since 3.0
  * @noreference This class is not intended to be referenced by clients.
  * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead

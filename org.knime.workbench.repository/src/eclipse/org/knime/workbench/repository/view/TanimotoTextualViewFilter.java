@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ import org.knime.workbench.repository.model.Root;
  * A filter for items which computes the tanimoto distance to a given query and filters all nodes which have a distance
  * greater or equal to UPPER_DISTANCE_BOUND=0.6.
  *
- * @author Marcel Hanser, KNIME.com, Zurich, Switzerland
+ * @author Marcel Hanser, KNIME AG, Zurich, Switzerland
  */
 final class TanimotoTextualViewFilter extends TextualViewFilter {
     /**

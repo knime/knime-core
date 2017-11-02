@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ import javax.swing.event.DocumentListener;
  * Convenience implementation of a {@link DocumentListener} which calls for 
  * every change, insert, or remove the abstract {@link #validate()} method.
  * 
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public abstract class AbstractValidateDocumentListener

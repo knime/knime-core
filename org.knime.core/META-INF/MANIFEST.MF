@@ -7,7 +7,7 @@ Bundle-ClassPath: knime-core.jar,
  lib/saxon-he-9.2.0.5.jar,
  lib/schemas.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: log4j,
  org.knime.core,
  org.knime.core.data,

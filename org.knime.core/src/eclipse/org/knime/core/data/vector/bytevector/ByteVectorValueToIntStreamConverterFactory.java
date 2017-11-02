@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ import org.knime.core.data.convert.java.SimpleDataCellToJavaConverterFactory;
  * Converter that translates a {@link ByteVectorValue} to an {@link IntStream} for use in the Java Snippet,
  * for instance. The values in the stream are in [0-255]. This class is registered via extension point.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.4
  */
 public final class ByteVectorValueToIntStreamConverterFactory

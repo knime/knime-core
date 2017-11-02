@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -87,7 +87,7 @@ import org.knime.core.util.DesktopUtil;
 /**
  * {@link JDialog} that displays and allows the editing of the additional parameters of an
  * {@link AggregationFunction}.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public class AggregationSettingsDialog extends JDialog {

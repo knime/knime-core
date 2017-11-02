@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ package org.knime.core.node.workflow;
  * when the scope is left. More complex derived classes represent
  * loops and try-catch-constructs.
  *
- * @author M. Berthold, KNIME.com, Zurich, Switzerland
+ * @author M. Berthold, KNIME AG, Zurich, Switzerland
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference Not to be used outside the core.
  * @since 2.8

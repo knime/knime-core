@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import org.knime.core.node.NodeLogger;
  * The after-IDs correspiond to the IDs of categories or nodes. If no after-ID is specified this category/node is
  * sorted to the front. If the magic id <tt>_last_</tt> is specified, it is sorted to the back.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 final class CategorySorter {

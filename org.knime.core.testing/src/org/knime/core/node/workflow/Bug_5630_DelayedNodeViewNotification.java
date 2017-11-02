@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -65,7 +65,7 @@ import org.knime.core.node.util.ViewUtils;
  * (partners & community asked to test their custom view implementations)
  * https://bugs.knime.org/show_bug.cgi?id=5630
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
 

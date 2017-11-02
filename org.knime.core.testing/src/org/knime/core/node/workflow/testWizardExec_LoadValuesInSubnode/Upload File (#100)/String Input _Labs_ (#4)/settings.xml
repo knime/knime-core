@@ -48,7 +48,7 @@
 <entry key="node-name" type="xstring" value="String Input (Labs)"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME Javascript Base Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.base"/>
-<entry key="node-bundle-vendor" type="xstring" value="KNIME.com, Zurich, Switzerland"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
 <entry key="node-bundle-version" type="xstring" value="2.12.0.qualifier"/>
 <config key="factory_settings"/>
 <entry key="name" type="xstring" value="String Input (Labs)"/>

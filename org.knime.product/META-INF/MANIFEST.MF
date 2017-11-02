@@ -6,7 +6,7 @@ Bundle-Version: 3.5.0.qualifier
 Bundle-ClassPath: knime-product.jar,
  lib/tagsoup-1.2.1.jar
 Bundle-Activator: org.knime.product.ProductPlugin
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Bundle-Localization: plugin
 Export-Package: org.knime.product,
  org.knime.product.branding,

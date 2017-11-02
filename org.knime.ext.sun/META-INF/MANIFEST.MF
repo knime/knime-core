@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME JavaScripting node
 Bundle-SymbolicName: org.knime.ext.sun;singleton:=true
 Bundle-Version: 3.5.0.qualifier
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.ext.sun.nodes.script,
  org.knime.ext.sun.nodes.script.calculator,
  org.knime.ext.sun.nodes.script.compile,

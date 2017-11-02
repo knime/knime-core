@@ -56,7 +56,7 @@
     <key>CFBundleDevelopmentRegion</key>
         <string>en</string>
     <key>NSHumanReadableCopyright</key>
-        <string>Copyright by KNIME GmbH, Konstanz, Germany. All rights reserved.</string>       
+        <string>Copyright by KNIME AG, Zurich, Switzerland. All rights reserved.</string>       
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
