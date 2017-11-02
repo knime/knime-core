@@ -56,7 +56,7 @@ public final class MultiSpecHandler {
     }
 
     /**
-     * Creates an equivalent {@link DataTableSpec} to {@link MultiSpecHandler.createJointSpec} but uses the same column
+     * Creates an equivalent {@link DataTableSpec} to {@link #createJointSpec} but uses the same column
      * nomenclature as the Joiner Node.
      *
      * @param leftSpec spec of the left table
@@ -64,17 +64,10 @@ public final class MultiSpecHandler {
      * @return the joint {@link DataTableSpec}
      */
     public static DataTableSpec createJointOutputSpec(final DataTableSpec leftSpec, final DataTableSpec rightSpec) {
-        DataTableSpecCreator specCreator = new DataTableSpecCreator();
-
-        for (DataColumnSpec dataColumnSpec : leftSpec) {
-            String columnName = dataColumnSpec.getName();
-            DataColumnSpecCreator dataColumnSpecCreator =
-                new DataColumnSpecCreator(columnName, dataColumnSpec.getType());
-            specCreator.addColumns(dataColumnSpecCreator.createSpec());
-        }
+        DataTableSpecCreator specCreator = new DataTableSpecCreator(leftSpec);
         for (DataColumnSpec dataColumnSpec : rightSpec) {
             String columnName = dataColumnSpec.getName();
-            if (specCreator.createSpec().containsName(columnName)) {
+            if (leftSpec.containsName(columnName)) {
                 columnName += " (#1)";
             }
             DataColumnSpecCreator dataColumnSpecCreator =

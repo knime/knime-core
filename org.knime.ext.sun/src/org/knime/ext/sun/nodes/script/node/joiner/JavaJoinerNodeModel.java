@@ -47,7 +47,6 @@ package org.knime.ext.sun.nodes.script.node.joiner;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -64,10 +63,10 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.streamable.BufferedDataTableRowOutput;
-import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
 import org.knime.ext.sun.nodes.script.calculator.MultiTableColumnCalculator;
+import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.multitable.MultiSpecHandler;
 import org.knime.ext.sun.nodes.script.multitable.MultiTableRowInput;
 import org.knime.ext.sun.nodes.script.multitable.VirtualJointRow;
@@ -111,15 +110,11 @@ public class JavaJoinerNodeModel extends NodeModel implements FlowVariableProvid
             throw new InvalidSettingsException("No expression has been set.");
         }
         try {
-
             m_settings.setInputAndCompile(MultiSpecHandler.createJointSpec(inSpecs[0], inSpecs[1]));
-
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage(), e);
+        } catch (CompilationFailedException e) {
+            throw new InvalidSettingsException("The given expression could not be compiled.", e);
         }
-        DataTableSpec[] outs = new DataTableSpec[getNrOutPorts()];
-        Arrays.fill(outs, MultiSpecHandler.createJointOutputSpec(inSpecs[0], inSpecs[1]));
-        return outs;
+        return new DataTableSpec[] {MultiSpecHandler.createJointOutputSpec(inSpecs[0], inSpecs[1])};
     }
 
     /** {@inheritDoc} */
@@ -127,26 +122,25 @@ public class JavaJoinerNodeModel extends NodeModel implements FlowVariableProvid
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
         MultiTableRowInput input = new MultiTableRowInput(inData[0], inData[1]);
-
+        // Row count for the flow variable provider
         m_rowCount = input.getRowCount();
-
-        BufferedDataContainer trueMatch = exec.createDataContainer(
+        // Container for the joined table
+        BufferedDataContainer joinedTables = exec.createDataContainer(
             MultiSpecHandler.createJointOutputSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec()));
-        BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(trueMatch);
+        BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(joinedTables);
         execute(input, output, exec);
-        BufferedDataTable[] outTables = new BufferedDataTable[]{trueMatch.getTable()};
-        return outTables;
+        return new BufferedDataTable[]{joinedTables.getTable()};
     }
 
-    private void execute(final RowInput inData, final RowOutput output, final ExecutionContext exec) throws Exception {
-        DataTableSpec spec = inData.getDataTableSpec();
-        m_settings.setInputAndCompile(spec);
-        long leftRowCount = ((MultiTableRowInput)inData).getLeftRowCount();
-        long rightRowCount = ((MultiTableRowInput)inData).getRightRowCount();
+    private void execute(final MultiTableRowInput inData, final RowOutput output,
+                            final ExecutionContext exec) throws Exception {
+        DataTableSpec inSpec = inData.getDataTableSpec();
+        m_settings.setInputAndCompile(inSpec);
+        long leftRowCount = inData.getLeftRowCount();
+        long rightRowCount = inData.getRightRowCount();
         MultiTableColumnCalculator cc = new MultiTableColumnCalculator(m_settings, this, leftRowCount, rightRowCount);
         int rowIndex = 0;
         DataRow row;
-        RowOutput trueMatch = output;
         while ((row = inData.poll()) != null) {
             cc.setProgress(rowIndex, m_rowCount, row.getKey(), exec);
             DataCell result = cc.calculate((VirtualJointRow)row);
@@ -158,12 +152,12 @@ public class JavaJoinerNodeModel extends NodeModel implements FlowVariableProvid
                 b = ((BooleanValue)result).getBooleanValue();
             }
             if (b) {
-                trueMatch.push(row);
+                output.push(row);
             }
             exec.checkCanceled();
             rowIndex++;
         }
-        trueMatch.close();
+        output.close();
     }
 
     /** {@inheritDoc} */
@@ -187,7 +181,9 @@ public class JavaJoinerNodeModel extends NodeModel implements FlowVariableProvid
         }
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated*/
+    @Deprecated
     @Override
     public int getRowCount() {
         return KnowsRowCountTable.checkRowCount(m_rowCount);

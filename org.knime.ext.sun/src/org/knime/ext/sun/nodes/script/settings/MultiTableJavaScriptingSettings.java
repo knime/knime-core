@@ -421,7 +421,7 @@ public final class MultiTableJavaScriptingSettings {
     /** Set input data, compile expression if necessary.
      * @param spec The input spec.
      * @throws CompilationFailedException If compilation fails.
-     * @throws InvalidSettingsException If settins are incorrect.
+     * @throws InvalidSettingsException If settings are incorrect.
      */
     public void setInputAndCompile(final DataTableSpec spec)
         throws CompilationFailedException, InvalidSettingsException {

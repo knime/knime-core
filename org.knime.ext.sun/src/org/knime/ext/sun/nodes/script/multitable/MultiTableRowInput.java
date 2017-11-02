@@ -13,14 +13,19 @@ import org.knime.core.node.streamable.RowInput;
  */
 public class MultiTableRowInput extends RowInput {
 
+    // The spec of the rows produced by this class
     private final DataTableSpec m_spec;
 
+    // Iterator over the left table
     private final CloseableRowIterator m_leftIterator;
 
+    // Iterator over the right table
     private CloseableRowIterator m_rightIterator;
 
+    // Current row in the left table
     private DataRow m_currentLeftRow;
 
+    // Number of rows, equals #rowsLeft * #rowsRight
     private final long m_rowCount;
 
     private BufferedDataTable m_leftTable;
@@ -43,7 +48,7 @@ public class MultiTableRowInput extends RowInput {
 
         m_rowCount = leftTable.size() * rightTable.size();
         if (m_rowCount <= 0) {
-            throw new IllegalArgumentException("Error constructing MultiTableRowInput: one of the tables is empty.");
+            throw new IllegalArgumentException("The input tables for a MultiTableRowInput cannot be empty.");
         }
         m_leftIterator = leftTable.iterator();
         m_rightIterator = rightTable.iterator();
@@ -64,6 +69,8 @@ public class MultiTableRowInput extends RowInput {
     @Override
     public DataRow poll() throws InterruptedException {
         DataRow rightRow;
+        // For every left row, we go through the right table.
+        // If the right iterator is done, we advance the left one.
         if (m_rightIterator.hasNext()) {
             rightRow = m_rightIterator.next();
         } else {

@@ -523,17 +523,27 @@ public class MultiTableJavaScriptingPanel extends JPanel {
         DefaultListModel listModel = (DefaultListModel)m_colList.getModel();
         listModel.removeAllElements();
         if (m_currentVersion == MultiTableExpression.VERSION_1X) {
-            listModel.addElement(MultiSpecHandler.LEFT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWKEY);
-            listModel.addElement(MultiSpecHandler.LEFT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWNUMBER);
-            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWKEY);
-            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWNUMBER);
+            listModel.addElement(MultiSpecHandler.LEFT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWKEY);
+            listModel.addElement(MultiSpecHandler.LEFT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWNUMBER);
+            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWKEY);
+            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWNUMBER);
         } else {
-            listModel.addElement(MultiSpecHandler.LEFT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWID);
-            listModel.addElement(MultiSpecHandler.LEFT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWINDEX);
-            listModel.addElement(MultiSpecHandler.LEFT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWCOUNT);
-            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWID);
-            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWINDEX);
-            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWCOUNT);
+            listModel.addElement(MultiSpecHandler.LEFT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWID);
+            listModel.addElement(MultiSpecHandler.LEFT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWINDEX);
+            listModel.addElement(MultiSpecHandler.LEFT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWCOUNT);
+            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWID);
+            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWINDEX);
+            listModel.addElement(MultiSpecHandler.RIGHT_PREFIX
+                + MultiSpecHandler.PREFIX_SEPARATOR + MultiTableExpression.ROWCOUNT);
         }
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);

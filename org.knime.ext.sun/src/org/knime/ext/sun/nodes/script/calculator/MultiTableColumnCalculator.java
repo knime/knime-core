@@ -167,20 +167,18 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
     public DataCell calculate(final VirtualJointRow row) {
         if (m_flowVarAssignmentMap == null) {
             m_flowVarAssignmentMap = new HashMap<InputField, Object>();
-            for (Map.Entry<InputField, ExpressionField> e
-                    : m_expression.getFieldMap().entrySet()) {
+            for (Map.Entry<InputField, ExpressionField> e : m_expression.getFieldMap().entrySet()) {
                 InputField f = e.getKey();
                 if (f.getFieldType().equals(FieldType.Variable)) {
                     Class<?> c = e.getValue().getFieldClass();
-                    m_flowVarAssignmentMap.put(f,
-                            m_flowVarProvider.readVariable(
-                                    f.getColOrVarName(), c));
+                    m_flowVarAssignmentMap.put(f, m_flowVarProvider.readVariable(f.getColOrVarName(), c));
                 }
             }
         }
         DataTableSpec spec = m_settings.getInputSpec();
         Class<?> returnType = m_settings.getReturnType();
         boolean isArrayReturn = m_settings.isArrayReturn();
+        // Map holding the table constant expressions
         Map<InputField, Object> nameValueMap =
             new HashMap<InputField, Object>();
         nameValueMap.put(new InputField(MultiSpecHandler.LEFT_PREFIX
@@ -204,6 +202,7 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
         m_lastProcessedRow++;
 
         nameValueMap.putAll(m_flowVarAssignmentMap);
+        // The row consists of the columns from the two input tables with a prefix.
         for (int i = 0; i < row.getNumCells(); i++) {
             DataColumnSpec columnSpec = spec.getColumnSpec(i);
             InputField inputField =
@@ -219,12 +218,10 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
             }
             Object cellVal = null;
             if (cell.isMissing()) {
-                if (m_settings.isInsertMissingAsNull()) {
-                    // leave value as null
-                } else {
-                    String message = "Row \"" + row.getKey() + "\" "
-                        + "contains missing value in column \""
-                        + columnSpec.getName() + "\" - returning missing";
+                if (!m_settings.isInsertMissingAsNull()) {
+                    String message = String.format("Row \"%s\" "
+                            + "contains missing value in column \"%s\" - returning missing",
+                            row.getKey(), columnSpec.getName());
                     if (!m_hasReportedMissing) {
                         m_hasReportedMissing = true;
                         LOGGER.warn(message + " (omitting further warnings)");
@@ -233,6 +230,7 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
                     }
                     return DataType.getMissingCell();
                 }
+                // else leave value as null
             } else {
                 for (JavaSnippetType<?, ?, ?> t : JavaSnippetType.TYPES) {
                     if (t.checkCompatibility(cellType)) {
@@ -253,22 +251,20 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
             o = m_expression.evaluate();
             // class correctness is asserted by compiler
         } catch (Abort ee) {
-            StringBuilder builder = new StringBuilder("Calculation aborted: ");
             String message = ee.getMessage();
-            builder.append(message == null ? "<no details>" : message);
-            throw new RuntimeException(builder.toString(), ee);
+            throw new RuntimeException("Calculation aborted: "
+                        + (message == null ? "<no details>" : message), ee);
         } catch (EvaluationFailedException ee) {
             Throwable cause = ee.getCause();
             if (cause instanceof InvocationTargetException) {
                 cause = ((InvocationTargetException)cause).getCause();
             }
-            String message =
-                cause != null ? cause.getMessage() : ee.getMessage();
-            LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey() + "\": " + message, ee);
+            String message = cause != null ? cause.getMessage() : ee.getMessage();
+            LOGGER.warn(String.format("Evaluation of expression failed for row \"%s\": %s",
+                                        row.getKey(), message), ee);
         } catch (IllegalPropertyException ipe) {
-            LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey() + "\": " + ipe.getMessage(), ipe);
+            LOGGER.warn(String.format("Evaluation of expression failed for row \"%s\": %s",
+                                        row.getKey(), ipe.getMessage()), ipe);
         }
         DataCell result = null;
         for (JavaSnippetType<?, ?, ?> t : JavaSnippetType.TYPES) {
@@ -284,8 +280,12 @@ public class MultiTableColumnCalculator extends AbstractCellFactory {
             }
         }
         if (result == null) {
-            throw new InternalError("No mapping for objects of class "
+            if (o == null) {
+                throw new InternalError("No data type mapping found");
+            } else {
+                throw new InternalError("No mapping for objects of class "
                     + o.getClass().getName());
+            }
         }
         return result;
     }
