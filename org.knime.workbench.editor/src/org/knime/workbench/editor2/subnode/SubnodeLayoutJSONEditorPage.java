@@ -106,12 +106,14 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.layout.DefaultLayoutCreatorImpl;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
@@ -149,6 +151,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
     private boolean m_basicPanelAvailable = true;
     private final Map<NodeIDSuffix, BasicLayoutInfo> m_basicMap;
     private Composite m_basicComposite;
+    private Map<NodeID, Button> m_wizardUsageMap;
+    private Map<NodeID, Button> m_dialogUsageMap;
 
     /**
      * Crates a new page instance with a given page name
@@ -160,6 +164,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
         m_layoutCreator = new DefaultLayoutCreatorImpl();
+        m_wizardUsageMap = new LinkedHashMap<NodeID, Button>();
+        m_dialogUsageMap = new LinkedHashMap<NodeID, Button>();
     }
 
     /**
@@ -176,7 +182,172 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         jsonTab.setText("Advanced");
         jsonTab.setControl(createJSONEditorComposite(tabs));
 
+        TabItem usageTab = new TabItem(tabs, SWT.NONE);
+        usageTab.setText("Node Usage");
+        usageTab.setControl(createUsageEditorComposite(tabs));
+
         setControl(tabs);
+    }
+
+    private Composite createUsageEditorComposite(final Composite parent) {
+        Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(new GridLayout(1, true));
+        GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL);
+        composite.setLayoutData(gridData);
+        if (m_viewNodes.size() > 0) {
+            createNodeGrid(composite);
+        } else {
+            createMessage(composite, "No nodes for usage configuration available.");
+        }
+        setControl(composite);
+        return composite;
+    }
+
+    private void createMessage(final Composite parent, final String message) {
+        GridData gridData = new GridData();
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.horizontalAlignment = SWT.CENTER;
+        Label infoLabel = new Label(parent, SWT.CENTER);
+        infoLabel.setText(message);
+        infoLabel.setLayoutData(gridData);
+    }
+
+    private Button createCheckbox(final Composite parent) {
+        Button checkbox = new Button(parent, SWT.CHECK);
+        checkbox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        return checkbox;
+    }
+
+    private void createNodeGrid(final Composite parent) {
+        ScrolledComposite scrollPane = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
+        scrollPane.setExpandHorizontal(true);
+        scrollPane.setExpandVertical(true);
+        Composite composite = new Composite(scrollPane, SWT.NONE);
+        scrollPane.setContent(composite);
+        scrollPane.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+        composite.setLayout(new GridLayout(3, false));
+        composite.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
+
+        //titles
+        new Composite(composite, SWT.NONE); /* Placeholder */
+        Label wizardLabel = new Label(composite, SWT.CENTER);
+        FontData fontData = wizardLabel.getFont().getFontData()[0];
+        Font boldFont =
+            new Font(Display.getCurrent(), new FontData(fontData.getName(), fontData.getHeight(), SWT.BOLD));
+        wizardLabel.setText("WebPortal /\nWrapped Metanode View");
+        wizardLabel.setFont(boldFont);
+        Label dialogLabel = new Label(composite, SWT.CENTER);
+        dialogLabel.setText("\nWrapped Metanode Dialog");
+        dialogLabel.setFont(boldFont);
+
+        //select all checkboxes
+        Label selectAllLabel = new Label(composite, SWT.LEFT);
+        selectAllLabel.setText("Enable/Disable");
+        Button selectAllWizard = createCheckbox(composite);
+        Button selectAllDialog = createCheckbox(composite);
+
+        //individual nodes
+        for (@SuppressWarnings("rawtypes")
+        Entry<NodeIDSuffix, WizardNode> entry : m_viewNodes.entrySet()) {
+            NodeIDSuffix suffix = entry.getKey();
+            NodeID id = suffix.prependParent(m_subNodeContainer.getWorkflowManager().getID());
+            NodeContainer nodeContainer =
+                m_viewNodes.containsKey(suffix) ? m_subNodeContainer.getWorkflowManager().getNodeContainer(id) : null;
+            createNodeLabelComposite(composite, id, nodeContainer);
+
+            @SuppressWarnings("rawtypes")
+            WizardNode model = entry.getValue();
+            Button wizardButton = createCheckbox(composite);
+            wizardButton.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    checkAllSelected(m_wizardUsageMap, selectAllWizard);
+                }
+            });
+            wizardButton.setToolTipText("Enable/disable for usage in WebPortal and wizard execution.");
+            wizardButton.setSelection(!((WizardNode<?, ?>)model).isHideInWizard());
+            m_wizardUsageMap.put(id, wizardButton);
+            if (model instanceof DialogNode) {
+                Button dialogButton = createCheckbox(composite);
+                dialogButton.addSelectionListener(new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(final SelectionEvent e) {
+                        checkAllSelected(m_dialogUsageMap, selectAllDialog);
+                    }
+                });
+                dialogButton.setToolTipText("Enable/disable for usage in wrapped metanode configure dialog.");
+                dialogButton.setSelection(!((DialogNode<?, ?>)model).isHideInDialog());
+                m_dialogUsageMap.put(id, dialogButton);
+            } else {
+                new Composite(composite, SWT.NONE); /* Placeholder */
+            }
+        }
+        checkAllSelected(m_wizardUsageMap, selectAllWizard);
+        checkAllSelected(m_dialogUsageMap, selectAllDialog);
+
+        selectAllWizard.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                selectAllWizard.setGrayed(false);
+                for (Button b : m_wizardUsageMap.values()) {
+                    b.setSelection(selectAllWizard.getSelection());
+                }
+            }
+        });
+        if (m_wizardUsageMap.size() < 1) {
+            selectAllWizard.setEnabled(false);
+        }
+        selectAllDialog.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                selectAllDialog.setGrayed(false);
+                for (Button b : m_dialogUsageMap.values()) {
+                    b.setSelection(selectAllDialog.getSelection());
+                }
+            }
+        });
+        if (m_dialogUsageMap.size() < 1) {
+            selectAllDialog.setEnabled(false);
+        }
+    }
+
+    private void checkAllSelected(final Map<NodeID, Button> buttons, final Button selectAllButton) {
+        boolean allSelected = true;
+        boolean oneSelected = false;
+        for (Button b : buttons.values()) {
+            allSelected &= b.getSelection();
+            oneSelected |= b.getSelection();
+        }
+        selectAllButton.setSelection(oneSelected);
+        selectAllButton.setGrayed(!allSelected);
+    }
+
+    boolean applyUsageChanges() {
+        try (WorkflowLock lock = m_subNodeContainer.lock()) { // each node will cause lock acquisition, do it as bulk
+            for (Entry<NodeID, Button> wUsage : m_wizardUsageMap.entrySet()) {
+                NodeID id = wUsage.getKey();
+                boolean hide = !wUsage.getValue().getSelection();
+                try {
+                    m_subNodeContainer.setHideNodeFromWizard(id, hide);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Unable to set hide in wizard flag on node: " + e.getMessage(), e);
+                    return false;
+                }
+            }
+
+            for (Entry<NodeID, Button> dUsage : m_dialogUsageMap.entrySet()) {
+                NodeID id = dUsage.getKey();
+                boolean hide = !dUsage.getValue().getSelection();
+                try {
+                    m_subNodeContainer.setHideNodeFromDialog(id, hide);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private Composite createBasicComposite(final Composite parent) {
@@ -380,7 +551,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
 
-        Composite labelComposite = new Composite(m_basicComposite, SWT.NONE);
+        Composite labelComposite = new Composite(parent, SWT.NONE);
         labelComposite.setLayout(new GridLayout(2, false));
         labelComposite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 

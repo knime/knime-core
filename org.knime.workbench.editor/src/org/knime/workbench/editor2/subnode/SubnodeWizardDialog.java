@@ -48,10 +48,8 @@
  */
 package org.knime.workbench.editor2.subnode;
 
-import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -66,19 +64,6 @@ public class SubnodeWizardDialog extends WizardDialog {
      */
     public SubnodeWizardDialog(final Shell parentShell, final IWizard newWizard) {
         super(parentShell, newWizard);
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void create() {
-        super.create();
-        Button nextBtn = getButton(IDialogConstants.NEXT_ID);
-        nextBtn.setText("Node Usage >");
-        Button backBtn = getButton(IDialogConstants.BACK_ID);
-        backBtn.setText("< Ports");
     }
 
 }

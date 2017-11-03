@@ -53,12 +53,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.swt.widgets.Button;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.DialogNode;
@@ -66,7 +64,6 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -86,7 +83,6 @@ public class SetupSubnodeWizard extends Wizard {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SetupSubnodeWizard.class);
 
     private ConfigureMetaNodePortsPage m_portsPage;
-    private ConfigureNodeUsagePage m_usagePage;
 
     private final EditPartViewer m_viewer;
     private final SubNodeContainer m_subNode;
@@ -129,10 +125,6 @@ public class SetupSubnodeWizard extends Wizard {
        m_portsPage.setSubNode(m_subNode);
        m_portsPage.setTemplate(null);
        addPage(m_portsPage);
-
-       m_usagePage = new ConfigureNodeUsagePage("Change node usage configuration");
-       m_usagePage.setNodes(m_subNode, usageNodes);
-       addPage(m_usagePage);
    }
 
    private boolean considerNodeForUsage(final NodeModel model) {
@@ -145,7 +137,7 @@ public class SetupSubnodeWizard extends Wizard {
    */
   @Override
   public boolean canFinish() {
-      return m_portsPage.isPageComplete() && m_usagePage.isPageComplete();
+      return m_portsPage.isPageComplete();
   }
 
     /**
@@ -153,10 +145,7 @@ public class SetupSubnodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
-        if (!applyPortChanges()) {
-            return false;
-        }
-        return applyUsageChanges();
+        return applyPortChanges();
     }
 
     private boolean applyPortChanges() {
@@ -216,34 +205,6 @@ public class SetupSubnodeWizard extends Wizard {
             reconfCmd.setNewOutPorts(outPorts);
         }
         m_viewer.getEditDomain().getCommandStack().execute(reconfCmd);
-        return true;
-    }
-
-    private boolean applyUsageChanges() {
-        try (WorkflowLock lock = m_subNode.lock()) { // each node will cause lock acquisition, do it as bulk
-            for (Entry<NodeID, Button> wUsage : m_usagePage.getWizardUsageMap().entrySet()) {
-                NodeID id = wUsage.getKey();
-                boolean hide = !wUsage.getValue().getSelection();
-                try {
-                    m_subNode.setHideNodeFromWizard(id, hide);
-                } catch (IllegalArgumentException e) {
-                    LOGGER.error("Unable to set hide in wizard flag on node: " + e.getMessage(), e);
-                    return false;
-                }
-            }
-
-            for (Entry<NodeID, Button> dUsage : m_usagePage.getDialogUsageMap().entrySet()) {
-                NodeID id = dUsage.getKey();
-                boolean hide = !dUsage.getValue().getSelection();
-                try {
-                    m_subNode.setHideNodeFromDialog(id, hide);
-                } catch (IllegalArgumentException e) {
-                    LOGGER.error("Unable to set hide in dialog flag on node: " + e.getMessage(), e);
-                    return false;
-                }
-            }
-        }
-
         return true;
     }
 

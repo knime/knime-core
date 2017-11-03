@@ -82,9 +82,11 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
 /**
- *
+ *@deprecated because it moved into the Layout Wizard
+ *@see SubnodeLayoutJSONEditorPage
  * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
  */
+@Deprecated
 public class ConfigureNodeUsagePage extends WizardPage {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ConfigureNodeUsagePage.class);
