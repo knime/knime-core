@@ -107,8 +107,7 @@ class NodeDescriptionParser {
      * @throws ParserConfigurationException if no appropriate parser can be found (highly unlikely)
      */
     public NodeDescriptionParser() throws ParserConfigurationException {
-        DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-        fac.setNamespaceAware(true);
+        DocumentBuilderFactory fac = NodeDescription.getDocumentBuilderFactory();
         m_parser = fac.newDocumentBuilder();
         m_parser.setEntityResolver(RESOLVER);
     }
