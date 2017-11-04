@@ -134,6 +134,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/VerticalCollapsablePanels.java" type="org.knime.core.node.util.VerticalCollapsablePanels">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.VerticalCollapsablePanels"/>
+                <message_argument value="addPanel(JPanel, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addPanel(JPanel, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="336695337">
             <message_arguments>
