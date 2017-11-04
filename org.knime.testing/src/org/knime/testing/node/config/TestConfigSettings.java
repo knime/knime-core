@@ -467,7 +467,7 @@ public class TestConfigSettings {
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
         m_owner = settings.getString("owner", null);
         if (m_owner == null) {
-            m_owner = System.getProperty("user.name") + "@inf.uni-konstanz.de";
+            m_owner = System.getProperty("user.name") + "@knime.com";
         }
 
         String[] temp = settings.getStringArray("requiredLogErrors", EMPTY);

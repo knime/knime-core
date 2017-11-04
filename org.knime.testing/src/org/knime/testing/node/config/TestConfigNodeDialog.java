@@ -162,8 +162,13 @@ public class TestConfigNodeDialog extends NodeDialogPane {
                 if (value != null) {
                     NodeContainer cont = (NodeContainer)value;
                     String text = cont.getNameWithID();
-                    return super.getListCellRendererComponent(list, text,
-                            index, isSelected, cellHasFocus);
+                    Component c = super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus);
+                    if (cont.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR)) {
+                        setForeground(Color.RED.darker().darker());
+                    } else {
+                        setForeground(list.getForeground());
+                    }
+                    return c;
                 } else {
                     return super.getListCellRendererComponent(list, value,
                             index, isSelected, cellHasFocus);
