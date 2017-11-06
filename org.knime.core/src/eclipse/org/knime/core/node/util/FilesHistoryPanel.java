@@ -1071,6 +1071,7 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public void setAllowSystemPropertySubstitution(final boolean b) {
         m_allowSystemPropertySubstitution = b;
+        fileLocationChanged();
     }
 
     /**
