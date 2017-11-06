@@ -399,12 +399,6 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        final DataTableSpec spec = (DataTableSpec)inSpecs[DATA_PORT];
-        try {
-            parseRules(spec, RuleNodeSettings.RuleSplitter);
-        } catch (final ParseException e) {
-            throw new InvalidSettingsException(e);
-        }
         return new StreamableOperator() {
             private SimpleStreamableOperatorInternals m_internals;
 
@@ -455,6 +449,12 @@ class RuleEngineFilter2PortsNodeModel extends RuleEngineNodeModel {
                     RowInput riRule = (RowInput)rulePort;
                     m_rulesList.addAll(
                         RuleEngineVariable2PortsNodeModel.rules(riRule, m_settings, RuleNodeSettings.RuleFilter));
+                }
+                final DataTableSpec spec = (DataTableSpec)inSpecs[DATA_PORT];
+                try {
+                    parseRules(spec, RuleNodeSettings.RuleSplitter);
+                } catch (final ParseException e) {
+                    throw new InvalidSettingsException(e);
                 }
                 final RowInput inputPartitions = (RowInput)inputs[DATA_PORT];
                 final List<Rule> rules = parseRules(inputPartitions.getDataTableSpec(), RuleNodeSettings.RuleFilter);
