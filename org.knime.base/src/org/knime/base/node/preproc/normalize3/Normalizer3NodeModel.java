@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -323,7 +323,7 @@ public class Normalizer3NodeModel extends NodeModel {
      * Helper class for being able to return all necessary information in the
      * {@link #calculate(PortObject[], ExecutionContext)} method.
      *
-     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     * @author Dominik Morent, KNIME AG, Zurich, Switzerland
      */
     private static final class CalculationResult {
         private final BufferedDataTable m_dataTable;

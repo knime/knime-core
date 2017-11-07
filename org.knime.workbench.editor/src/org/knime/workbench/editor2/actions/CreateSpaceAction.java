@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,13 +55,13 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 /**
  * This action moves all selected nodes in a workbench a certain distance in a certain direction.
  *
- * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class CreateSpaceAction extends MoveNodeAbstractAction {
 
     /**
      * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
      */
     public enum CreateSpaceDirection {
         /**

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -188,7 +188,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      * Policy that doesn't show any handles (black squares) when the editpart
      * is selected.
      *
-     * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+     * @author Peter Ohl, KNIME AG, Zurich, Switzerland
      */
     static class NonResizeNoHandlesEditPolicy extends NonResizableEditPolicy {
 
@@ -219,7 +219,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         /**
          * Handle that doesn't change the cursor.
          *
-         * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+         * @author Peter Ohl, KNIME AG, Zurich, Switzerland
          */
         static class Handle extends MoveHandle {
 

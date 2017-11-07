@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.NodeContext;
  * {@link #doInBackground()}, {@link #process(List)}, or {@link #done()} are called. The {@link NodeContext} is taken
  * from the creator of this object, not from the caller of {@link #execute()}.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @param <T> the result type returned by this {@code SwingWorker's} {@code doInBackground} and {@code get} methods
  * @param <V> the type used for carrying out intermediate results by this {@code SwingWorker's} {@code publish} and
  *            {@code process} methods

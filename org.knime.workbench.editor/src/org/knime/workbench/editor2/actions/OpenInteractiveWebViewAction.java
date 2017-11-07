@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import org.knime.workbench.editor2.WizardNodeView;
 /**
  * Action to open an interactive web view of a node.
  *
- * @author Bernd Wiswedel, KNIME.com AG, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.3
  */
 public final class OpenInteractiveWebViewAction extends Action {

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,7 @@ import org.knime.core.node.NodeModel;
 
 /**
  * Fixes fully qualified name from 2.5.x into current version - factory was renamed.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class DeprecatedNodeFactoryClassMapper extends NodeFactoryClassMapper {
 

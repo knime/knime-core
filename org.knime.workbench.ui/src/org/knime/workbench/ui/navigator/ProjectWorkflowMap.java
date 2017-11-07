@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -88,7 +88,7 @@ import org.knime.core.util.ThreadUtils;
  * @see KnimeResourcePatternFilter
  *
  * @author Fabian Dill, University of Konstanz
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  *
  * History: 2011-08-11 (ohl): Changing the key in the map.
  * Turns out some places (e.g. IResource.getLocationURI) create URIs without

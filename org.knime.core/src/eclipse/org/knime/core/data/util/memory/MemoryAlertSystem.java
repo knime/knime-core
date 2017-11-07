@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -53,6 +53,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryNotificationInfo;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,6 +69,7 @@ import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -77,7 +79,7 @@ import org.knime.core.node.workflow.NodeContext;
  * memory is kept in some kind of cache. Or you can check {@link #isMemoryLow()} while processing data.
  *
  * @author Christian Dietz, University of Konstanz
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.12
  */
 public final class MemoryAlertSystem {
@@ -182,7 +184,7 @@ public final class MemoryAlertSystem {
     }
 
     private void usageThresholdEvent(final double usageThreshold, final Notification not) {
-        LOGGER.debug("Memory collection threshold of " + usageThreshold + " exceeded after GC");
+        LOGGER.debugWithFormat("Memory collection threshold of %.0f%% exceeded after GC", usageThreshold * 100.0);
 
         long prev, next;
         do {
@@ -208,7 +210,14 @@ public final class MemoryAlertSystem {
         } while (!m_lastEventTimestamp.compareAndSet(prev, next));
 
         if (prev < not.getTimeStamp()) {
-            LOGGER.debug("Memory usage below threshold of " + usageThreshold + " after GC run");
+            MemoryUsage collectionUsage = m_memPool.getCollectionUsage();
+            long used = collectionUsage.getUsed();
+            long max = collectionUsage.getMax();
+            double currentUsagePercent = 100.0 * used / max;
+            LOGGER.debugWithFormat(
+                "Memory usage below threshold (%.0f%%) after GC run, currently %.0f%% (%.2fGB/%.2fGB)",
+                usageThreshold * 100.0, currentUsagePercent, (double)used / FileUtils.ONE_GB,
+                (double)max / FileUtils.ONE_GB);
             m_lowMemory.set(false);
         }
 

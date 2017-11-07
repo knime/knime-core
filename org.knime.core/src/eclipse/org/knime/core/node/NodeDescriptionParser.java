@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -65,7 +65,7 @@ import org.xml.sax.SAXException;
  * automatically determines the version of the node description and create the appriopriate proxy object. This object is
  * thread safe (synchronized internally).
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 class NodeDescriptionParser {
@@ -107,8 +107,7 @@ class NodeDescriptionParser {
      * @throws ParserConfigurationException if no appropriate parser can be found (highly unlikely)
      */
     public NodeDescriptionParser() throws ParserConfigurationException {
-        DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-        fac.setNamespaceAware(true);
+        DocumentBuilderFactory fac = NodeDescription.getDocumentBuilderFactory();
         m_parser = fac.newDocumentBuilder();
         m_parser.setEntityResolver(RESOLVER);
     }

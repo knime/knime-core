@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import org.knime.core.node.NodeLogger;
  * @param <J> The Java type that is used within the snippet
  * @param <V> The DataValue type that can be converted to J.
  * @param <C> The DataCell type is used to represent objects of J in KNIME.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public abstract class JavaSnippetType
     <J, V extends DataValue, C extends DataCell> {

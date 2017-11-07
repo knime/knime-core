@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Dec 6, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * Created on Dec 6, 2013 by Patrick Winter, KNIME AG, Zurich, Switzerland
  */
 package org.knime.core.node.util.filter;
 
@@ -63,7 +63,7 @@ import javax.swing.border.TitledBorder;
 /**
  * Preview twin list that shows the included and excluded elements.
  *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @param <T> The type of elements that are in- or excluded
  * @since 2.10
  */

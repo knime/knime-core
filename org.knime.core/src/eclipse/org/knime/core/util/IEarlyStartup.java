@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ package org.knime.core.util;
  * be any thread therefore don't make any assumptions (such as the thread being the main thread). The {@link #run()}
  * methods are executed synchronously therefore you shouldn't perform any long-running operations in them.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.2
  */
 @FunctionalInterface

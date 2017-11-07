@@ -13,6 +13,12 @@
                 <message_argument value="3.3.0"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.4.2"/>
+                <message_argument value="3.4.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/collection/CellCollection.java" type="org.knime.core.data.collection.CellCollection">
         <filter id="403804204">
@@ -66,6 +72,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="PARAMETER_NAME_PATTERN_LEGACY"/>
+            </message_arguments>
+        </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
@@ -119,6 +131,19 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="writeData(String, RowInput, long, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider, int, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/VerticalCollapsablePanels.java" type="org.knime.core.node.util.VerticalCollapsablePanels">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.VerticalCollapsablePanels"/>
+                <message_argument value="addPanel(JPanel, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addPanel(JPanel, boolean)"/>
             </message_arguments>
         </filter>
     </resource>

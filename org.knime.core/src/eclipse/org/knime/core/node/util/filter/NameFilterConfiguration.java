@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,8 +68,8 @@ import org.knime.core.node.util.ConvenienceMethods;
  * This class may contain additional functionality in future versions. Clients should not rely on the enforce
  * in/exclusion flags but only use the standard load/save routines and the {@link #applyTo(String[])} method.
  *
- * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 2.6
  */
 public class NameFilterConfiguration implements Cloneable {

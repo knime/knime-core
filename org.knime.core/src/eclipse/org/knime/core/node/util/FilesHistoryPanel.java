@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -100,6 +100,7 @@ import javax.swing.text.JTextComponent;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.KNIMEConstants;
@@ -123,7 +124,7 @@ public final class FilesHistoryPanel extends JPanel {
     /**
      * Enum for whether and which location validation should be performed.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     public static enum LocationValidation {
@@ -210,7 +211,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the destination location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class FileWriterCheckLabel extends LocationCheckLabel {
@@ -262,7 +263,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the destination location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class DirectoryWriterCheckLabel extends LocationCheckLabel {
@@ -315,7 +316,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the source location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. file does not exist, file is not readable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class FileReaderCheckLabel extends LocationCheckLabel {
@@ -356,7 +357,7 @@ public final class FilesHistoryPanel extends JPanel {
      * A label that checks the source location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, is not readable, etc.).
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 2.11
      */
     static class DirectoryReaderCheckLabel extends LocationCheckLabel {
@@ -410,6 +411,9 @@ public final class FilesHistoryPanel extends JPanel {
     private int m_dialogType = JFileChooser.OPEN_DIALOG;
 
     private String m_forcedFileExtensionOnSave = null;
+
+    /** See {@link #setAllowSystemPropertySubstitution(boolean)}. */
+    private boolean m_allowSystemPropertySubstitution = false;
 
     private final JSpinner m_connectTimeoutSpinner;
 
@@ -680,7 +684,7 @@ public final class FilesHistoryPanel extends JPanel {
         });
 
         try {
-            URL url = FileUtil.toURL(getSelectedFile());
+            URL url = FileUtil.toURL(getSelectedFileWithPropertiesReplaced());
             Path localPath = FileUtil.resolveToPath(url);
             if (localPath != null) {
                 if (Files.isDirectory(localPath)) {
@@ -746,6 +750,18 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public String getSelectedFile() {
         return ((JTextField) m_textBox.getEditor().getEditorComponent()).getText();
+    }
+
+    /**
+     * Internal getter to resolve possible system properties as per
+     * {@link #setAllowSystemPropertySubstitution(boolean)}.
+     */
+    private String getSelectedFileWithPropertiesReplaced() {
+        String selectedFile = getSelectedFile();
+        if (m_allowSystemPropertySubstitution) {
+            selectedFile = StrSubstitutor.replaceSystemProperties(selectedFile);
+        }
+        return selectedFile;
     }
 
     /**
@@ -928,7 +944,7 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     private void fileLocationChanged() {
-        String selFile = getSelectedFile();
+        String selFile = getSelectedFileWithPropertiesReplaced();
         m_warnMsg.setText("");
         if (StringUtils.isNotEmpty(selFile)) {
             try {
@@ -981,7 +997,7 @@ public final class FilesHistoryPanel extends JPanel {
                     // we can only check local files, ignore everything else
                     Component editorComponent =
                             m_textBox.getEditor().getEditorComponent();
-                    String selFile = getSelectedFile();
+                    String selFile = getSelectedFileWithPropertiesReplaced();
                     if (new File(selFile).exists()) {
                         editorComponent.setBackground(Color.WHITE);
                         return;
@@ -1040,6 +1056,22 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public void setAllowRemoteURLs(final boolean b) {
         m_warnMsg.setAllowRemoteURLs(b);
+    }
+
+    /**
+     * If set to <code>true</code>, the path may contain system properties such as "${user.home}/file.txt". The file
+     * existence checks as per {@link #setMarkIfNonexisting(boolean)} will then resolve the full path. The
+     * {@link #getSelectedFile()} method will return the path as entered by the user (incl. placeholders) so the caller
+     * needs to resolve them also (see for instance {@link org.apache.commons.lang3.text.StrSubstitutor}).
+     *
+     * <p>This method should be called right after construction.
+     *
+     * @param b Whether to allow system properties in the string (default is <code>false</code>)
+     * @since 3.5
+     */
+    public void setAllowSystemPropertySubstitution(final boolean b) {
+        m_allowSystemPropertySubstitution = b;
+        fileLocationChanged();
     }
 
     /**

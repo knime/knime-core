@@ -4,7 +4,7 @@
 <entry key="node-name" type="xstring" value="String Input"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME Nodes to create KNIME Quick Forms"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.quickform.nodes"/>
-<entry key="node-bundle-vendor" type="xstring" value="KNIME.com, Zurich, Switzerland"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
 <config key="factory_settings"/>
 <entry key="node_file" type="xstring" value="settings.xml"/>
 <config key="flow_stack">

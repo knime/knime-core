@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   24.03.2014 (Christian Albrecht, KNIME.com AG, Zurich, Switzerland): created
+ *   24.03.2014 (Christian Albrecht, KNIME AG, Zurich, Switzerland): created
  */
 package org.knime.workbench.editor2.subnode;
 
@@ -67,7 +65,7 @@ import org.knime.workbench.core.util.ImageRepository;
 
 /**
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  */
 public class SubnodeLayoutWizard extends Wizard {
 

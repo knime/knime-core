@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ import org.knime.core.node.NodeView;
  * <code>NodeFactory</code> for the "PossibleValueRowFilter" Node.
  *
  *
- * @author Ferry Abt, KNIME.com AG, Zurich, Switzerland
+ * @author Ferry Abt, KNIME AG, Zurich, Switzerland
  * @since 3.4
  */
 public class NominalValueRowSplitterNodeFactory extends NodeFactory<NominalValueRowFilterNodeModel> {

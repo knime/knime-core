@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider
  * This class extends the {@link DefaultCellEditor} class to provide a combobox which allows the user to choose
  * one of the available {@link AggregationFunction}s.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @param <F> {@link AggregationFunction} implementation to work with
  * @param <R> {@link AggregationFunctionRow} implementation to work with
  * @since 2.11

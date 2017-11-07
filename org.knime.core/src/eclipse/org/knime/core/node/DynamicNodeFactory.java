@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,9 +55,9 @@ import org.knime.node2012.KnimeNodeDocument;
  * A node factory to create nodes dynamically. It essentially creates the node description (usually given in the
  * XXXNodeFactory.xml) dynamically.
  *
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  * @author Martin Horn, University of Konstanz
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @param <T> the node model of the factory
  * @since 2.6
  */

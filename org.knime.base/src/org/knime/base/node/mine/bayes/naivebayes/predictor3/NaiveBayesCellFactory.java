@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
  * <code>NaiveBayesModel</code> to predict the class membership of each row.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  */
 class NaiveBayesCellFactory implements AppendedCellFactory, CellFactory {
 

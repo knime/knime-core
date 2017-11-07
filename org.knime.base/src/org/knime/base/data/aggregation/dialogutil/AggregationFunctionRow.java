@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -53,7 +53,7 @@ import org.knime.core.node.port.database.aggregation.AggregationFunction;
 /**
  * Interface that describes a row in an {@link AggregationFunction} table. It provides functions to check
  * if the row is valid and the missing cell handling.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @param <F> the {@link AggregationFunction} this row contains
  * @since 2.11
  */

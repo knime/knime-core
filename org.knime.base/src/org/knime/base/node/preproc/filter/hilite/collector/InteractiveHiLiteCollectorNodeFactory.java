@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 16.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 16.04.2013 by Christian Albrecht, KNIME AG, Zurich, Switzerland
  */
 package org.knime.base.node.preproc.filter.hilite.collector;
 
@@ -53,7 +53,7 @@ import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 
 /**
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 public class InteractiveHiLiteCollectorNodeFactory extends NodeFactory<InteractiveHiLiteCollectorNodeModel> implements

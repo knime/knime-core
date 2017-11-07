@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,10 @@
  */
 package org.knime.core.node;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.w3c.dom.Element;
@@ -55,10 +59,21 @@ import org.w3c.dom.Element;
  * meta information is read from the XML files which accompany every node factory. But also other means of providing
  * node descriptions are possible.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 public abstract class NodeDescription {
+
+    /** Creating the DocumentBuilderFactory, hence a lazy initializer, see AP-8171. */
+    private static final LazyInitializer<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY_INITIALIZER =
+            new LazyInitializer<DocumentBuilderFactory>() {
+
+        @Override
+        protected DocumentBuilderFactory initialize() {
+            return initializeDocumentBuilderFactory();
+        }
+    };
+
     private boolean m_deprecated;
 
     /**
@@ -208,4 +223,26 @@ public abstract class NodeDescription {
     public boolean isDeprecated() {
         return m_deprecated;
     }
+
+
+    /** Get a singleton instance of a {@link DocumentBuilderFactory}, initialized lazy.
+     * @return That singleton instance.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static DocumentBuilderFactory getDocumentBuilderFactory() {
+        try {
+            return DOCUMENT_BUILDER_FACTORY_INITIALIZER.get();
+        } catch (ConcurrentException ex) {
+            // will not be thrown as the 'initialize' method doesn't throw that exception
+            NodeLogger.getLogger(NodeDescription.class).error(ex.getMessage(), ex);
+            return initializeDocumentBuilderFactory();
+        }
+    }
+
+    private static DocumentBuilderFactory initializeDocumentBuilderFactory() {
+        DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+        fac.setNamespaceAware(true);
+        return fac;
+    }
+
 }

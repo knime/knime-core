@@ -208,7 +208,7 @@
                         <cell id="14">
                             <text id="15">
                                 <property name="contentType">auto</property>
-                                <text-property name="content"><![CDATA[Created with KNIME Report Designer. Provided by KNIME.com AG, Zurich, Switzerland]]></text-property>
+                                <text-property name="content"><![CDATA[Created with KNIME Report Designer. Provided by KNIME AG, Zurich, Switzerland]]></text-property>
                             </text>
                         </cell>
                         <cell id="18">

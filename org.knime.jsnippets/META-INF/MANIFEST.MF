@@ -6,7 +6,7 @@ Bundle-Version: 3.5.0.qualifier
 Bundle-ClassPath: knime-jsnippets.jar,
  lib/prompt.jar
 Bundle-Activator: org.knime.base.node.jsnippet.JavaSnippetActivator
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.base.node.jsnippet.guarded,
  org.knime.base.node.jsnippet.template,
  org.knime.base.node.jsnippet.ui,

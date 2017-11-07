@@ -9,10 +9,15 @@
 			are hours, minutes, seconds, nano-, micro- and milliseconds. If the output should be a long value the
 			conversion result will be truncated, e.g. if the duration <i>1 hour 30 minutes</i> should be converted to
 			hours, the exact output is <i>1.5 hours</i> whereas the truncated output <i>1 hour</i>.
+			<br />
+			<br />
+			<i>Note: Only time-based durations can be converted to numbers, since
+				the conversion of date-based durations is not well defined (e.g.
+				it is not clearly defined how many days a month has).</i>
 		</intro>
 		<tab name="Column Selection">
 			<option name="Column Selector">
-				A duration column can be chosen.
+				A time-based duration column can be chosen.
 			</option>
 		</tab>
 		<tab name="Conversion Settings">

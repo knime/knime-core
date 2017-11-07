@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -72,7 +72,7 @@ import org.knime.core.node.port.PortTypeRegistry;
 /**
  * Port object representing a simple image (png, ...).
  *
- * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
  */
 public class ImagePortObject extends AbstractPortObject {
     /**

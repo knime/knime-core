@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * Implemented and used by a node model to parse text expressions containing flow variable identifiers such as
  * $${Inameofintvar}$$.
  *
- * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
  * @since 2.7
  * @deprecated Use {@link FlowVariableProvider} instead
  */

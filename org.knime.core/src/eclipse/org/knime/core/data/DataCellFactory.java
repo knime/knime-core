@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.ExecutionContext;
  * <b>Note that you should not implement the {@link DataCellFactory} interface directly. Instead implement any of the
  * sub-interfaces that read from a specific input source.</b>
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.0
  */
 public interface DataCellFactory {
@@ -72,7 +72,7 @@ public interface DataCellFactory {
      * <b>This interface is not meant for direct implementation. Implement {@link FromSimpleString} or
      * {@link FromComplexString} instead.</b>
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public interface FromString extends DataCellFactory {
         /**
@@ -88,7 +88,7 @@ public interface DataCellFactory {
     /**
      * Factory that creates cells from simple, usually single-line, strings.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public interface FromSimpleString extends FromString {
     }
@@ -96,7 +96,7 @@ public interface DataCellFactory {
     /**
      * Factory that creates cells from complex, usually multi-line, string representations.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public interface FromComplexString extends FromString {
     }
@@ -105,7 +105,7 @@ public interface DataCellFactory {
      * Factory that creates cells from an binary input stream. When reading character data consider using
      * {@link FromReader} instead or at least assume UTF-8 encoding.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public interface FromInputStream extends DataCellFactory {
         /**
@@ -122,7 +122,7 @@ public interface DataCellFactory {
     /**
      * Factory that creates cells from an character reader.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public interface FromReader extends DataCellFactory {
         /**

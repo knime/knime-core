@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@
  * -------------------------------------------------------------------
  *
  * Created 25 October 2011
- * Author: Peter Ohl, KNIME.com, Zurich, Switzerland
+ * Author: Peter Ohl, KNIME AG, Zurich, Switzerland
  *
  */
 package org.knime.workbench.ui.layout.actions;
@@ -55,7 +55,7 @@ import org.knime.workbench.editor2.actions.delegates.AbstractEditorAction;
 /**
  * Editor action to start vertical alignment.
  *
- * @author Peter Ohl, KNIME.com, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  */
 public class VerticAlignLayoutEditorAction extends AbstractEditorAction {
 

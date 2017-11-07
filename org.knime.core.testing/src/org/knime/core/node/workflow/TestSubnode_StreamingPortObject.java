@@ -61,7 +61,7 @@ import org.knime.core.util.FileUtil;
 
 /**
  * Compares output of a streamed subnode to non-streamed version. Then saves, loads, checks again.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class TestSubnode_StreamingPortObject extends WorkflowTestCase {
 

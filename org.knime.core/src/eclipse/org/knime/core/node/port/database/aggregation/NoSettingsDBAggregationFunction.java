@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@ import org.knime.core.node.port.database.StatementManipulator;
  * This class should be extended by {@link DBAggregationFunction}s that do not need additional settings.
  * Abstract class that implements the {@link DBAggregationFunction} interface and handles the additional settings
  * method.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.11
  */
 public abstract class NoSettingsDBAggregationFunction implements DBAggregationFunction {

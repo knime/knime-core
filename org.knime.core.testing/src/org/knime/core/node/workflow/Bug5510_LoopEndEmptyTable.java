@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ import org.knime.core.util.FileUtil;
 /** 5510: Loop End node fails to save when all iterations produce empty tables
  * http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5510
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug5510_LoopEndEmptyTable extends WorkflowTestCase {
 

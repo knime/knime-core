@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
  * They delegate to the outer loop start node but also keep a history of which file stores were created
  * in their (inner) loop execution to allow for a cleanup after each iteration.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStartWriteFileStoreHandler {
 

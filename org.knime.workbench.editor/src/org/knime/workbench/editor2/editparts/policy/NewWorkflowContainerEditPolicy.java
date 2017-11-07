@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
  * Container policy, handles the creation of new nodes that are inserted into the workflow. The request contains the
  *
  * @author Florian Georg, University of Konstanz
- * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME AG, Zurich, Switzerland
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 

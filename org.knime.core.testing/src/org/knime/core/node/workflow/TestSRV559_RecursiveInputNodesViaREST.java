@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -282,7 +282,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
             manager.setInputNodes(inputMap);
             fail("Should have failed because parameter node is not uniquely identified");
         } catch (InvalidSettingsException ise) {
-            Assert.assertThat(ise.getMessage(), containsString("Duplicate"));
+            Assert.assertThat(ise.getMessage(), containsString("doesn't match"));
         }
     }
 

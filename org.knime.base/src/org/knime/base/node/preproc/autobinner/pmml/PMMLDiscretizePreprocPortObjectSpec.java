@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -183,7 +183,7 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
      * Wraps an PortObjectZipOutputStream and collects all data that is written
      * to the stream in a string.
      *
-     * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+     * @author Dominik Morent, KNIME AG, Zurich, Switzerland
      */
     private static class PortObjectZipOutputStreamAndString extends OutputStream {
         private StringBuilder m_buffer;

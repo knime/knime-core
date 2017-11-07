@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -258,7 +258,7 @@ public final class BooleanCell extends DataCell implements BooleanValue,
     /**
      * Factory for {@link BooleanCell}s.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @since 3.0
      */
     public static final class BooleanCellFactory implements FromSimpleString, FromComplexString {

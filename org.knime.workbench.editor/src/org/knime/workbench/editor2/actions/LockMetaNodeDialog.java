@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -119,10 +119,10 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
         m_passwordTextField = new Text(parent, SWT.SINGLE | SWT.BORDER);
         m_showPlainChecker = new Button(parent, SWT.CHECK);
         m_passwordKnimeCOMLabel = new Label(parent, 0);
-        m_passwordKnimeCOMLabel.setText("KNIME.com encrypted password (HEX)");
+        m_passwordKnimeCOMLabel.setText("KNIME encrypted password (HEX)");
         m_passwordKnimeCOMTextField = new Text(parent, SWT.SINGLE | SWT.BORDER);
         m_passwordHintLabel = new Label(parent, 0);
-        m_passwordHintLabel.setText("Password Hint (or copyright message)");
+        m_passwordHintLabel.setText("Password hint (or copyright message)");
         m_passwordHintTextField = new Text(parent, SWT.MULTI | SWT.WRAP
                 | SWT.V_SCROLL | SWT.BORDER);
         String hint = m_workflow.getPasswordHint();

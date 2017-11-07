@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Internal interface used by row filter nodes. Not to be used by other plug-ins!
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @noimplement This interface is not intended to be implemented by clients, extend {@link AbstractRowFilter} instead
  * @noextend This interface is not intended to be extended by clients.
  * @since 3.0

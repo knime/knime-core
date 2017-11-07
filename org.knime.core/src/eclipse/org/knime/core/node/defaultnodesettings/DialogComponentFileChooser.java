@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -345,6 +345,15 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     public void setAllowRemoteURLs(final boolean b) {
         m_filesPanel.setAllowRemoteURLs(b);
+    }
+
+    /** If set true, it allows files such as "${user.home}/file.txt".
+     * @param b The value to set
+     * @see org.knime.core.node.util.FilesHistoryPanel#setAllowSystemPropertySubstitution(boolean)
+     * @since 3.5
+     */
+    public void setAllowSystemPropertySubstitution(final boolean b) {
+        m_filesPanel.setAllowSystemPropertySubstitution(b);
     }
 
     /**

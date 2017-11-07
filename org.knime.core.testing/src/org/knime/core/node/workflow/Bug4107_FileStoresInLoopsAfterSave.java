@@ -63,7 +63,7 @@ import org.knime.testing.node.blocking.BlockingRepository;
  * It executes the workflow half-way (partial loop), then saves, continues execution and then saves/loads. Without
  * the fix the workflow could not be executed further after loading.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
 

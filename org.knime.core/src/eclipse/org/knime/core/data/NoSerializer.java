@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import java.io.IOException;
  * discouraged). Use this class only when registering a serializer at the extension point. The implementation is
  * non-functional!
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @param <T> the concrete subclass of DataCell
  * @since 3.0
  * @noreference This class is not intended to be referenced by clients.

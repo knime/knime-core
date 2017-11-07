@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ import org.xml.sax.SAXException;
  * Simple entity resolver that  always returns an empty entity. It's used to work around the problem that the XML
  * parser doesn't know how to handle the <tt>&lt;!DOCTYPE html SYSTEM "about:legacy-compat"></tt> doctype.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 class EmptyDoctypeResolver implements EntityResolver {
     public static final EntityResolver INSTANCE = new EmptyDoctypeResolver();

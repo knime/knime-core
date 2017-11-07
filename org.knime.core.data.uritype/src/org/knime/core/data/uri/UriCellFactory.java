@@ -11,7 +11,7 @@ import org.knime.core.data.DataType;
 /**
  * A factory for creating {@link URIDataCell}s.
  * 
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.0
  */
 public class UriCellFactory implements FromSimpleString, FromComplexString {

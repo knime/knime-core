@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   23.09.2014 (Christian Albrecht, KNIME.com AG, Zurich, Switzerland): created
+ *   23.09.2014 (Christian Albrecht, KNIME AG, Zurich, Switzerland): created
  */
 package org.knime.core.node.wizard;
 
@@ -75,7 +75,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @param <T> requires a {@link NodeModel} implementing {@link WizardNode} as well
  * @param <REP> the {@link WebViewContent} implementation used as view representation
  * @param <VAL> the {@link WebViewContent} implementation used as view value
@@ -372,7 +372,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     /**
      * Implementation of a WizardNodeView from extension point.
      *
-     * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+     * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
      */
     public static class WizardNodeViewExtension {
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -71,7 +71,7 @@ import org.knime.core.util.EclipseUtil;
 /**
  * A registry for all {@link DataType}s that are registered via the extension point <tt>org.knime.core.DataType</tt>.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.0
  */
 public final class DataTypeRegistry {

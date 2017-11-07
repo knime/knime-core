@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * Represents a FlowVariable filtering. Classes of this object are used as member in the NodeModel and as underlying
  * model to a {@link FlowVariableFilterPanel}.
  *
- * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 public class FlowVariableFilterConfiguration extends NameFilterConfiguration {

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ import org.knime.core.node.ExecutionContext;
  * File store handler used for non-start nodes that are part of a loop body (not the loop end). They
  * forward all calls to the file store handler associated with the loop start.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
 

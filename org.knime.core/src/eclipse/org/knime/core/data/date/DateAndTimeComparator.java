@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import org.knime.core.data.DataValueComparator;
 /**
  * Compares to {@link DateAndTimeValue}s by comparing their UTC time.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
 @Deprecated

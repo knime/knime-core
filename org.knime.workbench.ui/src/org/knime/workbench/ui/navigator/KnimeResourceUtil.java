@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -88,7 +88,7 @@ import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
  * Convenience class to be used when dealing with KNIME resources, such as
  * workflows and workflow groups.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 public final class KnimeResourceUtil {
 

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 
 /**
  * Renderer for DataCells that are compatible with {@link DoubleVectorValue} classes.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.2
  */
 public final class DoubleVectorValueRenderer extends DefaultDataValueRenderer {

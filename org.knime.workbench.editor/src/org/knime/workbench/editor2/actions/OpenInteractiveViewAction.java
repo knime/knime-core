@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@ import org.knime.workbench.core.util.ImageRepository;
 /**
  * Action to open an interactive view of a node.
  *
- * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 public class OpenInteractiveViewAction extends Action {

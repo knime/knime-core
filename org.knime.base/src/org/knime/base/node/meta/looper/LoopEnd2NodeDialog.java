@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Nov 28, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * Created on Nov 28, 2013 by Patrick Winter, KNIME AG, Zurich, Switzerland
  */
 package org.knime.base.node.meta.looper;
 
@@ -50,7 +50,7 @@ import javax.swing.JCheckBox;
 
 /**
  *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 2.9
  */
 public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSettings> {

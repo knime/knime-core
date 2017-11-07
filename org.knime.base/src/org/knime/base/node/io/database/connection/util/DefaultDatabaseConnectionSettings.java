@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * Extension of {@link DatabaseConnectionSettings} the allows the user to specify the individual parts of the database
  * URL (i.e. hostname, port, and database name).
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
 public class DefaultDatabaseConnectionSettings extends DatabaseConnectionSettings {

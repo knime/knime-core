@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,7 @@ import org.knime.core.data.container.ContainerTable;
  * See also bug 3383: workflow manager's table repository must not
  * be unsynchronized (recent problems with GroupLoop start "forgetting" its sorted table)
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 final class GlobalTableRepository extends HashMap<Integer, ContainerTable> {
 

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import org.knime.core.data.DataValue;
  * Interface supporting the representation of time and date independent of the
  * user's time zone and location. Times in KNIME are always UTC times!
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  * @deprecated use the new date&amp;time types from <tt>org.knime.time</tt> instead
  */
 @Deprecated

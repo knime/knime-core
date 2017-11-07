@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -96,8 +96,8 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
  * <p>
  * Do not use, no public API.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Christian Albrecht, KNIME AG, Zurich, Switzerland
  * @since 3.4
  */
 public abstract class WebResourceController {

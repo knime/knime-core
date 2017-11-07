@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -88,6 +87,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDescription27Proxy;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -598,7 +598,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         try {
             // Document
             Document doc =
-                DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation()
+                NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
                       .createDocument("http://knime.org/node2012", "knimeNode", null);
             // knimeNode
             Element knimeNode = doc.getDocumentElement();

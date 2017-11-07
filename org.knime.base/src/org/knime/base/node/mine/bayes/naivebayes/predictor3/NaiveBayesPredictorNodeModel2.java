@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ import org.w3c.dom.Node;
  * This is the <code>NodeModel</code> implementation of the
  * "Naive Bayes Predictor" node.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
 public class NaiveBayesPredictorNodeModel2 extends NodeModel {

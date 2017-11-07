@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.sample.row;
  * Represents a sample of rows drawn from the full set of rows which usually corresponds to the input table. <br>
  * A RowSample is typically used to train a single decision tree.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public interface RowSample {
 

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ import org.knime.core.node.NodeSettings;
 
 /** Fully executes a flow and then loads bogus settings into the nodes - expected to choke and should not reset flow.
  * Bug 4754: NodeContainer classes need dedicated validateSettings method
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
 

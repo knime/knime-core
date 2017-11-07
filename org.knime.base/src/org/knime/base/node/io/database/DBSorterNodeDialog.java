@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
  * Dialog for choosing the columns that will be sorted. It is also possible to set the order of columns
  *
  * @author Nicolas Cebron, University of Konstanz
- * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ * @author Patrick Winter, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
 public class DBSorterNodeDialog extends NodeDialogPane {

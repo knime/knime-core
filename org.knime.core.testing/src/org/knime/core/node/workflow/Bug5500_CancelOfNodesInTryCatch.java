@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ import org.junit.Test;
  *
  * The cause of the problem that some nodes (R and java snippet) were not detected as canceled when they were canceled.
  * See bugzilla comment and check-in diff for details.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class Bug5500_CancelOfNodesInTryCatch extends WorkflowTestCase {
 

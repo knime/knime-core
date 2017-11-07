@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.ExecutionContext;
@@ -88,7 +88,7 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  *
  * @author Heiko Hofer
  */
-public class JavaSnippetCellFactory implements CellFactory {
+public class JavaSnippetCellFactory extends AbstractCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetCellFactory.class);
 
     private JavaSnippet m_snippet;
@@ -332,6 +332,11 @@ public class JavaSnippetCellFactory implements CellFactory {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public void afterProcessing() {
+        m_snippet.close();
     }
 
     /**

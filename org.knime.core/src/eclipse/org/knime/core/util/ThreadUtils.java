@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.NodeContext;
 /**
  * This class contains utility methods for handling {@link NodeContext}s with new threads.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 2.8
  */
 public final class ThreadUtils {
@@ -178,7 +178,7 @@ public final class ThreadUtils {
      * Extension of {@link Runnable} that ensures that the {@link NodeContext}, which was present during creation of the
      * object, is set when the {@link #run()} method is called.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public abstract static class RunnableWithContext implements Runnable {
         private final NodeContext m_nodeContext;
@@ -217,7 +217,7 @@ public final class ThreadUtils {
      * Extension of {@link Callable} that ensures that the {@link NodeContext}, which was present during creation of the
      * object, is set when the {@link #call()} method is called.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      * @param <V> the result type of method <tt>call</tt>
      */
     public abstract static class CallableWithContext<V> implements Callable<V> {
@@ -261,7 +261,7 @@ public final class ThreadUtils {
      * Extension of {@link Thread} that ensures that the {@link NodeContext}, which was present during creation of the
      * object, is set when the {@link #run()} method is called.
      *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
      */
     public abstract static class ThreadWithContext extends Thread {
         private final NodeContext m_nodeContext;

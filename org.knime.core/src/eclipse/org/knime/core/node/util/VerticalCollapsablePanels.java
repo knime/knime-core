@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,9 +49,8 @@
 package org.knime.core.node.util;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
+import java.util.Objects;
 
-import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -77,30 +76,33 @@ public class VerticalCollapsablePanels extends JPanel {
         /**
          * @param panel The {@link JPanel} to wrap.
          * @param collapsed Is it collapsed by default?
-         * @param text The text to show on top of the panel.
+         * @param text The text to show on top of the panel, if null the panel's {@link JPanel#getName() name} is used
          */
-        public WrappedPanel(final JPanel panel, final boolean collapsed, final String text) {
+        WrappedPanel(final JPanel panel, final boolean collapsed, final String text) {
             super();
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setAlignmentY(TOP_ALIGNMENT);
             setAlignmentX(LEFT_ALIGNMENT);
             this.m_wrapped = panel;
             this.m_collapsed = collapsed;
-            final JButton button = new JButton();
+            final JButton button = new JButton(Objects.toString(text, panel.getName()), m_collapsed ? COLLAPSED : OPEN);
+            button.addActionListener(e -> {
+                m_collapsed ^= true;
+                button.setIcon(m_collapsed ? COLLAPSED : OPEN);
+                m_wrapped.setVisible(!m_collapsed);
+            });
+            if (text == null) {
+                panel.addPropertyChangeListener(e -> {
+                    if ("name".equals(e.getPropertyName())) {
+                        button.setText(Objects.toString(e.getNewValue()));
+                    }
+                });
+            }
             button.setAlignmentY(CENTER_ALIGNMENT);
             button.setAlignmentX(LEFT_ALIGNMENT);
             button.setContentAreaFilled(false);
             button.setFocusPainted(false);
             button.setBorderPainted(false);
-            AbstractAction action = new AbstractAction(text, m_collapsed ? COLLAPSED : OPEN) {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    m_collapsed ^= true;
-                    button.setIcon(m_collapsed ? COLLAPSED : OPEN);
-                    m_wrapped.setVisible(!m_collapsed);
-                }
-            };
-            button.setAction(action);
             JPanel buttonWrapper = new JPanel();
             buttonWrapper.setLayout(new BoxLayout(buttonWrapper, BoxLayout.LINE_AXIS));
             buttonWrapper.add(button);
@@ -164,7 +166,7 @@ public class VerticalCollapsablePanels extends JPanel {
      * @param panel The {@link JPanel} to add.
      * @param collapsed Collapsed or not.
      * @param text The text on the wrapper panel.
-     * @return The wrapped panel just in case you want to enable/disable it.
+     * @return The panel wrapping the argument - in case the caller wants to enable/disable it
      */
     public JPanel addPanel(final JPanel panel, final boolean collapsed, final String text) {
         WrappedPanel wrapped = new WrappedPanel(panel, collapsed, text);
@@ -173,13 +175,17 @@ public class VerticalCollapsablePanels extends JPanel {
     }
 
     /**
-     * Adds a panel wrapped without text on the wrapper.
+     * Adds a panel wrapped with the panel's {@linkplain JPanel#getName() name} to the list. If the name
+     * of the panel changes the label line is changed accordingly.
      *
-     * @param panel The {@link JPanel} to add.
+     * @param panel The {@link JPanel} to add - make sure to have a proper name set.
      * @param collapsed Collapsed or not.
+     * @return The panel wrapping the argument - in case the caller wants to enable/disable it
      */
-    public void addPanel(final JPanel panel, final boolean collapsed) {
-        addPanel(panel, collapsed, "");
+    public JPanel addPanel(final JPanel panel, final boolean collapsed) {
+        WrappedPanel wrapped = new WrappedPanel(panel, collapsed, null);
+        super.add(wrapped);
+        return wrapped;
     }
 
     /**

@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -81,7 +81,7 @@ import org.knime.core.data.property.filter.FilterHandler;
  * handler associated with the columns and the possible values as collection cell. It can be set whether the information
  * of property handlers as well as the possible values are extracted or not.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.8
  * @noextend This class is not intended to be subclassed by clients.
  */

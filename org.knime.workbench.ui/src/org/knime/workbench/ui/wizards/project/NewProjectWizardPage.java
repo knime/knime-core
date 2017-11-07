@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -83,7 +83,7 @@ import org.knime.workbench.ui.wizards.workflowgroup.WorkflowGroupSelectionDialog
  *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  * 
  * @deprecated since AP 3.0
  */

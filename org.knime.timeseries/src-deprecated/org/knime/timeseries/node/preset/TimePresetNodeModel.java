@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * Sets the time or date to a default (user entered) one by those 
  * {@link DateAndTimeValue}s, which lack the referring fields.
  * 
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Fabian Dill, KNIME AG, Zurich, Switzerland
  */
 @Deprecated
 public class TimePresetNodeModel extends NodeModel {

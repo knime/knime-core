@@ -27,4 +27,10 @@
             class="org.knime.core.util.EarlyStartupTest">
       </provider>
    </extension>
+   <extension
+         point="org.knime.core.WorkflowSaveHook">
+      <WorkflowSaveHook
+            class="org.knime.core.util.TestWorkflowSaveHook">
+      </WorkflowSaveHook>
+   </extension>
 </fragment>

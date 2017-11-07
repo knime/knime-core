@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 /**
  * Dialog that allows the user to manipulate the workflow editor's ui (e.g. grid settings, connection width, connection style etc.)
  *
- * @author Peter Ohl, KNIME.com, Zurich, Switzerland
+ * @author Peter Ohl, KNIME AG, Zurich, Switzerland
  * @author Martin Horn
  * @since 3.3
  */
