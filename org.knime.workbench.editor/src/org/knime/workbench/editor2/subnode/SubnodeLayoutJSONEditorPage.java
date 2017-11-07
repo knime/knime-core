@@ -161,10 +161,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      */
     protected SubnodeLayoutJSONEditorPage(final String pageName) {
         super(pageName);
-        setDescription("Define a layout for the View and Quickform nodes contained in the Wrapped Metanode. \nThe layout is used in the KNIME WebPortal and the Wrapped Metanode View.");
+        setDescription("Specifiy in what way the contained View and Quickform nodes are allowed to be used and define a layout. \nThe layout is used in the KNIME WebPortal and the Wrapped Metanode View.");
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
         m_layoutCreator = new DefaultLayoutCreatorImpl();
+
     }
 
     /**
@@ -430,7 +431,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private Composite createNodeLabelComposite(final Composite parent, final NodeID nodeID, final NodeContainer nodeContainer) {
 
-        Composite labelComposite = new Composite(parent, SWT.NONE);
+        Composite labelComposite = new Composite(m_basicComposite, SWT.NONE);
         labelComposite.setLayout(new GridLayout(2, false));
         labelComposite.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 

@@ -79,6 +79,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 
 /**
+ * A Composite to set up quicknode and view node usage in a wrapped meta node dialog and the web portal.
  *
  * @author Ferry Abt, KNIME GmbH, Konstanz, Germany
  */
@@ -89,9 +90,9 @@ public class NodeUsageComposite extends Composite {
     private Map<NodeID, Button> m_dialogUsageMap;
 
     /**
-     * @param parent
-     * @param viewNodes
-     * @param subNodeContainer
+     * @param parent of the composite (e.g. a TabItem)
+     * @param viewNodes the quickforms and view nodes in this wrapped metanode
+     * @param subNodeContainer the container of the wrapped meta node
      */
     public NodeUsageComposite(final Composite parent,
         @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes,
@@ -277,14 +278,14 @@ public class NodeUsageComposite extends Composite {
     }
 
     /**
-     * @return the wizardUsageMap
+     * @return the wizardUsageMap (which nodes should be used in the web portal)
      */
     Map<NodeID, Button> getWizardUsageMap() {
         return m_wizardUsageMap;
     }
 
     /**
-     * @return the dialogUsageMap
+     * @return the dialogUsageMap (which nodes should be used in the wrapped meta node dialog)
      */
     Map<NodeID, Button> getDialogUsageMap() {
         return m_dialogUsageMap;
