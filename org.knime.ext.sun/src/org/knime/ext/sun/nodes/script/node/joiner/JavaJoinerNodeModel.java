@@ -121,12 +121,19 @@ public class JavaJoinerNodeModel extends NodeModel implements FlowVariableProvid
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
+        DataTableSpec outSpec = MultiSpecHandler.createJointOutputSpec(
+            inData[0].getDataTableSpec(), inData[1].getDataTableSpec());
+        BufferedDataContainer joinedTables = exec.createDataContainer(outSpec);
+        // If one of the tables is empty, the result is empty, too
+        if (inData[0].size() == 0 || inData[1].size() == 0) {
+            joinedTables.close();
+            return new BufferedDataTable[]{joinedTables.getTable()};
+        }
         MultiTableRowInput input = new MultiTableRowInput(inData[0], inData[1]);
         // Row count for the flow variable provider
         m_rowCount = input.getRowCount();
         // Container for the joined table
-        BufferedDataContainer joinedTables = exec.createDataContainer(
-            MultiSpecHandler.createJointOutputSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec()));
+
         BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(joinedTables);
         execute(input, output, exec);
         return new BufferedDataTable[]{joinedTables.getTable()};
