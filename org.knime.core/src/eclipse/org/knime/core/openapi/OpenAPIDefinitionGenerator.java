@@ -71,6 +71,8 @@ import org.knime.core.node.workflow.WorkflowSaveHook;
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
  * workflows when used as REST resources.
  *
+ * <p>This class is used by the KNIME Server software. While it has public scope it is not considered table API.
+ *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.5
  */
