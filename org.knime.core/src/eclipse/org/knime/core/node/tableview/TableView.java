@@ -66,6 +66,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
@@ -149,6 +150,10 @@ public class TableView extends JScrollPane {
     private TableAction m_findNextAction;
 
     private TableAction m_gotoRowAction;
+
+    private TableAction m_increaseFontSizeAction;
+
+    private TableAction m_decreaseFontSizeAction;
 
     /**
      * Creates new empty <code>TableView</code>. Content and handlers are set using the appropriate methods, that is,
@@ -558,6 +563,41 @@ public class TableView extends JScrollPane {
                 d.height = newHeight;
                 v.setPreferredSize(d);
             }
+        }
+    }
+
+    /** Set the font size to the argument value, bounded by certain 'sane' limits.
+     * @param size The new size.
+     * @since 3.5
+     */
+    public void setFontSize(final int size) {
+        TableContentView contentTable = getContentTable();
+        final Font font = contentTable.getFont();
+        int curFontSize = font.getSize();
+        int newFontSize = Math.max(5, Math.min(size, 48));
+        if (curFontSize != newFontSize) {
+            // get first visible row so that we can scroll to it afterwards
+            Point p = getViewport().getViewPosition();
+            int firstVisibleRow = contentTable.rowAtPoint(p);
+            int firstVisibleColumn = contentTable.columnAtPoint(p);
+            Font newFont = font.deriveFont((float)newFontSize);
+            contentTable.setFont(newFont);
+            int newRowHeight = (int)Math.ceil((getRowHeight() * newFontSize) / (double)curFontSize);
+            setRowHeight(newRowHeight);
+            for (Enumeration<TableColumn> e = contentTable.getColumnModel().getColumns(); e.hasMoreElements();) {
+                TableColumn nextColumn = e.nextElement();
+                int oldWidth = nextColumn.getWidth();
+                int newWidth = (oldWidth * newFontSize) / curFontSize;
+                int oldMinWidth = nextColumn.getMinWidth();
+                if (newWidth < oldMinWidth) {
+                    nextColumn.setMinWidth(newWidth);
+                }
+                nextColumn.setPreferredWidth(newWidth);
+            }
+            // scroll somewhere near the row that was previously visible
+            final Rectangle rec = contentTable.getCellRect(
+                Math.max(firstVisibleRow, 0), Math.max(firstVisibleColumn, 0), false);
+            contentTable.scrollRectToVisible(rec);
         }
     }
 
@@ -1073,6 +1113,18 @@ public class TableView extends JScrollPane {
         item.setEnabled(hasData());
         result.add(item);
 
+        item = new JMenuItem(registerIncreaseFontSizeAction());
+        item.setMnemonic('I');
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
+
+        item = new JMenuItem(registerDecreaseFontSizeAction());
+        item.setMnemonic('D');
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
+
         item = new JMenuItem("Font Size...");
         item.setMnemonic('F');
         item.addActionListener(new ActionListener() {
@@ -1295,6 +1347,52 @@ public class TableView extends JScrollPane {
             m_gotoRowAction = action;
         }
         return m_gotoRowAction;
+    }
+
+    /**
+     * Creates and registers the "Increase Font Size" actions on this component.
+     * Multiple invocation of this method have no effect (lazy initialization).
+     * @return the action
+     */
+    private TableAction registerIncreaseFontSizeAction() {
+        if (m_increaseFontSizeAction == null) {
+            m_increaseFontSizeAction = createFontSizeAction(true);
+        }
+        return m_increaseFontSizeAction;
+    }
+
+    /**
+     * Creates and registers the "Decrease Font Size" actions on this component.
+     * Multiple invocation of this method have no effect (lazy initialization).
+     * @return the action
+     */
+    private TableAction registerDecreaseFontSizeAction() {
+        if (m_decreaseFontSizeAction == null) {
+            m_decreaseFontSizeAction = createFontSizeAction(false);
+        }
+        return m_decreaseFontSizeAction;
+    }
+
+    /** Implementation of {@link #registerIncreaseFontSizeAction()} and {@link #registerDecreaseFontSizeAction()}.
+     * @return a new registered action
+     */
+    private TableAction createFontSizeAction(final boolean isIncrease) {
+        String name = (isIncrease ? "Increase" : "Decrease") + " Font Size";
+        int key = isIncrease ? KeyEvent.VK_PLUS : KeyEvent.VK_MINUS;
+        KeyStroke stroke = KeyStroke.getKeyStroke(key, InputEvent.CTRL_DOWN_MASK);
+        TableAction action = new TableAction(stroke, name) {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (!hasData()) {
+                    return;
+                }
+                int curFontSize = getContentTable().getFont().getSize();
+                int increment = isIncrease ? +1 : -1;
+                setFontSize(curFontSize + increment);
+            }
+        };
+        registerAction(action);
+        return action;
     }
 
     /** PropertyChangeListener that will disable/enable the menu items. */
