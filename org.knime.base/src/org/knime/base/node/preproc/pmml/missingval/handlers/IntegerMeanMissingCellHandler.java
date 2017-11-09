@@ -66,7 +66,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A handler that replaces missing values with the rounded mean of the column.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
 

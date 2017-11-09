@@ -60,7 +60,10 @@ import org.knime.core.util.MutableInteger;
 
 /**
  * Calculates the most frequent value for a single column.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MostFrequentValueStatistic extends Statistic {
 

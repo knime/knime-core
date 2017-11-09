@@ -51,7 +51,6 @@ package org.knime.base.node.preproc.pmml.missingval;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -59,6 +58,8 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MVColumnSettings {
 
@@ -67,22 +68,29 @@ public class MVColumnSettings {
 
     private Set<String> m_columns;
     private MVIndividualSettings m_settings;
-
-    /**
-     * Initializes a new MVColumnSettings object without columns and a do nothing factory.
-     */
-    MVColumnSettings() {
-        m_columns = new HashSet<String>();
-        m_settings = new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance());
-    }
+    private final MissingCellHandlerFactoryManager m_handlerFactoryManager;
 
     /**
      * Constructor for column settings that initializes the settings with no columns and the given factory.
      * @param factory the factory that is assigned to the columns that are configured with this settings object
+     * @param handlerFactoryManager manager keeping the missing value handler factories
      */
-    public MVColumnSettings(final MissingCellHandlerFactory factory) {
+    public MVColumnSettings(final MissingCellHandlerFactory factory,
+        final MissingCellHandlerFactoryManager handlerFactoryManager) {
+
         m_columns = new HashSet<String>();
-        m_settings = new MVIndividualSettings(factory);
+        m_settings = new MVIndividualSettings(factory, handlerFactoryManager);
+        m_handlerFactoryManager = handlerFactoryManager;
+    }
+
+    /**
+     * Constructor for column settings that initializes the settings with no columns and the given factory.
+     * @param handlerFactoryManager manager keeping the missing value handler factories
+     */
+    public MVColumnSettings(final MissingCellHandlerFactoryManager handlerFactoryManager) {
+        m_columns = new HashSet<String>();
+        m_settings = new MVIndividualSettings(handlerFactoryManager);
+        m_handlerFactoryManager = handlerFactoryManager;
     }
 
     /**
@@ -95,7 +103,7 @@ public class MVColumnSettings {
     public String loadSettings(final NodeSettingsRO settings, final boolean repair) throws InvalidSettingsException {
         this.m_columns.clear();
 
-        m_settings = new MVIndividualSettings();
+        m_settings = new MVIndividualSettings(m_handlerFactoryManager);
         String warning = m_settings.loadSettings(settings.getNodeSettings(SETTINGS_KEY), repair);
         for (String col : settings.getStringArray(COLUMN_NAMES_KEY)) {
             m_columns.add(col);

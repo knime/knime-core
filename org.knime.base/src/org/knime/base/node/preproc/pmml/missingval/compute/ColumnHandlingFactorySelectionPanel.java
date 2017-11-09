@@ -76,7 +76,7 @@ import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.node.preproc.pmml.missingval.MVColumnSettings;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
-import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryManager;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -88,7 +88,10 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Panel that allows setting the missing cell handler for an arbitrary group of columns.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class ColumnHandlingFactorySelectionPanel extends JPanel {
 
@@ -103,19 +106,24 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
     private MVColumnSettings m_settings;
     private MissingValueHandlerFactorySelectionPanel m_settingsPanel;
 
+    private final MissingCellHandlerFactoryManager m_factoryManager;
+
     /**
      * Constructor for ColumnHandlingFactorySelectionPanel.
      * @param cols the columns for which settings are made in this panel
      * @param specs the input specs
      * @param tableIndex the index of the input table in the specs
+     * @param factoryManager manager keeping the missing value handler factories
      */
     public ColumnHandlingFactorySelectionPanel(final List<DataColumnSpec> cols,
                                                 final PortObjectSpec[] specs,
-                                                final int tableIndex) {
-        m_settings = new MVColumnSettings(DoNothingMissingCellHandlerFactory.getInstance());
+                                                final int tableIndex,
+                                                final MissingCellHandlerFactoryManager factoryManager) {
+        m_settings = new MVColumnSettings(factoryManager);
         for (DataColumnSpec cspec : cols) {
             m_settings.getColumns().add(cspec.getName());
         }
+        m_factoryManager = factoryManager;
         createContent(specs, tableIndex);
     }
 
@@ -124,11 +132,14 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
      * @param s the current settings for this data type
      * @param specs the input specs
      * @param tableIndex the index of the input table in the specs
+     * @param factoryManager manager keeping the missing value handler factories
      */
     public ColumnHandlingFactorySelectionPanel(final MVColumnSettings s,
                                                 final PortObjectSpec[] specs,
-                                                final int tableIndex) {
+                                                final int tableIndex,
+                                                final MissingCellHandlerFactoryManager factoryManager) {
         m_settings = s;
+        m_factoryManager = factoryManager;
         createContent(specs, tableIndex);
     }
 
@@ -290,7 +301,8 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
             }
         }
 
-        m_settingsPanel = new MissingValueHandlerFactorySelectionPanel(dt, m_settings.getSettings(), specs);
+        m_settingsPanel =
+            new MissingValueHandlerFactorySelectionPanel(dt, m_settings.getSettings(), m_factoryManager, specs);
         m_settingsPanel.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {

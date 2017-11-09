@@ -76,7 +76,8 @@ import org.xml.sax.SAXException;
  * Factory for missing cell handler descriptions.
  *
  * @author Marcel Hanser, Alexander Fillbrunn
- * @since 2.12
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class MissingCellHandlerDescriptionFactory {
 
@@ -140,8 +141,9 @@ public final class MissingCellHandlerDescriptionFactory {
                 + "Handlers that do not produce valid PMML 4.2 are marked with an asterisk (*).");
 
         for (MissingCellHandlerFactory reg : factoriesOfType) {
-            String shortDescription = StringEscapeUtils.escapeXml(reg.getDescription().getShortDescription());
-            String name = reg.getDescription().getName();
+            MissingCellHandlerDescription description = reg.getDescription();
+            String shortDescription = StringEscapeUtils.escapeXml(description.getShortDescription());
+            String name = description.getName();
             if (!reg.producesPMML4_2()) {
                 name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
             }

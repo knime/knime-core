@@ -57,7 +57,10 @@ import org.knime.core.data.DoubleValue;
 
 /**
  * Creates a handler that replaces missing values with the column's median value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MedianNumberMissingCellHandlerFactory extends MissingCellHandlerFactory {
 

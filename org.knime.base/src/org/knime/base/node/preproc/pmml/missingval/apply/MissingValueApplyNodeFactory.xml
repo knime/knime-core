@@ -10,7 +10,7 @@
     <fullDescription>
         <intro>
             Reads missing value replacement settings from the PMML port and applies them to the data.
-            The node can handle the output of the Knime Missing Value node and foreign PMML of the following form:<br/>
+            The node can handle the output of the KNIME Missing Value node and foreign PMML of the following form:<br/>
             <pre>
 	&lt;Apply function="if"&gt;
 	    &lt;Apply function="isMissing"&gt;

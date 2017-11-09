@@ -58,7 +58,10 @@ import org.knime.core.data.def.IntCell;
 
 /**
  * Creates a handler that replaces missing values with the column's most frequent value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MostFrequentValueMissingCellHandlerFactory extends MissingCellHandlerFactory {
 

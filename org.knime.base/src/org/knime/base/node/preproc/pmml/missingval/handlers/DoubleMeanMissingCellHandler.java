@@ -66,7 +66,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Replaces missing values with the mean of the column.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
 

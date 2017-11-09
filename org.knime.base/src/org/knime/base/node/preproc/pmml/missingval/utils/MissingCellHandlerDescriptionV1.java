@@ -59,7 +59,8 @@ import org.w3c.dom.Element;
 /**
  *
  * @author Marcel Hanser, Alexander Fillbrunn
- * @since 2.12
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 final class MissingCellHandlerDescriptionV1 implements MissingCellHandlerDescription {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingCellHandlerDescriptionV1.class);

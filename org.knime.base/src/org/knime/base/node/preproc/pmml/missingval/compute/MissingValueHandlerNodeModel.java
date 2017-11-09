@@ -25,8 +25,9 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 /**
  * This is the model implementation of CompiledModelReader.
  *
- *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MissingValueHandlerNodeModel extends NodeModel {
 

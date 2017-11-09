@@ -66,7 +66,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * A handler that replaces missing values in a cell with the average of cells before and after it.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class DoubleMovingAverageMissingCellHandler extends MissingCellHandler {
 

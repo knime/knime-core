@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.pmml.missingval.utils;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -73,7 +74,8 @@ import org.xml.sax.SAXException;
  * Helper class to generate the {@link NodeDescription} for the Missing Value Handler node.
  *
  * @author Marcel Hanser, Alexander Fillbrunn
- * @since 2.12
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class MissingValueNodeDescriptionHelper {
 
@@ -87,16 +89,19 @@ public final class MissingValueNodeDescriptionHelper {
      * description.
      *
      * @param parentDescription the parent description to add the tag to
+     * @param manager handler factory manager
      * @return a node description with the <option=''/> added
      * @throws IOException some problem on reading the description
      * @throws SAXException not going to happen
      */
-    public static NodeDescription createNodeDescription(final NodeDescription parentDescription) throws SAXException,
-        IOException {
+    public static NodeDescription createNodeDescription(final NodeDescription parentDescription,
+        final MissingCellHandlerFactoryManager manager) throws SAXException, IOException {
+
         NodeDescription createNodeDescription = parentDescription;
         Element knimeNode = createNodeDescription.getXMLDescription();
 
-        Iterable<MissingCellHandlerFactory> factories = MissingCellHandlerFactoryManager.getInstance().getFactories();
+        List<MissingCellHandlerFactory> factories = manager.getFactories();
+        factories.sort((a,b) ->  a.getDisplayName().compareTo(b.getDisplayName()));
 
         Element fullDescription = findFullDescription(knimeNode);
 

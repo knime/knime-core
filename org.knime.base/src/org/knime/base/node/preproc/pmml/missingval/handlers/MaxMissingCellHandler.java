@@ -61,7 +61,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Replaces missing values in a column with the maximum value in this column.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MaxMissingCellHandler extends DefaultMissingCellHandler {
 

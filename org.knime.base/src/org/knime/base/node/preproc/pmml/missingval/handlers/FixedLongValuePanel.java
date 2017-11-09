@@ -53,7 +53,10 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
  * A panel that has a field for entering an integer value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ *
  */
 public class FixedLongValuePanel extends DefaultMissingValueHandlerPanel {
 

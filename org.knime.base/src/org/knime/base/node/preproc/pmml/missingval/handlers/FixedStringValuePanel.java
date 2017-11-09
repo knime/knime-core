@@ -53,7 +53,10 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
  * A panel with a field for entering a string value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class FixedStringValuePanel extends DefaultMissingValueHandlerPanel {
 

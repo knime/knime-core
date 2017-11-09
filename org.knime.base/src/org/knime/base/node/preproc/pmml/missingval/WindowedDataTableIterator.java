@@ -57,6 +57,8 @@ import org.knime.core.data.RowIterator;
 /**
  * Iterator over a data table that provides windows over the individual columns.
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class WindowedDataTableIterator extends RowIterator {
 

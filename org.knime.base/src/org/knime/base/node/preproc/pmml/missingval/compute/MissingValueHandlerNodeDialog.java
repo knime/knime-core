@@ -31,7 +31,7 @@ import javax.swing.border.EmptyBorder;
 import org.knime.base.node.preproc.pmml.missingval.MVColumnSettings;
 import org.knime.base.node.preproc.pmml.missingval.MVIndividualSettings;
 import org.knime.base.node.preproc.pmml.missingval.MVSettings;
-import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryManager;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -59,6 +59,8 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel.SearchedItems
  * components. If you need a more complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
@@ -95,13 +97,14 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     /**
      * New pane for configuring the CompiledModelReader node.
      */
-    protected MissingValueHandlerNodeDialog() {
+    public MissingValueHandlerNodeDialog() {
         // Create panels for the default tab
         m_defaultsPanel = new JPanel(new BorderLayout());
         //m_defaultsPanel.setPreferredSize(new Dimension(500, 300));
         m_typeSettingsPanel = new JPanel(new GridBagLayout());
         m_defaultsPanel.add(m_typeSettingsPanel, BorderLayout.CENTER);
         m_defaultsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        final boolean showPMMLWarning = getHandlerFactoryManager().hasNonStandardPMMLHandlers();
         m_pmmlLabel1 = new JLabel(PMML_WARNING);
         m_pmmlLabel2 = new JLabel(PMML_WARNING);
         m_pmmlLabel1.setHorizontalAlignment(SwingConstants.CENTER);
@@ -117,8 +120,10 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         m_warnings = new JLabel();
         m_warnings.setForeground(Color.RED);
         messagePanel.add(m_warnings, gbc1);
-        gbc1.gridy = 1;
-        messagePanel.add(m_pmmlLabel1, gbc1);
+        if (showPMMLWarning) {
+            gbc1.gridy = 1;
+            messagePanel.add(m_pmmlLabel1, gbc1);
+        }
 
         m_defaultsPanel.add(messagePanel, BorderLayout.SOUTH);
 
@@ -127,7 +132,6 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
         // Panel for the tab where the user selects column specific missing cell handlers
         m_columnsPanel = new JPanel(new BorderLayout());
-        m_columnsPanel.add(m_pmmlLabel2, BorderLayout.SOUTH);
         m_individualsPanel = new IndividualsPanel();
 
         // The panel that has the "Add"-button and the warning about PMML compatibility
@@ -141,8 +145,10 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         southPanel.add(buttonPanel, gbc);
 
-        gbc.gridy = 1;
-        southPanel.add(m_pmmlLabel2, gbc);
+        if (showPMMLWarning) {
+            gbc.gridy = 1;
+            southPanel.add(m_pmmlLabel2, gbc);
+        }
         m_addButton = new JButton("Add");
         m_addButton.addActionListener(new ActionListener() {
             /** {@inheritDoc} */
@@ -201,7 +207,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             return;
         }
 
-        final ColumnHandlingFactorySelectionPanel p = new ColumnHandlingFactorySelectionPanel(specs, m_specs, 0);
+        final ColumnHandlingFactorySelectionPanel p =
+            new ColumnHandlingFactorySelectionPanel(specs, m_specs, 0, getHandlerFactoryManager());
         p.registerMouseListener(new MouseAdapter() {
             /** {@inheritDoc} */
             @Override
@@ -280,7 +287,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        MVSettings mvSettings = new MVSettings();
+        MVSettings mvSettings = createEmptySettings();
         for (DataType type : m_types.keySet()) {
             MissingValueHandlerFactorySelectionPanel panel = m_types.get(type);
             mvSettings.setSettingsForDataType(type, panel.getSettings());
@@ -298,7 +305,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
 
-        MVSettings mvSettings = new MVSettings();
+        MVSettings mvSettings = createEmptySettings();
         m_specs = specs;
         DataTableSpec spec = (DataTableSpec)specs[0];
 
@@ -328,7 +335,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
         m_individualsPanel.removeAll();
         for (MVColumnSettings colSetting : mvSettings.getColumnSettings()) {
-            ColumnHandlingFactorySelectionPanel p = new ColumnHandlingFactorySelectionPanel(colSetting, specs, 0);
+            ColumnHandlingFactorySelectionPanel p =
+                new ColumnHandlingFactorySelectionPanel(colSetting, specs, 0, getHandlerFactoryManager());
             addToIndividualPanel(p);
         }
 
@@ -351,10 +359,10 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             // Should not happen if node model is properly configured,
             // but check anyways and fall back to do nothing factory
             if (s == null) {
-                s = new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance());
+                s = new MVIndividualSettings(getHandlerFactoryManager());
             }
             MissingValueHandlerFactorySelectionPanel p =
-                    new MissingValueHandlerFactorySelectionPanel(type, s, specs);
+                    new MissingValueHandlerFactorySelectionPanel(type, s, getHandlerFactoryManager(), specs);
             p.setBorder(BorderFactory.createBevelBorder(1));
             p.addPropertyChangeListener(new FactoryChangedListener());
             m_typeSettingsPanel.add(p, gbc);
@@ -425,7 +433,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         private ColumnHandlingFactorySelectionPanel createDummyPanel() {
             DataColumnSpec cspec = new DataColumnSpecCreator("____________________", DoubleCell.TYPE).createSpec();
             List<DataColumnSpec> cspecs = Arrays.asList(cspec);
-            return new ColumnHandlingFactorySelectionPanel(cspecs, new PortObjectSpec[]{new DataTableSpec(cspec)}, 0);
+            return new ColumnHandlingFactorySelectionPanel(cspecs,
+                new PortObjectSpec[]{new DataTableSpec(cspec)}, 0, getHandlerFactoryManager());
         }
 
         /** Set box layout. */
@@ -501,5 +510,15 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     static boolean isIncompatible(final DataType type, final DataColumnSpec dataColumnSpec) {
         DataType colType = dataColumnSpec.getType();
         return !(colType.equals(type) || colType.isASuperTypeOf(type));
+    }
+
+    /** @return empty default settings */
+    protected MVSettings createEmptySettings() {
+        return new MVSettings();
+    }
+
+    /** @return manager keeping the missing value handler factories */
+    protected MissingCellHandlerFactoryManager getHandlerFactoryManager() {
+        return MissingCellHandlerFactoryManager.getInstance();
     }
 }

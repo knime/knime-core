@@ -49,6 +49,7 @@
 package org.knime.base.node.preproc.pmml.missingval;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,17 +64,20 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Manager for missing cell handler factories that are provided by extensions.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
-public final class MissingCellHandlerFactoryManager {
+public class MissingCellHandlerFactoryManager {
 
     /** The id of the MissingCellHandler extension point. */
-    public static final String EXT_POINT_ID = "org.knime.base.MissingCellHandler";
+    private static final String EXT_POINT_ID = "org.knime.base.MissingCellHandler";
 
-    /**
-     * The attribute of the missing cell handler extension point pointing to the factory class.
-     */
-    public static final String EXT_POINT_ATTR_DF = "MissingCellHandlerFactory";
+   /**
+    * The attribute of the missing cell handler extension point pointing to the factory class.
+    */
+    private static final String EXT_POINT_ATTR_DF = "MissingCellHandlerFactory";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingCellHandlerFactoryManager.class);
 
@@ -87,9 +91,13 @@ public final class MissingCellHandlerFactoryManager {
     private Map<String, MissingCellHandlerFactory> m_factoryNameMap
                 = new HashMap<String, MissingCellHandlerFactory>();
 
-    /** private constructor because this class is a singleton. **/
-    private MissingCellHandlerFactoryManager() {
-        registerExtensionPoints();
+    /**
+     * protected constructor because this class is a singleton.
+     * @param extPointId id of the extension point
+     * @param extPointAttrDf attribute of the factory class within the handler extension point
+     */
+    protected MissingCellHandlerFactoryManager(final String extPointId, final String extPointAttrDf) {
+        registerExtensionPoints(extPointId, extPointAttrDf);
     }
 
     /**
@@ -98,7 +106,7 @@ public final class MissingCellHandlerFactoryManager {
      */
     public static MissingCellHandlerFactoryManager getInstance() {
         if (instance == null) {
-            instance = new MissingCellHandlerFactoryManager();
+            instance = new MissingCellHandlerFactoryManager(EXT_POINT_ID, EXT_POINT_ATTR_DF);
         }
         return instance;
     }
@@ -106,7 +114,7 @@ public final class MissingCellHandlerFactoryManager {
     /**
      * @return all factories managed by this class.
      */
-    public Iterable<MissingCellHandlerFactory> getFactories() {
+    public List<MissingCellHandlerFactory> getFactories() {
         return m_factories;
     }
 
@@ -121,32 +129,34 @@ public final class MissingCellHandlerFactoryManager {
 
     /**
      * Registers all extension point implementations.
+     * @param extPointId id of the extension point
+     * @param extPointAttrDf attribute of the factory class within the handler extension point
      */
-    private void registerExtensionPoints() {
+    protected void registerExtensionPoints(final String extPointId, final String extPointAttrDf) {
         try {
             final IExtensionRegistry registry = Platform.getExtensionRegistry();
-            final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+            final IExtensionPoint point = registry.getExtensionPoint(extPointId);
             if (point == null) {
-                LOGGER.error("Invalid extension point: " + EXT_POINT_ID);
-                throw new IllegalStateException("ACTIVATION ERROR: " + " --> Invalid extension point: " + EXT_POINT_ID);
+                LOGGER.error("Invalid extension point: " + extPointId);
+                throw new IllegalStateException("ACTIVATION ERROR: " + " --> Invalid extension point: " + extPointId);
             }
             for (final IConfigurationElement elem : point.getConfigurationElements()) {
-                final String operator = elem.getAttribute(EXT_POINT_ATTR_DF);
+                final String operator = elem.getAttribute(extPointAttrDf);
                 final String decl = elem.getDeclaringExtension().getUniqueIdentifier();
 
                 if ((operator == null) || operator.isEmpty()) {
                     LOGGER.error("The extension '" + decl + "' doesn't provide the required attribute '"
-                            + EXT_POINT_ATTR_DF + "'");
+                            + extPointAttrDf + "'");
                     LOGGER.error("Extension " + decl + " ignored.");
                     continue;
                 }
 
                 try {
                     final MissingCellHandlerFactory factory =
-                            (MissingCellHandlerFactory)elem.createExecutableExtension(EXT_POINT_ATTR_DF);
+                        (MissingCellHandlerFactory)elem.createExecutableExtension(extPointAttrDf);
                     addMissingCellHandlerFactory(factory);
                 } catch (final Exception t) {
-                    LOGGER.error("Problems during initialization of missing cell handler (with id '"
+                    LOGGER.error("Problems during initialization of missing value handler factory (with id '"
                                 + operator + "'.)");
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.", t);
@@ -167,7 +177,7 @@ public final class MissingCellHandlerFactoryManager {
         List<MissingCellHandlerFactory> factories = new ArrayList<MissingCellHandlerFactory>();
 
         // Add the do nothing default factory
-        factories.add(DoNothingMissingCellHandlerFactory.getInstance());
+        factories.add(getDoNothingHandlerFactory());
 
         for (MissingCellHandlerFactory fac : m_factories) {
             if (fac.isApplicable(type)) {
@@ -178,15 +188,16 @@ public final class MissingCellHandlerFactoryManager {
     }
 
     /**
-     * Returns a list of missing cell handler factories for certain data types.
+     * Returns a list of missing value handler factories for certain data types sorted by display name.
+     *
      * @param types the data types
      * @return the list of suitable missing cell handler factories
      */
-    public List<MissingCellHandlerFactory> getFactories(final DataType[] types) {
+    public List<MissingCellHandlerFactory> getFactoriesSorted(final DataType[] types) {
         List<MissingCellHandlerFactory> factories = new ArrayList<MissingCellHandlerFactory>();
 
         // Add the do nothing default factory
-        factories.add(DoNothingMissingCellHandlerFactory.getInstance());
+        factories.add(getDoNothingHandlerFactory());
 
         for (MissingCellHandlerFactory fac : m_factories) {
             boolean isApplicable = true;
@@ -199,6 +210,14 @@ public final class MissingCellHandlerFactoryManager {
                 factories.add(fac);
             }
         }
+
+        factories.sort(new Comparator<MissingCellHandlerFactory>() {
+            @Override
+            public int compare(final MissingCellHandlerFactory a, final MissingCellHandlerFactory b) {
+                return a.getDisplayName().compareTo(b.getDisplayName());
+            }
+        });
+
         return factories;
     }
 
@@ -208,9 +227,30 @@ public final class MissingCellHandlerFactoryManager {
      * @return the factory with the given name
      */
     public MissingCellHandlerFactory getFactoryByID(final String id) {
-        if (id.equals(DoNothingMissingCellHandlerFactory.ID)) {
-            return DoNothingMissingCellHandlerFactory.getInstance();
+        if (id.equals(getDoNothingHandlerFactoryId())) {
+            return getDoNothingHandlerFactory();
         }
         return m_factoryNameMap.get(id);
+    }
+
+    /** @return true if one or more handler produce non standard PMML */
+    public boolean hasNonStandardPMMLHandlers() {
+        for (MissingCellHandlerFactory handler : getFactories()) {
+            if (!handler.producesPMML4_2()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return id of do nothing handler factory */
+    protected String getDoNothingHandlerFactoryId() {
+        return DoNothingMissingCellHandlerFactory.ID;
+    }
+
+    /** @return instance of do nothing handler factory */
+    protected MissingCellHandlerFactory getDoNothingHandlerFactory() {
+        return DoNothingMissingCellHandlerFactory.getInstance();
     }
 }

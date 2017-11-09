@@ -48,7 +48,6 @@
  */
 package org.knime.base.node.preproc.pmml.missingval;
 
-import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -56,7 +55,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Holds information necessary for initializing a missing value handler for one column or one data type.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MVIndividualSettings {
 
@@ -68,23 +70,35 @@ public class MVIndividualSettings {
 
     private NodeSettings m_settings;
 
-    /**
-     * Empty constructor for loading from settings.
-     */
-    MVIndividualSettings() {
-        m_settings = new NodeSettings("");
-    }
+    private final MissingCellHandlerFactoryManager m_handlerFactoryManager;
 
     /**
      * Creates a new instance of MVColumnSettings.
      * @param factory the factory for the missing cell handler
+     * @param handlerFactoryManager manager keeping the missing value handler factories
      */
-    public MVIndividualSettings(final MissingCellHandlerFactory factory) {
-        this();
+    public MVIndividualSettings(final MissingCellHandlerFactory factory,
+        final MissingCellHandlerFactoryManager handlerFactoryManager) {
+
         if (factory == null) {
             throw new NullPointerException("The facory must not be null");
         }
+
+        if (handlerFactoryManager == null) {
+            throw new NullPointerException("Factory manager required");
+        }
+
+        m_settings = new NodeSettings("");
         m_factory = factory;
+        m_handlerFactoryManager = handlerFactoryManager;
+    }
+
+    /**
+     * Creates a new instance of MVColumnSettings using a do nothing handler.
+     * @param handlerFactoryManager manager keeping the missing value handler factories
+     */
+    public MVIndividualSettings(final MissingCellHandlerFactoryManager handlerFactoryManager) {
+        this(handlerFactoryManager.getDoNothingHandlerFactory(), handlerFactoryManager);
     }
 
     /**
@@ -114,13 +128,13 @@ public class MVIndividualSettings {
     public String loadSettings(final NodeSettingsRO settings, final boolean repair) throws InvalidSettingsException {
         String factID = settings.getString(FACTORY_ID_CFG);
         String warning = null;
-        m_factory = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factID);
+        m_factory = m_handlerFactoryManager.getFactoryByID(factID);
         if (m_factory == null) {
             warning = "The factory " + factID + " is not a registered extension but is chosen in the settings.";
             if (!repair) {
                 throw new InvalidSettingsException(warning);
             }
-            m_factory = DoNothingMissingCellHandlerFactory.getInstance();
+            m_factory = m_handlerFactoryManager.getDoNothingHandlerFactory();
         }
         if (settings.containsKey(SETTINGS_CFG)) {
             m_settings = new NodeSettings("");

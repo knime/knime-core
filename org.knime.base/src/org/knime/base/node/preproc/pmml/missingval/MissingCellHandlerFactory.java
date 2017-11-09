@@ -55,7 +55,9 @@ import org.knime.core.data.DataType;
 
 /**
  * Factory class for a missing cell handler. Provides all the meta information and instances of the handler.
+ *
  * @author Alexander Fillbrunn
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class MissingCellHandlerFactory {
 

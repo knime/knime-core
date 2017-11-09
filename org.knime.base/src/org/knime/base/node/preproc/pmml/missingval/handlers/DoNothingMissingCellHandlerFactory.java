@@ -56,7 +56,10 @@ import org.knime.core.data.DataType;
 
 /**
  * A factory that creates a handler that does nothing.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DoNothingMissingCellHandlerFactory extends MissingCellHandlerFactory {
 

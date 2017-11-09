@@ -71,7 +71,10 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * A missing cell handler that is initialized from a PMML document instead of a factory.
  * Only works with the data types boolean, int, long, double and date time.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
 

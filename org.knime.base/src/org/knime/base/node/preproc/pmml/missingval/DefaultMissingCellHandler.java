@@ -53,7 +53,10 @@ import org.knime.core.data.DataColumnSpec;
 
 /**
  * Abstract missing cell handler without moving window.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class DefaultMissingCellHandler extends MissingCellHandler {
 

@@ -58,7 +58,10 @@ import org.knime.core.data.date.DateAndTimeValue;
 
 /**
  * Creates a handler that replaces missing values with the column's minimum value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MinMissingCellHandlerFactory extends MissingCellHandlerFactory {
 

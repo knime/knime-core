@@ -59,6 +59,8 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class MissingValueHandlerPanel extends JPanel {
 

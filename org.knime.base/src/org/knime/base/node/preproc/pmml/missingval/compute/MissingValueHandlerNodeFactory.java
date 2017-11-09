@@ -3,6 +3,7 @@ package org.knime.base.node.preproc.pmml.missingval.compute;
 import java.io.IOException;
 
 import org.apache.xmlbeans.XmlException;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryManager;
 import org.knime.base.node.preproc.pmml.missingval.utils.MissingValueNodeDescriptionHelper;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
@@ -13,8 +14,8 @@ import org.xml.sax.SAXException;
 /**
  * <code>NodeFactory</code> for the "CompiledModelReader" Node.
  *
- *
  * @author Alexander Fillbrunn
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MissingValueHandlerNodeFactory
         extends NodeFactory<MissingValueHandlerNodeModel> {
@@ -66,7 +67,8 @@ public class MissingValueHandlerNodeFactory
     @Override
     protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
         NodeDescription createNodeDescription = super.createNodeDescription();
-        return MissingValueNodeDescriptionHelper.createNodeDescription(createNodeDescription);
+        MissingCellHandlerFactoryManager manager = MissingCellHandlerFactoryManager.getInstance();
+        return MissingValueNodeDescriptionHelper.createNodeDescription(createNodeDescription, manager);
     }
 }
 

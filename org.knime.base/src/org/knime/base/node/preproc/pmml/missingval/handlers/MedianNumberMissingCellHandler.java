@@ -65,7 +65,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Replaces missing values with the column's median value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class MedianNumberMissingCellHandler extends DefaultMissingCellHandler {
 

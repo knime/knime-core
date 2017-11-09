@@ -63,7 +63,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 
 /**
  * Replaces missing values with a fixed double value.
+ *
  * @author Alexander Fillbrunn
+ * @since 3.5
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class FixedDoubleValueMissingCellHandler extends MissingCellHandler {
 
