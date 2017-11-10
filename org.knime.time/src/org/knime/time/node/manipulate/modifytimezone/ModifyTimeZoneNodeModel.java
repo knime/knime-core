@@ -72,6 +72,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.UniqueNameGenerator;
@@ -94,6 +95,9 @@ final class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
     static final String OPTION_APPEND = "Append selected columns";
 
     static final String OPTION_REPLACE = "Replace selected columns";
+
+    /** Configuration key that is used to persist one of the settings. */
+    private static final String CFG_KEY_MODIFY_SELECT = "modify_select";
 
     static final String MODIFY_OPTION_SET = "Set time zone";
 
@@ -155,27 +159,19 @@ final class ModifyTimeZoneNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createModifySelectModel() {
-        return new SettingsModelString("modify_select", MODIFY_OPTION_SET);
+        return new SettingsModelString(CFG_KEY_MODIFY_SELECT, MODIFY_OPTION_SET);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        if (!m_hasValidatedConfiguration) {
-            throw new InvalidSettingsException("Node must be configured!");
-        }
-        final String modification = m_modifyAction.getStringValue();
-        if (!(modification.equals(MODIFY_OPTION_SET) || modification.equals(MODIFY_OPTION_SHIFT)
-            || modification.equals(MODIFY_OPTION_REMOVE))) {
-            throw new InvalidSettingsException("Unknow modification operation '" + m_modifyAction.getStringValue()
-                + "'. Most likely the parameter 'modify_select' was controlled by an invalid flow variable.");
-        }
-        return super.configure(inSpecs);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) throws InvalidSettingsException {
+        CheckUtils.checkSetting(m_hasValidatedConfiguration, "Node must be configured!");
+        final String modification = CheckUtils.checkSettingNotNull(m_modifyAction.getStringValue(), "must not be null");
+        CheckUtils.checkSetting(modification.equals(MODIFY_OPTION_SET)
+            || modification.equals(MODIFY_OPTION_SHIFT)
+            || modification.equals(MODIFY_OPTION_REMOVE),
+            "Unknow modification operation '%s'. Most likely the parameter '%s' was controlled by "
+            + "an invalid flow variable.", CFG_KEY_MODIFY_SELECT, m_modifyAction.getStringValue());
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndeces =
