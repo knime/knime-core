@@ -32,7 +32,14 @@
 			Name of the output column containing the
 			prediction.
 		</option>
-	</fullDescription>
+        <option name="Append overall prediction confidence">Appends a column that contains information on how
+            the certain the model is about its prediction.</option>
+        <option name="Append individual class probabilites">Appends for each possible class a column
+            containing the probability that the given row is an element of this
+            class</option>
+        <option name="Suffix for probability column">Allows to add a suffix for the class probability
+            columns.</option>
+    </fullDescription>
 
 	<ports>
 		<inPort index="0" name="Model">Gradient Boosted Trees model in PMML format.</inPort>
