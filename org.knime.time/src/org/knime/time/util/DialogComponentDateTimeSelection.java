@@ -87,6 +87,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 import com.toedter.calendar.JDateChooser;
 
@@ -413,6 +414,7 @@ public final class DialogComponentDateTimeSelection extends DialogComponent {
      */
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
+        CheckUtils.checkSettingNotNull(m_dateChooser.getDate(), "Date must be valid and not empty.", new Object[0]);
         updateModel();
     }
 
