@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
  * This class represents the frequent case that there is no good surrogate and only the default response (direction) is
  * used as Surrogate
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class TreeNodeSurrogateOnlyDefDirCondition extends AbstractTreeNodeSurrogateCondition {
 

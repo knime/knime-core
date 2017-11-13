@@ -74,7 +74,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 /**
  * Handles the export of {@link AbstractTreeModel} objects to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends AbstractWarningHolder {
 

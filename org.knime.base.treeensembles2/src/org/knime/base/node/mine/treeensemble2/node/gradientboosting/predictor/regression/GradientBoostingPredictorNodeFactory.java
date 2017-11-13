@@ -55,7 +55,7 @@ import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class GradientBoostingPredictorNodeFactory extends NodeFactory<GradientBoostingPredictorNodeModel> {
 

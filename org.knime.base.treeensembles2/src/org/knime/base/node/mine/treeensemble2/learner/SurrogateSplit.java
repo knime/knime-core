@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNodeSurrogateCon
 /**
  * This class is used as a container to encapsulate the child markers and conditions of a surrogate split
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class SurrogateSplit {
     private final AbstractTreeNodeSurrogateCondition[] m_conditions;

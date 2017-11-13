@@ -67,7 +67,7 @@ import org.knime.core.node.ExecutionContext;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public abstract class ProximityMatrix {
 

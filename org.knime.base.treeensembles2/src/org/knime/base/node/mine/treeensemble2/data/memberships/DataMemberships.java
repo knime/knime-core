@@ -52,7 +52,7 @@ import java.util.BitSet;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public interface DataMemberships {
 

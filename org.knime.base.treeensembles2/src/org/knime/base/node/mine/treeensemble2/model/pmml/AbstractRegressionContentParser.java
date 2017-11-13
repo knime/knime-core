@@ -59,7 +59,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 /**
  * Handles the general parsing of regression tree node content.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractRegressionContentParser implements
 ContentParser<TreeNodeRegression, TreeTargetNumericColumnMetaData> {

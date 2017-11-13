@@ -57,7 +57,7 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * Abstract implementation of the {@link Predictor} interface.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <M> the type of model
  * @param <S> the type of model spec
  * @param <C> the type of configuration

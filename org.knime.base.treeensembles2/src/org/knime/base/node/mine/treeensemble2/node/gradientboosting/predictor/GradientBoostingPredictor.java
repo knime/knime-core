@@ -63,7 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <M> The type of gradient boosted trees model this predictor applies
  */
 public class GradientBoostingPredictor <M extends AbstractGradientBoostingModel>

@@ -64,7 +64,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 /**
  * Handles the translation of {@link GradientBoostedTreesModel}s to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class RegressionGBTModelExporter extends AbstractGBTModelExporter<GradientBoostedTreesModel> {
 

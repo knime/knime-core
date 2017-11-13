@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 /**
  * Contains utility functions for exporting and importing models to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class TranslationUtil {
 

@@ -64,7 +64,7 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <N> the type of node the trees handled by this translator consist of
  * @param <M> the type of tree this translator handles
  * @param <T> the type of meta data information of the target column

@@ -71,7 +71,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RegressionTreeModelPortObject extends AbstractPortObject {
     public static final class Serializer extends AbstractPortObjectSerializer<RegressionTreeModelPortObject> {}

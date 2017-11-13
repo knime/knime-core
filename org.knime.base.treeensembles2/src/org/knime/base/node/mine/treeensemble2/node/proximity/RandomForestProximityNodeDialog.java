@@ -55,7 +55,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RandomForestProximityNodeDialog extends DefaultNodeSettingsPane {
 

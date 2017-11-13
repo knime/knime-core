@@ -67,7 +67,7 @@ import org.knime.distance.DistanceMeasurePortObject;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RandomForestDistanceCreatorNodeModel extends NodeModel {
 

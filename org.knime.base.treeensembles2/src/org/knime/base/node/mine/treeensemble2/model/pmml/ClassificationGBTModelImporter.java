@@ -72,7 +72,7 @@ import org.knime.core.util.Pair;
 /**
  * Handles the import of {@link MultiClassGradientBoostedTreesModel}s from PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class ClassificationGBTModelImporter extends AbstractGBTModelImporter<MultiClassGradientBoostedTreesModel> {
 

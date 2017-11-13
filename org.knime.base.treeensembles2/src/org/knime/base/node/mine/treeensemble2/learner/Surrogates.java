@@ -71,7 +71,7 @@ import org.knime.core.data.RowKey;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class Surrogates {
 

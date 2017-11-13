@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble2.node.view.RandomForestAbstractTree
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RandomForestClassificationTreeNodeWidgetFactory extends RandomForestAbstractTreeNodeWidgetFactory {
 

@@ -54,7 +54,7 @@ import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class GradientBoostingRegressionLearnerNodeFactory extends NodeFactory<GradientBoostingRegressionLearnerNodeModel> {
 

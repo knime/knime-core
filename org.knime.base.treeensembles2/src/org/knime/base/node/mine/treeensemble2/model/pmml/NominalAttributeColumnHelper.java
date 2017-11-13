@@ -58,7 +58,7 @@ import org.knime.core.node.util.CheckUtils;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class NominalAttributeColumnHelper extends AbstractAttributeColumnHelper<TreeNominalColumnMetaData>
 implements NomValMapper {

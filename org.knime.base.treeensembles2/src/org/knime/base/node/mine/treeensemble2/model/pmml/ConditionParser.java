@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 /**
  * Parses PMML conditions of a {@link Node} into {@link TreeNodeCondition} objects.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 interface ConditionParser {
 

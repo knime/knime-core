@@ -58,7 +58,7 @@ import org.knime.core.data.DataTableSpec;
  * Provides a mapping from field names to {@link TreeAttributeColumnMetaData}.
  * For example necessary for creation of {@link TreeNodeCondition} objects.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 interface MetaDataMapper <T extends TreeTargetColumnMetaData> {
 

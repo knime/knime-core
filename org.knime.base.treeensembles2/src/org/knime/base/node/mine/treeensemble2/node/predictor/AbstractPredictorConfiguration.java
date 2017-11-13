@@ -56,7 +56,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public abstract class AbstractPredictorConfiguration implements PredictorConfiguration {
 

@@ -81,7 +81,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 class GBTPMMLExporterNodeModel extends NodeModel {
 

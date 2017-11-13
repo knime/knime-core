@@ -53,7 +53,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public abstract class RandomForestAbstractTreeGraphView extends HierarchicalGraphView<AbstractTreeNode> {
 

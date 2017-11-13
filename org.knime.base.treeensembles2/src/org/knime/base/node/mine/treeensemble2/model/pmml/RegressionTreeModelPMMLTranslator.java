@@ -61,7 +61,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
  * Node that exporting a model learned on a vector columns will result in a warning because
  * it is not possible to import such a model again.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RegressionTreeModelPMMLTranslator
 extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeModelRegression, TreeTargetNumericColumnMetaData> {

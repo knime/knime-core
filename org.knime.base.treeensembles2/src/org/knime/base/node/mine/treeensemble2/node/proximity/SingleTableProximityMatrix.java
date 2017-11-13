@@ -54,7 +54,7 @@ import org.knime.core.node.BufferedDataTable;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class SingleTableProximityMatrix extends ProximityMatrix {
 

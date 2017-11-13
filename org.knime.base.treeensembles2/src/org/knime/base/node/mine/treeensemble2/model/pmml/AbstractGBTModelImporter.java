@@ -66,7 +66,7 @@ import org.knime.core.util.Pair;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractGBTModelImporter <M extends AbstractGradientBoostingModel> {
 

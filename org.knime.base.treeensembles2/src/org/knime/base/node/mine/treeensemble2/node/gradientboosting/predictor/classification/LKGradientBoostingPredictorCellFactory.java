@@ -72,7 +72,7 @@ import org.knime.core.util.UniqueNameGenerator;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class LKGradientBoostingPredictorCellFactory extends AbstractCellFactory {
 

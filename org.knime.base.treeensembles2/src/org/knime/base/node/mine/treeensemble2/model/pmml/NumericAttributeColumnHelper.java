@@ -54,7 +54,7 @@ import org.knime.core.data.DataColumnSpec;
 /**
  * Simply wraps a {@link TreeNumericColumnMetaData} object.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class NumericAttributeColumnHelper extends AbstractAttributeColumnHelper<TreeNumericColumnMetaData> {
 

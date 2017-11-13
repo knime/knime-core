@@ -59,7 +59,7 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
 /**
  * Abstract implementation for the translation of gradient boosted trees model from and to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <M> The model type that is handled by the translator
  */
 public abstract class AbstractGBTModelPMMLTranslator <M extends AbstractGradientBoostingModel>

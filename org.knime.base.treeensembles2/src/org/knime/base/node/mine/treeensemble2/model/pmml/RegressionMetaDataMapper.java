@@ -56,7 +56,7 @@ import org.knime.core.data.DataTableSpec;
 /**
  * MetaDataMapper for regression tree reconstruction.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class RegressionMetaDataMapper extends AbstractMetaDataMapper<TreeTargetNumericColumnMetaData> {
 

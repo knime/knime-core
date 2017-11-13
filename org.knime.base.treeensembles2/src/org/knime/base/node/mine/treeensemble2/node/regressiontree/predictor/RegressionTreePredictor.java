@@ -56,7 +56,7 @@ import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class RegressionTreePredictor extends
 AbstractPredictor<RegressionTreeModel, RegressionTreeModelPortObjectSpec, RegressionTreePredictorConfiguration> {

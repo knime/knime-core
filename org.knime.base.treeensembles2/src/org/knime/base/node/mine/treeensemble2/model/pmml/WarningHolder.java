@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 /**
  * Classes implementing this interface can have warnings.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 interface WarningHolder {
     /**

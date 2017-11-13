@@ -58,7 +58,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class TreeEnsemblePredictorConfiguration extends AbstractPredictorConfiguration {
 

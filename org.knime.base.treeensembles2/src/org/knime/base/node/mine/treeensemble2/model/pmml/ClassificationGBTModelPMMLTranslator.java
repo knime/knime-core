@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTre
 /**
  * Handles PMML import and export for {@link MultiClassGradientBoostedTreesModel}s.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class ClassificationGBTModelPMMLTranslator extends
 AbstractGBTModelPMMLTranslator<MultiClassGradientBoostedTreesModel> {

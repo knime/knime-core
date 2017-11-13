@@ -53,7 +53,7 @@ import org.knime.core.data.DataColumnSpec;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class NumericTargetColumnHelper extends TargetColumnHelper<TreeTargetNumericColumnMetaData> {
 

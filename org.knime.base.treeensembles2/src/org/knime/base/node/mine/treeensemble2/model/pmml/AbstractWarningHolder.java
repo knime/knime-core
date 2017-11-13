@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 /**
  * Handles warnings for implementing classes.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractWarningHolder implements WarningHolder {
 

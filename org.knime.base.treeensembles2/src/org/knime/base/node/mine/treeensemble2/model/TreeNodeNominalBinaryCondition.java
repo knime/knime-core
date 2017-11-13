@@ -70,7 +70,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
 

@@ -60,7 +60,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
 /**
  * Handles the export of {@link TreeModelClassification} objects to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class ClassificationTreeModelExporter extends AbstractTreeModelExporter<TreeNodeClassification> {
 

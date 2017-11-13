@@ -56,7 +56,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Root interface for predictor configurations in the tree ensemble plugin.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public interface PredictorConfiguration {
 

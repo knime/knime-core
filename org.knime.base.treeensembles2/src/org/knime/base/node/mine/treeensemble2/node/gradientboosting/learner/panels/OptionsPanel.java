@@ -97,7 +97,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class OptionsPanel extends JPanel {
 

@@ -54,7 +54,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 /**
  * Used to create the final tree objects.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 interface TreeFactory <N extends AbstractTreeNode, M extends AbstractTreeModel<N>>{
 

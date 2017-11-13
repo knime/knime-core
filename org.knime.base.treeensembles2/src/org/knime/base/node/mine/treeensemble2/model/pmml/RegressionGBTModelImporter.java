@@ -67,7 +67,7 @@ import org.knime.core.util.Pair;
 /**
  * Handles the import of Gradient Boosted Trees for regression.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class RegressionGBTModelImporter extends AbstractGBTModelImporter<GradientBoostedTreesModel> {
 

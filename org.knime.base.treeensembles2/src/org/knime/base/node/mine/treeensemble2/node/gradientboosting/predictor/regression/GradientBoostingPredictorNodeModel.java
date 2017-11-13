@@ -80,7 +80,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class GradientBoostingPredictorNodeModel extends NodeModel {
 

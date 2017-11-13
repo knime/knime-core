@@ -52,7 +52,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class EnsembleStatistic {
 

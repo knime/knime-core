@@ -55,7 +55,7 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <M> the type of model this predictor uses
  * @param <S> the type of spec of the model
  * @param <C> the type of predictor configuration

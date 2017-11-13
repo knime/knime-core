@@ -69,7 +69,7 @@ import org.knime.core.node.port.PortType;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RandomForestProximityNodeModel extends NodeModel {
 

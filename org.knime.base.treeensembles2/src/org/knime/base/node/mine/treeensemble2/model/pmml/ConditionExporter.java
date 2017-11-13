@@ -78,7 +78,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
 /**
  * Exports node conditions to PMML.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class ConditionExporter {
 

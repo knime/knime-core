@@ -59,7 +59,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public abstract class AbstractTreeNodeSurrogateCondition extends TreeNodeCondition {
 

@@ -80,7 +80,7 @@ import org.knime.core.data.property.ColorAttr;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RandomForestClassificationTreeNodeWidget extends RandomForestAbstractTreeNodeWidget {
 

@@ -69,7 +69,7 @@ import org.knime.core.node.util.CheckUtils;
  * This implementation of MetaDataMapper only supports models that were build with
  * ordinary KNIME tables containing no vectors.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> implements MetaDataMapper<T> {
 

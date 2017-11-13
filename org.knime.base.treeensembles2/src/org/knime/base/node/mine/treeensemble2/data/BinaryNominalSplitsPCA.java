@@ -69,7 +69,7 @@ class BinaryNominalSplitsPCA {
      * This nested class is intended to be only used within this class and in
      * TreeNominalColumnData#calcBestSplitClassificationBinaryPCA.
      *
-     * @author Adrian Nembach
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
      */
     static class CombinedAttributeValues {
         final RealVector m_classFrequencyVector;

@@ -59,7 +59,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 /**
  * Handles the content parsing for Gradient Boosted Trees regression tree models.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class GBTRegressionContentParser extends AbstractRegressionContentParser {
     private final Map<TreeNodeSignature, Double> m_coefficientMap = new HashMap<>();

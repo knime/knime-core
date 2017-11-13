@@ -64,7 +64,7 @@ import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class GradientBoostingModelPortObject extends AbstractPortObject {
     public static final class Serializer extends AbstractPortObjectSerializer<GradientBoostingModelPortObject> {}

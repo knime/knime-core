@@ -86,7 +86,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 /**
  * Predictor for simple regression tree models that imports its model from PMML prior to prediction.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
 

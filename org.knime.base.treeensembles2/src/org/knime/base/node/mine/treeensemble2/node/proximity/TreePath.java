@@ -50,7 +50,7 @@ package org.knime.base.node.mine.treeensemble2.node.proximity;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public interface TreePath {
 

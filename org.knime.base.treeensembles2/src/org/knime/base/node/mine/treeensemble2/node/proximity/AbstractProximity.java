@@ -55,7 +55,7 @@ import org.knime.core.node.ExecutionMonitor;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class AbstractProximity {
 

@@ -58,7 +58,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class GradientBoostingLearnerConfiguration extends TreeEnsembleLearnerConfiguration {
 

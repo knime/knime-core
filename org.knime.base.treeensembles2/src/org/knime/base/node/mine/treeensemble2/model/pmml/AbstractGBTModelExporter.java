@@ -69,7 +69,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 /**
  * Handles the export of {@link GradientBoostedTreesModel}s on an abstract level.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel> extends AbstractWarningHolder {
     private final M m_gbtModel;

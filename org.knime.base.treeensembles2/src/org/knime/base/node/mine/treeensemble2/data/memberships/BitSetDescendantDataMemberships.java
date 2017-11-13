@@ -53,7 +53,7 @@ import java.util.HashMap;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class BitSetDescendantDataMemberships implements DataMemberships {
 

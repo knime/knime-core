@@ -63,7 +63,7 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 /**
  * Gradient Boosted Trees model for classification tasks.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class MultiClassGradientBoostedTreesModel extends AbstractGradientBoostingModel {
 

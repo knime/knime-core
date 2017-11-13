@@ -56,7 +56,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * Configuration for a Simple Regression Tree Predictor node.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class RegressionTreePredictorConfiguration extends AbstractPredictorConfiguration {
 

@@ -91,7 +91,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 /**
  * Predictor for GBT models that imports its model from PMML prior to prediction.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <M> the model type (usually {@link GradientBoostedTreesModel} or {@link MultiClassGradientBoostedTreesModel})
  */
 public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientBoostingModel> extends NodeModel {

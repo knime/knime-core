@@ -60,7 +60,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  * Parses the content of a {@link TreeNodeClassification}.
  * This includes the majority class and class distribution.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class ClassificationContentParser
 implements ContentParser<TreeNodeClassification, TreeTargetNominalColumnMetaData> {

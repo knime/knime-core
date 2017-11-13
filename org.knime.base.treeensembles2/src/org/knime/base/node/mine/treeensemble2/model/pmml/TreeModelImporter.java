@@ -64,7 +64,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
  * Handles the import of {@link AbstractTreeModel} objects from PMML.
  * This includes the handling of conditions as those are independent of the node type.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 class TreeModelImporter<N extends AbstractTreeNode, M extends AbstractTreeModel<N>,
 T extends TreeTargetColumnMetaData> {

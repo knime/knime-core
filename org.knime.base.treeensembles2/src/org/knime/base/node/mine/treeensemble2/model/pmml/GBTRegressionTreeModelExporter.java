@@ -60,7 +60,7 @@ import org.knime.core.node.util.CheckUtils;
 /**
  * Handles the export of regression trees used in gradient boosted trees.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class GBTRegressionTreeModelExporter extends RegressionTreeModelExporter {
 

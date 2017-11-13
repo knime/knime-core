@@ -58,7 +58,7 @@ import com.google.common.collect.ArrayListMultimap;
  * This class creates and stores TreeNodeSignature for reuse in the building process of new trees.
  * Needs to be synchronized because trees are build in parallel.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class TreeNodeSignatureFactory {
     private static final int DEFAULT_CAPACITY = 2048;

@@ -58,7 +58,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 /**
  * Creates TreeNode objects from PMML nodes.
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 interface ContentParser <N extends AbstractTreeNode, T extends TreeTargetColumnMetaData>{
 

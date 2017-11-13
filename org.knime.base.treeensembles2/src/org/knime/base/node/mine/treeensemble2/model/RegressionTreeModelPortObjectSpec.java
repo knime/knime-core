@@ -68,7 +68,7 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class RegressionTreeModelPortObjectSpec extends AbstractSimplePortObjectSpec {
     public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<RegressionTreeModelPortObjectSpec> {}

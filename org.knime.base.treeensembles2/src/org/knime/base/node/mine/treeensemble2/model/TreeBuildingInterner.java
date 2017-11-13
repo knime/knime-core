@@ -55,7 +55,7 @@ import com.google.common.collect.Interners;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class TreeBuildingInterner {
 

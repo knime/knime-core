@@ -78,7 +78,7 @@ import com.google.common.collect.ArrayListMultimap;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class Proximity extends AbstractProximity{
 

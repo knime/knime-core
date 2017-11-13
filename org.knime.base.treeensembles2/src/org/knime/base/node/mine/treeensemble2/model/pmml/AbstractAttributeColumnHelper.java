@@ -54,7 +54,7 @@ import org.knime.core.data.DataColumnSpec;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractAttributeColumnHelper <T extends TreeAttributeColumnMetaData> implements ColumnHelper<T> {
 

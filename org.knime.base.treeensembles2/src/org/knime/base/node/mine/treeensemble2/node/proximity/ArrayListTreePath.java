@@ -52,7 +52,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class ArrayListTreePath implements TreePath {
 

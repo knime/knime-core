@@ -79,7 +79,7 @@ import com.google.common.primitives.Doubles;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public abstract class AbstractGradientBoostingLearner {
 

@@ -76,7 +76,7 @@ import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
- * @author Adrian Nembach, KNIME
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class RegressionTreePredictorNodeModel extends NodeModel {
 

@@ -70,7 +70,7 @@ import org.knime.core.util.ThreadPool;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public class PathProximity extends AbstractProximity {
 

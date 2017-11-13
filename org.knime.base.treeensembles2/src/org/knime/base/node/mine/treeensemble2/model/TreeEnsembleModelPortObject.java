@@ -82,7 +82,7 @@ import com.google.common.collect.Lists;
 public class TreeEnsembleModelPortObject extends FileStorePortObject {
     /**
      *
-     * @author Adrian Nembach
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
      */
     public static final class Serializer extends PortObjectSerializer<TreeEnsembleModelPortObject> {
 
