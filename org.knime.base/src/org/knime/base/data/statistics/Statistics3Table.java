@@ -58,12 +58,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math.stat.descriptive.moment.Kurtosis;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.Skewness;
 import org.apache.commons.math.stat.descriptive.moment.Variance;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -644,27 +646,34 @@ public class Statistics3Table {
      */
     public DataTable createNominalValueTable(final List<String> nominal) {
         DataTableSpec outSpec = createOutSpecNominal(m_spec, nominal);
-        List<Iterator<Entry<DataCell, Integer>>> it =
-            new ArrayList<Iterator<Entry<DataCell, Integer>>>(outSpec.getNumColumns() / 2);
-        for (int i = 0; i < m_nominalValues.size(); i++) {
-            if (m_nominalValues.get(i) != null) {
-                it.add(m_nominalValues.get(i).entrySet().iterator());
+        @SuppressWarnings("unchecked")
+        Iterator<Entry<DataCell, Integer>>[] it = new Iterator[(outSpec.getNumColumns() / 3)];
+        long[] totals = new long[it.length];
+        for (int i = 0, index = 0; i < m_nominalValues.size(); i++) {
+            Map<DataCell, Integer> currentMap = m_nominalValues.get(i);
+            if (currentMap != null) {
+                it[index] = currentMap.entrySet().iterator();
+                totals[index] = currentMap.values().stream().collect(Collectors.summingLong(Integer::valueOf));
+                index += 1;
             }
         }
-        DataContainer cont = new DataContainer(outSpec);
+        DataContainer cont = new DataContainer(outSpec, true);
         int rowIndex = 0;
         do {
             boolean addEnd = true;
-            DataCell[] cells = new DataCell[2 * it.size()];
-            for (int i = 0; i < it.size(); i++) {
-                if (it.get(i) != null && it.get(i).hasNext()) {
-                    Map.Entry<DataCell, Integer> e = it.get(i).next();
-                    cells[2 * i] = e.getKey();
-                    cells[2 * i + 1] = new IntCell(e.getValue());
+            DataCell[] cells = new DataCell[3 * it.length];
+            for (int i = 0; i < it.length; i++) {
+                if (it[i].hasNext()) {
+                    Map.Entry<DataCell, Integer> e = it[i].next();
+                    cells[3 * i] = e.getKey();
+                    int count = e.getValue().intValue();
+                    cells[3 * i + 1] = new IntCell(count);
+                    cells[3 * i + 2] = new DoubleCell((double)count / totals[i]);
                     addEnd = false;
                 } else {
-                    cells[2 * i] = DataType.getMissingCell();
-                    cells[2 * i + 1] = DataType.getMissingCell();
+                    cells[3 * i] = DataType.getMissingCell();
+                    cells[3 * i + 1] = DataType.getMissingCell();
+                    cells[3 * i + 2] = DataType.getMissingCell();
                 }
             }
             if (addEnd) {
@@ -738,9 +747,15 @@ public class Statistics3Table {
                 cspecs.add(cspec);
                 String countCol = DataTableSpec.getUniqueColumnName(inSpec, cspec.getName() + "_Count");
                 cspecs.add(new DataColumnSpecCreator(countCol, IntCell.TYPE).createSpec());
+                String percentCol =
+                    DataTableSpec.getUniqueColumnName(inSpec, "Relative Frequency (" + cspec.getName() + ")");
+                DataColumnSpecCreator percentColSpecCreator = new DataColumnSpecCreator(percentCol, DoubleCell.TYPE);
+                percentColSpecCreator
+                    .setDomain(new DataColumnDomainCreator(new DoubleCell(0.0), new DoubleCell(1.0)).createDomain());
+                cspecs.add(percentColSpecCreator.createSpec());
             }
         }
-        return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
+        return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs.size()]));
     }
 
     /**

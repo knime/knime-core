@@ -48,7 +48,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,7 +79,6 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -96,6 +94,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.Pair;
 
@@ -408,28 +407,28 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     }
 
     /**
-     * @param occurrencesSpec The original occurrences spec from the base class' implementation.
+     * @param nominalSpec The original spec from {@link Statistics3Table#createOutSpecNominal(DataTableSpec, List)}.
      * @return The '{@code ... count}' columns are renamed to '{@code Count (...)}'.
      * @deprecated We will not need this once the replacement for Statistics3Table is present and give the correct
      *             table.
      */
     @Deprecated
-    protected DataTableSpec renamedOccurrencesSpec(final DataTableSpec occurrencesSpec) {
-        DataTableSpecCreator renameSpecCreator = new DataTableSpecCreator(occurrencesSpec);
-        DataColumnSpec[] specs = new DataColumnSpec[occurrencesSpec.getNumColumns()];
-        for (int i = occurrencesSpec.getNumColumns(); i-- > 0;) {
-            if (i % 2 == 1) {
-                DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(occurrencesSpec.getColumnSpec(i));
-                colSpecCreator.setName("Count (" + occurrencesSpec.getColumnSpec(i - 1).getName() + ")");
-                specs[i] = colSpecCreator.createSpec();
-            } else {
-                specs[i] = occurrencesSpec.getColumnSpec(i);
+    protected DataTableSpec renamedOccurrencesSpec(final DataTableSpec nominalSpec) {
+        DataTableSpecCreator tableSpecCreator = new DataTableSpecCreator(nominalSpec);
+        for (int i = 0; i < nominalSpec.getNumColumns(); i++) {
+            // columns are grouped: (name1, name1_count, Relative Frequency (name1), name2, name2_Count, ...)
+            if (i % 3 == 1) {
+                DataColumnSpec countSpec = nominalSpec.getColumnSpec(i);
+                String name = countSpec.getName();
+                CheckUtils.checkState(name.endsWith("_Count"), "Expected column name '<someName>_Count' but got '%s'",
+                    name);
+                String newName = name.replaceAll("(.+)_Count", "Count ($1)");
+                DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(countSpec);
+                colSpecCreator.setName(newName);
+                tableSpecCreator.replaceColumn(i, colSpecCreator.createSpec());
             }
         }
-        renameSpecCreator.dropAllColumns();
-        renameSpecCreator.addColumns(specs);
-        DataTableSpec newSpec = renameSpecCreator.createSpec();
-        return newSpec;
+        return tableSpecCreator.createSpec();
     }
 
     /**
@@ -513,7 +512,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         final DataTableSpec inputSpec = inSpecs[0];
@@ -522,7 +521,8 @@ class ExtendedStatisticsNodeModel extends NodeModel {
                 IntValue.class, LongValue.class, BooleanValue.class), true);
         }
         List<String> nominalValues = Arrays.asList(m_nominalFilter.applyTo(inputSpec).getIncludes());
-        DataTableSpec nominalSpec = createOutSpecNominal(inputSpec, nominalValues);
+        DataTableSpec nominalSpec = Statistics3Table.createOutSpecNominal(inputSpec, nominalValues);
+        nominalSpec = renamedOccurrencesSpec(nominalSpec);
 
         DataTableSpec[] ret = new DataTableSpec[3];
         DataTableSpecCreator specCreator = new DataTableSpecCreator(Statistics3Table.getStatisticsSpecification());
@@ -533,27 +533,6 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         ret[1] = hc.createNominalHistogramTableSpec();
         ret[2] = nominalSpec;
         return ret;
-    }
-
-    /**
-     * Create spec containing only nominal columns in same order as the input spec.
-     *
-     * @param inputSpec input spec
-     * @param nominalValues used in map of co-occurrences
-     * @return a new spec with all nominal columns (Counts are in the form: {@code Count (} nominal column name
-     *         {@code )}.)
-     */
-    private DataTableSpec createOutSpecNominal(final DataTableSpec inputSpec, final List<String> nominalValues) {
-        ArrayList<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
-        for (int i = 0; i < inputSpec.getNumColumns(); i++) {
-            DataColumnSpec cspec = inputSpec.getColumnSpec(i);
-            if (nominalValues.contains(cspec.getName())) {
-                    cspecs.add(cspec);
-                    String countCol = DataTableSpec.getUniqueColumnName(inputSpec, "Count (" + cspec.getName() + ")");
-                    cspecs.add(new DataColumnSpecCreator(countCol, IntCell.TYPE).createSpec());
-                }
-            }
-            return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
     }
 
     /**
