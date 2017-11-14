@@ -50,11 +50,11 @@ package org.knime.base.node.preproc.pmml.missingval.compute;
 
 import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -89,9 +89,11 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
      */
     public static final String SELECTED_FACTORY_CHANGE = "selectedFactoryChanged";
 
-    private JComboBox<MissingCellHandlerFactory> m_comboBox;
+    private final JComboBox<MissingCellHandlerFactory> m_comboBox;
 
-    private JPanel m_argumentsPanel;
+    private final JPanel m_argumentsPanel;
+
+    private final HashMap<String, MissingValueHandlerPanel> m_valueHandlerPanels;
 
     private final MissingCellHandlerFactoryManager m_handlerFactoryManager;
 
@@ -121,6 +123,7 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         // Each settings panel for the different factories is a card in a card layout.
         // The change of the cards is triggered by the combo box.
         m_argumentsPanel = new JPanel(new DynamicCardLayout());
+        m_valueHandlerPanels = new HashMap<>();
         m_comboBox = new JComboBox<MissingCellHandlerFactory>();
         for (MissingCellHandlerFactory fac : factoryManager.getFactoriesSorted(dt)) {
             m_comboBox.addItem(fac);
@@ -129,6 +132,7 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
                 try {
                     panel.loadSettingsFrom(s.getSettings(), specs);
                     m_argumentsPanel.add(panel, fac.getID());
+                    m_valueHandlerPanels.put(fac.getID(), panel);
                 } catch (Exception e) {
                     m_argumentsPanel.add(new LoadingErrorMissingValueHandlerPanel(e.getMessage()), fac.getID());
                 }
@@ -192,24 +196,12 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
      * @throws InvalidSettingsException if a user defined panel throws an error while saving its settings.
      */
     public MVIndividualSettings getSettings() throws InvalidSettingsException {
-        MVIndividualSettings settings = new MVIndividualSettings(getSelectedFactory(), m_handlerFactoryManager);
-        MissingValueHandlerPanel selectedPanel = getCurrentPanel();
-        if (selectedPanel != null) {
-            selectedPanel.saveSettingsTo(settings.getSettings());
+        MissingCellHandlerFactory currentFactory = getSelectedFactory();
+        MVIndividualSettings settings = new MVIndividualSettings(currentFactory, m_handlerFactoryManager);
+        if (m_valueHandlerPanels.containsKey(currentFactory.getID())) {
+            m_valueHandlerPanels.get(currentFactory.getID()).saveSettingsTo(settings.getSettings());
         }
         return settings;
-    }
-
-    /**
-     * Find the currently visible settings panel.
-     */
-    private MissingValueHandlerPanel getCurrentPanel() {
-        for (Component comp : m_argumentsPanel.getComponents()) {
-            if (comp.isVisible()) {
-                return (MissingValueHandlerPanel)comp;
-            }
-        }
-        return null;
     }
 
     /**
