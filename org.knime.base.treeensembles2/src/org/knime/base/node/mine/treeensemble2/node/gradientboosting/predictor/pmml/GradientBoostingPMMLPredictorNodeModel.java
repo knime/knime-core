@@ -141,7 +141,7 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+    public PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
         M model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
