@@ -371,11 +371,11 @@
                disabledIcon="icons/layout_16_bw.png"
                icon="icons/layout_16.png"
                id="org.knime.workbench.editor.actions.subnodeLayout"
-               label="Wrapped Metanode Layout"
+               label="Wrapped Metanode Node Usage And Layout"
                menubarPath="org.knime.workbench.editor.menu/group2"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
-               tooltip="Opens dialog to edit layout of Wrapped Metanode views.">
+               tooltip="Opens a dialog to edit usage and layout of Wrapped Metanode views and Quickforms.">
          </action>
          
          

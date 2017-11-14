@@ -161,7 +161,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      */
     protected SubnodeLayoutJSONEditorPage(final String pageName) {
         super(pageName);
-        setDescription("Specifiy in what way the contained View and Quickform nodes are allowed to be used and define a layout. \nThe layout is used in the KNIME WebPortal and the Wrapped Metanode View.");
+        setDescription("Specifiy in what way the contained view and Quickform nodes are allowed to be used and define a layout. \nThe layout is used in the KNIME WebPortal and the Wrapped Metanode View.");
         m_jsonDocument = "";
         m_basicMap = new LinkedHashMap<NodeIDSuffix, BasicLayoutInfo>();
         m_layoutCreator = new DefaultLayoutCreatorImpl();
@@ -188,11 +188,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         });
 
         TabItem basicTab = new TabItem(tabs, SWT.NONE);
-        basicTab.setText("Basic");
+        basicTab.setText("Basic Layout");
         basicTab.setControl(createBasicComposite(tabs));
 
         TabItem jsonTab = new TabItem(tabs, SWT.NONE);
-        jsonTab.setText("Advanced");
+        jsonTab.setText("Advanced Layout");
         jsonTab.setControl(createJSONEditorComposite(tabs));
 
         setControl(tabs);
