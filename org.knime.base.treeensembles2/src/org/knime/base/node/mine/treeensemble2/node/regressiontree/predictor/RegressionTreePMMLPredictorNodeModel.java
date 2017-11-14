@@ -134,6 +134,11 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
         RegressionTreeModel model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
+        // Can only happen if configure was not called before execute e.g. in generic PMML Predictor
+        if (m_configuration == null) {
+            m_configuration = RegressionTreePredictorConfiguration.createDefault(
+                translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
+        }
         final RegressionTreePredictor pred =
             new RegressionTreePredictor(model, translateSpec(pmmlPO.getSpec()), dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();

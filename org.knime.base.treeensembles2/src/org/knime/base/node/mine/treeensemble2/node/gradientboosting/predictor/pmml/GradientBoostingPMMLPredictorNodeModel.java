@@ -146,6 +146,11 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
         M model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
+        // only happens if configure was not called previously e.g. in the generic PMML predictor
+        if (m_configuration == null) {
+            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(
+                m_isRegression, translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
+        }
         final GradientBoostingPredictor<M> pred =
             new GradientBoostingPredictor<>(model, translateSpec(pmmlPO.getSpec()), dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
