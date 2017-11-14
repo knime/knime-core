@@ -161,6 +161,69 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
         return root.build();
     }
 
+    /**
+     * Analyzes the given workflow and generates an OpenAPI fragment for the workflow's output parameters. The returned
+     * object is the schema description of all output parameters. Example:
+     *
+     * <pre>
+     * {
+     *    "type: "object",
+     *    "properties": {
+     *       "int-output-7": {
+     *         "type":"object",
+     *         "properties": {
+     *           "integer": {
+     *             "type":"integer",
+     *             "default":42
+     *           }
+     *         },
+     *         "description": "Enter a number for this value",
+     *         "example": {
+     *           "integer": 42
+     *         }
+     *       },
+     *       "string-input-1": {
+     *         "type":"object",
+     *         "properties": {
+     *           "string": {
+     *             "type": "string",
+     *              "default": "Default value from the dialog"
+     *           }
+     *       },
+     *       "description": "Enter a string here",
+     *       "example": {
+     *         "string": "Default value from the dialog"
+     *       }
+     *     }
+     *   }
+     * }
+     * </pre>
+     *
+     * In case the workflow doesn't have any input parameters an empty object is returned.
+     *
+     * @param wfm a workflow manager, must not be <code>null</code>
+     * @return a JSON object
+     */
+    private JsonObject createOutputParametersDescription(final WorkflowManager wfm) {
+        final JsonObjectBuilder root = Json.createObjectBuilder();
+        if (!wfm.getOutputNodes().isEmpty()) {
+            JsonObjectBuilder properties = Json.createObjectBuilder();
+
+            for (Map.Entry<String, ExternalNodeData> e : wfm.getOutputNodes().entrySet()) {
+                if (e.getValue().getJSONValue() != null) {
+                    JsonObjectBuilder input = translateToSchema(e.getValue().getJSONValue());
+                    e.getValue().getDescription().ifPresent(d -> input.add("description", d));
+                    input.add("example", e.getValue().getJSONValue());
+                    properties.add(e.getKey(), input);
+                }
+            }
+            root.add("type", "object");
+            root.add("properties", properties);
+        }
+
+        return root.build();
+    }
+
     private JsonObjectBuilder translateToSchema(final JsonValue v) {
         final JsonObjectBuilder node = Json.createObjectBuilder();
 
@@ -214,6 +277,16 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
             try (final JsonWriter out = m_writerFactory
                 .createWriter(new FileOutputStream(new File(artifactsFolder, "openapi-input-parameters.json")))) {
                 out.write(api);
+            }
+        }
+
+        final JsonObject outApi = createOutputParametersDescription(workflow);
+
+        if (!outApi.isEmpty()) {
+            LOGGER.debug("Writing OpenAPI definition for parameters of " + workflow.getName());
+            try (final JsonWriter out = m_writerFactory
+                .createWriter(new FileOutputStream(new File(artifactsFolder, "openapi-output-parameters.json")))) {
+                out.write(outApi);
             }
         }
     }
