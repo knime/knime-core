@@ -129,7 +129,7 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+    public PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
         RegressionTreeModel model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
