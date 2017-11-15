@@ -53,6 +53,7 @@ import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
 
@@ -66,6 +67,7 @@ public abstract class AbstractGBTModelPMMLTranslator <M extends AbstractGradient
 extends AbstractWarningHolder implements PMMLTranslator {
 
     private M m_gbtModel;
+    private DataTableSpec m_learnSpec;
 
     /**
      * Default constructor to be used if a model should be read from PMML.
@@ -77,10 +79,12 @@ extends AbstractWarningHolder implements PMMLTranslator {
     /**
      * Default constructor to be used if a model should be written to PMML.
      *
-     * @param gbtModel
+     * @param gbtModel the Gradient Boosted Trees model to export to PMML
+     * @param learnSpec the {@link DataTableSpec spec} of the table used for training
      */
-    public AbstractGBTModelPMMLTranslator(final M gbtModel) {
+    public AbstractGBTModelPMMLTranslator(final M gbtModel, final DataTableSpec learnSpec) {
         m_gbtModel = gbtModel;
+        m_learnSpec = learnSpec;
     }
 
 
@@ -90,9 +94,14 @@ extends AbstractWarningHolder implements PMMLTranslator {
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
         PMML pmml = pmmlDoc.getPMML();
+        if (pmml.getHeader() == null || pmml.getHeader().getApplication() == null
+                || !pmml.getHeader().getApplication().getName().equals("KNIME")) {
+            throw new IllegalArgumentException("Currently only models created with KNIME are supported.");
+        }
         MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper = new RegressionMetaDataMapper(pmmlDoc);
         AbstractGBTModelImporter<M> importer = createImporter(metaDataMapper);
         m_gbtModel = importer.importFromPMML(pmml.getMiningModelList().get(0));
+        m_learnSpec = metaDataMapper.getLearnSpec();
     }
 
     /**
@@ -129,10 +138,25 @@ extends AbstractWarningHolder implements PMMLTranslator {
     public M getGBTModel() {
         if (m_gbtModel == null) {
             throw new IllegalStateException("This translator currently holds no Gradient Boosted Trees model. "
-                + "Please initialize the model from PMML or create a new translator with an exisiting Gradient Boosted"
-                + " Trees model.");
+                + "Please initialize the model from PMML or create a new translator with an existing Gradient Boosted"
+                + " Trees model and its learn table spec.");
         }
         return m_gbtModel;
+    }
+
+    /**
+     * Returns the {@link DataTableSpec spec} of the table the model was learned on.</br>
+     * It is important to use this spec because the spec extracted from the PMMLSpec may be in different order.
+     *
+     * @return the spec of the learning table
+     */
+    public DataTableSpec getLearnSpec() {
+        if (m_learnSpec == null) {
+            throw new IllegalStateException("This translator currently holds no learn table spec. "
+                + "Please initialize the model from PMML or create a new translator with and existing Gradient Boosted"
+                + " Trees model and its learn table spec.");
+        }
+        return m_learnSpec;
     }
 
 }

@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
+import org.knime.core.data.DataTableSpec;
 
 /**
  * Handles translation of {@link GradientBoostedTreesModel}s from and to PMML.
@@ -70,9 +71,10 @@ public final class RegressionGBTModelPMMLTranslator extends AbstractGBTModelPMML
      * Constructor to be used if a model should be written to PMML.
      *
      * @param gbtModel the Gradient Boosted Trees model that should be written to PMML
+     * @param learnSpec the {@link DataTableSpec spec} of the table used for learning
      */
-    public RegressionGBTModelPMMLTranslator(final GradientBoostedTreesModel gbtModel) {
-        super(gbtModel);
+    public RegressionGBTModelPMMLTranslator(final GradientBoostedTreesModel gbtModel, final DataTableSpec learnSpec) {
+        super(gbtModel, learnSpec);
     }
 
     /**

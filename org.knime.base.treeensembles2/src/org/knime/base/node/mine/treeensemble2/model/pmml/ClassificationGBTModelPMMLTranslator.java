@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
+import org.knime.core.data.DataTableSpec;
 
 /**
  * Handles PMML import and export for {@link MultiClassGradientBoostedTreesModel}s.
@@ -64,9 +65,11 @@ AbstractGBTModelPMMLTranslator<MultiClassGradientBoostedTreesModel> {
      * Constructor to be used if a model should be translated to PMML.
      *
      * @param gbtModel the model that should be translated to PMML
+     * @param learnSpec {@link DataTableSpec spec} of the table used for learning
      */
-    public ClassificationGBTModelPMMLTranslator(final MultiClassGradientBoostedTreesModel gbtModel) {
-        super (gbtModel);
+    public ClassificationGBTModelPMMLTranslator(final MultiClassGradientBoostedTreesModel gbtModel,
+        final DataTableSpec learnSpec) {
+        super(gbtModel, learnSpec);
     }
 
     /**

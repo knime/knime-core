@@ -53,6 +53,7 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
+import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractGBTModelPMMLTranslator;
@@ -143,7 +144,7 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     @Override
     public PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
-        M model = importModel(pmmlPO);
+        GradientBoostingModelPortObject model = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
         // only happens if configure was not called previously e.g. in the generic PMML predictor
@@ -151,8 +152,8 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
             m_configuration = TreeEnsemblePredictorConfiguration.createDefault(
                 m_isRegression, translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
         }
-        final GradientBoostingPredictor<M> pred =
-            new GradientBoostingPredictor<>(model, translateSpec(pmmlPO.getSpec()), dataSpec, m_configuration);
+        final GradientBoostingPredictor<?> pred =
+            new GradientBoostingPredictor<>(model.getEnsembleModel(), model.getSpec(), dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
@@ -167,7 +168,7 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     }
 
     @SuppressWarnings("unchecked")
-    private M importModel(final PMMLPortObject pmmlPO) {
+    private GradientBoostingModelPortObject importModel(final PMMLPortObject pmmlPO) {
         AbstractGBTModelPMMLTranslator<M> pmmlTranslator;
         DataType targetType = extractTargetType(pmmlPO.getSpec());
         if (targetType.isCompatible(DoubleValue.class)) {
@@ -181,7 +182,8 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
         if (pmmlTranslator.hasWarning()) {
             setWarningMessage(pmmlTranslator.getWarning());
         }
-        return pmmlTranslator.getGBTModel();
+        return new GradientBoostingModelPortObject(new TreeEnsembleModelPortObjectSpec(pmmlTranslator.getLearnSpec()),
+            pmmlTranslator.getGBTModel());
     }
 
     /**
@@ -198,8 +200,9 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
                 PMMLPortObject model =
                     (PMMLPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-                final GradientBoostingPredictor<M> pred =
-                    new GradientBoostingPredictor<>(importModel(model), translateSpec(model.getSpec()),
+                GradientBoostingModelPortObject gbt = importModel(model);
+                final GradientBoostingPredictor<?> pred =
+                    new GradientBoostingPredictor<>(gbt.getEnsembleModel(), gbt.getSpec(),
                             dataSpec, m_configuration);
                 ColumnRearranger rearranger = pred.getPredictionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);

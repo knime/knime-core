@@ -100,9 +100,11 @@ class GBTPMMLExporterNodeModel extends NodeModel {
         AbstractGBTModelPMMLTranslator<?> translator;
         AbstractGradientBoostingModel gbtModel = gbtPO.getEnsembleModel();
         if (gbtModel instanceof GradientBoostedTreesModel) {
-            translator = new RegressionGBTModelPMMLTranslator((GradientBoostedTreesModel)gbtModel);
+            translator = new RegressionGBTModelPMMLTranslator((GradientBoostedTreesModel)gbtModel,
+                gbtPO.getSpec().getLearnTableSpec());
         } else if (gbtModel instanceof MultiClassGradientBoostedTreesModel){
-            translator = new ClassificationGBTModelPMMLTranslator((MultiClassGradientBoostedTreesModel)gbtModel);
+            translator = new ClassificationGBTModelPMMLTranslator((MultiClassGradientBoostedTreesModel)gbtModel,
+                gbtPO.getSpec().getLearnTableSpec());
         } else {
             throw new IllegalArgumentException("Unknown gradient boosted trees model type '" +
                     gbtModel.getClass().getSimpleName() + "'.");
