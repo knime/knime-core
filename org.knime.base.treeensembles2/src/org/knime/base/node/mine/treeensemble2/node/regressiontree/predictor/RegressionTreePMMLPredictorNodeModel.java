@@ -82,6 +82,7 @@ import org.knime.core.node.streamable.PortObjectInput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.util.Pair;
 
 /**
  * Predictor for simple regression tree models that imports its model from PMML prior to prediction.
@@ -131,7 +132,7 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
     @Override
     public PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         PMMLPortObject pmmlPO = (PMMLPortObject)inObjects[0];
-        RegressionTreeModel model = importModel(pmmlPO);
+        Pair<RegressionTreeModel, RegressionTreeModelPortObjectSpec> modelSpecPair = importModel(pmmlPO);
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
         // Can only happen if configure was not called before execute e.g. in generic PMML Predictor
@@ -140,7 +141,7 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
                 translateSpec(pmmlPO.getSpec()).getTargetColumn().getName());
         }
         final RegressionTreePredictor pred =
-            new RegressionTreePredictor(model, translateSpec(pmmlPO.getSpec()), dataSpec, m_configuration);
+            new RegressionTreePredictor(modelSpecPair.getFirst(), modelSpecPair.getSecond(), dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
         return new BufferedDataTable[]{outTable};
@@ -154,13 +155,15 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
         return pmmlSpec.getTargetCols().get(0).getType();
     }
 
-    private RegressionTreeModel importModel(final PMMLPortObject pmmlPO) {
+    private Pair<RegressionTreeModel, RegressionTreeModelPortObjectSpec> importModel(final PMMLPortObject pmmlPO) {
         RegressionTreeModelPMMLTranslator pmmlTranslator = new RegressionTreeModelPMMLTranslator();
         pmmlPO.initializeModelTranslator(pmmlTranslator);
         if (pmmlTranslator.hasWarning()) {
             setWarningMessage(pmmlTranslator.getWarning());
         }
-        return new RegressionTreeModel(pmmlTranslator.getTreeMetaData(), pmmlTranslator.getTree(), TreeType.Ordinary);
+        return new Pair<>(new RegressionTreeModel(
+            pmmlTranslator.getTreeMetaData(), pmmlTranslator.getTree(), TreeType.Ordinary),
+                new RegressionTreeModelPortObjectSpec(pmmlTranslator.getLearnSpec()));
     }
 
     /**
@@ -177,8 +180,9 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
                 PMMLPortObject model =
                     (PMMLPortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
+                Pair<RegressionTreeModel, RegressionTreeModelPortObjectSpec> treeSpecPair = importModel(model);
                 final RegressionTreePredictor pred =
-                    new RegressionTreePredictor(importModel(model), translateSpec(model.getSpec()),
+                    new RegressionTreePredictor(treeSpecPair.getFirst(), treeSpecPair.getSecond(),
                             dataSpec, m_configuration);
                 ColumnRearranger rearranger = pred.getPredictionRearranger();
                 StreamableFunction func = rearranger.createStreamableFunction(1, 0);

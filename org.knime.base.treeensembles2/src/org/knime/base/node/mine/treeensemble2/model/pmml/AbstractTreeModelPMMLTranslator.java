@@ -59,8 +59,10 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -75,15 +77,23 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
 
     private AbstractTreeModel<N> m_treeModel;
     private TreeMetaData m_treeMetaData;
+    private DataTableSpec m_learnSpec;
 
     /**
+     * Constructor for the export of a model to PMML.
+     *
      * @param treeModel a tree model that should be translated to pmml
      * @param metaData the meta data associated with the tree model
-     *
+     * @param learnSpec the {@link DataTableSpec table spec} of the training data
      */
-    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<N> treeModel, final TreeMetaData metaData) {
+    public AbstractTreeModelPMMLTranslator(final AbstractTreeModel<N> treeModel, final TreeMetaData metaData,
+        final DataTableSpec learnSpec) {
+        CheckUtils.checkNotNull(treeModel);
+        CheckUtils.checkNotNull(metaData);
+        CheckUtils.checkNotNull(learnSpec);
         m_treeModel = treeModel;
         m_treeMetaData = metaData;
+        m_learnSpec = learnSpec;
     }
 
     /**
@@ -112,6 +122,7 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
         TreeModelImporter<N, M, T> importer = createImporter(metaDataMapper);
         m_treeModel = importer.importFromPMML(trees.get(0));
         m_treeMetaData = metaDataMapper.getTreeMetaData();
+        m_learnSpec = metaDataMapper.getLearnSpec();
     }
 
     /**
@@ -157,9 +168,26 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
         if (m_treeMetaData == null) {
             throw new IllegalStateException(
                 "This translator has no tree meta data yet. "
-                + "Please read a tree model from PMML or create a new translator with the model and its meta data.");
+                + "Please read a tree model from PMML or create a new translator with the model,"
+                + " its meta data and its learn spec.");
         }
         return m_treeMetaData;
+    }
+
+    /**
+     * Returns the table spec of the table that was used for training.</br>
+     * Note that the order is important because the target column must always be the last column in the spec.
+     *
+     * @return the table spec of the training data
+     */
+    public DataTableSpec getLearnSpec() {
+        if (m_learnSpec == null) {
+            throw new IllegalStateException(
+                "This translator has no learn spec yet. "
+                + "Please read a tree model from PMML or create a new translator with the model, "
+                + "its meta data and its learn spec.");
+        }
+        return m_learnSpec;
     }
 
     /**

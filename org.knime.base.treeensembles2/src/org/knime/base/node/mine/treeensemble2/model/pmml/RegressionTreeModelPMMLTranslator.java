@@ -55,6 +55,7 @@ import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
+import org.knime.core.data.DataTableSpec;
 
 /**
  * Translates tree models to and from PMML.
@@ -74,13 +75,15 @@ extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeModelRegression,
     }
 
     /**
-     * Constructor to be called when a model should be exported to PMML.
-     * @param treeModel the tree model that should be written to PMML
+     * Constructor for the export of a model to PMML.
+     *
+     * @param treeModel a tree model that should be translated to pmml
      * @param metaData the meta data associated with the tree model
+     * @param learnSpec the {@link DataTableSpec table spec} of the training data
      */
     public RegressionTreeModelPMMLTranslator(final AbstractTreeModel<TreeNodeRegression> treeModel,
-        final TreeMetaData metaData) {
-        super(treeModel, metaData);
+        final TreeMetaData metaData, final DataTableSpec learnSpec) {
+        super(treeModel, metaData, learnSpec);
     }
 
     /**
