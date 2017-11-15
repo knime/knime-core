@@ -171,6 +171,9 @@ public abstract class PMMLModelWrapper {
             if (s.getSupportVectorMachineModel() != null) {
                 list.add(new PMMLSupportVectorMachineModelWrapper(s.getSupportVectorMachineModel()));
             }
+            if (s.getMiningModel() != null) {
+                list.add(new PMMLMiningModelWrapper(s.getMiningModel()));
+            }
         }
         return list;
     }
