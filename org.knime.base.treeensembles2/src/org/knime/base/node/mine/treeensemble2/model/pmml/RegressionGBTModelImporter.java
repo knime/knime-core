@@ -88,7 +88,7 @@ final class RegressionGBTModelImporter extends AbstractGBTModelImporter<Gradient
      * {@inheritDoc}
      */
     @Override
-    public GradientBoostedTreesModel importFromPMML(final MiningModel miningModel) {
+    public GradientBoostedTreesModel importFromPMMLInternal(final MiningModel miningModel) {
         Segmentation segmentation = miningModel.getSegmentation();
         CheckUtils.checkArgument(segmentation.getMultipleModelMethod() == MULTIPLEMODELMETHOD.SUM,
                 "The provided segmentation has not the required sum as multiple model method but '%s' instead.",

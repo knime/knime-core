@@ -89,6 +89,7 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
         PMMLMiningSchemaTranslator.writeMiningSchema(pmmlSpec, model);
         m_pmmlSpec = pmmlSpec;
         model.setFunctionName(getMiningFunction());
+        model.setModelName("GradientBoostedTrees");
         doWrite(model);
         return MiningModel.type;
     }

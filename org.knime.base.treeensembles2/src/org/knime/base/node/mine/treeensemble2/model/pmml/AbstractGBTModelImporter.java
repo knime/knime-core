@@ -89,7 +89,19 @@ abstract class AbstractGBTModelImporter <M extends AbstractGradientBoostingModel
      * @param miningModel the PMML model from which to read the Gradient Boosted Trees model
      * @return a KNIME Gradient Boosted Trees model corresponding to the provided PMML model
      */
-    public abstract M importFromPMML(final MiningModel miningModel);
+    protected abstract M importFromPMMLInternal(final MiningModel miningModel);
+
+    /**
+     * Imports a Gradient Boosted Trees model from the provided PMML mining model
+     * @param miningModel the PMML model from which to read the Gradient Boosted Trees model
+     * @return a KNIME Gradient Boosted Trees model corresponding to the provided PMML model
+     */
+    public final M importFromPMML(final MiningModel miningModel) {
+        if (miningModel.getModelName() == null || !miningModel.getModelName().equals(TranslationUtil.GBT_MODEL_NAME)) {
+            throw new IllegalArgumentException("Currently only models created with KNIME are supported.");
+        }
+        return importFromPMMLInternal(miningModel);
+    }
 
     protected Pair<List<TreeModelRegression>, List<Map<TreeNodeSignature, Double>>> readSumSegmentation(
         final Segmentation segmentation) {

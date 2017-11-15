@@ -93,7 +93,7 @@ final class ClassificationGBTModelImporter extends AbstractGBTModelImporter<Mult
      * {@inheritDoc}
      */
     @Override
-    public MultiClassGradientBoostedTreesModel importFromPMML(final MiningModel miningModel) {
+    protected MultiClassGradientBoostedTreesModel importFromPMMLInternal(final MiningModel miningModel) {
         Segmentation modelChain = miningModel.getSegmentation();
         CheckUtils.checkArgument(modelChain.getMultipleModelMethod() == MULTIPLEMODELMETHOD.MODEL_CHAIN,
                 "The top level segmentation should have multiple model method '%s' but has '%s'",
