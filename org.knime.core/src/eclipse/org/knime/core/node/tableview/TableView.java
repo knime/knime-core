@@ -54,6 +54,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -1378,20 +1379,35 @@ public class TableView extends JScrollPane {
      */
     private TableAction createFontSizeAction(final boolean isIncrease) {
         String name = (isIncrease ? "Increase" : "Decrease") + " Font Size";
-        int key = isIncrease ? KeyEvent.VK_PLUS : KeyEvent.VK_MINUS;
-        KeyStroke stroke = KeyStroke.getKeyStroke(key, InputEvent.CTRL_DOWN_MASK);
-        TableAction action = new TableAction(stroke, name) {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (!hasData()) {
-                    return;
+        KeyStroke[] keyStrokes; // increase has two keystrokes - Ctrl-+ and Ctrl-= (due to US keyboard layouts)
+        int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(); // CTRL on Windows, Apple key on Mac
+        final int sizeIncrement;
+        if (isIncrease) {
+            sizeIncrement = +1;
+            keyStrokes = new KeyStroke[] {
+                KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, shortcut), // on US layout this is next to '-'
+                KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, shortcut)
+            };
+        } else {
+            sizeIncrement = -1;
+            keyStrokes = new KeyStroke[] {
+                KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, shortcut),
+            };
+        }
+        TableAction action = null;
+        for (KeyStroke keyStroke : keyStrokes) {
+            action = new TableAction(keyStroke, name) {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    if (!hasData()) {
+                        return;
+                    }
+                    int curFontSize = getContentTable().getFont().getSize();
+                    setFontSize(curFontSize + sizeIncrement);
                 }
-                int curFontSize = getContentTable().getFont().getSize();
-                int increment = isIncrease ? +1 : -1;
-                setFontSize(curFontSize + increment);
-            }
-        };
-        registerAction(action);
+            };
+            registerAction(action);
+        }
         return action;
     }
 
