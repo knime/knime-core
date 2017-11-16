@@ -377,6 +377,18 @@
                toolbarPath="org.knime.workbench.editor.menu/group2"
                tooltip="Opens a dialog to edit usage and layout of Wrapped Metanode views and Quickforms.">
          </action>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.SubnodeSetupEditorAction"
+               definitionId="knime.commands.editor.subnodeSetup"
+               disabledIcon="icons/layout_16_bw.png"
+               icon="icons/layout_16.png"
+               id="org.knime.workbench.editor.actions.subnodeSetup"
+               label="Wrapped Metanode Setup"
+               menubarPath="org.knime.workbench.editor.menu/group2"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group2"
+               tooltip="Opens a dialog to edit the inputs, outputs, description ...">
+         </action>
          
          
          <action

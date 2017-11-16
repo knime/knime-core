@@ -235,7 +235,6 @@ import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
-import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
@@ -657,7 +656,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction disconnectMetaNodeLink = new DisconnectMetaNodeLinkAction(this);
         AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
 
-        AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
         AbstractNodeAction subNodeChangeLink = new ChangeSubNodeLinkAction(this);
         AbstractNodeAction defineSubNodeTemplate = new SaveAsSubNodeTemplateAction(this);
         AbstractNodeAction checkUpdateSubNodeLink = new CheckUpdateMetaNodeLinkAction(this);
@@ -724,7 +722,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(lockMetaLink);
 
-        m_actionRegistry.registerAction(subNodeReConfigure);
         m_actionRegistry.registerAction(subNodeChangeLink);
         m_actionRegistry.registerAction(defineSubNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateSubNodeLink);
@@ -761,7 +758,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(metaNodeReConfigure.getId());
-        m_editorActions.add(subNodeReConfigure.getId());
         m_editorActions.add(metaNodeChangeLink.getId());
         m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
