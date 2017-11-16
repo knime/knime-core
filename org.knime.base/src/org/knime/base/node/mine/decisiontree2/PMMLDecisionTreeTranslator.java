@@ -56,6 +56,7 @@ import java.util.Set;
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlCursor;
 import org.dmg.pmml.ArrayType;
+import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate;
 import org.dmg.pmml.FIELDUSAGETYPE;
 import org.dmg.pmml.MININGFUNCTION;
 import org.dmg.pmml.MININGFUNCTION.Enum;
@@ -329,10 +330,14 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             int nodeIndex = parent.getIndex(node);
             // get the PMML predicate of the current node from its parent
             PMMLPredicate predicate = splitNode.getSplitPred()[nodeIndex];
-            predicate.setSplitAttribute(mapper.getDerivedFieldName(
+            if (predicate instanceof PMMLCompoundPredicate) {
+                exportCompoundPredicate(pmmlNode, (PMMLCompoundPredicate)predicate, mapper);
+            } else {
+                predicate.setSplitAttribute(mapper.getDerivedFieldName(
                     predicate.getSplitAttribute()));
             // delegate the writing to the predicate translator
             PMMLPredicateTranslator.exportTo(predicate, pmmlNode);
+            }
         } else {
             throw new IllegalArgumentException("Node Type " + parent.getClass() + " is not supported!");
         }
@@ -355,6 +360,49 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
         if (!(node instanceof DecisionTreeNodeLeaf)) {
             for (int i = 0; i < node.getChildCount(); i++) {
                 addTreeNode(pmmlNode.addNewNode(), node.getChildAt(i), mapper);
+            }
+        }
+    }
+
+    /**
+     * Exports {@link PMMLCompoundPredicate compound} to {@link Node pmmlNode} using {@link DerivedFieldMapper mapper}
+     * to get names of derived fields. It is recommended to use this method in favor of
+     * {@link PMMLPredicateTranslator#exportTo(PMMLPredicate, Node)}.
+     *
+     * @param pmmlNode the node to export the compound predicate to
+     * @param compound the compound predicate to export
+     * @param mapper the derived field mapper
+     */
+    private static void exportCompoundPredicate(final Node pmmlNode, final PMMLCompoundPredicate compound, final DerivedFieldMapper mapper) {
+        CompoundPredicate pmmlCp = pmmlNode.addNewCompoundPredicate();
+        pmmlCp.setBooleanOperator(PMMLPredicateTranslator.getOperator(compound.getBooleanOperator()));
+        for (PMMLPredicate pred : compound.getPredicates()) {
+            if (pred instanceof PMMLCompoundPredicate) {
+                exportCompoundPredicate(pmmlCp, (PMMLCompoundPredicate)pred, mapper);
+            } else {
+                pred.setSplitAttribute(mapper.getDerivedFieldName(pred.getSplitAttribute()));
+                PMMLPredicateTranslator.exportTo(pred, pmmlCp);
+            }
+        }
+    }
+
+    /**
+     * We need to handle compound predicates separately because the {@link PMMLPredicateTranslator} can currently
+     * not deal with derived fields.
+     *
+     * @param outer the outer compound predicate to which we need to export <b>inner</b>
+     * @param inner the inner compound predicate to export
+     * @param mapper the derived field mapper
+     */
+    private static void exportCompoundPredicate(final CompoundPredicate outer, final PMMLCompoundPredicate inner, final DerivedFieldMapper mapper) {
+        CompoundPredicate pmmlInner = outer.addNewCompoundPredicate();
+        pmmlInner.setBooleanOperator(PMMLPredicateTranslator.getOperator(inner.getBooleanOperator()));
+        for (PMMLPredicate pred : inner.getPredicates()) {
+            if (pred instanceof PMMLCompoundPredicate) {
+                exportCompoundPredicate(pmmlInner, (PMMLCompoundPredicate)pred, mapper);
+            } else {
+                pred.setSplitAttribute(mapper.getDerivedFieldName(pred.getSplitAttribute()));
+                PMMLPredicateTranslator.exportTo(pred, pmmlInner);
             }
         }
     }
