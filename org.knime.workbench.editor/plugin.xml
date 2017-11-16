@@ -381,7 +381,7 @@
                class="org.knime.workbench.editor2.actions.delegates.SubnodeSetupEditorAction"
                definitionId="knime.commands.editor.subnodeSetup"
                disabledIcon="icons/layout_16_bw.png"
-               icon="icons/layout_16.png"
+               icon="icons/meta/metanode_setname.png"
                id="org.knime.workbench.editor.actions.subnodeSetup"
                label="Wrapped Metanode Setup"
                menubarPath="org.knime.workbench.editor.menu/group2"
