@@ -71,6 +71,8 @@ public final class PMMLPredicateTranslator {
     }
 
     /**
+     * Note that the export of compound predicates does not support derived fields.
+     *
      * @param predicate the predicate to export
      * @param node the Node element to add the predicate to
      */
@@ -100,6 +102,8 @@ public final class PMMLPredicateTranslator {
             // for classification does not use compound predicates
             CompoundPredicate cp = node.addNewCompoundPredicate();
             cp.setBooleanOperator(getOperator(compPred.getBooleanOperator()));
+            // compound predicates do not work with derived fields as we can't access
+            // the derived field names of the contained predicates
             for (PMMLPredicate pred : compPred.getPredicates()) {
                 exportTo(pred, cp);
             }

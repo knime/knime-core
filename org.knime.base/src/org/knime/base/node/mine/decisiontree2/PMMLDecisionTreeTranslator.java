@@ -330,13 +330,13 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             int nodeIndex = parent.getIndex(node);
             // get the PMML predicate of the current node from its parent
             PMMLPredicate predicate = splitNode.getSplitPred()[nodeIndex];
-            if (predicate instanceof PMMLCompoundPredicate) {
+            if (predicate instanceof PMMLCompoundPredicate) { // surrogates as used in GBT
                 exportCompoundPredicate(pmmlNode, (PMMLCompoundPredicate)predicate, mapper);
             } else {
                 predicate.setSplitAttribute(mapper.getDerivedFieldName(
                     predicate.getSplitAttribute()));
-            // delegate the writing to the predicate translator
-            PMMLPredicateTranslator.exportTo(predicate, pmmlNode);
+                // delegate the writing to the predicate translator
+                PMMLPredicateTranslator.exportTo(predicate, pmmlNode);
             }
         } else {
             throw new IllegalArgumentException("Node Type " + parent.getClass() + " is not supported!");
