@@ -80,7 +80,7 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         Display display = Display.getDefault();
-        if (!display.isDisposed()) {
+        if (display.isDisposed()) {
             return;
         }
         display.asyncExec(new Runnable() {
