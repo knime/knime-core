@@ -45,6 +45,10 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -78,6 +82,9 @@ import org.knime.workbench.editor2.WizardNodeView;
 public final class OpenInteractiveWebViewAction extends Action {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(OpenInteractiveWebViewAction.class);
+
+    private static final String CHROMIUM_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromiumWizardNodeView";
+    private static final String CHROME_BROWSER = "org.knime.ext.seleniumdrivers.multios.ChromeWizardNodeView";
 
     private final SingleInteractiveWebViewResult m_webViewForNode;
     private final NodeContainer m_nodeContainer;
@@ -147,22 +154,58 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     static AbstractWizardNodeView getConfiguredWizardNodeView(final ViewableModel model) {
-
-        String classString = JSCorePlugin.getDefault().getPreferenceStore().getString(JSCorePlugin.P_VIEW_BROWSER);
-        try {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IConfigurationElement[] configurationElements =
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IConfigurationElement[] configurationElements =
                 registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
-            for (IConfigurationElement element : configurationElements) {
-                if (classString.equals(element.getAttribute("viewClass"))) {
-                    Class<?> viewClass = Platform.getBundle(element.getDeclaringExtension().getContributor().getName()).loadClass(element.getAttribute("viewClass"));
-                    return (AbstractWizardNodeView)viewClass.getConstructor(ViewableModel.class).newInstance(model);
-                }
+
+        Class<?> viewClass = null;
+        String classString = JSCorePlugin.getDefault().getPreferenceStore().getString(JSCorePlugin.P_VIEW_BROWSER);
+        if (StringUtils.isNotEmpty(classString)) {
+            // try loading selected view
+            viewClass = getViewClassByReflection(classString, configurationElements);
+            if (viewClass == null) {
+                LOGGER.error("JS view set in preferences (" + classString
+                    + ") can't be loaded. Switching to default.");
             }
-        } catch (Throwable e) {
-            LOGGER.error("JS view set in preferences (" + classString + ") can't be loaded. Switching to default. - " + e.getMessage(), e);
+        }
+        if (viewClass == null) {
+            // try loading defaults
+            viewClass = getViewClassByReflection(CHROMIUM_BROWSER, configurationElements);
+            if (viewClass == null) {
+                viewClass = getViewClassByReflection(CHROME_BROWSER, configurationElements);
+            }
+        }
+        if (viewClass != null) {
+            try {
+                Constructor<?> constructor = viewClass.getConstructor(ViewableModel.class);
+                return (AbstractWizardNodeView)constructor.newInstance(model);
+            } catch (Exception e) {
+                LOGGER.error("JS view can not be initialized. Falling back to internal SWT browser.");
+            }
         }
         return new WizardNodeView(model);
+    }
+
+    private static Class<?> getViewClassByReflection(final String className, final IConfigurationElement[] confElements) {
+        Class<?> viewClass = null;
+        try {
+            for (IConfigurationElement element : confElements) {
+                if (className.equals(element.getAttribute("viewClass"))) {
+                    viewClass = Platform.getBundle(element.getDeclaringExtension().getContributor().getName())
+                        .loadClass(element.getAttribute("viewClass"));
+                }
+            }
+        } catch (Exception e) { /* do nothing */}
+        if (viewClass != null) {
+            try {
+                Method isEnabledM = viewClass.getMethod("isEnabled");
+                boolean isEnabled = (boolean)isEnabledM.invoke(null);
+                return isEnabled ? viewClass : null;
+            } catch (Exception e) {
+                return viewClass;
+            }
+        }
+        return null;
     }
 
     @Override

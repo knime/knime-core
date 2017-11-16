@@ -160,7 +160,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     }
 
     /**
-     * @return
+     * @return the model
      * @since 3.4
      */
     protected final WizardNode<REP, VAL> getModel() {
