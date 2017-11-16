@@ -79,7 +79,11 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        Display.getDefault().asyncExec(new Runnable() {
+        Display display = Display.getDefault();
+        if (!display.isDisposed()) {
+            return;
+        }
+        display.asyncExec(new Runnable() {
             @Override
             public void run() {
                 WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
