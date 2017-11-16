@@ -56,6 +56,7 @@ import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelClassification;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the export of {@link TreeModelClassification} objects to PMML.
@@ -67,8 +68,9 @@ final class ClassificationTreeModelExporter extends AbstractTreeModelExporter<Tr
     /**
      * @param treeModel
      */
-    public ClassificationTreeModelExporter(final AbstractTreeModel<TreeNodeClassification> treeModel) {
-        super(treeModel);
+    public ClassificationTreeModelExporter(final AbstractTreeModel<TreeNodeClassification> treeModel,
+        final DerivedFieldMapper derivedFieldMapper) {
+        super(treeModel, derivedFieldMapper);
     }
 
     /**

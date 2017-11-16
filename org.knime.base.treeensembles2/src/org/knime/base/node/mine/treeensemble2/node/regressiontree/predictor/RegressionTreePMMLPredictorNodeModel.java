@@ -50,6 +50,7 @@ package org.knime.base.node.mine.treeensemble2.node.regressiontree.predictor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
@@ -57,6 +58,7 @@ import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjec
 import org.knime.base.node.mine.treeensemble2.model.pmml.AbstractTreeModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionTreeModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -82,6 +84,7 @@ import org.knime.core.node.streamable.PortObjectInput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Pair;
 
 /**
@@ -148,7 +151,14 @@ public class RegressionTreePMMLPredictorNodeModel extends NodeModel {
     }
 
     private RegressionTreeModelPortObjectSpec translateSpec(final PMMLPortObjectSpec pmmlSpec) {
-        return new RegressionTreeModelPortObjectSpec(pmmlSpec.getDataTableSpec());
+        DataTableSpec pmmlDataSpec = pmmlSpec.getDataTableSpec();
+        ColumnRearranger cr = new ColumnRearranger(pmmlDataSpec);
+        List<DataColumnSpec> targets = pmmlSpec.getTargetCols();
+        CheckUtils.checkArgument(!targets.isEmpty(), "The provided PMML does not declare a target field.");
+        CheckUtils.checkArgument(targets.size() == 1, "The provided PMML declares multiple target. "
+            + "This behavior is currently not supported.");
+        cr.move(targets.get(0).getName(), pmmlDataSpec.getNumColumns());
+        return new RegressionTreeModelPortObjectSpec(cr.createSpec());
     }
 
     private DataType extractTargetType(final PMMLPortObjectSpec pmmlSpec) {

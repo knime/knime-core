@@ -56,6 +56,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Translates tree models to and from PMML.
@@ -98,8 +99,8 @@ extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeModelRegression,
      * {@inheritDoc}
      */
     @Override
-    protected AbstractTreeModelExporter<TreeNodeRegression> createExporter() {
-        return new RegressionTreeModelExporter(getTree());
+    protected AbstractTreeModelExporter<TreeNodeRegression> createExporter(final DerivedFieldMapper derivedFieldMapper) {
+        return new RegressionTreeModelExporter(getTree(), derivedFieldMapper);
     }
 
     /**
@@ -116,10 +117,8 @@ extends AbstractTreeModelPMMLTranslator<TreeNodeRegression, TreeModelRegression,
      * {@inheritDoc}
      */
     @Override
-    protected MetaDataMapper<TreeTargetNumericColumnMetaData> createMetaDataMapper(final PMMLDocument pmmlDoc) {
-        return new RegressionMetaDataMapper(pmmlDoc);
+    protected MetaDataMapper<TreeTargetNumericColumnMetaData> createMetaDataMapper(final PMMLDocument pmmlDoc, final String targetName) {
+        return new RegressionMetaDataMapper(pmmlDoc, targetName);
     }
-
-
 
 }

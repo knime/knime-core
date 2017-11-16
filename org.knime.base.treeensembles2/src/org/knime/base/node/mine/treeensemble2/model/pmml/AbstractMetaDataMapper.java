@@ -51,6 +51,7 @@ package org.knime.base.node.mine.treeensemble2.model.pmml;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.dmg.pmml.DerivedFieldDocument;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
@@ -63,6 +64,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -81,29 +83,33 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
      * Creates a SimpleMetaDataMapper by extracting the meta data information from the data dictionary of the provided
      * PMMLDocument.
      * @param pmmlDoc PMMLDocument from whose data dictionary meta data information is to be extracted
+     * @param targetName the name of the target field
      *
      */
-    public AbstractMetaDataMapper(final PMMLDocument pmmlDoc) {
-        this(extractTableSpecFromPMMLDoc(pmmlDoc));
+    public AbstractMetaDataMapper(final PMMLDocument pmmlDoc, final String targetName) {
+        this(extractTableSpecFromPMMLDoc(pmmlDoc), targetName, new DerivedFieldMapper(pmmlDoc));
     }
 
-    public AbstractMetaDataMapper(final DataTableSpec tableSpec) {
-        m_learnSpec = tableSpec;
+    public AbstractMetaDataMapper(final DataTableSpec tableSpec, final String targetName,
+        final DerivedFieldMapper derivedFieldMapper) {
         ColumnRearranger cr = new ColumnRearranger(tableSpec);
-        // Remove the target column (assumes that the last column is the target)
-        final int targetIdx = tableSpec.getNumColumns() - 1;
-        cr.remove(targetIdx);
-        m_colHelperMap = createColumnHelperMapFromSpec(cr.createSpec());
-        m_targetColumnHelper = createTargetColumnHelper(tableSpec.getColumnSpec(targetIdx));
+        // move target column to last position
+        cr.move(targetName, tableSpec.getNumColumns());
+        m_learnSpec = cr.createSpec();
+        cr.remove(targetName);
+        m_colHelperMap = createColumnHelperMapFromSpec(cr.createSpec(), derivedFieldMapper);
+        m_targetColumnHelper = createTargetColumnHelper(tableSpec.getColumnSpec(targetName));
     }
 
     static AbstractMetaDataMapper<?> createMetaDataMapper(final DataTableSpec tableSpec) {
         DataColumnSpec targetCol = tableSpec.getColumnSpec(tableSpec.getNumColumns() - 1);
         DataType targetType = targetCol.getType();
+        // we need the pmml to instantiate the actual mapper which we don't have at this point
+        DerivedFieldMapper dummyDerivedFieldMapper = new DerivedFieldMapper(new DerivedFieldDocument.DerivedField[] {});
         if (targetType.isCompatible(StringValue.class)) {
-            return new ClassificationMetaDataMapper(tableSpec);
+            return new ClassificationMetaDataMapper(tableSpec, targetCol.getName(), dummyDerivedFieldMapper);
         } else if (targetType.isCompatible(DoubleValue.class)) {
-            return new RegressionMetaDataMapper(tableSpec);
+            return new RegressionMetaDataMapper(tableSpec, targetCol.getName(), dummyDerivedFieldMapper);
         }
         throw new IllegalArgumentException("The target column \"" + targetCol + "\" is not numeric or nominal.");
     }
@@ -117,16 +123,17 @@ abstract class AbstractMetaDataMapper <T extends TreeTargetColumnMetaData> imple
     protected abstract TargetColumnHelper<T> createTargetColumnHelper(final DataColumnSpec targetSpec);
 
     private static Map<String, AbstractAttributeColumnHelper<?>> createColumnHelperMapFromSpec(
-        final DataTableSpec tableSpec) {
+        final DataTableSpec tableSpec, final DerivedFieldMapper derivedFieldMapper) {
         Map<String, AbstractAttributeColumnHelper<?>> map = new HashMap<>();
         for (int i = 0; i < tableSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
             checkForVectorColumn(colSpec);
             DataType colType = colSpec.getType();
+            String derivedName = derivedFieldMapper.getDerivedFieldName(colSpec.getName());
             if (colType.isCompatible(StringValue.class)) {
-                map.put(colSpec.getName(), new NominalAttributeColumnHelper(colSpec, i));
+                map.put(derivedName, new NominalAttributeColumnHelper(colSpec, i));
             } else if (colType.isCompatible(DoubleValue.class)) {
-                map.put(colSpec.getName(), new NumericAttributeColumnHelper(colSpec, i));
+                map.put(derivedName, new NumericAttributeColumnHelper(colSpec, i));
             } else {
                 throw new IllegalStateException("Only default KNIME types are supported right now.");
             }

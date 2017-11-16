@@ -49,8 +49,10 @@
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.xmlbeans.SchemaType;
+import org.dmg.pmml.FIELDUSAGETYPE;
 import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.PMMLDocument.PMML;
 import org.dmg.pmml.TreeModelDocument;
@@ -62,6 +64,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -118,11 +121,25 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
             throw new IllegalArgumentException("The provided PMMLDocument contains no tree models.");
         }
 
-        MetaDataMapper<T> metaDataMapper = createMetaDataMapper(pmmlDoc);
+        MetaDataMapper<T> metaDataMapper = createMetaDataMapper(pmmlDoc, getTargetName(pmml));
         TreeModelImporter<N, M, T> importer = createImporter(metaDataMapper);
         m_treeModel = importer.importFromPMML(trees.get(0));
         m_treeMetaData = metaDataMapper.getTreeMetaData();
         m_learnSpec = metaDataMapper.getLearnSpec();
+    }
+
+    private String getTargetName(final PMML pmml) {
+        List<TreeModel> trees = pmml.getTreeModelList();
+        CheckUtils.checkArgument(!trees.isEmpty(), "The provided PMML contains no TreeModel.");
+        CheckUtils.checkArgument(trees.size() == 1, "The provided PMML contains more than one TreeModel.");
+        List<String> targets = trees.get(0).getMiningSchema().getMiningFieldList().stream()
+                .filter(f -> f.getUsageType() == FIELDUSAGETYPE.TARGET)
+                .map(f -> f.getName())
+                .collect(Collectors.toList());
+        CheckUtils.checkArgument(!targets.isEmpty(), "The provided TreeModel does not declare a target field.");
+        CheckUtils.checkArgument(targets.size() == 1, "The provided TreeModel declares multiple targets. "
+            + "This behavior is currently not supported.");
+        return targets.get(0);
     }
 
     /**
@@ -141,7 +158,7 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         PMML pmml = pmmlDoc.getPMML();
         TreeModelDocument.TreeModel treeModel = pmml.addNewTreeModel();
-        AbstractTreeModelExporter<N> exporter = createExporter();
+        AbstractTreeModelExporter<N> exporter = createExporter(new DerivedFieldMapper(pmmlDoc));
         SchemaType st = exporter.writeModelToPMML(treeModel, spec);
         if (exporter.hasWarning()) {
             addWarning(exporter.getWarning());
@@ -193,13 +210,13 @@ T extends TreeTargetColumnMetaData> extends AbstractWarningHolder implements PMM
     /**
      * @return an exporter that is used to export the tree model to PMML
      */
-    protected abstract AbstractTreeModelExporter<N> createExporter();
+    protected abstract AbstractTreeModelExporter<N> createExporter(final DerivedFieldMapper derivedFieldMapper);
 
     /**
      * @param pmmlDoc the PMML Document from which to read a tree model
      * @return a MetaDataMapper that is used in the translation process
      */
-    protected abstract MetaDataMapper<T> createMetaDataMapper(PMMLDocument pmmlDoc);
+    protected abstract MetaDataMapper<T> createMetaDataMapper(PMMLDocument pmmlDoc, final String targetName);
 
     /**
      * @param metaDataMapper the MetaDataMapper that holds meta information

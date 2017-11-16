@@ -48,7 +48,12 @@
  */
 package org.knime.base.node.mine.treeensemble2.model.pmml;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.xmlbeans.SchemaType;
+import org.dmg.pmml.FIELDUSAGETYPE;
+import org.dmg.pmml.MiningModelDocument.MiningModel;
 import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
@@ -56,6 +61,8 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingMode
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Abstract implementation for the translation of gradient boosted trees model from and to PMML.
@@ -98,10 +105,25 @@ extends AbstractWarningHolder implements PMMLTranslator {
                 || !pmml.getHeader().getApplication().getName().equals("KNIME")) {
             throw new IllegalArgumentException("Currently only models created with KNIME are supported.");
         }
-        MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper = new RegressionMetaDataMapper(pmmlDoc);
+        List<MiningModel> mmList = pmml.getMiningModelList();
+        if (mmList == null || mmList.isEmpty()) {
+            throw new IllegalArgumentException("The provided PMML does not contain a Gradient Boosted Trees model.");
+        }
+        MiningModel model = mmList.get(0);
+        MetaDataMapper<TreeTargetNumericColumnMetaData> metaDataMapper = new RegressionMetaDataMapper(pmmlDoc, getTargetFieldName(model));
         AbstractGBTModelImporter<M> importer = createImporter(metaDataMapper);
         m_gbtModel = importer.importFromPMML(pmml.getMiningModelList().get(0));
         m_learnSpec = metaDataMapper.getLearnSpec();
+    }
+
+    private String getTargetFieldName(final MiningModel miningModel) {
+        List<String> targetList = miningModel.getMiningSchema().getMiningFieldList().stream()
+        .filter(f -> f.getUsageType() == FIELDUSAGETYPE.TARGET).map(f -> f.getName()).collect(Collectors.toList());
+        CheckUtils.checkArgument(!targetList.isEmpty(),
+            "The provided model does not specify what its target column is.");
+        CheckUtils.checkArgument(targetList.size() == 1, "The provided model declares multiple targets."
+            + " This behavior is currently not supported.");
+        return targetList.get(0);
     }
 
     /**
@@ -114,7 +136,7 @@ extends AbstractWarningHolder implements PMMLTranslator {
     /**
      * @return the exporter for the current model type
      */
-    protected abstract AbstractGBTModelExporter<M> createExporter();
+    protected abstract AbstractGBTModelExporter<M> createExporter(final DerivedFieldMapper derivedFieldMapper);
 
     /**
      * {@inheritDoc}
@@ -122,7 +144,7 @@ extends AbstractWarningHolder implements PMMLTranslator {
     @Override
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         PMML pmml = pmmlDoc.getPMML();
-        AbstractGBTModelExporter<M> exporter = createExporter();
+        AbstractGBTModelExporter<M> exporter = createExporter(new DerivedFieldMapper(pmmlDoc));
 
         SchemaType st = exporter.writeModelToPMML(pmml.addNewMiningModel(), spec);
         if (exporter.hasWarning()) {

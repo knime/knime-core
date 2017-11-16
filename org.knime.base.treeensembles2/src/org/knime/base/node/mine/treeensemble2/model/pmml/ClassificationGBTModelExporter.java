@@ -77,6 +77,7 @@ import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTre
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the export of {@link MultiClassGradientBoostedTreesModel}s.
@@ -88,8 +89,8 @@ final class ClassificationGBTModelExporter extends AbstractGBTModelExporter<Mult
     /**
      * @param gbtModel
      */
-    public ClassificationGBTModelExporter(final MultiClassGradientBoostedTreesModel gbtModel) {
-        super(gbtModel);
+    public ClassificationGBTModelExporter(final MultiClassGradientBoostedTreesModel gbtModel, final DerivedFieldMapper derivedFieldMapper) {
+        super(gbtModel, derivedFieldMapper);
     }
 
     /**

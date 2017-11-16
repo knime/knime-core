@@ -52,6 +52,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaDa
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles PMML import and export for {@link MultiClassGradientBoostedTreesModel}s.
@@ -93,8 +94,9 @@ AbstractGBTModelPMMLTranslator<MultiClassGradientBoostedTreesModel> {
      * {@inheritDoc}
      */
     @Override
-    protected AbstractGBTModelExporter<MultiClassGradientBoostedTreesModel> createExporter() {
-        return new ClassificationGBTModelExporter(getGBTModel());
+    protected AbstractGBTModelExporter<MultiClassGradientBoostedTreesModel> createExporter(
+        final DerivedFieldMapper derivedFieldMapper) {
+        return new ClassificationGBTModelExporter(getGBTModel(), derivedFieldMapper);
     }
 
 }

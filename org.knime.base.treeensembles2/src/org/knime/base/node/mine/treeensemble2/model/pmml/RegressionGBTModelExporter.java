@@ -60,6 +60,7 @@ import org.dmg.pmml.TargetDocument.Target;
 import org.dmg.pmml.TargetsDocument.Targets;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the translation of {@link GradientBoostedTreesModel}s to PMML.
@@ -70,9 +71,11 @@ final class RegressionGBTModelExporter extends AbstractGBTModelExporter<Gradient
 
     /**
      * @param gbtModel the model that should be translated to PMML
+     * @param derivedFieldMapper
      */
-    public RegressionGBTModelExporter(final GradientBoostedTreesModel gbtModel) {
-        super(gbtModel);
+    public RegressionGBTModelExporter(final GradientBoostedTreesModel gbtModel,
+        final DerivedFieldMapper derivedFieldMapper) {
+        super(gbtModel, derivedFieldMapper);
     }
 
     /**
@@ -90,7 +93,7 @@ final class RegressionGBTModelExporter extends AbstractGBTModelExporter<Gradient
         // write the model
         Segmentation segmentation = model.addNewSegmentation();
         List<TreeModelRegression> trees = IntStream.range(0, gbtModel.getNrModels())
-                .mapToObj(i -> gbtModel.getTreeModelRegression(i))
+                .mapToObj(gbtModel::getTreeModelRegression)
                 .collect(Collectors.toList());
         writeSumSegmentation(segmentation, trees, gbtModel.getCoeffientMaps());
     }

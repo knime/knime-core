@@ -50,6 +50,7 @@ package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.p
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
@@ -62,6 +63,7 @@ import org.knime.base.node.mine.treeensemble2.model.pmml.ClassificationGBTModelP
 import org.knime.base.node.mine.treeensemble2.model.pmml.RegressionGBTModelPMMLTranslator;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.GradientBoostingPredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -88,6 +90,7 @@ import org.knime.core.node.streamable.PortObjectInput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Predictor for GBT models that imports its model from PMML prior to prediction.
@@ -160,7 +163,14 @@ public class GradientBoostingPMMLPredictorNodeModel <M extends AbstractGradientB
     }
 
     private TreeEnsembleModelPortObjectSpec translateSpec(final PMMLPortObjectSpec pmmlSpec) {
-        return new TreeEnsembleModelPortObjectSpec(pmmlSpec.getDataTableSpec());
+        DataTableSpec pmmlDataSpec = pmmlSpec.getDataTableSpec();
+        ColumnRearranger cr = new ColumnRearranger(pmmlDataSpec);
+        List<DataColumnSpec> targets = pmmlSpec.getTargetCols();
+        CheckUtils.checkArgument(!targets.isEmpty(), "The provided PMML does not declare a target field.");
+        CheckUtils.checkArgument(targets.size() == 1, "The provided PMML declares multiple target. "
+            + "This behavior is currently not supported.");
+        cr.move(targets.get(0).getName(), pmmlDataSpec.getNumColumns());
+        return new TreeEnsembleModelPortObjectSpec(cr.createSpec());
     }
 
     private DataType extractTargetType(final PMMLPortObjectSpec pmmlSpec) {

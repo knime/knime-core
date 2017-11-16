@@ -55,6 +55,7 @@ import org.dmg.pmml.NodeDocument.Node;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the export of {@link TreeModelRegression} objects to PMML.
@@ -66,8 +67,9 @@ class RegressionTreeModelExporter extends AbstractTreeModelExporter<TreeNodeRegr
     /**
      * @param treeModel
      */
-    public RegressionTreeModelExporter(final AbstractTreeModel<TreeNodeRegression> treeModel) {
-        super(treeModel);
+    public RegressionTreeModelExporter(final AbstractTreeModel<TreeNodeRegression> treeModel,
+        final DerivedFieldMapper derivedFieldMapper) {
+        super(treeModel, derivedFieldMapper);
     }
 
     /**

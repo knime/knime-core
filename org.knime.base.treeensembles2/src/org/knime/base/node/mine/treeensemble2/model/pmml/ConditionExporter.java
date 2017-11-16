@@ -74,6 +74,7 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNodeSurrogateCon
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeColumnCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Exports node conditions to PMML.
@@ -82,7 +83,13 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeTrueCondition;
  */
 final class ConditionExporter {
 
-    static void exportCondition(final TreeNodeCondition condition, final Node pmmlNode) {
+    private DerivedFieldMapper m_derivedFieldMapper;
+
+    public ConditionExporter(final DerivedFieldMapper derivedFieldMapper) {
+        m_derivedFieldMapper = derivedFieldMapper;
+    }
+
+    void exportCondition(final TreeNodeCondition condition, final Node pmmlNode) {
         if (condition instanceof TreeNodeTrueCondition) {
             pmmlNode.addNewTrue();
         } else if (condition instanceof TreeNodeColumnCondition) {
@@ -97,7 +104,7 @@ final class ConditionExporter {
         }
     }
 
-    private static void exportColumnCondition(final TreeNodeColumnCondition condition, final Node pmmlNode) {
+    private void exportColumnCondition(final TreeNodeColumnCondition condition, final Node pmmlNode) {
         final PMMLPredicate knimePredicate = condition.toPMMLPredicate();
         if (knimePredicate instanceof PMMLCompoundPredicate) {
             setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(),
@@ -113,8 +120,8 @@ final class ConditionExporter {
         }
     }
 
-    private static void setValuesFromPMMLSimplePredicate(final SimplePredicate to, final PMMLSimplePredicate from) {
-        to.setField(from.getSplitAttribute());
+    private void setValuesFromPMMLSimplePredicate(final SimplePredicate to, final PMMLSimplePredicate from) {
+        to.setField(m_derivedFieldMapper.getDerivedFieldName(from.getSplitAttribute()));
         Operator.Enum operator;
         final PMMLOperator op = from.getOperator();
         switch (op) {
@@ -154,9 +161,9 @@ final class ConditionExporter {
         to.setOperator(operator);
     }
 
-    private static void setValuesFromPMMLSimpleSetPredicate(final SimpleSetPredicate to,
+    private void setValuesFromPMMLSimpleSetPredicate(final SimpleSetPredicate to,
         final PMMLSimpleSetPredicate from) {
-        to.setField(from.getSplitAttribute());
+        to.setField(m_derivedFieldMapper.getDerivedFieldName(from.getSplitAttribute()));
         final Enum operator;
         final PMMLSetOperator setOp = from.getSetOperator();
         switch (setOp) {
@@ -193,7 +200,7 @@ final class ConditionExporter {
         array.setType(type);
     }
 
-    private static void setValuesFromPMMLCompoundPredicate(final CompoundPredicate to,
+    private void setValuesFromPMMLCompoundPredicate(final CompoundPredicate to,
         final PMMLCompoundPredicate from) {
         final PMMLBooleanOperator boolOp = from.getBooleanOperator();
         switch (boolOp) {
@@ -232,7 +239,7 @@ final class ConditionExporter {
         }
     }
 
-    private static String setToWhitspaceSeparatedString(final Set<String> set) {
+    private String setToWhitspaceSeparatedString(final Set<String> set) {
         final StringBuilder sb = new StringBuilder();
         for (final String string : set.stream().sorted().collect(Collectors.toList())) {
             sb.append("\"");

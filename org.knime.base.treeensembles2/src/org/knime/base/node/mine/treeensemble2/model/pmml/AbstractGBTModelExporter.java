@@ -65,6 +65,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the export of {@link GradientBoostedTreesModel}s on an abstract level.
@@ -74,9 +75,12 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel> extends AbstractWarningHolder {
     private final M m_gbtModel;
     private PMMLPortObjectSpec m_pmmlSpec;
+    private final DerivedFieldMapper m_derivedFieldMapper;
 
-    public AbstractGBTModelExporter(final M gbtModel) {
+    public AbstractGBTModelExporter(final M gbtModel,
+        final DerivedFieldMapper derivedFieldMapper) {
         m_gbtModel = gbtModel;
+        m_derivedFieldMapper = derivedFieldMapper;
     }
 
     /**
@@ -124,7 +128,8 @@ abstract class AbstractGBTModelExporter<M extends AbstractGradientBoostingModel>
     private void writeTreeIntoSegment(final Segment segment, final TreeModelRegression tree,
         final Map<TreeNodeSignature, Double> coefficientMap) {
         assert m_pmmlSpec != null : "The pmml spec is null, this indicates an implementation mistake.";
-        GBTRegressionTreeModelExporter exporter = new GBTRegressionTreeModelExporter(tree, coefficientMap);
+        GBTRegressionTreeModelExporter exporter =
+                new GBTRegressionTreeModelExporter(tree, m_derivedFieldMapper, coefficientMap);
         if (exporter.hasWarning()) {
             addWarning(exporter.getWarning());
         }

@@ -52,6 +52,7 @@ import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * MetaDataMapper for regression tree reconstruction.
@@ -61,14 +62,15 @@ import org.knime.core.data.DataTableSpec;
 final class RegressionMetaDataMapper extends AbstractMetaDataMapper<TreeTargetNumericColumnMetaData> {
 
     /**
-     * @param pmmlDoc
+     * @param pmmlDoc the PMML document from which to initialize the Gradient Boosted Trees model
+     * @param targetName the name of the target field
      */
-    public RegressionMetaDataMapper(final PMMLDocument pmmlDoc) {
-        super(pmmlDoc);
+    public RegressionMetaDataMapper(final PMMLDocument pmmlDoc, final String targetName) {
+        super(pmmlDoc, targetName);
     }
 
-    public RegressionMetaDataMapper(final DataTableSpec tableSpec) {
-        super(tableSpec);
+    public RegressionMetaDataMapper(final DataTableSpec tableSpec, final String targetName, final DerivedFieldMapper derivedFieldMapper) {
+        super(tableSpec, targetName, derivedFieldMapper);
     }
 
     /**

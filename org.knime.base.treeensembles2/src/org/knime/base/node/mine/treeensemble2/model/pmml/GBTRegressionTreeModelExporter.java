@@ -55,6 +55,7 @@ import org.dmg.pmml.NodeDocument.Node;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -71,8 +72,9 @@ final class GBTRegressionTreeModelExporter extends RegressionTreeModelExporter {
      * @param coefficientMap must contain the coefficients for all leafs in <b>treeModel</b>
      */
     public GBTRegressionTreeModelExporter(final AbstractTreeModel<TreeNodeRegression> treeModel,
+        final DerivedFieldMapper derivedFieldMapper,
         final Map<TreeNodeSignature, Double> coefficientMap) {
-        super(treeModel);
+        super(treeModel, derivedFieldMapper);
         m_coefficientMap = coefficientMap;
     }
 

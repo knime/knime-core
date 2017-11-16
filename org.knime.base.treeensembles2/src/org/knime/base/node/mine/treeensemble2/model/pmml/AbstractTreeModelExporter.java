@@ -70,6 +70,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Handles the export of {@link AbstractTreeModel} objects to PMML.
@@ -82,9 +83,11 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends Abs
 
     private final AbstractTreeModel<T> m_treeModel;
     private int m_nodeIndex;
+    private final ConditionExporter m_conditionExporter;
 
-    public AbstractTreeModelExporter(final AbstractTreeModel<T> treeModel) {
+    public AbstractTreeModelExporter(final AbstractTreeModel<T> treeModel, final DerivedFieldMapper derivedFieldMapper) {
         m_treeModel = treeModel;
+        m_conditionExporter = new ConditionExporter(derivedFieldMapper);
     }
 
     /**
@@ -190,7 +193,7 @@ abstract class AbstractTreeModelExporter<T extends AbstractTreeNode> extends Abs
 
         TreeNodeCondition condition = node.getCondition();
 
-        ConditionExporter.exportCondition(condition, pmmlNode);
+        m_conditionExporter.exportCondition(condition, pmmlNode);
 
         for (int i = 0; i < node.getNrChildren(); i++) {
             addTreeNode(pmmlNode.addNewNode(), (T)node.getChild(i));
