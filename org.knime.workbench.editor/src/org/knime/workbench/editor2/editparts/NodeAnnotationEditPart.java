@@ -79,13 +79,15 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        Display display = Display.getDefault();
-        if (display.isDisposed()) {
-            return;
-        }
+        final Display display = Display.getDefault();
         display.asyncExec(new Runnable() {
             @Override
             public void run() {
+                if (display.isDisposed()) {
+                    // this used to cause problems when KNIME was closed and as part of the closing a workflow
+                    // in the background became active
+                    return;
+                }
                 WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
                 NodeAnnotation anno = (NodeAnnotation)getModel();
                 NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
