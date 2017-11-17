@@ -611,7 +611,7 @@ public class NodeMonitorView extends ViewPart
         assert Display.getCurrent().getThread() == Thread.currentThread();
         m_info.setText("Node Configuration");
         // retrieve settings
-        ConfigBaseRO settings = nc.getNodeSettings();
+        ConfigBaseRO settings = unwrapNC(nc).getNodeSettings();
         // and put them into the table
         m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
