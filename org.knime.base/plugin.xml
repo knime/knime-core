@@ -119,6 +119,12 @@
             path="/view"
             name="Property"/>
       <category
+            icon="icons/16x16/category_javascript.png"
+            level-id="js-views"
+            locked="true"
+            name="JavaScript"
+            path="/view" />
+      <category
             after="view"
             icon="icons/16x16/category_mining.png"
             level-id="analytics"
@@ -299,6 +305,13 @@
             level-id="labs"
             name="KNIME Labs"
             path="/">
+      </category>
+      <category
+            description="JavaScript Views in KNIME Labs"
+            icon="icons/16x16/category_javascript.png"
+            level-id="js-views"
+            name="JavaScript Views (Labs)"
+            path="/labs">
       </category>
       <category
             description="PMML Processing Nodes (Labs)"
