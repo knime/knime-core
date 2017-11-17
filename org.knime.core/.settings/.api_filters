@@ -675,6 +675,18 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
+                <message_argument value="delete(URL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
+                <message_argument value="exists(URL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
                 <message_argument value="getSize(URL)"/>
             </message_arguments>
         </filter>
@@ -682,6 +694,18 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
                 <message_argument value="isWorkflowGroup(URL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
+                <message_argument value="lastModified(URL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.IRemoteFileUtilsService"/>
+                <message_argument value="mkDir(URL)"/>
             </message_arguments>
         </filter>
     </resource>
