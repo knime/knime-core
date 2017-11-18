@@ -258,7 +258,7 @@
             description="external tools and tool integrations"
             icon="icons/16x16/category_misc.png"
             level-id="toolintegration"
-            name="Tool Integration"
+            name="Tools &amp; Services"
             path="/"/>
       <category
             after="toolintegration"
