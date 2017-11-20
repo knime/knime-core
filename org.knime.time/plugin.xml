@@ -95,6 +95,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.convert.timestamptodatetime.TimestampToDateTimeNodeFactory">
       </node>
+      <node
+            category-path="/applications/timeseries/transform"
+            deprecated="false"
+            factory-class="org.knime.time.node.window.LoopStartWindowNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

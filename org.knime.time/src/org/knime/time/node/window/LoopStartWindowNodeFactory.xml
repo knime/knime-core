@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="loop_start_window.png" type="LoopStart"
+	xmlns="http://knime.org/node/v3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v3.1 http://knime.org/node/v3.1.xsd">
+	<name>Window Loop Start</name>
+
+	<shortDescription>Sliding window over input table.</shortDescription>
+
+	<fullDescription>
+		<intro>In each iteration the node selects a set of rows specified by a
+			window, which defines the output table. The window is either defined
+			by the number of rows it contains, or by selecting a certain time or
+			date interval.
+		</intro>
+		<option name="Row based">
+			The window size and step size are chosen as a
+			number of rows. In each iteration a window will be returned with
+			the
+			exact number of rows as specified by the window size.
+		</option>
+		<option name="Time based">
+			The window size and step size are given as duration. If no row lies
+			within the next time window, the window will be moved forward until
+			it at least contains a single row or no rows are left.
+			The chosen time
+			column has to be sorted in ascending order or the node will fail
+			<i>(see 'Sorter' Node)</i>
+			. Note the size of the output table can vary per iteration.
+		</option>
+		<option name="Window size">
+			The window size is either defined as
+			the number of
+			rows it contains (row based) or as a duration (time based).
+			Depending
+			on the chosen method the number of rows returned in each iteration
+			are static or variable.
+		</option>
+		<option name="Step size">
+			The step size, which is either given as the number
+			of rows (event triggered) or as a temporal amount (time triggered).
+			The step size defines on how the window will move as it either
+			defines the number of elements or the time it will skip after each
+			iteration.
+		</option>
+		<option name="Limit window to table">
+			If selected, the sliding window will never overlap
+			with the start or the end of the table. If false, undefined rows will
+			be added as missing values.
+		</option>
+		<option name="Start at">
+			If selected, the window will start at the
+			specified date and time. Otherwise, the window will choose the
+			date
+			and time of the first row as a starting point.
+		</option>
+
+		<option name="Forward">
+			Looks window size forward from the current row.
+		</option>
+		<option name="Central">
+			Looks half the window size backward from the
+			current row and half forward.
+		</option>
+		<option name="Backward">
+			Looks window size backward from the current row.
+		</option>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Any table">Any input table. Each iteration will
+			process one part of this table.
+		</inPort>
+		<outPort index="0" name="Windowed input">Window
+		</outPort>
+	</ports>
+</knimeNode>

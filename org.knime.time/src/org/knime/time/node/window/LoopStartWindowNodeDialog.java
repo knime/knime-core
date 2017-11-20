@@ -1,0 +1,605 @@
+/*
+ * ------------------------------------------------------------------------
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   Jun 3, 2010 (wiswedel): created
+ */
+package org.knime.time.node.window;
+
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
+
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.time.node.window.LoopStartWindowConfiguration.Trigger;
+import org.knime.time.node.window.LoopStartWindowConfiguration.Unit;
+import org.knime.time.node.window.LoopStartWindowConfiguration.WindowDefinition;
+import org.knime.time.util.DialogComponentDateTimeSelection;
+import org.knime.time.util.DialogComponentDateTimeSelection.DisplayOption;
+import org.knime.time.util.DurationPeriodFormatUtils;
+import org.knime.time.util.SettingsModelDateTime;
+
+/**
+ * Dialog pane for the Window Loop Start node.
+ *
+ * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
+ */
+final class LoopStartWindowNodeDialog extends NodeDialogPane {
+
+    /* Windowing definition */
+    private final JRadioButton m_forwardRButton;
+
+    private final JRadioButton m_centralRButton;
+
+    private final JRadioButton m_backwardRButton;
+
+    /* Triggering */
+    private final JRadioButton m_rowTrigRButton;
+
+    private final JRadioButton m_timeTrigRButton;
+
+    /* Event Triggered */
+    private final JSpinner m_stepSizeSpinner;
+
+    private final JSpinner m_windowSizeSpinner;
+
+    private final JLabel m_stepSizeLabel;
+
+    private final JLabel m_windowSizeLabel;
+
+    private final JCheckBox m_limitWindowCheckBox;
+
+    /* Time Triggered*/
+    private final JLabel m_windowTimeLabel;
+
+    private final JLabel m_startTimeLabel;
+
+    private final JTextField m_timeWindow;
+
+    private final JTextField m_startTime;
+
+    private final JCheckBox m_useSpecifiedStartTimeCheckBox;
+
+    private final DialogComponentDateTimeSelection m_specifiedStartTime;
+
+    private final DialogComponentColumnNameSelection m_columnSelector;
+
+    private final JLabel m_unitLabel;
+
+    private final JComboBox<Unit> m_timeWindowUnit;
+
+    private final JComboBox<Unit> m_startTimeUnit;
+
+    private final JLabel m_inLabel;
+
+    private final JLabel m_inLabel2;
+
+    final SettingsModelDateTime modelStart = LoopStartWindowNodeModel.createStartModel();
+
+    /**
+     *
+     */
+    public LoopStartWindowNodeDialog() {
+        ButtonGroup bg = new ButtonGroup();
+
+        m_forwardRButton = new JRadioButton("Forward");
+        m_backwardRButton = new JRadioButton("Backward");
+        m_centralRButton = new JRadioButton("Central");
+
+        bg.add(m_forwardRButton);
+        bg.add(m_centralRButton);
+        bg.add(m_backwardRButton);
+
+        bg = new ButtonGroup();
+        m_rowTrigRButton = new JRadioButton("Row based");
+        m_timeTrigRButton = new JRadioButton("Time based");
+
+        bg.add(m_rowTrigRButton);
+        bg.add(m_timeTrigRButton);
+
+        m_windowSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 2));
+        m_stepSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 2));
+
+        m_timeWindow = new JTextField(14);
+        m_startTime = new JTextField(14);
+
+        m_stepSizeLabel = new JLabel("Step size");
+        m_windowSizeLabel = new JLabel("Window size");
+
+        m_windowTimeLabel = new JLabel("Window size");
+        m_startTimeLabel = new JLabel("Step size");
+
+        m_limitWindowCheckBox = new JCheckBox("Limit window to table");
+        m_limitWindowCheckBox.setSelected(false);
+
+        m_useSpecifiedStartTimeCheckBox = new JCheckBox("Start at:");
+        m_useSpecifiedStartTimeCheckBox.setSelected(false);
+
+        m_specifiedStartTime =
+            new DialogComponentDateTimeSelection(modelStart, null, DisplayOption.SHOW_DATE_AND_TIME_AND_TIMEZONE);
+
+        m_unitLabel = new JLabel("Unit");
+        m_startTimeUnit = new JComboBox<>(Unit.values());
+        m_timeWindowUnit = new JComboBox<>(Unit.values());
+
+        m_inLabel = new JLabel("in");
+        m_inLabel2 = new JLabel("in");
+
+        m_columnSelector =
+            new DialogComponentColumnNameSelection(LoopStartWindowNodeModel.createColumnModel(), "Time column", 0,
+                false, LocalTimeValue.class, LocalDateTimeValue.class, LocalDateValue.class, ZonedDateTimeValue.class);
+
+        ActionListener triggerListener = new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                /* Time triggered */
+                m_timeWindow.setEnabled(!m_rowTrigRButton.isSelected());
+                m_columnSelector.getModel().setEnabled(!m_rowTrigRButton.isSelected());
+                m_startTime.setEnabled(!m_rowTrigRButton.isSelected());
+                m_useSpecifiedStartTimeCheckBox.setEnabled(!m_rowTrigRButton.isSelected());
+                m_specifiedStartTime
+                    .setEnabled(!m_rowTrigRButton.isSelected() && m_useSpecifiedStartTimeCheckBox.isSelected());
+                m_startTimeUnit.setEnabled(!m_rowTrigRButton.isSelected());
+                m_timeWindowUnit.setEnabled(!m_rowTrigRButton.isSelected());
+
+                /* Event triggered */
+                m_windowSizeSpinner.setEnabled(m_rowTrigRButton.isSelected());
+                m_stepSizeSpinner.setEnabled(m_rowTrigRButton.isSelected());
+                m_limitWindowCheckBox.setEnabled(m_rowTrigRButton.isSelected());
+            }
+        };
+
+        /* Listener for start time. */
+        ActionListener selectorListener = new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (m_columnSelector.getSelectedAsSpec() != null) {
+
+                    if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
+                        modelStart.setUseDate(true);
+                        modelStart.setUseTime(false);
+                        modelStart.setUseZone(false);
+                    } else if (m_columnSelector.getSelectedAsSpec().getType()
+                        .equals(DataType.getType(LocalDateTimeCell.class))) {
+                        modelStart.setUseDate(true);
+                        modelStart.setUseTime(true);
+                        modelStart.setUseZone(false);
+                    } else if (m_columnSelector.getSelectedAsSpec().getType()
+                        .equals(DataType.getType(LocalTimeCell.class))) {
+                        modelStart.setUseDate(false);
+                        modelStart.setUseTime(true);
+                        modelStart.setUseZone(false);
+                    } else if (m_columnSelector.getSelectedAsSpec().getType()
+                        .equals(DataType.getType(ZonedDateTimeCell.class))) {
+                        modelStart.setUseDate(true);
+                        modelStart.setUseTime(true);
+                        modelStart.setUseZone(true);
+                    }
+
+                } else {
+                    m_specifiedStartTime.getComponentPanel().setEnabled(false);
+                }
+
+            }
+        };
+
+        /* TODO: hardcoded */
+        ((ColumnSelectionPanel)m_columnSelector.getComponentPanel().getComponent(1))
+            .addActionListener(selectorListener);
+
+        m_rowTrigRButton.addActionListener(triggerListener);
+        m_timeTrigRButton.addActionListener(triggerListener);
+        m_limitWindowCheckBox.addActionListener(triggerListener);
+        m_useSpecifiedStartTimeCheckBox.addActionListener(triggerListener);
+
+        m_forwardRButton.doClick();
+        m_rowTrigRButton.doClick();
+
+        initLayout();
+    }
+
+    /**
+     * Initiates the layout.
+     */
+    private void initLayout() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints constraint = new GridBagConstraints();
+
+        constraint.anchor = GridBagConstraints.LINE_START;
+        constraint.gridx = 1;
+        constraint.gridy = 1;
+        constraint.fill = GridBagConstraints.HORIZONTAL;
+
+        /* Trigger sub-panel*/
+        JPanel triggerPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints subConstraint = new GridBagConstraints();
+        subConstraint.ipadx = 2;
+        subConstraint.ipady = 5;
+        subConstraint.insets = new Insets(2, 2, 2, 2);
+        subConstraint.weightx = 1;
+        subConstraint.weighty = 1;
+        subConstraint.gridx = 1;
+        subConstraint.gridy = 1;
+
+        triggerPanel.add(m_rowTrigRButton, subConstraint);
+
+        subConstraint.gridx++;
+        triggerPanel.add(m_timeTrigRButton, subConstraint);
+
+        panel.add(triggerPanel, constraint);
+
+        /* Event sub-panel */
+        JPanel rowPanel = new JPanel(new GridBagLayout());
+
+        subConstraint.gridx = 1;
+        subConstraint.gridy = 1;
+
+        rowPanel.add(m_windowSizeLabel, subConstraint);
+
+        subConstraint.gridx++;
+        rowPanel.add(m_windowSizeSpinner, subConstraint);
+
+        subConstraint.gridx--;
+        subConstraint.gridy++;
+        rowPanel.add(m_stepSizeLabel, subConstraint);
+
+        subConstraint.gridx++;
+        rowPanel.add(m_stepSizeSpinner, subConstraint);
+
+        subConstraint.gridx--;
+        subConstraint.gridy++;
+        rowPanel.add(m_limitWindowCheckBox, subConstraint);
+
+        rowPanel.setBorder(BorderFactory.createTitledBorder("Row based"));
+
+        constraint.gridy++;
+        panel.add(rowPanel, constraint);
+
+        /* Time sub-panel */
+        JPanel timePanel = new JPanel(new GridBagLayout());
+
+        subConstraint.gridx = 1;
+        subConstraint.gridy = 1;
+
+        Component[] comp = m_columnSelector.getComponentPanel().getComponents();
+        timePanel.add(comp[0], subConstraint);
+
+        subConstraint.gridx++;
+        subConstraint.fill = GridBagConstraints.HORIZONTAL;
+        timePanel.add(comp[1], subConstraint);
+
+        subConstraint.gridx--;
+        subConstraint.gridy++;
+        subConstraint.fill = GridBagConstraints.NONE;
+        timePanel.add(m_windowTimeLabel, subConstraint);
+
+        subConstraint.gridx++;
+        subConstraint.fill = GridBagConstraints.HORIZONTAL;
+        timePanel.add(m_timeWindow, subConstraint);
+
+        subConstraint.gridx++;
+        timePanel.add(m_inLabel, subConstraint);
+
+        subConstraint.gridx++;
+        timePanel.add(m_timeWindowUnit, subConstraint);
+
+        subConstraint.gridx -= 3;
+        subConstraint.gridy++;
+        subConstraint.fill = GridBagConstraints.NONE;
+        timePanel.add(m_startTimeLabel, subConstraint);
+
+        subConstraint.gridx++;
+        subConstraint.fill = GridBagConstraints.HORIZONTAL;
+        timePanel.add(m_startTime, subConstraint);
+
+        subConstraint.gridx++;
+        timePanel.add(m_inLabel2, subConstraint);
+
+        subConstraint.gridx++;
+        timePanel.add(m_startTimeUnit, subConstraint);
+
+        subConstraint.gridx -= 3;
+        subConstraint.gridy++;
+        subConstraint.fill = GridBagConstraints.NONE;
+        timePanel.add(m_useSpecifiedStartTimeCheckBox, subConstraint);
+
+        subConstraint.gridx++;
+        subConstraint.fill = GridBagConstraints.HORIZONTAL;
+        timePanel.add(m_specifiedStartTime.getComponentPanel(), subConstraint);
+
+        timePanel.setBorder(BorderFactory.createTitledBorder("Time based"));
+
+        constraint.gridy++;
+        panel.add(timePanel, constraint);
+
+        /* Window definition sub-panel */
+        JPanel windowDefinitionPanel = new JPanel(new GridBagLayout());
+
+        subConstraint.gridx = 1;
+        subConstraint.gridy = 1;
+        windowDefinitionPanel.add(m_forwardRButton, subConstraint);
+
+        subConstraint.gridx++;
+        windowDefinitionPanel.add(m_centralRButton, subConstraint);
+
+        subConstraint.gridx++;
+        windowDefinitionPanel.add(m_backwardRButton, subConstraint);
+
+        constraint.gridy++;
+        panel.add(windowDefinitionPanel, constraint);
+
+        addTab("Configuration", panel);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        LoopStartWindowConfiguration config = new LoopStartWindowConfiguration();
+        config.loadSettingsInDialog(settings);
+
+        m_windowSizeSpinner.setValue(config.getEventWindowSize());
+        m_stepSizeSpinner.setValue(config.getEventStepSize());
+        m_limitWindowCheckBox.setSelected(config.getLimitWindow());
+        m_useSpecifiedStartTimeCheckBox.setSelected(config.useSpecifiedStartTime());
+        m_startTimeUnit.setSelectedItem(config.getTimeStepUnit());
+        m_timeWindowUnit.setSelectedItem(config.getTimeWindowUnit());
+
+        switch (config.getWindowDefinition()) {
+            case FORWARD:
+                m_forwardRButton.doClick();
+                break;
+            case BACKWARD:
+                m_backwardRButton.doClick();
+                break;
+            default:
+                m_centralRButton.doClick();
+        }
+
+        switch (config.getTrigger()) {
+            case ROW:
+                m_rowTrigRButton.doClick();
+                break;
+            default:
+                m_timeTrigRButton.doClick();
+                m_startTime.setText(config.getTimeStepSize());
+                m_timeWindow.setText(config.getTimeWindowSize());
+        }
+
+        m_columnSelector.loadSettingsFrom(settings, specs);
+        m_specifiedStartTime.loadSettingsFrom(settings, specs);
+
+        if (m_columnSelector.getSelectedAsSpec() != null) {
+
+            if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
+                modelStart.setUseDate(true);
+                modelStart.setUseTime(false);
+                modelStart.setUseZone(false);
+            } else if (m_columnSelector.getSelectedAsSpec().getType()
+                .equals(DataType.getType(LocalDateTimeCell.class))) {
+                modelStart.setUseDate(true);
+                modelStart.setUseTime(true);
+                modelStart.setUseZone(false);
+            } else if (m_columnSelector.getSelectedAsSpec().getType()
+                .equals(DataType.getType(LocalTimeCell.class))) {
+                modelStart.setUseDate(false);
+                modelStart.setUseTime(true);
+                modelStart.setUseZone(false);
+            } else if (m_columnSelector.getSelectedAsSpec().getType()
+                .equals(DataType.getType(ZonedDateTimeCell.class))) {
+                modelStart.setUseDate(true);
+                modelStart.setUseTime(true);
+                modelStart.setUseZone(true);
+            }
+
+        } else {
+            m_specifiedStartTime.getComponentPanel().setEnabled(false);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        LoopStartWindowConfiguration config = new LoopStartWindowConfiguration();
+        config.setEventWindowSize((Integer)m_windowSizeSpinner.getValue());
+        config.setEventStepSize((Integer)m_stepSizeSpinner.getValue());
+        config.setLimitWindow(m_limitWindowCheckBox.isSelected());
+
+        if (m_forwardRButton.isSelected()) {
+            config.setWindowDefinition(WindowDefinition.FORWARD);
+        } else if (m_backwardRButton.isSelected()) {
+            config.setWindowDefinition(WindowDefinition.BACKWARD);
+        } else {
+            config.setWindowDefinition(WindowDefinition.CENTRAL);
+        }
+
+        if (m_rowTrigRButton.isSelected()) {
+            config.setTrigger(Trigger.ROW);
+        } else {
+            config.setTrigger(Trigger.TIME);
+
+            if (m_columnSelector == null || m_columnSelector.getSelectedAsSpec() == null) {
+                throw new InvalidSettingsException("No valid column has been chosen");
+            }
+
+            /* Check that either no unit is selected or that the given input does not contain any letters. */
+            if (m_startTimeUnit.getSelectedItem() != Unit.NO_UNIT && !m_startTime.getText().matches("^[0-9]+$")
+                || m_timeWindowUnit.getSelectedItem() != Unit.NO_UNIT && !m_timeWindow.getText().matches("^[0-9]+$")) {
+                throw new InvalidSettingsException("Only integers are allowed when a specific unit is chosen");
+            }
+
+            try {
+                Duration startDur = DurationPeriodFormatUtils
+                    .parseDuration(m_startTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+
+                /* Limit window to 24h */
+                if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
+                    Duration temp = Duration.ofHours(24);
+
+                    if (startDur.compareTo(temp) > 0) {
+                        throw new InvalidSettingsException(
+                            "Stepz size must not be greater than 24h when LocalTime is selected");
+                    } else if (startDur.compareTo(Duration.ZERO) == 0) {
+                        throw new InvalidSettingsException("Step size must be greater than 0");
+                    }
+                }
+
+                if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
+                    throw new InvalidSettingsException(
+                        "Step size: Duration types are not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
+                }
+
+                config.setTimeStepSize(m_startTime.getText());
+            } catch (DateTimeParseException e) {
+                try {
+                    DurationPeriodFormatUtils
+                        .parsePeriod(m_startTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+
+                    /* Period is not allowed. */
+                    if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
+                        throw new InvalidSettingsException(
+                            "Step size: Date based duration is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
+                    } else if (m_centralRButton.isSelected()) {
+                        throw new InvalidSettingsException(
+                            "Step size: Date based duration is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
+                    }
+
+                    config.setTimeStepSize(m_startTime.getText());
+                } catch (DateTimeParseException e2) {
+                    throw new InvalidSettingsException("'" + m_startTime.getText()
+                        + "' is not a valid duration. Note that 'M' is reserved for months, use 'm' for minutes.");
+                }
+            }
+
+            try {
+                Duration windowDur = DurationPeriodFormatUtils
+                    .parseDuration(m_timeWindow.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+
+                /* Limit window to 24h */
+                if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
+                    Duration temp = Duration.ofHours(24);
+
+                    if (windowDur.compareTo(temp) > 0) {
+                        throw new InvalidSettingsException(
+                            "Window size must not be greater than 24h when LocalTime is selected");
+                    } else if (windowDur.compareTo(Duration.ZERO) == 0) {
+                        throw new InvalidSettingsException("Window size must be greater than 0");
+                    }
+                }
+
+                if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
+                    throw new InvalidSettingsException(
+                        "Window size: Time based duration is not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
+                }
+
+                config.setTimeWindowSize(m_timeWindow.getText());
+            } catch (DateTimeParseException e) {
+                try {
+                    DurationPeriodFormatUtils.parsePeriod(
+                        m_timeWindow.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+
+                    /* Period is not allowed. */
+                    if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
+                        throw new InvalidSettingsException(
+                            "Window size: Date based duration is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
+                    } else if (m_centralRButton.isSelected()) {
+                        throw new InvalidSettingsException(
+                            "Window size: Date based duration is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
+                    }
+
+                    config.setTimeWindowSize(m_timeWindow.getText());
+                } catch (DateTimeParseException e2) {
+                    throw new InvalidSettingsException("'" + m_timeWindow.getText()
+                        + "' is not a valid duration. Note that 'M' is reserved for months, use 'm' for minutes.");
+                }
+            }
+
+            config.setTimeWindowUnit((Unit)m_timeWindowUnit.getSelectedItem());
+            config.setTimeStepUnit((Unit)m_startTimeUnit.getSelectedItem());
+        }
+
+        config.setUseSpecifiedStartTime(m_useSpecifiedStartTimeCheckBox.isSelected());
+
+        config.saveSettingsTo(settings);
+        m_specifiedStartTime.saveSettingsTo(settings);
+        m_columnSelector.saveSettingsTo(settings);
+    }
+
+}
