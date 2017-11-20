@@ -744,10 +744,6 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"/>
 
    <includes
-         id="org.knime.features.ext.libsvm"
-         version="0.0.0"/>
-
-   <includes
          id="org.knime.features.ext.jep"
          version="0.0.0"/>
 
@@ -769,6 +765,14 @@ propagated with or for interoperation with KNIME.
 
    <includes
          id="org.knime.features.personalproductivity"
+         version="0.0.0"/>
+
+   <includes
+         id="org.knime.features.js.views"
+         version="0.0.0"/>
+
+   <includes
+         id="org.knime.features.rest"
          version="0.0.0"/>
 
    <requires>
