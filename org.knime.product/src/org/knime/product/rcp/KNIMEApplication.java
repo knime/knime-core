@@ -49,6 +49,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
@@ -154,9 +155,9 @@ public class KNIMEApplication implements IApplication {
             if (display != null) {
                 try {
                     display.dispose();
-                } catch (Throwable e) {
+                } catch (SWTException e) {
                     // attempt to fix ui hangs on mac when the closes, see AP-8117
-                    NodeLogger.getLogger(KNIMEApplication.class).error(
+                    NodeLogger.getLogger(KNIMEApplication.class).debug(
                         "Exception while disposing Display object: " + e.getMessage(), e);
                 }
             }
