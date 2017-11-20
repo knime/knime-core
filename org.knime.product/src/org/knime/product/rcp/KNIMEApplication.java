@@ -152,7 +152,13 @@ public class KNIMEApplication implements IApplication {
                     : EXIT_RESTART;
         } finally {
             if (display != null) {
-                display.dispose();
+                try {
+                    display.dispose();
+                } catch (Throwable e) {
+                    // attempt to fix ui hangs on mac when the closes, see AP-8117
+                    NodeLogger.getLogger(KNIMEApplication.class).error(
+                        "Exception while disposing Display object: " + e.getMessage(), e);
+                }
             }
         }
     }
