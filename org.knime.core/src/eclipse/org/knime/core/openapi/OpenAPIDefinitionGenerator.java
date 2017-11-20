@@ -90,6 +90,12 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
     public static final String INPUT_PARAMETERS_FILE = "openapi-input-parameters.json";
 
     /**
+     * Name of the file that contains the output parameter definition: {@value}.
+     */
+    public static final String OUTPUT_PARAMETERS_FILE = "openapi-output-parameters.json";
+
+
+    /**
      * Returns the singleton instance.
      *
      * @return the singleton instance
@@ -142,23 +148,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      * @return a JSON object
      */
     public JsonObject createInputParametersDescription(final WorkflowManager wfm) {
-        JsonObjectBuilder root = Json.createObjectBuilder();
-        if (!wfm.getInputNodes().isEmpty()) {
-            JsonObjectBuilder properties = Json.createObjectBuilder();
-
-            for (Map.Entry<String, ExternalNodeData> e : wfm.getInputNodes().entrySet()) {
-                if (e.getValue().getJSONValue() != null) {
-                    JsonObjectBuilder input = translateToSchema(e.getValue().getJSONValue());
-                    e.getValue().getDescription().ifPresent(d -> input.add("description", d));
-                    input.add("example", e.getValue().getJSONValue());
-                    properties.add(e.getKey(), input);
-                }
-            }
-            root.add("type", "object");
-            root.add("properties", properties);
-        }
-
-        return root.build();
+        return createParametersDescription(wfm.getInputNodes());
     }
 
     /**
@@ -169,7 +159,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      * {
      *    "type: "object",
      *    "properties": {
-     *       "int-output-7": {
+     *       "json-output-1": {
      *         "type":"object",
      *         "properties": {
      *           "integer": {
@@ -177,23 +167,11 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *             "default":42
      *           }
      *         },
-     *         "description": "Enter a number for this value",
+     *         "description": "JSON output from the workflow",
      *         "example": {
      *           "integer": 42
      *         }
      *       },
-     *       "string-input-1": {
-     *         "type":"object",
-     *         "properties": {
-     *           "string": {
-     *             "type": "string",
-     *              "default": "Default value from the dialog"
-     *           }
-     *       },
-     *       "description": "Enter a string here",
-     *       "example": {
-     *         "string": "Default value from the dialog"
-     *       }
      *     }
      *   }
      * }
@@ -204,12 +182,17 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      * @param wfm a workflow manager, must not be <code>null</code>
      * @return a JSON object
      */
-    private JsonObject createOutputParametersDescription(final WorkflowManager wfm) {
-        final JsonObjectBuilder root = Json.createObjectBuilder();
-        if (!wfm.getOutputNodes().isEmpty()) {
+    public JsonObject createOutputParametersDescription(final WorkflowManager wfm) {
+        return createParametersDescription(wfm.getOutputNodes());
+    }
+
+
+    private static JsonObject createParametersDescription(final Map<String, ExternalNodeData> nodes) {
+        JsonObjectBuilder root = Json.createObjectBuilder();
+        if (!nodes.isEmpty()) {
             JsonObjectBuilder properties = Json.createObjectBuilder();
 
-            for (Map.Entry<String, ExternalNodeData> e : wfm.getOutputNodes().entrySet()) {
+            for (Map.Entry<String, ExternalNodeData> e : nodes.entrySet()) {
                 if (e.getValue().getJSONValue() != null) {
                     JsonObjectBuilder input = translateToSchema(e.getValue().getJSONValue());
                     e.getValue().getDescription().ifPresent(d -> input.add("description", d));
@@ -224,7 +207,8 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
         return root.build();
     }
 
-    private JsonObjectBuilder translateToSchema(final JsonValue v) {
+
+    private static JsonObjectBuilder translateToSchema(final JsonValue v) {
         final JsonObjectBuilder node = Json.createObjectBuilder();
 
         if (v instanceof JsonObject) {
@@ -270,22 +254,22 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
     @Override
     public void onSave(final WorkflowManager workflow, final boolean isSaveData, final File artifactsFolder)
         throws IOException {
-        final JsonObject api = createInputParametersDescription(workflow);
+        JsonObject api = createInputParametersDescription(workflow);
 
         if (!api.isEmpty()) {
-            LOGGER.debug("Writing OpenAPI definition for parameters of " + workflow.getName());
-            try (final JsonWriter out = m_writerFactory
-                .createWriter(new FileOutputStream(new File(artifactsFolder, "openapi-input-parameters.json")))) {
+            LOGGER.debug("Writing OpenAPI definition for input parameters of " + workflow.getName());
+            try (JsonWriter out = m_writerFactory
+                .createWriter(new FileOutputStream(new File(artifactsFolder, INPUT_PARAMETERS_FILE)))) {
                 out.write(api);
             }
         }
 
-        final JsonObject outApi = createOutputParametersDescription(workflow);
+        JsonObject outApi = createOutputParametersDescription(workflow);
 
         if (!outApi.isEmpty()) {
-            LOGGER.debug("Writing OpenAPI definition for parameters of " + workflow.getName());
-            try (final JsonWriter out = m_writerFactory
-                .createWriter(new FileOutputStream(new File(artifactsFolder, "openapi-output-parameters.json")))) {
+            LOGGER.debug("Writing OpenAPI definition for output parameters of " + workflow.getName());
+            try (JsonWriter out = m_writerFactory
+                .createWriter(new FileOutputStream(new File(artifactsFolder, OUTPUT_PARAMETERS_FILE)))) {
                 out.write(outApi);
             }
         }

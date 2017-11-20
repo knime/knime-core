@@ -9372,7 +9372,8 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.5
      */
     public Map<String, ExternalNodeData> getOutputNodes() {
-        List<ExternalNodeDataHandle> outputNodes = getExternalNodeDataHandles(OutputNode.class, i -> i.getExternalOutput());
+        List<ExternalNodeDataHandle> outputNodes =
+            getExternalNodeDataHandles(OutputNode.class, i -> i.getExternalOutput());
         return outputNodes.stream().collect(Collectors.toMap(
             ExternalNodeDataHandle::getParameterNameFullyQualified,
             ExternalNodeDataHandle::getExternalNodeData));
