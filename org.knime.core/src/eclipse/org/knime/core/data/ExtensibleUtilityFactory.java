@@ -139,7 +139,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
         readRenderersFromExtensionPoint();
 
         if (rendererId == null) {
-            CORE_PREFS.put(getPreferenceKey(), null);
+            CORE_PREFS.remove(getPreferenceKey());
         } else {
             DataValueRendererFactory matchedFactory = m_renderers.get(rendererId);
             if (matchedFactory != null) {
