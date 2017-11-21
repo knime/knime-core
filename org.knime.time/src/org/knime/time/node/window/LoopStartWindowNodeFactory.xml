@@ -7,62 +7,45 @@
 	<shortDescription>Sliding window over input table.</shortDescription>
 
 	<fullDescription>
-		<intro>In each iteration the node selects a set of rows specified by a
-			window, which defines the output table. The window is either defined
-			by the number of rows it contains, or by selecting a certain time or
-			date interval.
+		<intro>The Window Loop Start node takes a table as input, defines a window of a
+certain size onto the table, breaks the table into chunks of the size of
+this window, and outputs these chunks one by one as it loops over the table.
+The size of the window is defined in terms of either the number of rows
+it contains or the date/time interval it covers.
 		</intro>
-		<option name="Row based">
-			The window size and step size are chosen as a
-			number of rows. In each iteration a window will be returned with
-			the
-			exact number of rows as specified by the window size.
+		<option name="Row based">If this option is selected, both window size and step size (the distance between the starting point of one iteration and the starting point of the next) can be defined in terms of number of rows. With each iteration, the node then returns a table with the specified number of rows.
 		</option>
 		<option name="Time based">
-			The window size and step size are given as duration. If no row lies
-			within the next time window, the window will be moved forward until
-			it at least contains a single row or no rows are left.
-			The chosen time
-			column has to be sorted in ascending order or the node will fail
-			<i>(see 'Sorter' Node)</i>
-			. Note the size of the output table can vary per iteration.
+		If this option is selected, both window size and step size (the distance between the starting point of one iteration and the starting point of the next) can be defined in terms of a date/time interval. If the window contains no row, it is moved forward until it contains at least one row or no rows are left.   The chosen time column has to be sorted in ascending order or the node will fail (see Sorter node). Note that the size of the output table can vary from one iteration to the next, and that the loop terminates as soon as the last line of the input table appears in the window or in the step interval.  
 		</option>
 		<option name="Window size">
-			The window size is either defined as
+			The window size is defined either as
 			the number of
-			rows it contains (row based) or as a duration (time based).
+			rows it contains (in case it is row based) or as the date/time interval it covers (in case it is time based).
 			Depending
-			on the chosen method the number of rows returned in each iteration
-			are static or variable.
+			on the chosen method, the number of rows returned in each iteration
+			is static or variable.
 		</option>
 		<option name="Step size">
-			The step size, which is either given as the number
-			of rows (event triggered) or as a temporal amount (time triggered).
-			The step size defines on how the window will move as it either
-			defines the number of elements or the time it will skip after each
-			iteration.
+			The step size is the distance between the starting point of one iteration and the starting point of the next.  It is defined in terms of number
+			of rows covered (in case it is event triggered) or time elapsed (in case it is time triggered).
 		</option>
 		<option name="Limit window to table">
-			If selected, the sliding window will never overlap
-			with the start or the end of the table. If false, undefined rows will
-			be added as missing values.
+			If this option is selected, the moving window will not extend beyond the beginning or the end of the table. If this option is not selected, undefined rows with missing values will be added.
 		</option>
 		<option name="Start at">
-			If selected, the window will start at the
-			specified date and time. Otherwise, the window will choose the
-			date
-			and time of the first row as a starting point.
+			If this option is selected, the window will start at the
+			specified date and time. If this option is not selected, the window will start with the date and time of the first row.
 		</option>
 
 		<option name="Forward">
-			Looks window size forward from the current row.
+			If this option is selected, the current row will be the first row of the window.
 		</option>
 		<option name="Central">
-			Looks half the window size backward from the
-			current row and half forward.
+			If this option is selected, the current row will be midway between the first and the last row of the window.
 		</option>
 		<option name="Backward">
-			Looks window size backward from the current row.
+			If this option is selected, the current row will be the last row of the window.
 		</option>
 	</fullDescription>
 
