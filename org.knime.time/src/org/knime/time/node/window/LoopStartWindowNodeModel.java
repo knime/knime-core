@@ -1122,13 +1122,13 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
             }
 
             /* Checks if current row lies within next temporal window */
-            if (compareTemporal(getTemporal(row.getCell(column)),
-                m_windowEndTemporal.plus(startInterval)/*m_nextStartTemporal.plus(windowDuration)*/) <= 0) {
-                m_bufferedRows.addFirst(row);
-                break;
-            } else if (compareTemporal(getTemporal(row.getCell(column)), m_nextStartTemporal) <= 0
+            if (compareTemporal(getTemporal(row.getCell(column)), m_nextStartTemporal) < 0
                 && !m_rowIterator.hasNext()) {
                 /* There are no more rows that could lie within an upcoming window. */
+                break;
+            } else if (compareTemporal(getTemporal(row.getCell(column)),
+                m_windowEndTemporal.plus(startInterval)/*m_nextStartTemporal.plus(windowDuration)*/) <= 0) {
+                m_bufferedRows.addFirst(row);
                 break;
             }
 
