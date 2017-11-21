@@ -735,50 +735,6 @@ propagated with or for interoperation with KNIME.
          id="org.knime.binary.jre"
          version="0.0.0"/>
 
-   <includes
-         id="org.knime.features.ensembles"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.dbdrivers"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.ext.jep"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.ext.poi"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.json"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.xml"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.js.quickforms"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.personalproductivity"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.js.views"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.rest"
-         version="0.0.0"/>
-
-   <includes
-         id="org.knime.features.ext.chromium"
-         version="0.0.0"/>
-
    <requires>
       <import feature="org.eclipse.equinox.p2.user.ui" version="2.0.1" match="greaterOrEqual"/>
    </requires>
