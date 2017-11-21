@@ -54,6 +54,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.Duration;
+import java.time.Period;
 import java.time.format.DateTimeParseException;
 
 import javax.swing.BorderFactory;
@@ -127,9 +128,9 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
     private final JLabel m_startTimeLabel;
 
-    private final JTextField m_timeWindow;
+    private final JTextField m_windowSizeTime;
 
-    private final JTextField m_startTime;
+    private final JTextField m_stepSizeTime;
 
     private final JCheckBox m_useSpecifiedStartTimeCheckBox;
 
@@ -173,8 +174,8 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         m_windowSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 2));
         m_stepSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 2));
 
-        m_timeWindow = new JTextField(14);
-        m_startTime = new JTextField(14);
+        m_windowSizeTime = new JTextField(14);
+        m_stepSizeTime = new JTextField(14);
 
         m_stepSizeLabel = new JLabel("Step size");
         m_windowSizeLabel = new JLabel("Window size");
@@ -207,9 +208,9 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 /* Time triggered */
-                m_timeWindow.setEnabled(!m_rowTrigRButton.isSelected());
+                m_windowSizeTime.setEnabled(!m_rowTrigRButton.isSelected());
                 m_columnSelector.getModel().setEnabled(!m_rowTrigRButton.isSelected());
-                m_startTime.setEnabled(!m_rowTrigRButton.isSelected());
+                m_stepSizeTime.setEnabled(!m_rowTrigRButton.isSelected());
                 m_useSpecifiedStartTimeCheckBox.setEnabled(!m_rowTrigRButton.isSelected());
                 m_specifiedStartTime
                     .setEnabled(!m_rowTrigRButton.isSelected() && m_useSpecifiedStartTimeCheckBox.isSelected());
@@ -352,7 +353,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
         subConstraint.gridx++;
         subConstraint.fill = GridBagConstraints.HORIZONTAL;
-        timePanel.add(m_timeWindow, subConstraint);
+        timePanel.add(m_windowSizeTime, subConstraint);
 
         subConstraint.gridx++;
         timePanel.add(m_inLabel, subConstraint);
@@ -367,7 +368,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
         subConstraint.gridx++;
         subConstraint.fill = GridBagConstraints.HORIZONTAL;
-        timePanel.add(m_startTime, subConstraint);
+        timePanel.add(m_stepSizeTime, subConstraint);
 
         subConstraint.gridx++;
         timePanel.add(m_inLabel2, subConstraint);
@@ -439,8 +440,8 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 break;
             default:
                 m_timeTrigRButton.doClick();
-                m_startTime.setText(config.getTimeStepSize());
-                m_timeWindow.setText(config.getTimeWindowSize());
+                m_stepSizeTime.setText(config.getTimeStepSize());
+                m_windowSizeTime.setText(config.getTimeWindowSize());
         }
 
         m_columnSelector.loadSettingsFrom(settings, specs);
@@ -457,8 +458,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 modelStart.setUseDate(true);
                 modelStart.setUseTime(true);
                 modelStart.setUseZone(false);
-            } else if (m_columnSelector.getSelectedAsSpec().getType()
-                .equals(DataType.getType(LocalTimeCell.class))) {
+            } else if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
                 modelStart.setUseDate(false);
                 modelStart.setUseTime(true);
                 modelStart.setUseZone(false);
@@ -496,61 +496,84 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
             config.setTrigger(Trigger.TIME);
 
             if (m_columnSelector == null || m_columnSelector.getSelectedAsSpec() == null) {
-                throw new InvalidSettingsException("No valid column has been chosen");
+                throw new InvalidSettingsException("No valid time column has been chosen");
+            }
+
+            /* Check if step size is smaller than 0. */
+            try {
+                if (m_stepSizeTime.getText() != null && Double.parseDouble(m_stepSizeTime.getText()) < 0) {
+                   throw new InvalidSettingsException("Step size '"+m_stepSizeTime.getText()+"' invalid. Step size must be greater than 0.");
+                }
+            } catch (NumberFormatException e) {
+
+            }
+            try {
+                if (m_windowSizeTime.getText() != null && Double.parseDouble(m_windowSizeTime.getText()) < 0) {
+                    throw new InvalidSettingsException("Window size '"+m_windowSizeTime.getText()+"' invalid. Window size must be greater than 0.");
+                }
+            } catch (NumberFormatException e) {
+
             }
 
             /* Check that either no unit is selected or that the given input does not contain any letters. */
-            if (m_startTimeUnit.getSelectedItem() != Unit.NO_UNIT && !m_startTime.getText().matches("^[0-9]+$")
-                || m_timeWindowUnit.getSelectedItem() != Unit.NO_UNIT && !m_timeWindow.getText().matches("^[0-9]+$")) {
-                throw new InvalidSettingsException("Only integers are allowed when a specific unit is chosen");
+            if (m_startTimeUnit.getSelectedItem() != Unit.NO_UNIT && !m_stepSizeTime.getText().matches("^[0-9]+$")) {
+                throw new InvalidSettingsException("Step size: input '"+m_stepSizeTime.getText()+"' invalid. Only integers are allowed when unit '"+m_startTimeUnit.getSelectedItem()+"' is chosen");
+
+            }
+            if(m_timeWindowUnit.getSelectedItem() != Unit.NO_UNIT && !m_windowSizeTime.getText().matches("^[0-9]+$")) {
+                throw new InvalidSettingsException("Window size: input '"+m_windowSizeTime.getText()+"' invalid. Only integers are allowed when unit '"+m_timeWindowUnit.getSelectedItem()+"' is chosen");
             }
 
             try {
                 Duration startDur = DurationPeriodFormatUtils
-                    .parseDuration(m_startTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+                    .parseDuration(m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
 
-                /* Limit window to 24h */
+                /* Limit step size to 24h */
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
                     Duration temp = Duration.ofHours(24);
 
                     if (startDur.compareTo(temp) > 0) {
                         throw new InvalidSettingsException(
                             "Stepz size must not be greater than 24h when LocalTime is selected");
-                    } else if (startDur.compareTo(Duration.ZERO) == 0) {
-                        throw new InvalidSettingsException("Step size must be greater than 0");
+                    } else if (startDur.compareTo(Duration.ZERO) == 0 || startDur.isNegative()) {
+                        throw new InvalidSettingsException("Step size '"+m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter()+"' invalid. Step size must be greater than 0.");
                     }
                 }
 
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
                     throw new InvalidSettingsException(
-                        "Step size: Duration types are not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
+                        "Step size: Duration based step size '"+m_stepSizeTime.getText()+"' is not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
                 }
 
-                config.setTimeStepSize(m_startTime.getText());
+                config.setTimeStepSize(m_stepSizeTime.getText());
             } catch (DateTimeParseException e) {
                 try {
-                    DurationPeriodFormatUtils
-                        .parsePeriod(m_startTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+                    Period startPer = DurationPeriodFormatUtils
+                        .parsePeriod(m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
 
                     /* Period is not allowed. */
                     if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
                         throw new InvalidSettingsException(
-                            "Step size: Date based duration is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
+                            "Step size: Date based step size '"+m_stepSizeTime.getText()+"' is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
                     } else if (m_centralRButton.isSelected()) {
                         throw new InvalidSettingsException(
-                            "Step size: Date based duration is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
+                            "Step size: Date based step size '"+m_stepSizeTime.getText()+"' is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
                     }
 
-                    config.setTimeStepSize(m_startTime.getText());
+                    if(startPer.isZero() || startPer.isNegative()) {
+                        throw new InvalidSettingsException("Step size '"+m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter()+"' invalid. Step Size must be greater than 0");
+                    }
+
+                    config.setTimeStepSize(m_stepSizeTime.getText());
                 } catch (DateTimeParseException e2) {
-                    throw new InvalidSettingsException("'" + m_startTime.getText()
+                    throw new InvalidSettingsException("Step size: '" + m_stepSizeTime.getText()
                         + "' is not a valid duration. Note that 'M' is reserved for months, use 'm' for minutes.");
                 }
             }
 
             try {
                 Duration windowDur = DurationPeriodFormatUtils
-                    .parseDuration(m_timeWindow.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+                    .parseDuration(m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
 
                 /* Limit window to 24h */
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
@@ -559,34 +582,38 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                     if (windowDur.compareTo(temp) > 0) {
                         throw new InvalidSettingsException(
                             "Window size must not be greater than 24h when LocalTime is selected");
-                    } else if (windowDur.compareTo(Duration.ZERO) == 0) {
-                        throw new InvalidSettingsException("Window size must be greater than 0");
+                    } else if (windowDur.isZero() || windowDur.isNegative()) {
+                        throw new InvalidSettingsException("Window size '"+m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter()+"' invalid. Window size must be greater than 0");
                     }
                 }
 
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
                     throw new InvalidSettingsException(
-                        "Window size: Time based duration is not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
+                        "Window size: Time based window size '"+m_windowSizeTime.getText()+"' is not allowed for type LocalDate. Note that 'm' is reserved for minutes, use 'M' for months.");
                 }
 
-                config.setTimeWindowSize(m_timeWindow.getText());
+                config.setTimeWindowSize(m_windowSizeTime.getText());
             } catch (DateTimeParseException e) {
                 try {
-                    DurationPeriodFormatUtils.parsePeriod(
-                        m_timeWindow.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+                    Period windowPer = DurationPeriodFormatUtils.parsePeriod(
+                        m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
 
                     /* Period is not allowed. */
                     if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
                         throw new InvalidSettingsException(
-                            "Window size: Date based duration is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
+                            "Window size: Date based window size '"+m_windowSizeTime.getText()+"' is not allowed for type LocalTime. Note that 'M' is reserved for months, use 'm' for minutes.");
                     } else if (m_centralRButton.isSelected()) {
                         throw new InvalidSettingsException(
-                            "Window size: Date based duration is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
+                            "Window size: Date based window size '"+m_windowSizeTime.getText()+"' is not allowed for central windowing. Note that 'M' is reserved for months, use 'm' for minutes.");
                     }
 
-                    config.setTimeWindowSize(m_timeWindow.getText());
+                    if(windowPer.isZero() || windowPer.isNegative()) {
+                        throw new InvalidSettingsException("Window size '"+m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter()+"' invalid. Window size must be greater than 0");
+                    }
+
+                    config.setTimeWindowSize(m_windowSizeTime.getText());
                 } catch (DateTimeParseException e2) {
-                    throw new InvalidSettingsException("'" + m_timeWindow.getText()
+                    throw new InvalidSettingsException("Window size: '" + m_windowSizeTime.getText()
                         + "' is not a valid duration. Note that 'M' is reserved for months, use 'm' for minutes.");
                 }
             }

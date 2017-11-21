@@ -1496,7 +1496,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                 //                m_timeColumnName = settingsModel.getStringValue();
 
                 if (m_windowConfig.useSpecifiedStartTime()) {
-                    createStartModel().saveSettingsTo(settings);
+                    m_timeConfig.saveSettingsTo(settings);
                 }
             }
         }
