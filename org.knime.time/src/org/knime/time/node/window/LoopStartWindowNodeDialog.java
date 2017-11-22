@@ -445,7 +445,6 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         }
 
         m_columnSelector.loadSettingsFrom(settings, specs);
-        m_specifiedStartTime.loadSettingsFrom(settings, specs);
 
         if (m_columnSelector.getSelectedAsSpec() != null) {
 
@@ -469,6 +468,8 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 modelStart.setUseZone(true);
             }
 
+
+            m_specifiedStartTime.loadSettingsFrom(settings, specs);
         } else {
             m_specifiedStartTime.getComponentPanel().setEnabled(false);
         }
