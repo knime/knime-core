@@ -241,7 +241,7 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     /** {@inheritDoc} */
     @Override
     public ConfigBaseRO getNodeSettings() {
-        throw new UnsupportedOperationException();
+        return unwrap().getNodeSettings();
     }
 
     @Override
