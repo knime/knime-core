@@ -853,7 +853,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                 m_windowEndTemporal = firstEnd;
 
                 /* Check for underflow of the current start. */
-                if (compareTemporal(m_nextStartTemporal, firstEnd) >= 0 && !overflow) {
+                if (compareTemporal(m_nextStartTemporal, firstEnd) >= 0 && (!overflow || compareTemporal(m_nextStartTemporal, getMin(m_nextStartTemporal)) == 0)) {
                     m_nextStartTemporal = getMin(m_nextStartTemporal);
                     m_bufferedRows.add(first);
                 } else {
