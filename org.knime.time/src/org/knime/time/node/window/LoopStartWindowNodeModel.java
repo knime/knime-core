@@ -557,6 +557,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
             /* First entry is the end of the window. Compute next starting point by adding start interval minus the size of the window. */
             Temporal firstEnd = getTemporal(first.getCell(column));
+            m_prevTemporal = firstEnd;
 
             /* Check if user specified start shall be used. */
             if (m_windowConfig.useSpecifiedStartTime()) {
@@ -579,6 +580,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
                 /* Current start temporal, m_nextStartTemporal is used to re-use the skipTemporalWindow method. */
                 m_nextStartTemporal = firstEnd.minus(windowDuration);
+                m_windowEndTemporal = firstEnd;
 
                 /* Check for underflow of the current start. */
                 if (compareTemporal(m_nextStartTemporal, firstEnd) >= 0) {
@@ -848,6 +850,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                 /* Current start temporal, m_nextStartTemporal is used to re-use the skipTemporalWindow method. */
                 m_nextStartTemporal = firstEnd.minus(windowDuration);
                 firstStart = firstEnd.minus(windowDuration.dividedBy(2));
+                m_windowEndTemporal = firstEnd;
 
                 /* Check for underflow of the current start. */
                 if (compareTemporal(m_nextStartTemporal, firstEnd) >= 0 && !overflow) {
