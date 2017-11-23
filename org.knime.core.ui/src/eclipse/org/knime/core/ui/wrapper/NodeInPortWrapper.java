@@ -77,33 +77,21 @@ public class NodeInPortWrapper extends AbstractWrapper<NodeInPort> implements No
         return (NodeInPortWrapper)Wrapper.wrapOrGet(nip, o -> new NodeInPortWrapper(o));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getPortIndex() {
         return unwrap().getPortIndex();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PortType getPortType() {
         return unwrap().getPortType();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getPortName() {
         return unwrap().getPortName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setPortName(final String portName) {
         unwrap().setPortName(portName);

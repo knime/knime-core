@@ -156,8 +156,8 @@ public interface Wrapper<W> {
      * @return the unwrapped object
      */
     public static <W> W unwrap(final UI wrapper, final Class<W> wrappedObjectClass) {
-        return unwrapOptional(wrapper, wrappedObjectClass).map(w -> w).orElseThrow(
-            () -> new IllegalArgumentException("Wrapper object ('" + wrapper.getClass().getSimpleName() + "') is actually not a wrapper. Cannot unwrap."));
+        return unwrapOptional(wrapper, wrappedObjectClass).map(w -> w).orElseThrow(() -> new IllegalArgumentException(
+            "Wrapper object ('" + wrapper.getClass().getSimpleName() + "') is actually not a wrapper. Cannot unwrap."));
     }
 
     /**

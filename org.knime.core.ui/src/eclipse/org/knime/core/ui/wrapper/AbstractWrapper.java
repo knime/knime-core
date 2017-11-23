@@ -49,6 +49,7 @@
 package org.knime.core.ui.wrapper;
 
 /**
+ * Abstract implementation of the {@link Wrapper} interface that keeps the wrapped object as local member.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -57,7 +58,7 @@ public abstract class AbstractWrapper<W> implements Wrapper<W> {
     private final W m_wrappedObj;
 
     /**
-     *
+     * @param wrappedObj object to be wrapped. This very same object is returned at the {@link #unwrap()} method.
      */
     protected AbstractWrapper(final W wrappedObj) {
         m_wrappedObj = wrappedObj;

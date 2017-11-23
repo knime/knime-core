@@ -60,7 +60,7 @@ import org.w3c.dom.Element;
 public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends NodeContainerWrapper<W> implements SingleNodeContainerUI {
 
     /**
-     *
+     * @param delegate the single node container to be wrapped
      */
     protected SingleNodeContainerWrapper(final W delegate) {
         super(delegate);

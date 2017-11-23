@@ -61,7 +61,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 public final class SubNodeContainerWrapper extends SingleNodeContainerWrapper<SubNodeContainer> implements SubNodeContainerUI {
 
     /**
-     * @param delegate
+     * @param delegate the sub node container to be wrapped
      */
     private SubNodeContainerWrapper(final SubNodeContainer delegate) {
         super(delegate);

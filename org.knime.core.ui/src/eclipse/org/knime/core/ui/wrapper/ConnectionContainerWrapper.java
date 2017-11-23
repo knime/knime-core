@@ -173,9 +173,6 @@ public final class ConnectionContainerWrapper extends AbstractWrapper<Connection
         return unwrap().toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isFlowVariablePortConnection() {
         return unwrap().isFlowVariablePortConnection();
