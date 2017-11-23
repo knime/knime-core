@@ -49,13 +49,15 @@
 package org.knime.core.ui.wrapper;
 
 import java.util.Optional;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.ui.UI;
+
+import com.google.common.collect.MapMaker;
 
 /**
  * Wraps another object and provides static methods to wrap and unwrap those.
@@ -66,7 +68,10 @@ import org.knime.core.ui.UI;
  */
 public interface Wrapper<W> {
 
-    static final WeakHashMap<Object, Wrapper> WRAPPER_MAP = new WeakHashMap<Object, Wrapper>();
+    /**
+     * The global wrapper map - not for direct access - use {@link #wrapOrGet(Object, Function)} instead!
+     */
+    static final ConcurrentMap<Integer, Wrapper<?>> WRAPPER_MAP = new MapMaker().weakValues().makeMap();
 
     /**
      * Unwraps the wrapped object.
@@ -116,22 +121,19 @@ public interface Wrapper<W> {
     }
 
     /**
-     * Either returns a wrapper object stored in a central global wrapper map for the provided key, or, wraps the given
-     * object (see {@link #wrap(Object, Class)}).
-     *
-     * It is NOT checked, whether the cached wrapper instance really wraps the very same object that is passed, too! The
-     * caller must assure this himself by passing the right key.
+     * Either returns a wrapper object stored in a central global wrapper map (with the identity hashcode as key - see
+     * {@link System#identityHashCode(Object)}). Or wraps the given object (see {@link #wrap(Object, Class)}).
      *
      * Its primary purpose is to workaround "1:1" wrappers. Within the eclipse UI very often instances are checked for
      * object equality. Consequently, there must be exactly one wrapper class instance for a certain object to be
      * wrapped. Two wrapper instances wrapping the same object should be avoided (this happens if, e.g. a getter method
      * is called twice and each time a new wrapper instance is created around the same object returned).
      *
-     * The global wrapper map caches object instances (weak references) for look up with the dedicated key.
+     * The global wrapper map caches object instances (weak references) for look up with the identity hashcode as key.
      *
-     * @param object the object to be wrapped that also at the same time serves as the key to look for already existing
+     * @param object the object to be wrapped. Its identity hashcode serves as the key to look for an already existing
      *            wrapper
-     * @param wrap function that does the wrapping if necessary
+     * @param wrap function that does the wrapping if no already existing wrapper has been found (i.e. was cached)
      * @return a new or already existing wrapper instance that wraps an object of the given type
      */
     @SuppressWarnings("unchecked")
@@ -139,7 +141,9 @@ public interface Wrapper<W> {
         if (object == null) {
             return null;
         }
-        return WRAPPER_MAP.computeIfAbsent(object, o -> wrap.apply((W)o));
+        Wrapper<?> wrapper = WRAPPER_MAP.computeIfAbsent(System.identityHashCode(object), i -> wrap.apply(object));
+        assert wrapper.unwrap() == object;
+        return (Wrapper<W>)wrapper;
     }
 
     /**
