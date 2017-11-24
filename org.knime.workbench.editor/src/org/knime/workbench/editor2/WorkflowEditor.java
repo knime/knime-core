@@ -1573,11 +1573,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             ps.run(true, false, saveRunnable);
             // this code is usually (always?) run in the UI thread but in case it's not we schedule in UI thread
             // (SVG export always in UI thread)
+            final File svgFile = new File(workflowDir, WorkflowPersistor.SVG_WORKFLOW_FILE);
+            svgFile.delete();
             Display.getDefault().syncExec(new Runnable() {
                 @Override
                 public void run() {
                     if (m_manager.isProject()) {
-                        final File svgFile = new File(workflowDir, WorkflowPersistor.SVG_WORKFLOW_FILE);
                         saveSVGImage(svgFile);
                     }
                 }
