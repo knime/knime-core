@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingPredictorRegression.png"
 	type="Predictor">
-	<name>Gradient Boosted Trees Predictor (Regression PMML)</name>
+	<name>PMML Gradient Boosted Trees Predictor (Regression)</name>
 
 	<shortDescription>
 		Applies regression from a Gradient Boosted Trees model that is provided in PMML format.
