@@ -83,6 +83,9 @@ public final class NodeAndBundleInformation {
         try {
             map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata(.+)"), "org.knime.features.bigdata$1");
             map.put(Pattern.compile("^com\\.knime\\.bigdata(.+)"), "org.knime.bigdata$1");
+            map.put(Pattern.compile("^com\\.knime\\.features\\.personalproductivity(.+)"),
+                "org.knime.features.personalproductivity$1");
+            map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes");
         } catch (PatternSyntaxException e) {
             map.clear(); // if one fails, all fail
             NodeLogger.getLogger(NodeAndBundleInformation.class).coding(e.getMessage(), e);
