@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="treeensemble_predictor_regression.png" type="Predictor">
-	<name>Simple Regression Tree Predictor (PMML)</name>
+	<name>PMML Simple Regression Tree Predictor</name>
 
 	<shortDescription>
 		Applies regression from a regression tree model stored in PMML format.
