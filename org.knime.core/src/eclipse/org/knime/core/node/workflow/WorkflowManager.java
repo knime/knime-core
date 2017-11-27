@@ -9363,23 +9363,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Get all output nodes, e.g. nodes like "JSON Output".
-     *
-     * <p>
-     * Method is used to allow clients to retrieve an example output.
-     *
-     * @return A map from {@link DialogNode#getParameterName() node's parameter name} to its (JSON object value)
-     * @since 3.5
-     */
-    public Map<String, ExternalNodeData> getOutputNodes() {
-        List<ExternalNodeDataHandle> outputNodes =
-            getExternalNodeDataHandles(OutputNode.class, i -> i.getExternalOutput());
-        return outputNodes.stream().collect(Collectors.toMap(
-            ExternalNodeDataHandle::getParameterNameFullyQualified,
-            ExternalNodeDataHandle::getExternalNodeData));
-    }
-
-    /**
      * Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level. All nodes as
      * per map argument will be reset as part of this call.
      *
@@ -9442,10 +9425,10 @@ public final class WorkflowManager extends NodeContainer
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
         List<ExternalNodeDataHandle> outputNodes =
-                getExternalNodeDataHandles(OutputNode.class, o -> o.getExternalOutput());
-        return outputNodes.stream().collect(Collectors.toMap(
-            ExternalNodeDataHandle::getParameterNameFullyQualified,
-            ExternalNodeDataHandle::getExternalNodeData));
+                getExternalNodeDataHandles(OutputNode.class, i -> i.getExternalOutput());
+            return outputNodes.stream().collect(Collectors.toMap(
+                ExternalNodeDataHandle::getParameterNameFullyQualified,
+                ExternalNodeDataHandle::getExternalNodeData));
     }
 
     /**

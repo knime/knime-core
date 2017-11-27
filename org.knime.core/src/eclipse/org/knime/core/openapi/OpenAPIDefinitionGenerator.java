@@ -183,7 +183,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      * @return a JSON object
      */
     public JsonObject createOutputParametersDescription(final WorkflowManager wfm) {
-        return createParametersDescription(wfm.getOutputNodes());
+        return createParametersDescription(wfm.getExternalOutputs());
     }
 
 
