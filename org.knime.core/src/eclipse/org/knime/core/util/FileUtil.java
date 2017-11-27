@@ -1420,8 +1420,10 @@ public final class FileUtil {
 
     private static boolean isRelativeKnimeURL(final URL url) {
         // either a workflow-relative URL that leaves the workflow or a mountpoint-relative URL
-        return (("knime.workflow".equals(url.getHost())) && url.getPath().startsWith("/../"))
-                || "knime.mountpoint".contentEquals(url.getHost());
+        final String host = url.getHost();
+        final String path = url.getPath();
+        return (("knime.workflow".equals(host)) && (path.startsWith("/../") || path.equals("/..")))
+            || "knime.mountpoint".equals(host);
     }
 
     private static final class ZipWrapper extends ZipOutputStream {
