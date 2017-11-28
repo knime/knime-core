@@ -1197,9 +1197,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
         if (cell instanceof LocalTimeCell) {
             return ((LocalTimeCell)cell).getLocalTime();
         } else if (cell instanceof LocalDateCell) {
-            LocalDate date = ((LocalDateCell)cell).getLocalDate();
-            LocalDateTime dateTime = LocalDateTime.of(date.getYear(), date.getMonth(), date.getDayOfMonth(), 0, 0);
-            return dateTime;
+            return ((LocalDateCell)cell).getLocalDate();
         } else if (cell instanceof LocalDateTimeCell) {
             return ((LocalDateTimeCell)cell).getLocalDateTime();
         } else if (cell instanceof ZonedDateTimeCell) {
