@@ -447,6 +447,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         m_columnSelector.loadSettingsFrom(settings, specs);
 
         if (m_columnSelector.getSelectedAsSpec() != null) {
+            m_specifiedStartTime.loadSettingsFrom(settings, specs);
 
             if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
                 modelStart.setUseDate(true);
@@ -467,9 +468,6 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 modelStart.setUseTime(true);
                 modelStart.setUseZone(true);
             }
-
-
-            m_specifiedStartTime.loadSettingsFrom(settings, specs);
         } else {
             m_specifiedStartTime.getComponentPanel().setEnabled(false);
         }
