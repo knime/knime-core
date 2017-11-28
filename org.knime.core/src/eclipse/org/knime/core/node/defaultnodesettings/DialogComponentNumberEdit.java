@@ -87,6 +87,9 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
     private final FlowVariableModelButton m_fvmButton;
 
+    private boolean m_isTextFieldUpdating = false;
+
+
     private final JLabel m_label;
 
     /**
@@ -153,30 +156,40 @@ public class DialogComponentNumberEdit extends DialogComponent {
         getComponentPanel().add(m_valueField);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
+
             @Override
             public void removeUpdate(final DocumentEvent e) {
                 try {
+                    m_isTextFieldUpdating = true;
                     updateModel();
                 } catch (final InvalidSettingsException ise) {
                     // ignore it here.
+                } finally {
+                    m_isTextFieldUpdating = false;
                 }
             }
 
             @Override
             public void insertUpdate(final DocumentEvent e) {
                 try {
+                    m_isTextFieldUpdating = true;
                     updateModel();
                 } catch (final InvalidSettingsException ise) {
                     // ignore it here.
+                } finally {
+                    m_isTextFieldUpdating = false;
                 }
             }
 
             @Override
             public void changedUpdate(final DocumentEvent e) {
                 try {
+                    m_isTextFieldUpdating = true;
                     updateModel();
                 } catch (final InvalidSettingsException ise) {
                     // ignore it here.
+                } finally {
+                    m_isTextFieldUpdating = false;
                 }
             }
         });
@@ -235,8 +248,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
         // update component only if its out of sync with model
         final SettingsModelNumber model = (SettingsModelNumber)getModel();
-        final String compString = m_valueField.getText();
-        if (!model.getNumberValueStr().equals(compString)) {
+        if (!m_isTextFieldUpdating) {
             m_valueField.setText(model.getNumberValueStr());
         }
 
