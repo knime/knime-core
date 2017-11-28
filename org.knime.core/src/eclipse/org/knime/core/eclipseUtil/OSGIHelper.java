@@ -45,9 +45,12 @@
  */
 package org.knime.core.eclipseUtil;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
@@ -95,11 +98,28 @@ public final class OSGIHelper {
         }
     }
 
+    private static final Pattern KNIME_PATTERN = Pattern.compile("^(?:org|com)\\.knime\\..+");
+
+    /** This comparator sorts all KNIME features to the front. */
+    private static final Comparator<IInstallableUnit> FEATURE_NAME_COMPARATOR = new Comparator<IInstallableUnit>() {
+        @Override
+        public int compare(final IInstallableUnit o1, final IInstallableUnit o2) {
+            boolean isKNIMEO1 = KNIME_PATTERN.matcher(o1.getId()).matches();
+            boolean isKNIMEO2 = KNIME_PATTERN.matcher(o2.getId()).matches();
+            if (isKNIMEO1 && !isKNIMEO2) {
+                return -1;
+            } else if (!isKNIMEO1 && isKNIMEO2) {
+                return 1;
+            } else {
+                return o1.getId().compareTo(o2.getId());
+            }
+        }
+    };
 
     /**
      * Returns the feature in which the given bundle is packaged. If there is more than one feature providing the bundle
-     * then one of them (in no particular order) is returned. If the bundle cannot be found in any feature then an
-     * empty result is returned.
+     * then one of them is returned whereby KNIME features are preferred. If the bundle cannot be found in any feature
+     * then an empty result is returned.
      *
      * @param bundle any bundle
      * @return the installable unit containing the bundle
@@ -111,7 +131,11 @@ public final class OSGIHelper {
             return Optional.of(u);
         } else if (getP2Profile() != null) {
             IQueryResult<IInstallableUnit> queryResult = getP2Profile().query(QueryUtil.createIUGroupQuery(), null);
-            for (IInstallableUnit unit : queryResult) {
+
+            IInstallableUnit[] features = queryResult.toArray(IInstallableUnit.class);
+            Arrays.sort(features, FEATURE_NAME_COMPARATOR);
+
+            for (IInstallableUnit unit : features) {
                 for (IArtifactKey afk : unit.getArtifacts()) {
                     if (afk.getId().equals(bundle.getSymbolicName())) {
                         bundleToFeatureMap.put(bundle, unit);
