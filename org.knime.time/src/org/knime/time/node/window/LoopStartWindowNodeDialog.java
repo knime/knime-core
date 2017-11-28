@@ -138,8 +138,6 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnNameSelection m_columnSelector;
 
-    private final JLabel m_unitLabel;
-
     private final JComboBox<Unit> m_timeWindowUnit;
 
     private final JComboBox<Unit> m_startTimeUnit;
@@ -148,7 +146,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
     private final JLabel m_inLabel2;
 
-    final SettingsModelDateTime modelStart = LoopStartWindowNodeModel.createStartModel();
+    final SettingsModelDateTime m_modelStart = LoopStartWindowNodeModel.createStartModel();
 
     /**
      *
@@ -190,9 +188,8 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         m_useSpecifiedStartTimeCheckBox.setSelected(false);
 
         m_specifiedStartTime =
-            new DialogComponentDateTimeSelection(modelStart, null, DisplayOption.SHOW_DATE_AND_TIME_AND_TIMEZONE);
+            new DialogComponentDateTimeSelection(m_modelStart, null, DisplayOption.SHOW_DATE_AND_TIME_AND_TIMEZONE);
 
-        m_unitLabel = new JLabel("Unit");
         m_startTimeUnit = new JComboBox<>(Unit.values());
         m_timeWindowUnit = new JComboBox<>(Unit.values());
 
@@ -212,8 +209,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 m_columnSelector.getModel().setEnabled(!m_rowTrigRButton.isSelected());
                 m_stepSizeTime.setEnabled(!m_rowTrigRButton.isSelected());
                 m_useSpecifiedStartTimeCheckBox.setEnabled(!m_rowTrigRButton.isSelected());
-                m_specifiedStartTime
-                    .setEnabled(!m_rowTrigRButton.isSelected() && m_useSpecifiedStartTimeCheckBox.isSelected());
+                m_modelStart.setEnabled(!m_rowTrigRButton.isSelected() && m_useSpecifiedStartTimeCheckBox.isSelected());
                 m_startTimeUnit.setEnabled(!m_rowTrigRButton.isSelected());
                 m_timeWindowUnit.setEnabled(!m_rowTrigRButton.isSelected());
 
@@ -232,24 +228,24 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
                 if (m_columnSelector.getSelectedAsSpec() != null) {
 
                     if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
-                        modelStart.setUseDate(true);
-                        modelStart.setUseTime(false);
-                        modelStart.setUseZone(false);
+                        m_modelStart.setUseDate(true);
+                        m_modelStart.setUseTime(false);
+                        m_modelStart.setUseZone(false);
                     } else if (m_columnSelector.getSelectedAsSpec().getType()
                         .equals(DataType.getType(LocalDateTimeCell.class))) {
-                        modelStart.setUseDate(true);
-                        modelStart.setUseTime(true);
-                        modelStart.setUseZone(false);
+                        m_modelStart.setUseDate(true);
+                        m_modelStart.setUseTime(true);
+                        m_modelStart.setUseZone(false);
                     } else if (m_columnSelector.getSelectedAsSpec().getType()
                         .equals(DataType.getType(LocalTimeCell.class))) {
-                        modelStart.setUseDate(false);
-                        modelStart.setUseTime(true);
-                        modelStart.setUseZone(false);
+                        m_modelStart.setUseDate(false);
+                        m_modelStart.setUseTime(true);
+                        m_modelStart.setUseZone(false);
                     } else if (m_columnSelector.getSelectedAsSpec().getType()
                         .equals(DataType.getType(ZonedDateTimeCell.class))) {
-                        modelStart.setUseDate(true);
-                        modelStart.setUseTime(true);
-                        modelStart.setUseZone(true);
+                        m_modelStart.setUseDate(true);
+                        m_modelStart.setUseTime(true);
+                        m_modelStart.setUseZone(true);
                     }
 
                 } else {
@@ -450,26 +446,26 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
             m_specifiedStartTime.loadSettingsFrom(settings, specs);
 
             if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalDateCell.class))) {
-                modelStart.setUseDate(true);
-                modelStart.setUseTime(false);
-                modelStart.setUseZone(false);
+                m_modelStart.setUseDate(true);
+                m_modelStart.setUseTime(false);
+                m_modelStart.setUseZone(false);
             } else if (m_columnSelector.getSelectedAsSpec().getType()
                 .equals(DataType.getType(LocalDateTimeCell.class))) {
-                modelStart.setUseDate(true);
-                modelStart.setUseTime(true);
-                modelStart.setUseZone(false);
+                m_modelStart.setUseDate(true);
+                m_modelStart.setUseTime(true);
+                m_modelStart.setUseZone(false);
             } else if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
-                modelStart.setUseDate(false);
-                modelStart.setUseTime(true);
-                modelStart.setUseZone(false);
+                m_modelStart.setUseDate(false);
+                m_modelStart.setUseTime(true);
+                m_modelStart.setUseZone(false);
             } else if (m_columnSelector.getSelectedAsSpec().getType()
                 .equals(DataType.getType(ZonedDateTimeCell.class))) {
-                modelStart.setUseDate(true);
-                modelStart.setUseTime(true);
-                modelStart.setUseZone(true);
+                m_modelStart.setUseDate(true);
+                m_modelStart.setUseTime(true);
+                m_modelStart.setUseZone(true);
             }
         } else {
-            m_specifiedStartTime.getComponentPanel().setEnabled(false);
+            m_modelStart.setEnabled(false);
         }
     }
 
