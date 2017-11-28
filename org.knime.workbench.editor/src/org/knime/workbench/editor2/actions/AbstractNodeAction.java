@@ -276,7 +276,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
             //and the action cannot deal with the WorkflowManagerUI-interface itself, it is disabled
             return false;
         }
-        return getManager() != null && internalCalculateEnabled();
+        return getManagerUI() != null && internalCalculateEnabled();
     }
 
     /**
