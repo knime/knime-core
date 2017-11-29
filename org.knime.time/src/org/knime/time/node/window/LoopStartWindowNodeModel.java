@@ -97,6 +97,9 @@ import org.knime.time.util.SettingsModelDateTime;
  */
 final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeTerminator {
 
+    private final String m_orderException =
+        "Table not in ascending order concerning chosen temporal column (use Sorter prior to Window Loop Start).";
+
     // Configuration used to get the settings
     private LoopStartWindowConfiguration m_windowConfig;
 
@@ -428,8 +431,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
             /* Check if table is sorted in non-descending order according to temporal column. */
             if (compareTemporal(currTemporal, m_prevTemporal) < 0) {
-                throw new IllegalStateException(
-                    "Table not in ascending order concerning chosen temporal column (use Sorter prior to Windo Loop Start).");
+                throw new IllegalStateException(m_orderException);
             }
 
             m_prevTemporal = currTemporal;
@@ -704,7 +706,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
             /* Check if table is sorted in non-descending order according to temporal column. */
             if (compareTemporal(currTemporal, m_prevTemporal) < 0) {
-                throw new IllegalStateException("Table not in ascending order concerning chosen temporal column.");
+                throw new IllegalStateException(m_orderException);
             }
 
             m_prevTemporal = currTemporal;
@@ -976,7 +978,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
             /* Check if table is sorted in non-descending order according to temporal column. */
             if (compareTemporal(currTemporal, m_prevTemporal) < 0) {
-                throw new IllegalStateException("Table not in ascending order concerning chosen temporal column.");
+                throw new IllegalStateException(m_orderException);
             }
 
             m_prevTemporal = currTemporal;
@@ -1064,6 +1066,8 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
             return LocalDateTime.MIN;
         } else if (t1 instanceof LocalDate) {
             return LocalDate.MIN;
+        } else if(t1 instanceof ZonedDateTime) {
+            throw new IllegalArgumentException("Unexpected underflow for ZonedDateTime occurred.");
         }
 
         throw new IllegalArgumentException(
@@ -1091,8 +1095,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
                     continue;
                 } else if (compareTemporal(m_prevTemporal, getTemporal(temp.getCell(column))) > 0) {
-                    throw new IllegalStateException(
-                        "Table not in ascending order concerning chosen temporal column (use Sorter prior to Windo Loop Start).");
+                    throw new IllegalStateException(m_orderException);
                 }
 
                 m_prevTemporal = getTemporal(row.getCell(column));
