@@ -47,8 +47,14 @@
  */
 package org.knime.core.node;
 
+import java.util.Collections;
 import java.util.Dictionary;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.eclipseUtil.OSGIHelper;
@@ -64,6 +70,31 @@ import org.osgi.framework.Version;
  * @since 2.6
  */
 public final class NodeAndBundleInformation {
+
+    /** Maps a regular expression to the a new extension name. For instance, after open sourcing the big data extensions
+     * the namespace changed from "com.knime(.features).bigdata.()" to "org.knime(.features).bigdata.()." */
+    private static final Map<Pattern, String> EXTENSION_RENAME_MAP;
+
+    static {
+        // key and value correspond to the two arguments in String#replaceAll
+        // most specific matchers should be sorted in first
+
+        Map<Pattern, String> map = new LinkedHashMap<>();
+        try {
+            map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata\\.feature\\.group"),
+                "org.knime.features.bigdata.connectors.feature.group");
+            map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata(.+)"), "org.knime.features.bigdata$1");
+            map.put(Pattern.compile("^com\\.knime\\.bigdata(.+)"), "org.knime.bigdata$1");
+            map.put(Pattern.compile("^com\\.knime\\.features\\.personalproductivity(.+)"),
+                "org.knime.features.personalproductivity$1");
+            map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes");
+        } catch (PatternSyntaxException e) {
+            map.clear(); // if one fails, all fail
+            NodeLogger.getLogger(NodeAndBundleInformation.class).coding(e.getMessage(), e);
+        }
+        EXTENSION_RENAME_MAP = Collections.unmodifiableMap(map);
+    }
+
     private final String m_featureSymbolicName;
 
     private final String m_featureName;
@@ -348,10 +379,10 @@ public final class NodeAndBundleInformation {
         } else {
             nodeName = settings.getString("node-name");
             bundleName = settings.getString("node-bundle-name");
-            bundleSymbolicName = settings.getString("node-bundle-symbolic-name");
+            bundleSymbolicName = fixExtensionName(settings.getString("node-bundle-symbolic-name"));
             bundleVendor = settings.getString("node-bundle-vendor");
 
-            featureSymbolicName = settings.getString("node-feature-symbolic-name", null);
+            featureSymbolicName = fixExtensionName(settings.getString("node-feature-symbolic-name", null));
             featureName = settings.getString("node-feature-name", null);
             featureVendor = settings.getString("node-feature-vendor", null);
 
@@ -428,5 +459,25 @@ public final class NodeAndBundleInformation {
             b.append(")");
         }
         return b.toString();
+    }
+
+    /** If feature or bundle name matches any in {@link #EXTENSION_RENAME_MAP} the string is modified so that
+     * it matches the new namespace. Otherwise the argument is returned (also includes null case).
+     *
+     * @param extName The name of the feature or bundle, e.g. com.knime.bigdata.foo.bar
+     * @return the possibly modified name, e.g. org.knime.bigdata.foo.bar
+     */
+    private static String fixExtensionName(final String extName) {
+        if (extName == null) {
+            return null;
+        }
+        for (Map.Entry<Pattern, String> entry : EXTENSION_RENAME_MAP.entrySet()) {
+            Pattern p = entry.getKey();
+            Matcher matcher = p.matcher(extName);
+            if (matcher.matches()) {
+                return matcher.replaceAll(entry.getValue());
+            }
+        }
+        return extName;
     }
 }
