@@ -141,6 +141,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                     setValid(false);
                     setErrorMessage("No community node recommendations available. Please update.");
                 }
+                setEnableStatusUpdateButtons();
             }
         });
 
@@ -179,8 +180,20 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         m_lastUpdate = new Label(manualUpdateComp, SWT.NONE);
 
         initializeValues();
+        setEnableStatusUpdateButtons();
 
         return composite;
+    }
+
+    /**
+     * Updates the enable status of the update widgets. They are disabled when the community recommendations are
+     * deactivated.
+     */
+    private void setEnableStatusUpdateButtons() {
+        m_updateButton.setEnabled(m_checkCommunityProvider.getSelection());
+        m_weeklyUpdateButton.setEnabled(m_checkCommunityProvider.getSelection());
+        m_monthlyUpdateButton.setEnabled(m_checkCommunityProvider.getSelection());
+        m_noAutoUpdateButton.setEnabled(m_checkCommunityProvider.getSelection());
     }
 
     /**
