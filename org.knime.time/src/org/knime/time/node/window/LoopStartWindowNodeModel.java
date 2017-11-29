@@ -80,6 +80,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -96,6 +97,8 @@ import org.knime.time.util.SettingsModelDateTime;
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
 final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeTerminator {
+
+    private final NodeLogger m_logger = NodeLogger.getLogger(LoopStartWindowNodeModel.class);
 
     private final String m_orderException =
         "Table not in ascending order concerning chosen temporal column (use Sorter prior to Window Loop Start).";
@@ -307,7 +310,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
             }
 
             if (first.getCell(column).isMissing()) {
-                getLogger().warn("Column '" + m_timeColumnName + "' only contains missing values.");
+                m_logger.warn("Column '" + m_timeColumnName + "' only contains missing values.");
                 container.close();
 
                 return new BufferedDataTable[]{container.getTable()};
@@ -514,7 +517,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
     private void printMissingWarning() {
         if (!m_printedMissingWarning) {
             m_printedMissingWarning = true;
-            getLogger().warn("Detected missing values for specified column; rows have been skipped.");
+            m_logger.warn("Detected missing values for specified column; rows have been skipped.");
         }
 
     }
@@ -551,7 +554,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
             }
 
             if (first.getCell(column).isMissing()) {
-                getLogger().warn("Column '" + m_timeColumnName + "' only contains missing values.");
+                m_logger.warn("Column '" + m_timeColumnName + "' only contains missing values.");
                 container.close();
 
                 return new BufferedDataTable[]{container.getTable()};
@@ -572,7 +575,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                     /* Check if next window yields an overflow. In this case we return an empty table. */
                     if (compareTemporal(tempNextEnd, firstEnd) <= 0) {
                         container.close();
-                        getLogger().warn("No row lies within any of the possible windows.");
+                        m_logger.warn("No row lies within any of the possible windows.");
 
                         return new BufferedDataTable[]{container.getTable()};
                     }
@@ -596,7 +599,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                     /* Check if overflow of window occurred. In this case we return an empty table. */
                     if (compareTemporal(firstEnd, m_nextStartTemporal) <= 0) {
                         container.close();
-                        getLogger().warn("No row lies within any of the possible windows.");
+                        m_logger.warn("No row lies within any of the possible windows.");
 
                         return new BufferedDataTable[]{container.getTable()};
                     }
@@ -606,7 +609,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                 /* Check if we found a window which contains at least one row. */
                 if (m_bufferedRows.isEmpty()) {
                     container.close();
-                    getLogger().warn("No row lies within any of the possible windows.");
+                    m_logger.warn("No row lies within any of the possible windows.");
 
                     return new BufferedDataTable[]{container.getTable()};
                 }
@@ -815,7 +818,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
             }
 
             if (first.getCell(column).isMissing()) {
-                getLogger().warn("Column '" + m_timeColumnName + "' only contains missing values.");
+                m_logger.warn("Column '" + m_timeColumnName + "' only contains missing values.");
                 container.close();
 
                 return new BufferedDataTable[]{container.getTable()};
@@ -867,7 +870,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
                 /* Check if we found a window which contains at least one row. */
                 if (m_bufferedRows.isEmpty()) {
                     container.close();
-                    getLogger().warn("No row lies within any of the possible windows.");
+                    m_logger.warn("No row lies within any of the possible windows.");
 
                     return new BufferedDataTable[]{container.getTable()};
                 }
