@@ -376,7 +376,7 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
 
             /* Checks if temporal overflow occurs. */
             Temporal temp = m_nextStartTemporal.plus(windowDuration);
-            if (compareTemporal(temp, m_nextStartTemporal.minus(startInterval)) <= 0) {
+            if (compareTemporal(temp, m_windowEndTemporal) <= 0) {
                 overflow = true;
             } else {
                 m_windowEndTemporal = temp;
