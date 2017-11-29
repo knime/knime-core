@@ -141,6 +141,10 @@ class InstallMissingNodesJob extends Job {
             public void done(final IJobChangeEvent event) {
                 if (PlatformUI.isWorkbenchRunning() && event.getResult().isOK()) {
                     Display.getDefault().asyncExec(() -> {
+                        if (Display.getDefault().isDisposed()) {
+                            NodeLogger.getLogger("Display disposed, aborting install action");
+                            return; // fixes AP-8376, AP-8380, AP-7184
+                        }
                         provUI.getPolicy().setRepositoriesVisible(false);
                         provUI.openInstallWizard(featuresToInstall,
                             new InstallOperation(provUI.getSession(), featuresToInstall), loadJob);
