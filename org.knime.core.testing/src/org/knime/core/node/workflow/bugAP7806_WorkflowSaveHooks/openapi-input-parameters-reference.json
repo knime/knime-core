@@ -1,19 +1,11 @@
-
 {
     "type":"object",
     "properties":{
         "int-input-5":{
-            "type":"object",
-            "properties":{
-                "integer":{
-                    "type":"integer",
-                    "default":42
-                }
-            },
+            "type":"integer",
+            "default":42,
             "description":"Description for Integer Input",
-            "example":{
-                "integer":42
-            }
+            "example":42
         },
         "json-input-7":{
             "type":"object",
@@ -43,6 +35,7 @@
                     }
                 }
             },
+            "description":"",
             "example":{
                 "string":"value",
                 "number":42,
@@ -57,17 +50,10 @@
             }
         },
         "string-input-6":{
-            "type":"object",
-            "properties":{
-                "string":{
-                    "type":"string",
-                    "default":"sunny day"
-                }
-            },
+            "type":"string",
+            "default":"sunny day",
             "description":"Description for String Input",
-            "example":{
-                "string":"sunny day"
-            }
+            "example":"sunny day"
         }
     }
 }
