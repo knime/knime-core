@@ -320,10 +320,6 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         subConstraint.gridx++;
         rowPanel.add(m_stepSizeSpinner, subConstraint);
 
-//        subConstraint.gridx--;
-//        subConstraint.gridy++;
-//        rowPanel.add(m_limitWindowCheckBox, subConstraint);
-
         rowPanel.setBorder(BorderFactory.createTitledBorder("Row based"));
 
         constraint.gridy++;
@@ -391,13 +387,18 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         /* Advanced Panel */
         JPanel advancedPanel = new JPanel(new GridBagLayout());
 
+        constraint = new GridBagConstraints();
         constraint.gridx = 1;
         constraint.gridy = 1;
+        constraint.fill = GridBagConstraints.BOTH;
+        constraint.weightx = 1;
+        constraint.weighty = 0.5;
 
         rowPanel = new JPanel();
 
         subConstraint.gridx = 1;
         subConstraint.gridy = 1;
+        subConstraint.fill = GridBagConstraints.VERTICAL;
         rowPanel.add(m_limitWindowCheckBox, subConstraint);
 
         rowPanel.setBorder(BorderFactory.createTitledBorder("Row based"));
