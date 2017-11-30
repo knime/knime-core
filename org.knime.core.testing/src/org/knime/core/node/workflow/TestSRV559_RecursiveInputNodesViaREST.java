@@ -152,17 +152,17 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
             "metanode-level-credentials-input-21:11"));
 
         ExternalNodeData topLevelStringInputData = inputNodes.get("top-level-string-input-1");
-        assertThat(topLevelStringInputData.getJSONValue(), is(toJson("{\"string\":\"foo\"}")));
+        assertThat(topLevelStringInputData.getJSONValue().toString(), is("\"foo\""));
 
         ExternalNodeData topLevelCredInputData = inputNodes.get("top-level-credentials-input-2");
         assertThat(topLevelCredInputData.getJSONValue(), is(toJson("{\"username\":\"foo-login\", \"password\":null}")));
 
         ExternalNodeData metanodeLevelStringInputData = inputNodes.get("metanode-level-string-input-21:10");
-        assertThat(metanodeLevelStringInputData.getJSONValue(), is(toJson("{\"string\":\"foo\"}")));
+        assertThat(metanodeLevelStringInputData.getJSONValue().toString(), is("\"foo\""));
 
         ExternalNodeData metanodeLevelCredInputData = inputNodes.get("metanode-level-credentials-input-21:11");
         assertThat(metanodeLevelCredInputData.getJSONValue(),
-            is(toJson("{\"username\":\"foo-login\", \"password\":null}")));
+            is(toJson("{\"username\":\"foo-login\",\"password\":null}")));
 
         Map<String, ExternalNodeData> outputs = manager.getExternalOutputs();
         assertThat(outputs.size(), is(2));
@@ -171,15 +171,13 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         ExternalNodeData outputDataTopLevel = outputs.get("top-level-json-output-7");
         assertThat(outputDataTopLevel.getID(), is("top-level-json-output"));
 
-        assertThat(outputDataTopLevel.getJSONValue(), is(toJson(
-            "{\"top-level-string-input\":\"foo\","
-            + "\"metanode-level-string-input\":\"foo\"}")));
+        assertThat(outputDataTopLevel.getJSONValue(),
+            is(toJson("{\"top-level-string-input\":\"foo\", \"metanode-level-string-input\":\"foo\"}")));
 
         ExternalNodeData outputDataMetanodeLevel = outputs.get("metanode-level-json-output-21:16");
         assertThat(outputDataMetanodeLevel.getID(), is("metanode-level-json-output"));
 
-        assertThat(outputDataMetanodeLevel.getJSONValue(), is(toJson(
-            "{\"metanode-level-string-input\":\"foo\"}")));
+        assertThat(outputDataMetanodeLevel.getJSONValue(), is(toJson("{\"metanode-level-string-input\":\"foo\"}")));
     }
 
     @Test
