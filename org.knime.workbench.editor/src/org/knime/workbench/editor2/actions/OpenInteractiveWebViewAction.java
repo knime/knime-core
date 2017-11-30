@@ -185,6 +185,17 @@ public final class OpenInteractiveWebViewAction extends Action {
         }
         if (viewClass != null) {
             try {
+                Method isEnabledM = viewClass.getMethod("isEnabled");
+                boolean isEnabled = (boolean)isEnabledM.invoke(null);
+                if (!isEnabled) {
+                    LOGGER.error("JS view (" + classString
+                        + ") is not available. Falling back to internal SWT browser.");
+                    viewClass = null;
+                }
+            } catch (Exception e) { /*do nothing */ }
+        }
+        if (viewClass != null) {
+            try {
                 Constructor<?> constructor = viewClass.getConstructor(ViewableModel.class);
                 return (AbstractWizardNodeView)constructor.newInstance(model);
             } catch (Exception e) {
