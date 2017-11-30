@@ -154,8 +154,6 @@ final class LoopStartWindowConfiguration {
 
     private final String m_limitWindowKey = "limitWindow";
 
-    private final String m_specifiedStartTimeKey = "specifiedStartTime";
-
     private final String m_useSpecifiedStartTimeKey = "useSpecifiedStartTime";
 
     private final String m_timeWindowUnitKey = "timeWindowUnit";
@@ -328,7 +326,7 @@ final class LoopStartWindowConfiguration {
         m_timeStepUnit = Unit.getUnit(settings.getString(m_timeStepUnitKey, null));
         m_timeWindowUnit = Unit.getUnit(settings.getString(m_timeWindowUnitKey, null));
 
-        setLimitWindow(settings.getBoolean(m_limitWindowKey, false));
+        setLimitWindow(settings.getBoolean(m_limitWindowKey, true));
         setUseSpecifiedStartTime(settings.getBoolean(m_useSpecifiedStartTimeKey, false));
     }
 

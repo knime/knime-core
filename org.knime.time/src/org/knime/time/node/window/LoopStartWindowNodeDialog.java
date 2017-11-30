@@ -182,7 +182,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         m_startTimeLabel = new JLabel("Step size");
 
         m_limitWindowCheckBox = new JCheckBox("Limit window to table");
-        m_limitWindowCheckBox.setSelected(false);
+        m_limitWindowCheckBox.setSelected(true);
 
         m_useSpecifiedStartTimeCheckBox = new JCheckBox("Start at:");
         m_useSpecifiedStartTimeCheckBox.setSelected(false);
@@ -320,9 +320,9 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         subConstraint.gridx++;
         rowPanel.add(m_stepSizeSpinner, subConstraint);
 
-        subConstraint.gridx--;
-        subConstraint.gridy++;
-        rowPanel.add(m_limitWindowCheckBox, subConstraint);
+//        subConstraint.gridx--;
+//        subConstraint.gridy++;
+//        rowPanel.add(m_limitWindowCheckBox, subConstraint);
 
         rowPanel.setBorder(BorderFactory.createTitledBorder("Row based"));
 
@@ -386,6 +386,23 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         constraint.gridy++;
         panel.add(timePanel, constraint);
 
+        addTab("Options", panel);
+
+        /* Advanced Panel */
+        JPanel advancedPanel = new JPanel(new GridBagLayout());
+
+        constraint.gridx = 1;
+        constraint.gridy = 1;
+
+        rowPanel = new JPanel();
+
+        subConstraint.gridx = 1;
+        subConstraint.gridy = 1;
+        rowPanel.add(m_limitWindowCheckBox, subConstraint);
+
+        rowPanel.setBorder(BorderFactory.createTitledBorder("Row based"));
+        advancedPanel.add(rowPanel, constraint);
+
         /* Window definition sub-panel */
         JPanel windowDefinitionPanel = new JPanel(new GridBagLayout());
 
@@ -399,10 +416,12 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
         subConstraint.gridx++;
         windowDefinitionPanel.add(m_backwardRButton, subConstraint);
 
-        constraint.gridy++;
-        panel.add(windowDefinitionPanel, constraint);
+        windowDefinitionPanel.setBorder(BorderFactory.createTitledBorder("Windowing"));
 
-        addTab("Configuration", panel);
+        constraint.gridy++;
+        advancedPanel.add(windowDefinitionPanel, constraint);
+
+        addTab("Advanced", advancedPanel);
     }
 
     /** {@inheritDoc} */
