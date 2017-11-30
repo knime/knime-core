@@ -83,6 +83,8 @@ public final class NodeAndBundleInformation {
         try {
             map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata\\.feature\\.group"),
                 "org.knime.features.bigdata.connectors.feature.group");
+            map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata\\.spark1_3\\.feature\\.group"),
+                    "org.knime.features.bigdata.spark.feature.group");
             map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata(.+)"), "org.knime.features.bigdata$1");
             map.put(Pattern.compile("^com\\.knime\\.bigdata(.+)"), "org.knime.bigdata$1");
             map.put(Pattern.compile("^com\\.knime\\.features\\.personalproductivity(.+)"),
