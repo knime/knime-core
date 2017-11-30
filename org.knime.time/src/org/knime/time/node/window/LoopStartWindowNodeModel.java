@@ -87,6 +87,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
 import org.knime.time.node.window.LoopStartWindowConfiguration.Trigger;
+import org.knime.time.node.window.LoopStartWindowConfiguration.Unit;
 import org.knime.time.util.DurationPeriodFormatUtils;
 import org.knime.time.util.SettingsModelDateTime;
 
@@ -213,7 +214,17 @@ final class LoopStartWindowNodeModel extends NodeModel implements LoopStartNodeT
      * @param amount string that shall be parsed
      * @return TemporalAmount of the string or {@code null} if it cannot be parsed to Duration or Period.
      */
-    private TemporalAmount getTemporalAmount(final String amount) {
+    private TemporalAmount getTemporalAmount(String amount) {
+        /* Change milliseconds to seconds to allow parsing. */
+        if(amount.endsWith(Unit.MILLISECONDS.getUnitLetter())){
+            String tempAmount = amount.substring(0, amount.length() - Unit.MILLISECONDS.getUnitLetter().length());
+
+            Double temp = Double.parseDouble(tempAmount);
+            temp /= 1000;
+
+            amount = temp+Unit.SECONDS.getUnitLetter();
+        }
+
         try {
             return DurationPeriodFormatUtils.parseDuration(amount);
         } catch (DateTimeParseException e) {

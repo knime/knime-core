@@ -539,8 +539,18 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
             }
 
             try {
-                Duration startDur = DurationPeriodFormatUtils
-                    .parseDuration(m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+                Duration startDur = null;
+
+                /* If unit is milliseconds we have it to change to seconds for parsing. */
+                if (((Unit)m_startTimeUnit.getSelectedItem()) == Unit.MILLISECONDS) {
+                    double tempStart = Double.parseDouble(m_stepSizeTime.getText());
+                    tempStart /= 1000;
+
+                    startDur = DurationPeriodFormatUtils.parseDuration(tempStart + Unit.SECONDS.getUnitLetter());
+                } else {
+                    startDur = DurationPeriodFormatUtils.parseDuration(
+                        m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter());
+                }
 
                 /* Limit step size to 24h */
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
@@ -548,7 +558,7 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
 
                     if (startDur.compareTo(temp) > 0) {
                         throw new InvalidSettingsException(
-                            "Stepz size must not be greater than 24h when LocalTime is selected");
+                            "Step size must not be greater than 24h when LocalTime is selected");
                     } else if (startDur.compareTo(Duration.ZERO) == 0 || startDur.isNegative()) {
                         throw new InvalidSettingsException("Step size '"+m_stepSizeTime.getText() + ((Unit)m_startTimeUnit.getSelectedItem()).getUnitLetter()+"' invalid. Step size must be greater than 0.");
                     }
@@ -586,8 +596,18 @@ final class LoopStartWindowNodeDialog extends NodeDialogPane {
             }
 
             try {
-                Duration windowDur = DurationPeriodFormatUtils
-                    .parseDuration(m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+                Duration windowDur = null;
+
+                /* If unit is milliseconds we have it to change to seconds for parsing. */
+                if (((Unit)m_timeWindowUnit.getSelectedItem()) == Unit.MILLISECONDS) {
+                    double tempWindow = Double.parseDouble(m_windowSizeTime.getText());
+                    tempWindow /= 1000;
+
+                    windowDur = DurationPeriodFormatUtils.parseDuration(tempWindow + Unit.SECONDS.getUnitLetter());
+                } else {
+                    windowDur = DurationPeriodFormatUtils.parseDuration(
+                        m_windowSizeTime.getText() + ((Unit)m_timeWindowUnit.getSelectedItem()).getUnitLetter());
+                }
 
                 /* Limit window to 24h */
                 if (m_columnSelector.getSelectedAsSpec().getType().equals(DataType.getType(LocalTimeCell.class))) {
