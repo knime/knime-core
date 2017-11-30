@@ -636,7 +636,7 @@ public abstract class WebResourceController {
                 validationError = wizardNode.validateViewValue(newViewValue);
             } catch (Exception e) {
                 resultMap.put(entry.getKey(),
-                    new ValidationError("Could not deserialize JSON value: " + entry.getValue()));
+                    new ValidationError("Could not deserialize JSON value: " + entry.getValue() + ": \n" + e.getMessage()));
             }
             if (validationError != null) {
                 resultMap.put(entry.getKey(), validationError);
