@@ -97,9 +97,8 @@ import org.xml.sax.SAXException;
  *
  */
 public class PMMLUtils {
-    private static final String PMML_V3_NS_PREFIX = "http://www.dmg.org/PMML-3";
-    private static final String PMML_V4_NS = "http://www.dmg.org/PMML-4_0";
-    private static final String PMML_V41_NS = "http://www.dmg.org/PMML-4_1";
+
+    private static final String PMML_NS_PREFIX = "http://www.dmg.org/PMML-";
     private static final String PMML_V42_NS = "http://www.dmg.org/PMML-4_2";
     private static final String PMML_CURRENT_VERSION_NS = PMML_V42_NS;
 
@@ -243,7 +242,8 @@ public class PMMLUtils {
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.2.
+     * Sets the namespace and version of the document to PMML 4.2. Caller needs to make sure that this is a
+     * safe operation.
      *
      * @param document the document to update the namespace
      * @throws XmlException when the PMML element could not be updated to 4.2
@@ -269,7 +269,9 @@ public class PMMLUtils {
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.2.
+     * Update the namespace and version of the document to PMML 4.2. This method forces an update of the header so
+     * the caller should make sure it's compatible with 4.2 (in the sense that there haven't been changes to the
+     * any of the fields in the models that KNIME can read).
      *
      * @param xmlDoc the {@link XmlObject} to update the namespace
      * @return the updated PMML
@@ -317,14 +319,11 @@ public class PMMLUtils {
         NamedNodeMap atts = element.getAttributes();
         for (int i = 0; i < atts.getLength(); i++) {
             Node att = atts.item(i);
-            if ((att.getNodeName().equals("xmlns") || att.getNodeName()
-                    .startsWith("xmlns:"))
-                    && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
-                            || att.getNodeValue().equals(PMML_V4_NS) || att.getNodeValue().equals(PMML_V41_NS))) {
+            if ((att.getNodeName().equals("xmlns") || att.getNodeName().startsWith("xmlns:"))
+                    && att.getNodeValue().startsWith(PMML_NS_PREFIX)) {
                 att.setNodeValue(PMML_V42_NS);
             } else if (att.getNodeName().equals("xsi:schemaLocation")
-                    && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
-                            || att.getNodeValue().equals(PMML_V4_NS) || att.getNodeValue().equals(PMML_V41_NS))) {
+                    && att.getNodeValue().startsWith(PMML_NS_PREFIX)) {
                 element.removeAttribute(att.getNodeName());
             }
         }

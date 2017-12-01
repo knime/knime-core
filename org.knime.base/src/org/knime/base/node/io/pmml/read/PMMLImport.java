@@ -87,16 +87,15 @@ public class PMMLImport {
      * {@link PMMLPortObjectSpec} from the content of the file.
      *
      * @param file containing the PMML model
-     * @param update try to update the PMML to version 4.1 if an older version
-     *      is imported
+     * @param forceVersionUpdate try to update the PMML to version 4.2 if an older or newer version is imported
      * @throws IOException if something goes wrong reading the file
      * @throws XmlException if an invalid PMML file is passed
      * @throws IllegalArgumentException if the input file is invalid or has
      *      invalid content
      */
-    public PMMLImport(final File file, final boolean update)
+    public PMMLImport(final File file, final boolean forceVersionUpdate)
             throws IOException, XmlException, IllegalArgumentException {
-        this(checkFileAndGetURL(file), update);
+        this(checkFileAndGetURL(file), forceVersionUpdate);
     }
 
     /** Checks file existence (throws exception if not exists) and returns corresponding URL. */
@@ -116,13 +115,12 @@ public class PMMLImport {
      * {@link PMMLPortObjectSpec} from the content of the file.
      *
      * @param url url of PMML file
-     * @param update try to update the PMML to version 4.1 if an older version
-     *      is imported
+     * @param forceVersionUpdate try to update the PMML to version 4.2 if an older version is imported
      * @throws IOException if something goes wrong reading the file
      * @throws XmlException if an invalid PMML file is passed
      * @throws IllegalArgumentException if the input file is invalid or has invalid content
      */
-    PMMLImport(final URL url, final boolean update)
+    PMMLImport(final URL url, final boolean forceVersionUpdate)
             throws IOException, XmlException, IllegalArgumentException {
 
         if (url == null) {
@@ -156,7 +154,7 @@ public class PMMLImport {
             /* Try to recover when reading a PMML 3.x document that
              * was produced by KNIME by just replacing the PMML version and
              * namespace or when the recover flag is set. */
-            if (update || PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
+            if (forceVersionUpdate || PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
                 try {
                     String updatedPMML
                             = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
@@ -167,7 +165,7 @@ public class PMMLImport {
                     throw new RuntimeException(
                             "Parsing of PMML v 3.x/4.0/4.1 document failed.", e);
                 }
-                if (!update) {
+                if (!forceVersionUpdate) {
                     LOGGER.info(
                             "KNIME produced PMML 3.x/4.0/4.1 updated to PMML 4.2.");
                 } else {
