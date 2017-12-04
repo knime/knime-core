@@ -121,7 +121,7 @@ public class BitVectorPerformanceComparisonBug1532 {
             "tanimoto calculation new: " + timeForNew);
         assertTrue("Tanimoto calculation of new bit vector cells takes much " +
                 "longer than calculation on old (java) bit vectors",
-                timeForNew < 1.2 * timeForOld);
+                timeForNew < 1.3 * timeForOld);
     }
 
 
