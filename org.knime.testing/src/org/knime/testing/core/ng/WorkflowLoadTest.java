@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.Version;
 import org.knime.testing.core.TestrunConfiguration;
 
 import junit.framework.AssertionFailedError;
@@ -133,6 +134,15 @@ public class WorkflowLoadTest extends WorkflowTest {
                 WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDir);
                 fac.setMountpointRoot(testcaseRoot);
                 return fac.createContext();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
+                final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
+                return UnknownKNIMEVersionLoadPolicy.Try;
             }
         };
 
