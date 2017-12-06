@@ -590,15 +590,6 @@
             specClass="org.knime.core.node.port.pmml.PMMLPortObjectSpec"
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
-      <portType
-            color="#8b008b"
-            hidden="false"
-            name="SharedContainer"
-            objectClass="org.knime.core.node.streamable.SharedContainerPortObject"
-            objectSerializer="org.knime.core.node.streamable.SharedContainerPortObject$SharedContainerPortObjectSerializer"
-            specClass="org.knime.core.node.streamable.SharedContainerPortObjectSpec"
-            specSerializer="org.knime.core.node.streamable.SharedContainerPortObjectSpec$SharedContainerPortObjectSpecSerialzer">
-      </portType>
    </extension>
    <extension
          point="org.knime.core.DataCellToJavaConverter">

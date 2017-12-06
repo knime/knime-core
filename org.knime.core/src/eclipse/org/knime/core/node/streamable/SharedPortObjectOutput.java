@@ -59,6 +59,14 @@ public class SharedPortObjectOutput<T extends Serializable> extends PortOutput {
 
     private SharedContainerPortObject<T> m_portObject;
 
+    public SharedPortObjectOutput() {
+
+    }
+
+    public SharedPortObjectOutput(final T object) {
+        m_portObject = new SharedContainerPortObject<T>(object);
+    }
+
     /** @param portObject the portObject to set */
     public void setPortObject(final SharedContainerPortObject<T> portObject) {
         m_portObject = portObject;

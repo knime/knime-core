@@ -48,15 +48,9 @@
  */
 package org.knime.core.node.streamable;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
 import javax.swing.JComponent;
 
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortObjectSpecZipInputStream;
-import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  *
@@ -65,18 +59,18 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  */
 public class SharedContainerPortObjectSpec implements PortObjectSpec {
 
-    private Class<?> m_containedClass;
+    private String m_containedClassId;
 
     /**
      * Constructor.
-     * @param containedClass the base class for the contained object
+     * @param containedClassId the base class for the contained object
      */
-    public SharedContainerPortObjectSpec(final Class<?> containedClass) {
-        m_containedClass = containedClass;
+    public SharedContainerPortObjectSpec(final String containedClassId) {
+        m_containedClassId = containedClassId;
     }
 
-    public Class<?> getContainedClass() {
-        return m_containedClass;
+    public String getContainedClassId() {
+        return m_containedClassId;
     }
 
     /**
@@ -86,48 +80,6 @@ public class SharedContainerPortObjectSpec implements PortObjectSpec {
     public JComponent[] getViews() {
      // no views
         return new JComponent[0];
-    }
-
-    public class SharedContainerPortObjectSpecSerialzer extends PortObjectSpecSerializer<SharedContainerPortObjectSpec> {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public SharedContainerPortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
-
-                int bufferlength = 128;
-                ByteBuffer buffer = null;
-                int ctr = 0;
-                while(in.available() > 0) {
-                    byte[] b = new byte[bufferlength];
-                    in.read(b);
-                    ctr++;
-                    ByteBuffer tmp = ByteBuffer.allocate(ctr * 128);
-                    if(buffer != null) {
-                        tmp.put(buffer);
-                    }
-                    tmp.put(b);
-                    buffer = tmp;
-                }
-                String className = StandardCharsets.UTF_8.decode(buffer).toString();
-            try {
-                return new SharedContainerPortObjectSpec(Class.forName(className));
-            } catch (ClassNotFoundException ex) {
-                throw new IOException("Wrapped class " + className + " is not available on system.");
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void savePortObjectSpec(final SharedContainerPortObjectSpec portObjectSpec, final PortObjectSpecZipOutputStream out)
-            throws IOException {
-            out.write(portObjectSpec.getContainedClass().toString().getBytes(StandardCharsets.UTF_8));
-
-        }
-
     }
 
 }

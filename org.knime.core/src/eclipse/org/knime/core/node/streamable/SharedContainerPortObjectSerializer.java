@@ -44,72 +44,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Dec 4, 2017 (clemens): created
+ *   Dec 6, 2017 (clemens): created
  */
 package org.knime.core.node.streamable;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.JComponent;
-
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 
 /**
  *
- * @author Clemens von Schwerin, University of Ulm
+ * @author clemens
  * @since 3.5
  */
-public class SharedContainerPortObject<T extends Serializable> implements PortObject {
+public abstract class SharedContainerPortObjectSerializer extends PortObjectSerializer<SharedContainerPortObject<?>> {
 
-    private ReentrantLock m_lock;
-
-    private T m_sharedObject;
-
-    public final static PortType TYPE = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class);
-
-    public final static PortType TYPE_OPTIONAL = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class, true);
-
-    public SharedContainerPortObject(final T object) {
-        m_lock = new ReentrantLock();
-        m_sharedObject = object;
-    }
-
-    synchronized T getAndLock() {
-        m_lock.lock();
-        return m_sharedObject;
-    }
-
-    synchronized void unlock() {
-        m_lock.unlock();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void savePortObject(final SharedContainerPortObject<?> portObject, final PortObjectZipOutputStream out,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        ObjectOutputStream objOut = new ObjectOutputStream(out);
+        try{
+            objOut.writeObject(portObject.getAndLock());
+        } finally {
+            portObject.unlock();
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getSummary() {
-        return "Sharing a portobject of class " + m_sharedObject.getClass();
+    public SharedContainerPortObject<?> loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        ObjectInputStream objIn = new ObjectInputStream(in);
+        Class<? extends Serializable> objclass = getContainedClassForPortobject((SharedContainerPortObjectSpec)spec);
+        try {
+            return cast(objclass, objIn.readObject());
+        } catch (ClassNotFoundException ex) {
+            throw new IOException("Could not find class: " + ((SharedContainerPortObjectSpec)spec).getClass());
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObjectSpec getSpec() {
-        return new SharedContainerPortObjectSpec(m_sharedObject.getClass().getName());
+    private <T extends Serializable>SharedContainerPortObject<T> cast(final Class<T> objclass, final Object obj) {
+        SharedContainerPortObject<T> containerObj = new SharedContainerPortObject<T>(objclass.cast(obj));
+        return containerObj;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JComponent[] getViews() {
-        // no views
-        return new JComponent[0];
-    }
+    protected abstract Class<? extends Serializable> getContainedClassForPortobject(SharedContainerPortObjectSpec spec);
 
 }

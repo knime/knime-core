@@ -55,7 +55,7 @@ import java.io.Serializable;
  * @author Clemens von Schwerin, University of Ulm
  * @since 3.5
  */
-public abstract class SharedPortObjectInput<T extends Serializable> extends PortInput {
+public class SharedPortObjectInput<T extends Serializable> extends PortInput {
 
     private SharedContainerPortObject<T> m_portObject;
 

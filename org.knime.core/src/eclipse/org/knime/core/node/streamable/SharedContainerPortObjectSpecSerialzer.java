@@ -44,72 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Dec 4, 2017 (clemens): created
+ *   Dec 6, 2017 (clemens): created
  */
 package org.knime.core.node.streamable;
 
-import java.io.Serializable;
-import java.util.concurrent.locks.ReentrantLock;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-import javax.swing.JComponent;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
+import org.knime.core.node.port.PortObjectSpecZipInputStream;
+import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  *
- * @author Clemens von Schwerin, University of Ulm
+ * @author clemens
  * @since 3.5
  */
-public class SharedContainerPortObject<T extends Serializable> implements PortObject {
+public class SharedContainerPortObjectSpecSerialzer extends PortObjectSpecSerializer<SharedContainerPortObjectSpec> {
 
-    private ReentrantLock m_lock;
+    public SharedContainerPortObjectSpecSerialzer() {
 
-    private T m_sharedObject;
-
-    public final static PortType TYPE = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class);
-
-    public final static PortType TYPE_OPTIONAL = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class, true);
-
-    public SharedContainerPortObject(final T object) {
-        m_lock = new ReentrantLock();
-        m_sharedObject = object;
     }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SharedContainerPortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
 
-    synchronized T getAndLock() {
-        m_lock.lock();
-        return m_sharedObject;
-    }
-
-    synchronized void unlock() {
-        m_lock.unlock();
+            ObjectInputStream ois = new ObjectInputStream(in);
+            String className = ois.readUTF();
+            ois.close();
+            return new SharedContainerPortObjectSpec(className);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getSummary() {
-        return "Sharing a portobject of class " + m_sharedObject.getClass();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObjectSpec getSpec() {
-        return new SharedContainerPortObjectSpec(m_sharedObject.getClass().getName());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JComponent[] getViews() {
-        // no views
-        return new JComponent[0];
+    public void savePortObjectSpec(final SharedContainerPortObjectSpec portObjectSpec, final PortObjectSpecZipOutputStream out)
+        throws IOException {
+        ObjectOutputStream oos = new ObjectOutputStream(out);
+        oos.writeUTF(portObjectSpec.getContainedClassId());
+        oos.close();
     }
 
 }
