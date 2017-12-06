@@ -167,6 +167,9 @@ public interface PortObject {
             for (Type type : ConvenienceMethods.getAllGenericSuperclasses(getClass())) {
                 if (type instanceof ParameterizedType) {
                     Type typeArgument = ((ParameterizedType)type).getActualTypeArguments()[0];
+                    if(!(typeArgument instanceof Class<?>)) {
+                        typeArgument = ((ParameterizedType)typeArgument).getRawType();
+                    }
                     if (PortObject.class.isAssignableFrom((Class<?>)typeArgument)) {
                         if (typeArgument instanceof Class) {
                             return (Class<T>)typeArgument;
