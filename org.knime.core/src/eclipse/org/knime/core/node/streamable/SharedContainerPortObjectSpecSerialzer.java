@@ -57,15 +57,13 @@ import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
+ * Serializer for a {@link SharedContainerPortObjectSpec}.
  *
- * @author clemens
+ * @author Clemens von Schwerin, University of Ulm
  * @since 3.5
  */
 public class SharedContainerPortObjectSpecSerialzer extends PortObjectSpecSerializer<SharedContainerPortObjectSpec> {
 
-    public SharedContainerPortObjectSpecSerialzer() {
-
-    }
     /**
      * {@inheritDoc}
      */

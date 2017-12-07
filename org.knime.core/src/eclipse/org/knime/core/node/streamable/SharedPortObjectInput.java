@@ -51,8 +51,10 @@ package org.knime.core.node.streamable;
 import java.io.Serializable;
 
 /**
+ * The {@link PortInput} used in transferring {@link SharedContainerPortObject}s.
  *
  * @author Clemens von Schwerin, University of Ulm
+ * @param <T> the type of the object to share inside the port object
  * @since 3.5
  */
 public class SharedPortObjectInput<T extends Serializable> extends PortInput {
@@ -66,7 +68,13 @@ public class SharedPortObjectInput<T extends Serializable> extends PortInput {
         m_portObject = portObject;
     }
 
-     public void pollAndProcess(final Processor<T> processor) {
+     /**
+     * Wait for the latest version of the object encapsulated in the port object. Lock and retrieve it.
+     * Run the given processor on it.
+     *
+     * @param processor a processor using the encapsulated object
+     */
+    public void pollAndProcess(final Processor<T> processor) {
         try {
             processor.process(m_portObject.getAndLock());
         } finally {
@@ -74,9 +82,19 @@ public class SharedPortObjectInput<T extends Serializable> extends PortInput {
         }
     }
 
-     public interface Processor<T> {
+     /**
+     * A function using the object encapsulated in the port object (command pattern).
+     * @param <T> the type of the object to share inside the port object
+     */
+    public interface Processor<T> {
 
-         void process(T object);
+         /**
+         * Use the given object in order to compute the next output (e.g. make a prediction using a passed model).
+         * NOTE: Do not persist the passed object.
+         *
+         * @param object the object that should be used for processing
+         */
+        void process(T object);
      }
 
 }

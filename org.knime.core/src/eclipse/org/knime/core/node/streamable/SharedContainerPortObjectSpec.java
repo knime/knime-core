@@ -53,8 +53,9 @@ import javax.swing.JComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
+ * Transports the class-ID of the object encpasulated in the corresponding {@link SharedContainerPortObject}.
  *
- * @author clemens
+ * @author Clemens von Schwerin, Univerity of Ulm
  * @since 3.5
  */
 public class SharedContainerPortObjectSpec implements PortObjectSpec {
@@ -69,6 +70,9 @@ public class SharedContainerPortObjectSpec implements PortObjectSpec {
         m_containedClassId = containedClassId;
     }
 
+    /**
+     * @return the class-ID of the object encpasulated in the corresponding {@link SharedContainerPortObject}
+     */
     public String getContainedClassId() {
         return m_containedClassId;
     }

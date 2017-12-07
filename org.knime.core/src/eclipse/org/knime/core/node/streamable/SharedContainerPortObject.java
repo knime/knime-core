@@ -49,6 +49,7 @@
 package org.knime.core.node.streamable;
 
 import java.io.Serializable;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JComponent;
@@ -59,6 +60,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 
 /**
+ * A streamable container port object. Encapsulates an object having a generic type that is shared between the producing
+ * and the consuming node and is updated by the producer and processed by the consumer multiple times.
  *
  * @author Clemens von Schwerin, University of Ulm
  * @since 3.5
@@ -67,22 +70,64 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
 
     private ReentrantLock m_lock;
 
+    private Condition m_sharedObjectSet;
+
     private T m_sharedObject;
 
+    /**
+     *  Define port type of objects of this class when used as PortObjects.
+     */
     public final static PortType TYPE = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class);
 
+    /**
+     * A port type representing an optional shared object input (as used, for instance
+     * in the Concatenate node).
+     */
     public final static PortType TYPE_OPTIONAL = PortTypeRegistry.getInstance().getPortType(SharedContainerPortObject.class, true);
 
-    public SharedContainerPortObject(final T object) {
+    /**
+     * Constructor.
+     */
+    public SharedContainerPortObject() {
         m_lock = new ReentrantLock();
-        m_sharedObject = object;
+        m_sharedObjectSet = m_lock.newCondition();
     }
 
+    /**
+     * Set the object to share between nodes.
+     * @param obj the shared object
+     */
+    public void set(final T obj) {
+        m_sharedObject = obj;
+        m_lock.lock();
+        try {
+            m_sharedObjectSet.signalAll();
+        } finally {
+            m_lock.unlock();
+        }
+    }
+
+    /**
+     * Get the encapsulated object. Wait until its set (not-null) and unlocked (the producer / consumer may work on it).
+     *
+     * @return the encapsulated object
+     */
     synchronized T getAndLock() {
         m_lock.lock();
-        return m_sharedObject;
+        try {
+            while(m_sharedObject == null) {
+                m_sharedObjectSet.await();
+            }
+            return m_sharedObject;
+        } catch(InterruptedException ex) {
+            throw new IllegalStateException("Interrupted while waiting on valid object to be set.");
+        }
     }
 
+    /**
+     * Signal that a working step (updating / processing) on the encapsulated object is done and the next thread waiting
+     * on retrieving the encapsulated object may get a hold of it.
+     */
     synchronized void unlock() {
         m_lock.unlock();
     }

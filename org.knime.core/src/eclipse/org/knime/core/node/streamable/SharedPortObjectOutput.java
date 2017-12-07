@@ -59,23 +59,33 @@ public class SharedPortObjectOutput<T extends Serializable> extends PortOutput {
 
     private SharedContainerPortObject<T> m_portObject;
 
+    /**
+     * Constructor.
+     * Create an internal {@link SharedContainerPortObject} with a null encapsualted object.
+     */
     public SharedPortObjectOutput() {
-
+        m_portObject = new SharedContainerPortObject<T>();
     }
 
-    public SharedPortObjectOutput(final T object) {
-        m_portObject = new SharedContainerPortObject<T>(object);
+    /** @param objectToShare the object to share with another node, non-null. */
+    public void setContainedPortObject(final T objectToShare) {
+        assert objectToShare != null;
+        m_portObject.set(objectToShare);
     }
 
-    /** @param portObject the portObject to set */
-    public void setPortObject(final SharedContainerPortObject<T> portObject) {
-        m_portObject = portObject;
-    }
-
+    /**
+     * @return the port object
+     */
     public SharedContainerPortObject<T> getPortObject() {
         return m_portObject;
     }
 
+    /**
+     * Wait for the latest version of the object encapsulated in the port object. Lock and retrieve it.
+     * Run the given updater on it.
+     *
+     * @param updater a updater using the encapsulated object
+     */
     public void updateAndPush(final Updater<T> updater) {
         try {
             updater.update(m_portObject.getAndLock());
@@ -84,8 +94,18 @@ public class SharedPortObjectOutput<T extends Serializable> extends PortOutput {
         }
     }
 
+    /**
+     * A function using the object encapsulated in the port object (command pattern).
+     * @param <T> the type of the object to share inside the port object
+     */
     public interface Updater<T> {
 
+        /**
+         * Update the given object (e.g. do a training step on a model).
+         * NOTE: Do not persist the passed object.
+         *
+         * @param object the object that should be used for updating
+         */
         void update(T object);
     }
 

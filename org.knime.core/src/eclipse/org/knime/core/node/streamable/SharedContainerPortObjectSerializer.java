@@ -61,8 +61,10 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 
 /**
+ * An abstract serializer for {@link SharedContainerPortObjet}s. Each class inheriting has to implement class loading
+ * due to class loader scopes.
  *
- * @author clemens
+ * @author Clemens von Schwerin, University of Ulm
  * @since 3.5
  */
 public abstract class SharedContainerPortObjectSerializer extends PortObjectSerializer<SharedContainerPortObject<?>> {
@@ -97,10 +99,18 @@ public abstract class SharedContainerPortObjectSerializer extends PortObjectSeri
     }
 
     private <T extends Serializable>SharedContainerPortObject<T> cast(final Class<T> objclass, final Object obj) {
-        SharedContainerPortObject<T> containerObj = new SharedContainerPortObject<T>(objclass.cast(obj));
+        SharedContainerPortObject<T> containerObj = new SharedContainerPortObject<T>();
+        containerObj.set(objclass.cast(obj));
         return containerObj;
     }
 
+    /**
+     * Get the class object for the class-ID stored inside the given {@link SharedContainerPortObjectSpec}.
+     * Has to be implemented in order to assure using the correct classloader.
+     *
+     * @param spec the spec for the port object to serialize
+     * @return a class object
+     */
     protected abstract Class<? extends Serializable> getContainedClassForPortobject(SharedContainerPortObjectSpec spec);
 
 }
