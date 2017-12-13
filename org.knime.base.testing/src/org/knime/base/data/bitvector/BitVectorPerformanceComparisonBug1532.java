@@ -120,7 +120,7 @@ public class BitVectorPerformanceComparisonBug1532 {
         NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
             "tanimoto calculation new: " + timeForNew);
         assertTrue("Tanimoto calculation of new bit vector cells takes much " +
-                "longer than calculation on old (java) bit vectors",
+                "longer than calculation on old (java) bit vectors: " + timeForNew + "ms vs. " + timeForOld + "ms",
                 timeForNew < 1.3 * timeForOld);
     }
 
