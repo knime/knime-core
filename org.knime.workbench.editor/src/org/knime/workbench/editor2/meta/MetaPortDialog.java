@@ -90,8 +90,6 @@ public class MetaPortDialog extends Dialog {
     private Label m_typeLabel;
     private Combo m_type;
 
-    private static final int HEIGHT = 120;
-
     private PortType m_port = null;
 
     private static final Comparator<PortType> PORT_TYPE_COMPARATOR = new Comparator<PortType>() {
@@ -153,11 +151,13 @@ public class MetaPortDialog extends Dialog {
 
         //calculate size and set location
         Point location = parent.getLocation();
-        Point size = parent.getSize();
-        int shellWidth = m_type.getParent().computeSize(SWT.DEFAULT, SWT.DEFAULT).x + 20;
-        m_shell.setLocation(location.x + (size.x / 2) - (shellWidth / 2),
-                location.y + (size.y / 2) - (HEIGHT / 2));
-        m_shell.setSize(shellWidth, HEIGHT);
+        Point parentSize = parent.getSize();
+        Point shellSize = m_shell.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+        int shellWidth = shellSize.x;
+        int shellHeight = shellSize.y;
+        m_shell.setLocation(location.x + (parentSize.x / 2) - (shellWidth / 2),
+            location.y + (parentSize.y / 2) - (shellHeight / 2));
+        m_shell.setSize(shellWidth, shellHeight);
 
         m_shell.open();
         Display display = parent.getDisplay();
