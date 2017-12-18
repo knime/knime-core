@@ -55,7 +55,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.Platform;
@@ -460,16 +459,14 @@ public class WrappedNodeDialog extends Dialog {
         NodeContext.pushContext(m_nodeContainer);
         try {
             m_dialogPane.callOnClose();
-        } finally {
-            NodeContext.removeLastContext();
-        }
-        buttonPressed(IDialogConstants.OK_ID);
-        if (execute) {
-            m_nodeContainer.getParent()
-                    .executeUpToHere(m_nodeContainer.getID());
+            buttonPressed(IDialogConstants.OK_ID);
+            if (execute) {
+                m_nodeContainer.getParent().executeUpToHere(m_nodeContainer.getID());
+            }
             if (openView) {
-                final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-                SwingUtilities.invokeLater(new Runnable() {
+                final Rectangle knimeWindowBounds =
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+                ViewUtils.invokeLaterInEDT(new Runnable() {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
@@ -484,14 +481,16 @@ public class WrappedNodeDialog extends Dialog {
                             pIndex = 0;
                         }
                         if (m_nodeContainer.getNrOutPorts() > pIndex) {
-                            NodeOutPort port =
-                                    m_nodeContainer.getOutPort(pIndex);
-                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                            NodeOutPort port = m_nodeContainer.getOutPort(pIndex);
+                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y,
+                                knimeWindowBounds.width, knimeWindowBounds.height);
                             port.openPortView(port.getPortName(), bounds);
                         }
                     }
                 });
             }
+        } finally {
+            NodeContext.removeLastContext();
         }
     }
 
