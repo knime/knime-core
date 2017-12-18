@@ -354,7 +354,10 @@ public class WrappedNodeDialog extends Dialog {
                     btnOK.forceFocus();
                     // force OK - Execute when CTRL and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
-                    doOK(ke, canExecutePredicate.test(m_nodeContainer), (ke.stateMask & SWT.SHIFT) != 0);
+                    ke.doit = doApply();
+                    if (ke.doit) {
+                        runOK(canExecutePredicate.test(m_nodeContainer),  (ke.stateMask & SWT.SHIFT) != 0);
+                    }
                     // reset ok button state/label
                     if (!ke.doit) {
                         btnOK.setText("OK");
@@ -441,15 +444,6 @@ public class WrappedNodeDialog extends Dialog {
             NodeContext.removeLastContext();
         }
         buttonPressed(IDialogConstants.CANCEL_ID);
-    }
-
-    private void doOK(final KeyEvent ke, final boolean execute,
-            final boolean openView) {
-        // simulate doApply
-        ke.doit = doApply();
-        if (ke.doit) {
-            runOK(execute, openView);
-        }
     }
 
     private void doOK(final SelectionEvent se, final boolean execute,
