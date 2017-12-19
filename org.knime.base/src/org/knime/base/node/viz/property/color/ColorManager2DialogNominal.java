@@ -66,7 +66,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * A dialog panel used to set color for nominal values.
  *
@@ -122,8 +121,7 @@ final class ColorManager2DialogNominal extends JPanel {
                 assert cell != null;
                 ColorAttr color = map.get(cell);
                 assert color != null;
-                m_columnModel.addElement(
-                        new ColorManager2Icon(cell, color.getColor()));
+                m_columnModel.addElement(new ColorManager2Icon(cell, color.getColor()));
             }
             flag = true;
         }
@@ -133,8 +131,7 @@ final class ColorManager2DialogNominal extends JPanel {
     }
 
     /**
-     * Select new color for the selected attribute value of the the selected
-     * column.
+     * Select new color for the selected attribute value of the selected column.
      *
      * @param column the selected column
      * @param color the new color
@@ -152,8 +149,33 @@ final class ColorManager2DialogNominal extends JPanel {
     }
 
     /**
-     * Adds the given set of possible values to the internal structure by the
-     * given column name.
+     * Apply new colors of a given palette of the selected column.
+     *
+     * @param column the selected column
+     * @param palette the new palette
+     */
+    void updateWithPalette(final String column, final String[] palette) {
+        Map<DataCell, ColorAttr> map = m_map.get(column);
+        int i = 0;
+        ColorAttr color;
+        for (Object o : m_columnModel.toArray()) {
+            if (i >= palette.length) {
+                i = 0;
+            }
+            ColorManager2Icon icon = (ColorManager2Icon)o;
+            color = ColorAttr.getInstance(Color.decode(palette[i]));
+            icon.setColor(color.getColor());
+            map.put(icon.getCell(), color);
+            i++;
+        }
+
+        super.validate();
+        super.repaint();
+
+    }
+
+    /**
+     * Adds the given set of possible values to the internal structure by the given column name.
      *
      * @param column the column name
      * @param set the set of possible values for this column
@@ -165,23 +187,24 @@ final class ColorManager2DialogNominal extends JPanel {
     }
 
     /**
-     * Create default color mapping for the given set of possible
-     * <code>DataCell</code> values.
+     * Create default color mapping for the given set of possible <code>DataCell</code> values.
+     *
      * @param set possible values
      * @return a map of possible value to color
      */
-    static final Map<DataCell, ColorAttr> createColorMapping(
-            final Set<DataCell> set) {
+    static final Map<DataCell, ColorAttr> createColorMapping(final Set<DataCell> set) {
         if (set == null) {
             return Collections.EMPTY_MAP;
         }
         Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
         int idx = 0;
         for (DataCell cell : set) {
-            // use Color, half saturated, half bright for base color
-            Color color = new Color(Color.HSBtoRGB((float) idx++
-                    / (float) set.size(), 1.0f, 1.0f));
+            if (idx >= ColorManager2NodeDialogPane.PALETTE_DEFAULT.length) {
+                idx = 0;
+            }
+            Color color = Color.decode(ColorManager2NodeDialogPane.PALETTE_DEFAULT[idx]);
             map.put(cell, ColorAttr.getInstance(color));
+            idx++;
         }
         return map;
     }
@@ -199,17 +222,14 @@ final class ColorManager2DialogNominal extends JPanel {
      * Save settings that are the current color settings.
      *
      * @param settings to write to
-     * @throws InvalidSettingsException if no nominal value are defined on the
-     *             selected column
+     * @throws InvalidSettingsException if no nominal value are defined on the selected column
      */
-    void saveSettings(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    void saveSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
         int len = m_columnModel.getSize();
         if (len > 0) {
             DataCell[] vals = new DataCell[len];
             for (int i = 0; i < m_columnModel.getSize(); i++) {
-                ColorManager2Icon icon = (ColorManager2Icon)m_columnModel
-                        .getElementAt(i);
+                ColorManager2Icon icon = (ColorManager2Icon)m_columnModel.getElementAt(i);
                 vals[i] = icon.getCell();
                 Color c = icon.getColor();
                 c = new Color(c.getRed(), c.getGreen(), c.getBlue(), m_alpha);
@@ -217,8 +237,8 @@ final class ColorManager2DialogNominal extends JPanel {
             }
             settings.addDataCellArray(ColorManager2NodeModel.VALUES, vals);
         } else {
-            throw new InvalidSettingsException("Make sure the selected column "
-                    + "has nominal values defined within the domain.");
+            throw new InvalidSettingsException(
+                "Make sure the selected column has nominal values defined within the domain.");
         }
     }
 
@@ -232,8 +252,7 @@ final class ColorManager2DialogNominal extends JPanel {
         if (column == null) {
             return;
         }
-        DataCell[] vals = settings.getDataCellArray(
-                ColorManager2NodeModel.VALUES, (DataCell[])null);
+        DataCell[] vals = settings.getDataCellArray(ColorManager2NodeModel.VALUES, (DataCell[])null);
         if (vals == null) {
             return;
         }
