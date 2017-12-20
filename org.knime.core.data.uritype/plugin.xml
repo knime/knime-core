@@ -27,7 +27,7 @@
       <portType
             color="#1eb9dc"
             hidden="true"
-            name="URI"
+            name="URI Object"
             objectClass="org.knime.core.data.uri.URIPortObject"
             objectSerializer="org.knime.core.data.uri.URIPortObject$Serializer"
             specClass="org.knime.core.data.uri.URIPortObjectSpec"
@@ -35,8 +35,8 @@
       </portType>
       <portType
             color="#1eb9dc"
-            hidden="true"
-            name="URI"
+            hidden="false"
+            name="URI Object"
             objectClass="org.knime.core.data.uri.IURIPortObject"
             objectSerializer="org.knime.core.data.uri.IURIPortObject$DummySerializer"
             specClass="org.knime.core.data.uri.URIPortObjectSpec"
