@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="KNIME Analytics Platform" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="3.5.0.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="KNIME Analytics Platform" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="3.5.1.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/png/knime_about.png"/>
