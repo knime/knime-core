@@ -122,7 +122,12 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @Override
     public String getText() {
-        return (m_singleTitle ? "Single" : "Interactive") + " View: " + m_webViewForNode.getViewName();
+        String text = m_webViewForNode.getViewName();
+        if (!m_singleTitle) {
+            return "Interactive View: " + text;
+        } else {
+            return text;
+        }
     }
 
     @Override

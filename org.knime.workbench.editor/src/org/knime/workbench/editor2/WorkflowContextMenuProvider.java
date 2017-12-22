@@ -68,6 +68,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -139,6 +140,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     private static final String GROUP_METANODE_LINKS = "group.knime.metanode.links";
     private static final String GROUP_SUBNODE = "group.knime.subnode";
     private static final String GROUP_SUBNODE_LINKS = "group.knime.subnode.links";
+    private static final String GROUP_SUBNODE_VIEWS = "group.knime.subnode.views";
 
     private final ActionRegistry m_actionRegistry;
 
@@ -306,6 +308,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
 
         IMenuManager metanodeMenuMgr = null;
         IMenuManager subnodeMenuMgr = null;
+        IMenuManager subnodeViewMgr = null;
 
         // depending on the current selection: add the actions for the port
         // views and the node views
@@ -358,7 +361,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     // it's only one or the other -- do not support nodes that have
                     // both (standard swing) interactive and web interactive views
                     //TODO for subnodes move to submenu?
-                    if (wraps(container, NodeContainer.class)) {
+                    if (wraps(container, NativeNodeContainer.class)) {
                         InteractiveWebViewsResult interactiveWebViewsResult =
                             unwrapNC(container).getInteractiveWebViews();
                         for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
@@ -420,6 +423,18 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     ((AbstractNodeAction)action).update();
 
                     if (wraps(container, SubNodeContainer.class)) {
+
+                        InteractiveWebViewsResult interactiveWebViewsResult =
+                                unwrapNC(container).getInteractiveWebViews();
+                        if (interactiveWebViewsResult.size() > 0) {
+                            subnodeViewMgr = getSingleSubNodeViewsMenuManager(subnodeViewMgr, subnodeMenuMgr);
+                            for (int i = 0; i < interactiveWebViewsResult.size(); i++) {
+                                action = new OpenInteractiveWebViewAction(unwrapNC(container),
+                                    interactiveWebViewsResult.get(i));
+                                subnodeViewMgr.appendToGroup(GROUP_SUBNODE_VIEWS, action);
+                            }
+                        }
+
                         action = new OpenSubnodeWebViewAction(Wrapper.unwrap(container, SubNodeContainer.class));
                         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                     }
@@ -559,6 +574,18 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             return m;
         }
         return subNodeManagerOrNull;
+    }
+
+    private static IMenuManager getSingleSubNodeViewsMenuManager(final IMenuManager singleViewsManagerOrNull, final IMenuManager parentMenuManager) {
+        if (singleViewsManagerOrNull == null) {
+            MenuManager m = new MenuManager("Individual Views",
+                ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "/icons/openInteractiveView.png"),
+                null);
+            m.add(new Separator(GROUP_SUBNODE_VIEWS));
+            parentMenuManager.appendToGroup(GROUP_SUBNODE, m);
+            return m;
+        }
+        return singleViewsManagerOrNull;
     }
 
     /**
