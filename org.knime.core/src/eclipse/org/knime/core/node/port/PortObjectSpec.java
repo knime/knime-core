@@ -173,15 +173,13 @@ public interface PortObjectSpec {
     }
 
     /**
-     * The returned views are displayed in the out port view of the referring
-     * node. Each component is displayed in an extra tab. The name of the
-     * component is used as the title for the tab. It is important that no
-     * external members are kept in the component so it can be deleted, when
-     * the port object is deleted. If the port object has no view return an
-     * empty array.
+     * The returned views are displayed in the out port view of the referring node. Each component is displayed in an
+     * extra tab. The name of the component is used as the title for the tab. A component may additionally implement
+     * {@link PortObjectSpecView} to have the ability for further resource deallocation etc. If the port object has no
+     * view return an empty array.
      *
-     * @return an array of views for the port object spec, each displayed as a
-     * tab in the out port view
+     * @return an array of views for the port object spec, each displayed as a tab in the out port view
+     * @see PortObjectSpecView
      */
     public JComponent[] getViews();
 

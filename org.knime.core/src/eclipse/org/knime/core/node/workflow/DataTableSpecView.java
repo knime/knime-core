@@ -51,34 +51,26 @@ import javax.swing.JPanel;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.DataTableSpecExtractor;
 import org.knime.core.data.util.DataTableSpecExtractor.PossibleValueOutputFormat;
 import org.knime.core.data.util.DataTableSpecExtractor.PropertyHandlerOutputFormat;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortObjectSpecView;
+import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableView;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class DataTableSpecView extends JPanel {
-
-//    private static final NodeLogger LOGGER =
-//        NodeLogger.getLogger(DataTableSpecView.class);
-
+public class DataTableSpecView extends JPanel implements PortObjectSpecView {
 
     private final TableView m_specView;
 
     private final DataTableSpec m_tableSpec;
-
-    /** Updates are synchronized on this object. Declaring the methods
-     * as synchronized (i.e. using "this" as mutex) does not work as swing
-     * also acquires locks on this graphical object.
-     */
-    private final Object m_updateLock = new Object();
-
 
     /**
      *
@@ -102,31 +94,18 @@ public class DataTableSpecView extends JPanel {
         setName("DataTableSpec");
         add(m_specView);
 
-        updateDataTableSpec();
-    }
-
-    /**
-     * Sets a new DataTableSpec to display.
-     *
-     * @param newTableSpec The new data table spec (or null) to display in the
-     *            view.
-     */
-    private void updateDataTableSpec() {
-        synchronized (m_updateLock) {
-            m_specView.setDataTable(createTableSpecTable(m_tableSpec));
-            m_specView.getHeaderTable().sizeWidthToFit();
-            // display the number of columns in the upper left corner
-            if (m_tableSpec != null) {
-                String title = createWindowTitle(m_tableSpec.getNumColumns());
-                m_specView.getHeaderTable().setColumnName(title);
-                setName("Spec - " + title);
-            } else {
-                m_specView.getHeaderTable().setColumnName("");
-                setName("No Spec");
-            }
+        m_specView.setDataTable(createTableSpecTable(m_tableSpec));
+        m_specView.getHeaderTable().sizeWidthToFit();
+        // display the number of columns in the upper left corner
+        if (m_tableSpec != null) {
+            String title = createWindowTitle(m_tableSpec.getNumColumns());
+            m_specView.getHeaderTable().setColumnName(title);
+            setName("Spec - " + title);
+        } else {
+            m_specView.getHeaderTable().setColumnName("");
+            setName("No Spec");
         }
     }
-
 
     private DataTable createTableSpecTable(final DataTableSpec spec) {
         if (spec != null) {
@@ -144,9 +123,20 @@ public class DataTableSpecView extends JPanel {
         }
     }
 
+    /** {@inheritDoc}
+     * @since 3.6 */
+    @Override
+    public void dispose() {
+        TableContentModel contentModel = m_specView.getContentModel();
+        DataTable dataTable = contentModel.getDataTable();
+        contentModel.setDataTable(null);
+        if (dataTable instanceof ContainerTable) {
+            ((ContainerTable)dataTable).clear();
+        }
+    }
+
     private static String createWindowTitle(final int numOfCols) {
         return "Column" + (numOfCols > 1 ? "s: " : ": ") + numOfCols;
     }
-
 
 }

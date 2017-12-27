@@ -44,41 +44,20 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Dec 26, 2016 (wiswedel): created
+ *   Dec 27, 2017 (wiswedel): created
  */
 package org.knime.core.node.port;
 
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.workflow.CredentialsProvider;
-
 /**
- * Interface optionally implemented by views returned by {@linkplain PortObject#getViews()}. It adds a few additional
- * methods that provide more framework information to the view, e.g. {@link HiLiteHandler} etc.
- *
- * <p>This interface was added after the {@link PortObject} interface was defined, hence it's optional to implement
- * it.
+ * Interface optionally implemented by the views returned in {@link PortObjectSpec#getViews()} for resource
+ * relinquishing. The interface was added after the {@link PortObjectSpec} interface was defined, hence it's optional.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @since 3.4
+ * @since 3.6
  */
-public interface PortObjectView {
+public interface PortObjectSpecView {
 
-    /** Sets the hilite handler associated with the port.
-     * @param hiliteHandler the handler, might be null to reset.
-     */
-    default void setHiliteHandler(final HiLiteHandler hiliteHandler) {
-        // possibly overridden
-    }
-
-    /** Sets the credentials provider associated with the node.
-     * @param credentialsProvider the provider, might be null to reset.
-     */
-    default void setCredentialsProvider(final CredentialsProvider credentialsProvider) {
-        // possibly overridden
-    }
-
-    /** Called when the view is discarded (won't be opened again).
-     * @since 3.6 */
-    default void dispose() {}
+    /** Called by the framework when the view is closed (and won't be opened again). */
+    public default void dispose() { }
 
 }

@@ -55,102 +55,92 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.port.PortObjectSpecView;
+import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class DataColumnPropertiesView extends JPanel {
-
-    private final DataTableSpec m_tableSpec;
+public class DataColumnPropertiesView extends JPanel implements PortObjectSpecView {
 
     private final TableView m_propsView;
 
-    private final Object m_lock = new Object();
-
     /**
      *
-     * @param tableSpec data table spec to extract the data column properties
-     *  from
+     * @param tableSpec data table spec to extract the data column properties from, not null
      */
     public DataColumnPropertiesView(final DataTableSpec tableSpec) {
         setLayout(new BorderLayout());
-        m_tableSpec = tableSpec;
-        m_propsView = new TableView();
+        m_propsView = new TableView(createPropsTable(CheckUtils.checkArgumentNotNull(tableSpec)));
         m_propsView.setShowIconInColumnHeader(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
         add(m_propsView);
-        updatePropsTable();
     }
 
 
-    private DataTable createPropsTable() {
-        if (m_tableSpec != null) {
-            // output has as many cols
-            int numOfCols = m_tableSpec.getNumColumns();
-            String[] colNames = new String[numOfCols];
-            DataType[] colTypes = new DataType[numOfCols];
-            // colnames are the same as incoming, types are all StringTypes
-            for (int c = 0; c < numOfCols; c++) {
-                colNames[c] = m_tableSpec.getColumnSpec(c).getName();
-                colTypes[c] = StringCell.TYPE;
-            }
-            // get keys for ALL props in the table. Each will show in one row.
-            HashSet<String> allKeys = new LinkedHashSet<String>();
-            for (int c = 0; c < numOfCols; c++) {
-                Enumeration<String> props =
-                    m_tableSpec.getColumnSpec(c).getProperties().properties();
-                while (props.hasMoreElements()) {
-                    allKeys.add(props.nextElement());
-                }
-            }
-            DataContainer result =
-                    new DataContainer(new DataTableSpec(colNames, colTypes));
-
-            // now construct the rows we wanna display
-            for (String key : allKeys) {
-                DataCell[] cells = new DataCell[numOfCols];
-                for (int c = 0; c < numOfCols; c++) {
-                    String cellValue = "";
-                    if (m_tableSpec.getColumnSpec(c).getProperties()
-                            .containsProperty(key)) {
-                        cellValue =
-                            m_tableSpec.getColumnSpec(c).getProperties()
-                                        .getProperty(key);
-                    }
-                    cells[c] = new StringCell(cellValue);
-                }
-                result.addRowToTable(new DefaultRow(key, cells));
-            }
-            result.close();
-            return result.getTable();
-
-        } else {
-            DataContainer result =
-                    new DataContainer(new DataTableSpec(
-                            new String[]{"No outgoing table spec"},
-                            new DataType[]{StringCell.TYPE}));
-            result.close();
-            return result.getTable();
+    private DataTable createPropsTable(final DataTableSpec tableSpec) {
+        // output has as many cols
+        int numOfCols = tableSpec.getNumColumns();
+        String[] colNames = new String[numOfCols];
+        DataType[] colTypes = new DataType[numOfCols];
+        // colnames are the same as incoming, types are all StringTypes
+        for (int c = 0; c < numOfCols; c++) {
+            colNames[c] = tableSpec.getColumnSpec(c).getName();
+            colTypes[c] = StringCell.TYPE;
         }
+        // get keys for ALL props in the table. Each will show in one row.
+        HashSet<String> allKeys = new LinkedHashSet<String>();
+        for (int c = 0; c < numOfCols; c++) {
+            Enumeration<String> props =
+                    tableSpec.getColumnSpec(c).getProperties().properties();
+            while (props.hasMoreElements()) {
+                allKeys.add(props.nextElement());
+            }
+        }
+        DataContainer result =
+                new DataContainer(new DataTableSpec(colNames, colTypes));
+
+        // now construct the rows we wanna display
+        for (String key : allKeys) {
+            DataCell[] cells = new DataCell[numOfCols];
+            for (int c = 0; c < numOfCols; c++) {
+                String cellValue = "";
+                if (tableSpec.getColumnSpec(c).getProperties()
+                        .containsProperty(key)) {
+                    cellValue =
+                            tableSpec.getColumnSpec(c).getProperties()
+                            .getProperty(key);
+                }
+                cells[c] = new StringCell(cellValue);
+            }
+            result.addRowToTable(new DefaultRow(key, cells));
+        }
+        result.close();
+        return result.getTable();
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
         return "Properties";
     }
 
-    private void updatePropsTable() {
-        synchronized (m_lock) {
-            m_propsView.setDataTable(createPropsTable());
+    /** {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public void dispose() {
+        TableContentModel contentModel = m_propsView.getContentModel();
+        DataTable dataTable = contentModel.getDataTable();
+        contentModel.setDataTable(null);
+        if (dataTable instanceof ContainerTable) {
+            ((ContainerTable)dataTable).clear();
         }
     }
 }

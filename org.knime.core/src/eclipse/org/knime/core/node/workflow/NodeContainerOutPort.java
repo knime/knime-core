@@ -162,24 +162,6 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
     }
 
     /**
-     * Sets a port view for this port. The port view can only be set once.
-     *
-     * @param portView The port view to set.
-     * @throws NullPointerException If the port view is null.
-     * @throws IllegalStateException If the port view was already set.
-     * @see #getPortView()
-     */
-    private final void setPortView(final OutPortView portView) {
-        if (portView == null) {
-            throw new NullPointerException("Can't set port view to null");
-        }
-        if (m_portView != null) {
-            throw new IllegalStateException("Port View can only be set once.");
-        }
-        m_portView = portView;
-    }
-
-    /**
      * Returns the port view for this output port which can be null.
      *
      * @return The port view or null.
@@ -219,13 +201,12 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
     private void openPortViewInEDT(final String name, final Rectangle knimeWindowBounds) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_portView == null) {
-            setPortView(new OutPortView(m_snc.getDisplayLabel(), getPortName()));
-        } else {
-            // the custom name might have changed meanwhile
-            m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());
+            m_portView = new OutPortView(m_snc.getDisplayLabel(), getPortName());
+            m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
+                m_snc.getCredentialsProvider(), getHiLiteHandler());
         }
-        m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
-            m_snc.getCredentialsProvider(), getHiLiteHandler());
+        // the custom name might have changed meanwhile
+        m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());
         m_portView.openView(knimeWindowBounds);
     }
 

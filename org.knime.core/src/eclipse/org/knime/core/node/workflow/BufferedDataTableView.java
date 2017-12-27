@@ -141,9 +141,10 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
     }
 
 
-    /**
-     * Rest internal data table and reset data out-port view.
+    /** {@inheritDoc}
+     * Reset internal data table and reset data out-port view.
      */
+    @Override
     public void dispose() {
         m_table = null;
         m_dataView.setDataTable(null);

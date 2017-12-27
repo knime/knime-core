@@ -76,6 +76,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectSpecView;
 import org.knime.core.node.port.PortObjectView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
@@ -86,6 +87,9 @@ import org.knime.core.node.util.ViewUtils;
  * @author Fabian Dill, University of Konstanz
  */
 public class OutPortView extends JFrame {
+
+    /** Update object to reset the view. */
+    private static final UpdateObject UPDATE_OBJECT_NULL = new UpdateObject(null, null, null, null, null);
 
     /** Keeps track if view has been opened before. */
     private boolean m_wasOpened = false;
@@ -310,6 +314,10 @@ public class OutPortView extends JFrame {
                         PortObjectView poView = (PortObjectView)oldComponent;
                         poView.setCredentialsProvider(null);
                         poView.setHiliteHandler(null);
+                        poView.dispose();
+                    }
+                    if (oldComponent instanceof PortObjectSpecView) {
+                        ((PortObjectSpecView)oldComponent).dispose();
                     }
                 }
                 m_tabbedPane.removeAll();
@@ -365,8 +373,8 @@ public class OutPortView extends JFrame {
     public void dispose() {
         // release all - identified memory leak via
         // sun.awt.AppContext -> ... Maps -> swing.RepaintManager -> ...> JTabbedPane -> ... -> WFM
-        m_tabbedPane.removeAll();
         m_updateObjectReference.set(null);
+        updateInternal(UPDATE_OBJECT_NULL);
         remove(m_tabbedPane);
         super.dispose();
     }
