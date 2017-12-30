@@ -116,6 +116,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new BooleanFieldEditor(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
+        addField(new BooleanFieldEditor(
+            PreferenceConstants.P_CONFIRM_LOAD_NIGHTLY_BUILD_WORKFLOW,
+            "Confirm when loading workflows created by a nightly build", parent));
+
         ComboFieldEditor dataAwareExecutePromptEditor = new ComboFieldEditor(
             PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS,
             "Execute upstream nodes when needed",

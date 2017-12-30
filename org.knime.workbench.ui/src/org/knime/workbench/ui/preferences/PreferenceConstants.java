@@ -69,6 +69,10 @@ public interface PreferenceConstants {
     public static final String P_CONFIRM_EXEC_NODES_NOT_SAVED =
         "knime.confirm.exec_nodes_not_saved";
 
+    /** Preference constant to (not) warn when loading nightly build workflow.
+     * @since 3.5 */
+    public static final String P_CONFIRM_LOAD_NIGHTLY_BUILD_WORKFLOW = "knime.confirm.nightlybuildflow";
+
     /** Preference constant to execute upstream nodes for nodes w/ data aware dialog (ALWAYS, NEVER, PROMPT). */
     public static final String P_EXEC_NODES_DATA_AWARE_DIALOGS = "knime.exec_nodes_for_data_aware_dialogs";
 

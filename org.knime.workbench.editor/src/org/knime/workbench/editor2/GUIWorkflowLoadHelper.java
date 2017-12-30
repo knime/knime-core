@@ -54,17 +54,22 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.util.Version;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
@@ -72,7 +77,12 @@ import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
  */
 class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(GUIWorkflowLoadHelper.class);
+    private static final Version CURRENT_VERSION = new Version(KNIMEConstants.VERSION);
+
+    private static final String LOAD_FUTURE_FLOW_TEXT =
+        "If you choose to proceed you may have issues loading the workflow, it may miss some nodes or "
+            + "connections, or node configurations may not be correct either now or when you save it later.\n\n"
+            + "How do you want to proceed?";
 
     private final Display m_display;
     private final String m_workflowName;
@@ -168,35 +178,35 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
     @Override
     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
         final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
-        Version currentVersion = new Version(KNIMEConstants.VERSION);
-        StringBuilder e = new StringBuilder("Your version of KNIME Analytics Platform (");
-        e.append(currentVersion);
 
-        e.append(") version does not support reading workflows created by a ");
-        if (isNightlyBuild) {
-            e.append("nightly build version");
+        final boolean isFuture = createdByKNIMEVersion != null && !CURRENT_VERSION.isSameOrNewer(createdByKNIMEVersion);
+        assert isFuture || isNightlyBuild : "Only to be called for 'future' workflows or those created by a nightly";
+
+        if (isNightlyBuild && !isFuture) {
+            // nightly builds in the same or older version will show an info dialog with a toggle button
+            return shouldLoadNightlyBuildWorkflow(workflowKNIMEVersion, createdByKNIMEVersion);
         } else {
-            e.append("newer release");
+            return shouldLoadFutureVersionWorkflow(workflowKNIMEVersion, createdByKNIMEVersion, isNightlyBuild);
         }
+    }
+
+    /** Called from {@link #getUnknownKNIMEVersionLoadPolicy(LoadVersion, Version, boolean)} when loading a
+     * workflow created by a future version of KNIME AP. */
+    private UnknownKNIMEVersionLoadPolicy shouldLoadFutureVersionWorkflow(final LoadVersion workflowKNIMEVersion,
+        final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
+        StringBuilder e = new StringBuilder("Your version of KNIME Analytics Platform (");
+        e.append(CURRENT_VERSION);
+        e.append(") version does not support reading workflows created by a newer release");
         e.append(" of KNIME Analytics Platform (");
-        if (createdByKNIMEVersion != null) {
-            e.append(createdByKNIMEVersion);
-        } else {
-            e.append("<unknown>");
-        }
+        e.append(createdByKNIMEVersion);
         if (isNightlyBuild) {
             e.append("-nightly");
         }
         e.append(").\n\n");
 
-        if (createdByKNIMEVersion != null && !currentVersion.isSameOrNewer(createdByKNIMEVersion)) {
-            e.append("You should upgrade to the latest version of KNIME Analytics Platform to open this workflow.\n\n");
-        }
+        e.append("You should upgrade to the latest version of KNIME Analytics Platform to open this workflow.\n\n");
+        e.append(LOAD_FUTURE_FLOW_TEXT);
 
-        e.append("If you choose to proceed you may have issues loading the workflow, it may miss some nodes or ")
-            .append("connections, or node configurations may not be correct either now or when you save it later.\n\n");
-
-        e.append("How do you want to proceed?");
         String cancel = "&Cancel";
         String loadAnyway = "&Load Anyway";
         final String[] labels = new String[] {cancel, loadAnyway};
@@ -208,10 +218,65 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
                 MessageDialog dialog = new MessageDialog(m_display.getActiveShell(),
                     "Workflow version not supported by KNIME Analytics Platform version",
                     null, e.toString(), MessageDialog.WARNING, labels, 0);
-                if (dialog.open() == 0) {
-                    result.set(UnknownKNIMEVersionLoadPolicy.Abort);
-                } else {
-                    result.set(UnknownKNIMEVersionLoadPolicy.Try);
+                switch (dialog.open()) {
+                    case 0:           // 0 button: Cancel
+                    case SWT.DEFAULT: // cancel by 'esc'
+                        result.set(UnknownKNIMEVersionLoadPolicy.Abort);
+                        break;
+                    default:
+                        result.set(UnknownKNIMEVersionLoadPolicy.Try);
+                }
+            }
+        });
+        return result.get();
+    }
+
+    /** Called from {@link #getUnknownKNIMEVersionLoadPolicy(LoadVersion, Version, boolean)} when loading a
+     * workflow created by a current or old nightly build version. Requires special treatment as per AP-8642. */
+    private UnknownKNIMEVersionLoadPolicy shouldLoadNightlyBuildWorkflow(final LoadVersion workflowKNIMEVersion,
+        final Version createdByKNIMEVersion) {
+        final IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean confirmLoadNightlyBuild = store.getBoolean(PreferenceConstants.P_CONFIRM_LOAD_NIGHTLY_BUILD_WORKFLOW);
+        if (!confirmLoadNightlyBuild) {
+            return UnknownKNIMEVersionLoadPolicy.Try;
+        }
+
+        StringBuilder e = new StringBuilder("You are attempting to load a workflow created with a nightly build (");
+        if (createdByKNIMEVersion != null) {
+            e.append(createdByKNIMEVersion);
+        } else {
+            e.append("<unknown>");
+        }
+        e.append("-nightly). This can lead to issues with the officially released version of some nodes.\n\n");
+        e.append(LOAD_FUTURE_FLOW_TEXT);
+
+        // must not change to something else than this as MessageDialogWithToggle has some special magic to re-index
+        // buttons -- see org.eclipse.jface.dialogs.MessageDialogWithToggle.createButtonsForButtonBar(Composite)
+        // must use jface button label as per org.eclipse.jface.dialogs.MessageDialogWithToggle.mapButtonLabelToButtonID
+        // (this is very different to the behavior of MessageDialog(NoToggle))
+        String cancel = IDialogConstants.CANCEL_LABEL;
+        String loadAnyway = "&Load Anyway";
+        final String[] labels = new String[] {cancel, loadAnyway};
+        final AtomicReference<UnknownKNIMEVersionLoadPolicy> result =
+                new AtomicReference<>(UnknownKNIMEVersionLoadPolicy.Abort);
+        m_display.syncExec(new Runnable() {
+            @Override
+            public void run() {
+                MessageDialogWithToggle dialog = new MessageDialogWithToggle(m_display.getActiveShell(),
+                    "Loading Workflow created by a Nightly Build",
+                    null, e.toString(), MessageDialog.WARNING, labels, 0,
+                    "Always load workflows created by a Nightly Build", false);
+                switch (dialog.open()) {
+                    case IDialogConstants.CANCEL_ID:   // Cancel button
+                    case SWT.DEFAULT:                  // cancel by 'esc'
+                        result.set(UnknownKNIMEVersionLoadPolicy.Abort);
+                        break;
+                    default:
+                        result.set(UnknownKNIMEVersionLoadPolicy.Try);
+                        if (dialog.getToggleState()) {
+                            store.setValue(PreferenceConstants.P_CONFIRM_LOAD_NIGHTLY_BUILD_WORKFLOW, false);
+                            KNIMEUIPlugin.getDefault().savePluginPreferences();
+                        }
                 }
             }
         });
