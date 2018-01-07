@@ -22,7 +22,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -59,7 +59,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.orc.CompressionKind;
+import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
+import org.apache.orc.OrcFile.WriterOptions;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
@@ -67,6 +69,7 @@ import org.apache.orc.Writer;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.def.DefaultCellIterator;
 import org.knime.core.node.InvalidSettingsException;
@@ -86,6 +89,8 @@ public final class OrcKNIMEUtil {
         private final Map<String, OrcKNIMEType> m_fieldMap;
         private final boolean m_hasRowKey;
         private final File m_file;
+        private Long m_stripSizeLong = null;
+        private Integer m_rowBatchSize = null;
 
         /**
          *
@@ -109,21 +114,43 @@ public final class OrcKNIMEUtil {
             return this;
         }
 
+        /** Used during testing to force some swapping, or null for default. See {@link OrcConf#STRIPE_SIZE}. */
+        public OrcWriterBuilder setStripeSize(final Long value) {
+            m_stripSizeLong = value;
+            return this;
+        }
+
+        /** Used during testing to set some non-default batch size (number of rows before a batch is handed off to
+         * ORC for further processing, etc. Default is null (so {@link VectorizedRowBatch#DEFAULT_SIZE}). */
+        public OrcWriterBuilder setRowBatchSize(final Integer value) {
+            m_rowBatchSize = value;
+            return this;
+        }
+
         public OrcKNIMEWriter create() throws IOException {
             TypeDescription schema = TypeDescription.createStruct();
             for (Map.Entry<String, OrcKNIMEType> colEntry : m_fieldMap.entrySet()) {
                 schema.addField(colEntry.getKey(), colEntry.getValue().getTypeDescription());
             }
             Configuration conf = new Configuration();
-            Writer writer = OrcFile.createWriter(new Path(m_file.getAbsolutePath()),
-                OrcFile.writerOptions(conf)
-                  .setSchema(schema)
-                  .stripeSize(100000)
-                  .bufferSize(10000)
-                  .compress(CompressionKind.SNAPPY)
-                  .version(OrcFile.Version.V_0_12));
-            VectorizedRowBatch rowBatch = schema.createRowBatch();
+            WriterOptions orcConf = OrcFile.writerOptions(conf)
+              .setSchema(schema)
+              .compress(CompressionKind.SNAPPY)
+              .version(OrcFile.Version.V_0_12);
+            if (m_stripSizeLong != null) {
+                orcConf.stripeSize(m_stripSizeLong);
+            }
+            Writer writer = OrcFile.createWriter(new Path(m_file.getAbsolutePath()), orcConf);
+            int rowBatchSize = m_rowBatchSize != null ? m_rowBatchSize : VectorizedRowBatch.DEFAULT_SIZE;
+            VectorizedRowBatch rowBatch = schema.createRowBatch(rowBatchSize);
             return new OrcKNIMEWriter(writer, m_hasRowKey, rowBatch, getOrcKNIMETypes());
+        }
+
+        /**
+         * @return the file
+         */
+        public File getFile() {
+            return m_file;
         }
 
         /**
@@ -136,7 +163,8 @@ public final class OrcKNIMEUtil {
         public OrcRowIterator createRowIterator() throws IOException {
             Reader reader = OrcFile.createReader(new Path(m_file.getAbsolutePath()),
                 OrcFile.readerOptions(new Configuration()));
-            return new OrcRowIterator(reader, m_hasRowKey, getOrcKNIMETypes());
+            final int batchSize = m_rowBatchSize != null ? m_rowBatchSize : VectorizedRowBatch.DEFAULT_SIZE;
+            return new OrcRowIterator(reader, m_hasRowKey, getOrcKNIMETypes(), batchSize);
         }
 
         public void writeSettings(final NodeSettingsWO settings) {
@@ -176,7 +204,7 @@ public final class OrcKNIMEUtil {
         }
 
         public void addRow(final DataRow row) throws IOException {
-            final int rowInBatch = m_rowBatch.size;
+            final int rowInBatch = m_rowBatch.size++;
             int c = 0;
             if (m_hasRowKey) {
                 ((StringOrcKNIMEType)m_columnTypes[0]).writeValue(
@@ -187,7 +215,7 @@ public final class OrcKNIMEUtil {
                 DataCell cell = row.getCell(m_hasRowKey ? c - 1 : c);
                 m_columnTypes[c].writeValue(m_rowBatch.cols[c], rowInBatch, cell);
             }
-            if (rowInBatch == m_batchSize - 1) {
+            if (m_rowBatch.size == m_rowBatch.getMaxSize()) {
                 m_writer.addRowBatch(m_rowBatch);
                 m_rowBatch.reset();
             }
@@ -218,13 +246,15 @@ public final class OrcKNIMEUtil {
 
         /**
          * @param reader
+         * @param batchSize TODO
          * @throws IOException
          */
-        OrcRowIterator(final Reader reader, final boolean hasRowKey, final OrcKNIMEType[] columnTypes) throws IOException {
+        OrcRowIterator(final Reader reader, final boolean hasRowKey, final OrcKNIMEType[] columnTypes,
+            final int batchSize) throws IOException {
             m_hasRowKey = hasRowKey;
             m_columnTypes = columnTypes;
             m_rows = reader.rows();
-            m_rowBatch = reader.getSchema().createRowBatch();
+            m_rowBatch = reader.getSchema().createRowBatch(batchSize);
             internalNext();
         }
 
@@ -239,13 +269,17 @@ public final class OrcKNIMEUtil {
          */
         @Override
         public DataRow next() {
-            OrcRow orcRow = new OrcRow(this, m_rowInBatch);
-            try {
-                internalNext();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            OrcRow orcRow = new OrcRow(this, m_rowInBatch); // this is fragile as updates to the batch make it invalid
+            DataRow safeRow = new BlobSupportDataRow(orcRow.getKey(), orcRow);
+            m_rowInBatch += 1;
+            if (m_rowInBatch >= m_rowBatch.size) {
+                try {
+                    internalNext();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-            return orcRow;
+            return safeRow;
         }
 
         private void internalNext() throws IOException {
@@ -269,6 +303,9 @@ public final class OrcKNIMEUtil {
     }
 
 
+    /** The KNIME DataRow wrapping the VectorizedBatch, values are read lazy so a reset to the batch will make this
+     * row invalid -- caller needs to cache data first.
+     */
     static final class OrcRow implements DataRow {
 
         private static final RowKey NO_KEY = new RowKey("no-key");
@@ -297,7 +334,6 @@ public final class OrcKNIMEUtil {
 
         @Override
         public DataCell getCell(final int index) {
-            // TODO do not eval lazy as m_rowBatch may have been updated
             int c = index + (m_iterator.m_hasRowKey ? 1 : 0);
             return m_iterator.m_columnTypes[c].readValue(m_iterator.m_rowBatch.cols[c], m_rowInBatch);
         }

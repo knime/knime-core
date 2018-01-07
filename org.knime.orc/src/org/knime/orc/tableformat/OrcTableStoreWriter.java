@@ -1,8 +1,7 @@
 /*
  * ------------------------------------------------------------------------
- *
- *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -22,7 +21,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -41,7 +40,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
  *   Mar 18, 2016 (wiswedel): created
@@ -74,13 +73,11 @@ final class OrcTableStoreWriter extends AbstractTableStoreWriter {
     /**
      * @param binFile
      * @param spec
-     * @param bufferID
      * @param writeRowKey
      * @throws IOException
      * @throws IllegalArgumentException
      */
-    public OrcTableStoreWriter(final File binFile, final DataTableSpec spec, final int bufferID,
-        final boolean writeRowKey) throws IllegalArgumentException, IOException {
+    public OrcTableStoreWriter(final File binFile, final DataTableSpec spec, final boolean writeRowKey) throws IllegalArgumentException, IOException {
         super(spec, writeRowKey);
         m_binFile = binFile;
         m_binFile.delete();

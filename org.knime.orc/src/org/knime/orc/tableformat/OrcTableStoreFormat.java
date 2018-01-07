@@ -1,8 +1,7 @@
 /*
  * ------------------------------------------------------------------------
- *
- *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -22,7 +21,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -41,7 +40,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
  *   Mar 14, 2016 (wiswedel): created
@@ -57,9 +56,9 @@ import java.util.Map;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.storage.AbstractTableStoreFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
+import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -71,7 +70,7 @@ import org.knime.core.node.NodeSettingsRO;
  *
  * @author wiswedel
  */
-public final class OrcTableStoreFormat extends AbstractTableStoreFormat {
+public final class OrcTableStoreFormat implements TableStoreFormat {
 
     static final Map<DataType, OrcKNIMEType> SUPPORTED_TYPES_MAP;
 
@@ -83,31 +82,33 @@ public final class OrcTableStoreFormat extends AbstractTableStoreFormat {
         SUPPORTED_TYPES_MAP.put(LongCell.TYPE, OrcKNIMEType.LONG);
     }
 
+    @Override
+    public String getName() {
+        return "Column Store (Apache ORC) - experimental";
+    }
+
+    @Override
+    public String getFilenameSuffix() {
+        return ".orc";
+    }
+
     /** {@inheritDoc} */
     @Override
-    public boolean accept(final DataTableSpec spec) {
+    public boolean accepts(final DataTableSpec spec) {
         return spec.stream().map(c -> c.getType()).allMatch(t -> SUPPORTED_TYPES_MAP.containsKey(t));
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean supportsBlobs() {
-        return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public AbstractTableStoreWriter createWriter(final File binFile, final DataTableSpec spec, final int bufferID,
-        final boolean writeRowKey) throws IOException {
-        return new OrcTableStoreWriter(binFile, spec, bufferID, writeRowKey);
+    public AbstractTableStoreWriter createWriter(final File binFile, final DataTableSpec spec, final boolean writeRowKey) throws IOException {
+        return new OrcTableStoreWriter(binFile, spec, writeRowKey);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public AbstractTableStoreWriter createWriter(final OutputStream output, final DataTableSpec spec, final int bufferID,
-        final boolean writeRowKey) throws IOException, UnsupportedOperationException {
+    public AbstractTableStoreWriter createWriter(final OutputStream output, final DataTableSpec spec, final boolean writeRowKey) throws IOException, UnsupportedOperationException {
         throw new UnsupportedOperationException("Writing to stream not supported");
     }
 
@@ -116,9 +117,8 @@ public final class OrcTableStoreFormat extends AbstractTableStoreFormat {
      */
     @Override
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
-        final int bufferID, final Map<Integer, ContainerTable> tblRep, final int version,
-        final boolean isReadRowKey) throws IOException, InvalidSettingsException {
-        return new OrcTableStoreReader(binFile, spec, settings, bufferID, tblRep, version, isReadRowKey);
+        final Map<Integer, ContainerTable> tblRep, final int version, final boolean isReadRowKey) throws IOException, InvalidSettingsException {
+        return new OrcTableStoreReader(binFile, spec, settings, tblRep, version, isReadRowKey);
     }
 
 }

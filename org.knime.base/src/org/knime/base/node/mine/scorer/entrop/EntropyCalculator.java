@@ -323,7 +323,7 @@ public final class EntropyCalculator {
             final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         File scorerFile = new File(dir, FILE_SCORER_TABLE);
-        File tempFile = DataContainer.createTempFile();
+        File tempFile = DataContainer.createTempFile(".table");
         FileUtil.copy(scorerFile, tempFile);
         DataTable scorerTable = DataContainer.readFromZip(tempFile);
         File settingsFile = new File(dir, FILE_SETTINGS);
@@ -397,6 +397,7 @@ public final class EntropyCalculator {
             sortedRows.add(row);
         }
         Collections.sort(sortedRows, new Comparator<DefaultRow>() {
+            @Override
             public int compare(final DefaultRow o1, final DefaultRow o2) {
                 double e1 = ((DoubleValue)o1.getCell(2)).getDoubleValue();
                 double e2 = ((DoubleValue)o2.getCell(2)).getDoubleValue();

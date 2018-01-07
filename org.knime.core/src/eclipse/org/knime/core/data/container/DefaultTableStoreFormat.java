@@ -1,8 +1,7 @@
 /*
  * ------------------------------------------------------------------------
- *
- *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -22,7 +21,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -41,7 +40,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
  *   Mar 14, 2016 (wiswedel): created
@@ -55,9 +54,9 @@ import java.io.OutputStream;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.storage.AbstractTableStoreFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
+import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -69,7 +68,7 @@ import org.knime.core.node.NodeSettingsRO;
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class DefaultTableStoreFormat extends AbstractTableStoreFormat {
+public final class DefaultTableStoreFormat implements TableStoreFormat {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultTableStoreFormat.class);
 
@@ -121,29 +120,33 @@ public final class DefaultTableStoreFormat extends AbstractTableStoreFormat {
         None;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean accept(final DataTableSpec spec) {
-        return true;
+    public String getName() {
+        return "Default";
+    }
+
+    @Override
+    public String getFilenameSuffix() {
+        return ".bin.gz";
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean supportsBlobs() {
+    public boolean accepts(final DataTableSpec spec) {
         return true;
     }
 
     /** {@inheritDoc} */
     @Override
     public AbstractTableStoreWriter createWriter(final File binFile, final DataTableSpec spec,
-        final int bufferID, final boolean writeRowKey) throws IOException {
-        return createWriter(new FileOutputStream(binFile), spec, bufferID, writeRowKey);
+        final boolean writeRowKey) throws IOException {
+        return createWriter(new FileOutputStream(binFile), spec, writeRowKey);
     }
 
     /** {@inheritDoc} */
     @Override
     public AbstractTableStoreWriter createWriter(final OutputStream output, final DataTableSpec spec,
-        final int bufferID, final boolean writeRowKey) throws IOException {
+        final boolean writeRowKey) throws IOException {
         return new DefaultTableStoreWriter(spec, output, writeRowKey);
     }
 
@@ -154,10 +157,10 @@ public final class DefaultTableStoreFormat extends AbstractTableStoreFormat {
      */
     @Override
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
-        final NodeSettingsRO settings, final int bufferID, final Map<Integer, ContainerTable> tblRep,
-        final int version, final boolean isReadRowKey)
+        final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep, final int version,
+        final boolean isReadRowKey)
                 throws IOException, InvalidSettingsException {
-        return new DefaultTableStoreReader(binFile, spec, settings, bufferID, tblRep, version, isReadRowKey);
+        return new DefaultTableStoreReader(binFile, spec, settings, tblRep, version, isReadRowKey);
     }
 
 

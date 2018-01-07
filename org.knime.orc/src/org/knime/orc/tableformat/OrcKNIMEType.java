@@ -1,8 +1,7 @@
 /*
  * ------------------------------------------------------------------------
- *
- *  Copyright by KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -22,7 +21,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -41,14 +40,14 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
  *   Mar 18, 2016 (wiswedel): created
  */
 package org.knime.orc.tableformat;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
@@ -80,9 +79,6 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
     public static final IntOrcKNIMEType INT = new IntOrcKNIMEType();
     public static final LongOrcKNIMEType LONG = new LongOrcKNIMEType();
 
-//    private final AbstractPrimitiveWritableObjectInspector m_factory;
-//    private final Type m_prestoType;
-//    private final Supplier<Object> m_hadoopObjectSupplier;
     private final TypeDescription m_orcTypeDescription;
 
     /**
@@ -94,6 +90,7 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
 
     void writeValue(final ColumnVector columnVector, final int rowInBatch, final DataCell cell) {
         if (cell.isMissing()) {
+            columnVector.noNulls = false;
             columnVector.isNull[rowInBatch] = true;
         } else {
             writeValueNonNull((C)columnVector, rowInBatch, cell);
@@ -104,14 +101,9 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
 
     @SuppressWarnings("unchecked")
     DataCell readValue(final ColumnVector columnVector, final int rowInBatch) {
-        if (columnVector.noNulls) {
-            if (columnVector.isRepeating) {
-                return readValueNonNull((C)columnVector, 0);
-            } else if (columnVector.isNull[rowInBatch]) {
-                return DataType.getMissingCell();
-            } else {
-                return readValueNonNull((C)columnVector, rowInBatch);
-            }
+        int rowInBatchCorrected = columnVector.isRepeating ? 0 : rowInBatch;
+        if (columnVector.noNulls || !columnVector.isNull[rowInBatchCorrected]) {
+            return readValueNonNull((C)columnVector, rowInBatchCorrected);
         } else {
             return DataType.getMissingCell();
         }
@@ -212,20 +204,22 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
     }
 
     static final class StringOrcKNIMEType extends OrcKNIMEType<BytesColumnVector> {
-        private static final Charset UTF_8 = Charset.forName("UTF-8");
         private StringOrcKNIMEType() {
             super(TypeDescription.createString());
         }
 
         @Override
         void writeValueNonNull(final BytesColumnVector columnVector, final int rowInBatch, final DataCell cell) {
-            byte[] b = ((StringValue)cell).getStringValue().getBytes(UTF_8);
+            byte[] b = ((StringValue)cell).getStringValue().getBytes(StandardCharsets.UTF_8);
             columnVector.setRef(rowInBatch, b, 0, b.length);
         }
 
         @Override
         DataCell readValueNonNull(final BytesColumnVector columnVector, final int rowInBatchOrZero) {
-            return new StringCell(new String(columnVector.vector[rowInBatchOrZero], UTF_8));
+            return new StringCell(new String(
+                    columnVector.vector[rowInBatchOrZero],
+                    columnVector.start[rowInBatchOrZero],
+                    columnVector.length[rowInBatchOrZero], StandardCharsets.UTF_8));
         }
 
         // TODO new method with byte[]
@@ -234,7 +228,7 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
             if (string == null) {
                 byteVectorColumn.isNull[rowInBatch] = true;
             } else {
-                byte[] b = string.getBytes(UTF_8);
+                byte[] b = string.getBytes(StandardCharsets.UTF_8);
                 byteVectorColumn.setRef(rowInBatch, b, 0, b.length);
             }
         }
@@ -248,9 +242,14 @@ public abstract class OrcKNIMEType<C extends ColumnVector> {
             final BytesColumnVector byteVectorColumn = (BytesColumnVector)columnVector;
             if (byteVectorColumn.noNulls) {
                 if (byteVectorColumn.isRepeating) {
-                    return new String(byteVectorColumn.vector[0], UTF_8);
+                    return new String(byteVectorColumn.vector[0], StandardCharsets.UTF_8);
                 } else if (byteVectorColumn.isNull[rowInBatch]) {
                     return null;
+                } else {
+                    return new String(
+                        byteVectorColumn.vector[rowInBatch],
+                        byteVectorColumn.start[rowInBatch],
+                        byteVectorColumn.length[rowInBatch], StandardCharsets.UTF_8);
                 }
             }
             return null;

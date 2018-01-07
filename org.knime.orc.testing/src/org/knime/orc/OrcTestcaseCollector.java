@@ -43,48 +43,16 @@
  * -------------------------------------------------------------------
  *
  * History
- *   Mar 18, 2016 (wiswedel): created
+ *   20.11.2010 (meinl): created
  */
-package org.knime.orc.tableformat;
+package org.knime.orc;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.storage.AbstractTableStoreReader;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.orc.tableformat.OrcKNIMEUtil.OrcWriterBuilder;
+import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
  *
- * @author wiswedel
+ * @author Thorsten Meinl, University of Konstanz
  */
-final class OrcTableStoreReader extends AbstractTableStoreReader {
-
-    private OrcWriterBuilder m_builder;
-
-    /**
-     * @param binFile
-     * @param spec
-     * @param settings
-     * @param tblRep
-     * @param version
-     * @param isReadRowKey
-     * @throws InvalidSettingsException
-     */
-    public OrcTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep,
-        final int version, final boolean isReadRowKey) throws InvalidSettingsException {
-        m_builder = new OrcWriterBuilder(binFile, isReadRowKey);
-        m_builder.fromSettings(settings);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public TableStoreCloseableRowIterator iterator() throws IOException {
-        return m_builder.createRowIterator();
-    }
-
+public class OrcTestcaseCollector extends AbstractTestcaseCollector {
+    // yes, it is empty
 }

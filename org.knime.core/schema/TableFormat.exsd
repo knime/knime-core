@@ -43,7 +43,7 @@
                   The class responsible for the storage format.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.core.data.container.storage.AbstractTableStoreFormat:"/>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.container.storage.TableStoreFormat"/>
                </appInfo>
             </annotation>
          </attribute>
@@ -55,7 +55,7 @@
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         KNIME 3.2
+         KNIME 3.6
       </documentation>
    </annotation>
 
@@ -75,7 +75,7 @@
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         (C) KNIME GmbH, Konstanz, Germany.
+         KNIME AG, Zurich, Switzerland
       </documentation>
    </annotation>
 

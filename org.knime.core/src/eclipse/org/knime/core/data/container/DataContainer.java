@@ -1148,20 +1148,37 @@ public class DataContainer implements RowAppender {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
     /**
-     * Creates a temp file called "knime_container_<i>date</i>_xxxx.zip" and marks it for deletion upon exit. This
+     * Creates a temp file called "knime_container_<i>date</i>_xxxx.bin.gz" and marks it for deletion upon exit. This
      * method is used to init the file when the data container flushes to disk. It is also used when the nodes are read
      * back in to copy the data to the tmp-directory.
      *
      * @return A temp file to use. The file is empty.
      * @throws IOException If that fails for any reason.
+     * @deprecated use {@link #createTempFile(String)} -- in fact, method should only be used withing the core
+     * @noreference This method is not intended to be referenced by clients.
      */
+    @Deprecated
     public static final File createTempFile() throws IOException {
+        return createTempFile(".bin.gz");
+    }
+
+    /**
+     * Creates a temp file called "knime_container_<i>date</i>_xxxx.&lt;suffix>" and marks it for deletion upon exit.
+     * This method is used to init the file when the data container flushes to disk. It is also used when the nodes are
+     * read back in to copy the data to the tmp-directory.
+     *
+     * @param suffix The file suffix (e.g. ".bin.gz")
+     * @return A temp file to use. The file is empty.
+     * @throws IOException If that fails for any reason.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.6
+     */
+    public static final File createTempFile(final String suffix) throws IOException {
         String date;
         synchronized (DATE_FORMAT) {
             date = DATE_FORMAT.format(new Date());
         }
         String fileName = "knime_container_" + date + "_";
-        String suffix = ".bin.gz";
         File f = FileUtil.createTempFile(fileName, suffix);
         f.deleteOnExit();
         return f;
