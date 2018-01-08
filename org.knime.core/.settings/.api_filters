@@ -108,6 +108,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/PortObjectView.java" type="org.knime.core.node.port.PortObjectView">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.PortObjectView"/>
+                <message_argument value="dispose()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/database/writer/DBWriter.java" type="org.knime.core.node.port.database.writer.DBWriter">
         <filter id="403804204">
             <message_arguments>
