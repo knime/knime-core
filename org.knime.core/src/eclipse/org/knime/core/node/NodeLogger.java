@@ -522,6 +522,8 @@ public final class NodeLogger {
      */
     private NodeLogger(final Logger logger) {
         m_logger = logger;
+        // this overrides the default ERROR level from the configuration file
+        m_logger.setLevel(Level.ALL);
     }
 
     /**
