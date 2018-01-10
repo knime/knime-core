@@ -89,6 +89,7 @@ public class SharedPortObjectOutput<T extends Serializable> extends PortOutput {
     public void updateAndPush(final Updater<T> updater) {
         try {
             updater.update(m_portObject.getAndLock());
+            m_portObject.setUpdated();
         } finally {
             m_portObject.unlock();
         }
@@ -107,6 +108,14 @@ public class SharedPortObjectOutput<T extends Serializable> extends PortOutput {
          * @param object the object that should be used for updating
          */
         void update(T object);
+    }
+
+    /**
+     * Enforce an iterative update / process order.
+     * @param enforce yes enforce, no do not enforce
+     */
+    public void enforceIterative(final boolean enforce) {
+        m_portObject.enforceIterative(enforce);
     }
 
 }

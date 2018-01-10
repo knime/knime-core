@@ -72,7 +72,15 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
 
     private Condition m_sharedObjectSet;
 
+    private Condition m_waitOnProcessingCondition;
+
+    private Condition m_waitOnUpdateCondition;
+
     private T m_sharedObject;
+
+    private boolean m_iterative;
+
+    private boolean m_updated;
 
     /**
      *  Define port type of objects of this class when used as PortObjects.
@@ -91,6 +99,9 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
     public SharedContainerPortObject() {
         m_lock = new ReentrantLock();
         m_sharedObjectSet = m_lock.newCondition();
+        m_waitOnProcessingCondition = m_lock.newCondition();
+        m_waitOnUpdateCondition = m_lock.newCondition();
+        m_updated = false;
     }
 
     /**
@@ -155,6 +166,44 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
     public JComponent[] getViews() {
         // no views
         return new JComponent[0];
+    }
+
+    /**
+     * Enforce an iterative update / process order.
+     * @param enforce yes enforce, no do not enforce
+     */
+    public void enforceIterative(final boolean enforce) {
+        m_iterative = enforce;
+    }
+
+    /**
+     * Set the updated flag to true and notify all threads waiting for model updates.
+     */
+    public void setUpdated() {
+        if(m_updated && m_iterative) {
+            try {
+                m_waitOnProcessingCondition.await();
+            } catch (InterruptedException ex) {
+                // TODO Auto-generated catch block
+            }
+        }
+        m_updated = true;
+        m_waitOnUpdateCondition.signalAll();
+    }
+
+    /**
+     * Set the updated flag to false and notify all threads waiting for model processing.
+     */
+    public void setProcessed() {
+        if(!m_updated && m_iterative) {
+            try {
+                m_waitOnUpdateCondition.await();
+            } catch (InterruptedException ex) {
+                // TODO Auto-generated catch block
+            }
+        }
+        m_updated = false;
+        m_waitOnProcessingCondition.signalAll();
     }
 
 }

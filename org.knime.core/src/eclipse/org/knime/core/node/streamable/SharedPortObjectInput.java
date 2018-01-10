@@ -77,6 +77,7 @@ public class SharedPortObjectInput<T extends Serializable> extends PortInput {
     public void pollAndProcess(final Processor<T> processor) {
         try {
             processor.process(m_portObject.getAndLock());
+            m_portObject.setProcessed();
         } finally {
             m_portObject.unlock();
         }
