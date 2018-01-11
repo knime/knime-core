@@ -49,6 +49,7 @@
 package org.knime.core.node.streamable;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -80,7 +81,7 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
 
     private boolean m_iterative;
 
-    private boolean m_updated;
+    private AtomicBoolean m_updated;
 
     /**
      *  Define port type of objects of this class when used as PortObjects.
@@ -101,7 +102,7 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
         m_sharedObjectSet = m_lock.newCondition();
         m_waitOnProcessingCondition = m_lock.newCondition();
         m_waitOnUpdateCondition = m_lock.newCondition();
-        m_updated = false;
+        m_updated = new AtomicBoolean(false);
     }
 
     /**
@@ -123,7 +124,7 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
      *
      * @return the encapsulated object
      */
-    synchronized T getAndLock() {
+    T getAndLock() {
         m_lock.lock();
         try {
             while(m_sharedObject == null) {
@@ -139,7 +140,7 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
      * Signal that a working step (updating / processing) on the encapsulated object is done and the next thread waiting
      * on retrieving the encapsulated object may get a hold of it.
      */
-    synchronized void unlock() {
+    void unlock() {
         m_lock.unlock();
     }
 
@@ -180,14 +181,14 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
      * Set the updated flag to true and notify all threads waiting for model updates.
      */
     public void setUpdated() {
-        if(m_updated && m_iterative) {
+        if(m_updated.get() && m_iterative) {
             try {
                 m_waitOnProcessingCondition.await();
             } catch (InterruptedException ex) {
                 // TODO Auto-generated catch block
             }
         }
-        m_updated = true;
+        m_updated.set(true);
         m_waitOnUpdateCondition.signalAll();
     }
 
@@ -195,14 +196,14 @@ public class SharedContainerPortObject<T extends Serializable> implements PortOb
      * Set the updated flag to false and notify all threads waiting for model processing.
      */
     public void setProcessed() {
-        if(!m_updated && m_iterative) {
+        if(!m_updated.get() && m_iterative) {
             try {
                 m_waitOnUpdateCondition.await();
             } catch (InterruptedException ex) {
                 // TODO Auto-generated catch block
             }
         }
-        m_updated = false;
+        m_updated.set(false);
         m_waitOnProcessingCondition.signalAll();
     }
 
