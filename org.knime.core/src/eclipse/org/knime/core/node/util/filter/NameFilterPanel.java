@@ -73,7 +73,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -122,7 +121,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /** Include model. */
     @SuppressWarnings("rawtypes")
-    private final DefaultListModel m_inclMdl;
+    private final ArrayListModel m_inclMdl;
 
     /** Exclude list. */
     @SuppressWarnings("rawtypes")
@@ -130,7 +129,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /** Exclude model. */
     @SuppressWarnings("rawtypes")
-    private final DefaultListModel m_exclMdl;
+    private final ArrayListModel m_exclMdl;
 
     /** Highlight all search hits in the include model. */
     private final JCheckBox m_markAllHitsIncl;
@@ -334,7 +333,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         buttonPan.add(Box.createGlue());
 
         // include list
-        m_inclMdl = new DefaultListModel();
+        m_inclMdl = new ArrayListModel();
         m_inclList = new JList(m_inclMdl);
         m_inclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_inclList.addMouseListener(new MouseAdapter() {
@@ -383,7 +382,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         includePanel.add(jspIncl, BorderLayout.CENTER);
 
         // exclude list
-        m_exclMdl = new DefaultListModel();
+        m_exclMdl = new ArrayListModel();
         m_exclList = new JList(m_exclMdl);
         m_exclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_exclList.addMouseListener(new MouseAdapter() {
@@ -645,18 +644,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_availableNames = names;
         // clear internal member
         m_order.clear();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
+        m_inclMdl.clear();
+        m_exclMdl.clear();
         m_hideNames.clear();
 
         for (final String name : m_invalidIncludes) {
             final T t = getTforName(name);
-            m_inclMdl.addElement(t);
+            m_inclMdl.add(t);
             m_order.add(t);
         }
         for (final String name : m_invalidExcludes) {
             final T t = getTforName(name);
-            m_exclMdl.addElement(t);
+            m_exclMdl.add(t);
             m_order.add(t);
         }
 
@@ -672,9 +671,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
             // if item is not filtered out, add it to include or exclude list
             if (ins.contains(name)) {
-                m_inclMdl.addElement(t);
+                m_inclMdl.add(t);
             } else if (exs.contains(name)) {
-                m_exclMdl.addElement(t);
+                m_exclMdl.add(t);
             }
             m_order.add(t);
         }
@@ -802,10 +801,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (T name : names) {
             if (m_inclMdl.contains(name)) {
                 m_hideNames.add(name);
-                changed |= m_inclMdl.removeElement(name);
+                changed |= m_inclMdl.remove(name);
             } else if (m_exclMdl.contains(name)) {
                 m_hideNames.add(name);
-                changed |= m_exclMdl.removeElement(name);
+                changed |= m_exclMdl.remove(name);
             }
         }
         if (changed) {
@@ -822,13 +821,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // add all selected elements from the include to the exclude list
         HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(m_hideNames);
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+        for (Object e : m_exclMdl) {
+            hash.add(e);
         }
-        m_exclMdl.removeAllElements();
+        m_exclMdl.clear();
         for (T name : m_order) {
             if (hash.contains(name)) {
-                m_exclMdl.addElement(name);
+                m_exclMdl.add(name);
             }
         }
         m_hideNames.clear();
@@ -1079,27 +1078,32 @@ public abstract class NameFilterPanel<T> extends JPanel {
     @SuppressWarnings("unchecked")
     private void onRemIt() {
         // add all selected elements from the include to the exclude list
-        @SuppressWarnings("deprecation")
-        Object[] o = m_inclList.getSelectedValues();
+        List<T> o = m_inclList.getSelectedValuesList();
         HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+        hash.addAll(o);
+        for (Object e : m_exclMdl) {
+            hash.add(e);
         }
-        boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_inclMdl.removeElement(o[i]);
-        }
-        m_exclMdl.removeAllElements();
+
+        boolean changed = m_inclMdl.removeAll(o);
+        m_exclMdl.clear();
+
+        // Here we copy all elements to add into a tmp list and add in bulk at the end.
+        // Each add() call on the list model will fire a changed event which leads to
+        // bad performance if we want to add many elements. addAll() will fire the event
+        // only once.
+        ArrayList<T> tmp = new ArrayList<>(m_order.size());
         for (T c : m_order) {
             if (hash.contains(c)) {
-                m_exclMdl.addElement(c);
+                tmp.add(c);
                 String name = getNameForT(c);
                 if (m_invalidIncludes.remove(name)) {
                     m_invalidExcludes.add(name);
                 }
             }
         }
+        m_exclMdl.addAll(tmp);
+
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
@@ -1111,16 +1115,24 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     @SuppressWarnings("unchecked")
     private void onRemAll() {
-        boolean changed = m_inclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
+        boolean changed = !m_inclMdl.isEmpty();
+        m_inclMdl.clear();
+        m_exclMdl.clear();
         m_invalidExcludes.addAll(m_invalidIncludes);
         m_invalidIncludes.clear();
+
+        // Here we copy all elements to add into a tmp list and add in bulk at the end.
+        // Each add() call on the list model will fire a changed event which leads to
+        // bad performance if we want to add many elements. addAll() will fire the event
+        // only once.
+        ArrayList<T> tmp = new ArrayList<>(m_order.size());
         for (T c : m_order) {
             if (!m_hideNames.contains(c)) {
-                m_exclMdl.addElement(c);
+                tmp.add(c);
             }
         }
+        m_exclMdl.addAll(tmp);
+
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
@@ -1133,27 +1145,32 @@ public abstract class NameFilterPanel<T> extends JPanel {
     @SuppressWarnings("unchecked")
     private void onAddIt() {
         // add all selected elements from the exclude to the include list
-        @SuppressWarnings("deprecation")
-        Object[] o = m_exclList.getSelectedValues();
+        List<T> o = m_exclList.getSelectedValuesList();
         HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+        hash.addAll(o);
+        for (Object e : m_inclMdl) {
+            hash.add(e);
         }
-        boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_exclMdl.removeElement(o[i]);
-        }
-        m_inclMdl.removeAllElements();
+
+        boolean changed = m_exclMdl.removeAll(o);
+        m_inclMdl.clear();
+
+        // Here we copy all elements to add into a tmp list and add in bulk at the end.
+        // Each add() call on the list model will fire a changed event which leads to
+        // bad performance if we want to add many elements. addAll() will fire the event
+        // only once.
+        ArrayList<T> tmp = new ArrayList<>(m_order.size());
         for (T c : m_order) {
             if (hash.contains(c)) {
-                m_inclMdl.addElement(c);
+                tmp.add(c);
                 String name = getNameForT(c);
                 if (m_invalidExcludes.remove(name)) {
                     m_invalidIncludes.add(name);
                 }
             }
         }
+        m_inclMdl.addAll(tmp);
+
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
@@ -1165,16 +1182,24 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     @SuppressWarnings("unchecked")
     private void onAddAll() {
-        boolean changed = m_exclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
+        boolean changed = !m_exclMdl.isEmpty();
+        m_inclMdl.clear();
+        m_exclMdl.clear();
         m_invalidIncludes.addAll(m_invalidExcludes);
         m_invalidExcludes.clear();
+
+        // Here we copy all elements to add into a tmp list and add in bulk at the end.
+        // Each add() call on the list model will fire a changed event which leads to
+        // bad performance if we want to add many elements. addAll() will fire the event
+        // only once.
+        ArrayList<T> tmp = new ArrayList<>(m_order.size());
         for (T c : m_order) {
             if (!m_hideNames.contains(c)) {
-                m_inclMdl.addElement(c);
+                tmp.add(c);
             }
         }
+        m_inclMdl.addAll(tmp);
+
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();

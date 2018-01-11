@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
@@ -79,13 +78,13 @@ public final class ListModelFilterUtils {
      *            the given list. If set to <code>false</code> the method will mark the next occurrences of the search
      *            text after the current marked list element.
      */
-    public static void onSearch(final JList list, final DefaultListModel model, final String searchText,
+    public static void onSearch(final JList list, final ListModel model, final String searchText,
         final boolean markAllHits) {
         if (list == null || model == null || searchText == null) {
             return;
         }
         final String searchStr = searchText.trim();
-        if (model.isEmpty() || searchStr.equals("")) {
+        if (model.getSize() == 0 || searchStr.equals("")) {
             list.clearSelection();
             return;
         }
