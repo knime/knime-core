@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -337,6 +338,10 @@ public final class WizardExecutionController extends ExecutionController {
         this(manager);
         int[] levelStack = settings.getIntArray("promptedSubnodeIDs");
         m_promptedSubnodeIDSuffixes.addAll(Arrays.asList(ArrayUtils.toObject(levelStack)));
+
+        String[] waitingSubnodes = settings.getStringArray("waitingSubnodes", new String[0]);
+        Stream.of(waitingSubnodes).map(s -> NodeIDSuffix.fromString(s).prependParent(manager.getID()))
+            .forEach(id -> m_waitingSubnodes.add(id));
     }
 
     /**
@@ -696,6 +701,10 @@ public final class WizardExecutionController extends ExecutionController {
         int[] promptedSubnodeIDs = ArrayUtils.toPrimitive(
             m_promptedSubnodeIDSuffixes.toArray(new Integer[m_promptedSubnodeIDSuffixes.size()]));
         settings.addIntArray("promptedSubnodeIDs", promptedSubnodeIDs);
+
+        NodeID parentId = m_manager.getID();
+        settings.addStringArray("waitingSubnodes",
+            m_waitingSubnodes.stream().map(id -> NodeIDSuffix.create(parentId, id).toString()).toArray(String[]::new));
     }
 
     /** Result value of {@link WizardExecutionController#getCurrentWizardPage()}. */
