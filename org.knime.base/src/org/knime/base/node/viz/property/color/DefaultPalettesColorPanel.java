@@ -50,7 +50,10 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -84,21 +87,39 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     }
 
     /**
-     * Overwrites the default JButton to notify the ColorSelectionModel of changes.
+     * Overwrites the default JPanel to notify the ColorSelectionModel of changes.
      */
-    private class PaletteButton extends JButton {
+    private class PaletteElement extends JPanel {
         private static final int SIZE = 30;
 
         private Color m_color;
 
-        PaletteButton(final String c) {
+        PaletteElement(final String c) {
             m_color = Color.decode(c);
             setPreferredSize(new Dimension(SIZE, SIZE));
             setBackground(m_color);
-            setForeground(m_color);
-            setBorderPainted(false);
-            setFocusPainted(false);
-            addActionListener(e -> getColorSelectionModel().setSelectedColor(m_color));
+            addMouseListener(new MouseAdapter(){
+                @Override
+                public void mouseClicked(final MouseEvent e){
+                    getColorSelectionModel().setSelectedColor(m_color);
+                }
+                @Override
+                public void mousePressed(final MouseEvent e){
+                  setBorder(BorderFactory.createLineBorder(Color.gray));
+                }
+                @Override
+                public void mouseReleased(final MouseEvent e){
+                  setBorder(BorderFactory.createLineBorder(Color.black));
+                }
+                @Override
+                public void mouseEntered(final MouseEvent e){
+                  setBorder(BorderFactory.createLineBorder(Color.black));
+                }
+                @Override
+                public void mouseExited(final MouseEvent e){
+                  setBorder(null);
+                }
+            });
         }
     }
 
@@ -115,8 +136,8 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         set2Panel.setAlignmentX(LEFT_ALIGNMENT);
 
         for (int i = 0; i < 12; i++) {
-            set1Panel.add(new PaletteButton(m_paletteDefault[i]));
-            set2Panel.add(new PaletteButton(m_palettePaired[i]));
+            set1Panel.add(new PaletteElement(m_paletteDefault[i]));
+            set2Panel.add(new PaletteElement(m_palettePaired[i]));
         }
         //JButtons Apply
         set1Panel.add(new JPanel());
