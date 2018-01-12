@@ -22,7 +22,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -59,10 +59,10 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 /**
  * Serializer for a {@link SharedContainerPortObjectSpec}.
  *
- * @author Clemens von Schwerin, University of Ulm
+ * @author Clemens von Schwerin, KNIME, Konstanz, Germany
  * @since 3.5
  */
-public class SharedContainerPortObjectSpecSerialzer extends PortObjectSpecSerializer<SharedContainerPortObjectSpec> {
+public class SharedContainerPortObjectSpecSerializer extends PortObjectSpecSerializer<SharedContainerPortObjectSpec> {
 
     /**
      * {@inheritDoc}

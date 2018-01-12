@@ -22,7 +22,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -64,7 +64,8 @@ import org.knime.core.node.port.PortTypeRegistry;
  * A streamable container port object. Encapsulates an object having a generic type that is shared between the producing
  * and the consuming node and is updated by the producer and processed by the consumer multiple times.
  *
- * @author Clemens von Schwerin, University of Ulm
+ * @author Clemens von Schwerin, KNIME, Konstanz, Germany
+ * @param <T> type of the encapsulated object
  * @since 3.5
  */
 public class SharedContainerPortObject<T extends Serializable> implements PortObject {
