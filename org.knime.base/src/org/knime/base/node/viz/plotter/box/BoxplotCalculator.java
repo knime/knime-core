@@ -71,6 +71,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  *
@@ -149,11 +150,12 @@ public class BoxplotCalculator {
      * @param exec an execution context
      * @return A linked hash map with BoxplotStatistics for each category
      * @throws CanceledExecutionException when the user cancels the execution
+     * @throws InvalidSettingsException when the category column has no domain values
      */
     public LinkedHashMap<String, LinkedHashMap<String, BoxplotStatistics>>
         calculateMultipleConditional(final BufferedDataTable table, final String catCol,
                                             final String[] numCol, final ExecutionContext exec)
-                                                    throws CanceledExecutionException {
+                                                    throws CanceledExecutionException, InvalidSettingsException {
         DataTableSpec spec = table.getSpec();
         int catColIdx = spec.findColumnIndex(catCol);
         int[] numColIdxs = new int[numCol.length];
@@ -161,7 +163,11 @@ public class BoxplotCalculator {
             numColIdxs[i] = spec.findColumnIndex(numCol[i]);
         }
 
-        ArrayList<DataCell> vals = new ArrayList<>(spec.getColumnSpec(catColIdx).getDomain().getValues());
+        Set<DataCell> valuesSet = spec.getColumnSpec(catColIdx).getDomain().getValues();
+        if (valuesSet == null) {
+            throw new InvalidSettingsException("Selected category column has no domain values");
+        }
+        ArrayList<DataCell> vals = new ArrayList<>(valuesSet);
         Collections.sort(vals, new Comparator<DataCell>() {
             @Override
             public int compare(final DataCell o1, final DataCell o2) {
