@@ -77,6 +77,7 @@ public final class ListModelFilterUtils {
      * @param markAllHits if set to <code>true</code> the method will mark all occurrences of the given search text in
      *            the given list. If set to <code>false</code> the method will mark the next occurrences of the search
      *            text after the current marked list element.
+     * @since 3.6
      */
     public static void onSearch(final JList list, final ListModel model, final String searchText,
         final boolean markAllHits) {
