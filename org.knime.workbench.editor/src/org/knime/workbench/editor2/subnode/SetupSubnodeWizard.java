@@ -85,6 +85,7 @@ public class SetupSubnodeWizard extends Wizard {
     private ConfigureMetaNodePortsPage m_portsPage;
     private SubnodeDescriptionPage m_descPage;
     private SubnodeInputPortDescriptionPage m_inPortDescPage;
+    private SubnodeOutputPortDescriptionPage m_outPortDescPage;
 
     private final EditPartViewer m_viewer;
     private final SubNodeContainer m_subNode;
@@ -133,6 +134,9 @@ public class SetupSubnodeWizard extends Wizard {
        m_inPortDescPage = new SubnodeInputPortDescriptionPage("Change the descriptions of the input ports");
        m_inPortDescPage.setSubNode(m_subNode);
        addPage(m_inPortDescPage);
+       m_outPortDescPage = new SubnodeOutputPortDescriptionPage("Change the descriptions of the output ports");
+       m_outPortDescPage.setSubNode(m_subNode);
+       addPage(m_outPortDescPage);
    }
 
    private boolean considerNodeForUsage(final NodeModel model) {
@@ -156,6 +160,8 @@ public class SetupSubnodeWizard extends Wizard {
         m_subNode.setNodeDescription(m_descPage.getNodeDescription());
         m_subNode.setInPortDescriptions(m_inPortDescPage.getPortDescriptions());
         m_subNode.setInPortNames(m_inPortDescPage.getPortNames());
+        m_subNode.setOutPortDescriptions(m_outPortDescPage.getPortDescriptions());
+        m_subNode.setOutPortNames(m_outPortDescPage.getPortNames());
         return applyPortChanges();
     }
 

@@ -245,6 +245,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     private String m_nodeDescription;
     private String[] m_inPortDescriptions;
     private String[] m_inPortNames;
+    private String[] m_outPortDescriptions;
+    private String[] m_outPortNames;
 
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
@@ -300,6 +302,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_nodeDescription = persistor.getNodeDescription();
         m_inPortDescriptions = persistor.getInPortDescriptions();
         m_inPortNames = persistor.getInPortNames();
+        m_outPortDescriptions = persistor.getOutPortDescriptions();
+        m_outPortNames = persistor.getOutPortNames();
     }
 
     /**
@@ -590,8 +594,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         String[] inPortNames = getInPortNames();
         String[] inPortDescriptions = getInPortDescriptions();
-        String[] outPortNames = outNode.getPortNames();
-        String[] outPortDescriptions = outNode.getPortDescriptions();
+        String[] outPortNames = getOutPortNames();
+        String[] outPortDescriptions = getOutPortDescriptions();
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
         List<String> optionNames = new ArrayList<String>();
         List<String> optionDescriptions = new ArrayList<String>();
@@ -2025,6 +2029,81 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             for (int i = 0; i < inPortNames.length; i++) {
                 if (!StringUtils.equals(m_inPortNames[i], inPortNames[i])) {
                     m_inPortNames[i] = inPortNames[i];
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            refreshPortNames();
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the descriptions of the output ports. Retrieves it from the Subnode Output Node if the node was last saved
+     * before 3.6
+     *
+     * @return the descriptions of the output ports
+     * @since 3.6
+     */
+    public String[] getOutPortDescriptions() {
+        if (m_outPortDescriptions == null) {
+            m_outPortDescriptions = getVirtualOutNodeModel().getPortDescriptions();
+            setDirty();
+        }
+        return m_outPortDescriptions;
+    }
+
+    /**
+     * @param outPortDescriptions the new port descriptions to be set
+     * @since 3.6
+     */
+    public void setOutPortDescriptions(final String[] outPortDescriptions) {
+        boolean dirty = false;
+        if (m_outPortDescriptions.length != outPortDescriptions.length) {
+            m_outPortDescriptions = outPortDescriptions.clone();
+            dirty = true;
+        } else {
+            for (int i = 0; i < outPortDescriptions.length; i++) {
+                if (!StringUtils.equals(m_outPortDescriptions[i], outPortDescriptions[i])) {
+                    m_outPortDescriptions[i] = outPortDescriptions[i];
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the names of the output ports. Retrieves it from the Subnode Output Node if the node was last saved before
+     * 3.6
+     *
+     * @return the names of the output ports
+     * @since 3.6
+     */
+    public String[] getOutPortNames() {
+        if (m_outPortNames == null) {
+            m_outPortNames = getVirtualOutNodeModel().getPortNames();
+            setDirty();
+        }
+        return m_outPortNames;
+    }
+
+    /**
+     * @param outPortNames the new port names to be set
+     * @since 3.6
+     */
+    public void setOutPortNames(final String[] outPortNames) {
+        boolean dirty = false;
+        if (m_outPortNames.length != outPortNames.length) {
+            m_outPortNames = outPortNames.clone();
+            dirty = true;
+        } else {
+            for (int i = 0; i < outPortNames.length; i++) {
+                if (!StringUtils.equals(m_outPortNames[i], outPortNames[i])) {
+                    m_outPortNames[i] = outPortNames[i];
                     dirty = true;
                 }
             }

@@ -108,6 +108,10 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private String[] m_inPortNames;
 
+    private String[] m_outPortDescriptions;
+
+    private String[] m_outPortNames;
+
     /**
      * @param nodeSettingsFile
      * @param loadHelper
@@ -373,6 +377,13 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
         // added in 3.6
         m_inPortNames = nodeSettings.containsKey("inPortNames") ? nodeSettings.getStringArray("inPortNames") : null;
+
+        // added in 3.6
+        m_outPortDescriptions =
+            nodeSettings.containsKey("outPortDescriptions") ? nodeSettings.getStringArray("outPortDescriptions") : null;
+
+        // added in 3.6
+        m_outPortNames = nodeSettings.containsKey("outPortNames") ? nodeSettings.getStringArray("outPortNames") : null;
     }
 
     private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
@@ -513,6 +524,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         settings.addString("nodeDescription", subnodeNC.getNodeDescription());
         settings.addStringArray("inPortDescriptions", subnodeNC.getInPortDescriptions());
         settings.addStringArray("inPortNames", subnodeNC.getInPortNames());
+        settings.addStringArray("outPortDescriptions", subnodeNC.getOutPortDescriptions());
+        settings.addStringArray("outPortNames", subnodeNC.getOutPortNames());
     }
 
     /**
@@ -551,6 +564,26 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public String[] getInPortNames() {
         return m_inPortNames;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getOutPortDescriptions() {
+        return m_outPortDescriptions;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getOutPortNames() {
+        return m_outPortNames;
     }
 
 }

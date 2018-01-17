@@ -77,6 +77,8 @@ public class CopySubNodeContainerPersistor
     private final String m_nodeDescription;
     private final String[] m_inPortDescriptions;
     private final String[] m_inPortNames;
+    private final String[] m_outPortDescriptions;
+    private final String[] m_outPortNames;
 
     /**
      * @param original
@@ -128,6 +130,16 @@ public class CopySubNodeContainerPersistor
         m_inPortNames = new String[inPortNames.length];
         for (int i = 0; i < inPortNames.length; i++) {
             m_inPortNames[i] = inPortNames[i];
+        }
+        String[] outPortDescriptions = original.getOutPortDescriptions();
+        m_outPortDescriptions = new String[outPortDescriptions.length];
+        for (int i = 0; i < outPortDescriptions.length; i++) {
+            m_outPortDescriptions[i] = outPortDescriptions[i];
+        }
+        String[] outPortNames = original.getOutPortNames();
+        m_outPortNames = new String[outPortNames.length];
+        for (int i = 0; i < outPortNames.length; i++) {
+            m_outPortNames[i] = outPortNames[i];
         }
     }
 
@@ -226,6 +238,26 @@ public class CopySubNodeContainerPersistor
     @Override
     public String[] getInPortNames() {
         return m_inPortNames;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getOutPortDescriptions() {
+        return m_outPortDescriptions;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getOutPortNames() {
+        return m_outPortNames;
     }
 }
 
