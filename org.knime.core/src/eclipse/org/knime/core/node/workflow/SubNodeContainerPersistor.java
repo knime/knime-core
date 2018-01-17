@@ -84,4 +84,10 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
 
     /** @since 3.6 */
     String getNodeDescription();
+
+    /** @since 3.6 */
+    String[] getInPortDescriptions();
+
+    /** @since 3.6 */
+    String[] getInPortNames();
 }

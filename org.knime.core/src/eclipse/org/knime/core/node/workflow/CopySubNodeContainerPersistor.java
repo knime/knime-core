@@ -75,6 +75,8 @@ public class CopySubNodeContainerPersistor
     private final String m_layoutJSONString;
     private final MetaNodeTemplateInformation m_templateInformation;
     private final String m_nodeDescription;
+    private final String[] m_inPortDescriptions;
+    private final String[] m_inPortNames;
 
     /**
      * @param original
@@ -117,6 +119,16 @@ public class CopySubNodeContainerPersistor
         m_layoutJSONString = new String(original.getLayoutJSONString());
         m_templateInformation = original.getTemplateInformation().clone();
         m_nodeDescription = new String(original.getNodeDescription());
+        String[] inPortDescriptions = original.getInPortDescriptions();
+        m_inPortDescriptions = new String[inPortDescriptions.length];
+        for (int i = 0; i < inPortDescriptions.length; i++) {
+            m_inPortDescriptions[i] = inPortDescriptions[i];
+        }
+        String[] inPortNames = original.getInPortNames();
+        m_inPortNames = new String[inPortNames.length];
+        for (int i = 0; i < inPortNames.length; i++) {
+            m_inPortNames[i] = inPortNames[i];
+        }
     }
 
     /** {@inheritDoc} */
@@ -194,6 +206,26 @@ public class CopySubNodeContainerPersistor
     @Override
     public String getNodeDescription() {
         return m_nodeDescription;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getInPortDescriptions() {
+        return m_inPortDescriptions;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getInPortNames() {
+        return m_inPortNames;
     }
 }
 

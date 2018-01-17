@@ -104,6 +104,10 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private String m_nodeDescription;
 
+    private String[] m_inPortDescriptions;
+
+    private String[] m_inPortNames;
+
     /**
      * @param nodeSettingsFile
      * @param loadHelper
@@ -361,8 +365,14 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
 
         // added in 3.6
-        m_nodeDescription =
-            nodeSettings.containsKey("nodeDescription") ? nodeSettings.getString("nodeDescription") : null;
+        m_nodeDescription = nodeSettings.getString("nodeDescription", null);
+
+        // added in 3.6
+        m_inPortDescriptions =
+            nodeSettings.containsKey("inPortDescriptions") ? nodeSettings.getStringArray("inPortDescriptions") : null;
+
+        // added in 3.6
+        m_inPortNames = nodeSettings.containsKey("inPortNames") ? nodeSettings.getStringArray("inPortNames") : null;
     }
 
     private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
@@ -501,6 +511,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
         settings.addString("nodeDescription", subnodeNC.getNodeDescription());
+        settings.addStringArray("inPortDescriptions", subnodeNC.getInPortDescriptions());
+        settings.addStringArray("inPortNames", subnodeNC.getInPortNames());
     }
 
     /**
@@ -519,6 +531,26 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public String getNodeDescription() {
         return m_nodeDescription;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getInPortDescriptions() {
+        return m_inPortDescriptions;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String[] getInPortNames() {
+        return m_inPortNames;
     }
 
 }

@@ -58,10 +58,7 @@ import java.util.Map;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -89,9 +86,9 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
     private final JCheckBox m_variablePrefixChecker;
     private final JTextField m_variablePrefixTextField;
 
-    private final JTextArea m_subNodeDescription = new JTextArea();
-    private final JPanel m_portPanel = new JPanel(new GridBagLayout());
-    private PortDescriptionPanel[] m_portDescriptionPanels = new PortDescriptionPanel[0];
+    private String m_subNodeDescription = "";
+    private String[] m_portNames = new String[0];
+    private String[] m_portDescriptions = new String[0];
 
     /** Default const.
      * @param numberOfPorts The number of out ports of this virtual in node */
@@ -113,8 +110,8 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         });
         m_variablePrefixChecker.doClick(); // sync
         addTab("Configuration", initLayout());
-        addTab("Descriptions", createDescriptionsPanel());
-        fillPortDescriptionPanel(numberOfPorts);
+        m_portNames = new String[numberOfPorts];
+        m_portDescriptions = new String[numberOfPorts];
     }
 
     private JPanel initLayout() {
@@ -143,38 +140,6 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         return result;
     }
 
-    private JPanel createDescriptionsPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 0, 0);
-        panel.add(m_portPanel, gbc);
-        return panel;
-    }
-
-    private void fillPortDescriptionPanel(final int numberOfPorts) {
-        m_portDescriptionPanels = new PortDescriptionPanel[numberOfPorts];
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        for (int i = 0; i < m_portDescriptionPanels.length; i++) {
-            m_portDescriptionPanels[i] = new PortDescriptionPanel(i);
-            m_portPanel.add(m_portDescriptionPanels[i], gbc);
-            gbc.gridy++;
-        }
-    }
-
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
@@ -188,29 +153,21 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         } else {
             prefix = null;
         }
-        VirtualSubNodeInputConfiguration configuration =
-            new VirtualSubNodeInputConfiguration(m_portDescriptionPanels.length);
+        VirtualSubNodeInputConfiguration configuration = new VirtualSubNodeInputConfiguration(m_portNames.length);
         configuration.setFlowVariablePrefix(prefix);
         FlowVariableFilterConfiguration f = VirtualSubNodeInputConfiguration.createFilterConfiguration();
         m_variableFilterPanel.saveConfiguration(f);
         configuration.setFilterConfiguration(f);
-        String[] portNames = new String[m_portDescriptionPanels.length];
-        String[] portDescriptions = new String[m_portDescriptionPanels.length];
-        for (int i = 0; i < m_portDescriptionPanels.length; i++) {
-            portNames[i] = m_portDescriptionPanels[i].getPortName();
-            portDescriptions[i] = m_portDescriptionPanels[i].getPortDescription();
-        }
-        configuration.setSubNodeDescription(m_subNodeDescription.getText());
-        configuration.setPortNames(portNames);
-        configuration.setPortDescriptions(portDescriptions);
+        configuration.setSubNodeDescription(m_subNodeDescription);
+        configuration.setPortNames(m_portNames);
+        configuration.setPortDescriptions(m_portDescriptions);
         configuration.saveConfiguration(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) {
-        VirtualSubNodeInputConfiguration configuration =
-            new VirtualSubNodeInputConfiguration(m_portDescriptionPanels.length);
+        VirtualSubNodeInputConfiguration configuration = new VirtualSubNodeInputConfiguration(m_portNames.length);
         final Map<String, FlowVariable> availableVariables = Node.invokeGetAvailableFlowVariables(
             this, Type.values());
         configuration.loadConfigurationInDialog(settings, availableVariables);
@@ -220,55 +177,12 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         }
         m_variablePrefixTextField.setText(prefix == null ? "outer." : prefix);
         m_variableFilterPanel.loadConfiguration(configuration.getFilterConfiguration(), availableVariables);
-        m_subNodeDescription.setText(configuration.getSubNodeDescription());
+        m_subNodeDescription = configuration.getSubNodeDescription();
         String[] portNames = configuration.getPortNames();
         String[] portDescriptions = configuration.getPortDescriptions();
-        for (int i = 0; i < m_portDescriptionPanels.length; i++) {
-            String name = i < portNames.length ? portNames[i] : "";
-            String description = i < portDescriptions.length ? portDescriptions[i] : "";
-            m_portDescriptionPanels[i].setPortName(name);
-            m_portDescriptionPanels[i].setPortDescription(description);
-        }
-    }
-
-    private static class PortDescriptionPanel extends JPanel {
-        private static final long serialVersionUID = -725452335646797350L;
-        private final JTextField m_name = new JTextField();
-        private final JTextArea m_description = new JTextArea();
-        PortDescriptionPanel(final int number) {
-            setBorder(new TitledBorder(new EtchedBorder(), "Port " + (number + 1)));
-            m_description.setBorder(new EtchedBorder());
-            setLayout(new GridBagLayout());
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
-            gbc.anchor = GridBagConstraints.NORTHWEST;
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.gridx = 0;
-            gbc.gridy = 0;
-            add(new JLabel("Name:"), gbc);
-            gbc.weightx = 1;
-            gbc.gridx++;
-            add(m_name, gbc);
-            gbc.gridx = 0;
-            gbc.gridy++;
-            gbc.weightx = 0;
-            gbc.weighty = 1;
-            add(new JLabel("Description:"), gbc);
-            gbc.weightx = 1;
-            gbc.gridx++;
-            add(m_description, gbc);
-        }
-        String getPortName() {
-            return m_name.getText();
-        }
-        void setPortName(final String portName) {
-            m_name.setText(portName);
-        }
-        String getPortDescription() {
-            return m_description.getText();
-        }
-        void setPortDescription(final String portDescription) {
-            m_description.setText(portDescription);
+        for (int i = 0; i < m_portNames.length; i++) {
+            m_portNames[i] = i < portNames.length ? portNames[i] : "";
+            m_portDescriptions[i] = i < portDescriptions.length ? portDescriptions[i] : "";
         }
     }
 

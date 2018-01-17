@@ -243,6 +243,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     private int m_virtualOutNodeIDSuffix;
 
     private String m_nodeDescription;
+    private String[] m_inPortDescriptions;
+    private String[] m_inPortNames;
 
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
@@ -296,6 +298,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         m_templateInformation = persistor.getTemplateInformation();
         m_nodeDescription = persistor.getNodeDescription();
+        m_inPortDescriptions = persistor.getInPortDescriptions();
+        m_inPortNames = persistor.getInPortNames();
     }
 
     /**
@@ -584,8 +588,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             sDescription = StringUtils.split(description, ".\n")[0];
             sDescription = StringUtils.abbreviate(sDescription, 200);
         }
-        String[] inPortNames = inNode.getPortNames();
-        String[] inPortDescriptions = inNode.getPortDescriptions();
+        String[] inPortNames = getInPortNames();
+        String[] inPortDescriptions = getInPortDescriptions();
         String[] outPortNames = outNode.getPortNames();
         String[] outPortDescriptions = outNode.getPortDescriptions();
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
@@ -667,7 +671,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     }
 
     private void refreshPortNames() {
-        String[] inPortNames = getVirtualInNodeModel().getPortNames();
+        String[] inPortNames = getInPortNames();
         String[] outPortNames = getVirtualOutNodeModel().getPortNames();
         for (int i = 0; i < inPortNames.length; i++) {
             getInPort(i + 1).setPortName(inPortNames[i]);
@@ -1952,6 +1956,81 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     public void setNodeDescription(final String nodeDescription) {
         if (!StringUtils.equals(m_nodeDescription, nodeDescription)) {
             m_nodeDescription = nodeDescription;
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the descriptions of the input ports. Retrieves it from the Subnode Input Node if the node was last saved
+     * before 3.6
+     *
+     * @return the descriptions of the input ports
+     * @since 3.6
+     */
+    public String[] getInPortDescriptions() {
+        if (m_inPortDescriptions == null) {
+            m_inPortDescriptions = getVirtualInNodeModel().getPortDescriptions();
+            setDirty();
+        }
+        return m_inPortDescriptions;
+    }
+
+    /**
+     * @param inPortDescriptions the new port descriptions to be set
+     * @since 3.6
+     */
+    public void setInPortDescriptions(final String[] inPortDescriptions) {
+        boolean dirty = false;
+        if (m_inPortDescriptions.length != inPortDescriptions.length) {
+            m_inPortDescriptions = inPortDescriptions.clone();
+            dirty = true;
+        } else {
+            for (int i = 0; i < inPortDescriptions.length; i++) {
+                if (!StringUtils.equals(m_inPortDescriptions[i], inPortDescriptions[i])) {
+                    m_inPortDescriptions[i] = inPortDescriptions[i];
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the names of the input ports. Retrieves it from the Subnode Input Node if the node was last saved before
+     * 3.6
+     *
+     * @return the names of the input ports
+     * @since 3.6
+     */
+    public String[] getInPortNames() {
+        if (m_inPortNames == null) {
+            m_inPortNames = getVirtualInNodeModel().getPortNames();
+            setDirty();
+        }
+        return m_inPortNames;
+    }
+
+    /**
+     * @param inPortNames the new port names to be set
+     * @since 3.6
+     */
+    public void setInPortNames(final String[] inPortNames) {
+        boolean dirty = false;
+        if (m_inPortNames.length != inPortNames.length) {
+            m_inPortNames = inPortNames.clone();
+            dirty = true;
+        } else {
+            for (int i = 0; i < inPortNames.length; i++) {
+                if (!StringUtils.equals(m_inPortNames[i], inPortNames[i])) {
+                    m_inPortNames[i] = inPortNames[i];
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            refreshPortNames();
             setDirty();
         }
     }
