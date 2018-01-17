@@ -102,6 +102,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private MetaNodeTemplateInformation m_templateInformation;
 
+    private String m_nodeDescription;
+
     /**
      * @param nodeSettingsFile
      * @param loadHelper
@@ -357,6 +359,10 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
 
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
+
+        // added in 3.6
+        m_nodeDescription =
+            nodeSettings.containsKey("nodeDescription") ? nodeSettings.getString("nodeDescription") : null;
     }
 
     private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
@@ -494,6 +500,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
+        settings.addString("nodeDescription", subnodeNC.getNodeDescription());
     }
 
     /**
@@ -502,6 +509,16 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String getNodeDescription() {
+        return m_nodeDescription;
     }
 
 }

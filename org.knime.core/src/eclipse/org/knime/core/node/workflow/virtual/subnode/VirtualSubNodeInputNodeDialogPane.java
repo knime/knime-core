@@ -153,26 +153,8 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         gbc.weighty = 1;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        panel.add(createSubNodeDescriptionPanel(), gbc);
-        gbc.gridy++;
         gbc.insets = new Insets(0, 0, 0, 0);
         panel.add(m_portPanel, gbc);
-        return panel;
-    }
-
-    private JPanel createSubNodeDescriptionPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1;
-        gbc.weighty = 1;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(m_subNodeDescription, gbc);
-        m_subNodeDescription.setBorder(new EtchedBorder());
-        panel.setBorder(new TitledBorder(new EtchedBorder(), "Wrapped Metanode Description"));
         return panel;
     }
 

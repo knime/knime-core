@@ -242,6 +242,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     private int m_virtualInNodeIDSuffix;
     private int m_virtualOutNodeIDSuffix;
 
+    private String m_nodeDescription;
+
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
 
@@ -293,6 +295,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             m_inports[i] = new NodeInPort(i, inTypes[i]);
         }
         m_templateInformation = persistor.getTemplateInformation();
+        m_nodeDescription = persistor.getNodeDescription();
     }
 
     /**
@@ -573,7 +576,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     public Element getXMLDescription() {
         VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
         VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
-        String description = inNode.getSubNodeDescription();
+        String description = getNodeDescription();
         String sDescription;
         if (StringUtils.isEmpty(description)) {
             sDescription = "";
@@ -1924,6 +1927,31 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     public void setLayoutJSONString(final String layoutJSONString) {
         if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
             m_layoutJSONString = layoutJSONString;
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the node description. Retrieves it from the Subnode Input Node if the node was last saved before 3.6
+     *
+     * @return the node description
+     * @since 3.6
+     */
+    public String getNodeDescription() {
+        if (m_nodeDescription == null) {
+            m_nodeDescription = getVirtualInNodeModel().getSubNodeDescription();
+            setDirty();
+        }
+        return m_nodeDescription;
+    }
+
+    /**
+     * @param nodeDescription the new nodeDescription to set
+     * @since 3.6
+     */
+    public void setNodeDescription(final String nodeDescription) {
+        if (!StringUtils.equals(m_nodeDescription, nodeDescription)) {
+            m_nodeDescription = nodeDescription;
             setDirty();
         }
     }

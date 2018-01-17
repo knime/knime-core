@@ -74,6 +74,7 @@ public class CopySubNodeContainerPersistor
     private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
     private final String m_layoutJSONString;
     private final MetaNodeTemplateInformation m_templateInformation;
+    private final String m_nodeDescription;
 
     /**
      * @param original
@@ -115,6 +116,7 @@ public class CopySubNodeContainerPersistor
         }
         m_layoutJSONString = new String(original.getLayoutJSONString());
         m_templateInformation = original.getTemplateInformation().clone();
+        m_nodeDescription = new String(original.getNodeDescription());
     }
 
     /** {@inheritDoc} */
@@ -184,5 +186,14 @@ public class CopySubNodeContainerPersistor
         return m_templateInformation;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public String getNodeDescription() {
+        return m_nodeDescription;
+    }
 }
 

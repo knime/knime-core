@@ -83,6 +83,7 @@ public class SetupSubnodeWizard extends Wizard {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SetupSubnodeWizard.class);
 
     private ConfigureMetaNodePortsPage m_portsPage;
+    private SubnodeDescriptionPage m_descPage;
 
     private final EditPartViewer m_viewer;
     private final SubNodeContainer m_subNode;
@@ -125,6 +126,9 @@ public class SetupSubnodeWizard extends Wizard {
        m_portsPage.setSubNode(m_subNode);
        m_portsPage.setTemplate(null);
        addPage(m_portsPage);
+       m_descPage = new SubnodeDescriptionPage("Change the node description");
+       m_descPage.setSubNode(m_subNode);
+       addPage(m_descPage);
    }
 
    private boolean considerNodeForUsage(final NodeModel model) {
@@ -145,6 +149,7 @@ public class SetupSubnodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
+        m_subNode.setNodeDescription(m_descPage.getNodeDescription());
         return applyPortChanges();
     }
 

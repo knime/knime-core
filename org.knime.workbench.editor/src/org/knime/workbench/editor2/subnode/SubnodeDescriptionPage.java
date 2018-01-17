@@ -40,48 +40,78 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   14.01.2008 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.subnode;
 
-import java.util.Map;
-
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * A WizardPage to set a subnode description
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author Ferry Abt, KNIME GmbH, Konstanz, Germany
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
+public class SubnodeDescriptionPage extends WizardPage {
 
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
+    private static final String DESCRIPTION = "Provide a node description";
 
-    WorkflowPortTemplate[] getInPortTemplates();
+    private Text m_nodeDescription;
 
-    WorkflowPortTemplate[] getOutPortTemplates();
+    private SubNodeContainer m_subNode;
 
-    int getVirtualInNodeIDSuffix();
+    /**
+     * Creates the page and sets title and description.
+     *
+     * @param title of the wizard page
+     */
+    public SubnodeDescriptionPage(final String title) {
+        super(title);
+        setDescription(DESCRIPTION);
+    }
 
-    int getVirtualOutNodeIDSuffix();
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public void createControl(final Composite parent) {
+        Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(new GridLayout(1, true));
+        GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.GRAB_VERTICAL);
+        composite.setLayoutData(gridData);
+        Label title = new Label(composite, SWT.BOLD);
+        title.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        title.setText("Wrapped Metanode Description");
+        m_nodeDescription = new Text(composite, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+        m_nodeDescription.setLayoutData(new GridData(GridData.FILL_BOTH));
+        m_nodeDescription.setText(m_subNode.getNodeDescription());
+        setControl(composite);
+    }
 
-    /** @since 2.10 */
-    @Deprecated
-    Map<Integer, WizardNodeLayoutInfo> getLayoutInfo();
+    /**
+     * This page initializes from the sub node.
+     *
+     * @param subNode the sub node to initialize the description from
+     */
+    public void setSubNode(final SubNodeContainer subNode) {
+        m_subNode = subNode;
+    }
 
-    /** @since 3.1 */
-    String getLayoutJSONString();
+    /**
+     * @return the entered node description
+     */
+    public String getNodeDescription() {
+        return m_nodeDescription.getText();
+    }
 
-    MetaNodeTemplateInformation getTemplateInformation();
-
-    /** @since 3.6 */
-    String getNodeDescription();
 }
