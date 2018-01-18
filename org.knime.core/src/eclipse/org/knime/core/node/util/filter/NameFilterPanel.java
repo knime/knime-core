@@ -648,14 +648,16 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclMdl.clear();
         m_hideNames.clear();
 
+        ArrayList<T> tmp_incl = new ArrayList<>(m_order.size());
+        ArrayList<T> tmp_excl = new ArrayList<>(m_order.size());
         for (final String name : m_invalidIncludes) {
             final T t = getTforName(name);
-            m_inclMdl.add(t);
+            tmp_incl.add(t);
             m_order.add(t);
         }
         for (final String name : m_invalidExcludes) {
             final T t = getTforName(name);
-            m_exclMdl.add(t);
+            tmp_excl.add(t);
             m_order.add(t);
         }
 
@@ -671,12 +673,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
             // if item is not filtered out, add it to include or exclude list
             if (ins.contains(name)) {
-                m_inclMdl.add(t);
+                tmp_incl.add(t);
             } else if (exs.contains(name)) {
-                m_exclMdl.add(t);
+                tmp_excl.add(t);
             }
             m_order.add(t);
         }
+
+        m_inclMdl.addAll(tmp_incl);
+        m_exclMdl.addAll(tmp_excl);
 
         repaint();
     }
