@@ -1342,4 +1342,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_patternPanel.setAdditionalCheckboxText(newText);
     }
 
+    /**
+     * @return the filter of this panel
+     * @since 3.6
+     */
+    public InputFilter<T> getFilter() {
+        return m_filter;
+    }
 }

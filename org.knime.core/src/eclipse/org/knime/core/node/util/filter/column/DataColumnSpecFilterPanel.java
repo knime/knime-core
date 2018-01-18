@@ -246,9 +246,17 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         if (m_spec != null) {
             colSpec = m_spec.getColumnSpec(name);
         }
+        // invalid spec if name not contained in spec
         if (colSpec == null) {
-            colSpec = DataColumnSpecListCellRenderer.createInvalidSpec(name);
+            return DataColumnSpecListCellRenderer.createInvalidSpec(name);
+        // or filtered out by this filter
+        } else if (m_filter != null && !m_filter.include(colSpec)){
+            return DataColumnSpecListCellRenderer.createInvalidSpec(name);
+         // or filtered out by filter of superclass
+        } else if (getFilter() != null && !getFilter().include(colSpec)) {
+            return DataColumnSpecListCellRenderer.createInvalidSpec(name);
         }
+
         return colSpec;
     }
 
