@@ -311,8 +311,9 @@ public class ArrayListModel<E> extends AbstractListModel<E> implements Iterable<
         if(c.isEmpty()){
             return false;
         }
+        int index = m_delegate.size() - 1;
         boolean changed = m_delegate.removeAll(c);
-        fireIntervalRemoved(this, 0, m_delegate.size());
+        fireIntervalRemoved(this, 0, index);
         return changed;
     }
 
