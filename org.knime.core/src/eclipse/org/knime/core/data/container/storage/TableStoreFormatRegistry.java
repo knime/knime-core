@@ -157,7 +157,9 @@ public final class TableStoreFormatRegistry {
         // experimental ORC/hadoop format as default when running nightlies
         String defaultFormatClassName;
         if (KNIMEConstants.isNightlyBuild()) {
-            defaultFormatClassName = "org.knime.orc.tableformat.OrcTableStoreFormat";
+            defaultFormatClassName = DefaultTableStoreFormat.class.getName();
+            // TODO make this the nightly build default once we sort out all(?) problems
+//            defaultFormatClassName = "org.knime.orc.tableformat.OrcTableStoreFormat";
         } else {
             defaultFormatClassName = DefaultTableStoreFormat.class.getName();
         }
