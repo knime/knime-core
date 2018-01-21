@@ -63,6 +63,7 @@ import org.apache.orc.OrcConf;
 import org.apache.orc.OrcFile;
 import org.apache.orc.OrcFile.WriterOptions;
 import org.apache.orc.Reader;
+import org.apache.orc.Reader.Options;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
@@ -128,11 +129,8 @@ public final class OrcKNIMEUtil {
         }
 
         public OrcKNIMEWriter create() throws IOException {
-            TypeDescription schema = TypeDescription.createStruct();
-            for (Map.Entry<String, OrcKNIMEType> colEntry : m_fieldMap.entrySet()) {
-                schema.addField(colEntry.getKey(), colEntry.getValue().getTypeDescription());
-            }
             Configuration conf = new Configuration();
+            TypeDescription schema = deriveTypeDescription();
             WriterOptions orcConf = OrcFile.writerOptions(conf)
               .setSchema(schema)
               .compress(CompressionKind.SNAPPY)
@@ -153,6 +151,14 @@ public final class OrcKNIMEUtil {
             return m_file;
         }
 
+        private TypeDescription deriveTypeDescription() {
+            TypeDescription schema = TypeDescription.createStruct();
+            for (Map.Entry<String, OrcKNIMEType> colEntry : m_fieldMap.entrySet()) {
+                schema.addField(colEntry.getKey(), colEntry.getValue().getTypeDescription());
+            }
+            return schema;
+        }
+
         /**
          * @return
          */
@@ -163,8 +169,13 @@ public final class OrcKNIMEUtil {
         public OrcRowIterator createRowIterator() throws IOException {
             Reader reader = OrcFile.createReader(new Path(m_file.getAbsolutePath()),
                 OrcFile.readerOptions(new Configuration()));
+            Options options = reader.options();
+            // ORC files have an 'OrcTail' containing the schema.
+            // we found cases where this wasn't correct (read <int, int, int> instead of <String, int, String>);
+            // deterministically reproducable by running workflow test case 'testEditNominalDomain'
+            options.schema(deriveTypeDescription());
             final int batchSize = m_rowBatchSize != null ? m_rowBatchSize : VectorizedRowBatch.DEFAULT_SIZE;
-            return new OrcRowIterator(reader, m_hasRowKey, getOrcKNIMETypes(), batchSize);
+            return new OrcRowIterator(reader, m_hasRowKey, options, getOrcKNIMETypes(), batchSize);
         }
 
         public void writeSettings(final NodeSettingsWO settings) {
@@ -236,24 +247,31 @@ public final class OrcKNIMEUtil {
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(OrcRowIterator.class);
 
-        private final OrcKNIMEType[] m_columnTypes;
         private final VectorizedRowBatch m_rowBatch;
         private final boolean m_hasRowKey;
         private final RecordReader m_rows;
+        private final OrcKNIMEType[] m_columnTypes;
 
         private int m_rowInBatch;
         private boolean m_isClosed;
 
         /**
          * @param reader
+         * @param readerOptions TODO
+         * @param columnTypes TODO
          * @param batchSize TODO
          * @throws IOException
          */
-        OrcRowIterator(final Reader reader, final boolean hasRowKey, final OrcKNIMEType[] columnTypes,
-            final int batchSize) throws IOException {
+        OrcRowIterator(final Reader reader, final boolean hasRowKey, final Options readerOptions,
+            final OrcKNIMEType[] columnTypes, final int batchSize) throws IOException {
             m_hasRowKey = hasRowKey;
-            m_columnTypes = columnTypes;
+            if (!readerOptions.getSchema().equals(reader.getSchema())) {
+                LOGGER.debugWithFormat("Different Schemas; KNIME claims:\n  %s\nORC claims:\n  %s",
+                    readerOptions.getSchema(), reader.getSchema());
+            }
+//            m_rows = reader.rows(readerOptions);
             m_rows = reader.rows();
+            m_columnTypes = columnTypes;
             m_rowBatch = reader.getSchema().createRowBatch(batchSize);
             internalNext();
         }
