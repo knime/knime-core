@@ -94,10 +94,10 @@ import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
-import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
+import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
@@ -216,10 +216,10 @@ public class Buffer implements KNIMEStreamConstants {
     private static final String CFG_SIZE_L = "table.size.long";
 
     /** Current version string. */
-    private static final String VERSION = "container_9";
+    private static final String VERSION = "container_10";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 9;
+    private static final int IVERSION = 10;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -233,7 +233,8 @@ public class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_6", 6); // 2.0 Alpha
         COMPATIBILITY_MAP.put("container_7", 7); // 2.0.0 (final)
         COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1
-        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 3.2++ (multiple table formats)
+        COMPATIBILITY_MAP.put("container_9", 9); // never released - some workflow tests contain it (BW used a nightly)
+        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 3.6++ (multiple table formats)
         // NOTE consider to also
         // - increment the workflow.knime version number when updating this list
         // - update list in NoKeyBuffer
