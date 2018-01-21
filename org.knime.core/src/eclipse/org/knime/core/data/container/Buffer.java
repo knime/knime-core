@@ -1103,7 +1103,7 @@ public class Buffer implements KNIMEStreamConstants {
                     .orElseThrow(() -> new InvalidSettingsException(String.format(
                         "Invalid table format '%s' - unable to restore table.", outputFormat)));
             NodeSettingsRO outputFormatSettings =
-                    m_version >= 9 ? subSettings.getNodeSettings(CFG_TABLE_FORMAT_CONFIG) : subSettings;
+                    m_version >= 10 ? subSettings.getNodeSettings(CFG_TABLE_FORMAT_CONFIG) : subSettings;
             initOutputReader(outputFormatSettings, m_version);
         }
     }
