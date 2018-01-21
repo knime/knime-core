@@ -47,7 +47,6 @@
 package org.knime.core.node.interactive;
 
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.web.WebViewContent;
 
 
 
@@ -56,8 +55,8 @@ import org.knime.core.node.web.WebViewContent;
  * execution when the view has been modified by the user.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link WebViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
+ * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
+ * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
  * @since 2.8
  */
 public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> {
