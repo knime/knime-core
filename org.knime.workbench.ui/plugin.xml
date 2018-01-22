@@ -180,6 +180,12 @@
             id="org.knime.workbench.ui.preferences.gui.workfloweditor"
             name="Workflow Editor">
       </page>
+      <page
+            category="org.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.preferences.DataStoragePreferencePage"
+            id="org.knime.workbench.ui.preferences.datastorage"
+            name="Data Storage">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

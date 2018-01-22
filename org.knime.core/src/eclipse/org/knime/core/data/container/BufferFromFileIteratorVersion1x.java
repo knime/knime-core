@@ -63,6 +63,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.container.DefaultTableStoreReader.FromFileIterator;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -72,13 +73,13 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
+final class BufferFromFileIteratorVersion1x extends FromFileIterator {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BufferFromFileIteratorVersion1x.class);
 
     /** Associated buffer. */
-    private final Buffer m_buffer;
+    private final DefaultTableStoreReader m_tableFormatReader;
 
     /** Row pointer. */
     private long m_pointer;
@@ -93,19 +94,19 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
     private DCObjectInputStream m_inStream;
 
     /** Inits the iterator by opening the input stream.
-     * @param buffer Associated buffer.
+     * @param tableFormatReader Associated buffer.
      * @throws IOException If stream can't be opened. */
-    BufferFromFileIteratorVersion1x(final Buffer buffer) throws IOException {
+    BufferFromFileIteratorVersion1x(final DefaultTableStoreReader tableFormatReader) throws IOException {
         m_pointer = 0;
-        if (buffer.getBinFile() == null) {
+        if (tableFormatReader.getBinFile() == null) {
             throw new IOException("Unable to read table from file, "
                     + "table has been cleared.");
         }
-        m_buffer = buffer;
+        m_tableFormatReader = tableFormatReader;
         BufferedInputStream bufferedStream =
-            new BufferedInputStream(new FileInputStream(buffer.getBinFile()));
+            new BufferedInputStream(new FileInputStream(tableFormatReader.getBinFile()));
         InputStream in;
-        switch (buffer.getBinFileCompressionFormat()) {
+        switch (tableFormatReader.getBinFileCompressionFormat()) {
             case Gzip:
                 in = new GZIPInputStream(bufferedStream);
                 // buffering is important when reading gzip streams
@@ -116,7 +117,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
                 break;
             default:
                 bufferedStream.close();
-                throw new IOException("Unsupported compression format: " + buffer.getBinFileCompressionFormat());
+                throw new IOException("Unsupported compression format: "
+                        + tableFormatReader.getBinFileCompressionFormat());
         }
         m_inStream = new DCObjectInputStream(in);
     }
@@ -124,7 +126,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
     /** {@inheritDoc} */
     @Override
     public synchronized boolean hasNext() {
-        boolean hasNext = m_pointer < m_buffer.size();
+        boolean hasNext = m_pointer < m_tableFormatReader.size();
         if (!hasNext && (m_inStream != null)) {
             close();
         }
@@ -148,7 +150,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             String keyS = "Read_failed__auto_generated_key_" + m_pointer;
             key = new RowKey(keyS);
         }
-        int colCount = m_buffer.getTableSpec().getNumColumns();
+        int colCount = m_tableFormatReader.getTableSpec().getNumColumns();
         DataCell[] cells = new DataCell[colCount];
         for (int i = 0; i < colCount; i++) {
             DataCell nextCell;
@@ -161,7 +163,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             cells[i] = nextCell;
         }
         try {
-            if (m_buffer.getReadVersion() >= 5) {
+            if (m_tableFormatReader.getReadVersion() >= 5) {
                 byte eoRow = inStream.readByte();
                 if (eoRow != BYTE_ROW_SEPARATOR) {
                     throw new IOException("Expected end of row byte, "
@@ -190,12 +192,12 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
      */
     private RowKey readRowKey(final DCObjectInputStream inStream)
         throws IOException {
-        if (m_buffer.shouldSkipRowKey()) {
+        if (!m_tableFormatReader.isReadRowKey()) {
             return DUMMY_ROW_KEY;
         }
         String key;
         // < 5 is version 1.3.x and before, see above
-        if (m_buffer.getReadVersion() >= 5) {
+        if (m_tableFormatReader.getReadVersion() >= 5) {
             key = inStream.readUTF();
         } else {
             key = readDataCell(inStream).toString();
@@ -206,7 +208,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
     /** Reads a datacell from inStream, does no exception handling. */
     private DataCell readDataCell(final DCObjectInputStream inStream)
             throws IOException {
-        if (m_buffer.getReadVersion() == 1) {
+        if (m_tableFormatReader.getReadVersion() == 1) {
             return readDataCellVersion1(inStream);
         }
         inStream.setCurrentClassLoader(null);
@@ -218,19 +220,16 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         if (isSerialized) {
             identifier = inStream.readByte();
         }
-        CellClassInfo type = m_buffer.getTypeForChar(identifier);
+        CellClassInfo type = m_tableFormatReader.getTypeForChar(identifier);
         Class<? extends DataCell> cellClass = type.getCellClass();
-        boolean isBlob =
-            BlobDataCell.class.isAssignableFrom(cellClass);
+        boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
         if (isBlob) {
             BlobAddress address = inStream.readBlobAddress();
-            Buffer blobBuffer = m_buffer;
-            if (address.getBufferID() != m_buffer.getBufferID()) {
-                ContainerTable cnTbl =
-                    m_buffer.getGlobalRepository().get(address.getBufferID());
+            Buffer blobBuffer = m_tableFormatReader.getBuffer();
+            if (address.getBufferID() != blobBuffer.getBufferID()) {
+                ContainerTable cnTbl = blobBuffer.getGlobalRepository().get(address.getBufferID());
                 if (cnTbl == null) {
-                    throw new IOException(
-                    "Unable to retrieve table that owns the blob cell");
+                    throw new IOException("Unable to retrieve table that owns the blob cell");
                 }
                 blobBuffer = cnTbl.getBuffer();
             }
@@ -276,9 +275,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
                 throw ioe;
             }
         } else {
-            CellClassInfo type = m_buffer.getTypeForChar(identifier);
-            DataCellSerializer<? extends DataCell> serializer =
-                type.getSerializer();
+            CellClassInfo type = m_tableFormatReader.getTypeForChar(identifier);
+            DataCellSerializer<? extends DataCell> serializer = type.getSerializer();
             assert serializer != null;
             try {
                 return inStream.readDataCell(serializer);
@@ -291,7 +289,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
 
     private void handleReadThrowable(final Throwable throwable) {
         String warnMessage = "Errors while reading row " + (m_pointer + 1)
-            + " from file \"" + m_buffer.getBinFile().getName() + "\": "
+            + " from file \"" + m_tableFormatReader.getBinFile().getName() + "\": "
             + throwable.getMessage();
         if (!m_hasThrownReadException) {
             warnMessage = warnMessage.concat(
@@ -314,8 +312,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
 
     /** {@inheritDoc} */
     @Override
-    boolean performClose() throws IOException {
-        m_pointer = m_buffer.size(); // mark it as end of file
+    public boolean performClose() throws IOException {
+        m_pointer = m_tableFormatReader.size(); // mark it as end of file
         // already closed (clear has been called before)
         if (m_inStream == null) {
             return false;
@@ -324,12 +322,6 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         m_inStream = null;
         in.close();
         return true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void close() {
-        m_buffer.clearIteratorInstance(this, true);
     }
 
     /** {@inheritDoc} */

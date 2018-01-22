@@ -54,7 +54,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;

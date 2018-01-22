@@ -174,7 +174,9 @@ final class CopyOnAccessTask {
     Buffer createBuffer(final InputStream in) throws IOException {
         ZipInputStream inStream = new ZipInputStream(in);
         ZipEntry entry;
-        File binFile = DataContainer.createTempFile();
+        // file name ending may change later when meta info is read
+        final String fallbackFileExtension = ".tmp";
+        File binFile = DataContainer.createTempFile(fallbackFileExtension);
         File blobDir = null;
         File fileStoreDir = null;
         // we only need to read from this file while being in
@@ -244,6 +246,16 @@ final class CopyOnAccessTask {
                 new FileInputStream(metaTempFile));
         Buffer buffer = m_bufferCreator.createBuffer(binFile, blobDir, fileStoreDir,
                 spec, metaIn, m_bufferID, m_tableRep, m_fileStoreHandlerRepository);
+        // TODO fix the file ending of the temp file -- purely cosmetic change
+        // the below currently doesn't work as we change the file name in the background and that breaks the reader
+//        File binFileParent = binFile.getParentFile();
+//        String binFileSimpleName = binFile.getName();
+//        String binFileSimpleNameFixed = StringUtils.removeEnd(binFileSimpleName, fallbackFileExtension)
+//                + buffer.getOutputFormat().getFilenameSuffix();
+//        File binFileNew = new File(binFileParent, binFileSimpleNameFixed);
+//        if (!binFileNew.exists()) {
+//            binFile.renameTo(binFileNew); // we don't bother if that succeeds or not
+//        }
         if (m_needsRestoreIntoMemory) {
             buffer.restoreIntoMemory();
         }
