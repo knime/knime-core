@@ -48,13 +48,16 @@
  */
 package org.knime.core.wizard;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
@@ -62,6 +65,7 @@ import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -95,6 +99,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
  * @since 3.4
  */
 public abstract class AbstractPageManager {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractPageManager.class);
 
     private final WorkflowManager m_wfm;
 
@@ -279,6 +285,25 @@ public abstract class AbstractPageManager {
             }
             return jsonString;
         }
+    }
+
+    /**
+     * Serializes a response for a view request into a JSON string.
+     * @param response the response object to serialize
+     * @return the serialized JSON string, or null if exception occurs.
+     * @since 3.6
+     */
+    protected String serializeViewResponse(final WebViewContent response) {
+        if (response != null) {
+            try (OutputStream stream = response.saveToStream()) {
+                if (stream instanceof ByteArrayOutputStream) {
+                    return ((ByteArrayOutputStream)stream).toString("UTF-8");
+                }
+            } catch (IOException ex) {
+                LOGGER.error("Could not update view: " + ex.getMessage(), ex);
+            }
+        }
+        return null;
     }
 
 }

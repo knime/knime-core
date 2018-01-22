@@ -49,11 +49,17 @@
 package org.knime.core.node.wizard;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -62,16 +68,28 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
 import org.knime.core.node.interactive.ReexecutionCallback;
+import org.knime.core.node.interactive.SimpleErrorViewResponse;
+import org.knime.core.node.interactive.ViewRequestJob;
+import org.knime.core.node.interactive.ViewResponseMonitor;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateEvent;
+import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateEventType;
+import org.knime.core.node.wizard.DefaultViewRequestJob.ViewResponseMonitorUpdateListener;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  *
@@ -81,36 +99,64 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VAL> the {@link WebViewContent} implementation used as view value
  * @since 2.11
  */
-public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
-    extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
+public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>,
+    REP extends WebViewContent, VAL extends WebViewContent> extends AbstractNodeView<T>
+    implements InteractiveView<T, REP, VAL>, ViewRequestExecutorPushEnabled<String> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractWizardNodeView.class);
+
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
 
     private AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
 
-    /** Label for discard option.
-     * @since 3.4 */
+    private Map<String, DefaultViewRequestJob<? extends WizardViewResponse>> m_viewRequestMap;
+
+    /**
+     * Label for discard option.
+     *
+     * @since 3.4
+     */
     protected final static String DISCARD_LABEL = "Discard Changes";
-    /** Description text for discard option.
-     * @since 3.4 */
+
+    /**
+     * Description text for discard option.
+     *
+     * @since 3.4
+     */
     protected final static String DISCARD_DESCRIPTION = "Discards any changes made and closes the view.";
-    /** Label for apply temporarily option.
-     * @since 3.4 */
+
+    /**
+     * Label for apply temporarily option.
+     *
+     * @since 3.4
+     */
     protected final static String APPLY_LABEL = "Apply settings temporarily";
-    /** Description text template for apply temporarily option.
-     * @since 3.4 */
+
+    /**
+     * Description text template for apply temporarily option.
+     *
+     * @since 3.4
+     */
     protected final static String APPLY_DESCRIPTION_FORMAT = "Applies the current view settings to the node%s"
-            + " and triggers a re-execute of the node. This option will not override the default node settings "
-            + "set in the dialog. Changes will be lost when the node is reset.";
-    /** Label for apply as new default option.
-     * @since 3.4*/
+        + " and triggers a re-execute of the node. This option will not override the default node settings "
+        + "set in the dialog. Changes will be lost when the node is reset.";
+
+    /**
+     * Label for apply as new default option.
+     *
+     * @since 3.4
+     */
     protected final static String APPLY_DEFAULT_LABEL = "Apply settings as new default";
-    /** Description text template for apply as new default option.
-     * @since 3.4 */
-    protected final static String APPLY_DEFAULT_DESCRIPTION_FORMAT = "Applies the current view settings as the new default node settings%s"
+
+    /**
+     * Description text template for apply as new default option.
+     *
+     * @since 3.4
+     */
+    protected final static String APPLY_DEFAULT_DESCRIPTION_FORMAT =
+        "Applies the current view settings as the new default node settings%s"
             + " and triggers a re-execute of the node. This option will override the settings set in the node dialog "
             + "and changes made will remain applied after a node reset.";
 
@@ -121,6 +167,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     protected AbstractWizardNodeView(final T nodeModel) {
         super(nodeModel, true);
         m_delegate = new InteractiveViewDelegate<VAL>();
+        m_viewRequestMap = new HashMap<String, DefaultViewRequestJob<? extends WizardViewResponse>>();
     }
 
     @Override
@@ -150,12 +197,10 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
             modelChanged();
         } catch (NullPointerException npe) {
             LOGGER.coding("AbstractWizardNodeView.modelChanged() causes "
-                   + "NullPointerException during notification of a "
-                   + "changed model, reason: " + npe.getMessage(), npe);
+                + "NullPointerException during notification of a " + "changed model, reason: " + npe.getMessage(), npe);
         } catch (Throwable t) {
             LOGGER.error("AbstractWizardNodeView.modelChanged() causes an error "
-                   + "during notification of a changed model, reason: "
-                   + t.getMessage(), t);
+                + "during notification of a changed model, reason: " + t.getMessage(), t);
         }
     }
 
@@ -178,12 +223,26 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         return null;
     }
 
-     /**
+    /**
+     * @return a map of all currently active view requests, never null
+     * @since 3.6
+     */
+    protected Map<String, DefaultViewRequestJob<? extends WizardViewResponse>> getViewRequestMap() {
+        return m_viewRequestMap;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void callCloseView() {
+        cancelOutstandingViewRequests();
         closeView();
+    }
+
+    private void cancelOutstandingViewRequests() {
+        m_viewRequestMap.values().forEach(job -> job.cancel());
+        m_viewRequestMap.clear();
     }
 
     /**
@@ -252,7 +311,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     }
 
     /**
-     * Check if the view value represented in the currently open view has changed from the view value represented in the node model.
+     * Check if the view value represented in the currently open view has changed from the view value represented in the
+     * node model.
      *
      * @return true if the settings have changed, false otherwise or if status cannot be determined
      * @since 3.4
@@ -263,7 +323,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         }
         String jsonString = retrieveCurrentValueFromView();
         if (jsonString == null) {
-         // no view value present in view
+            // no view value present in view
             return false;
         }
         try {
@@ -281,6 +341,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Query if an interaction with the concrete view is possible.
+     *
      * @return true, if interaction is possible, false otherwise
      * @since 3.4
      */
@@ -288,6 +349,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Execute JavaScript code in view to determine if the current settings validate.
+     *
      * @return true, if validation succeeds, false otherwise
      * @since 3.4
      */
@@ -295,6 +357,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Execute JavaScript code in view to retrieve the current view settings.
+     *
      * @return the JSON serialized view value string
      * @since 3.4
      */
@@ -302,13 +365,15 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Execute JavaScript code in view to display a validation error.
-     * @param error the errror to display
+     *
+     * @param error the error to display
      * @since 3.4
      */
     protected abstract void showValidationErrorInView(String error);
 
     /**
      * Called when a close dialog is supposed to be shown with options on how to deal with changed settings in the view.
+     *
      * @return true, if discard is chosen or a subsequent apply was successful, false otherwise
      * @since 3.4
      */
@@ -320,6 +385,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Called when an apply dialog (temporary or default apply) is supposed to be shown.
+     *
      * @return true, if a subsequent apply was successful, false otherwise
      * @since 3.4
      */
@@ -331,16 +397,184 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * Displays a dialog to ask user how to handle settings changed in view.
+     *
      * @param showDiscardOption true, if discard option is to be displayed, false otherwise
      * @param title the title of the dialog
      * @param message the message of the dialog
      * @return true, if discard is chosen or a subsequent apply was successful, false otherwise
      * @since 3.4
      */
-    protected abstract boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title, final String message);
+    protected abstract boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title,
+        final String message);
+
+    /**
+     *
+     * @param jsonRequest the json serialized request object string
+     * @return true, if the request could be processed correctly, false otherwise
+     * @since 3.6
+     */
+    @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public final String handleViewRequest(final String jsonRequest) {
+        //TODO: is the simple creation of the monitor correct here?
+        ExecutionMonitor overallExec = new ExecutionMonitor();
+        WizardNode<REP, VAL> model = getModel();
+        int requestSequence = -1;
+        if (!(model instanceof WizardViewRequestHandler)) {
+            try {
+                requestSequence = tryGetSequenceFromRequest(jsonRequest);
+            } catch (Exception ex) { /* nothing can be done in this case */ }
+            String errorMessage = "Node model can not handle view requests. Possible implementation error.";
+            return serializeResponseMonitor(new SimpleErrorViewResponse(requestSequence, errorMessage));
+        }
+        LOGGER.debug("Received request from view: " + jsonRequest);
+        WizardViewRequest req = ((WizardViewRequestHandler)model).createEmptyViewRequest();
+        final String errorString = "View request failed: ";
+        DefaultViewRequestJob<? extends WizardViewResponse> requestJob = null;
+        try {
+            req.loadFromStream(new ByteArrayInputStream(jsonRequest.getBytes(Charset.forName("UTF-8"))));
+            requestSequence = req.getSequence();
+
+            requestJob = new DefaultViewRequestJob(requestSequence, overallExec);
+            final String requestID = requestJob.getId();
+            final ViewResponseMonitor<? extends WizardViewResponse> monitor = requestJob;
+            requestJob.addUpdateListener(new ViewResponseMonitorUpdateListener() {
+
+                @Override
+                public void monitorUpdate(final ViewResponseMonitorUpdateEvent event) {
+                    ViewResponseMonitorUpdateEventType type = event.getType();
+                    pushRequestUpdate(serializeResponseMonitor(monitor));
+                    if (ViewResponseMonitorUpdateEventType.STATUS_UPDATE == type) {
+                        if (monitor.isExecutionFinished() && monitor.isResponseAvailable()) {
+                            overallExec.setProgress(1);
+                            overallExec.setMessage((String)null);
+                            if (m_viewRequestMap.containsKey(requestID)) {
+                                respondToViewRequest(monitor.getResponse().get());
+                                m_viewRequestMap.remove(requestID);
+                            }
+                        }
+                        else if (monitor.isExecutionFailed() || monitor.isCancelled()) {
+                            m_viewRequestMap.remove(requestID);
+                        }
+                    }
+                }
+            });
+
+            m_viewRequestMap.put(requestID, requestJob);
+            requestJob.start((WizardViewRequestHandler)model, req);
+            return serializeResponseMonitor(requestJob);
+        } catch (Exception ex) {
+            LOGGER.error(errorString + ex, ex);
+            if (requestJob != null) {
+                m_viewRequestMap.remove(requestJob.getId());
+            }
+            if (requestSequence == -1) {
+                try {
+                    requestSequence = tryGetSequenceFromRequest(jsonRequest);
+                } catch (Exception ex2) { /* nothing can be done in this case */ }
+            }
+            return serializeResponseMonitor(new SimpleErrorViewResponse(requestSequence, ex.getMessage()));
+        }
+    }
+
+    private static int tryGetSequenceFromRequest(final String jsonRequest) throws JsonProcessingException,
+        IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = mapper.readTree(jsonRequest);
+        JsonNode sequenceNode = node.get("sequence");
+        if (sequenceNode != null) {
+            int sequence = sequenceNode.asInt(-1);
+            if (sequence >= 0) {
+                return sequence;
+            }
+        }
+        throw new IllegalArgumentException("JSON request string did not contain a 'sequence' field.");
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public String updateRequestStatus(final String monitorID) {
+        ViewResponseMonitor<? extends WizardViewResponse> monitor = m_viewRequestMap.get(monitorID);
+        if (monitor != null) {
+            if (monitor.isCancelled() || monitor.isExecutionFailed()
+                || (monitor.isExecutionFinished() && monitor.isResponseAvailable())) {
+                m_viewRequestMap.remove(monitor.getId());
+            }
+            return serializeResponseMonitor(monitor);
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public void cancelRequest(final String monitorID) {
+        //try to get by id
+        ViewRequestJob<? extends WizardViewResponse> future = m_viewRequestMap.get(monitorID);
+        if (future == null) {
+            //try to get by request sequence, this might happen when the view can only push but not return
+            //the id on an initial polling request
+            List<DefaultViewRequestJob<? extends WizardViewResponse>> jobList = m_viewRequestMap.entrySet().stream()
+                .filter(e -> monitorID.equals(Integer.toString(e.getValue().getRequestSequence())))
+                .map(e -> e.getValue())
+                .collect(Collectors.toList());
+            if (jobList.size() > 0) {
+                future = jobList.get(0);
+            }
+        }
+        if (future != null) {
+            LOGGER.debug("Cancelling view request " + future.getId());
+            future.cancel();
+            m_viewRequestMap.remove(monitorID);
+        }
+    }
+
+
+    private static String serializeResponseMonitor(
+        final ViewResponseMonitor<? extends WizardViewResponse> monitor) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module());
+        try {
+            return mapper.writeValueAsString(monitor);
+        } catch (JsonProcessingException ex) {
+            LOGGER.error("Error serializing response monitor object: " + ex.getMessage(), ex);
+            return null;
+        }
+    }
+
+    private final void respondToViewRequest(final WizardViewResponse response) {
+        try (OutputStream stream = response.saveToStream()) {
+            if (stream instanceof ByteArrayOutputStream) {
+                String responseString = ((ByteArrayOutputStream)stream).toString("UTF-8");
+                respondToViewRequest(responseString);
+            }
+        } catch (IOException ex) {
+            LOGGER.error("Could not update view: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public abstract void respondToViewRequest(final String response);
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public abstract void pushRequestUpdate(final String monitor);
 
     /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.
+     *
      * @return A list with all registered view implementations.
      */
     @SuppressWarnings("unchecked")
@@ -379,7 +613,9 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     public static class WizardNodeViewExtension {
 
         private Class<AbstractWizardNodeView<?, ?, ?>> m_viewClass;
+
         private String m_viewName;
+
         private String m_viewDescription;
 
         /**
@@ -399,7 +635,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         /**
          * @return the viewClass
          */
-        public Class<AbstractWizardNodeView<? extends ViewableModel, ? extends WebViewContent, ? extends WebViewContent>>
+        public
+            Class<AbstractWizardNodeView<? extends ViewableModel, ? extends WebViewContent, ? extends WebViewContent>>
             getViewClass() {
             return m_viewClass;
         }

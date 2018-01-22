@@ -53,6 +53,7 @@ import java.io.File;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
@@ -103,6 +104,10 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
     private Shell m_shell;
 
     private Browser m_browser;
+    private BrowserFunction m_viewRequestCallback;
+    private BrowserFunction m_updateRequestStatusCallback;
+    private BrowserFunction m_cancelRequestCallback;
+    private BrowserFunction m_isPushSupportedCallback;
     private boolean m_viewSet = false;
     private boolean m_initialized = false;
     private String m_title;
@@ -328,19 +333,21 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
                     }
                 });
                 setBrowserURL();
+                m_viewRequestCallback = new ViewRequestFunction(m_browser, "knimeViewRequest");
+                m_updateRequestStatusCallback = new UpdateRequestStatusFunction(m_browser, "knimeUpdateRequestStatus");
+                m_cancelRequestCallback = new CancelRequestFunction(m_browser, "knimeCancelRequest");
+                m_isPushSupportedCallback = new PushSupportedFunction(m_browser, "knimePushSupported");
             }
         });
 
     }
 
     class DropdownSelectionListener extends SelectionAdapter {
-        private ToolItem dropdown;
 
         private Menu menu;
 
-        public DropdownSelectionListener(final ToolItem dropdown) {
-          this.dropdown = dropdown;
-          menu = new Menu(dropdown.getParent().getShell(), SWT.POP_UP);
+        public DropdownSelectionListener(final ToolItem drop) {
+          menu = new Menu(drop.getParent().getShell(), SWT.POP_UP);
         }
 
         public void add(final String text, final String tooltip, final SelectionAdapter selectionListener) {
@@ -386,11 +393,27 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
      */
     @Override
     public final void closeView() {
-        if ((m_shell != null) && !m_shell.isDisposed()) {
+        if (m_viewRequestCallback != null && !m_viewRequestCallback.isDisposed()) {
+            m_viewRequestCallback.dispose();
+        }
+        if (m_updateRequestStatusCallback != null && !m_updateRequestStatusCallback.isDisposed()) {
+            m_updateRequestStatusCallback.dispose();
+        }
+        if (m_cancelRequestCallback != null && !m_cancelRequestCallback.isDisposed()) {
+            m_cancelRequestCallback.dispose();
+        }
+        if (m_isPushSupportedCallback != null && !m_isPushSupportedCallback.isDisposed()) {
+            m_isPushSupportedCallback.dispose();
+        }
+        if (m_shell != null && !m_shell.isDisposed()) {
             m_shell.dispose();
         }
         m_shell = null;
         m_browser = null;
+        m_viewRequestCallback = null;
+        m_updateRequestStatusCallback = null;
+        m_cancelRequestCallback = null;
+        m_isPushSupportedCallback = null;
         m_viewSet = false;
         // do instanceof check here to avoid a public discard method in the ViewableModel interface
         if (getViewableModel() instanceof SubnodeViewableModel) {
@@ -490,4 +513,143 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
         String showErrorCall = creator.wrapInTryCatch(creator.getNamespacePrefix() + showErrorMethod + "('" + escapedError + "');");
         m_browser.execute(showErrorCall);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void respondToViewRequest(final String response) {
+        Display display = getDisplay();
+        if (display == null) {
+            // view most likely disposed
+            return;
+        }
+        display.asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                LOGGER.debug("Sending response: " + response);
+                String call = "KnimeInteractivity.respondToViewRequest(JSON.parse('" + response + "'));";
+                WizardViewCreator<REP, VAL> creator = getViewCreator();
+                call = creator.wrapInTryCatch(call);
+                if (m_browser != null && !m_browser.isDisposed()) {
+                    m_browser.execute(call);
+                }
+            }
+
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void pushRequestUpdate(final String monitor) {
+        Display display = getDisplay();
+        if (display == null) {
+            // view most likely disposed
+            return;
+        }
+        display.asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                String call = "KnimeInteractivity.updateResponseMonitor(JSON.parse('" + monitor + "'));";
+                WizardViewCreator<REP, VAL> creator = getViewCreator();
+                call = creator.wrapInTryCatch(call);
+                if (m_browser != null && !m_browser.isDisposed()) {
+                    m_browser.execute(call);
+                }
+            }
+        });
+    }
+
+    private class ViewRequestFunction extends BrowserFunction {
+
+        /**
+         * @param browser
+         * @param name
+         */
+        public ViewRequestFunction(final Browser browser, final String name) {
+            super(browser, name);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object function(final Object[] arguments) {
+            if (arguments == null || arguments.length < 1) {
+                return false;
+            }
+            return handleViewRequest((String)arguments[0]);
+        }
+
+    }
+
+    private class UpdateRequestStatusFunction extends BrowserFunction {
+
+        /**
+         * @param browser
+         * @param name
+         */
+        public UpdateRequestStatusFunction(final Browser browser, final String name) {
+            super(browser, name);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object function(final Object[] arguments) {
+            if (arguments == null || arguments.length < 1) {
+                return false;
+            }
+            return updateRequestStatus((String)arguments[0]);
+        }
+    }
+
+    private class CancelRequestFunction extends BrowserFunction {
+
+        /**
+         * @param browser
+         * @param name
+         */
+        public CancelRequestFunction(final Browser browser, final String name) {
+            super(browser, name);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object function(final Object[] arguments) {
+            if (arguments == null || arguments.length < 1) {
+                return false;
+            }
+            cancelRequest((String)arguments[0]);
+            return null;
+        }
+    }
+
+    private class PushSupportedFunction extends BrowserFunction {
+
+        /**
+         * @param browser
+         * @param name
+         */
+        public PushSupportedFunction(final Browser browser, final String name) {
+            super(browser, name);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Object function(final Object[] arguments) {
+            return isPushEnabled();
+        }
+
+    }
+
 }

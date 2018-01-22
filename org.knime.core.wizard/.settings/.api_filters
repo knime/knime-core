@@ -62,7 +62,91 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/core/wizard/ViewRequestRegistry.java" type="org.knime.core.wizard.ViewRequestRegistry">
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="ViewRequestRegistry"/>
+                <message_argument value="cancel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="ViewRequestRegistry"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/core/wizard/WizardPageManager.java" type="org.knime.core.wizard.WizardPageManager">
+        <filter id="572522506">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+            </message_arguments>
+        </filter>
+        <filter id="640708718">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob(int, ExecutionMonitor)"/>
+                <message_argument value="WizardPageManager"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="cancel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="DefaultViewRequestJob&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="start(WizardViewRequestHandler&lt;REQ,RES&gt;, REQ)"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ViewResponseMonitor&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ViewResponseMonitor&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="isCancelled()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ViewResponseMonitor&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="isExecutionFailed()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ViewResponseMonitor&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="isExecutionFinished()"/>
+            </message_arguments>
+        </filter>
+        <filter id="640712815">
+            <message_arguments>
+                <message_argument value="ViewResponseMonitor&lt;RES&gt;"/>
+                <message_argument value="WizardPageManager"/>
+                <message_argument value="isResponseAvailable()"/>
+            </message_arguments>
+        </filter>
         <filter id="640712815">
             <message_arguments>
                 <message_argument value="WorkflowLock"/>

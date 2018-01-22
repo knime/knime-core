@@ -61,17 +61,23 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
+import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
@@ -84,6 +90,9 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardViewRequest;
+import org.knime.core.node.wizard.WizardViewRequestHandler;
+import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
@@ -665,6 +674,73 @@ public abstract class WebResourceController {
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
         return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
+    }
+
+    /**
+     * Returns a wizard node to a given subnode and node id
+     * @param subnodeID the subnode id, which is the container for the wizard node
+     * @param wizardNodeID the node id of the wizard node
+     * @return the resolved wizard node or null, if node id does not denote a wizard node
+     * @since 3.6
+     */
+    @SuppressWarnings("rawtypes")
+    protected WizardNode getWizardNodeForVerifiedID(final NodeID subnodeID, final NodeID wizardNodeID) {
+        CheckUtils.checkNotNull(subnodeID);
+        CheckUtils.checkNotNull(wizardNodeID);
+        WorkflowManager manager = m_manager;
+        assert manager.isLockedByCurrentThread();
+        SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
+        NodeContainer cont = subNodeNC.getWorkflowManager().getNodeContainer(wizardNodeID);
+        if (cont instanceof NativeNodeContainer) {
+            NodeModel model = ((NativeNodeContainer)cont).getNodeModel();
+            if (model instanceof WizardNode) {
+                return (WizardNode)model;
+            } else {
+                LOGGER.error("Node model is not of type WizardNode");
+            }
+            LOGGER.error("Node container is not of type NativeNodeContainer");
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves the future object for a view request, which is from a node within a subnode
+     * @param subnodeID the node id of the subnode container
+     * @param nodeID the node id of the wizard node, as fetched from the combined view
+     * @param viewRequest the JSON serialized view request string
+     * @param exec the execution monitor to set progress and check possible cancellation
+     * @return a {@link CompletableFuture} instance (not null), which resolves into a response to the view request, or null in case
+     * of error
+     * @throws ViewRequestHandlingException on serialization error
+     * @since 3.6
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected CompletableFuture<WizardViewResponse> processViewRequestInternal(final NodeID subnodeID,
+        final String nodeID, final String viewRequest, final ExecutionMonitor exec) throws ViewRequestHandlingException {
+        WorkflowManager manager = m_manager;
+        assert manager.isLockedByCurrentThread();
+        NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(nodeID);
+        NodeID id = suffix.prependParent(manager.getID());
+        WizardNode model = getWizardNodeForVerifiedID(subnodeID, id);
+        if (model == null || !(model instanceof WizardViewRequestHandler)) {
+            return CompletableFuture.supplyAsync(() -> null);
+        }
+        WizardViewRequest req = ((WizardViewRequestHandler)model).createEmptyViewRequest();
+        try {
+            req.loadFromStream(new ByteArrayInputStream(viewRequest.getBytes(Charset.forName("UTF-8"))));
+            return CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return (WizardViewResponse)((WizardViewRequestHandler)model).handleRequest(req, exec);
+                    } catch (ViewRequestHandlingException | InterruptedException ex) {
+                        throw new CompletionException(ex.getMessage(), ex);
+                    } catch (CanceledExecutionException ex) {
+                        throw new CancellationException(ex.getMessage());
+                    }
+                });
+        } catch (Exception ex) {
+            throw new ViewRequestHandlingException(ex.getMessage(), ex);
+        }
     }
 
     /**

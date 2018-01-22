@@ -49,10 +49,14 @@
 package org.knime.core.node.workflow;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -130,6 +134,30 @@ public class SinglePageWebResourceController extends WebResourceController {
             NodeContext.pushContext(manager);
             try {
                 return loadValuesIntoPageInternal(viewContentMap, m_nodeID, validate, useAsDefault);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+    }
+
+    /**
+     * Processes a request issued by a view by calling the appropriate methods on the corresponding node model and
+     * returns a future which can resolve a response object.
+     * @param nodeID The node id of the node that the request belongs to.
+     * @param viewRequest The JSON serialized view request
+     * @param exec the execution monitor to set progress and check possible cancellation
+     * @return a {@link CompletableFuture} object, which can resolve a {@link WizardViewResponse}.
+     * @throws ViewRequestHandlingException on processing error
+     * @since 3.6
+     */
+    public CompletableFuture<WizardViewResponse> processViewRequest(final String nodeID, final String viewRequest,
+        final ExecutionMonitor exec) throws ViewRequestHandlingException {
+        WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            checkDiscard();
+            NodeContext.pushContext(manager);
+            try {
+                return processViewRequestInternal(m_nodeID, nodeID, viewRequest, exec);
             } finally {
                 NodeContext.removeLastContext();
             }
