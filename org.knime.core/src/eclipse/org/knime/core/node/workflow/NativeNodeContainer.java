@@ -95,6 +95,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -250,6 +252,22 @@ public class NativeNodeContainer extends SingleNodeContainer {
             m_inputPorts[index] = new NodeInPort(index, m_node.getInputType(index));
         }
         return m_inputPorts[index];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return m_node.getNodeModel().getInputPortRoles();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return m_node.getNodeModel().getOutputPortRoles();
     }
 
     /* ------------------ Views ---------------- */

@@ -48,13 +48,17 @@ package org.knime.core.node.workflow;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.concurrent.Future;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /** Runnable that represents the execution of a node. This abstract class
@@ -64,6 +68,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * state.
  * @author Bernd Wiswedel, University of Konstanz
  * @author Peter Ohl, University of Konstanz
+ * @since 3.6
  */
 public abstract class NodeExecutionJob implements Runnable {
 
@@ -245,11 +250,34 @@ public abstract class NodeExecutionJob implements Runnable {
      * @see java.util.concurrent.Future#cancel(boolean) */
     protected abstract boolean cancel();
 
+    /**
+     * TODO
+     * @return
+     * @since 3.6
+     */
+    public Future<NodeContainerExecutionResult> getFuture() {
+        return null;
+    }
+
     /** Access method for the input port objects.
      * @return Input port objects as passed into constructor.
      */
     protected final PortObject[] getPortObjects() {
         return m_data;
+    }
+
+    /**
+     * @since 3.6
+     */
+    protected final PortInput[] getPortInputs() {
+        return null;
+    }
+
+    /**
+     * @since 3.6
+     */
+    protected final PortOutput[] getPortOutputs() {
+        return null;
     }
 
     /** Get the input objects, excluding the mandatory flow variable input

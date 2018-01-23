@@ -58,6 +58,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -66,6 +67,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -1194,6 +1197,19 @@ public abstract class SingleNodeContainer extends NodeContainer {
     }
 
     /* ------------------ Port Information ------------------- */
+
+    /**
+     * TODO
+     * see {@link NodeModel#getInputPortRoles()}
+     */
+    public abstract InputPortRole[] getInputPortRoles();
+
+    /**
+     * TODO
+     * see {@link NodeModel#getOutputPortRoles()}
+     */
+    public abstract OutputPortRole[] getOutputPortRoles();
+
 
     /**
      * @param portIndex ...

@@ -113,6 +113,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.wizard.WizardNode;
@@ -562,6 +564,32 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             getVirtualOutNodeModel().updateConfigIncludeAllFlowVariables();
             getWorkflowManager().saveNodeSettingsToDefault(getVirtualOutNodeID());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        //retrieve the port roles from the first connected node
+        InputPortRole[] roles = new InputPortRole[getVirtualInNode().getNrOutPorts()];
+        for (int i = 0; i < roles.length; i++) {
+            roles[i] = getVirtualInNode().getOutPort(i).getConnectedNodeContainer().getInputPortRoles()[i];
+        }
+        return roles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        //retrieve the port roles from the first connected nodes
+        OutputPortRole[] roles = new OutputPortRole[getVirtualOutNode().getNrOutPorts()];
+        for (int i = 0; i < roles.length; i++) {
+            roles[i] = getVirtualOutNode().getOutPort(i).getConnectedNodeContainer().getOutputPortRoles()[i];
+        }
+        return roles;
     }
     /* -------------------- NodeContainer info properties -------------- */
 

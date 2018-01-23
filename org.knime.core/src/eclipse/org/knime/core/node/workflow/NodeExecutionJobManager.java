@@ -58,6 +58,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 
 /**
@@ -84,6 +86,18 @@ public interface NodeExecutionJobManager {
      */
     public NodeExecutionJob submitJob(final NodeContainer nc,
             final PortObject[] data);
+
+
+    /**
+     * TODO
+     * @since 3.6
+     */
+    public default NodeExecutionJob submitJob(final NodeContainer nc,
+            final PortInput[] inData, final PortOutput[] outData) {
+        //there could also be executors (java.concurrent) be passed in the constructor for better control
+        //TODO
+        return submitJob(nc, new PortObject[data.length]);
+    }
 
     /**
      * Creates a new instance of a panel that holds components to display the
