@@ -49,7 +49,9 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
@@ -121,9 +123,18 @@ public final class JoinedTable implements KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public CloseableRowIterator iterator() {
-        return new JoinTableIterator(m_leftTable.iterator(),
-                m_rightTable.iterator(), m_map, m_flags);
+    public CloseableRowIterator iterator(final int... indices) {
+        final List<Integer> leftIndices = new ArrayList<Integer>();
+        final List<Integer> rightIndices = new ArrayList<Integer>();
+        for (int i = 0; i < indices.length; i++) {
+            if (m_flags[i]) {
+                leftIndices.add(m_map[i]);
+            } else {
+                rightIndices.add(m_map[i]);
+            }
+        }
+        return new JoinTableIterator(m_leftTable.iterator(leftIndices.stream().mapToInt(i -> i).toArray()),
+            m_rightTable.iterator(rightIndices.stream().mapToInt(i -> i).toArray()), m_map, m_flags);
     }
 
     /**

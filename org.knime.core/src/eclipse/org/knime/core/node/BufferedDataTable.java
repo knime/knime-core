@@ -325,6 +325,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
         return m_delegate.iterator();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public CloseableRowIterator iterator(final int... colIndices) {
+        return m_delegate.iterator(colIndices);
+    }
+
     /**
      * Get an iterator instance that will return missing values when the table
      * is cleared as part of a node reset.
@@ -857,7 +863,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
         /** Overridden to narrow return type to closeable iterator.
          * {@inheritDoc} */
         @Override
-        public CloseableRowIterator iterator();
+        default CloseableRowIterator iterator(){
+            return iterator(new int[0]);
+        }
+
+        /** Overridden to narrow return type to closeable iterator.
+         * {@inheritDoc} */
+        @Override
+        public CloseableRowIterator iterator(int ... indices);
 
         /** Reference to the underlying tables, if any. A reference
          * table exists if this object is just a wrapper, such as a

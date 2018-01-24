@@ -116,6 +116,14 @@ public final class VoidTable implements KnowsRowCountTable {
         };
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CloseableRowIterator iterator(final int... indices) {
+        return iterator();
+    }
+
     /** Does nothing. {@inheritDoc} */
     @Override
     public void clear() {

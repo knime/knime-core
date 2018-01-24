@@ -44,7 +44,9 @@
  */
 package org.knime.base.data.filter.column;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -382,7 +384,21 @@ public final class FilterColumnTable implements DataTable {
      */
     @Override
     public RowIterator iterator() {
-        RowIterator it = m_data.iterator();
+        return iterator(new int[0]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        final List<Integer> cols = new ArrayList<>();
+        for (int i = 0; i < indices.length; i++) {
+            cols.add(m_columns[indices[i]]);
+        }
+
+        int[] res = cols.stream().mapToInt(i -> i).toArray();
+        final RowIterator it = m_data.iterator(res.length == 0 ? m_columns : res);
         if (it instanceof CloseableRowIterator) {
             return new CloseableFilterColumnRowIterator(
                     (CloseableRowIterator) it, m_columns);

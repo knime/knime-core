@@ -193,6 +193,15 @@ public class AppendedRowsTable implements DataTable {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        // fine. deprecated.
+        return iterator(null, -1);
+    }
+
+    /**
      * Get an iterator whose {@link RowIterator#next()} method may throw an
      * exception if the execution is canceled. In particular if you try to
      * concatenate a table to itself and do not allow duplicates, the

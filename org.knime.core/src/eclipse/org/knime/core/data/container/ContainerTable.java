@@ -122,8 +122,16 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
      */
     @Override
     public CloseableRowIterator iterator() {
+        return iterator(new int[0]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CloseableRowIterator iterator(final int... indices) {
         ensureBufferOpen();
-        return m_buffer.iterator();
+        return m_buffer.iterator(indices);
     }
 
     /**
@@ -299,5 +307,4 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
             m_readTask = null;
         }
     }
-
 }

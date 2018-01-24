@@ -76,7 +76,7 @@ public abstract class AbstractTableStoreReader {
         m_fileStoreHandlerRepository = fileStoreHandlerRepository;
     }
 
-    public abstract TableStoreCloseableRowIterator iterator() throws IOException;
+    public abstract TableStoreCloseableRowIterator iterator(int ... indices) throws IOException;
 
     public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
 

@@ -1352,17 +1352,16 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Get a new <code>RowIterator</code>, traversing all rows that have been added. Calling this method makes only
-     * sense when the buffer has been closed. However, no check is done (as it is available to package classes only).
+     * @param indices of selected columns. If indices.length == 0, then all columns are selected.
      *
      * @return a new Iterator over all rows.
      */
-    synchronized CloseableRowIterator iterator() {
+    synchronized CloseableRowIterator iterator(final int... indices) {
         if (usesOutFile()) {
             if (m_useBackIntoMemoryIterator) {
                 // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
-                m_backIntoMemoryIterator = iterator();
+                m_backIntoMemoryIterator = iterator(indices);
                 // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
                 m_list = new ArrayList<BlobSupportDataRow>((int) size());
                 return new FromListIterator();
@@ -1371,7 +1370,7 @@ public class Buffer implements KNIMEStreamConstants {
                 LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
                         + m_nrOpenInputStreams + " open streams");
 
-                TableStoreCloseableRowIterator iterator = m_outputReader.iterator();
+                TableStoreCloseableRowIterator iterator = m_outputReader.iterator(indices);
                 iterator.setBuffer(this);
                 m_nrOpenInputStreams.incrementAndGet();
                 synchronized (m_openIteratorSet) {
@@ -1390,6 +1389,15 @@ public class Buffer implements KNIMEStreamConstants {
         }
     }
 
+    /**
+     * Get a new <code>RowIterator</code>, traversing all rows that have been added. Calling this method makes only
+     * sense when the buffer has been closed. However, no check is done (as it is available to package classes only).
+     *
+     * @return a new Iterator over all rows.
+     */
+    synchronized CloseableRowIterator iterator() {
+        return iterator(new int[0]);
+    }
 
     private static List<OutputStream> DEBUG_STREAMS = new ArrayList<>();
 

@@ -124,6 +124,14 @@ public final class WrappedTable implements KnowsRowCountTable {
         return m_table.iterator();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CloseableRowIterator iterator(final int... colIndices) {
+        return iterator(colIndices);
+    }
+
     /** {@inheritDoc} */
     @Override
     public DataTableSpec getDataTableSpec() {

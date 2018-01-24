@@ -172,11 +172,19 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     /** {@inheritDoc} */
     @Override
     public CloseableRowIterator iterator() {
+        return iterator(new int[0]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CloseableRowIterator iterator(final int... indices) {
         // return MyIterator if all specs are the same indicated by m_tablesWrapper == null
-        if(m_tablesWrapper == null) {
-            return new MyIterator();
+        if (m_tablesWrapper == null) {
+            return new MyIterator(indices);
         } else {
-            return m_tablesWrapper.iterator(null, -1);
+            return m_tablesWrapper.iterator(null, -1, indices);
         }
     }
 
@@ -323,9 +331,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         private DataRow m_next;
 
         /** Creates new iterator. */
-        public MyIterator() {
+        public MyIterator(final int[] indices) {
             m_tableIndex = 0;
-            m_curIterator = m_tables[m_tableIndex].iterator();
+            m_curIterator = m_tables[m_tableIndex].iterator(indices);
             m_next = internalNext();
         }
 

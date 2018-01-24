@@ -47,7 +47,7 @@ package org.knime.core.data;
 /**
  * Most general data interface in table structure with a fixed number of columns
  * and iterable rows (no random access).
- * 
+ *
  * <p>
  * Each <code>DataTable</code> is a read-only container of {@link DataRow}
  * elements which are returned by the {@link RowIterator}. Each row must have
@@ -57,9 +57,9 @@ package org.knime.core.data;
  * of the table. The {@link DataTableSpec} consists of {@link DataColumnSpec}s
  * which contain information about the column, e.g. name, type, and possible
  * values etc.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  * @see DataCell
  * @see DataRow
  * @see RowIterator
@@ -69,18 +69,34 @@ public interface DataTable extends Iterable<DataRow> {
     /**
      * Returns the {@link DataTableSpec} object of this table which gives
      * information about the structure of this data table.
-     * 
+     *
      * @return the DataTableSpec of this table
      */
     DataTableSpec getDataTableSpec();
 
     /**
      * Returns a row iterator which returns each row one-by-one from the table.
-     * 
+     *
      * @return row iterator
-     * 
+     *
      * @see org.knime.core.data.DataRow
      */
-    RowIterator iterator();
+    @Override
+    default RowIterator iterator(){
+        return iterator(new int[0]);
+    }
+
+    /**
+     * Returns a row iterator which returns each row one-by-one from the table. The returned {@link DataRow} only
+     * guarantees to return non-null values for the selected indices.
+     *
+     * @param indices the indices of the columns which will be guaranteed to be accessible in a particular
+     *            {@link DataRow}. If <source>indices.length == 0</source> all columns are accessible.
+     *
+     * @return row iterator
+     */
+    default RowIterator iterator(final int... indices) {
+        return iterator();
+    }
 
 }

@@ -186,7 +186,15 @@ public class AppendedRowsTable implements DataTable {
      */
     @Override
     public RowIterator iterator() {
-        return iterator(null, -1);
+        return iterator(new int[0]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        return iterator(null, -1, indices);
     }
 
     /**
@@ -202,11 +210,11 @@ public class AppendedRowsTable implements DataTable {
      * @see AppendedRowsIterator.RuntimeCanceledExecutionException
      */
     public AppendedRowsIterator iterator(final ExecutionMonitor exec,
-            final int totalRowCount) {
+            final int totalRowCount, final int ... indices) {
         PairSupplier[] iteratorSuppliers = new PairSupplier[m_tables.length];
         for (int i = 0; i < iteratorSuppliers.length; i++) {
             iteratorSuppliers[i] = new PairSupplier(new Pair<RowIterator, DataTableSpec>(
-                    m_tables[i].iterator(), m_tables[i].getDataTableSpec()));
+                    m_tables[i].iterator(indices), m_tables[i].getDataTableSpec()));
         }
         return new AppendedRowsIterator(iteratorSuppliers, m_duplPolicy, m_suffix, m_spec, exec, totalRowCount);
     }

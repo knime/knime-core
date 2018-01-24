@@ -67,15 +67,25 @@ public class DataTableRowInput extends RowInput {
     private final long m_rowCount;
 
     /** Initialize with table.
-     * @param table The table to read from. */
-    public DataTableRowInput(final DataTable table) {
+     *
+     * @param table The table to read from.
+     * @param indices indices of selected columns
+     * @since 3.6
+     */
+    public DataTableRowInput(final DataTable table, final int ... indices) {
         m_tableSpec = table.getDataTableSpec();
-        m_iterator = table.iterator();
+        m_iterator = table.iterator(indices);
         if (table instanceof BufferedDataTable) {
             m_rowCount = ((BufferedDataTable)table).size();
         } else {
             m_rowCount = -1;
         }
+    }
+
+    /** Initialize with table.
+     * @param table The table to read from. */
+    public DataTableRowInput(final DataTable table) {
+        this(table, new int[0]);
     }
 
     /** {@inheritDoc} */
@@ -111,5 +121,4 @@ public class DataTableRowInput extends RowInput {
     public long getRowCount() {
         return m_rowCount;
     }
-
 }

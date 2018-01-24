@@ -209,6 +209,14 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     */
+    @Override
+    public CloseableRowIterator iterator(final int... indices) {
+        return m_reference.iterator(indices);
+    }
+
+    /**
+     * {@inheritDoc}
      * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override

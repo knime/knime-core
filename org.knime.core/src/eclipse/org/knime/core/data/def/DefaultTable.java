@@ -443,6 +443,14 @@ public class DefaultTable implements DataTable {
     public RowIterator iterator() {
         return new DefaultRowIterator(m_rowList);
     }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        // Sorry, we don't support any optimization here
+        return iterator();
+    }
 
     /**
      * Get a reference to underlying data container. The returned

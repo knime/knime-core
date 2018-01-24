@@ -59,7 +59,6 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.Buffer.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
@@ -98,7 +97,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader implements 
     }
 
     @Override
-    public TableStoreCloseableRowIterator iterator() throws IOException {
+    public TableStoreCloseableRowIterator iterator(final int ... indices) throws IOException {
         if (m_version <= 5) { // 2.0 tech preview and before
             return new BufferFromFileIteratorVersion1x(this);
         } else {

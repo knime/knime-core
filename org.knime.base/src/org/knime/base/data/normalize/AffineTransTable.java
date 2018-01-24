@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.normalize;
 
@@ -69,30 +69,30 @@ import org.knime.core.node.streamable.RowInput;
 /**
  * Table that performs an affine transformation, i.e. y = a*x + b where a and be
  * b are parameters, x the input value and y the transformed output.
- * 
+ *
  * <p>
  * The transformation is only applied to a given set of ({@link DoubleValue} -
  * compatible) columns. Other columns are copied.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AffineTransTable implements DataTable {
-    
+
     /** A very small number. */
     public static final double VERY_SMALL = 1E-10;
-    
+
     private final RowInput m_tableRows;
 
     private final DataTableSpec m_spec;
 
     private String m_errormessage;
-    
+
     private final AffineTransConfiguration m_configuration;
     private final int[] m_indicesInConfiguration;
 
     /**
      * Creates new table given the following parameters.
-     * 
+     *
      * @param table the Table to wrap
      * @param names the names of the column to scale
      * @param scales the scale parameters (same order as <code>names</code>)
@@ -111,8 +111,8 @@ public class AffineTransTable implements DataTable {
      *             arrays of scales and translations contain NaN, the target
      *             columns are not {@link DoubleValue} compatible
      * @deprecated Create {@link AffineTransConfiguration} object and then
-     * use the constructor 
-     * {@link #AffineTransTable(DataTable, AffineTransConfiguration)}. 
+     * use the constructor
+     * {@link #AffineTransTable(DataTable, AffineTransConfiguration)}.
      */
     @Deprecated
     public AffineTransTable(final DataTable table, final String[] names,
@@ -121,7 +121,7 @@ public class AffineTransTable implements DataTable {
         this(table, new AffineTransConfiguration(
                 names, scales, translations, min, max, null));
     }
-    
+
     /** Creates new table, normalizing <code>table</code> with the configuration
      * given by <code>configuration</code>.
      * @param table To be normalized
@@ -170,14 +170,14 @@ public class AffineTransTable implements DataTable {
         }
         if (!hash.isEmpty()) {
             int size = hash.size();
-            setErrorMessage("Normalization was not applied to " + size 
-                    + " column(s) as they do not exist in the table: " 
+            setErrorMessage("Normalization was not applied to " + size
+                    + " column(s) as they do not exist in the table: "
                     + Arrays.toString(hash.keySet().toArray()));
         }
         m_spec = generateNewSpec(spec, m_configuration);
         m_tableRows = rowInput;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -185,14 +185,14 @@ public class AffineTransTable implements DataTable {
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
-    
+
     /**
      * @return the configuration
      */
     public AffineTransConfiguration getConfiguration() {
         return m_configuration;
     }
-    
+
     /**
      * @return the indicesInConfiguration
      */
@@ -209,11 +209,18 @@ public class AffineTransTable implements DataTable {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        return iterator();
+    }
+    /*
      * Creates a new DataTableSpec. The target column's type is set to
      * DoubleType, the domain is adjusted.
      */
     private static DataTableSpec generateNewSpec(
-            final DataTableSpec spec, 
+            final DataTableSpec spec,
             final AffineTransConfiguration configuration) {
         String[] names = configuration.getNames();
         HashMap<String, Integer> hash = new HashMap<String, Integer>();
@@ -232,7 +239,7 @@ public class AffineTransTable implements DataTable {
                 }
             }
         }
-        
+
         DataColumnSpec[] specs = new DataColumnSpec[spec.getNumColumns()];
         double[] newmin = configuration.getMin();
         double[] newmax = configuration.getMax();
@@ -241,7 +248,7 @@ public class AffineTransTable implements DataTable {
         for (int i = 0; i < specs.length; i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);
             DataColumnDomain colDomain = colSpec.getDomain();
-            Integer indexObject = hash.get(colSpec.getName()); 
+            Integer indexObject = hash.get(colSpec.getName());
             if (indexObject == null) {
                 specs[i] = colSpec;
             } else {
@@ -253,11 +260,11 @@ public class AffineTransTable implements DataTable {
                 DataCell oldUp = colDomain.getUpperBound();
                 if (oldUp != null && !oldUp.isMissing()) {
                     double oldVal = ((DoubleValue)oldUp).getDoubleValue();
-                    double newVal = 
+                    double newVal =
                         scales[index] * oldVal + translations[index];
                     if (!Double.isNaN(newmax[index])) {
                         if (newVal > newmax[index]
-                                && ((newVal - newmax[index]) 
+                                && ((newVal - newmax[index])
                                         / interval) < VERY_SMALL) {
                             newVal = newmax[index];
                         }
@@ -268,11 +275,11 @@ public class AffineTransTable implements DataTable {
                 DataCell oldLow = colDomain.getLowerBound();
                 if (oldLow != null && !oldLow.isMissing()) {
                     double oldVal = ((DoubleValue)oldLow).getDoubleValue();
-                    double newVal = 
+                    double newVal =
                         scales[index] * oldVal + translations[index];
                     if (!Double.isNaN(newmin[index])) {
                         if (newVal < newmin[index]
-                                && ((newmin[index] - newVal) 
+                                && ((newmin[index] - newVal)
                                         / interval) < VERY_SMALL) {
                             newVal = newmin[index];
                         }
@@ -295,20 +302,20 @@ public class AffineTransTable implements DataTable {
     /**
      * Saves internals to the argument settings object. This object is supposed
      * to be the only one writing to this (sub)setting object.
-     * 
+     *
      * @param settings To write to.
      */
     public void save(final ModelContentWO settings) {
         m_configuration.save(settings);
     }
-    
+
     /** Reads the meta information from the settings object and constructs
      * a AffineTransTable based on this information and the given DataTable.
      * @param table The table to which the normalization is applied.
      * @param sets The normalization information.
      * @return A new table wrapping <code>table</code> but normalized according
      * to <code>settings</code>.
-     * @throws InvalidSettingsException If the settings are incomplete 
+     * @throws InvalidSettingsException If the settings are incomplete
      * or cannot be applied to spec.
      */
     public static AffineTransTable load(final DataTable table,
@@ -316,24 +323,24 @@ public class AffineTransTable implements DataTable {
         AffineTransConfiguration config = AffineTransConfiguration.load(sets);
         return new AffineTransTable(table, config);
     }
-    
+
     /** Reads the meta information from the settings object and constructs
      * the DataTableSpec, which would be the outcome when a table complying with
      * <code>spec</code> were fet to the load method.
      * @param spec The original input spec.
      * @param settings The normalization information.
      * @return The DataTableSpec of the normalized table.
-     * @throws InvalidSettingsException If the settings are incomplete 
+     * @throws InvalidSettingsException If the settings are incomplete
      * or cannot be applied to spec.
      */
-    public static DataTableSpec createSpec(final DataTableSpec spec, 
+    public static DataTableSpec createSpec(final DataTableSpec spec,
             final ModelContentRO settings) throws InvalidSettingsException {
         return generateNewSpec(spec, AffineTransConfiguration.load(settings));
     }
-    
-    
+
+
     /**
-     * Sets an error message, if something went wrong during normalization. 
+     * Sets an error message, if something went wrong during normalization.
      * @param message the message to set.
      */
     void setErrorMessage(final String message) {
@@ -341,7 +348,7 @@ public class AffineTransTable implements DataTable {
             m_errormessage = message;
         }
     }
-    
+
     /**
      * @return error message if something went wrong, <code>null</code>
      * otherwise.

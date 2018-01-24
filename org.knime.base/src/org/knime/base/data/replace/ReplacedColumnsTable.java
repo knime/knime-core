@@ -45,6 +45,10 @@
  */
 package org.knime.base.data.replace;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -65,6 +69,7 @@ public class ReplacedColumnsTable implements DataTable {
 
     private final ReplacedCellsFactory m_cellFactory;
 
+    private int[] m_invertedColumns;
     /**
      * Creates a new replaced column table with one replaced column.
      * 
@@ -102,6 +107,7 @@ public class ReplacedColumnsTable implements DataTable {
         m_table = table;
         m_cellFactory = cellFac;
         m_columns = columns;
+        m_invertedColumns = invertSelection(m_columns, m_table.getDataTableSpec().getNumColumns());
     }
 
     /**
@@ -155,14 +161,52 @@ public class ReplacedColumnsTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
-        RowIterator origIt = m_table.iterator();
+        // we've to invert the m_columns as we only want to read the columns which haven't been replaced. meta.
+        RowIterator origIt = m_table.iterator(m_invertedColumns);
         DataType[] validateTypes = new DataType[m_columns.length];
         for (int column = 0; column < m_columns.length; column++) {
-            validateTypes[column] = getDataTableSpec().getColumnSpec(
-                    m_columns[column]).getType();
+            validateTypes[column] = getDataTableSpec().getColumnSpec(m_columns[column]).getType();
         }
-        return new ReplacedColumnsRowIterator(origIt, m_cellFactory,
-                validateTypes, m_columns);
+        return new ReplacedColumnsRowIterator(origIt, m_cellFactory, validateTypes, m_columns);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RowIterator iterator(final int... indices) {
+        // further restricts the minimal set of columns we have to provide.
+        List<Integer> res = new ArrayList<>();
+        for (int i = 0; i < m_invertedColumns.length; i++) {
+            if (ArrayUtils.contains(indices, m_invertedColumns[i])) {
+                res.add(m_invertedColumns[i]);
+            }
+        }
+
+        // TODO we could further improve this.
+        RowIterator origIt = m_table.iterator(res.stream().mapToInt(i -> i).toArray());
+        DataType[] validateTypes = new DataType[m_columns.length];
+        for (int column = 0; column < m_columns.length; column++) {
+            validateTypes[column] = getDataTableSpec().getColumnSpec(m_columns[column]).getType();
+        }
+
+        return new ReplacedColumnsRowIterator(origIt, m_cellFactory, validateTypes, m_columns);
+    }
+
+    // TODO double check assumptions, functionality and code
+    // Assumption m_columns is sorted.
+    private int[] invertSelection(final int[] selection, final int total) {
+        int[] cols = new int[total - selection.length];
+        int j = 0, k = 0;
+        for (int i = 0; i < total; i++) {
+            if (i == selection[j]) {
+                ++j;
+            } else {
+                cols[k++] = i;
+            }
+        }
+        return cols;
     }
 }
