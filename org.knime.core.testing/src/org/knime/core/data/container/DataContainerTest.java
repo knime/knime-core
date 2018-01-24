@@ -53,9 +53,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
+import org.apache.commons.lang3.RandomStringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.junit.Assume;
 import org.knime.core.data.DataCell;
@@ -73,6 +71,9 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.DuplicateKeyException;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
  * Test case for class <code>DataContainer</code>.
@@ -700,15 +701,6 @@ public class DataContainerTest extends TestCase {
         }
     }
 
-    private static char[] createRandomChars(
-            final int length, final Random rand) {
-        char[] result = new char[length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = (char)rand.nextInt(Character.MAX_VALUE);
-        }
-        return result;
-    }
-
     private static DataRow createRandomRow(final int index, final int colCount,
             final Random rand1, final ObjectToDataCellConverter conv) {
         RowKey key = new RowKey("Row " + index);
@@ -723,8 +715,7 @@ public class DataContainerTest extends TestCase {
             case 1:
                 String s;
                 if (rand1.nextDouble() < 0.1) {
-                    s = new String(createRandomChars(
-                            rand1.nextInt(1000000), rand1));
+                    s = RandomStringUtils.random(rand1.nextInt(1000000),0,0,true,true,null,rand1);
                 } else {
                     s = "Row" + index + "; Column:" + c;
                 }
