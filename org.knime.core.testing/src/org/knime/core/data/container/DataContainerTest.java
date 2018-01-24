@@ -701,32 +701,32 @@ public class DataContainerTest extends TestCase {
         }
     }
 
-    private static DataRow createRandomRow(final int index, final int colCount,
-            final Random rand1, final ObjectToDataCellConverter conv) {
+    private static DataRow createRandomRow(final int index, final int colCount, final Random rand1,
+        final ObjectToDataCellConverter conv) {
         RowKey key = new RowKey("Row " + index);
         DataCell[] cells = new DataCell[colCount];
         for (int c = 0; c < colCount; c++) {
             DataCell cell = null;
             switch (c % 3) {
-            case 0:
-                cell = conv.createDataCell(
-                        rand1.nextDouble() - 0.5);
-                break;
-            case 1:
-                String s;
-                if (rand1.nextDouble() < 0.1) {
-                    s = RandomStringUtils.random(rand1.nextInt(1000000),0,0,true,true,null,rand1);
-                } else {
-                    s = "Row" + index + "; Column:" + c;
-                }
-                cell = conv.createDataCell(s);
-                break;
-            case 2:
-                // use full range of int
-                int r = (int)rand1.nextLong();
-                cell = conv.createDataCell(r);
-                break;
-            default: throw new InternalError();
+                case 0:
+                    cell = conv.createDataCell(rand1.nextDouble() - 0.5);
+                    break;
+                case 1:
+                    String s;
+                    if (rand1.nextDouble() < 0.1) {
+                        s = RandomStringUtils.random(rand1.nextInt(100), 0, 0, true, true, null, rand1);
+                    } else {
+                        s = "Row" + index + "; Column:" + c;
+                    }
+                    cell = conv.createDataCell(s);
+                    break;
+                case 2:
+                    // use full range of int
+                    int r = (int)rand1.nextLong();
+                    cell = conv.createDataCell(r);
+                    break;
+                default:
+                    throw new InternalError();
             }
             cells[c] = cell;
         }
