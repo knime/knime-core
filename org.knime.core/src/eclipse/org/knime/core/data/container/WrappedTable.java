@@ -129,7 +129,7 @@ public final class WrappedTable implements KnowsRowCountTable {
      */
     @Override
     public CloseableRowIterator iterator(final int... colIndices) {
-        return iterator(colIndices);
+        return m_table.iterator(colIndices);
     }
 
     /** {@inheritDoc} */
