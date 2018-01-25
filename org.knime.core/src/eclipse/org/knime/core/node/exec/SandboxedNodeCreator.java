@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -79,6 +80,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.wizard.StreamableWizardNode;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.CredentialsStore;
@@ -88,6 +90,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -127,6 +130,7 @@ public final class SandboxedNodeCreator {
     private PortObject[] m_inData;
     private boolean m_copyDataIntoNewContext;
     private boolean m_forwardConnectionProgressEvents;
+    private boolean m_forwardWizardStateChangeEvents;
 
     /** New creator with base information that can be further customized using the setter methods. None
      * of the arguments must be null.
@@ -174,6 +178,16 @@ public final class SandboxedNodeCreator {
      */
     public SandboxedNodeCreator setForwardConnectionProgressEvents(final boolean forwardConnectionProgressEvents) {
         m_forwardConnectionProgressEvents = forwardConnectionProgressEvents;
+        return this;
+    }
+
+    /** Whether to forward state change events for streamable wizard nodes. This is true for the streaming executor
+     * but false otherwise.
+     * @param forwardWizardStateChangeEvents that property (default is <code>false</code>).
+     * @return this (method chaining).
+     */
+    public SandboxedNodeCreator setForwardWizardStateChangeEvents(final boolean forwardWizardStateChangeEvents) {
+        m_forwardWizardStateChangeEvents = forwardWizardStateChangeEvents;
         return this;
     }
 
@@ -291,6 +305,9 @@ public final class SandboxedNodeCreator {
             .forEach(i -> tempWFM.addConnection(ins[i], 1, targetNodeID, i));
             if (m_forwardConnectionProgressEvents) {
                 setupConnectionProgressEventListeners(m_nc, targetNode);
+            }
+            if (m_forwardWizardStateChangeEvents) {
+                setupStateChangeEventListeners(m_nc, targetNode);
             }
 
             // copy the existing tables into the (meta) node (e.g. an executed file reader that's necessary
@@ -429,6 +446,35 @@ public final class SandboxedNodeCreator {
             }
             ConnectionContainer sbCC = sandboxWFM.getConnection(new ConnectionID(sandboxTargetID, cc.getDestPort()));
             sbCC.addProgressListener(pe -> cc.progressChanged(pe));
+        }
+    }
+
+    private void setupStateChangeEventListeners(final NodeContainer origNC, final NodeContainer sandboxNC) {
+        WorkflowManager origWFM;
+        WorkflowManager sandboxWFM;
+        if (origNC instanceof WorkflowManager) {
+            origWFM = (WorkflowManager)origNC;
+            sandboxWFM = (WorkflowManager)sandboxNC;
+        } else if (origNC instanceof SubNodeContainer) {
+            origWFM = ((SubNodeContainer)origNC).getWorkflowManager();
+            sandboxWFM = ((SubNodeContainer)sandboxNC).getWorkflowManager();
+        } else {
+            return;
+        }
+        Map<NodeID, StreamableWizardNode> origNodes = origWFM.findNodes(StreamableWizardNode.class, false);
+        Map<NodeID, StreamableWizardNode> sandboxNodes = sandboxWFM.findNodes(StreamableWizardNode.class, false);
+        for (Entry<NodeID, StreamableWizardNode> entry : sandboxNodes.entrySet()) {
+            NodeID sandboxWFMID = sandboxWFM.getID();
+            NodeIDSuffix suffix = NodeID.NodeIDSuffix.create(sandboxWFMID, entry.getKey());
+            StreamableWizardNode origNode = origNodes.get(suffix.prependParent(origWFM.getID()));
+            StreamableWizardNode sandboxNode = entry.getValue();
+            if (origNode == null || sandboxNode == null) {
+                return;
+            }
+            if (!origNode.supportsStreaming() || !sandboxNode.supportsStreaming()) {
+                return;
+            }
+            sandboxNode.addStateChangeListener(ce -> origNode.stateChanged(ce));
         }
     }
 

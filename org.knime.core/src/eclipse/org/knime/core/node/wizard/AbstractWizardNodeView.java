@@ -160,6 +160,18 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void updateModel(final Object arg) {
+        if (arg instanceof String) {
+            updateModelInView((String)arg);
+        } else {
+            LOGGER.error("Update model failed, because argument was not of type string.");
+        }
+    }
+
+    /**
      * @return the model
      * @since 3.4
      */
@@ -285,6 +297,14 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      * @since 3.4
      */
     protected abstract boolean viewInteractionPossible();
+
+    /**
+     * Execute JavaScript code in view to update the model content, e.g. streaming
+     * data.
+     * @param updatedModel a JSON serialized string of the updated model content
+     * @since 3.6
+     */
+    protected abstract void updateModelInView(String updatedModel);
 
     /**
      * Execute JavaScript code in view to determine if the current settings validate.

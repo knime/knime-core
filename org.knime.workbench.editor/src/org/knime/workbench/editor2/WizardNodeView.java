@@ -446,6 +446,17 @@ public final class WizardNodeView<T extends ViewableModel & WizardNode<REP, VAL>
      * {@inheritDoc}
      */
     @Override
+    protected void updateModelInView(final String updatedModel) {
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        String updateMethod = "updateModel";
+        String call = creator.wrapInTryCatch(creator.getNamespacePrefix() + updateMethod + "('" + updatedModel + "');");
+        m_browser.execute(call);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected boolean validateCurrentValueInView() {
         boolean valid = true;
         WizardViewCreator<REP, VAL> creator = getViewCreator();

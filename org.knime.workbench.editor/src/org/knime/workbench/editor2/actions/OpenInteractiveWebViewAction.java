@@ -65,6 +65,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.SingleInteractiveWebViewResult;
@@ -107,7 +108,8 @@ public final class OpenInteractiveWebViewAction extends Action {
 
     @Override
     public boolean isEnabled() {
-        return m_nodeContainer.getNodeContainerState().isExecuted();
+        NodeContainerState state = m_nodeContainer.getNodeContainerState();
+        return !state.isIdle();
     }
 
     @Override
