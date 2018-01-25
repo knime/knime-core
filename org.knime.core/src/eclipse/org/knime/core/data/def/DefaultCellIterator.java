@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 23, 2005 (wiswedel): created
  *   21.06.06 (bw & po): reviewed
@@ -64,7 +64,7 @@ import org.knime.core.data.DataRow;
  * <p>
  * The iterator doesn't support removal of datacells, an invocation of the
  * method <code>remove()</code> will end up with an exception.
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class DefaultCellIterator implements Iterator<DataCell> {
@@ -77,7 +77,7 @@ public class DefaultCellIterator implements Iterator<DataCell> {
 
     /**
      * Creates a new iterator over a given <code>DataRow</code>.
-     * 
+     *
      * @param row The row to traverse.
      * @throws NullPointerException If the argument is null.
      */
@@ -92,6 +92,7 @@ public class DefaultCellIterator implements Iterator<DataCell> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean hasNext() {
         return m_index < m_row.getNumCells();
     }
@@ -99,21 +100,21 @@ public class DefaultCellIterator implements Iterator<DataCell> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell next() {
         if (!hasNext()) {
             throw new NoSuchElementException("Iterator is at end.");
         }
-        DataCell result = m_row.getCell(m_index);
-        m_index++;
-        return result;
+        return m_row.getCell(m_index++);
     }
 
     /**
      * Throws {@link UnsupportedOperationException} as removal of datacells from
      * a row is not permitted.
-     * 
+     *
      * @see java.util.Iterator#remove()
      */
+    @Override
     public void remove() {
         throw new UnsupportedOperationException(
                 "Removing cells is not allowed.");

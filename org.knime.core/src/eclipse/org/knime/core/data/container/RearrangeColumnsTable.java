@@ -55,9 +55,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -467,7 +469,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
         final int factoryCount = newColsFactories.size();
         int r = 0;
         CellFactory facForProgress = factoryCount > 0 ? newColsFactories.iterator().next() : null;
-        for (RowIterator it = table.iterator(); it.hasNext(); r++) {
+        for (RowIterator it = table.iterator(newColsProducerMapping.m_union); it.hasNext(); r++) {
             DataRow row = it.next();
             DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
             container.addRowToTable(append);
@@ -511,7 +513,14 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
         ConcurrentNewColCalculator calculator = new ConcurrentNewColCalculator(queueSize, workers, container,
             subProgress, finalRowCount, newColsProducerMapping, facForProgress);
         try {
-            calculator.run(table);
+
+            calculator.run(new Iterable<DataRow>() {
+
+                @Override
+                public Iterator<DataRow> iterator() {
+                    return table.iterator(newColsProducerMapping.m_union);
+                }
+            });
         } catch (InterruptedException e) {
             CanceledExecutionException cee = new CanceledExecutionException(e.getMessage());
             cee.initCause(e);
@@ -805,6 +814,8 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
      */
     static final class NewColumnsProducerMapping {
 
+        private final int[] m_union;
+
         private final List<SpecAndFactoryObject> m_allNewColumnsList;
 
         private final List<Pair<SpecAndFactoryObject, Integer>> m_converterToIndexMap;
@@ -834,6 +845,19 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
                 }
             }
 
+            // Determine union of selected tree indicies
+            final TreeSet<Integer> tmp = new TreeSet<>();
+            for (SpecAndFactoryObject fac : includes) {
+                if (fac.getFactory() != null) {
+                    final int[] sel = fac.getFactory().selectedColIndices();
+                    for (int i = 0; i < sel.length; i++) {
+                        tmp.add(sel[i]);
+                    }
+                }
+            }
+
+            m_union = tmp.stream().mapToInt(i -> i).toArray();
+            //            m_union = new int[0];
         }
 
         /**
@@ -869,6 +893,13 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
          */
         List<SpecAndFactoryObject> getAllNewColumnsList() {
             return m_allNewColumnsList;
+        }
+
+        /**
+         * @return the union of all selected indices of the individual {@link CellFactory}s
+         */
+        public int[] getUnionOfSelectedColIndices() {
+            return m_union;
         }
     }
 }

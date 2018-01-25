@@ -48,6 +48,7 @@ package org.knime.core.data.container;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -76,6 +77,15 @@ public interface CellFactory {
      * @throws IllegalArgumentException If there is no mapping available.
      */
     DataCell[] getCells(final DataRow row);
+
+    /**
+     * @see DataTable#iterator(int...)
+     *
+     * @return the indices of the columns which are accessed by {@link CellFactory#getCells(DataRow)}.
+     */
+    default int[] selectedColIndices() {
+        return new int[0];
+    }
 
     /**
      * The column specs for the cells that are generated in the getCells() method. This method is only called once,

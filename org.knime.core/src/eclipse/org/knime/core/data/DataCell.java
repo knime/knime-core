@@ -112,7 +112,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * @return the <code>DataType</code>
      * @see DataType#getType(Class)
      */
-    public final DataType getType() {
+    public DataType getType() {
         DataType elementType = null;
         List<Class<? extends DataValue>> adapterValueList = Collections.emptyList();
         if (this instanceof CollectionDataValue) {

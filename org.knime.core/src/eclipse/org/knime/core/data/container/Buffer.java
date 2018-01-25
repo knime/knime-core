@@ -669,16 +669,13 @@ public class Buffer implements KNIMEStreamConstants {
         DataCell[] cellCopies = null;
         if (!(row instanceof BlobSupportDataRow)) {
             cellCopies = new DataCell[cellCount];
-            for (int i = 0; i < cellCount; i++) {
-                cellCopies[i] = row.getCell(i);
-            }
         }
         // take ownership of unassigned blob cells (if any)
         for (int col = 0; col < cellCount; col++) {
             DataCell cell =
-                    row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(col) : cellCopies[col];
+                    row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(col) : (cellCopies[col] = row.getCell(col));
             DataCell processedCell =
-                    handleIncomingBlob(cell, col, row.getNumCells(), isCopyOfExisting, forceCopyOfBlobs);
+                    handleIncomingBlob(cell, col, cellCount, isCopyOfExisting, forceCopyOfBlobs);
             if (mustBeFlushedPriorSave(processedCell)) {
                 if (m_maxRowsInMem != 0) {
                     LOGGER.debug("Forcing buffer to disc as it contains file store cells that need special handling");

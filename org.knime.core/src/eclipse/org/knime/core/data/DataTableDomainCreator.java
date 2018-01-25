@@ -46,7 +46,6 @@
  */
 package org.knime.core.data;
 
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -192,39 +191,29 @@ public class DataTableDomainCreator {
      */
     private void updateMinMax(final int col, final DataCell cell, final DataCell[] mins, final DataCell[] maxs,
         final DataValueComparator[] comparators) {
-        if (mins[col] == null || cell.isMissing()) {
-            return;
-        }
-        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
-        if (value.isMissing()) {
+        if (mins[col] == null || cell.isMissing() || isNaN(cell)) {
             return;
         }
 
-        Comparator<DataCell> comparator = comparators[col];
-        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
-            mins[col] = value;
+        DataValueComparator comparator = comparators[col];
+        if (mins[col].isMissing() || (comparator.compareDataValues(cell, mins[col]) < 0)) {
+            mins[col] = cell;
         }
-        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
-            maxs[col] = value;
+        if (maxs[col].isMissing() || (comparator.compareDataValues(cell, maxs[col]) > 0)) {
+            maxs[col] = cell;
         }
     }
 
-    /*
-     * Returns
-     * - the cell if it is not a DoubleValue
-     * - the cell if it is not NaN
-     * - a missing cell if it is NaN
-     */
-    private DataCell handleNaN(final DataCell cell) {
-        if (cell.getType().isCompatible(DoubleValue.class)) {
-            if (Double.isNaN(((DoubleValue)cell).getDoubleValue())) {
-                return DataType.getMissingCell();
-            } else {
-                return cell;
+    private boolean isNaN(final DataCell cell) {
+        if (cell instanceof DoubleValue) {
+            return Double.isNaN(((DoubleValue)cell).getDoubleValue());
+        } else if (cell instanceof BlobWrapperDataCell) { /* Avoid instanceof in case we know it's DoubleValue */
+            DataCell content = ((BlobWrapperDataCell)cell).getCell();
+            if (content instanceof DoubleValue) {
+                return Double.isNaN(((DoubleValue)cell).getDoubleValue());
             }
-        } else {
-            return cell;
         }
+        return false;
     }
 
     /**
@@ -277,18 +266,20 @@ public class DataTableDomainCreator {
         assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "
             + m_inputSpec.getNumColumns() + " vs. " + row.getNumCells();
 
-        int i = 0;
-        for (DataCell c : row) {
-            if (!c.isMissing() && m_possVals[i] != null) {
-                if (m_possVals[i].add(c) && (m_possVals[i].size() > m_maxPossibleValues)) {
+        for (int i = 0; i < row.getNumCells(); i++) {
+            final DataCell cell = row.getCell(i);
+            final boolean isMissing = cell.isMissing();
+            if (!isMissing && m_possVals[i] != null) {
+                if (m_possVals[i].add(cell) && (m_possVals[i].size() > m_maxPossibleValues)) {
                     m_possVals[i] = null;
                 }
             }
-            updateMinMax(i, c, m_mins, m_maxs, m_comparators);
+            if (!isMissing) {
+                updateMinMax(i, cell, m_mins, m_maxs, m_comparators);
+            }
             i++;
         }
     }
-
 
     /**
      * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
@@ -305,7 +296,7 @@ public class DataTableDomainCreator {
     @Deprecated
     public void updateDomain(final DataTable table, final ExecutionMonitor exec, final int rowCount)
         throws CanceledExecutionException {
-        updateDomain(table, exec, (long) rowCount);
+        updateDomain(table, exec, (long)rowCount);
     }
 
     /**

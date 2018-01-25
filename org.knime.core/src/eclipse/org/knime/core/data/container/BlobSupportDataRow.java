@@ -93,7 +93,6 @@ public final class BlobSupportDataRow implements DataRow {
                 m_cells[i] = oldRow.getCell(i);
             }
         }
-
     }
 
     /**
