@@ -65,7 +65,7 @@ public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
 
     public static final DataType TYPE = DataType.getType(LargeBlobCell.class);
 
-    public static final int SIZE_OF_CELL = 256 * 256;
+    public static final int SIZE_OF_CELL = 16 * 16;
 
     /** Don't compress this cell. */
     public static final boolean USE_COMPRESSION = false;
