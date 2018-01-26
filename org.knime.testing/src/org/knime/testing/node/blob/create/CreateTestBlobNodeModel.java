@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
@@ -129,10 +130,27 @@ final class CreateTestBlobNodeModel extends NodeModel {
         BufferedDataTableRowOutput rowOut1 = new BufferedDataTableRowOutput(container1);
         BufferedDataTableRowOutput rowOut2 = new BufferedDataTableRowOutput(container2);
         int totalCount = m_countModel.getIntValue();
-        fillOutput(rowOut1, 0, totalCount / 2, exec);
-        fillOutput(rowOut2, totalCount / 2, totalCount - totalCount / 2, exec); // math in case it's an odd number
+        fillOutput(rowOut1, 0, totalCount / 2, exec.createSubExecutionContext(1 / 3.0));
+
+        // weird math? : in case it's an odd number
+        fillOutput(rowOut2, totalCount / 2, totalCount - totalCount / 2, exec.createSubExecutionContext(1 / 3.0));
+        BufferedDataTable tableOut1Global = rowOut1.getDataTable(); // table will be (indirectly) contained in output
+        BufferedDataTable tableOut2Local = rowOut2.getDataTable();  // table will be copied and not be put in output
+
+        BufferedDataContainer container3 = exec.createDataContainer(createTableSpec());
+        ExecutionContext copyExec = exec.createSubExecutionContext(1 / 3.0);
+        long l = 0L;
+        long tableCount = tableOut2Local.size();
+        for (DataRow r : tableOut2Local) {
+            copyExec.checkCanceled();
+            copyExec.setProgress(l++ / (double)tableCount, String.format("Copying 2nd table %d/%d", l, tableCount));
+            container3.addRowToTable(r);
+        }
+        container3.close();
+        BufferedDataTable tableOut2Global = container3.getTable();
+
         BufferedDataTable outputTable = exec.createConcatenateTable(
-            exec, Optional.empty(), false, rowOut1.getDataTable(), rowOut2.getDataTable());
+            exec, Optional.empty(), false, tableOut1Global, tableOut2Global);
         return new BufferedDataTable[]{outputTable};
 
     }
