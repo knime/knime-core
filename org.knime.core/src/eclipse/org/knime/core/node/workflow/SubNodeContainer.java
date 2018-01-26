@@ -76,8 +76,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -269,7 +267,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowPersistor,
-            parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
+            parent.getWorkflowDataRepository());
         m_wfm.setJobManager(null);
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
@@ -307,8 +305,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         super(parent, id, content.getNodeAnnotation());
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
-                parent.getContext(), name, Optional.of(parent.getGlobalTableRepository()),
-                Optional.of(parent.getFileStoreHandlerRepository()), Optional.of(content.getNodeAnnotation()));
+                parent.getContext(), name,
+                Optional.of(parent.getWorkflowDataRepository()), Optional.of(content.getNodeAnnotation()));
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
@@ -1788,11 +1786,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * {@inheritDoc}
      */
     @Override
-    protected NodeContainerPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
+    protected NodeContainerPersistor getCopyPersistor(final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
-        return new CopySubNodeContainerPersistor(this,
-            tableRep, fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand);
+        return new CopySubNodeContainerPersistor(this, preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     /** @return a persistor containing all but the virtual nodes and that is also fixing the in/out connections

@@ -46,13 +46,10 @@ package org.knime.core.node.workflow;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -1438,22 +1435,18 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
-    /** Get a new persistor that is used to copy this node (copy&amp;paste action).
-     * @param tableRep Table repository of the destination.
-     * @param fileStoreHandlerRepository file store handler of destination
-     * @param preserveDeletableFlags Whether the "isdeleteable" annotation
-     * should be copied also (false when individual nodes are copied
-     * but true when an entire metanode is copied).
-     * @param isUndoableDeleteCommand If to keep the location of the
-     *        node directories (important for undo of delete commands, see
-     *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
-     *        for details.)
-     * @return A new persistor for copying. */
-    protected abstract NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep,
-            FileStoreHandlerRepository fileStoreHandlerRepository,
-            final boolean preserveDeletableFlags,
-            final boolean isUndoableDeleteCommand);
+    /**
+     * Get a new persistor that is used to copy this node (copy&amp;paste action).
+     *
+     * @param preserveDeletableFlags Whether the "isdeleteable" annotation should be copied also (false when individual
+     *            nodes are copied but true when an entire metanode is copied).
+     * @param isUndoableDeleteCommand If to keep the location of the node directories (important for undo of delete
+     *            commands, see {@link WorkflowManager#copy(boolean, WorkflowCopyContent)} for details.)
+     * @return A new persistor for copying.
+     * @since 3.7
+     */
+    protected abstract NodeContainerPersistor getCopyPersistor(final boolean preserveDeletableFlags,
+        final boolean isUndoableDeleteCommand);
 
     /**
      * @param directory the nodeContainerDirectory to set

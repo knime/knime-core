@@ -58,7 +58,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -88,7 +87,6 @@ import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
@@ -97,6 +95,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.BufferedDataTableView;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.MutableBoolean;
 
 /**
@@ -278,23 +277,23 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     /** Called after execution of node has finished to put the tables that
      * are returned from the execute method into a global table repository.
-     * @param rep The repository from the workflow
+     * @param dataRepository The repository from the workflow
      */
-    void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
-        m_delegate.putIntoTableRepository(rep);
+    void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
+        m_delegate.putIntoTableRepository(dataRepository);
         BufferedDataTable[] references = m_delegate.getReferenceTables();
         for (BufferedDataTable reference : references) {
-            reference.putIntoTableRepository(rep);
+            reference.putIntoTableRepository(dataRepository);
         }
     }
 
     /** Remove this table and all of its delegates from the table repository,
      * if and only if its owner is the argument node.
-     * @param rep The repository to be removed from.
+     * @param dataRepository The repository to be removed from.
      * @param owner The dedicated owner.
      * @return The number of tables effectively removed, used for assertions.
      */
-    int removeFromTableRepository(final HashMap<Integer, ContainerTable> rep,
+    int removeFromTableRepository(final WorkflowDataRepository dataRepository,
             final Node owner) {
         if (getOwner() != owner) { // can safely test for hard references here
             return 0;
@@ -302,9 +301,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
         int result = 0;
         BufferedDataTable[] references = m_delegate.getReferenceTables();
         for (BufferedDataTable reference : references) {
-            result += reference.removeFromTableRepository(rep, owner);
+            result += reference.removeFromTableRepository(dataRepository, owner);
         }
-        if (m_delegate.removeFromTableRepository(rep)) {
+        if (m_delegate.removeFromTableRepository(dataRepository)) {
             result += 1;
         }
         return result;
@@ -629,8 +628,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param settings The settings to load from.
      * @param exec The exec mon for progress/cancel
      * @param tblRep The table repository
-     * @param bufferRep The buffer repository (needed for blobs).
-     * @param fileStoreHandlerRepository ...
+     * @param dataRepository The data repository (needed for blobs and file stores).
      * @return The table as written by save.
      * @throws IOException If reading fails.
      * @throws CanceledExecutionException If canceled.
@@ -639,8 +637,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     static BufferedDataTable loadFromFile(final ReferencedFile dirRef,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> tblRep,
-            final HashMap<Integer, ContainerTable> bufferRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
+            final WorkflowDataRepository dataRepository)
             throws IOException, CanceledExecutionException,
             InvalidSettingsException {
         File dir = dirRef.getFile();
@@ -695,8 +692,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 if (isVersion11x) {
                     fromContainer = DataContainer.readFromZip(fileRef.getFile());
                 } else {
-                    fromContainer = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, bufferRep,
-                        fileStoreHandlerRepository);
+                    fromContainer = BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
                 }
                 t = new BufferedDataTable(fromContainer, id);
                 break;
@@ -709,7 +705,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 CheckUtils.checkSetting(format.validateVersion(versionString),
                     "Unsupported version \"%s\" for table format \"%s\"", versionString, format.getClass().getName());
                 fromContainer =
-                    BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, bufferRep, fileStoreHandlerRepository);
+                    BufferedDataContainer.readFromZipDelayed(fileRef, spec, id, dataRepository);
                 t = new BufferedDataTable(fromContainer, id);
                 break;
             case TABLE_TYPE_REARRANGE_COLUMN:
@@ -731,11 +727,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 for (String reference : referenceDirs) {
                     CheckUtils.checkSettingNotNull(reference, "Reference dir is \"null\"");
                     ReferencedFile referenceDirRef = new ReferencedFile(dirRef, reference);
-                    loadFromFile(referenceDirRef, s, exec, tblRep, bufferRep, fileStoreHandlerRepository);
+                    loadFromFile(referenceDirRef, s, exec, tblRep, dataRepository);
                 }
                 if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                     t = new BufferedDataTable(
-                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, bufferRep, fileStoreHandlerRepository));
+                        new RearrangeColumnsTable(fileRef, s, tblRep, spec, id, dataRepository));
                 } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                     JoinedTable jt = JoinedTable.load(s, spec, tblRep);
                     t = new BufferedDataTable(jt);
@@ -936,19 +932,20 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
         /** Put this table into the global table repository. Called when
          * execution finished.
-         * @param rep The workflow table repository.
+         * @param dataRepository The workflow table repository.
+         * @since 3.7
          */
-        void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep);
+        void putIntoTableRepository(final WorkflowDataRepository dataRepository);
 
         /** Remove this table from global table repository. Called when
          * node is reset.
-         * @param rep The workflow table repository.
+         * @param dataRepository The workflow table repository.
          * @return If this table was indeed removed from the table repository
          *         (true for ordinary container tables but false for wrappers
          *         such as concatenate or spec replacer)
+         * @since 3.7
          */
-        boolean removeFromTableRepository(
-                final HashMap<Integer, ContainerTable> rep);
+        boolean removeFromTableRepository(final WorkflowDataRepository dataRepository);
 
         /**
          * Checks if the row count is greater than {@link Integer#MAX_VALUE}. If this is the case an exception is

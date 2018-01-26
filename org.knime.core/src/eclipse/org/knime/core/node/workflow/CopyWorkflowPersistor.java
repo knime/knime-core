@@ -58,8 +58,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -84,14 +82,14 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final AuthorInformation m_authorInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
-    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final WorkflowDataRepository m_workflowDataRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
     private final List<WorkflowAnnotation> m_workflowAnnotations;
     private final boolean m_isProject;
+
     /** Create copy persistor.
      * @param original To copy from
-     * @param tableRep The table map in the target
      * @param preserveDeletableFlags Whether to keep the "is-deletable" flags
      *        in the target.
      * @param isUndoableDeleteCommand If to keep the location of the node
@@ -100,11 +98,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
      *        for details.)
      */
     @SuppressWarnings("unchecked")
-    CopyWorkflowPersistor(final WorkflowManager original,
-            final HashMap<Integer, ContainerTable> tableRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
-            final boolean preserveDeletableFlags,
-            final boolean isUndoableDeleteCommand) {
+    CopyWorkflowPersistor(final WorkflowManager original, final boolean preserveDeletableFlags,
+        final boolean isUndoableDeleteCommand) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
             ? NodeUIInformation.builder(original.getInPortsBarUIInfo()).build() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
@@ -134,16 +129,16 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             assert m_outportTemplates.length == 0
                     && m_inportTemplates.length == 0;
             m_tableRep = new GlobalTableRepository();
-            m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
+            m_workflowDataRepository = new WorkflowDataRepository();
         } else {
-            m_fileStoreHandlerRepository = null;
+            m_workflowDataRepository = null;
             m_tableRep = null;
         }
         m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
         for (NodeContainer nc : original.getNodeContainers()) {
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
-                    m_tableRep, null, true, isUndoableDeleteCommand));
+                    true, isUndoableDeleteCommand));
         }
 
         for (ConnectionContainer cc : original.getConnectionContainers()) {
@@ -197,9 +192,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
+    public WorkflowDataRepository getWorkflowDataRepository() {
         assert isProject() : "only to be called on projects";
-        return m_fileStoreHandlerRepository;
+        return m_workflowDataRepository;
     }
 
     /** {@inheritDoc} */

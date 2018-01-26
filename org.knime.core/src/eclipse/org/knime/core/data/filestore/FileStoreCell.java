@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 
@@ -141,12 +141,12 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      * @since 3.7
      */
     final void retrieveFileStoreHandlersFrom(final FileStoreKey[] keys,
-        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+        final IDataRepository dataRepository) throws IOException {
         m_fileStoreProxies = new FileStoreProxy[keys.length];
         int fsIdx = 0;
         for (FileStoreKey key : keys) {
             FileStoreProxy proxy = new FileStoreProxy();
-            proxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+            proxy.retrieveFileStoreHandlerFrom(key, dataRepository);
             m_fileStoreProxies[fsIdx] = proxy;
             fsIdx++;
         }

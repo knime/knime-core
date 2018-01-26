@@ -58,7 +58,6 @@ import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformation;
@@ -140,8 +139,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** The repository of file store handlers.
      * @return
-     * @since 2.6*/
-    WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository();
+     * @since 3.7*/
+    WorkflowDataRepository getWorkflowDataRepository();
 
     String getName();
 

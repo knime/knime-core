@@ -72,6 +72,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -88,6 +89,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
@@ -104,10 +106,9 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableOutputStream;
@@ -359,19 +360,13 @@ public class Buffer implements KNIMEStreamConstants {
 
     /**
      * A map with other buffers that may have written certain blob cells. We reference them by using the bufferID that
-     * is written to the file. This member is a reference to the (WorkflowManager-)global table repository.
-     */
-    private final Map<Integer, ContainerTable> m_globalRepository;
-
-    /**
-     * A map with other buffers that may have written certain blob cells. We reference them by using the bufferID that
      * is written to the file. This temporary repository exists only while a node is executing. It is only important
      * while writing to this buffer.
      */
     private Map<Integer, ContainerTable> m_localRepository;
 
-    /** {@link #getFileStoreHandlerRepository()}. */
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    /** {@link #getDataRepository()}. */
+    private final IDataRepository m_dataRepository;
 
     /** {@link #getFileStoreHandler()}. */
     private IFileStoreHandler m_fileStoreHandler;
@@ -438,21 +433,19 @@ public class Buffer implements KNIMEStreamConstants {
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory until they will be subsequent written to
      *            the temp file. (0 to write immediately to a file)
      * @param bufferID The id of this buffer used for blob (de)serialization.
-     * @param globalRep Table repository for blob (de)serialization (read only).
      * @param localRep Local table repository for blob (de)serialization.
      * @param fileStoreHandler ...
      */
     Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
-           final Map<Integer, ContainerTable> globalRep, final Map<Integer, ContainerTable> localRep, final IWriteFileStoreHandler fileStoreHandler) {
+           final Map<Integer, ContainerTable> localRep, final IWriteFileStoreHandler fileStoreHandler) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
         m_size = 0;
         m_bufferID = bufferID;
-        m_globalRepository = globalRep;
         m_localRepository = localRep;
         m_fileStoreHandler = fileStoreHandler;
-        m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
+        m_dataRepository = fileStoreHandler.getDataRepository();
         m_spec = spec;
         TableStoreFormat storeFormat = TableStoreFormatRegistry.getInstance().getFormatFor(spec);
         TableStoreFormat prefFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
@@ -477,13 +470,11 @@ public class Buffer implements KNIMEStreamConstants {
      * @param metaIn An input stream from which this constructor reads the meta information (e.g. which byte encodes
      *            which DataCell).
      * @param bufferID The id of this buffer used for blob (de)serialization.
-     * @param tblRep Table repository for blob (de)serialization.
-     * @param fileStoreHandlerRepository ...
+     * @param dataRepository ...
      * @throws IOException If the header (the spec information) can't be read.
      */
     Buffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
-           final InputStream metaIn, final int bufferID, final Map<Integer, ContainerTable> tblRep,
-           final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+           final InputStream metaIn, final int bufferID, final IDataRepository dataRepository) throws IOException {
         // just check if data is present!
         if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
             throw new IOException("Unable to read from file: " + binFile);
@@ -492,13 +483,12 @@ public class Buffer implements KNIMEStreamConstants {
         m_binFile = binFile;
         m_blobDir = blobDir;
         m_bufferID = bufferID;
-        m_globalRepository = tblRep;
-        if (fileStoreHandlerRepository == null) {
-            LOGGER.debug("no file store handler repository set, using new instance of "
-                    + NotInWorkflowFileStoreHandlerRepository.class.getName());
-            m_fileStoreHandlerRepository = new NotInWorkflowFileStoreHandlerRepository();
+        if (dataRepository == null) {
+            LOGGER.debug("no data repository set, using new instance of "
+                    + NotInWorkflowDataRepository.class.getName());
+            m_dataRepository = NotInWorkflowDataRepository.newInstance();
         } else {
-            m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+            m_dataRepository = dataRepository;
         }
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
@@ -749,8 +739,8 @@ public class Buffer implements KNIMEStreamConstants {
                 ownerBuffer = this;
             } else {
                 // table that's been created somewhere in the workflow
-                ContainerTable t = m_globalRepository.get(ad.getBufferID());
-                ownerBuffer = t != null ? t.getBuffer() : null;
+                Optional<ContainerTable> t = m_dataRepository.getTable(ad.getBufferID());
+                ownerBuffer = t.map(ContainerTable::getBuffer).orElse(null);
             }
             /* this can only be true if the argument row contains wrapper
              * cells for blobs that do not have a buffer set; that is,
@@ -892,11 +882,11 @@ public class Buffer implements KNIMEStreamConstants {
         if (!Objects.equals(originalBA, a)) {
             int originalBufferIndex = originalBA.getBufferID();
             Buffer originalBuffer = null;
-            ContainerTable t = getGlobalRepository().get(originalBufferIndex);
-            if (t != null) {
-                originalBuffer = t.getBuffer();
+            Optional<ContainerTable> tableOptional = getDataRepository().getTable(originalBufferIndex);
+            if (tableOptional.isPresent()) {
+                originalBuffer = tableOptional.get().getBuffer();
             } else if (getLocalRepository() != null) {
-                t = getLocalRepository().get(originalBufferIndex);
+                ContainerTable t = getLocalRepository().get(originalBufferIndex);
                 if (t != null) {
                     originalBuffer = t.getBuffer();
                 }
@@ -1122,7 +1112,7 @@ public class Buffer implements KNIMEStreamConstants {
                             + bufferID + " vs. " + m_bufferID + "), unpredictable errors may occur");
                 }
             }
-            IFileStoreHandler fileStoreHandler = new EmptyFileStoreHandler(m_fileStoreHandlerRepository);
+            IFileStoreHandler fileStoreHandler = new EmptyFileStoreHandler(m_dataRepository);
             if (m_version >= 8) { // file stores added between version 8 and 9
                 String fileStoresUUIDS = subSettings.getString(CFG_FILESTORES_UUID, null);
                 UUID fileStoresUUID = null;
@@ -1135,7 +1125,7 @@ public class Buffer implements KNIMEStreamConstants {
                 }
                 if (fileStoresUUID != null) {
                     NotInWorkflowWriteFileStoreHandler notInWorkflowFSH =
-                            new NotInWorkflowWriteFileStoreHandler(fileStoresUUID, m_fileStoreHandlerRepository);
+                            new NotInWorkflowWriteFileStoreHandler(fileStoresUUID, m_dataRepository);
                     notInWorkflowFSH.setBaseDir(fileStoreDir);
                     fileStoreHandler = notInWorkflowFSH;
                 }
@@ -1168,9 +1158,9 @@ public class Buffer implements KNIMEStreamConstants {
      */
     private void initOutputReader(final NodeSettingsRO outputFormatSettings, final int version)
         throws IOException, InvalidSettingsException {
-        m_outputReader = m_outputFormat.createReader(m_binFile, m_spec, outputFormatSettings, m_globalRepository,
+        m_outputReader = m_outputFormat.createReader(m_binFile, m_spec, m_dataRepository, outputFormatSettings,
             version, !shouldSkipRowKey());
-        m_outputReader.setBufferAndFileStoreHandlerRepository(this, m_fileStoreHandlerRepository);
+        m_outputReader.setBufferAndDataRepository(this, m_dataRepository);
     }
 
     /**
@@ -1231,25 +1221,13 @@ public class Buffer implements KNIMEStreamConstants {
         }
     }
 
-
     /**
-     * Get reference to the table repository that this buffer was initially instantiated with. Used for blob
-     * reading/writing.
+     * Used while reading file store cells and referenced tables and blobs.
      *
-     * @return (Workflow-) global table repository.
+     * @return the data repository set at construction time
      */
-    public final Map<Integer, ContainerTable> getGlobalRepository() {
-        return m_globalRepository;
-    }
-
-    /**
-     * Used while reading file store cells. When used in a BufferedDataTable this is the workflow global repository,
-     * otherwise a repository with at most one handler.
-     *
-     * @return the fileStoreHandlerRepository
-     */
-    final FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+    public final IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /**
@@ -1273,10 +1251,8 @@ public class Buffer implements KNIMEStreamConstants {
     BlobDataCell readBlobDataCell(final BlobAddress blobAddress, final CellClassInfo cl) throws IOException {
         int blobBufferID = blobAddress.getBufferID();
         if (blobBufferID != m_bufferID) {
-            ContainerTable cnTbl = m_globalRepository.get(blobBufferID);
-            if (cnTbl == null) {
-                throw new IOException("Unable to retrieve table that owns the blob cell");
-            }
+            ContainerTable cnTbl = m_dataRepository.getTable(blobBufferID)
+                    .orElseThrow(() -> new IOException("Unable to retrieve table that owns the blob cell"));
             Buffer blobBuffer = cnTbl.getBuffer();
             return blobBuffer.readBlobDataCell(blobAddress, cl);
         }
@@ -1449,9 +1425,8 @@ public class Buffer implements KNIMEStreamConstants {
      *
      * @return A new buffer with the same ID, which is only used locally to update the stream.
      */
-    @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new Buffer(m_spec, 0, getBufferID(), getGlobalRepository(), Collections.EMPTY_MAP, castAndGetFileStoreHandler());
+        return new Buffer(m_spec, 0, getBufferID(), Collections.emptyMap(), castAndGetFileStoreHandler());
     }
 
     /**
@@ -1466,7 +1441,7 @@ public class Buffer implements KNIMEStreamConstants {
             return (IWriteFileStoreHandler)m_fileStoreHandler;
         }
         LOGGER.debug("file store handler is not writable, creating fallback");
-        return new ROWriteFileStoreHandler(getFileStoreHandlerRepository());
+        return new ROWriteFileStoreHandler(getDataRepository());
     }
 
     /**

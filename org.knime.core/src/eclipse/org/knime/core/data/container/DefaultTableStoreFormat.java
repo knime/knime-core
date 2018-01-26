@@ -51,9 +51,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.data.container.storage.TableStoreFormat;
@@ -140,14 +140,9 @@ public final class DefaultTableStoreFormat implements TableStoreFormat {
         return new DefaultTableStoreWriter(spec, output, writeRowKey);
     }
 
-    /**
-     * {@inheritDoc}
-     * @throws IOException
-     * @throws InvalidSettingsException
-     */
     @Override
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
-        final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep, final int version,
+        final IDataRepository dataRepository, final NodeSettingsRO settings, final int version,
         final boolean isReadRowKey)
                 throws IOException, InvalidSettingsException {
         return new DefaultTableStoreReader(binFile, spec, settings, version, isReadRowKey);

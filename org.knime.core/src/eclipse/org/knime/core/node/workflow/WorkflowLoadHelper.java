@@ -54,7 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -334,10 +333,10 @@ public class WorkflowLoadHelper {
         final TemplateNodeContainerPersistor persistor;
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
-        WorkflowFileStoreHandlerRepository fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
+        WorkflowDataRepository workflowDataRepository = new WorkflowDataRepository();
         // ordinary workflow is loaded
         if (templateInfo == null) {
-            persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, dotKNIMERef,
+            persistor = new FileWorkflowPersistor(tableRep, workflowDataRepository, dotKNIMERef,
                 this, version, !isTemplateFlow());
         } else {
             // some template is loaded
@@ -349,14 +348,14 @@ public class WorkflowLoadHelper {
                     } else {
                         workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), WorkflowPersistor.WORKFLOW_FILE);
                     }
-                    persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowDotKNIME,
+                    persistor = new FileWorkflowPersistor(tableRep, workflowDataRepository, workflowDotKNIME,
                         this, version, !isTemplateFlow());
                     break;
                 case SubNode:
                     final ReferencedFile settingsDotXML = new ReferencedFile(dotKNIMERef.getParent(),
                         SingleNodeContainerPersistor.SETTINGS_FILE_NAME);
                     persistor = new FileSubNodeContainerPersistor(settingsDotXML, this, version,
-                        tableRep, fileStoreHandlerRepository, true);
+                        tableRep, workflowDataRepository, true);
                     break;
                 default:
                     throw new IllegalStateException("Unsupported template type");

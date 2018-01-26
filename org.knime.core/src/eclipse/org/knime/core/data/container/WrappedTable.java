@@ -49,7 +49,6 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
@@ -60,6 +59,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 /**
  * Special table implementation that simply wraps a given
@@ -132,14 +132,12 @@ public final class WrappedTable implements KnowsRowCountTable {
 
     /** {@inheritDoc} */
     @Override
-    public void putIntoTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean removeFromTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
         return false;
     }
 

@@ -293,7 +293,7 @@ public final class PortUtil {
                     notInWorkflowFSHandler.setBaseDir(fileStoreDir);
                 }
                 FileStoreUtil.retrieveFileStoreHandlerFrom((FileStorePortObject)portObject, fileStoreKeys,
-                    notInWorkflowFSHandler.getFileStoreHandlerRepository());
+                    notInWorkflowFSHandler.getDataRepository());
             }
             return portObject;
         } catch (InvalidSettingsException ex) {

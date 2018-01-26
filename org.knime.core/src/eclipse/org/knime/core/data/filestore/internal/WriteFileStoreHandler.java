@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -58,6 +59,7 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 
@@ -85,7 +87,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     private File m_baseDirInWorkflowFolder;
     private File m_baseDir;
     private InternalDuplicateChecker m_duplicateChecker;
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private IDataRepository m_dataRepository;
     private LRUCache<FileStoreKey, FileStoreKey> m_createdFileStoreKeys;
     private int m_nextIndex = 0;
 
@@ -100,9 +102,9 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     /** {@inheritDoc} */
     @Override
-    public void addToRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        fileStoreHandlerRepository.addFileStoreHandler(this);
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    public void addToRepository(final IDataRepository dataRepository) {
+        dataRepository.addFileStoreHandler(this);
+        m_dataRepository = dataRepository;
     }
 
     public void setBaseDir(final File baseDir) {
@@ -113,16 +115,16 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+    public IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
-        if (m_fileStoreHandlerRepository != null) {
-            m_fileStoreHandlerRepository.removeFileStoreHandler(this);
-            m_fileStoreHandlerRepository = null;
+        if (m_dataRepository != null) {
+            m_dataRepository.removeFileStoreHandler(this);
+            m_dataRepository = null;
         }
         if (m_baseDir != null) {
             StringBuilder b = new StringBuilder("Disposing file store \"");
@@ -174,9 +176,9 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (m_createdFileStoreKeys == null) {
             LOGGER.debug("Duplicating file store objects - file store handler id "
-                    + key.getStoreUUID() + " is unknown to " + m_fileStoreHandlerRepository.getClass().getName());
+                    + key.getStoreUUID() + " is unknown to " + m_dataRepository.getClass().getName());
             LOGGER.debug("Dump of valid file store handlers follows, omitting further log output");
-            m_fileStoreHandlerRepository.printValidFileStoreHandlersToLogDebug();
+            m_dataRepository.printValidFileStoreHandlersToLogDebug();
             m_createdFileStoreKeys = new LRUCache<FileStoreKey, FileStoreKey>(10000);
         }
         FileStoreKey local = m_createdFileStoreKeys.get(key);
@@ -216,17 +218,15 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     /**
      * @param key
      * @return */
+    @SuppressWarnings("null")
     IFileStoreHandler getOwnerHandler(final FileStoreKey key) {
         IFileStoreHandler ownerHandler;
         final UUID keyStoreUUID = key.getStoreUUID();
         if (keyStoreUUID.equals(m_storeUUID)) {
             ownerHandler = this;
         } else {
-            FileStoreHandlerRepository repo = m_fileStoreHandlerRepository;
-            if (repo == null) {
-                throw new IllegalStateException(
-                        "No file store handler repository set");
-            }
+            IDataRepository repo = m_dataRepository;
+            CheckUtils.checkState(repo != null, "No data repository set");
             ownerHandler = repo.getHandler(keyStoreUUID);
         }
         return ownerHandler;
@@ -374,10 +374,10 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     public static final IFileStoreHandler restore(final String name,
             final UUID uuid,
-            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowDataRepository dataRepository,
             final File inWorkflowDirectory) {
         WriteFileStoreHandler fileStoreHandler = new WriteFileStoreHandler(name, uuid);
-        fileStoreHandler.addToRepository(fileStoreHandlerRepository);
+        fileStoreHandler.addToRepository(dataRepository);
         fileStoreHandler.m_baseDirInWorkflowFolder = inWorkflowDirectory;
         return fileStoreHandler;
     }

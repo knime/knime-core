@@ -79,10 +79,11 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
@@ -95,6 +96,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
@@ -607,9 +609,8 @@ public class DataContainer implements RowAppender {
             return;
         }
         if (m_buffer == null) {
-            m_buffer =
-                m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
-                    getGlobalTableRepository(), getLocalTableRepository(), getFileStoreHandler());
+            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
+                getLocalTableRepository(), getFileStoreHandler());
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -762,11 +763,9 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             int bufID = createInternalBufferID();
-            Map<Integer, ContainerTable> globalTableRep = getGlobalTableRepository();
             Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
             IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
-            m_buffer =
-                m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, globalTableRep, localTableRep, fileStoreHandler);
+            m_buffer = m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, localTableRep, fileStoreHandler);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
@@ -1015,7 +1014,7 @@ public class DataContainer implements RowAppender {
             e = exec.createSubProgress(0.8);
             buf =
                 new Buffer(table.getDataTableSpec(), 0, -1, new HashMap<Integer, ContainerTable>(),
-                	new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create());
+                	NotInWorkflowWriteFileStoreHandler.create());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1074,9 +1073,8 @@ public class DataContainer implements RowAppender {
      */
     public static ContainerTable readFromStream(final InputStream in) throws IOException {
         // mimic the behavior of readFromZip(ReferencedFile)
-        CopyOnAccessTask coa =
-            new CopyOnAccessTask(/*File*/null, null, -1, new HashMap<Integer, ContainerTable>(), null,
-                new BufferCreator());
+        CopyOnAccessTask coa = new CopyOnAccessTask(/*File*/null, null, -1, NotInWorkflowDataRepository.newInstance(),
+            new BufferCreator());
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer(in);
         return new ContainerTable(buffer);
@@ -1108,7 +1106,7 @@ public class DataContainer implements RowAppender {
         // bufferID = -1: all blobs are contained in buffer, no fancy
         // reference handling to other buffer objects
         CopyOnAccessTask coa =
-            new CopyOnAccessTask(zipFileRef, null, -1, new HashMap<Integer, ContainerTable>(), null, creator);
+            new CopyOnAccessTask(zipFileRef, null, -1, NotInWorkflowDataRepository.newInstance(), creator);
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer();
         return new ContainerTable(buffer);
@@ -1120,16 +1118,14 @@ public class DataContainer implements RowAppender {
      * @param zipFile To read from (is going to be copied to temp on access)
      * @param spec The DTS for the table.
      * @param bufferID The buffer's id used for blob (de)serialization
-     * @param bufferRep Repository of buffers for blob (de)serialization.
-     * @param fileStoreHandlerRepository Workflow global file store repository.
+     * @param dataRepository Workflow global data repository for blob and file store resolution.
      * @return Table contained in <code>zipFile</code>.
      * @noreference This method is not intended to be referenced by clients.
      */
     protected static ContainerTable readFromZipDelayed(final ReferencedFile zipFile, final DataTableSpec spec,
-        final int bufferID, final Map<Integer, ContainerTable> bufferRep,
-        final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        final int bufferID, final WorkflowDataRepository dataRepository) {
         CopyOnAccessTask t =
-            new CopyOnAccessTask(zipFile, spec, bufferID, bufferRep, fileStoreHandlerRepository, new BufferCreator());
+            new CopyOnAccessTask(zipFile, spec, bufferID, dataRepository, new BufferCreator());
         return readFromZipDelayed(t, spec);
     }
 
@@ -1299,15 +1295,13 @@ public class DataContainer implements RowAppender {
          * @param spec The spec.
          * @param metaIn Input stream containing meta information.
          * @param bufID The buffer's id used for blob (de)serialization
-         * @param tblRep Table repository for blob (de)serialization.
-         * @param fileStoreHandlerRepository ...
+         * @param dataRepository repository for blob and filestore (de)serialization.
          * @return A buffer instance.
          * @throws IOException If parsing fails.
          */
         Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
-            final InputStream metaIn, final int bufID, final Map<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-            return new Buffer(binFile, blobDir, fileStoreDir, spec, metaIn, bufID, tblRep, fileStoreHandlerRepository);
+            final InputStream metaIn, final int bufID, final IDataRepository dataRepository) throws IOException {
+            return new Buffer(binFile, blobDir, fileStoreDir, spec, metaIn, bufID, dataRepository);
         }
 
         /**
@@ -1315,16 +1309,14 @@ public class DataContainer implements RowAppender {
          * @param spec Write spec -- used to initialize output stream for some non-KNIME formats
          * @param rowsInMemory The number of rows being kept in memory.
          * @param bufferID The buffer's id used for blob (de)serialization.
-         * @param globalTableRep Table repository for blob (de)serialization.
          * @param localTableRep Table repository for blob (de)serialization.
          * @param fileStoreHandler ...
          *
          * @return A newly created buffer.
          */
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
-            final int bufferID, final Map<Integer, ContainerTable> globalTableRep,
-            final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
-            return new Buffer(spec, rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
+            final int bufferID, final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
+            return new Buffer(spec, rowsInMemory, bufferID, localTableRep, fileStoreHandler);
         }
 
     }

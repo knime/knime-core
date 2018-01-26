@@ -60,7 +60,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -126,9 +125,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      */
     FileNativeNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
         final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
         super(nodeSettingsFile, loadHelper, version, globalTableRepository,
-            fileStoreHandlerRepository, mustWarnOnDataLoadError);
+            workflowDataRepository, mustWarnOnDataLoadError);
     }
 
     /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
@@ -266,9 +265,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
         try {
             HashMap<Integer, ContainerTable> globalTableRepository = getGlobalTableRepository();
-            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository = getFileStoreHandlerRepository();
+            WorkflowDataRepository dataRepository = getWorkflowDataRepository();
             m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
-                fileStoreHandlerRepository, result);
+                dataRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);

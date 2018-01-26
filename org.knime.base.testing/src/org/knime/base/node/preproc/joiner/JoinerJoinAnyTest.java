@@ -48,7 +48,6 @@
 package org.knime.base.node.preproc.joiner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,7 +66,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
@@ -115,8 +113,7 @@ public class JoinerJoinAnyTest {
         m_exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 new Node(dummyFactory),
-                    SingleNodeContainer.MemoryPolicy.CacheOnDisc,
-                    new HashMap<Integer, ContainerTable>());
+                    SingleNodeContainer.MemoryPolicy.CacheOnDisc);
     }
 
     /**

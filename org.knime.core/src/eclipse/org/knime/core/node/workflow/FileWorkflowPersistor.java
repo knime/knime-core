@@ -70,7 +70,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -266,7 +265,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
-    private final WorkflowFileStoreHandlerRepository m_fileStoreRepository;
+    private final WorkflowDataRepository m_workflowDataRepository;
 
     private WorkflowPortTemplate[] m_inPortTemplates;
 
@@ -334,11 +333,11 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @param version of loading workflow.
      */
     FileWorkflowPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final ReferencedFile dotKNIMEFile,
+        final WorkflowDataRepository workflowDataRepository, final ReferencedFile dotKNIMEFile,
         final WorkflowLoadHelper loadHelper, final LoadVersion version, final boolean isProject) {
         assert version != null;
         m_globalTableRepository = tableRep;
-        m_fileStoreRepository = fileStoreHandlerRepository;
+        m_workflowDataRepository = workflowDataRepository;
         m_versionString = version;
         m_metaPersistor = new FileNodeContainerMetaPersistor(dotKNIMEFile, loadHelper, version);
         m_nodeContainerLoaderMap = new TreeMap<Integer, FromFileNodeContainerPersistor>();
@@ -417,8 +416,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @since 2.6
      */
     @Override
-    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreRepository;
+    public WorkflowDataRepository getWorkflowDataRepository() {
+        return m_workflowDataRepository;
     }
 
     /** {@inheritDoc} */
@@ -1836,20 +1835,20 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
-            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
+            getGlobalTableRepository(), getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     FileSubNodeContainerPersistor createSubNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileSubNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
-            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
+            getGlobalTableRepository(), getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     FileWorkflowPersistor createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return new ObsoleteMetaNodeFileWorkflowPersistor(getGlobalTableRepository(),
-                getFileStoreHandlerRepository(), wfmFile, getLoadHelper(), getLoadVersion());
+                getWorkflowDataRepository(), wfmFile, getLoadHelper(), getLoadVersion());
         } else {
-            return new FileWorkflowPersistor(getGlobalTableRepository(), getFileStoreHandlerRepository(),
+            return new FileWorkflowPersistor(getGlobalTableRepository(), getWorkflowDataRepository(),
                 wfmFile, getLoadHelper(), getLoadVersion(), false);
         }
     }

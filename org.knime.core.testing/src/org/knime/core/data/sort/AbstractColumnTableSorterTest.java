@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,7 +19,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -71,7 +69,7 @@ public class AbstractColumnTableSorterTest {
             (NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
         m_exec =
             new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(dummyFactory),
-                SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
+                SingleNodeContainer.MemoryPolicy.CacheOnDisc);
 
         DataColumnSpec[] colSpecs =
             new DataColumnSpec[]{new DataColumnSpecCreator(FEATURE1, DoubleCell.TYPE).createSpec(),

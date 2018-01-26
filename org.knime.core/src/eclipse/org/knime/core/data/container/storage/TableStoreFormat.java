@@ -50,10 +50,9 @@ package org.knime.core.data.container.storage;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 
@@ -116,17 +115,18 @@ public interface TableStoreFormat {
     /** Creates a reader that is able to read the file previously written by the writer.
      * @param binFile where to read from
      * @param spec The spec matching the content of the file.
+     * @param dataRepository the non-null repo to resolve referenced blobs and file stores from.
      * @param settings The settings (written by
      *          {@link AbstractTableStoreWriter#writeMetaInfoAfterWrite(org.knime.core.node.NodeSettingsWO)})
-     * @param tblRep For looking up blobs
      * @param version The version as defined in the Buffer class
      * @param isReadRowKey If file contains the row key.
      * @return The reader object
      * @throws IOException Any type of I/O problem.
      * @throws InvalidSettingsException If the settings aren't expected as per the corresponding write method.
+     * @since 3.7
      */
     public AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
-        final NodeSettingsRO settings, final Map<Integer, ContainerTable> tblRep, int version,
+        IDataRepository dataRepository, final NodeSettingsRO settings, int version,
         boolean isReadRowKey) throws IOException, InvalidSettingsException;
 
     /**

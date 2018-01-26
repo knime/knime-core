@@ -55,6 +55,7 @@ import java.util.concurrent.Future;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
@@ -67,9 +68,10 @@ import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.KNIMEJob;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
@@ -122,9 +124,9 @@ public class ExecutionContext extends ExecutionMonitor {
 
     private final Node m_node;
     private final MemoryPolicy m_memoryPolicy;
-    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     private final HashMap<Integer, ContainerTable> m_localTableRepository;
     private final IWriteFileStoreHandler m_fileStoreHandler;
+    private final IDataRepository m_dataRepository;
 
     /** Creates new object based on a progress monitor and a node as parent
      * of any created buffered data table.
@@ -138,8 +140,24 @@ public class ExecutionContext extends ExecutionMonitor {
     @Deprecated
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node) {
         // as it is deprecated we don't introduce an argument for mem policy
-        this(progMon, node, MemoryPolicy.CacheSmallInMemory,
-                new HashMap<Integer, ContainerTable>());
+        this(progMon, node, MemoryPolicy.CacheSmallInMemory);
+    }
+
+    /**
+     * Creates new object based on a progress monitor and a node as parent of any created buffered data table. This
+     *
+     * @param progMon To report progress to.
+     * @param node The parent of any BufferedDataTable being created.
+     * @param policy the policy according to which created BufferedDataTables behave
+     * @param tableRepository ignored
+     * @deprecated This constructor ignores the last argument and calls
+     *             {@link #ExecutionContext(NodeProgressMonitor, Node, MemoryPolicy)}
+     */
+    @Deprecated
+    public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
+        final MemoryPolicy policy,
+        final HashMap<Integer, ContainerTable> tableRepository) {
+        this(progMon, node, policy);
     }
 
     /**
@@ -150,14 +168,11 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param node The parent of any BufferedDataTable being created.
      * @param policy the policy according to which created BufferedDataTables
      *            behave
-     * @param tableRepository A map to which BufferedDataTables register
-     *            themselves; used internally to identify tables that serialize
-     *            blob cells.
+     * @since 3.7
      */
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
-            final MemoryPolicy policy,
-            final HashMap<Integer, ContainerTable> tableRepository) {
-        this(progMon, node, policy, tableRepository, new HashMap<Integer, ContainerTable>(),
+            final MemoryPolicy policy) {
+        this(progMon, node, policy, new HashMap<Integer, ContainerTable>(),
                 (node.getFileStoreHandler() instanceof IWriteFileStoreHandler ?
                         (IWriteFileStoreHandler)node.getFileStoreHandler() : null));
     }
@@ -175,25 +190,20 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     private ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
-            final HashMap<Integer, ContainerTable> tableRepository,
             final HashMap<Integer, ContainerTable> localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler) {
         super(progMon);
-        if (node == null || tableRepository == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_node = node;
+        m_node = CheckUtils.checkArgumentNotNull(node);
         if (fileStoreHandler == null) {
             LOGGER.debug("No file store handler set on \"" + m_node.getName()
                     + "\" (possibly running in 3rd party executor)");
-            NotInWorkflowFileStoreHandlerRepository repo =
-                new NotInWorkflowFileStoreHandlerRepository();
+            NotInWorkflowDataRepository repo = NotInWorkflowDataRepository.newInstance();
             m_fileStoreHandler = new ROWriteFileStoreHandler(repo);
         } else {
             m_fileStoreHandler = fileStoreHandler;
         }
+        m_dataRepository = m_fileStoreHandler.getDataRepository();
         m_memoryPolicy = policy;
-        m_globalTableRepository = tableRepository;
         m_localTableRepository = localTableRepository;
     }
 
@@ -347,7 +357,7 @@ public class ExecutionContext extends ExecutionMonitor {
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
-                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
+                m_localTableRepository, m_fileStoreHandler);
     }
 
     /**
@@ -359,7 +369,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * <a href="#new_column">details</a>.
      * @param in The input table, i.e. reference table.
      * @param rearranger The object which performs the reassembling of columns.
-     * @param subProgressMon Typically the object on which this method is
+     * @param subProgressMon Typically the object on which this method isgetType
      * performed unless the processing is only a part of the total work.
      * @return A new table which can be returned in the execute method.
      * @throws CanceledExecutionException If canceled.
@@ -587,7 +597,7 @@ public class ExecutionContext extends ExecutionMonitor {
                     + "created by another node (\"" + oOwner + "\")");
         }
         int id = table.getBufferedTableId();
-        if (m_globalTableRepository.containsKey(id)) {
+        if (m_dataRepository.getTable(id).isPresent()) {
             throw new IllegalStateException("Clearing table not allowed - can "
                     + "only clear a table during execution");
         }
@@ -614,8 +624,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
+        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_localTableRepository, m_fileStoreHandler);
     }
 
     /**
@@ -635,8 +644,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext createSilentSubExecutionContext(
             final double maxProg) {
         NodeProgressMonitor subProgress = createSilentSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
+        return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_localTableRepository, m_fileStoreHandler);
     }
 
     /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */

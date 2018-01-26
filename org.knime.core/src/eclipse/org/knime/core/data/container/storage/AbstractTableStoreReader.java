@@ -55,6 +55,7 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,6 +66,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIteratorBuilder;
 import org.knime.core.data.RowIteratorBuilder.DefaultRowIteratorBuilder;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
@@ -74,7 +76,6 @@ import org.knime.core.data.container.CellClassInfo;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.KNIMEStreamConstants;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -113,7 +114,7 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
     private CellClassInfo[] m_shortCutsLookup;
 
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private IDataRepository m_dataRepository;
 
     private Buffer m_buffer;
 
@@ -143,12 +144,17 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
 
     /**
      * @param buffer the buffer to set
-     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
+     * @param dataRepository Non-null repository to retrieve file stores and blobs from.
      */
-    public final void setBufferAndFileStoreHandlerRepository(final Buffer buffer,
-        final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    public final void setBufferAndDataRepository(final Buffer buffer,
+        final IDataRepository dataRepository) {
+        m_dataRepository = CheckUtils.checkArgumentNotNull(dataRepository);
         m_buffer = buffer;
+    }
+
+    /** @return the data repository set at construction time, not null. */
+    public final IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /** @return the buffer */
@@ -169,20 +175,13 @@ public abstract class AbstractTableStoreReader implements KNIMEStreamConstants {
         throws IOException {
         Buffer blobBuffer = getBuffer();
         if (address.getBufferID() != blobBuffer.getBufferID()) {
-            ContainerTable cnTbl = blobBuffer.getGlobalRepository().get(address.getBufferID());
-            if (cnTbl == null) {
+            Optional<ContainerTable> cnTbl = blobBuffer.getDataRepository().getTable(address.getBufferID());
+            if (!cnTbl.isPresent()) {
                 throw new IOException("Unable to retrieve table that owns the blob cell");
             }
-            blobBuffer = cnTbl.getBuffer();
+            blobBuffer = cnTbl.get().getBuffer();
         }
         return new BlobWrapperDataCell(blobBuffer, address, type);
-    }
-
-    /**
-     * @return the fileStoreHandlerRepository
-     */
-    public final FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
     }
 
     /**

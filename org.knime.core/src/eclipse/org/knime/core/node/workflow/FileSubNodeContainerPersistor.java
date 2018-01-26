@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -107,16 +106,17 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
      * @param loadHelper
      * @param version
      * @param globalTableRepository
-     * @param fileStoreHandlerRepository
+     * @param workflowDataRepository
      * @param mustWarnOnDataLoadError
+     * @since 3.7
      */
     public FileSubNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
         final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
         super(nodeSettingsFile, loadHelper, version, globalTableRepository,
-            fileStoreHandlerRepository, mustWarnOnDataLoadError);
+            workflowDataRepository, mustWarnOnDataLoadError);
         m_workflowPersistor =
-            new FileWorkflowPersistor(globalTableRepository, fileStoreHandlerRepository, new ReferencedFile(
+            new FileWorkflowPersistor(globalTableRepository, workflowDataRepository, new ReferencedFile(
                 nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE), getLoadHelper(), getLoadVersion(),
                 false) {
                 @Override

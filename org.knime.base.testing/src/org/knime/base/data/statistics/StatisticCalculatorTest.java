@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -32,7 +31,6 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -68,7 +66,7 @@ public class StatisticCalculatorTest {
     public static void setUpBeforeClass() throws Exception {
         EXEC_CONTEXT =
             new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
-                SingleNodeContainer.MemoryPolicy.CacheSmallInMemory, new HashMap<Integer, ContainerTable>());
+                SingleNodeContainer.MemoryPolicy.CacheSmallInMemory);
     }
 
     /**

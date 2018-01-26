@@ -64,7 +64,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -289,9 +288,8 @@ public abstract class WorkflowTestCase {
     }
 
     protected Collection<IWriteFileStoreHandler> getWriteFileStoreHandlers() {
-        WorkflowFileStoreHandlerRepository fshr =
-                m_manager.getFileStoreHandlerRepository();
-        return fshr.getWriteFileStoreHandlers();
+        WorkflowDataRepository dataRepository = m_manager.getWorkflowDataRepository();
+        return dataRepository.getWriteFileStoreHandlers();
     }
 
     protected File getFileStoresDirectory(final NodeID id) throws Exception {
@@ -507,7 +505,7 @@ public abstract class WorkflowTestCase {
     }
 
     protected int getNrTablesInGlobalRepository() {
-        return m_manager.getGlobalTableRepository().size();
+        return m_manager.getWorkflowDataRepository().getGlobalTableRepository().size();
     }
 
     protected void dumpWorkflowToLog() throws IOException {

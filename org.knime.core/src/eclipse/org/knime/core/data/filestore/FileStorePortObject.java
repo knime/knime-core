@@ -50,7 +50,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.port.PortObject;
@@ -72,15 +72,15 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
      * @param fileStores Non null list of file store objects to wrap. */
     protected FileStorePortObject(final List<FileStore> fileStores) {
         m_fileStoreProxies = new ArrayList<FileStoreProxy>(fileStores.size());
-        FileStoreHandlerRepository commonFSHandlerRepository = null;
+        IDataRepository commonDataRepository = null;
         for (FileStore fs : fileStores) {
             m_fileStoreProxies.add(new FileStoreProxy(fs));
-            FileStoreHandlerRepository fsHandlerRepository = fs.getFileStoreHandler().getFileStoreHandlerRepository();
-            if (commonFSHandlerRepository == null) {
-                commonFSHandlerRepository = fsHandlerRepository;
-            } else if (commonFSHandlerRepository != fsHandlerRepository) {
-                throw new IllegalStateException("File Stores passed in constructor don't have the same file store "
-                        + "handler repository: " + commonFSHandlerRepository + " vs. " + fsHandlerRepository);
+            IDataRepository fsDataRepository = fs.getFileStoreHandler().getDataRepository();
+            if (commonDataRepository == null) {
+                commonDataRepository = fsDataRepository;
+            } else if (commonDataRepository != fsDataRepository) {
+                throw new IllegalStateException("File Stores passed in constructor don't have the same data "
+                        + "repository: " + commonDataRepository + " vs. " + fsDataRepository);
             }
         }
     }
@@ -92,13 +92,13 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    final void retrieveFileStoreHandlerFrom(final List<FileStoreKey> keys,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+    final void retrieveFileStoreHandlerFrom(final List<FileStoreKey> keys, final IDataRepository dataRepository)
+        throws IOException {
         assert m_fileStoreProxies.isEmpty() : "FileStore list expected to be empty after construction: "
             + ConvenienceMethods.getShortStringFrom(m_fileStoreProxies, 3);
         for (FileStoreKey key : keys) {
             FileStoreProxy proxy = new FileStoreProxy();
-            proxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+            proxy.retrieveFileStoreHandlerFrom(key, dataRepository);
             m_fileStoreProxies.add(proxy);
         }
         m_fileStoreProxies.trimToSize();

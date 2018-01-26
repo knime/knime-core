@@ -54,11 +54,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -66,7 +66,6 @@ import org.knime.core.data.filestore.internal.LoopEndWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopStartReferenceWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler;
 import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
@@ -375,8 +374,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     public ExecutionContext createExecutionContext() {
         NodeProgressMonitor progressMonitor = getProgressMonitor();
         return new ExecutionContext(progressMonitor, getNode(),
-                getOutDataMemoryPolicy(),
-                getParent().getGlobalTableRepository());
+                getOutDataMemoryPolicy());
     }
 
     /* ---------------- Configuration/Execution ----------------- */
@@ -419,7 +417,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 } else {
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
-                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
+                IWriteFileStoreHandler fsh = initFileStore(getParent().getWorkflowDataRepository());
                 m_node.setFileStoreHandler(fsh);
                 break;
             default:
@@ -457,7 +455,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 // ideally opening the file store handler would be done in "mimicRemoteExecuting" (consistently to
                 // performStateTransitionEXECUTING) but remote execution isn't split up that nicely - there is only
                 // pre-execute and executed
-                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
+                IWriteFileStoreHandler fsh = initFileStore(getParent().getWorkflowDataRepository());
                 m_node.setFileStoreHandler(fsh);
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 break;
@@ -608,19 +606,18 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @noreference This method is not intended to be referenced by clients.
      */
     public final void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
-        HashMap<Integer, ContainerTable> globalRep =
-            getParent().getGlobalTableRepository();
-        m_node.putOutputTablesIntoGlobalRepository(globalRep);
+        WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
+        m_node.putOutputTablesIntoGlobalRepository(dataRepository);
         HashMap<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
         Set<ContainerTable> localTables = new HashSet<ContainerTable>();
         for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
-            ContainerTable fromGlob = globalRep.get(t.getKey());
-            if (fromGlob == null) {
+            Optional<ContainerTable> fromGlob = dataRepository.getTable(t.getKey());
+            if (fromGlob.isPresent()) {
+                assert fromGlob.get() == t.getValue();
+            } else {
                 // not used globally
                 localTables.add(t.getValue());
-            } else {
-                assert fromGlob == t.getValue();
             }
         }
         m_node.addToTemporaryTables(localTables);
@@ -629,9 +626,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** Removes all tables that were created by this node from the global
      * table repository. */
     private int removeOutputTablesFromGlobalRepository() {
-        HashMap<Integer, ContainerTable> globalRep =
-            getParent().getGlobalTableRepository();
-        return m_node.removeOutputTablesFromGlobalRepository(globalRep);
+        WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
+        return m_node.removeOutputTablesFromGlobalRepository(dataRepository);
     }
 
     /* --------------- File Store Handling ------------- */
@@ -655,7 +651,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    private IWriteFileStoreHandler initFileStore(final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+    private IWriteFileStoreHandler initFileStore(final WorkflowDataRepository dataRepository) {
         final FlowObjectStack flowObjectStack = getFlowObjectStack();
         FlowLoopContext upstreamFLC = flowObjectStack.peek(FlowLoopContext.class);
         if (upstreamFLC == null) {
@@ -685,7 +681,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 + "loop start and not contained in loop), disposing old handler";*/
             }
             newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
-            newFSHandler.addToRepository(fileStoreHandlerRepository);
+            newFSHandler.addToRepository(dataRepository);
         } else if (innerFLC != null) {
             // node is a loop start node
             int loopIteration = innerFLC.getIterationIndex();
@@ -701,7 +697,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 } else {
                     newFSHandler = new LoopStartWritableFileStoreHandler(this, UUID.randomUUID(), innerFLC);
                 }
-                newFSHandler.addToRepository(fileStoreHandlerRepository);
+                newFSHandler.addToRepository(dataRepository);
                 innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);
             } else {
                 assert oldFSHandler instanceof IWriteFileStoreHandler : "Loop Start " + getNameWithID()
@@ -718,11 +714,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
                     newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
                 } else {
                     newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
-                    newFSHandler.addToRepository(fileStoreHandlerRepository);
+                    newFSHandler.addToRepository(dataRepository);
                 }
             } else {
                 newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
-                newFSHandler.addToRepository(fileStoreHandlerRepository);
+                newFSHandler.addToRepository(dataRepository);
             }
         }
         return newFSHandler;
@@ -846,7 +842,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
 
         if (isExecuted) {
-            m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
+            m_node.putOutputTablesIntoGlobalRepository(getParent().getWorkflowDataRepository());
         }
         return null;
     }
@@ -876,7 +872,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 NodeContext.pushContext(this);
                 try {
                     m_node.loadExecutionResult(nodeExecResult, new ExecutionMonitor(), loadResult);
-                    m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
+                    m_node.putOutputTablesIntoGlobalRepository(getParent().getWorkflowDataRepository());
                 } finally {
                     NodeContext.removeLastContext();
                 }
@@ -1053,15 +1049,10 @@ public class NativeNodeContainer extends SingleNodeContainer {
         super.setDirty();
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected NodeContainerPersistor getCopyPersistor(
-            final HashMap<Integer, ContainerTable> tableRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
-            final boolean preserveDeletableFlags,
-            final boolean isUndoableDeleteCommand) {
-        return new CopyNativeNodeContainerPersistor(this,
-                preserveDeletableFlags, isUndoableDeleteCommand);
+    protected NodeContainerPersistor getCopyPersistor(final boolean preserveDeletableFlags,
+        final boolean isUndoableDeleteCommand) {
+        return new CopyNativeNodeContainerPersistor(this, preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     /* ------------------ Node Properties ---------------- */

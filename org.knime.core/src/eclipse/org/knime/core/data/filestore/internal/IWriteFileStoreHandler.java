@@ -50,6 +50,7 @@ package org.knime.core.data.filestore.internal;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
@@ -65,7 +66,7 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
 
     public void open(final ExecutionContext exec);
 
-    public void addToRepository(final FileStoreHandlerRepository repository);
+    public void addToRepository(final IDataRepository repository);
 
     public void close();
 

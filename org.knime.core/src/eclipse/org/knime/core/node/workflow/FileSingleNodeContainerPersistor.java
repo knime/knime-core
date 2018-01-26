@@ -60,7 +60,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -113,24 +112,24 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     private final boolean m_mustWarnOnDataLoadError;
 
-    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final WorkflowDataRepository m_workflowDataRepository;
 
 
     /** Load persistor.
      * @param globalTableRepository TODO
-     * @param fileStoreHandlerRepository TODO
+     * @param workflowDataRepository TODO
      * @param mustWarnOnDataLoadError TODO*/
     FileSingleNodeContainerPersistor(final ReferencedFile nodeSettingsFile,
         final WorkflowLoadHelper loadHelper, final LoadVersion version,
         final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        final WorkflowDataRepository workflowDataRepository, final boolean mustWarnOnDataLoadError) {
         CheckUtils.checkArgumentNotNull(version, "Version must not be null");
         CheckUtils.checkArgumentNotNull(globalTableRepository, "Table repository must not be null");
-        CheckUtils.checkArgumentNotNull(fileStoreHandlerRepository, "File store handler repository must not be null");
+        CheckUtils.checkArgumentNotNull(workflowDataRepository, "File store handler repository must not be null");
         m_version = version;
         m_metaPersistor = new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version);
         m_globalTableRepository = globalTableRepository;
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        m_workflowDataRepository = workflowDataRepository;
         m_mustWarnOnDataLoadError = mustWarnOnDataLoadError;
     }
 
@@ -497,9 +496,9 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return m_globalTableRepository;
     }
 
-    /** @return the fileStoreHandlerRepository as passed in constructor, not null. */
-    WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+    /** @return the data repository as passed in constructor, not null. */
+    WorkflowDataRepository getWorkflowDataRepository() {
+        return m_workflowDataRepository;
     }
 
     /** @return property derived from outer workflow persistor,

@@ -113,11 +113,6 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -276,15 +271,8 @@ public final class WorkflowManager extends NodeContainer
     private final Vector<WorkflowAnnotationID> m_annotationIDs = new Vector<WorkflowAnnotationID>();
     private int m_nextAnnotationID = 0;
 
-    // Misc members:
-
-    /** for internal usage, holding output table references. */
-    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
-
-    /**
-     * The repository of all active {@link IFileStoreHandler}. It inherits from the parent if this wfm is a metanode.
-     */
-    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
+    /** for internal usage, holding output table references and file store handlers */
+    private final WorkflowDataRepository m_dataRepository;
 
     /**
      * Password store. This object is associated with each meta-node (contained metanodes have their own password
@@ -344,7 +332,7 @@ public final class WorkflowManager extends NodeContainer
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
      */
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
-        new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty(), Optional.empty());
+        new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
     /**
      * The root of all metanodes that are part of the node repository, for instance x-val metanode.
@@ -409,14 +397,12 @@ public final class WorkflowManager extends NodeContainer
      * @param isProject If this workflow manager is a project
      * @param context The context
      * @param name Name of this workflow manager
-     * @param globalTableRepositoryOptional TODO
-     * @param fsHandlerRepositoryOptional TODO
      * @param nodeAnno object to copy the node annotation from
+     * @param fsHandlerRepositoryOptional TODO
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContext context,
-        final String name, final Optional<HashMap<Integer, ContainerTable>> globalTableRepositoryOptional,
-        final Optional<WorkflowFileStoreHandlerRepository> fsHandlerRepositoryOptional,
+        final String name, final Optional<WorkflowDataRepository> dataRepositoryOptional,
         final Optional<NodeAnnotation> nodeAnno) {
         super(parent, id, nodeAnno.orElse(null));
         m_directNCParent = assertParentAssignments(directNCParent, parent);
@@ -448,9 +434,7 @@ public final class WorkflowManager extends NodeContainer
             // otherwise we may have incoming and/or outgoing dependencies...
             m_workflowContext = context;
         }
-        m_globalTableRepository = globalTableRepositoryOptional.orElseGet(() -> new GlobalTableRepository());
-        m_fileStoreHandlerRepository =
-            fsHandlerRepositoryOptional.orElseGet(() -> new WorkflowFileStoreHandlerRepository());
+        m_dataRepository = dataRepositoryOptional.orElseGet(() -> new WorkflowDataRepository());
         m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
@@ -485,12 +469,10 @@ public final class WorkflowManager extends NodeContainer
      * @param parent The parent of this workflow
      * @param id The ID of this workflow
      * @param persistor Persistor containing the content for this workflow
-     * @param globalTableRepository ...
-     * @param fileStoreHandlerRepository ...
+     * @param workflowDataRepository ...
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
-        final WorkflowPersistor persistor, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+        final WorkflowPersistor persistor, final WorkflowDataRepository workflowDataRepository) {
         super(parent, id, persistor.getMetaPersistor());
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         ReferencedFile ncDir = super.getNodeContainerDirectory();
@@ -547,12 +529,10 @@ public final class WorkflowManager extends NodeContainer
 
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
-            m_globalTableRepository = persistor.getGlobalTableRepository();
-            m_fileStoreHandlerRepository = persistor.getFileStoreHandlerRepository();
+            m_dataRepository = persistor.getWorkflowDataRepository();
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
-            m_globalTableRepository = globalTableRepository;
-            m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+            m_dataRepository = workflowDataRepository;
         }
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.debug("Created subworkflow " + this.getID());
@@ -677,7 +657,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm =
             createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(),
-                creationHelper.getGlobalTableRepository(), creationHelper.getFileStoreHandlerRepository(), null, null);
+                creationHelper.getWorkflowDataRepository(), null, null);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -842,20 +822,17 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
         final String name) {
-        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null, null);
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null);
     }
 
     /**
      * Adds new empty metanode to this WFM.
-     *
-     * @param globalTableRepository TODO
-     * @param fileStoreHandlerRepository TODO
+     * @param workflowDataRepository TODO
      */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
         final String name, final boolean isNewProject, final WorkflowContext context,
-        final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final NodeID idOrNull,
-        final NodeAnnotation nodeAnno) {
+        final WorkflowDataRepository workflowDataRepository,
+        final NodeID idOrNull, final NodeAnnotation nodeAnno) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             CheckUtils.checkState(!hasPorts,
@@ -874,19 +851,14 @@ public final class WorkflowManager extends NodeContainer
                 newID = m_workflow.createUniqueID();
             }
             // TODO both args into one "data-repo" wrapper class
-            CheckUtils.checkArgument(!((globalTableRepository == null) ^ (fileStoreHandlerRepository == null)),
-                "Both args must be null or both args must be non-null");
-            Optional<HashMap<Integer, ContainerTable>> globalTableRepositoryOptional;
-            Optional<WorkflowFileStoreHandlerRepository> fileStoreRepositoryOptional;
+            Optional<WorkflowDataRepository> fileStoreRepositoryOptional;
             if (isNewProject) {
-                globalTableRepositoryOptional = Optional.ofNullable(globalTableRepository);
-                fileStoreRepositoryOptional = Optional.ofNullable(fileStoreHandlerRepository);
+                fileStoreRepositoryOptional = Optional.ofNullable(workflowDataRepository);
             } else {
-                globalTableRepositoryOptional = Optional.of(m_globalTableRepository);
-                fileStoreRepositoryOptional = Optional.of(m_fileStoreHandlerRepository);
+                fileStoreRepositoryOptional = Optional.of(m_dataRepository);
             }
             wfm = new WorkflowManager(null, this, newID, inPorts, outPorts, isNewProject, context, name,
-                globalTableRepositoryOptional, fileStoreRepositoryOptional, Optional.ofNullable(nodeAnno));
+                fileStoreRepositoryOptional, Optional.ofNullable(nodeAnno));
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
@@ -916,8 +888,7 @@ public final class WorkflowManager extends NodeContainer
         if (!newID.hasSamePrefix(getID()) || m_workflow.containsNodeKey(newID)) {
             throw new RuntimeException("Invalid or duplicate ID \"" + newID + "\"");
         }
-        WorkflowManager wfm =
-            new WorkflowManager(null, this, newID, persistor, m_globalTableRepository, m_fileStoreHandlerRepository);
+        WorkflowManager wfm = new WorkflowManager(null, this, newID, persistor, m_dataRepository);
         return wfm;
     }
 
@@ -3876,8 +3847,8 @@ public final class WorkflowManager extends NodeContainer
 
             removeNode(subnodeID);
 
-            WorkflowManager metaNode = createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null,
-                subnodeID, subnode.getNodeAnnotation());
+            WorkflowManager metaNode = createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, subnodeID,
+                subnode.getNodeAnnotation());
             metaNode.setUIInformation(uiInformation);
             metaNode.paste(fromSubnodePersistor);
             metaNode.setCustomDescription(subnode.getCustomDescription());
@@ -5496,21 +5467,12 @@ public final class WorkflowManager extends NodeContainer
     /////////////////////////////////
 
     /**
-     * @return global table repository for this WFM.
-     * @since 3.1
+     * @return the data repository for this metanode or project.
+     * @since 3.6
      * @noreference This method is not intended to be referenced by clients.
      */
-    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return m_globalTableRepository;
-    }
-
-    /**
-     * @return the fileStoreHandlerRepository for this metanode or project.
-     * @since 3.1
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+    public WorkflowDataRepository getWorkflowDataRepository() {
+        return m_dataRepository;
     }
 
     /**
@@ -7279,11 +7241,9 @@ public final class WorkflowManager extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    protected CopyWorkflowPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
+    protected CopyWorkflowPersistor getCopyPersistor(final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
-        return new CopyWorkflowPersistor(this, tableRep, fileStoreHandlerRepository, preserveDeletableFlags,
-            isUndoableDeleteCommand);
+        return new CopyWorkflowPersistor(this, preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     /**
@@ -7342,8 +7302,8 @@ public final class WorkflowManager extends NodeContainer
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
-                final NodeContainerPersistor copyPersistor = cont.getCopyPersistor(m_globalTableRepository,
-                    m_fileStoreHandlerRepository, false, isUndoableDeleteCommand);
+                final NodeContainerPersistor copyPersistor = cont.getCopyPersistor(false,
+                    isUndoableDeleteCommand);
                 NodeContainerMetaPersistor copyMetaPersistor = copyPersistor.getMetaPersistor();
                 NodeUIInformation overwrittenUIInfo = content.getOverwrittenUIInfo(nodeIDs[i]);
                 Integer suggestedNodeIDSuffix = content.getSuggestedNodIDSuffix(nodeIDs[i]);
@@ -8420,16 +8380,7 @@ public final class WorkflowManager extends NodeContainer
                 nc.setDirty();
             }
         }
-        for (ContainerTable t : m_globalTableRepository.values()) {
-            t.ensureOpen();
-        }
-        for (IWriteFileStoreHandler writeFileStoreHandler : m_fileStoreHandlerRepository.getWriteFileStoreHandlers()) {
-            try {
-                writeFileStoreHandler.ensureOpenAfterLoad();
-            } catch (IOException e) {
-                LOGGER.error("Could not open file store handler " + writeFileStoreHandler, e);
-            }
-        }
+        m_dataRepository.ensureOpenAfterLoad();
     }
 
     /** {@inheritDoc} */

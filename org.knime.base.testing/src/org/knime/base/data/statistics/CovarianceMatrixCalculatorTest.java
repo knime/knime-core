@@ -51,7 +51,6 @@ package org.knime.base.data.statistics;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
 import java.util.Random;
 
 import org.apache.commons.math3.linear.RealMatrix;
@@ -66,7 +65,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -109,7 +107,7 @@ public class CovarianceMatrixCalculatorTest {
             (NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
         m_exec =
             new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(dummyFactory),
-                SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
+                SingleNodeContainer.MemoryPolicy.CacheOnDisc);
     }
 
     /**

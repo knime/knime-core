@@ -56,9 +56,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -602,9 +602,9 @@ public abstract class NodeModel implements ViewableModel {
             } else if (outData[i] instanceof FileStorePortObject) {
                 // file stores can be 'external', e.g. when a model reader node reads an external model file
                 FileStorePortObject fsPO = (FileStorePortObject)outData[i];
-                FileStoreHandlerRepository expectedRep = exec.getFileStoreHandler().getFileStoreHandlerRepository();
-                FileStoreHandlerRepository actualRep = FileStoreUtil.getFileStores(fsPO).stream()
-                        .map(FileStoreUtil::getFileStoreHandler).map(h -> h.getFileStoreHandlerRepository())
+                IDataRepository expectedRep = exec.getFileStoreHandler().getDataRepository();
+                IDataRepository actualRep = FileStoreUtil.getFileStores(fsPO).stream()
+                        .map(FileStoreUtil::getFileStoreHandler).map(h -> h.getDataRepository())
                         .findFirst().orElse(expectedRep);
                 if (actualRep != expectedRep) {
                     outData[i] = Node.copyPortObject(fsPO, exec);

@@ -371,7 +371,7 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             if (fileStoreKeys != null) {
                 FileStoreCell fsCell = (FileStoreCell)result;
                 FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys,
-                    m_tableFormatReader.getFileStoreHandlerRepository());
+                    m_tableFormatReader.getDataRepository());
             }
 
             return result;

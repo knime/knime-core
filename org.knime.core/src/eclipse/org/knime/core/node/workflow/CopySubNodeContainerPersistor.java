@@ -50,8 +50,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
@@ -77,18 +75,16 @@ public class CopySubNodeContainerPersistor
 
     /**
      * @param original
-     * @param tableRep
-     * @param fileStoreHandlerRepository
      * @param preserveDeletableFlags
      * @param isUndoableDeleteCommand
+     * @since 3.7
      */
     public CopySubNodeContainerPersistor(final SubNodeContainer original,
-        final HashMap<Integer, ContainerTable> tableRep,
-        final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
+        final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
         super(original, preserveDeletableFlags, isUndoableDeleteCommand);
-        m_workflowPersistor = new CopyWorkflowPersistor(original.getWorkflowManager(), tableRep,
-            fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand) {
+        m_workflowPersistor = new CopyWorkflowPersistor(original.getWorkflowManager(), preserveDeletableFlags,
+            isUndoableDeleteCommand) {
             @Override
             public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
                 NodeContainerParent ncParent = wfm.getDirectNCParent();

@@ -47,8 +47,10 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -58,21 +60,18 @@ import org.knime.core.data.filestore.FileStoreKey;
  */
 public class EmptyFileStoreHandler implements IFileStoreHandler {
 
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final IDataRepository m_dataRepository;
 
     /**
-     * @param fileStoreHandlerRepository */
-    public EmptyFileStoreHandler(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        if (fileStoreHandlerRepository == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+     * @param dataRepository */
+    public EmptyFileStoreHandler(final IDataRepository dataRepository) {
+        m_dataRepository = CheckUtils.checkArgumentNotNull(dataRepository);
     }
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+    public IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /** {@inheritDoc} */
@@ -84,8 +83,7 @@ public class EmptyFileStoreHandler implements IFileStoreHandler {
     /** {@inheritDoc} */
     @Override
     public FileStore getFileStore(final FileStoreKey key) {
-        return m_fileStoreHandlerRepository.getHandlerNotNull(
-                key.getStoreUUID()).getFileStore(key);
+        return m_dataRepository.getHandlerNotNull(key.getStoreUUID()).getFileStore(key);
     }
 
 }

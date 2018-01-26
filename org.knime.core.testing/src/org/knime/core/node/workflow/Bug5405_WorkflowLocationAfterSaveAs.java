@@ -45,7 +45,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -117,7 +117,8 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
 
     private ContainerTable getExecuteFileReaderTable() {
         WorkflowManager manager = getManager();
-        final HashMap<Integer, ContainerTable> globalTableRepository = manager.getGlobalTableRepository();
+        final WorkflowDataRepository dataRepository = manager.getWorkflowDataRepository();
+        Map<Integer, ContainerTable> globalTableRepository = dataRepository.getGlobalTableRepository();
         Assert.assertEquals(1, globalTableRepository.size());
         return globalTableRepository.values().iterator().next();
     }

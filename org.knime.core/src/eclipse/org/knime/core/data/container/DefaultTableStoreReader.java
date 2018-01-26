@@ -127,7 +127,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader {
     }
 
     /**
-     * @return numbe of records
+     * @return number of records
      * @see org.knime.core.data.container.Buffer#size()
      */
     long size() {

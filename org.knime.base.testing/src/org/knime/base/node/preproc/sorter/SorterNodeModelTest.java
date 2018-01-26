@@ -48,8 +48,6 @@
 package org.knime.base.node.preproc.sorter;
 
 
-import java.util.HashMap;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -62,7 +60,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
@@ -94,8 +91,7 @@ public class SorterNodeModelTest {
     public static void setUpBeforeClass() throws Exception {
         EXEC_CONTEXT = new ExecutionContext(
            new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
-                    SingleNodeContainer.MemoryPolicy.CacheSmallInMemory,
-                    new HashMap<Integer, ContainerTable>());
+                    SingleNodeContainer.MemoryPolicy.CacheSmallInMemory);
     }
 
     /**
