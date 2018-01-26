@@ -46,11 +46,13 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -71,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -78,6 +81,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -86,6 +90,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -93,7 +98,6 @@ import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
-import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
@@ -865,7 +869,7 @@ public class Buffer implements KNIMEStreamConstants {
                         ensureTempFileExists();
                         initOutputWriter(m_binFile);
                     }
-                    ((DefaultTableStoreWriter)m_outputWriter).writeBlobDataCell(bc, rewrite, this);
+                    writeBlobDataCell(bc, rewrite);
                     wc = new BlobWrapperDataCell(this, rewrite, cl, bc);
                 } else {
                     wc = new BlobWrapperDataCell(this, rewrite, cl);
@@ -881,6 +885,61 @@ public class Buffer implements KNIMEStreamConstants {
             }
         }
         return wc;
+    }
+
+    private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a) throws IOException {
+        DataCellSerializer<DataCell> ser = ((DefaultTableStoreWriter)m_outputWriter)
+                .getSerializerForDataCell(CellClassInfo.get(cell));
+        // addRow will make sure that m_indicesOfBlobInColumns is initialized
+        // when this method is called. If this method is called from a different
+        // buffer object, it means that this buffer has been closed!
+        // (When can this happen? This buffer resides in memory, a successor
+        // node is written to disc; they have different memory policies.)
+        if (m_indicesOfBlobInColumns == null) {
+            m_indicesOfBlobInColumns = new int[m_spec.getNumColumns()];
+        }
+        int column = a.getColumn();
+        int indexInColumn = m_indicesOfBlobInColumns[column]++;
+        a.setIndexOfBlobInColumn(indexInColumn);
+        boolean isToCompress = Buffer.isUseCompressionForBlobs(CellClassInfo.get(cell));
+        File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
+        BlobAddress originalBA = cell.getBlobAddress();
+        if (!Objects.equals(originalBA, a)) {
+            int originalBufferIndex = originalBA.getBufferID();
+            Buffer originalBuffer = null;
+            ContainerTable t = getGlobalRepository().get(originalBufferIndex);
+            if (t != null) {
+                originalBuffer = t.getBuffer();
+            } else if (getLocalRepository() != null) {
+                t = getLocalRepository().get(originalBufferIndex);
+                if (t != null) {
+                    originalBuffer = t.getBuffer();
+                }
+            }
+            if (originalBuffer != null) {
+                int index = originalBA.getIndexOfBlobInColumn();
+                int col = originalBA.getColumn();
+                boolean compress = originalBA.isUseCompression();
+                File source = originalBuffer.getBlobFile(index, col, false, compress);
+                FileUtil.copy(source, outFile);
+                return;
+            }
+        }
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
+        Buffer.onFileCreated(outFile);
+        if (isToCompress) {
+            out = new GZIPOutputStream(out);
+            // buffering the gzip stream brings another performance boost
+            // (in one case from 5mins down to 2 mins)
+            out = new BufferedOutputStream(out);
+        }
+        try (DCObjectOutputVersion2 outStream = new DCObjectOutputVersion2(out)) {
+            if (ser != null) { // DataCell is datacell-serializable
+                outStream.writeDataCellPerKNIMESerializer(ser, cell);
+            } else {
+                outStream.writeDataCellPerJavaSerialization(cell);
+            }
+        }
     }
 
     private boolean mustBeFlushedPriorSave(final DataCell cell) {
@@ -1238,8 +1297,7 @@ public class Buffer implements KNIMEStreamConstants {
         if (getReadVersion() <= 5) { // 2.0 TechPreview and earlier
             result = BufferFromFileIteratorVersion1x.readBlobDataCell(this, blobAddress, cl);
         } else {
-            result = new DataCellStreamReader((DefaultTableStoreReader)m_outputReader)
-                    .readBlobDataCell(blobAddress, cl);
+            result = BufferFromFileIteratorVersion20.readBlobDataCell(blobAddress, cl, this);
         }
         m_blobLRUCache.put(blobAddress, new SoftReference<BlobDataCell>(result));
         return result;

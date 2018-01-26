@@ -267,16 +267,55 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
         close();
     }
 
-    /** Utility class that separates the logic of reading DataCells from the
-     * stream. It is a separate class since the same logic is also used to read
-     * files containing blob cells. */
+    /**
+     * Reads the blob from the given blob address.
+     * @param blobAddress The address to read from.
+     * @param cl The expected class.
+     * @return The blob cell being read.
+     * @throws IOException If that fails.
+     */
+    static BlobDataCell readBlobDataCell(final BlobAddress blobAddress, final CellClassInfo cl, final Buffer buffer)
+        throws IOException {
+        assert buffer.getBufferID() == blobAddress.getBufferID() : "Buffer IDs don't match: " + buffer.getBufferID()
+            + " vs. " + blobAddress.getBufferID();
+        int column = blobAddress.getColumn();
+        int indexInColumn = blobAddress.getIndexOfBlobInColumn();
+        boolean isCompress = blobAddress.isUseCompression();
+        File inFile = buffer.getBlobFile(indexInColumn, column, false, isCompress);
+        InputStream in = new BufferedInputStream(new FileInputStream(inFile));
+        if (isCompress) {
+            in = new GZIPInputStream(in);
+            // that buffering is important
+            in = new BufferedInputStream(in);
+        }
+        Class<? extends DataCell> cellClass = cl.getCellClass();
+        DataCellSerializer<? extends DataCell> ser = cl.getSerializer();
+        DCObjectInputVersion2 inStream = new DCObjectInputVersion2(in);
+        BlobDataCell result;
+        try {
+            if (ser != null) {
+                // the DataType class will reject Serializer that do not
+                // have the appropriate return type
+                result = (BlobDataCell)inStream.readDataCellPerKNIMESerializer(ser);
+            } else {
+                inStream.setCurrentClassLoader(cellClass.getClassLoader());
+                result = (BlobDataCell)inStream.readDataCellPerJavaSerialization();
+            }
+            result.setBlobAddress(blobAddress);
+            return result;
+        } finally {
+            inStream.close();
+        }
+    }
+
+    /** Utility class that separates the logic of reading DataCells from the stream. */
     static class DataCellStreamReader {
 
         /** Associated buffer. */
         private final DefaultTableStoreReader m_tableFormatReader;
 
-        /** Only memorizes the buffer.
-         * @param tableFormatReader associated buffer. */
+        /** Only memorizes the table reader.
+         * @param tableFormatReader associated reader, possibly be null. */
         DataCellStreamReader(final DefaultTableStoreReader tableFormatReader) {
             m_tableFormatReader = tableFormatReader;
         }
@@ -338,50 +377,6 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             }
             return result;
         }
-
-        /**
-         * Reads the blob from the given blob address.
-         * @param blobAddress The address to read from.
-         * @param cl The expected class.
-         * @return The blob cell being read.
-         * @throws IOException If that fails.
-         */
-        BlobDataCell readBlobDataCell(final BlobAddress blobAddress,
-                final CellClassInfo cl) throws IOException {
-            Buffer buffer = m_tableFormatReader.getBuffer();
-            assert buffer.getBufferID() == blobAddress.getBufferID() : "Buffer IDs don't match: " + buffer.getBufferID()
-                + " vs. " + blobAddress.getBufferID();
-            int column = blobAddress.getColumn();
-            int indexInColumn = blobAddress.getIndexOfBlobInColumn();
-            boolean isCompress = blobAddress.isUseCompression();
-            File inFile = buffer.getBlobFile(indexInColumn, column, false, isCompress);
-            InputStream in = new BufferedInputStream(new FileInputStream(inFile));
-            if (isCompress) {
-                in = new GZIPInputStream(in);
-                // that buffering is important
-                in = new BufferedInputStream(in);
-            }
-            Class<? extends DataCell> cellClass = cl.getCellClass();
-            DataCellSerializer<? extends DataCell> ser = cl.getSerializer();
-            DCObjectInputVersion2 inStream = new DCObjectInputVersion2(in, this);
-            BlobDataCell result;
-            try {
-                if (ser != null) {
-                    // the DataType class will reject Serializer that do not
-                    // have the appropriate return type
-                    result = (BlobDataCell)inStream.readDataCellPerKNIMESerializer(ser);
-                } else {
-                    inStream.setCurrentClassLoader(cellClass.getClassLoader());
-                    result = (BlobDataCell)inStream.readDataCellPerJavaSerialization();
-                }
-                result.setBlobAddress(blobAddress);
-                return result;
-            } finally {
-                // do the best to minimize the number of open streams.
-                inStream.close();
-            }
-        }
-
     } // class DataCellStreamReader
 
 }

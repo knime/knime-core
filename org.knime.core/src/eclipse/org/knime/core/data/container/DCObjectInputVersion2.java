@@ -81,13 +81,17 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      * this stream reads from m_in. */
     private final DCLongUTFDataInputStream m_dataIn;
 
-    /** Buffer used to deserialized contained DataCells (when DataCells are
-     * wrapped in DataCells). */
-    private final DataCellStreamReader m_cellReader;
-
     /** Preferred class loader that is set shortly before a java
      * de-serialization takes place. May be null. */
     private ClassLoader m_priorityClassLoader;
+
+    /**
+     * Creates new input stream that reads from <code>in</code>. Used for blob reading (no embedded cell support).
+     * @param in The stream to read from.
+     */
+    DCObjectInputVersion2(final InputStream in) {
+        this(in, null);
+    }
 
     /**
      * Creates new input stream that reads from <code>in</code>.
@@ -95,11 +99,9 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
      * @param cellReader The object that helps to read DataCell contained in
      * DataCell as required by {@link DataCellDataInput#readDataCell()}.
      */
-    DCObjectInputVersion2(final InputStream in,
-            final DataCellStreamReader cellReader) {
-        m_cellReader = cellReader;
+    DCObjectInputVersion2(final InputStream in, final DataCellStreamReader cellReader) {
         m_in = new BlockableInputStream(in);
-        m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(m_in));
+        m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(m_in), cellReader);
     }
 
     /** Reads a data cell from the stream.
@@ -190,20 +192,28 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
 
     /** Data input stream with functionality to read encapsulated DataCell
      * objects. */
-    private final class DCLongUTFDataInputStream
-        extends LongUTFDataInputStream implements DataCellDataInput {
+    private final class DCLongUTFDataInputStream extends LongUTFDataInputStream implements DataCellDataInput {
+
+        /** Buffer used to deserialized contained DataCells (when DataCells are wrapped in DataCells). */
+        private final DataCellStreamReader m_cellReader;
+
 
         /** Inherited constructor.
          * @param input Passed to super implementation.
+         * @param cellReader for embedded cell reading, null if this is reading a blob (no embedded writing of blobs)
          */
-        public DCLongUTFDataInputStream(final DataInputStream input) {
+        public DCLongUTFDataInputStream(final DataInputStream input, final DataCellStreamReader cellReader) {
             super(input);
+            m_cellReader = cellReader;
         }
 
         /** Throws always an exception as reading DataCells is not supported.
          * {@inheritDoc} */
         @Override
         public DataCell readDataCell() throws IOException {
+            if (m_cellReader == null) {
+                throw new UnsupportedOperationException("Embedded cell reading not supported for blobs");
+            }
             return m_cellReader.readDataCell(DCObjectInputVersion2.this);
         }
 

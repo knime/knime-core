@@ -48,9 +48,7 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -63,14 +61,10 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.DefaultTableStoreFormat.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreWriter;
 import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -83,8 +77,6 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      * meta.xml in a zip file.
      */
     private HashMap<CellClassInfo, Byte> m_typeShortCuts;
-
-    private int[] m_indicesOfBlobInColumns;
 
     private final CompressionFormat m_compressionFormat;
 
@@ -180,61 +172,6 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
         }
     }
 
-    public void writeBlobDataCell(final BlobDataCell cell,
-        final BlobAddress a, final Buffer buffer) throws IOException {
-        DataCellSerializer<DataCell> ser = getSerializerForDataCell(CellClassInfo.get(cell));
-        // addRow will make sure that m_indicesOfBlobInColumns is initialized
-        // when this method is called. If this method is called from a different
-        // buffer object, it means that this buffer has been closed!
-        // (When can this happen? This buffer resides in memory, a successor
-        // node is written to disc; they have different memory policies.)
-        if (m_indicesOfBlobInColumns == null) {
-            m_indicesOfBlobInColumns = new int[getSpec().getNumColumns()];
-        }
-        int column = a.getColumn();
-        int indexInColumn = m_indicesOfBlobInColumns[column]++;
-        a.setIndexOfBlobInColumn(indexInColumn);
-        boolean isToCompress = Buffer.isUseCompressionForBlobs(CellClassInfo.get(cell));
-        File outFile = buffer.getBlobFile(indexInColumn, column, true, isToCompress);
-        BlobAddress originalBA = cell.getBlobAddress();
-        if (!ConvenienceMethods.areEqual(originalBA, a)) {
-            int originalBufferIndex = originalBA.getBufferID();
-            Buffer originalBuffer = null;
-            ContainerTable t = buffer.getGlobalRepository().get(originalBufferIndex);
-            if (t != null) {
-                originalBuffer = t.getBuffer();
-            } else if (buffer.getLocalRepository() != null) {
-                t = buffer.getLocalRepository().get(originalBufferIndex);
-                if (t != null) {
-                    originalBuffer = t.getBuffer();
-                }
-            }
-            if (originalBuffer != null) {
-                int index = originalBA.getIndexOfBlobInColumn();
-                int col = originalBA.getColumn();
-                boolean compress = originalBA.isUseCompression();
-                File source = originalBuffer.getBlobFile(index, col, false, compress);
-                FileUtil.copy(source, outFile);
-                return;
-            }
-        }
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
-        Buffer.onFileCreated(outFile);
-        if (isToCompress) {
-            out = new GZIPOutputStream(out);
-            // buffering the gzip stream brings another performance boost
-            // (in one case from 5mins down to 2 mins)
-            out = new BufferedOutputStream(out);
-        }
-        try (DCObjectOutputVersion2 outStream = new DCObjectOutputVersion2(out, this)) {
-            if (ser != null) { // DataCell is datacell-serializable
-                outStream.writeDataCellPerKNIMESerializer(ser, cell);
-            } else {
-                outStream.writeDataCellPerJavaSerialization(cell);
-            }
-        }
-    }
-
     /**
      * Creates short cut array and wraps the argument stream in a {@link DCObjectOutputVersion2}.
      */
@@ -267,7 +204,7 @@ final class DefaultTableStoreWriter extends AbstractTableStoreWriter implements 
      * @throws IOException If there are too many different cell implementations (currently 253 are theoretically
      *             supported)
      */
-    private DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
+    DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
         if (m_typeShortCuts == null) {
             m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
         }

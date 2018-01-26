@@ -83,21 +83,24 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
     /** Stream that we write to. Used to mark end of cells (or row keys). */
     private final BlockableOutputStream m_out;
 
-    /** The Buffer that uses this stream, used to save DataCells contained
-     * in (List)DataCell. */
-    private final DefaultTableStoreWriter m_tableStoreWriter;
-
     /** This stream writes to m_out and is passed to the DataCellSerializer. */
     private DCLongUTFDataOutputStream m_dataOut;
 
     /** Setups a new output stream.
      * @param out The stream to write to (the file)
-     * @param tableStoreWriter the corresponding writer (callback for long UTF strings)
+     * @param tableStoreWriter the corresponding writer (callback for embedded cell writing)
      */
-    public DCObjectOutputVersion2(final OutputStream out, final DefaultTableStoreWriter tableStoreWriter) {
+    DCObjectOutputVersion2(final OutputStream out, final DefaultTableStoreWriter tableStoreWriter) {
         m_out = new BlockableOutputStream(out);
-        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out));
-        m_tableStoreWriter = tableStoreWriter;
+        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out), tableStoreWriter);
+    }
+
+    /** Setups a new output stream for writing blobs (not supporting writing embedded cells).
+     * @param out The stream to write to (the file)
+     */
+    DCObjectOutputVersion2(final OutputStream out) {
+        m_out = new BlockableOutputStream(out);
+        m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out), null);
     }
 
     /** Writes a data cell using the serializer. No blocking is done (not here).
@@ -182,23 +185,29 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
 
     /** Stream that supports writing of encapsulated {@link DataCell} objects
      * as required by {@link DataCellDataOutput}. */
-    private final class DCLongUTFDataOutputStream
-        extends LongUTFDataOutputStream implements DataCellDataOutput {
+    final class DCLongUTFDataOutputStream extends LongUTFDataOutputStream implements DataCellDataOutput {
 
-        /** Delegates to super implementation.
-         * @param output Forwarded to super. */
-        public DCLongUTFDataOutputStream(final DataOutputStream output) {
+        private final DefaultTableStoreWriter m_tableStoreWriter;
+
+        /**
+         * Delegates to super implementation.
+         *
+         * @param output Forwarded to super.
+         * @param tableStoreWriter To redirect the contained cell writing to. Null when not supported (for blobs).
+         */
+        DCLongUTFDataOutputStream(final DataOutputStream output, final DefaultTableStoreWriter tableStoreWriter) {
             super(output);
+            m_tableStoreWriter = tableStoreWriter;
         }
 
         /** {@inheritDoc} */
         @Override
         public void writeDataCell(final DataCell cell) throws IOException {
+            if (m_tableStoreWriter == null) {
+                throw new UnsupportedOperationException("Writing encapsulated cells not supported for Blobs");
+            }
             m_tableStoreWriter.writeDataCell(cell, DCObjectOutputVersion2.this);
         }
-
     }
-
-
 
 }
