@@ -5,32 +5,11 @@
 <config key="internal_node_subsettings">
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
-<config key="model">
-<config key="filename_Internals">
-<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
-<entry key="EnabledStatus" type="xboolean" value="true"/>
-</config>
-<entry key="filename" type="xstring" value="/tmp/blobTmpPath.blob"/>
-<config key="overwriteOK_Internals">
-<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
-<entry key="EnabledStatus" type="xboolean" value="true"/>
-</config>
-<entry key="overwriteOK" type="xboolean" value="true"/>
-</config>
-<config key="variables">
-<config key="filename">
-<entry key="used_variable" type="xstring" value="tmpFilePath"/>
-<entry key="exposed_variable" type="xstring" isnull="true" value=""/>
-</config>
-</config>
+<config key="model"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="IDLE"/>
-<config key="nodecontainer_message">
-<entry key="type" type="xstring" value="WARNING"/>
-<entry key="message" type="xstring" value="No destination location provided! Please enter a valid location."/>
-</config>
-<entry key="factory" type="xstring" value="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
-<entry key="node-name" type="xstring" value="Table Writer"/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.util.cache.CacheNodeFactory"/>
+<entry key="node-name" type="xstring" value="Cache"/>
 <entry key="node-bundle-name" type="xstring" value="KNIME Base Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.base"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
@@ -40,10 +19,15 @@
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-version" type="xstring" value="0.0.0"/>
 <config key="factory_settings"/>
-<entry key="name" type="xstring" value="Table Writer"/>
+<entry key="name" type="xstring" value="Cache"/>
 <entry key="hasContent" type="xboolean" value="false"/>
 <entry key="isInactive" type="xboolean" value="false"/>
-<config key="ports"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
 <config key="filestores">
 <entry key="file_store_location" type="xstring" isnull="true" value=""/>
 <entry key="file_store_id" type="xstring" isnull="true" value=""/>

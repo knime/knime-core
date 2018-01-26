@@ -49,7 +49,7 @@
 <entry key="node-bundle-name" type="xstring" value="KNIME Java Snippet Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.jsnippets"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
-<entry key="node-bundle-version" type="xstring" value="3.5.0.qualifier"/>
+<entry key="node-bundle-version" type="xstring" value="3.6.0.qualifier"/>
 <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
