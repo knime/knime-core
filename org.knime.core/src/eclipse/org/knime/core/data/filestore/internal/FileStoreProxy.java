@@ -49,20 +49,18 @@ package org.knime.core.data.filestore.internal;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.node.NodeLogger;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class FileStoreProxy {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStorePortObject.class);
 
     private FileStoreKey m_fileStoreKey;
     private IFileStoreHandler m_fileStoreHandler;
@@ -89,11 +87,11 @@ public final class FileStoreProxy {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public void retrieveFileStoreHandlerFrom(final FileStoreKey key,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+    public void retrieveFileStoreHandlerFrom(final FileStoreKey key, final IDataRepository dataRepository)
+        throws IOException {
         m_fileStoreKey = key;
         UUID id = key.getStoreUUID();
-        m_fileStoreHandler = fileStoreHandlerRepository.getHandlerNotNull(id);
+        m_fileStoreHandler = dataRepository.getHandlerNotNull(id);
     }
 
     public FileStore getFileStore() {

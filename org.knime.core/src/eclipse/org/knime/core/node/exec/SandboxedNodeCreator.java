@@ -223,7 +223,7 @@ public final class SandboxedNodeCreator {
         WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
         creationHelper.setWorkflowContext(ctxFactory.createContext());
         if (!m_copyDataIntoNewContext) {
-            creationHelper.setDataHandlers(parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
+            creationHelper.setWorkflowDataRepository(parent.getWorkflowDataRepository());
         }
 
         WorkflowManager tempWFM =

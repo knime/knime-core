@@ -47,20 +47,26 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import java.util.Optional;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.NodeLogger;
 
-/** Fallback repository that is used when the node is run outside the workflow manager,
- * for instance in the testing environment or using a 3rd party executor.
+/** Fallback repository that is used when the node is run outside the workflow manager, for instance in the
+ * testing environment or using a 3rd party executor.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+public final class NotInWorkflowDataRepository implements IDataRepository {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NotInWorkflowFileStoreHandlerRepository.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NotInWorkflowDataRepository.class);
 
     private IFileStoreHandler m_fileStoreHandler;
+
+    private NotInWorkflowDataRepository() {
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -103,13 +109,33 @@ public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHand
         return defFileStoreHandler;
     }
 
-    /** {@inheritDoc} */
     @Override
-    void printValidFileStoreHandlersToLogDebug() {
+    public void addTable(final int key, final ContainerTable table) {
+        throw new UnsupportedOperationException("'Add' not to be called on "
+                + NotInWorkflowDataRepository.class.getSimpleName());
+    }
+
+    @Override
+    public Optional<ContainerTable> getTable(final int key) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ContainerTable> removeTable(final Integer key) {
+        return Optional.empty();
+    }
+
+    @Override
+    public void printValidFileStoreHandlersToLogDebug() {
         if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
             LOGGER.debug("Single file store handler " + ((IWriteFileStoreHandler)m_fileStoreHandler).getStoreUUID());
         } else {
             LOGGER.debug("No writable file store handler set");
         }
+    }
+
+    /** @return create and return new instance. */
+    public static NotInWorkflowDataRepository newInstance() {
+        return new NotInWorkflowDataRepository();
     }
 }

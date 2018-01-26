@@ -57,14 +57,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.text.NumberFormat;
-import java.util.Map;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.DataContainer.BufferCreator;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -99,10 +98,8 @@ final class CopyOnAccessTask {
     private final DataTableSpec m_spec;
     /** The buffer's id used for blob (de)serialization. */
     private final int m_bufferID;
-    /** Repository of tables in the workflow for blob (de)serialization. */
-    private final Map<Integer, ContainerTable> m_tableRep;
-    /** Workflow global file store repository. */
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    /** file and table store repository. */
+    private final IDataRepository m_dataRepository;
     /** To instantiate the buffer object. */
     private final BufferCreator m_bufferCreator;
     /** Flag to indicate that the buffer needs to restore its content
@@ -114,19 +111,16 @@ final class CopyOnAccessTask {
      * @param fileRef To read from.
      * @param spec The spec to the table in <code>file</code>.
      * @param bufferID The buffer's id used for blob (de)serialization.
-     * @param tblRep Repository of tables for blob (de)serialization.
-     * @param fileStoreHandlerRepository ...
+     * @param dataRepository global data repository
      * @param creator To instantiate the buffer object.
      */
     CopyOnAccessTask(final ReferencedFile fileRef, final DataTableSpec spec,
-            final int bufferID, final Map<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final int bufferID, final IDataRepository dataRepository,
             final BufferCreator creator) {
         m_fileRef = fileRef;
         m_spec = spec;
         m_bufferID = bufferID;
-        m_tableRep = tblRep;
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        m_dataRepository = dataRepository;
         m_bufferCreator = creator;
     }
 
@@ -244,8 +238,8 @@ final class CopyOnAccessTask {
         }
         InputStream metaIn = new BufferedInputStream(
                 new FileInputStream(metaTempFile));
-        Buffer buffer = m_bufferCreator.createBuffer(binFile, blobDir, fileStoreDir,
-                spec, metaIn, m_bufferID, m_tableRep, m_fileStoreHandlerRepository);
+        Buffer buffer =
+            m_bufferCreator.createBuffer(binFile, blobDir, fileStoreDir, spec, metaIn, m_bufferID, m_dataRepository);
         // TODO fix the file ending of the temp file -- purely cosmetic change
         // the below currently doesn't work as we change the file name in the background and that breaks the reader
 //        File binFileParent = binFile.getParentFile();
@@ -284,11 +278,9 @@ final class CopyOnAccessTask {
         m_needsRestoreIntoMemory = true;
     }
 
-    /** Get table repository in workflow for blob (de)serialization.
-     * @return table repository reference
-     */
-    Map<Integer, ContainerTable> getTableRepository() {
-        return m_tableRep;
+    /** @return the dataRepository for blob and file store resolution. */
+    IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     /**

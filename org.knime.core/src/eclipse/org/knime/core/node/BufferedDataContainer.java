@@ -52,10 +52,10 @@ import java.util.Map;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 /**
  * <code>DataContainer</code> to be used during a
@@ -111,7 +111,6 @@ import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 public class BufferedDataContainer extends DataContainer {
 
     private final Node m_node;
-    private final Map<Integer, ContainerTable> m_globalTableRepository;
     private final Map<Integer, ContainerTable> m_localTableRepository;
     private BufferedDataTable m_resultTable;
 
@@ -125,8 +124,6 @@ public class BufferedDataContainer extends DataContainer {
      * @param maxCellsInMemory Number of cells to be kept in memory, if negative
      * use user settings (according to node)
      * being added, see {@link DataContainer#setForceCopyOfBlobs(boolean)}.
-     * @param globalTableRepository
-     *        The global (WFM) table repository for blob (de)serialization.
      * @param localTableRepository
      *        The local (Node) table repository for blob (de)serialization.
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
@@ -134,7 +131,6 @@ public class BufferedDataContainer extends DataContainer {
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain,
             final Node node, final MemoryPolicy policy,
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
-            final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler) {
         // force synchronous IO when the node is a loop end:
@@ -144,7 +140,6 @@ public class BufferedDataContainer extends DataContainer {
                 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
                         node.isForceSychronousIO());
         m_node = node;
-        m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
         super.setFileStoreHandler(fileStoreHandler);
         super.setForceCopyOfBlobs(forceCopyOfBlobs);
@@ -170,14 +165,6 @@ public class BufferedDataContainer extends DataContainer {
     @Override
     protected int createInternalBufferID() {
         return BufferedDataTable.generateNewID();
-    }
-
-    /** Returns the table repository from this workflow.
-     * {@inheritDoc}
-     */
-    @Override
-    protected Map<Integer, ContainerTable> getGlobalTableRepository() {
-        return m_globalTableRepository;
     }
 
     /**
@@ -207,22 +194,18 @@ public class BufferedDataContainer extends DataContainer {
 
     /**
      * Just delegates to
-     * {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map, FileStoreHandlerRepository)}
-     * This method is available in this class to enable other classes in this
-     * package to use it.
+     * {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, WorkflowDataRepository)} This
+     * method is available in this class to enable other classes in this package to use it.
+     *
      * @param zipFileRef Delegated.
      * @param spec Delegated.
      * @param bufID Delegated.
-     * @param bufferRep Delegated.
-     * @param fileStoreHandlerRepository Delegated.
-     * @return {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map, FileStoreHandlerRepository)}
+     * @param dataRepository Delegated.
+     * @return {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, WorkflowDataRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
-    protected static ContainerTable readFromZipDelayed(
-            final ReferencedFile zipFileRef, final DataTableSpec spec,
-            final int bufID, final Map<Integer, ContainerTable> bufferRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        return DataContainer.readFromZipDelayed(zipFileRef, spec,
-                bufID, bufferRep, fileStoreHandlerRepository);
+    protected static ContainerTable readFromZipDelayed(final ReferencedFile zipFileRef, final DataTableSpec spec,
+        final int bufID, final WorkflowDataRepository dataRepository) {
+        return DataContainer.readFromZipDelayed(zipFileRef, spec, bufID, dataRepository);
     }
 }

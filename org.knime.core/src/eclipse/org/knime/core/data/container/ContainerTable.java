@@ -49,7 +49,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
@@ -60,6 +59,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 
 /**
@@ -198,9 +198,8 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public void putIntoTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
-        rep.put(getBufferID(), this);
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
+        dataRepository.addTable(getBufferID(), this);
         /* The following assertion must generally hold. Unfortunately, we have
          * a bug in pre 2.0 versions (bug #1291), which prevents us from
          * enabling this assertion. The bug can lead to different tables with
@@ -218,11 +217,10 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public boolean removeFromTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
-        if (rep.remove(getBufferID()) == null) {
-            LOGGER.debug("Failed to remove container table with id "
-                    + getBufferID() + " from global table repository.");
+    public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
+        if (!dataRepository.removeTable(getBufferID()).isPresent()) {
+            LOGGER.debugWithFormat(
+                "Failed to remove container table with id %d from global table repository.", getBufferID());
             return false;
         }
         return true;
@@ -238,10 +236,10 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
         if (m_buffer != null) {
             m_buffer.clear();
             // it may not even be in there
-            m_buffer.getGlobalRepository().remove(m_buffer.getBufferID());
+            m_buffer.getDataRepository().removeTable(m_buffer.getBufferID());
         }
         if (m_readTask != null) {
-            m_readTask.getTableRepository().remove(m_readTask.getBufferID());
+            m_readTask.getDataRepository().removeTable(m_readTask.getBufferID());
         }
     }
 

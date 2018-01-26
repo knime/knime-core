@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 
@@ -60,8 +61,8 @@ import org.knime.core.data.filestore.FileStoreKey;
  */
 public interface IFileStoreHandler {
 
-    /** @return the fileStoreHandlerRepository */
-    public FileStoreHandlerRepository getFileStoreHandlerRepository();
+    /** @return the data repository for final resolution of the file stores */
+    public IDataRepository getDataRepository();
 
     public void clearAndDispose();
 

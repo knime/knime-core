@@ -50,6 +50,7 @@ package org.knime.core.data.filestore.internal;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
@@ -77,7 +78,7 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public void addToRepository(final FileStoreHandlerRepository repository) {
+    public void addToRepository(final IDataRepository repository) {
         // ignore, handler does not define own file stores (only the start does)
     }
 
@@ -102,8 +103,8 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_reference.getFileStoreHandlerRepository();
+    public IDataRepository getDataRepository() {
+        return m_reference.getDataRepository();
     }
 
     /** {@inheritDoc} */

@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -70,12 +69,12 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -87,6 +86,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.MultiThreadWorker;
 import org.knime.core.util.Pair;
 
@@ -172,15 +172,14 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
      * @param spec The data table spec of the resulting table. This argument is <code>null</code> when the data to
      *            restore is written using KNIME 1.1.x or before.
      * @param tableID buffer ID of underlying buffer.
-     * @param bufferRep Repository of buffers for blob (de)serialization.
-     * @param fileStoreHandlerRepository ...
+     * @param dataRepository Repository of buffers for blob and file store (de)serialization.
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
      * @noreference
      */
     public RearrangeColumnsTable(final ReferencedFile f, final NodeSettingsRO settings,
         final Map<Integer, BufferedDataTable> tblRep, final DataTableSpec spec, final int tableID,
-        final HashMap<Integer, ContainerTable> bufferRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
+        final WorkflowDataRepository dataRepository)
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
@@ -220,8 +219,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
                 CopyOnAccessTask noKeyBufferOnAccessTask =
-                    new CopyOnAccessTask(f, appendSpec, tableID, bufferRep, fileStoreHandlerRepository,
-                        new NoKeyBufferCreator());
+                    new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, new NoKeyBufferCreator());
                 m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
             }
         } else {
@@ -647,9 +645,9 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
      * {@inheritDoc}
      */
     @Override
-    public void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
         if (m_appendTable != null) {
-            rep.put(m_appendTable.getBufferID(), m_appendTable);
+            dataRepository.addTable(m_appendTable.getBufferID(), m_appendTable);
         }
     }
 
@@ -657,11 +655,11 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
      * {@inheritDoc}
      */
     @Override
-    public boolean removeFromTableRepository(final HashMap<Integer, ContainerTable> rep) {
+    public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
         if (m_appendTable != null) {
             int id = m_appendTable.getBufferID();
-            if (rep.remove(id) == null) {
-                LOGGER.debug("Failed to remove appended table with id " + id + " from global table repository.");
+            if (!dataRepository.removeTable(id).isPresent()) {
+                LOGGER.debugWithFormat("Failed to remove appended table with id %s from global table repository.", id);
                 return false;
             }
             return true;
@@ -675,17 +673,15 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
-            final int bufferID, final Map<Integer, ContainerTable> globalTableRep,
-            final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
-            return new NoKeyBuffer(spec, rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
+            final int bufferID, final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(spec, rowsInMemory, bufferID, localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
-            final InputStream metaIn, final int bufID, final Map<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-            return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, tblRep, fileStoreHandlerRepository);
+            final InputStream metaIn, final int bufID, final IDataRepository dataRepository) throws IOException {
+            return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, dataRepository);
         }
     }
 

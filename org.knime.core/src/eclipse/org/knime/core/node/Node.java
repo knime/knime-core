@@ -124,6 +124,7 @@ import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeEndNode;
 import org.knime.core.node.workflow.ScopeStartNode;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
@@ -1594,14 +1595,14 @@ public final class Node implements NodeModelWarningListener {
 
     /** Enumerates the output tables and puts them into the global workflow repository of tables. This method delegates
      * from the NodeContainer class to access a package-scope method in BufferedDataTable.
-     * @param rep The global repository.
+     * @param repository The global repository.
      */
-    public void putOutputTablesIntoGlobalRepository(final HashMap<Integer, ContainerTable> rep) {
+    public void putOutputTablesIntoGlobalRepository(final WorkflowDataRepository repository) {
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
-                t.putIntoTableRepository(rep);
+                t.putIntoTableRepository(repository);
             }
         }
         if (m_internalHeldPortObjects != null) {
@@ -1610,25 +1611,25 @@ public final class Node implements NodeModelWarningListener {
             // tables as similar as possible (particular during load)
             for (PortObject t : m_internalHeldPortObjects) {
                 if (t instanceof BufferedDataTable) {
-                    ((BufferedDataTable)t).putIntoTableRepository(rep);
+                    ((BufferedDataTable)t).putIntoTableRepository(repository);
                 }
             }
         }
     }
 
     /** Reverse operation to
-     * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
+     * {@link #putOutputTablesIntoGlobalRepository(WorkflowDataRepository)}. It will remove
      * all output tables and its delegates from the global table repository.
-     * @param rep The global table rep.
+     * @param dataRepository The global table rep.
      * @return The number of tables effectively removed, used for assertions.
      */
-    public int removeOutputTablesFromGlobalRepository(final HashMap<Integer, ContainerTable> rep) {
+    public int removeOutputTablesFromGlobalRepository(final WorkflowDataRepository dataRepository) {
         int result = 0;
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
-                result += t.removeFromTableRepository(rep, this);
+                result += t.removeFromTableRepository(dataRepository, this);
             }
         }
         return result;

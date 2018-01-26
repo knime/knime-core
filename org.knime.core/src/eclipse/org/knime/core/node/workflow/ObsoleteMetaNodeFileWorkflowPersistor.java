@@ -57,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
@@ -105,12 +104,11 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
 
     ObsoleteMetaNodeFileWorkflowPersistor(
             final HashMap<Integer, ContainerTable> globalRep,
-            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowDataRepository workflowDataRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final FileWorkflowPersistor.LoadVersion version) {
-        super(globalRep, fileStoreHandlerRepository,
-                workflowKNIMEFile, loadHelper, version, false);
+        super(globalRep, workflowDataRepository, workflowKNIMEFile, loadHelper, version, false);
     }
 
     /** {@inheritDoc} */
@@ -197,7 +195,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
     protected FileSingleNodeContainerPersistor
         createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new ObsoleteSpecialNodeFileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
-            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
+            getGlobalTableRepository(), getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     /** {@inheritDoc} */
@@ -423,10 +421,10 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
                 final WorkflowLoadHelper loadHelper,
                 final FileWorkflowPersistor.LoadVersion version,
                 final HashMap<Integer, ContainerTable> globalTableRepository,
-                final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
+                final WorkflowDataRepository workflowDataRepository,
                 final boolean mustWarnOnDataLoadError) {
             super(nodeSettingsFile, loadHelper, version, globalTableRepository,
-                fileStoreHandlerRepository, mustWarnOnDataLoadError);
+                workflowDataRepository, mustWarnOnDataLoadError);
         }
 
         /** {@inheritDoc} */

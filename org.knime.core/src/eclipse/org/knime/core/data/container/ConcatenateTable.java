@@ -46,7 +46,6 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -62,6 +61,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 
@@ -182,15 +182,14 @@ public final class ConcatenateTable implements KnowsRowCountTable {
 
     /** {@inheritDoc} */
     @Override
-    public void putIntoTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
         // no new tables, ignore
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean removeFromTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+            final WorkflowDataRepository dataRepository) {
         // no new tables, ignore
         return false;
     }

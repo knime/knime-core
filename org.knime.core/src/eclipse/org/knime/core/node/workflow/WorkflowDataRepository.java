@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,37 +41,78 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jun 26, 2012 (wiswedel): created
+ *   Jan 23, 2018 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.node.workflow;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
-/** File store handler associated with a workflow. It's a map of
- * store UUIDs to file store handlers. Each file store handler corresponds
- * to a node.
+/**
+ * A repository of all the data elements (tables and file stores) that are held in a workflow. Used to enable
+ * dereferencing blobs, filestores and linked tables.
  *
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @since 2.6
  */
-public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+public class WorkflowDataRepository implements IDataRepository {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(WorkflowFileStoreHandlerRepository.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowDataRepository.class);
+
+    /** Instance used for old workflows where KNIME didn't have blobs and such. */
+    public static final WorkflowDataRepository OLD_WORKFLOWS_INSTANCE = new Version1xWorkflowDataRepository();
+
+    /**
+     * Maps buffer ID (as {@link org.knime.core.data.container.Buffer#getBufferID()} to their tables. Tables are output
+     * tables or node internal held tables.
+     */
+    private final Map<Integer, ContainerTable> m_globalTableRepository;
 
     private final ConcurrentHashMap<UUID, IWriteFileStoreHandler> m_handlerMap;
 
-    /**
-     *  */
-    public WorkflowFileStoreHandlerRepository() {
+    WorkflowDataRepository() {
+        // synchronized as per bug 3383: workflow manager's table repository must synchronized
+        // (problems with GroupLoop start "forgetting" its sorted table)
+        m_globalTableRepository = Collections.synchronizedMap(new HashMap<Integer, ContainerTable>());
         m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
+    }
+
+    @Override
+    public void addTable(final int key, final ContainerTable table) {
+        m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
+    }
+
+    @Override
+    public Optional<ContainerTable> getTable(final int key) {
+        return Optional.ofNullable(m_globalTableRepository.get(key));
+    }
+
+    @Override
+    public Optional<ContainerTable> removeTable(final Integer key) {
+        return Optional.ofNullable(m_globalTableRepository.remove(key));
+    }
+
+    /** Used in test case.
+     * @return the globalTableRepository
+     */
+    Map<Integer, ContainerTable> getGlobalTableRepository() {
+        return m_globalTableRepository;
     }
 
     @Override
@@ -88,33 +130,22 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         if (storeUUID != null) {
             IFileStoreHandler old = m_handlerMap.remove(storeUUID);
             if (old == null) {
-                throw new IllegalArgumentException(
-                        "No such file store hander: " + handler);
+                throw new IllegalArgumentException("No such file store hander: " + handler);
             }
             LOGGER.debug("Removing handler " + handler + " - " + m_handlerMap.size() + " remaining");
         }
     }
 
-    public Collection<IWriteFileStoreHandler> getWriteFileStoreHandlers() {
-        return m_handlerMap.values();
-    }
-
-    /** {@inheritDoc} */
     @Override
     public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
         return m_handlerMap.get(storeHandlerUUID);
     }
 
-    /** Get handler to id, never null.
-     * @param storeHandlerUUID the store id
-     * @return the handler.
-     * @throws IllegalStateException If store is not registered. */
     @Override
     public IFileStoreHandler getHandlerNotNull(final UUID storeHandlerUUID) {
         IFileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
         if (h == null) {
-            final String s =
-                "Unknown file store handler to UUID " + storeHandlerUUID;
+            final String s = "Unknown file store handler to UUID " + storeHandlerUUID;
             LOGGER.error(s);
             printValidFileStoreHandlersToLogDebug();
             throw new IllegalStateException(s);
@@ -122,9 +153,8 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         return h;
     }
 
-    /** {@inheritDoc} */
     @Override
-    void printValidFileStoreHandlersToLogDebug() {
+    public void printValidFileStoreHandlersToLogDebug() {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Valid file store handlers are:");
             LOGGER.debug("--------- Start --------------");
@@ -135,12 +165,49 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         }
     }
 
+    public Collection<IWriteFileStoreHandler> getWriteFileStoreHandlers() {
+        return m_handlerMap.values();
+    }
+
+    /** Restores data files into temp folder (if not done so before). */
+    void ensureOpenAfterLoad() {
+        synchronized (m_globalTableRepository) {
+            m_globalTableRepository.values().stream().forEach(ContainerTable::ensureOpen);
+        }
+        for (IWriteFileStoreHandler writeFileStoreHandler : getWriteFileStoreHandlers()) {
+            try {
+                writeFileStoreHandler.ensureOpenAfterLoad();
+            } catch (IOException e) {
+                LOGGER.error("Could not open file store handler " + writeFileStoreHandler, e);
+            }
+        }
+
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "File store handler repository ("
-            + m_handlerMap.size() + " handler(s))";
+        return String.format("%d table(s), %d file store handler(s)", m_globalTableRepository.size(),
+            m_handlerMap.size());
     }
 
+    private static final class Version1xWorkflowDataRepository extends WorkflowDataRepository {
+        @Override
+        public void addTable(final int key, final ContainerTable table) {
+            throw new UnsupportedOperationException("not to be called");
+        }
+        @Override
+        public Optional<ContainerTable> removeTable(final Integer key) {
+            throw new UnsupportedOperationException("not to be called");
+        }
+        @Override
+        public void addFileStoreHandler(final IWriteFileStoreHandler handler) {
+            throw new UnsupportedOperationException("not to be called");
+        }
+        @Override
+        public void removeFileStoreHandler(final IWriteFileStoreHandler handler) {
+            throw new UnsupportedOperationException("not to be called");
+        }
+    }
 
 }

@@ -49,6 +49,8 @@ package org.knime.core.data.filestore.internal;
 
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
+
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -58,7 +60,7 @@ public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHand
     /**
      * @param storeUUID */
     public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID) {
-        this(storeUUID, new NotInWorkflowFileStoreHandlerRepository());
+        this(storeUUID, NotInWorkflowDataRepository.newInstance());
     }
 
     /**
@@ -71,8 +73,7 @@ public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHand
 
     /**
      * @param storeUUID */
-    public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID,
-            final FileStoreHandlerRepository repository) {
+    public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID, final IDataRepository repository) {
         super("notInWorkflow", storeUUID);
         if (repository == null) {
             throw new NullPointerException("Argument must not be null.");

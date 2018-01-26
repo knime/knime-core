@@ -50,7 +50,6 @@ package org.knime.base.node.preproc.joiner;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -63,7 +62,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -93,7 +91,7 @@ public class JoinerTest {
             (NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
         m_exec =
             new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(dummyFactory),
-                SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
+                SingleNodeContainer.MemoryPolicy.CacheOnDisc);
     }
 
     /**

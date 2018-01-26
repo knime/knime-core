@@ -49,9 +49,10 @@ package org.knime.core.data.container.storage;
 
 import java.io.IOException;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.Buffer;
 import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * The abstract reader for reading specialized table formats.
@@ -62,18 +63,18 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
  */
 public abstract class AbstractTableStoreReader {
 
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
-
-    /** @return the fileStoreHandlerRepository */
-    public final FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
-    }
+    private final IDataRepository m_dataRepository;
 
     /**
-     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
+     * @param dataRepository Non-null repository to retrieve file stores and blobs from.
      */
-    public final void setFileStoreHandlerRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    protected AbstractTableStoreReader(final IDataRepository dataRepository) {
+        m_dataRepository = CheckUtils.checkArgumentNotNull(dataRepository);
+    }
+
+    /** @return the data repository set at construction time, not null. */
+    public final IDataRepository getDataRepository() {
+        return m_dataRepository;
     }
 
     public abstract TableStoreCloseableRowIterator iterator() throws IOException;

@@ -55,7 +55,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.NodeLogger;
 
@@ -104,12 +104,9 @@ class NoKeyBuffer extends Buffer {
      * @param localTblRep Passed on to super.
      * @param fileStoreHandler passed on to super.
      */
-    NoKeyBuffer(final DataTableSpec spec,
-            final int maxRowsInMemory, final int bufferID,
-            final Map<Integer, ContainerTable> tblRep,
-            final Map<Integer, ContainerTable> localTblRep, final IWriteFileStoreHandler fileStoreHandler) {
-        super(spec, maxRowsInMemory, bufferID, tblRep,
-                localTblRep, fileStoreHandler);
+    NoKeyBuffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
+        final Map<Integer, ContainerTable> localTblRep, final IWriteFileStoreHandler fileStoreHandler) {
+        super(spec, maxRowsInMemory, bufferID, localTblRep, fileStoreHandler);
     }
 
     /** Creates new buffer for reading.
@@ -118,17 +115,13 @@ class NoKeyBuffer extends Buffer {
      * @param spec Passed on to super.
      * @param metaIn Passed on to super.
      * @param bufferID Passed on to super.
-     * @param tblRep Passed on to super.
-     * @param fileStoreHandlerRepository Passed to super class.
+     * @param dataRepository Passed to super class.
      * @throws IOException Passed on from super.
      */
-    NoKeyBuffer(final File binFile, final File blobDir,
-            final DataTableSpec spec, final InputStream metaIn,
-            final int bufferID, final Map<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
-            throws IOException {
-        super(binFile, blobDir, /*can't have fs dir in workflow*/null,
-                spec, metaIn, bufferID, tblRep, fileStoreHandlerRepository);
+    NoKeyBuffer(final File binFile, final File blobDir, final DataTableSpec spec, final InputStream metaIn,
+        final int bufferID, final IDataRepository dataRepository)
+        throws IOException {
+        super(binFile, blobDir, /*can't have fs dir in workflow*/null, spec, metaIn, bufferID, dataRepository);
     }
 
     /** {@inheritDoc} */
@@ -161,10 +154,8 @@ class NoKeyBuffer extends Buffer {
 
     /** {@inheritDoc} */
     @Override
-    @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(),
-                getGlobalRepository(), Collections.EMPTY_MAP, castAndGetFileStoreHandler());
+        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(), Collections.emptyMap(), castAndGetFileStoreHandler());
     }
 
 }

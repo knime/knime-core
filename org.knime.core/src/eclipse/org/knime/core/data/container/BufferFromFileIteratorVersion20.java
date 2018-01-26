@@ -351,11 +351,8 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
                 BlobAddress address = inStream.readBlobAddress();
                 Buffer blobBuffer = m_tableFormatReader.getBuffer();
                 if (address.getBufferID() != blobBuffer.getBufferID()) {
-                    ContainerTable cnTbl = blobBuffer.getGlobalRepository().get(address.getBufferID());
-                    if (cnTbl == null) {
-                        throw new IOException(
-                        "Unable to retrieve table that owns the blob cell");
-                    }
+                    ContainerTable cnTbl = blobBuffer.getDataRepository().getTable(address.getBufferID())
+                            .orElseThrow(() -> new IOException("Unable to retrieve table that owns the blob cell"));
                     blobBuffer = cnTbl.getBuffer();
                 }
                 result = new BlobWrapperDataCell(blobBuffer, address, type);
@@ -373,7 +370,7 @@ final class BufferFromFileIteratorVersion20 extends FromFileIterator {
             if (fileStoreKey != null) {
                 FileStoreCell fsCell = (FileStoreCell)result;
                 FileStoreUtil.retrieveFileStoreHandlerFrom(fsCell,
-                        fileStoreKey, m_tableFormatReader.getFileStoreHandlerRepository());
+                        fileStoreKey, m_tableFormatReader.getDataRepository());
             }
             return result;
         }

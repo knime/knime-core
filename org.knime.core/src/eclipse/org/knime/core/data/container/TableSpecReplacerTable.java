@@ -51,7 +51,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -65,6 +64,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 
 /**
@@ -121,8 +121,7 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public void putIntoTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
     }
 
     /**
@@ -130,8 +129,7 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public boolean removeFromTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
         return false;
     }
 

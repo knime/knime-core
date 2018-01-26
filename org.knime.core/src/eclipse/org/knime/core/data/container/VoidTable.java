@@ -49,7 +49,6 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -59,6 +58,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 /**
  * A table that is void and only a placeholder for a streamed output.
@@ -150,12 +150,12 @@ public final class VoidTable implements KnowsRowCountTable {
 
     /** {@inheritDoc} */
     @Override
-    public void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean removeFromTableRepository(final HashMap<Integer, ContainerTable> rep) {
+    public boolean removeFromTableRepository(final WorkflowDataRepository dataRepository) {
         return false;
     }
 

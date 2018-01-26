@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -117,16 +117,15 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell,
-            final FileStoreKey key,
-            final FileStoreHandlerRepository repos) throws IOException {
-        cell.retrieveFileStoreHandlerFrom(key, repos);
+    public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell, final FileStoreKey key,
+        final IDataRepository repository) throws IOException {
+        cell.retrieveFileStoreHandlerFrom(key, repository);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static void retrieveFileStoreHandlerFrom(final FileStorePortObject object,
-        final List<FileStoreKey> keys, final FileStoreHandlerRepository repos) throws IOException {
-        object.retrieveFileStoreHandlerFrom(keys, repos);
+        final List<FileStoreKey> keys, final IDataRepository repository) throws IOException {
+        object.retrieveFileStoreHandlerFrom(keys, repository);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -135,7 +134,7 @@ public final class FileStoreUtil {
         final IWriteFileStoreHandler newHandler) throws IOException {
         List<FileStoreProxy> sourceFSProxies = sourceFSObj.getFileStoreProxies();
         List<FileStoreKey> sourceFSKeys = new ArrayList<FileStoreKey>(sourceFSProxies.size());
-        FileStoreHandlerRepository commonFSHandlerRepo = null;
+        IDataRepository commonDataRepository = null;
         for (FileStoreProxy proxy : sourceFSProxies) {
             FileStoreKey newKey;
             if (newHandler != null) {
@@ -144,16 +143,16 @@ public final class FileStoreUtil {
                 newKey = proxy.getFileStoreKey();
             }
             sourceFSKeys.add(newKey);
-            FileStoreHandlerRepository fsHandlerRepo = proxy.getFileStoreHandler().getFileStoreHandlerRepository();
-            if (commonFSHandlerRepo == null) {
-                commonFSHandlerRepo = fsHandlerRepo;
+            IDataRepository dataRepository = proxy.getFileStoreHandler().getDataRepository();
+            if (commonDataRepository == null) {
+                commonDataRepository = dataRepository;
             } else {
-                assert commonFSHandlerRepo == fsHandlerRepo : "File Stores in port object have different file "
-                        + "store handler repositories: " + commonFSHandlerRepo + " vs. " + fsHandlerRepo;
+                assert commonDataRepository == dataRepository : "File Stores in port object have different data "
+                        + "repositories: " + commonDataRepository + " vs. " + dataRepository;
             }
         }
-        FileStoreHandlerRepository resultRepos = newHandler != null
-                ? newHandler.getFileStoreHandlerRepository() : commonFSHandlerRepo;
+        IDataRepository resultRepos = newHandler != null
+                ? newHandler.getDataRepository() : commonDataRepository;
         resultFSObj.retrieveFileStoreHandlerFrom(sourceFSKeys, resultRepos);
     }
 

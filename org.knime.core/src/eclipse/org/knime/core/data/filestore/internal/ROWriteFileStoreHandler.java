@@ -50,6 +50,7 @@ package org.knime.core.data.filestore.internal;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -64,9 +65,9 @@ import org.knime.core.node.ExecutionContext;
 public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IWriteFileStoreHandler {
 
     /**
-     * @param fileStoreHandlerRepository */
-    public ROWriteFileStoreHandler(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        super(fileStoreHandlerRepository);
+     * @param dataRepository */
+    public ROWriteFileStoreHandler(final IDataRepository dataRepository) {
+        super(dataRepository);
     }
 
     /** {@inheritDoc} */
@@ -83,7 +84,7 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
 
     /** {@inheritDoc} */
     @Override
-    public void addToRepository(final FileStoreHandlerRepository repository) {
+    public void addToRepository(final IDataRepository repository) {
         throw new IllegalStateException("read only file store handler");
     }
 

@@ -50,7 +50,7 @@ package org.knime.core.data.filestore;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 
@@ -87,9 +87,9 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-        m_fileStoreProxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+    final void retrieveFileStoreHandlerFrom(final FileStoreKey key, final IDataRepository dataRepository)
+        throws IOException {
+        m_fileStoreProxy.retrieveFileStoreHandlerFrom(key, dataRepository);
         postConstruct();
     }
 

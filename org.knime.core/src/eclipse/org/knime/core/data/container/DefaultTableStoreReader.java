@@ -49,17 +49,16 @@ package org.knime.core.data.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.Buffer.CompressionFormat;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
@@ -83,9 +82,9 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader implements 
      * @throws InvalidSettingsException
      */
     DefaultTableStoreReader(final File binFile, final DataTableSpec spec, final NodeSettingsRO settings,
-        final Map<Integer, ContainerTable> tblRep, final int version,
-        final boolean isReadRowKey)
-                throws IOException, InvalidSettingsException {
+        final IDataRepository dataRepository, final int version, final boolean isReadRowKey)
+        throws IOException, InvalidSettingsException {
+        super(dataRepository);
         m_binFile = binFile;
         m_spec = spec;
         m_version = version;
@@ -140,7 +139,7 @@ final class DefaultTableStoreReader extends AbstractTableStoreReader implements 
     }
 
     /**
-     * @return numbe of records
+     * @return number of records
      * @see org.knime.core.data.container.Buffer#size()
      */
     long size() {
