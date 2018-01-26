@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other" icon="verifyblob.png">
+    <name>Verify Test Blobs</name>
+    
+    <shortDescription>
+        Checks validity of data created by the corresponding creator node.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        Checks validity of data created by the corresponding creator node. Select the two columns that come from
+        the creator node and. Upon execution it will verify that the string hidden in the blob matches the verification 
+        string.
+        <p>The node will fail if any row isn't valid.</p>
+        </intro>
+
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Test table">The table containing a blob column and their identifiers</inPort>
+        <outPort index="0" name="Test table">The same data.</outPort>
+    </ports>    
+</knimeNode>

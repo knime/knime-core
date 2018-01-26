@@ -111,6 +111,18 @@
             >
       </node>
       <node
+            after="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory"
+            category-path="/testing/filestore"
+            deprecated="false"
+            factory-class="org.knime.testing.node.blob.create.CreateTestBlobNodeFactory">
+      </node>
+      <node
+            after="org.knime.testing.node.blob.create.CreateTestBlobNodeFactory"
+            category-path="/testing/filestore"
+            deprecated="false"
+            factory-class="org.knime.testing.node.blob.verify.VerifyTestBlobNodeFactory">
+      </node>
+      <node
             category-path="/testing"
             factory-class="org.knime.testing.node.logging.LoggerOptionNodeFactory"
             >
@@ -128,7 +140,7 @@
             icon="icons/testing.png"
             level-id="filestore"
             locked="true"
-            name="File Store"
+            name="File Stores and Blobs"
             path="/testing"/>
    </extension>
    <extension

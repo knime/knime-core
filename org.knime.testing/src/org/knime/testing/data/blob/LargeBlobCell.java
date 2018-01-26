@@ -61,11 +61,11 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LargeBlobCell extends BlobDataCell {
+public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
 
     public static final DataType TYPE = DataType.getType(LargeBlobCell.class);
 
-    public static final int SIZE_OF_CELL = 1024 * 1024;
+    public static final int SIZE_OF_CELL = 256 * 256;
 
     /** Don't compress this cell. */
     public static final boolean USE_COMPRESSION = false;
@@ -125,6 +125,11 @@ public class LargeBlobCell extends BlobDataCell {
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((LargeBlobCell)dc).m_identifier.equals(m_identifier);
+    }
+
+    @Override
+    public String getIdentifier() {
+        return m_identifier;
     }
 
     /** {@inheritDoc} */
