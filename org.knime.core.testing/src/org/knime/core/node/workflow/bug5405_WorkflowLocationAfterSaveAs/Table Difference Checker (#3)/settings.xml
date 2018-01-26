@@ -64,8 +64,8 @@
 <entry key="node-name" type="xstring" value="Table Difference Checker"/>
 <entry key="node-bundle-name" type="xstring" value="Test-Node extension for KNIME Workbench"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.testing"/>
-<entry key="node-bundle-vendor" type="xstring" value="KNIME GmbH, Konstanz, Germany"/>
-<entry key="node-bundle-version" type="xstring" value="3.1.0.qualifier"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-bundle-version" type="xstring" value="3.6.0.qualifier"/>
 <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>

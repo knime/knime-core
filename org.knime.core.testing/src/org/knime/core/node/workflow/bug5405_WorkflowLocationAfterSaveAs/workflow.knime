@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="workflow.knime">
-<entry key="created_by" type="xstring" value="3.1.0.qualifier"/>
-<entry key="version" type="xstring" value="3.1.0"/>
+<entry key="created_by" type="xstring" value="3.6.0.qualifier"/>
+<entry key="created_by_nightly" type="xboolean" value="true"/>
+<entry key="version" type="xstring" value="3.6.0Pre"/>
 <entry key="name" type="xstring" isnull="true" value=""/>
 <config key="authorInformation">
 <entry key="authored-by" type="xstring" value="wiswedel"/>
 <entry key="authored-when" type="xstring" value="2014-07-09 13:49:51 +0200"/>
 <entry key="lastEdited-by" type="xstring" value="wiswedel"/>
-<entry key="lastEdited-when" type="xstring" value="2015-11-21 18:08:59 +0100"/>
+<entry key="lastEdited-when" type="xstring" value="2018-01-26 09:37:57 +0100"/>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
 <entry key="state" type="xstring" value="CONFIGURED"/>
@@ -24,8 +25,8 @@
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="140"/>
 <entry key="1" type="xint" value="110"/>
-<entry key="2" type="xint" value="81"/>
-<entry key="3" type="xint" value="79"/>
+<entry key="2" type="xint" value="78"/>
+<entry key="3" type="xint" value="82"/>
 </config>
 </config>
 </config>
@@ -40,8 +41,8 @@
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="140"/>
 <entry key="1" type="xint" value="258"/>
-<entry key="2" type="xint" value="81"/>
-<entry key="3" type="xint" value="79"/>
+<entry key="2" type="xint" value="78"/>
+<entry key="3" type="xint" value="82"/>
 </config>
 </config>
 </config>
@@ -54,10 +55,10 @@
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="330"/>
-<entry key="1" type="xint" value="188"/>
-<entry key="2" type="xint" value="115"/>
-<entry key="3" type="xint" value="95"/>
+<entry key="0" type="xint" value="329"/>
+<entry key="1" type="xint" value="189"/>
+<entry key="2" type="xint" value="111"/>
+<entry key="3" type="xint" value="101"/>
 </config>
 </config>
 </config>
@@ -82,5 +83,7 @@
 <entry key="workflow.editor.gridX" type="xint" value="90"/>
 <entry key="workflow.editor.gridY" type="xint" value="120"/>
 <entry key="workflow.editor.zoomLevel" type="xdouble" value="1.0"/>
+<entry key="workflow.editor.curvedConnections" type="xboolean" value="false"/>
+<entry key="workflow.editor.connectionWidth" type="xint" value="1"/>
 </config>
 </config>
