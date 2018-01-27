@@ -195,36 +195,24 @@ public class DataTableDomainCreator {
         if (mins[col] == null || cell.isMissing()) {
             return;
         }
-        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
-        if (value.isMissing()) {
+
+        final DataCell unwrapped = (cell instanceof BlobWrapperDataCell) ? ((BlobWrapperDataCell)cell).getCell() : cell;
+
+        if (isNaN(unwrapped)) {
             return;
         }
 
         Comparator<DataCell> comparator = comparators[col];
-        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
-            mins[col] = value;
+        if (mins[col].isMissing() || (comparator.compare(unwrapped, mins[col]) < 0)) {
+            mins[col] = unwrapped;
         }
-        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
-            maxs[col] = value;
+        if (maxs[col].isMissing() || (comparator.compare(unwrapped, maxs[col]) > 0)) {
+            maxs[col] = unwrapped;
         }
     }
 
-    /*
-     * Returns
-     * - the cell if it is not a DoubleValue
-     * - the cell if it is not NaN
-     * - a missing cell if it is NaN
-     */
-    private DataCell handleNaN(final DataCell cell) {
-        if (cell instanceof DoubleValue) {
-            if (Double.isNaN(((DoubleValue)cell).getDoubleValue())) {
-                return DataType.getMissingCell();
-            } else {
-                return cell;
-            }
-        } else {
-            return cell;
-        }
+    private boolean isNaN(final DataCell cell) {
+        return cell instanceof DoubleValue && Double.isNaN(((DoubleValue)cell).getDoubleValue());
     }
 
     /**
@@ -289,7 +277,6 @@ public class DataTableDomainCreator {
         }
     }
 
-
     /**
      * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
      * that has been provided to the constructor.
@@ -305,7 +292,7 @@ public class DataTableDomainCreator {
     @Deprecated
     public void updateDomain(final DataTable table, final ExecutionMonitor exec, final int rowCount)
         throws CanceledExecutionException {
-        updateDomain(table, exec, (long) rowCount);
+        updateDomain(table, exec, (long)rowCount);
     }
 
     /**
