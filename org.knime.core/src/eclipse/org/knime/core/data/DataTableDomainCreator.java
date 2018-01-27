@@ -216,7 +216,7 @@ public class DataTableDomainCreator {
      * - a missing cell if it is NaN
      */
     private DataCell handleNaN(final DataCell cell) {
-        if (cell.getType().isCompatible(DoubleValue.class)) {
+        if (cell instanceof DoubleValue) {
             if (Double.isNaN(((DoubleValue)cell).getDoubleValue())) {
                 return DataType.getMissingCell();
             } else {
