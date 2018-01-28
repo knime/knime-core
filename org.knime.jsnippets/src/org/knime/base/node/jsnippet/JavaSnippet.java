@@ -952,6 +952,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
             try {
                 for (final DataRow row : table) {
+                    exec.checkCanceled();
                     factory.getCells(row);
                 }
             } finally {
