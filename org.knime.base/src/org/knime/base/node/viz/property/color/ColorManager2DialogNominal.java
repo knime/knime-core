@@ -199,10 +199,10 @@ final class ColorManager2DialogNominal extends JPanel {
         Map<DataCell, ColorAttr> map = new LinkedHashMap<DataCell, ColorAttr>();
         int idx = 0;
         for (DataCell cell : set) {
-            if (idx >= ColorManager2NodeDialogPane.PALETTE_DEFAULT.length) {
+            if (idx >= ColorManager2NodeDialogPane.PALETTE_SET1.length) {
                 idx = 0;
             }
-            Color color = Color.decode(ColorManager2NodeDialogPane.PALETTE_DEFAULT[idx]);
+            Color color = Color.decode(ColorManager2NodeDialogPane.PALETTE_SET1[idx]);
             map.put(cell, ColorAttr.getInstance(color));
             idx++;
         }

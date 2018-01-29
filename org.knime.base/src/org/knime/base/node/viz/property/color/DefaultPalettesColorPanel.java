@@ -73,30 +73,40 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
 
     private final JButton m_set2Button = new JButton("Apply to columns");
 
-    private final String[] m_paletteDefault;
+    private final JButton m_set3Button = new JButton("Apply to columns");
 
-    private final String[] m_palettePaired;
+    private final String[] m_paletteSet1;
+
+    private final String[] m_paletteSet2;
+
+    private final String[] m_paletteSet3;
+
+    /** Size of the individual elements of a palette. */
+    private static final int PALETTE_ELEMENT_SIZE = 20;
+
+    /** Spacing between the individual elements of a palette. */
+    private static final int PALETTE_ELEMENT_SPACING = 4;
 
     /**
-     * @param paletteDefault the first, default color palette
-     * @param palettePaired the second color palette
+     * @param paletteSet1 the first, default color palette
+     * @param paletteSet2 the second color palette
      */
-    DefaultPalettesColorPanel(final String[] paletteDefault, final String[] palettePaired) {
-        m_paletteDefault = paletteDefault;
-        m_palettePaired = palettePaired;
+    DefaultPalettesColorPanel(final String[] paletteSet1, final String[] paletteSet2, final String[] paletteSet3) {
+        m_paletteSet1 = paletteSet1;
+        m_paletteSet2 = paletteSet2;
+        m_paletteSet3 = paletteSet3;
     }
 
     /**
      * Overwrites the default JPanel to notify the ColorSelectionModel of changes.
      */
     private class PaletteElement extends JPanel {
-        private static final int SIZE = 30;
 
         private Color m_color;
 
-        PaletteElement(final String c) {
+        PaletteElement(final String c, final int size) {
             m_color = Color.decode(c);
-            setPreferredSize(new Dimension(SIZE, SIZE));
+            setPreferredSize(new Dimension(size, size));
             setBackground(m_color);
             addMouseListener(new MouseAdapter(){
                 @Override
@@ -130,15 +140,24 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
     protected void buildChooser() {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         //JPanels
-        JPanel set1Panel = new JPanel(new FlowLayout());
+        JPanel set1Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
         set1Panel.setAlignmentX(LEFT_ALIGNMENT);
-        JPanel set2Panel = new JPanel(new FlowLayout());
+        JPanel set2Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
         set2Panel.setAlignmentX(LEFT_ALIGNMENT);
+        JPanel set3Panel = new JPanel(new FlowLayout(FlowLayout.LEFT, PALETTE_ELEMENT_SPACING, 0));
+        set3Panel.setAlignmentX(LEFT_ALIGNMENT);
 
-        for (int i = 0; i < 12; i++) {
-            set1Panel.add(new PaletteElement(m_paletteDefault[i]));
-            set2Panel.add(new PaletteElement(m_palettePaired[i]));
+        //add colored Panels
+        for (String s : m_paletteSet1) {
+            set1Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
         }
+        for (String s : m_paletteSet2) {
+            set2Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
+        }
+        for (String s : m_paletteSet3) {
+            set3Panel.add(new PaletteElement(s, PALETTE_ELEMENT_SIZE));
+        }
+
         //JButtons Apply
         set1Panel.add(new JPanel());
         m_set1Button.setFont(new Font(m_set1Button.getFont().getName(), Font.PLAIN, m_set1Button.getFont().getSize()));
@@ -146,12 +165,21 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         set2Panel.add(new JPanel());
         m_set2Button.setFont(new Font(m_set2Button.getFont().getName(), Font.PLAIN, m_set2Button.getFont().getSize()));
         set2Panel.add(m_set2Button);
+        JPanel whitespace = new JPanel();
+        whitespace.setPreferredSize(
+            new Dimension(5 * (PALETTE_ELEMENT_SIZE + PALETTE_ELEMENT_SPACING) + 10, PALETTE_ELEMENT_SIZE));
+        set3Panel.add(whitespace);
+
+        m_set3Button.setFont(new Font(m_set3Button.getFont().getName(), Font.PLAIN, m_set3Button.getFont().getSize()));
+        set3Panel.add(m_set3Button);
 
         //JLabels
-        JLabel set1Label = new JLabel("Default");
+        JLabel set1Label = new JLabel("Set 1");
         set1Label.setFont(new Font(set1Label.getFont().getName(), Font.PLAIN, set1Label.getFont().getSize() + 2));
-        JLabel set2Label = new JLabel("Paired");
+        JLabel set2Label = new JLabel("Set 2");
         set2Label.setFont(new Font(set2Label.getFont().getName(), Font.PLAIN, set2Label.getFont().getSize() + 2));
+        JLabel set3Label = new JLabel("Set 3 (colorblind safe)");
+        set3Label.setFont(new Font(set3Label.getFont().getName(), Font.PLAIN, set3Label.getFont().getSize() + 2));
 
         //add panels to layout
         super.add(set1Label);
@@ -161,16 +189,22 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         super.add(set2Label);
         super.add(Box.createVerticalStrut(5));
         super.add(set2Panel);
+        super.add(Box.createVerticalStrut(20));
+        super.add(set3Label);
+        super.add(Box.createVerticalStrut(5));
+        super.add(set3Panel);
 
     }
 
     /**
      * @param al1 the action listener for the first button
      * @param al2 the action listener for the second button
+     * @param al3 the action listener for the third button
      */
-    void addActionListeners(final ActionListener al1, final ActionListener al2) {
+    void addActionListeners(final ActionListener al1, final ActionListener al2, final ActionListener al3) {
         m_set1Button.addActionListener(al1);
         m_set2Button.addActionListener(al2);
+        m_set3Button.addActionListener(al3);
     }
 
     /**
@@ -181,6 +215,7 @@ final class DefaultPalettesColorPanel extends AbstractColorChooserPanel {
         super.setEnabled(enabled);
         m_set1Button.setVisible(enabled);
         m_set2Button.setVisible(enabled);
+        m_set3Button.setVisible(enabled);
     }
 
     /**

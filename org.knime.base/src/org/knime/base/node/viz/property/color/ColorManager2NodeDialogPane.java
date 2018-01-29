@@ -110,13 +110,16 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
     /** Palettes color panel. */
     private final DefaultPalettesColorPanel m_palettesPanel;
 
-    /** Default palette, contributed from http://colorbrewer2.org. */
-    static final String[] PALETTE_DEFAULT = {"#fb8072", "#bc80bd", "#b3de69", "#80b1d3", "#fdb462", "#8dd3c7",
+    /** 'Paired' palette, contributed from http://colorbrewer2.org. */
+    static final String[] PALETTE_SET1 = {"#33a02c", "#e31a1c", "#b15928", "#6a3d9a", "#1f78b4", "#ff7f00",
+        "#b2df8a", "#fdbf6f", "#fb9a99", "#cab2d6", "#a6cee3", "#ffff99"};
+
+    /** 'Set3' palette, contributed from http://colorbrewer2.org. */
+    static final String[] PALETTE_SET2 = {"#fb8072", "#bc80bd", "#b3de69", "#80b1d3", "#fdb462", "#8dd3c7",
         "#bebada", "#ffed6f", "#ccebc5", "#d9d9d9", "#fccde5", "#ffffb3"};
 
-    /** 'Pair' palette, contributed from http://colorbrewer2.org. */
-    static final String[] PALETTE_PAIRED = {"#33a02c", "#e31a1c", "#b15928", "#6a3d9a", "#1f78b4", "#ff7f00",
-        "#b2df8a", "#fdbf6f", "#fb9a99", "#cab2d6", "#a6cee3", "#ffff99"};
+    /** Colorblind safe palette, contributed from Color Universal Design, http://jfly.iam.u-tokyo.ac.jp/color/. */
+    static final String[] PALETTE_SET3 = {"#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"};
 
     /**
      * Creates a new color manager dialog; all color settings are empty.
@@ -155,10 +158,11 @@ final class ColorManager2NodeDialogPane extends NodeDialogPane implements ItemLi
         m_range = new ColorManager2DialogRange();
 
         // add action listener to palette buttons
-        m_palettesPanel = new DefaultPalettesColorPanel(PALETTE_DEFAULT, PALETTE_PAIRED);
-        final ActionListener al1 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_DEFAULT);
-        final ActionListener al2 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_PAIRED);
-        m_palettesPanel.addActionListeners(al1, al2);
+        m_palettesPanel = new DefaultPalettesColorPanel(PALETTE_SET1, PALETTE_SET2, PALETTE_SET3);
+        final ActionListener al1 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET1);
+        final ActionListener al2 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET2);
+        final ActionListener al3 = e -> m_nominal.updateWithPalette(getSelectedColumn(), PALETTE_SET3);
+        m_palettesPanel.addActionListeners(al1, al2, al3);
         // rearrange order of panels
         AbstractColorChooserPanel[] oldPanels = jcc.getChooserPanels();
         AbstractColorChooserPanel[] newPanels = new AbstractColorChooserPanel[oldPanels.length + 2];
