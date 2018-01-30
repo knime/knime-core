@@ -67,7 +67,7 @@ public class OneBlobManyTimesInTableWorkflowTest extends AbstractBlobsInWorkflow
         BufferedDataContainer c = exec.createDataContainer(
                 new DataTableSpec(new DataColumnSpecCreator(
                         "Blobs", LargeBlobCell.TYPE).createSpec()));
-        LargeBlobCell cell = new LargeBlobCell("This is a big cell");
+        LargeBlobCell cell = new LargeBlobCell("This is a big cell", LargeBlobCell.SIZE_OF_CELL);
         for (int i = 0; i < ROW_COUNT; i++) {
             String s = "someName_" + i;
             c.addRowToTable(new DefaultRow(s, cell));

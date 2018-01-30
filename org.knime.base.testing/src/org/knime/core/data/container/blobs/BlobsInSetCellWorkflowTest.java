@@ -84,7 +84,7 @@ public class BlobsInSetCellWorkflowTest extends AbstractBlobsInWorkflowTest {
             for (int j = 0; j < LIST_SIZE * 2; j++) {
                 String val = "Row_" + i + "; Cell index " + j;
                 if (j % 2 == 0) {
-                    cells.add(new LargeBlobCell(val));
+                    cells.add(new LargeBlobCell(val, LargeBlobCell.SIZE_OF_CELL));
                 } else {
                     cells.add(new StringCell(val));
                 }

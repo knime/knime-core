@@ -68,7 +68,7 @@ public class BlobReferenceInWorkflowTest extends AbstractBlobsInWorkflowTest {
                         "Blobs", LargeBlobCell.TYPE).createSpec()));
         for (int i = 0; i < BLOB_COUNT; i++) {
             String s = "someName_" + i;
-            c.addRowToTable(new DefaultRow(s, new LargeBlobCell(s)));
+            c.addRowToTable(new DefaultRow(s, new LargeBlobCell(s, LargeBlobCell.SIZE_OF_CELL)));
         }
         c.close();
         return c.getTable();

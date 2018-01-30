@@ -77,7 +77,7 @@ public class BlobsInSetCellPartiallySingletonsWorkflowTest extends AbstractBlobs
         BufferedDataContainer c = exec.createDataContainer(
                 new DataTableSpec(new DataColumnSpecCreator(
                         "Sequence", t).createSpec()));
-        LargeBlobCell singleton = new LargeBlobCell("singleton");
+        LargeBlobCell singleton = new LargeBlobCell("singleton", LargeBlobCell.SIZE_OF_CELL);
         for (int i = 0; i < ROW_COUNT; i++) {
             String s = "someName_" + i;
             // every other a ordinary string cell
@@ -93,7 +93,7 @@ public class BlobsInSetCellPartiallySingletonsWorkflowTest extends AbstractBlobs
                     cells.add(new StringCell(val));
                     break;
                 case 2:
-                    cells.add(new LargeBlobCell(val));
+                    cells.add(new LargeBlobCell(val, LargeBlobCell.SIZE_OF_CELL));
                     break;
                 default:
                     fail("invalid index");
