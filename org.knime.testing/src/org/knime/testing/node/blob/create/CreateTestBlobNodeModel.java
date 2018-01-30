@@ -108,7 +108,8 @@ final class CreateTestBlobNodeModel extends NodeModel {
             exec.setProgress(i / (double)count, String.format("Row %d", start + i + 1));
             exec.checkCanceled();
             String identifier = String.format("identifier-%03d", start + i);
-            output.push(new DefaultRow(RowKey.createRowKey((long)(start + i)), new LargeBlobCell(identifier),
+            output.push(new DefaultRow(RowKey.createRowKey((long)(start + i)),
+                new LargeBlobCell(identifier, 16 * 16), // workflow size isn't tested, so we can make the blobs small
                 new StringCell(identifier)));
         }
         output.close();

@@ -54,6 +54,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Blob cell that keeps a string identifier and whose size is artifically
@@ -65,12 +66,17 @@ public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
 
     public static final DataType TYPE = DataType.getType(LargeBlobCell.class);
 
-    public static final int SIZE_OF_CELL = 16 * 16;
+    /** (minimum) size of a single blob in bytes. Some test cases test the size of the persisted workflow so it
+     * needs to be sufficiently large to dominate the workflow size. */
+    public static final int SIZE_OF_CELL = 1024 * 1024;
 
     /** Don't compress this cell. */
     public static final boolean USE_COMPRESSION = false;
 
     private final String m_identifier;
+
+    /** The size in bytes as per constructor. */
+    private final int m_sizeOfCell;
 
     public static final DataCellSerializer<LargeBlobCell> getCellSerializer() {
         return new DataCellSerializer<LargeBlobCell>() {
@@ -85,23 +91,24 @@ public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
 
             /** {@inheritDoc} */
             @Override
-            public LargeBlobCell deserialize(final DataCellDataInput input)
-                    throws IOException {
-                for (int i = 0; i < SIZE_OF_CELL / 2; i++) {
+            public LargeBlobCell deserialize(final DataCellDataInput input) throws IOException {
+                int sizeOfCell = input.readInt();
+                CheckUtils.checkArgument(sizeOfCell >= 0, "Negative size %d", sizeOfCell);
+                for (int i = 0; i < sizeOfCell / 2; i++) {
                     input.readByte();
                 }
                 String identifier = input.readUTF();
-                for (int i = 0; i < SIZE_OF_CELL / 2; i++) {
+                for (int i = 0; i < sizeOfCell / 2; i++) {
                     input.readByte();
                 }
-                return new LargeBlobCell(identifier);
+                return new LargeBlobCell(identifier, LargeBlobCell.SIZE_OF_CELL);
             }
 
             /** {@inheritDoc} */
             @Override
-            public void serialize(final LargeBlobCell cell, final DataCellDataOutput output)
-                    throws IOException {
-                byte[] ar = new byte[SIZE_OF_CELL / 2];
+            public void serialize(final LargeBlobCell cell, final DataCellDataOutput output) throws IOException {
+                output.writeInt(cell.m_sizeOfCell);
+                byte[] ar = new byte[cell.m_sizeOfCell / 2];
                 m_random.nextBytes(ar);
                 output.write(ar);
                 output.writeUTF(cell.m_identifier);
@@ -112,13 +119,14 @@ public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
     }
 
     /**
+     * @param identifier The identifier saved in the binary garbage.
+     * @param sizeOfCell The size of the cell in bytes.
      *
      */
-    public LargeBlobCell(final String identifier) {
-        if (identifier == null) {
-            throw new IllegalArgumentException("Identifier must not be null");
-        }
-        m_identifier = identifier;
+    public LargeBlobCell(final String identifier, final int sizeOfCell) {
+        m_identifier = CheckUtils.checkArgumentNotNull(identifier);
+        CheckUtils.checkArgument(sizeOfCell >= 0, "Negative size %d", sizeOfCell);
+        m_sizeOfCell = sizeOfCell;
     }
 
     /** {@inheritDoc} */
