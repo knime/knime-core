@@ -11,6 +11,7 @@ Bundle-Localization: plugin
 Export-Package: org.knime.product,
  org.knime.product.branding,
  org.knime.product.headless,
+ org.knime.product.profiles,
  org.knime.product.rcp
 Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
  org.apache.xalan;bundle-version="[2.7.1,2.8.0)",

@@ -3,6 +3,7 @@
 <plugin>
 
    <extension-point id="splashExtension" name="KNIME Splash Extensions" schema="schema/splashExtension.exsd"/>
+   <extension-point id="profileProvider" name="KNIME Profile Provider" schema="schema/profileProvider.exsd"/>
 
    <extension
          id="KNIME_APPLICATION"
