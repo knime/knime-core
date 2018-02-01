@@ -76,12 +76,20 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 /**
+ * Manager for profiles that should be applied during startup. This includes custom default preferences and
+ * supplementary files such as database drivers. The profiles must be applied as early as possible during startup,
+ * ideally as the first command in the application's start method.
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class ProfileManager {
     private static final ProfileManager INSTANCE = new ProfileManager();
 
+    /**
+     * Returns the singleton instance.
+     *
+     * @return the singleton, never <code>null</code>
+     */
     public static ProfileManager getInstance() {
         return INSTANCE;
     }
@@ -115,7 +123,13 @@ public class ProfileManager {
         m_provider = provider;
     }
 
-    public void applyProfiles() throws CoreException, IOException {
+    /**
+     * Apply the available profiles to this instance. This includes setting new default preferences and copying
+     * supplementary files to instance's configuration area.
+     *
+     * @throws IOException if an I/O error occurs while processing files
+     */
+    public void applyProfiles() throws IOException {
         List<Path> localProfiles = fetchProfileContents();
         applyPreferences(localProfiles);
     }
@@ -124,7 +138,7 @@ public class ProfileManager {
     @SuppressWarnings("restriction")
     private void applyPreferences(final List<Path> profiles) throws IOException {
         if (DefaultPreferences.pluginCustomizationFile != null) {
-            return; // plugin customizations are already explicitly provided
+            return; // plugin customizations are already explicitly provided by someone else
         }
 
         Properties props = new Properties();
@@ -157,7 +171,7 @@ public class ProfileManager {
         DefaultPreferences.pluginCustomizationFile = pluginCustFile.toAbsolutePath().toString();
     }
 
-    private List<Path> fetchProfileContents() throws CoreException {
+    private List<Path> fetchProfileContents() {
         List<String> profiles = m_provider.getRequestedProfiles();
         if (profiles.isEmpty()) {
             return Collections.emptyList();
