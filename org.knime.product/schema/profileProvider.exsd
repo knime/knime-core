@@ -23,7 +23,7 @@
          <attribute name="point" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  The name of the extension point.
                </documentation>
             </annotation>
          </attribute>
@@ -35,7 +35,7 @@
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  The class that implements the profile provider interface. It must have a public no-args constructor and as few dependencies to other plug-ins as possible.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.product.preferences.IProfileProvider"/>
@@ -54,6 +54,16 @@
       </documentation>
    </annotation>
 
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension point=&quot;org.knime.product.profileProvider&quot;&gt;
+    &lt;profileProvider class=&quot;org.knime.product.profiles.ExampleProfileProvider&quot; /&gt;
+&lt;/extension&gt;
+      </documentation>
+   </annotation>
 
 
    <annotation>
@@ -61,7 +71,17 @@
          <meta.section type="implementation"/>
       </appInfo>
       <documentation>
-         See org.knime.product.preferences.DefaultProfileProvider for the default implementation.
+         public class ExampleProfileProvider implements IProfileProvider {
+    @Override
+    public List&lt;String&gt; getRequestedProfiles() {
+        return Arrays.asList(&quot;default&quot;, Platform.getOS());
+    }
+
+    @Override
+    public URI getProfilesLocation() {
+        return URI.create(&quot;http://localhost:8080/knime/rest/v4/profiles&quot;);
+    }
+}
       </documentation>
    </annotation>
 

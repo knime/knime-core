@@ -55,6 +55,9 @@ import java.util.List;
  * Interface for a profile provider. A provider can be registered at the extension point
  * <tt>org.knime.product.profileProvider</tt>. The registered provider is then asked for a list of profiles and their
  * location during startup.
+ * <b>Implementors should use a few plug-in dependecies as possible because otherwise those plug-in get initialized
+ * and applying custom default preferences is no longer possible. Ideally an implementation if this interface sits in
+ * its own plug-in and only has a dependency to <tt>org.knime.product</tt> and doesn't use any other KNIME classes.</b>
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
