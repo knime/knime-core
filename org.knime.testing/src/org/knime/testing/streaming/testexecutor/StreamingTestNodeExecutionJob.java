@@ -122,6 +122,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
     private final List<String> m_warningMessages = new ArrayList<String>(3);
 
+    private final List<BufferedDataContainer> m_tableChunksToBeDisposed = new ArrayList<BufferedDataContainer>();
+
     /**
      * @param nc
      * @param data
@@ -494,6 +496,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             if (numChunks > 1) {
                 removeNodeCopies(remoteNodeContainers);
             }
+
+            /* --- clear/dispose all newly created table chunks if there are any (created via creatTableChunks) --- */
+            m_tableChunksToBeDisposed.forEach(c -> c.dispose());
         }
     }
 
@@ -719,6 +724,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     break;
                 }
                 container = exec.createDataContainer(table.getDataTableSpec());
+
+                //keep track of the table to be disposed when the job is finished
+                m_tableChunksToBeDisposed.add(container);
             }
             container.addRowToTable(it.next());
         }
