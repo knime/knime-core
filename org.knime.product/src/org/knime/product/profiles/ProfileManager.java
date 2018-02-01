@@ -122,6 +122,10 @@ public class ProfileManager {
 
     @SuppressWarnings("restriction")
     private void applyPreferences(final List<Path> profiles) throws IOException {
+        if (DefaultPreferences.pluginCustomizationFile != null) {
+            return; // plugin customizations are already explicitly provided
+        }
+
         Properties props = new Properties();
         for (Path dir : profiles) {
             List<Path> prefFiles = Files.walk(dir).filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".epf"))
