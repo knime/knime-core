@@ -353,4 +353,11 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/viz/roc/ROCCurve.java" type="org.knime.base.node.viz.roc.ROCCurve">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setMaxPoints(int)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
