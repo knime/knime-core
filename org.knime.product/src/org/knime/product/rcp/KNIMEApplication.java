@@ -64,6 +64,7 @@ import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
 import org.knime.product.p2.RepositoryUpdater;
+import org.knime.product.profiles.ProfileManager;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -99,6 +100,8 @@ public class KNIMEApplication implements IApplication {
      */
     @Override
     public Object start(final IApplicationContext appContext) throws Exception {
+        ProfileManager.getInstance().applyProfiles();
+
         Display display = createDisplay();
 
         try {
