@@ -57,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -134,6 +135,15 @@ public class ProfileManager {
                 try (Reader r = Files.newBufferedReader(f, Charset.forName("UTF-8"))) {
                     props.load(r);
                 }
+            }
+        }
+
+        // removed "/instance" prefixes from preferences because otherwise they are not applied as default preferences
+        // (because they are instance preferences...)
+        for (Object key : new HashSet<>(props.keySet())) {
+            if (key.toString().startsWith("/instance/")) {
+                Object value = props.remove(key);
+                props.put(key.toString().substring("/instance/".length()), value);
             }
         }
 
