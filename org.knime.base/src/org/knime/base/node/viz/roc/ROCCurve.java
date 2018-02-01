@@ -146,6 +146,14 @@ public class ROCCurve {
     }
 
     /**
+     * @param maxPoints the maxPoints to set
+     * @since 3.6
+     */
+    protected void setMaxPoints(final int maxPoints) {
+        m_maxPoints = maxPoints;
+    }
+
+    /**
      * Returns the curve's name.
      *
      * @return the curve's name.
