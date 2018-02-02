@@ -79,6 +79,16 @@ public class WorkspaceProfileProvider implements IProfileProvider {
      */
     public static final Path SETTINGS_FILE;
 
+    /**
+     * Constant for the name of the profile location property: {@value}.
+     */
+    public static final String PROFILE_LOCATION = "profileLocation";
+
+    /**
+     * Constant for the name of the profile list property: {@value}.
+     */
+    public static final String PROFILE_LIST = "profileList";
+
     static {
         Bundle myself = FrameworkUtil.getBundle(WorkspaceProfileProvider.class);
         Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
