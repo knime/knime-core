@@ -377,7 +377,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                     ? new QuantileOperator(
                         new OperatorData("Quantile", true, false, DoubleValue.class, INCL_MISSING_CELLS), gSettings,
                         cSettings, percentile, m_estimationSettings.getStringValue())
-                    : new PSquarePercentileOperator(gSettings, cSettings, percentile);
+                    : new PSquarePercentileOperator(gSettings, cSettings, 100 * percentile);
                 aggregators[pos++] = new ColumnAggregator(cSettings.getOriginalColSpec(), method);
             }
         }
@@ -511,8 +511,8 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                     final Map<String, double[]> colsMap = map.get(getGroupKey(groupIndices, row));
                     for (int i = 0; i < noOutliers; i++) {
                         // treat the value of the cell if its a outlier
-                        treatedVals[i] = treatCellValue(repOpt, colsMap.get(outlierColNames[i]),
-                            getDoubleValue(row.getCell(outlierIndices[i])));
+                        treatedVals[i] =
+                            treatCellValue(repOpt, colsMap.get(outlierColNames[i]), row.getCell(outlierIndices[i]));
                     }
                     return treatedVals;
                 }
@@ -528,7 +528,12 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                 boolean toInsert = true;
                 for (final Entry<String, double[]> entry : colsMap.entrySet()) {
                     final int outlierInd = inSpec.findColumnIndex(entry.getKey());
-                    final double val = getDoubleValue(row.getCell(outlierInd));
+                    final DataCell cell = row.getCell(outlierInd);
+                    if (cell.isMissing()) {
+                        toInsert = false;
+                        break;
+                    }
+                    final double val = getDoubleValue(cell);
                     if (val < entry.getValue()[0] || val > entry.getValue()[1]) {
                         toInsert = false;
                         break;
@@ -549,10 +554,14 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      *
      * @param repOpt the selected outlier replacement strategy
      * @param interval the IQR interval
-     * @param val the value of the current data cell
+     * @param cell the the current data cell
      * @return the new data cell after replacing its value if necessary
      */
-    private DataCell treatCellValue(final REPLACEMENT_STRATEGY repOpt, final double[] interval, double val) {
+    private DataCell treatCellValue(final REPLACEMENT_STRATEGY repOpt, final double[] interval, final DataCell cell) {
+        if (cell.isMissing()) {
+            return cell;
+        }
+        double val = getDoubleValue(cell);
         // checks if the value is an outlier
         if (repOpt == REPLACEMENT_STRATEGY.MISSING && (val < interval[0] || val > interval[1])) {
             return DataType.getMissingCell();
