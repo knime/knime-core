@@ -49,13 +49,18 @@
 package org.knime.product.profiles;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +68,9 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipInputStream;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.eclipse.core.internal.preferences.DefaultPreferences;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -72,6 +79,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.knime.core.util.PathUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -171,7 +179,7 @@ public class ProfileManager {
         DefaultPreferences.pluginCustomizationFile = pluginCustFile.toAbsolutePath().toString();
     }
 
-    private List<Path> fetchProfileContents() {
+    private List<Path> fetchProfileContents() throws IOException {
         List<String> profiles = m_provider.getRequestedProfiles();
         if (profiles.isEmpty()) {
             return Collections.emptyList();
@@ -182,7 +190,7 @@ public class ProfileManager {
         if ("file".equalsIgnoreCase(profileLocation.getScheme())) {
             localProfileLocation = Paths.get(profileLocation);
         } else if (profileLocation.getScheme().startsWith("http")) {
-            localProfileLocation = downloadProfiles();
+            localProfileLocation = downloadProfiles(profileLocation);
         } else {
             throw new IllegalArgumentException("Profile from '" + profileLocation.getScheme() + " are not supported");
         }
@@ -194,7 +202,49 @@ public class ProfileManager {
     }
 
 
-    private Path downloadProfiles() {
-        throw new UnsupportedOperationException("Not implemented yet");
+    private Path downloadProfiles(final URI profileLocation) throws IOException {
+        Bundle myself = FrameworkUtil.getBundle(getClass());
+        Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
+        Files.createDirectories(stateDir);
+
+        Path profileDir = stateDir.resolve("profiles");
+        URIBuilder builder = new URIBuilder(profileLocation);
+        builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
+        try {
+            URL profileContentUrl = builder.build().toURL();
+            Path tempDir = Files.createTempDirectory(stateDir, "profile-download");
+            URLConnection conn = profileContentUrl.openConnection();
+
+            int timeout = 2000;
+            String to = System.getProperty("knime.url.timeout", Integer.toString(timeout));
+            try {
+                timeout = Integer.parseInt(to);
+            } catch (NumberFormatException ex) {
+                Platform.getLog(myself).log(new Status(IStatus.WARNING, myself.getSymbolicName(),
+                    "Illegal value for system property knime.url.timeout :" + to, ex));
+            }
+            conn.setConnectTimeout(timeout);
+
+            try (InputStream is = conn.getInputStream()) {
+                PathUtils.unzip(new ZipInputStream(is), tempDir);
+            }
+
+            // replace profiles only if new data has been downloaded successfully
+            PathUtils.deleteDirectoryIfExists(profileDir);
+            Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
+        } catch (URISyntaxException ex) {
+            throw new IOException(ex);
+        } catch (IOException ex) {
+            if (Files.isDirectory(profileDir)) {
+                // Use existing files for now
+                String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". " +
+                        "Will use existing but potentially outdated profiles.";
+                Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(), msg, ex));
+            } else {
+                throw ex;
+            }
+        }
+
+        return profileDir;
     }
 }
