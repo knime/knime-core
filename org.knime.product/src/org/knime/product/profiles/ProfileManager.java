@@ -61,11 +61,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
@@ -105,30 +107,38 @@ public class ProfileManager {
     private final IProfileProvider m_provider;
 
     private ProfileManager() {
-        IProfileProvider provider = new DefaultProfileProvider();
-        if (provider.getRequestedProfiles().isEmpty()) {
-            // only if no profile arguments have been provided on the command line we check for an extension
+        List<Supplier<IProfileProvider>> potentialProviders = Arrays.asList(
+            () -> new CommandlineProfileProvider(),
+            () -> new WorkspaceProfileProvider(),
+            getExtensionPointProviderSupplier());
+
+        m_provider = potentialProviders.stream().map(s -> s.get())
+                .filter(p -> !p.getRequestedProfiles().isEmpty())
+                .findFirst().orElse(new EmptyProfileProvider());
+    }
+
+    private static Supplier<IProfileProvider> getExtensionPointProviderSupplier() {
+        return () -> {
             IExtensionRegistry registry = Platform.getExtensionRegistry();
             IExtensionPoint point = registry.getExtensionPoint("org.knime.product.profileProvider");
 
             Optional<IConfigurationElement> extension =
                     Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).findFirst();
 
+            IProfileProvider provider = new EmptyProfileProvider();
             if (extension.isPresent()) {
                 try {
                     provider = (IProfileProvider)extension.get().createExecutableExtension("class");
                 } catch (CoreException ex) {
-                    Bundle b = FrameworkUtil.getBundle(getClass());
+                    Bundle b = FrameworkUtil.getBundle(ProfileManager.class);
                     Platform.getLog(b).log(new Status(IStatus.ERROR, b.getSymbolicName(),
                         "Could not create profile provider instance from class " + extension.get().getAttribute("class")
-                        + ". Using the default provider instead.",
+                        + ". No profiles will be processed.",
                         ex));
                 }
             }
-
-        }
-
-        m_provider = provider;
+            return provider;
+        };
     }
 
     /**

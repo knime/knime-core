@@ -44,58 +44,68 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   31.01.2018 (thor): created
+ *   02.02.2018 (thor): created
  */
 package org.knime.product.profiles;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
- * Default implementation of a profile provider. It reads the application argument <tt>-profileList</tt> and
- * <tt>-profileLocation</tt> and returns those values. The list should be a comma- or colon-separated list of strings
- * whereas the location should a URI (or an absolute file system path).
+ * Implementation of a profile provider that reads the required parameters from a properties file in the workspace. This
+ * file is created by the profile preference page and is expected to contain two properties <tt>profileList</tt> and
+ * <tt>profileLocation</tt>. The list should be a comma- or colon-separated list of strings whereas the location should
+ * a URI (or an absolute file system path).
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
-public class DefaultProfileProvider implements IProfileProvider {
+public class WorkspaceProfileProvider implements IProfileProvider {
     private List<String> m_requestedProfiles = Collections.emptyList();
 
     private URI m_profilesLocation;
 
-
     /**
      * Creates a new profile provider.
      */
-    public DefaultProfileProvider() {
-        String[] args = Platform.getApplicationArgs();
-        for (int i = 0; i < args.length; i++) {
-            if ("-profileList".equals(args[i])) {
-                if (i + 1 < args.length) {
-                    m_requestedProfiles = Arrays.asList(args[++i].split("[,;:]"));
-                }
-                // else ignore because there is no value
-            } else if ("-profileLocation".equals(args[i])) {
-                if (i + 1 < args.length) {
-                    try {
-                        m_profilesLocation = new URI(args[++i]);
-                        if (m_profilesLocation.getScheme() == null) {
-                            Path p = Paths.get(args[i]);
-                            m_profilesLocation = p.toUri();
-                        }
-                    } catch (URISyntaxException ex) {
-                        Path p = Paths.get(args[i]);
-                        m_profilesLocation = p.toUri();
-                    }
-                }
-                // else ignore because there is no value
+    public WorkspaceProfileProvider() {
+        try {
+            readWorkspaceSettings();
+        } catch (IOException | URISyntaxException ex) {
+            Bundle myself = FrameworkUtil.getBundle(getClass());
+            Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(),
+                "Could not read profile settings from workspace: " + ex.getMessage(), ex));
+        }
+    }
+
+    private void readWorkspaceSettings() throws IOException, URISyntaxException {
+        Bundle myself = FrameworkUtil.getBundle(getClass());
+        Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
+        Path settingsFile = stateDir.resolve("profile-settings.ini");
+        if (Files.isRegularFile(settingsFile)) {
+            Properties props = new Properties();
+            try (InputStream is = Files.newInputStream(settingsFile)) {
+                props.load(is);
+            }
+
+            String profileLocation = props.getProperty("profileLocation");
+            if (profileLocation != null) {
+                m_profilesLocation = new URI(profileLocation);
+                String requestedProfiles = props.getProperty("profileList", "");
+                m_requestedProfiles = Arrays.asList(requestedProfiles.split("[,;:]"));
             }
         }
     }
@@ -118,5 +128,4 @@ public class DefaultProfileProvider implements IProfileProvider {
         }
         return m_profilesLocation;
     }
-
 }
