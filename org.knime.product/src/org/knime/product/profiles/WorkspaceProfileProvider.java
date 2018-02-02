@@ -74,6 +74,17 @@ import org.osgi.framework.FrameworkUtil;
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public class WorkspaceProfileProvider implements IProfileProvider {
+    /**
+     * The file that contains the workspace settings. May not exist.
+     */
+    public static final Path SETTINGS_FILE;
+
+    static {
+        Bundle myself = FrameworkUtil.getBundle(WorkspaceProfileProvider.class);
+        Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
+        SETTINGS_FILE = stateDir.resolve("profile-settings.ini");
+    }
+
     private List<String> m_requestedProfiles = Collections.emptyList();
 
     private URI m_profilesLocation;
@@ -92,12 +103,9 @@ public class WorkspaceProfileProvider implements IProfileProvider {
     }
 
     private void readWorkspaceSettings() throws IOException, URISyntaxException {
-        Bundle myself = FrameworkUtil.getBundle(getClass());
-        Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
-        Path settingsFile = stateDir.resolve("profile-settings.ini");
-        if (Files.isRegularFile(settingsFile)) {
+        if (Files.isRegularFile(SETTINGS_FILE)) {
             Properties props = new Properties();
-            try (InputStream is = Files.newInputStream(settingsFile)) {
+            try (InputStream is = Files.newInputStream(SETTINGS_FILE)) {
                 props.load(is);
             }
 
