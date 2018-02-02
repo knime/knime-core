@@ -52,5 +52,9 @@
               category-path="/analytics/statistics"
               factory-class="org.knime.base.node.stats.correlation.rank.RankCorrelationComputeNodeFactory">
         </node>
+        <node
+              category-path="/analytics/statistics"
+              factory-class="org.knime.base.node.stats.outlier.OutlierDetectorNodeFactory">
+        </node>
    </extension>
 </plugin>
