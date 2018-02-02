@@ -499,6 +499,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
             /* --- clear/dispose all newly created table chunks if there are any (created via creatTableChunks) --- */
             m_tableChunksToBeDisposed.forEach(c -> c.dispose());
+            m_tableChunksToBeDisposed.clear();
         }
     }
 
