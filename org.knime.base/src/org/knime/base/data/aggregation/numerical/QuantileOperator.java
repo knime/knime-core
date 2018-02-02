@@ -94,8 +94,9 @@ public class QuantileOperator extends StoreResizableDoubleArrayOperator {
      * @param opColSettings the operator column specific settings
      * @param quantile the quantile value
      * @param estimation the type of estimation
+     * @since 3.6
      */
-    protected QuantileOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
+    public QuantileOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
         final OperatorColumnSettings opColSettings, final double quantile, final String estimation) {
         super(operatorData, globalSettings, opColSettings);
         m_settings.setQuantile(quantile);

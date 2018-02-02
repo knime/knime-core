@@ -92,8 +92,9 @@ public class PSquarePercentileOperator extends StorelessUnivariantStatisticOpera
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      * @param percentile the percentile value
+     * @since 3.6
      */
-    protected PSquarePercentileOperator(final GlobalSettings globalSettings,
+    public PSquarePercentileOperator(final GlobalSettings globalSettings,
         final OperatorColumnSettings opColSettings, final double percentile) {
         super(new OperatorData("P^2 Percentile", "P^2 percentile", false, false, DoubleValue.class, false),
             globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false), new PSquarePercentile(
