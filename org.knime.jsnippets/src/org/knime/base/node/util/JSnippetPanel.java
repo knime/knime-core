@@ -493,7 +493,13 @@ public class JSnippetPanel extends JPanel {
         return p;
     }
 
-    private void onSelectionInColumnList(final Object selected) {
+    /**
+     * Method that is being called by listener when an object in the column list has been selected.
+     *
+     * @param selected The selected object.
+     * @since 3.6
+     */
+    protected void onSelectionInColumnList(final Object selected) {
         if (selected != null) {
             String enter;
             if (selected instanceof String) {
@@ -509,7 +515,13 @@ public class JSnippetPanel extends JPanel {
         }
     }
 
-    private void onSelectionInVariableList(final Object selected) {
+    /**
+     * Method that is being called by listener when an object in the variable list has been selected.
+     *
+     * @param selected The selected object.
+     * @since 3.6
+     */
+    protected void onSelectionInVariableList(final Object selected) {
         if (selected instanceof FlowVariable) {
             FlowVariable v = (FlowVariable)selected;
             String typeChar;
