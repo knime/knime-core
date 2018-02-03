@@ -115,7 +115,6 @@ import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
-import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
@@ -913,8 +912,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         for (Object ep : getChildren()) {
             if (ep instanceof AbstractPortEditPart) {
                 Object model = ((EditPart)ep).getModel();
-                if (model instanceof NodePort) {
-                    ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
+                if (model instanceof NodePortUI) {
+                    ((AbstractPortEditPart)ep).setIndex(((NodePortUI)model).getPortIndex());
                 }
             }
         }
