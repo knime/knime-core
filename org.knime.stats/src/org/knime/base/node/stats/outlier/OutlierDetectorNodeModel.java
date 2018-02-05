@@ -101,7 +101,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  * Model to identify outliers based on interquartile ranges.
  *
- * @author Mark Ortmann
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
 public final class OutlierDetectorNodeModel extends NodeModel {
 

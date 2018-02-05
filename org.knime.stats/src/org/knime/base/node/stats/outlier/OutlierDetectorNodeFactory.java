@@ -53,8 +53,9 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * Factory class of the outlier detector node.
  *
- * @author Mark Ortmann
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
 public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeModel> {
 
@@ -78,7 +79,8 @@ public class OutlierDetectorNodeFactory extends NodeFactory<OutlierDetectorNodeM
      * {@inheritDoc}
      */
     @Override
-    public NodeView<OutlierDetectorNodeModel> createNodeView(final int viewIndex, final OutlierDetectorNodeModel nodeModel) {
+    public NodeView<OutlierDetectorNodeModel> createNodeView(final int viewIndex,
+        final OutlierDetectorNodeModel nodeModel) {
         return null;
     }
 

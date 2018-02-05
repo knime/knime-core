@@ -75,8 +75,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
+ * The node dialog of the outlier detector node.
  *
- * @author Mark Ortmann
+ * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
 public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
@@ -166,9 +167,8 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         panel.add(m_outlierDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
-        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weighty = 0;
         gbc.gridwidth = 1;
-        //        gbc.weightx = 1;
 
         // add settings panel
         panel.add(createSettingsPanel(), gbc);
@@ -191,6 +191,7 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.weightx = 1;
         gbc.fill = GridBagConstraints.NONE;
 
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "General settings"));
@@ -223,6 +224,7 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.anchor = GridBagConstraints.LINE_START;
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.weightx = 1;
         gbc.fill = GridBagConstraints.NONE;
 
         final JPanel panel = new JPanel(new GridBagLayout());
@@ -258,17 +260,21 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 1;
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        // add component to select the groups
+        m_groupsDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createGroupFilterModel(), 0);
+        panel.add(m_groupsDialog.getComponentPanel(), gbc);
 
+        gbc.weighty = 0;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        ++gbc.gridy;
         // add button to decide whether or not the group information is used by the algorithm
         m_useGroupsDialog =
             new DialogComponentBoolean(OutlierDetectorNodeModel.createUseGroupsModel(), APPLY_TO_GROUPS);
         panel.add(m_useGroupsDialog.getComponentPanel(), gbc);
-
-        ++gbc.gridy;
-        // add component to select the groups
-        m_groupsDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createGroupFilterModel(), 0);
-        panel.add(m_groupsDialog.getComponentPanel(), gbc);
 
         return panel;
     }
