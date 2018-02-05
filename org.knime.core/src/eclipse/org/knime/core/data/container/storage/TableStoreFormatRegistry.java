@@ -52,6 +52,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,6 +93,9 @@ public final class TableStoreFormatRegistry {
 
     /** Preference constant for selecting data storage format. */
     public static final String PREF_KEY_STORAGE_FORMAT = "knime.core.table-store-format";
+
+    /** Preference constant representing the asynchronous cache size. */
+    public static final String PREF_KEY_STORAGE_ASYNC_CACHE_SIZE = "knime.core.table-async-cache-size";
 
     private static TableStoreFormatRegistry INSTANCE = createInstance();
 
@@ -157,9 +161,7 @@ public final class TableStoreFormatRegistry {
         // experimental ORC/hadoop format as default when running nightlies
         String defaultFormatClassName;
         if (KNIMEConstants.isNightlyBuild()) {
-            defaultFormatClassName = DefaultTableStoreFormat.class.getName();
-            // TODO make this the nightly build default once we sort out all(?) problems
-//            defaultFormatClassName = "org.knime.orc.tableformat.OrcTableStoreFormat";
+            defaultFormatClassName = "org.knime.orc.tableformat.OrcTableStoreFormat";
         } else {
             defaultFormatClassName = DefaultTableStoreFormat.class.getName();
         }
@@ -187,6 +189,30 @@ public final class TableStoreFormatRegistry {
             return m_tableStoreFormats.get(0);
         }
         return match.get();
+    }
+
+    /** The 'default' asynchronous cache size. An empty optional if to use the default as per the chosen table format.
+     * @return that value.
+     * @see #getInstanceAsyncCacheSize()
+     */
+    public OptionalInt getDefaultAsyncCacheSize() {
+        int v = CORE_DEFAULT_PREFS.getInt(PREF_KEY_STORAGE_ASYNC_CACHE_SIZE, -1);
+        if (v < 0) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(v);
+    }
+
+    /** The 'instance' asynchronous cache size. If not set, it uses the
+     * {@linkplain #getDefaultAsyncCacheSize() default cache size}.
+     * @return that value.
+     */
+    public OptionalInt getInstanceAsyncCacheSize() {
+        int result = CORE_PREFS.getInt(PREF_KEY_STORAGE_FORMAT, -1);
+        if (result < 0) {
+            return getDefaultAsyncCacheSize();
+        }
+        return OptionalInt.of(result);
     }
 
     /** @return the tableStoreFormats in an unmodifiable list. */

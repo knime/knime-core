@@ -104,6 +104,16 @@ public abstract class AbstractTableStoreWriter implements AutoCloseable {
         return m_spec;
     }
 
+    /** The cache size of a double buffer that is used during writing. The row consumer will add rows to a data
+     * container and that will hand those rows of in batches to the actual implementation in a separate thread.
+     * @return The cache size, driven by a preference setting (if available) and/or the table format's default value.
+     */
+    protected int getAsyncCacheSize() {
+        return TableStoreFormatRegistry.getInstance().getInstanceAsyncCacheSize().orElse(getDefaultAsyncCacheSize());
+    }
+
+    protected abstract int getDefaultAsyncCacheSize();
+
     public abstract void writeRow(final DataRow row) throws IOException;
 
     public abstract void writeMetaInfoAfterWrite(final NodeSettingsWO settings);
