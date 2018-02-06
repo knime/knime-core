@@ -197,21 +197,13 @@ public class PatternFilterPanel<T> extends JPanel {
         m_wildcard.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                PatternFilterType newType = getSelectedFilterType();
-                if (newType != null && m_typeValue != newType) {
-                    m_typeValue = newType;
-                    fireFilteringChangedEvent();
-                }
+                refreshPatternFilterType();
             }
         });
         m_regex.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                PatternFilterType newType = getSelectedFilterType();
-                if (newType != null && m_typeValue != newType) {
-                    m_typeValue = newType;
-                    fireFilteringChangedEvent();
-                }
+                refreshPatternFilterType();
             }
         });
         m_caseSensitive.addChangeListener(new ChangeListener() {
@@ -291,9 +283,11 @@ public class PatternFilterPanel<T> extends JPanel {
         m_names = names;
         m_pattern.setText(config.getPattern());
         if (config.getType().equals(PatternFilterType.Regex)) {
-            m_regex.doClick();
+            m_regex.setSelected(true);
+            refreshPatternFilterType();
         } else if (config.getType().equals(PatternFilterType.Wildcard)) {
-            m_wildcard.doClick();
+            m_wildcard.setSelected(true);
+            refreshPatternFilterType();
         }
         m_caseSensitive.setSelected(config.isCaseSensitive());
         update();
@@ -435,4 +429,14 @@ public class PatternFilterPanel<T> extends JPanel {
         m_additionalCheckbox.setText(newText);
     }
 
+    /**
+     * Refresh the PatternFilterType with the currently selected one.
+     */
+    private void refreshPatternFilterType() {
+        PatternFilterType newType = getSelectedFilterType();
+        if (newType != null && m_typeValue != newType) {
+            m_typeValue = newType;
+            fireFilteringChangedEvent();
+        }
+    }
 }

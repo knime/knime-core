@@ -603,10 +603,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
         this.update(ins, exs, names);
         switch (config.getEnforceOption()) {
             case EnforceExclusion:
-                m_enforceExclusion.doClick();
+                m_enforceExclusion.setSelected(true);
+                cleanInvalidValues();
                 break;
             case EnforceInclusion:
-                m_enforceInclusion.doClick();
+                m_enforceInclusion.setSelected(true);
+                cleanInvalidValues();
                 break;
         }
         m_patternPanel.loadConfiguration(config.getPatternConfig(), names);
