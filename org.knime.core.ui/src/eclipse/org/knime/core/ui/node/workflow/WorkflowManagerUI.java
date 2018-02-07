@@ -1454,4 +1454,22 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      */
     void notifyTemplateConnectionChangedListener();
 
+    /**
+     * Determines whether a workflow is refreshable. If refreshable, the {@link #refresh()} method will be called for
+     * refreshing.
+     *
+     * @return <code>true</code> if the workflow can be refreshed
+     */
+    default boolean isRefreshable() {
+        return false;
+    }
+
+    /**
+     * Refreshes the workflow (e.g. downloads the new state).
+     * Only called when {@link #isRefreshable()} returns <code>true</code>.
+     */
+    default void refresh() {
+        //nothing to do, not refreshable
+    }
+
 }
