@@ -61,6 +61,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -254,12 +257,18 @@ public class ProfileManager {
                     .setConnectionRequestTimeout(timeout)
                     .build();
 
-            Path tempDir = Files.createTempDirectory(stateDir, "profile-download");
 
             try (CloseableHttpClient client = HttpClients.custom()
                     .setDefaultRequestConfig(requestConfig)
                     .setRedirectStrategy(new DefaultRedirectStrategy()).build()) {
                 HttpGet get = new HttpGet(profileUri);
+
+                if (Files.exists(profileDir)) {
+                    Instant lastModified = Files.getLastModifiedTime(profileDir).toInstant();
+                    get.setHeader("If-Modified-Since",
+                        DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModified.atZone(ZoneId.of("GMT"))));
+                }
+
                 try (CloseableHttpResponse response = client.execute(get)) {
                     int code = response.getStatusLine().getStatusCode();
                     if ((code >= 200) && (code < 300)) {
@@ -270,13 +279,15 @@ public class ProfileManager {
                             throw new IOException("Server did not return a ZIP file containing the selected profiles");
                         }
 
+                        Path tempDir = PathUtils.createTempDir("profile-download", stateDir);
                         try (InputStream is = response.getEntity().getContent()) {
                             PathUtils.unzip(new ZipInputStream(is), tempDir);
                         }
+
                         // replace profiles only if new data has been downloaded successfully
                         PathUtils.deleteDirectoryIfExists(profileDir);
                         Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
-                    } else {
+                    } else if (code != 304) { // 304 = Not Modified
                         throw new IOException(response.getStatusLine().getReasonPhrase());
                     }
                 }
