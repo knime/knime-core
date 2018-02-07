@@ -1,0 +1,102 @@
+/*
+ * ------------------------------------------------------------------------
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * -------------------------------------------------------------------
+ *
+ */
+package org.knime.expressions.sets.mathematical;
+
+import org.knime.expressions.AbstractExpression;
+
+/**
+ * Class that provides the script for modulo.
+ * 
+ * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
+ */
+class Modulo extends AbstractExpression implements MathExpression {
+
+	private final static String NAME = "mod";
+
+	private final static String DESCRIPTION = "Computes the modulo of the integers x and y, i.e. the remainder of x/y. <br />"
+			+ "<br />"
+			+ "Example: <ul>"
+			+ "<li> mod(4,2) = 0</li>"
+			+ "<li> mod(2,4) = 0</li>"
+			+ "<li> mod(16,5) = 1</li>"
+			+ "<li> mod(-16,5) = 4</li>"
+			+ "</ul>";
+
+	private final static String SCRIPT = "def " + NAME + "(x, y) {\n"
+			+ "if(x instanceof BigDecimal || y instanceof BigDecimal){ \n"
+			+ "	x1 = new BigDecimal(x);\n"
+			+ "	return x1.remainder(y);\n"
+			+ "} \n"
+			+ "return x.mod(y);}";
+
+	/**
+	 * Creates an object containing the script for AND.
+	 */
+	Modulo() {
+		super(NAME, DESCRIPTION, SCRIPT);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getNrArgs() {
+		return 2;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getDisplayName() {
+		return NAME + "(x, y)";
+	}
+
+	@Override
+	public boolean usesVargArgs() {
+		return false;
+	}
+}
