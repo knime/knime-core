@@ -115,9 +115,6 @@ final class FormulasNodeConfiguration {
 		if (expressionTable.length != 2) {
 			throw new IllegalArgumentException("Number of rows (" + expressionTable.length
 					+ ") of the provided expression table is not equal to 2.");
-		} else if (m_dataTypes != null && expressionTable[0].length != m_dataTypes.length) {
-			throw new IllegalArgumentException(
-					"The number of provided data types is not the same as the number of columns. ");
 		}
 
 		m_expressionTable = expressionTable;
@@ -153,14 +150,14 @@ final class FormulasNodeConfiguration {
 		} catch (InvalidSettingsException e) {
 			throw new InvalidSettingsException("No expressions set.", e);
 		}
+		
+		setExpressionTable(expressionTable);
 
 		try {
 			setDataTypes(settings.getDataTypeArray(TYPE_KEY));
 		} catch (InvalidSettingsException e) {
 			throw new InvalidSettingsException("No types set.");
 		}
-
-		setExpressionTable(expressionTable);
 	}
 
 	/**
