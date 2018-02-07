@@ -367,7 +367,7 @@ public class ExpressionUtils {
 		// classBuilder.append(CLASS_NAME + (counter++));
 		// classBuilder.append("{\n");
 		/* Imports */
-		classBuilder.append(methods[0]);
+		classBuilder.append(methods[1]);
 		classBuilder.append("\n\n");
 		/* Fields */
 		classBuilder.append(columnFields[0]);
@@ -391,7 +391,7 @@ public class ExpressionUtils {
 		classBuilder.append(columnFields[2]);
 		classBuilder.append(specialExpressionFields[2]);
 		/* Methods */
-		classBuilder.append(methods[1]);
+		classBuilder.append(methods[0]);
 		/* End of class */
 		// classBuilder.append("}");
 
