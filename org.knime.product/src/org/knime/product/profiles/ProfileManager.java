@@ -52,10 +52,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,7 +72,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
+import org.apache.http.impl.client.HttpClients;
 import org.eclipse.core.internal.preferences.DefaultPreferences;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -218,13 +226,20 @@ public class ProfileManager {
         Files.createDirectories(stateDir);
 
         Path profileDir = stateDir.resolve("profiles");
-        URIBuilder builder = new URIBuilder(profileLocation);
-        builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
-        try {
-            URL profileContentUrl = builder.build().toURL();
-            Path tempDir = Files.createTempDirectory(stateDir, "profile-download");
-            URLConnection conn = profileContentUrl.openConnection();
 
+        try {
+            URIBuilder builder = new URIBuilder(profileLocation);
+            builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
+            URI profileUri = builder.build();
+
+            // proxies
+            HttpHost proxy = ProxySelector.getDefault().select(profileUri).stream()
+                    .filter(p -> p.address() != null)
+                    .findFirst()
+                    .map(p -> new HttpHost(((InetSocketAddress) p.address()).getAddress()))
+                    .orElse(null);
+
+            // timeout
             int timeout = 2000;
             String to = System.getProperty("knime.url.timeout", Integer.toString(timeout));
             try {
@@ -233,26 +248,50 @@ public class ProfileManager {
                 Platform.getLog(myself).log(new Status(IStatus.WARNING, myself.getSymbolicName(),
                     "Illegal value for system property knime.url.timeout :" + to, ex));
             }
-            conn.setConnectTimeout(timeout);
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setConnectTimeout(timeout)
+                    .setProxy(proxy)
+                    .setConnectionRequestTimeout(timeout)
+                    .build();
 
-            try (InputStream is = conn.getInputStream()) {
-                PathUtils.unzip(new ZipInputStream(is), tempDir);
+            Path tempDir = Files.createTempDirectory(stateDir, "profile-download");
+
+            try (CloseableHttpClient client = HttpClients.custom()
+                    .setDefaultRequestConfig(requestConfig)
+                    .setRedirectStrategy(new DefaultRedirectStrategy()).build()) {
+                HttpGet get = new HttpGet(profileUri);
+                try (CloseableHttpResponse response = client.execute(get)) {
+                    int code = response.getStatusLine().getStatusCode();
+                    if ((code >= 200) && (code < 300)) {
+                        Header ct = response.getFirstHeader("Content-Type");
+                        if ((ct == null) || (ct.getValue() == null) || !ct.getValue().startsWith("application/zip")) {
+                            // this is a workaround because ZipInputStream doesn't complain when the read contents are
+                            // no zip file - it just processes an empty zip
+                            throw new IOException("Server did not return a ZIP file containing the selected profiles");
+                        }
+
+                        try (InputStream is = response.getEntity().getContent()) {
+                            PathUtils.unzip(new ZipInputStream(is), tempDir);
+                        }
+                        // replace profiles only if new data has been downloaded successfully
+                        PathUtils.deleteDirectoryIfExists(profileDir);
+                        Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
+                    } else {
+                        throw new IOException(response.getStatusLine().getReasonPhrase());
+                    }
+                }
             }
-
-            // replace profiles only if new data has been downloaded successfully
-            PathUtils.deleteDirectoryIfExists(profileDir);
-            Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
-        } catch (URISyntaxException ex) {
-            throw new IOException(ex);
         } catch (IOException ex) {
+            String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ".";
             if (Files.isDirectory(profileDir)) {
                 // Use existing files for now
-                String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". " +
-                        "Will use existing but potentially outdated profiles.";
-                Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(), msg, ex));
+                msg += "Will use existing but potentially outdated profiles.";
             } else {
-                throw ex;
+                msg += "No profiles will be applied.";
             }
+            Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(), msg, ex));
+        } catch (URISyntaxException ex) {
+            throw new IOException(ex);
         }
 
         return profileDir;
