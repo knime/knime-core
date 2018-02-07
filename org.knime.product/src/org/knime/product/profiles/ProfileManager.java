@@ -190,7 +190,7 @@ public class ProfileManager {
             }
         }
 
-        Path pluginCustFile = Files.createTempFile("pluginCustomization", ".ini");
+        Path pluginCustFile = PathUtils.createTempFile("pluginCustomization", ".ini");
         // It's important here to write to a stream and not a reader because when reading the file back in
         // org.eclipse.core.internal.preferences.DefaultPreferences.loadProperties(String) also reads from a stream
         // and therefore assumes it's ISO-8859-1 encoded (with replacement for UTF characters).
@@ -200,7 +200,7 @@ public class ProfileManager {
         DefaultPreferences.pluginCustomizationFile = pluginCustFile.toAbsolutePath().toString();
     }
 
-    private List<Path> fetchProfileContents() throws IOException {
+    private List<Path> fetchProfileContents() {
         List<String> profiles = m_provider.getRequestedProfiles();
         if (profiles.isEmpty()) {
             return Collections.emptyList();
@@ -213,24 +213,25 @@ public class ProfileManager {
         } else if (profileLocation.getScheme().startsWith("http")) {
             localProfileLocation = downloadProfiles(profileLocation);
         } else {
-            throw new IllegalArgumentException("Profile from '" + profileLocation.getScheme() + " are not supported");
+            throw new IllegalArgumentException("Profiles from '" + profileLocation.getScheme() + " are not supported");
         }
 
         return profiles.stream().map(p -> localProfileLocation.resolve(p).normalize())
                 .filter(p -> Files.isDirectory(p))
-                .filter(p -> p.startsWith(localProfileLocation)) // remove profiles that are outside the root
+                // remove profiles that are outside the profile root (e.g. with "../" in their name)
+                .filter(p -> p.startsWith(localProfileLocation))
                 .collect(Collectors.toList());
     }
 
 
-    private Path downloadProfiles(final URI profileLocation) throws IOException {
+    private Path downloadProfiles(final URI profileLocation) {
         Bundle myself = FrameworkUtil.getBundle(getClass());
         Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
-        Files.createDirectories(stateDir);
-
         Path profileDir = stateDir.resolve("profiles");
 
         try {
+            Files.createDirectories(stateDir);
+
             URIBuilder builder = new URIBuilder(profileLocation);
             builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
             URI profileUri = builder.build();
@@ -263,7 +264,7 @@ public class ProfileManager {
                     .setRedirectStrategy(new DefaultRedirectStrategy()).build()) {
                 HttpGet get = new HttpGet(profileUri);
 
-                if (Files.exists(profileDir)) {
+                if (Files.isDirectory(profileDir)) {
                     Instant lastModified = Files.getLastModifiedTime(profileDir).toInstant();
                     get.setHeader("If-Modified-Since",
                         DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModified.atZone(ZoneId.of("GMT"))));
@@ -292,7 +293,7 @@ public class ProfileManager {
                     }
                 }
             }
-        } catch (IOException ex) {
+        } catch (IOException | URISyntaxException ex) {
             String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ".";
             if (Files.isDirectory(profileDir)) {
                 // Use existing files for now
@@ -301,8 +302,6 @@ public class ProfileManager {
                 msg += "No profiles will be applied.";
             }
             Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(), msg, ex));
-        } catch (URISyntaxException ex) {
-            throw new IOException(ex);
         }
 
         return profileDir;
