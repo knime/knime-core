@@ -82,9 +82,4 @@ class Log extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "(x, base)";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
 }

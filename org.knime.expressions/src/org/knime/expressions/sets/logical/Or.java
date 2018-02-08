@@ -92,12 +92,4 @@ public class Or extends AbstractExpression implements LogicalExpression {
 	public String getDisplayName() {
 		return NAME + "(val1, val2, ...)";
 	}
-	
-	/**
-	 * 
-	 */
-	@Override
-	public boolean usesVargArgs() {
-		return true;
-	}
 }

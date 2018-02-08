@@ -94,9 +94,4 @@ class Modulo extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "(x, y)";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
 }

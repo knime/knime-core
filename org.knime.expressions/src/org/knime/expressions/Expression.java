@@ -65,9 +65,4 @@ public interface Expression extends Manipulator {
 	 * @return The imports needed to run the method.
 	 */
 	String getImports();
-	
-	/**
-	 * @return {@code true} if the method uses varargs as a parameter.
-	 */
-	boolean usesVargArgs();
 }

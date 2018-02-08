@@ -82,9 +82,4 @@ class Pow extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "(x, pow)";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
 }

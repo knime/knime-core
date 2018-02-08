@@ -89,9 +89,4 @@ class Max extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "(val1, val2, ...)";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return true;
-	}
 }

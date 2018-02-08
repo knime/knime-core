@@ -83,13 +83,4 @@ public class False extends AbstractExpression implements LogicalExpression {
 	public String getDisplayName() {
 		return NAME + "()";
 	}
-
-	/**
-	 * 
-	 */
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
-
 }

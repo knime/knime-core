@@ -82,9 +82,4 @@ class Sqrt extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "(x)";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
 }

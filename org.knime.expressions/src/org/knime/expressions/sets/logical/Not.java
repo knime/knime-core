@@ -83,12 +83,4 @@ public class Not extends AbstractExpression implements LogicalExpression {
 	public String getDisplayName() {
 		return NAME + "(val)";
 	}
-
-	/**
-	 * 
-	 */
-	@Override
-	public boolean usesVargArgs() {
-		return false;
-	}
 }

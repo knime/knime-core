@@ -82,9 +82,4 @@ class Pi extends AbstractExpression implements MathExpression {
 	public String getDisplayName() {
 		return NAME + "()";
 	}
-
-	@Override
-	public boolean usesVargArgs() {
-		return true;
-	}
 }
