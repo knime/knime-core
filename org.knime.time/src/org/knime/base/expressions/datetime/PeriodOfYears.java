@@ -51,7 +51,7 @@ package org.knime.base.expressions.datetime;
 import java.time.LocalTime;
 import java.time.Period;
 
-import org.knime.expressions.AbstractExpression;
+import org.knime.expressions.core.AbstractExpression;
 
 /**
  *
@@ -95,13 +95,5 @@ public class PeriodOfYears extends AbstractExpression implements DateTimeExpress
     @Override
     public Class<?> getReturnType() {
         return Period.class;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean usesVargArgs() {
-        return false;
     }
 }

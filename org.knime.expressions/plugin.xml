@@ -7,16 +7,16 @@
       <node
             category-path="/manipulation/row/row-other/"
             deprecated="false"
-            factory-class="org.knime.expressions.node.formulas.FormulasNodeFactory">
+            factory-class="org.knime.expressions.base.node.formulas.FormulasNodeFactory">
       </node>
    </extension>
    <extension
          point="org.knime.expressions.ExpressionSet">
       <expressionSet
-            expressionSet="org.knime.expressions.sets.logical.LogicalExpressionSet">
+            expressionSet="org.knime.expressions.base.sets.logical.LogicalExpressionSet">
       </expressionSet>
       <expressionSet
-            expressionSet="org.knime.expressions.sets.mathematical.MathematicalExpressionSet">
+            expressionSet="org.knime.expressions.base.sets.mathematical.MathematicalExpressionSet">
       </expressionSet>
    </extension> 
 </plugin>

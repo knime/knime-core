@@ -50,7 +50,7 @@ package org.knime.base.expressions.datetime;
 
 import java.time.LocalTime;
 
-import org.knime.expressions.AbstractExpression;
+import org.knime.expressions.core.AbstractExpression;
 
 /**
  *
@@ -95,13 +95,5 @@ public class LocalTimeFromString extends AbstractExpression implements DateTimeE
     @Override
     public Class<?> getReturnType() {
         return LocalTime.class;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean usesVargArgs() {
-        return false;
     }
 }

@@ -4,7 +4,7 @@
    <extension
          point="org.knime.testing.TestcaseCollector">
       <TestcaseCollector
-            TestcaseCollector="org.knime.expressions.ExpressionsTestCaseCollector">
+            TestcaseCollector="org.knime.expressions.core.ExpressionsTestCaseCollector">
       </TestcaseCollector>
    </extension>
 

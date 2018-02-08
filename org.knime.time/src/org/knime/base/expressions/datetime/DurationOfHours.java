@@ -51,7 +51,7 @@ package org.knime.base.expressions.datetime;
 import java.time.Duration;
 import java.time.LocalTime;
 
-import org.knime.expressions.AbstractExpression;
+import org.knime.expressions.core.AbstractExpression;
 
 /**
  *
@@ -95,13 +95,5 @@ public class DurationOfHours extends AbstractExpression implements DateTimeExpre
     @Override
     public Class<?> getReturnType() {
         return Duration.class;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean usesVargArgs() {
-        return false;
     }
 }

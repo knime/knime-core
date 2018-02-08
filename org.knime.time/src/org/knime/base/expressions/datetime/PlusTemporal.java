@@ -51,7 +51,7 @@ package org.knime.base.expressions.datetime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 
-import org.knime.expressions.AbstractExpression;
+import org.knime.expressions.core.AbstractExpression;
 
 /**
  *
@@ -99,14 +99,6 @@ public class PlusTemporal extends AbstractExpression implements DateTimeExpressi
     @Override
     public Class<?> getReturnType() {
         return Temporal.class;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean usesVargArgs() {
-        return false;
     }
 
     /**

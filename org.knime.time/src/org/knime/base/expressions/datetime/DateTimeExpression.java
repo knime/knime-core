@@ -48,7 +48,7 @@
  */
 package org.knime.base.expressions.datetime;
 
-import org.knime.expressions.Expression;
+import org.knime.expressions.core.Expression;
 
 /**
  * Interface for Date&Time expressions.

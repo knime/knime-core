@@ -4,7 +4,7 @@ Bundle-Name: KNIME Expression Parser
 Bundle-SymbolicName: org.knime.expressions;singleton:=true
 Bundle-Version: 3.6.0.qualifier
 Bundle-ClassPath: .,
- lib/groovy-all-2.4.13.jar
+ lib/groovy-2.4.13.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.base;bundle-version="[3.6.0,4.0.0)",
  org.knime.jsnippets;bundle-version="[3.6.0,4.0.0)",
@@ -16,4 +16,4 @@ Require-Bundle: org.knime.base;bundle-version="[3.6.0,4.0.0)",
  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Export-Package: org.knime.expressions
+Export-Package: org.knime.expressions.core

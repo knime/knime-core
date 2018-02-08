@@ -50,8 +50,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import org.knime.expressions.Expression;
-import org.knime.expressions.ExpressionSet;
+import org.knime.expressions.core.Expression;
+import org.knime.expressions.core.ExpressionSet;
 
 /**
  * An {@link ExpressionSet} for date and time expressions.
@@ -101,7 +101,7 @@ public class LocalDateTimeExpressionSet implements ExpressionSet {
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends Expression> getExpressionManipulators() {
+    public Collection<? extends Expression> getExpressions() {
         return m_expression;
     }
 
