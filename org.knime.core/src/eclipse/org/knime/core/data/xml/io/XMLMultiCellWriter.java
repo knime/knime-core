@@ -59,6 +59,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.XMLValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -197,23 +198,24 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void write(final XMLValue cell)
+	public void write(final XMLValue<Document> cell)
 	throws IOException {
-		Document doc = cell.getDocument();
-		Node child = doc.getFirstChild();
-		Node pre = null;
-		int depth = m_hasDedicatedRoot ? 1 : 0;
-		while (child != null) {
-			try {
-				XMLCellWriterUtil.writeNode(m_writer, child, pre, depth,
-						INDENT_CHAR,
-						LINEFEED_CHAR, m_preserveSpaceStack);
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
-			pre = child;
-			child = child.getNextSibling();
-		}
+        try (AutocloseableSupplier<Document> supplier = cell.getDocumentSupplier()) {
+            Document doc = supplier.get();
+            Node child = doc.getFirstChild();
+            Node pre = null;
+            int depth = m_hasDedicatedRoot ? 1 : 0;
+            while (child != null) {
+                try {
+                    XMLCellWriterUtil.writeNode(m_writer, child, pre, depth, INDENT_CHAR, LINEFEED_CHAR,
+                        m_preserveSpaceStack);
+                } catch (XMLStreamException e) {
+                    throw new IOException(e);
+                }
+                pre = child;
+                child = child.getNextSibling();
+            }
+        }
 	}
 
 

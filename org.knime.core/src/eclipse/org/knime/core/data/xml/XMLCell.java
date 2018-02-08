@@ -59,6 +59,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -68,7 +69,7 @@ import org.xml.sax.SAXException;
  * @author Heiko Hofer
  */
 @SuppressWarnings("serial")
-public class XMLCell extends DataCell implements XMLValue, StringValue {
+public class XMLCell extends DataCell implements XMLValue<Document>, StringValue {
     /**
      * Type for this cell implementation.
      * Convenience access member for {@link XMLCellFactory#TYPE}.
@@ -136,7 +137,10 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #getDocumentSupplier()} instead. See {@link XMLValue#getDocument()} for detailed
+     *             information.
      */
+    @Deprecated
     @Override
     public Document getDocument() {
         return m_content.getDocument();
@@ -162,9 +166,10 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected boolean equalContent(final DataValue otherValue) {
-        return XMLValue.equalContent(this, (XMLValue)otherValue);
+        return XMLValue.equalContent(this, (XMLValue<Document>)otherValue);
     }
 
     /**
@@ -181,5 +186,14 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
     @Override
     public String getStringValue() {
         return m_content.getStringValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public AutocloseableSupplier<Document> getDocumentSupplier() {
+        return m_content.getDocumentSupplier();
     }
 }

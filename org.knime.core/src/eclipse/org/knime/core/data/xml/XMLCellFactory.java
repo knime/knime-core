@@ -207,14 +207,14 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @return DataCell representing the XML document
      * @throws NullPointerException if argument is null
      */
-    public static DataCell create(final XMLValue xml) {
+    public static DataCell create(final XMLValue<Document> xml) {
         if (xml == null) {
             throw new NullPointerException("XMLValue must not be null");
         }
     	if(xml instanceof DataCell) {
     		return (DataCell)xml;
     	} else {
-    		XMLCellContent content = new XMLCellContent(xml.getDocument());
+    		XMLCellContent content = new XMLCellContent(xml.getDocumentSupplier());
             if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
                 return new XMLBlobCell(content);
             } else {

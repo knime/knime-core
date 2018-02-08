@@ -50,6 +50,7 @@ package org.knime.core.data.xml.io;
 import java.io.IOException;
 
 import org.knime.core.data.xml.XMLValue;
+import org.w3c.dom.Document;
 
 /**
  * An object to write xml cells (@link{XMLValue}).
@@ -63,7 +64,7 @@ public interface XMLCellWriter extends AutoCloseable {
 	 * @param cell the cell to write
 	 * @throws IOException when an error occurs while writing
 	 */
-	void write(XMLValue cell) throws IOException;
+	void write(XMLValue<Document> cell) throws IOException;
 
 	/**
 	 * Close resources used for writing the xml cell.

@@ -8,6 +8,7 @@ import org.knime.base.node.preproc.pmml.missingval.MissingCellReplacingDataTable
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -20,6 +21,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.w3c.dom.Document;
 
 /**
  * This is the model implementation of CompiledModelReader.
@@ -50,8 +52,11 @@ public class MissingValueApplyNodeModel extends NodeModel {
         DataTableSpec inSpec = inTable.getDataTableSpec();
 
         PMMLPortObject pmmlIn = (PMMLPortObject)inData[PMML_PORT_IDX];
-        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec,
-                        PMMLDocument.Factory.parse(pmmlIn.getPMMLValue().getDocument()));
+        MissingCellReplacingDataTable mvTable = null;
+
+        try (AutocloseableSupplier<Document> supplier = pmmlIn.getPMMLValue().getDocumentSupplier()) {
+            mvTable = new MissingCellReplacingDataTable(inSpec, PMMLDocument.Factory.parse(supplier.get()));
+        }
 
         // Calculate the statistics
         mvTable.init(inTable, exec.createSubExecutionContext(0.5));

@@ -52,11 +52,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.ref.SoftReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
 import org.knime.core.data.xml.io.XMLCellWriter;
 import org.knime.core.data.xml.io.XMLCellWriterFactory;
@@ -71,12 +73,15 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
-public class XMLCellContent implements XMLValue {
+public class XMLCellContent implements XMLValue<Document> {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(XMLCellContent.class);
+
     private final String m_xmlString;
 
     private SoftReference<Document> m_content;
+
+    private final ReentrantLock m_lock;
 
     /**
      * Creates a {@link Document} by parsing the passed string. It must contain
@@ -114,6 +119,8 @@ public class XMLCellContent implements XMLValue {
             m_xmlString = xmlString;
             m_content = new SoftReference<Document>(null);
         }
+
+        m_lock = new ReentrantLock();
     }
 
     /**
@@ -128,6 +135,7 @@ public class XMLCellContent implements XMLValue {
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
+        m_lock = new ReentrantLock();
         try {
             Document doc = parse(is);
             m_content = new SoftReference<Document>(doc);
@@ -151,6 +159,7 @@ public class XMLCellContent implements XMLValue {
      * @param doc an XML document
      */
     XMLCellContent(final Document doc) {
+        m_lock = new ReentrantLock();
         m_content = new SoftReference<Document>(doc);
         // Transform CDATA to text
         DOMConfiguration domConfig = doc.getDomConfig();
@@ -169,10 +178,45 @@ public class XMLCellContent implements XMLValue {
     }
 
     /**
+     * Creates a new instance which encapsulates the document held by the passed {@link AutocloseableSupplier}.
+     *
+     * @param documentSupplier {@link AutocloseableSupplier} holding the document.
+     * @since 3.6
+     */
+    public XMLCellContent(final AutocloseableSupplier<Document> documentSupplier) {
+        m_lock = new ReentrantLock();
+        String s = null;
+        try {
+            /* Serialize the xml string as in the other constructor.
+             * This guarantees that we work on our own copy later on. */
+            Document doc = documentSupplier.get();
+
+            DOMConfiguration domConfig = doc.getDomConfig();
+            domConfig.setParameter("cdata-sections", Boolean.FALSE);
+            // Resolve entities
+            domConfig.setParameter("entities", Boolean.FALSE);
+            // normalizeDocument adds e.g. missing xmls attributes
+            doc.normalizeDocument();
+
+            s = serialize(documentSupplier.get());
+            m_content = new SoftReference<Document>(null);
+        } catch (IOException ex) {
+            // should not happen
+        }
+
+        m_xmlString = s;
+
+    }
+
+    /**
      * Return the document. The returned document must not be changed!
      *
      * @return The document.
+     *
+     * @deprecated use {@link #getDocumentSupplier()} instead. See {@link XMLValue#getDocument()} for detailed
+     *             information.
      */
+    @Deprecated
     @Override
     public Document getDocument() {
         Document doc = m_content.get();
@@ -198,27 +242,33 @@ public class XMLCellContent implements XMLValue {
 
     private static String serialize(final Document doc) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ReentrantLock lock = new ReentrantLock();
+
         try (XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os)) {
-            writer.write(new XMLValue() {
+            writer.write(new XMLValue<Document>() {
+                @Deprecated
                 @Override
                 public Document getDocument() {
                     return doc;
+                }
+
+                @Override
+                public AutocloseableSupplier<Document> getDocumentSupplier() {
+                    return new AutocloseableSupplier<Document>(doc, lock);
                 }
             });
         }
         return os.toString("UTF-8");
     }
 
-    private static Document parse(final String xmlString) throws IOException,
-            ParserConfigurationException {
-        return XMLCellReaderFactory.createXMLCellReader(new StringReader(xmlString)).readXML()
-                .getDocument();
+    @SuppressWarnings("deprecation")
+    private static Document parse(final String xmlString) throws IOException, ParserConfigurationException {
+        return XMLCellReaderFactory.createXMLCellReader(new StringReader(xmlString)).readXML().getDocument();
     }
 
-    private static Document parse(final InputStream is) throws IOException,
-            ParserConfigurationException {
-        return XMLCellReaderFactory.createXMLCellReader(is).readXML()
-                .getDocument();
+    @SuppressWarnings("deprecation")
+    private static Document parse(final InputStream is) throws IOException, ParserConfigurationException {
+        return XMLCellReaderFactory.createXMLCellReader(is).readXML().getDocument();
     }
 
     /**
@@ -248,5 +298,25 @@ public class XMLCellContent implements XMLValue {
     @Override
     public int hashCode() {
         return XMLValue.hashCode(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.6
+     */
+    @Override
+    public AutocloseableSupplier<Document> getDocumentSupplier() {
+        Document doc = m_content.get();
+        if (doc == null) {
+            try {
+                doc = parse(m_xmlString);
+                m_content = new SoftReference<Document>(doc);
+            } catch (Exception ex) {
+                LOGGER.error("Error while parsing XML in XML Cell", ex);
+            }
+        }
+
+        return new AutocloseableSupplier<Document>(doc, m_lock);
     }
 }

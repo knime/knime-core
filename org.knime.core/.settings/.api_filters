@@ -82,6 +82,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/xml/XMLValue.java" type="org.knime.core.data.xml.XMLValue">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.xml.XMLValue"/>
+                <message_argument value="getDocumentSupplier()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/AbstractNodeView.java" type="org.knime.core.node.AbstractNodeView">
         <filter id="338722907">
             <message_arguments>

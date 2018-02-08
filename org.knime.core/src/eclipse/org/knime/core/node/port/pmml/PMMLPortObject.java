@@ -92,6 +92,7 @@ import org.dmg.pmml.TimeSeriesModelDocument.TimeSeriesModel;
 import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.xml.PMMLCellFactory;
 import org.knime.core.data.xml.PMMLValue;
@@ -267,7 +268,9 @@ public final class PMMLPortObject implements PortObject {
             final PMMLPortObject port, final DataTableSpec inData) {
         m_spec = spec;
         if (port != null) {
-            parse(port.getPMMLValue().getDocument());
+            try (AutocloseableSupplier<Document> supplier = port.getPMMLValue().getDocumentSupplier()) {
+                parse(supplier.get());
+            }
         } else if (inData != null) {
             initializePMMLDocument(inData);
         } else {

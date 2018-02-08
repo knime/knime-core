@@ -61,6 +61,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -148,7 +149,11 @@ public class PMMLBlobCell extends BlobDataCell
 
     /**
      * {@inheritDoc}
+     *
+     * @deprecated use {@link #getDocumentSupplier()} instead. See {@link XMLValue#getDocument()} for detailed
+     *             information.
      */
+    @Deprecated
     @Override
     public Document getDocument() {
         return m_content.getDocument();
@@ -211,6 +216,15 @@ public class PMMLBlobCell extends BlobDataCell
     @Override
     public List<Node> getModels() {
         return m_content.getModels();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.6
+     */
+    @Override
+    public AutocloseableSupplier<Document> getDocumentSupplier() {
+        return m_content.getDocumentSupplier();
     }
 
 }

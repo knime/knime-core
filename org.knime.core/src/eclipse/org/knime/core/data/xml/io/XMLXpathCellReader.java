@@ -164,7 +164,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public XMLValue readXML() throws IOException {
+	public XMLValue<Document> readXML() throws IOException {
 		if (!m_xpathMatcher.nodeMatches()) {
 			return null;
 		}
@@ -230,7 +230,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 						Node curr = m_currNodes.get(i);
 						Node first = m_docs.get(i).getFirstChild();
 						if (curr.isSameNode(first)) {
-							XMLValue cell = null;
+							XMLValue<Document> cell = null;
 						    cell = createDataCell(m_docs.get(i));
 							m_docs.remove(i);
 							m_currNodes.remove(i);
@@ -375,12 +375,13 @@ public class XMLXpathCellReader implements XMLCellReader {
 		m_lang.add(0, lang);
 	}
 
-	/** Create data cell from document. */
-	private XMLValue createDataCell(final Document doc) {
-		// normalizeDocument adds e.g. missing xmls attributes
-		doc.normalizeDocument();
-		return (XMLValue)XMLCellFactory.create(doc);
-	}
+    /** Create data cell from document. */
+    @SuppressWarnings("unchecked")
+    private XMLValue<Document> createDataCell(final Document doc) {
+        // normalizeDocument adds e.g. missing xmls attributes
+        doc.normalizeDocument();
+        return (XMLValue<Document>)XMLCellFactory.create(doc);
+    }
 
 	/**
 	 * {@inheritDoc}

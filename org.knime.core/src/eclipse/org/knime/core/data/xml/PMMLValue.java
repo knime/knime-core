@@ -63,7 +63,7 @@ import org.w3c.dom.Node;
  * @author morent
  *
  */
-public interface PMMLValue extends XMLValue {
+public interface PMMLValue extends XMLValue<Document> {
     /**
      * Meta information to this value type.
      *

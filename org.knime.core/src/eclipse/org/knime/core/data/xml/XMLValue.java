@@ -52,6 +52,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.convert.DataValueAccessMethod;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.util.XmlDomComparer;
 import org.w3c.dom.Document;
 
@@ -60,15 +61,32 @@ import org.w3c.dom.Document;
  * This value encapsulates a {@link Document}.
  *
  * @author Heiko Hofer
+ * @param <T>
  */
-public interface XMLValue extends DataValue {
+public interface XMLValue<T extends Document> extends DataValue {
     /**
-     * Returns the parsed XML document. Note, as per definition of {@link org.knime.core.data.DataCell}
-     * the returned document must not be modified by clients as data cells are read-only.
+     * Returns the parsed XML document. Note, as per definition of {@link org.knime.core.data.DataCell} the returned
+     * document must not be modified by clients as data cells are read-only.
+     *
      * @return the DOM
+     *
+     * @deprecated As DOM documents are not thread-safe (including read-only). Instead use
+     *             {@link #getDocumentSupplier()}, which returns an auto-closable supplier providing a thread-safe usage
+     *             of the DOM.
      */
+    @Deprecated
     @DataValueAccessMethod(name = "Document (XML)")
     Document getDocument();
+
+    /**
+     * Returns the parsed XML document. Note, as per definition of {@link org.knime.core.data.DataCell} the returned
+     * document must not be modified by clients as data cells are read-only.
+     *
+     * @return A supplier wrapping the document for thread-safe usage.
+     *
+     * @since 3.6
+     */
+    AutocloseableSupplier<T> getDocumentSupplier();
 
     /**
      * Meta information to this value type.
@@ -85,8 +103,11 @@ public interface XMLValue extends DataValue {
      * @return <code>true</code> if both values are equal, <code>false</code> otherwise
      * @since 3.0
      */
-    static boolean equalContent(final XMLValue v1, final XMLValue v2) {
-        return XmlDomComparer.equals(v1.getDocument(), v2.getDocument());
+    static boolean equalContent(final XMLValue<Document> v1, final XMLValue<Document> v2) {
+        try (AutocloseableSupplier<Document> s1 = v1.getDocumentSupplier();
+                AutocloseableSupplier<Document> s2 = v2.getDocumentSupplier()) {
+            return XmlDomComparer.equals(s1.get(), s2.get());
+        }
     }
 
     /**
@@ -96,8 +117,10 @@ public interface XMLValue extends DataValue {
      * @return the hashcode
      * @since 3.0
      */
-    static int hashCode(final XMLValue v) {
-        return XmlDomComparer.hashCode(v.getDocument());
+    static int hashCode(final XMLValue<Document> v) {
+        try (AutocloseableSupplier<Document> supplier = v.getDocumentSupplier()) {
+            return XmlDomComparer.hashCode(supplier.get());
+        }
     }
 
     /** Implementations of the meta information of this value class. */

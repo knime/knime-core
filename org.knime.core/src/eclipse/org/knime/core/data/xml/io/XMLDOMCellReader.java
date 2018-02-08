@@ -161,8 +161,9 @@ class XMLDOMCellReader implements XMLCellReader {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public XMLValue readXML() throws IOException {
+    public XMLValue<Document> readXML() throws IOException {
         if (m_first) {
             m_first = false;
 
@@ -173,7 +174,7 @@ class XMLDOMCellReader implements XMLCellReader {
                 throw new IOException(e);
             }
             removeEmptyTextRecursive(doc, new LinkedList<Boolean>());
-            return (XMLValue)XMLCellFactory.create(doc);
+            return (XMLValue<Document>)XMLCellFactory.create(doc);
         } else {
             return null;
         }

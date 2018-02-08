@@ -51,6 +51,7 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.xml.XMLValue;
+import org.w3c.dom.Document;
 
 /**
  * An object to read @link{DataCell}s that can safely be casted to
@@ -66,7 +67,7 @@ public interface XMLCellReader {
 	 * Note that this data cell implements {@link XMLValue}.
 	 * @throws IOException If an error occurred during the read process.
 	 */
-	XMLValue readXML() throws IOException;
+	XMLValue<Document> readXML() throws IOException;
 
 	/**
 	 * Closes any resources need for the read process.

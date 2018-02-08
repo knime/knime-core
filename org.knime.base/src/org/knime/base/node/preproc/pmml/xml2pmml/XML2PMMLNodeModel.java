@@ -62,6 +62,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.PMMLCell;
 import org.knime.core.data.xml.PMMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
@@ -78,6 +79,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.pmml.PMMLUtils;
+import org.w3c.dom.Document;
 
 /**
  * This is the model implementation of XML2PMML.
@@ -252,8 +254,9 @@ public class XML2PMMLNodeModel extends NodeModel {
                         String failure = null;
                         XmlObject xmlDoc;
 
-                        try {
-                            xmlDoc = XmlObject.Factory.parse(((XMLValue)cell).getDocument().cloneNode(true));
+                        try (@SuppressWarnings("unchecked")
+                        AutocloseableSupplier<Document> supplier = ((XMLValue<Document>)cell).getDocumentSupplier()){
+                            xmlDoc = XmlObject.Factory.parse(supplier.get().cloneNode(true));
                             if (xmlDoc instanceof PMMLDocument) {
                                 pmmlDoc = (PMMLDocument)xmlDoc;
                             } else if (PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
