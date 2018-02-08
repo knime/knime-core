@@ -455,7 +455,7 @@ public final class ProjectWorkflowMap {
         NodeContainerUI oldOne = PROJECTS.get(p);
         if (oldOne != null) {
             oldOne.removeNodeStateChangeListener(NSC_LISTENER);
-            Wrapper.unwrapWFM(oldOne).removeListener(WF_LISTENER);
+            ((WorkflowManagerUI)oldOne).removeListener(WF_LISTENER);
             oldOne.removeNodeMessageListener(MSG_LISTENER);
             oldOne.removeNodePropertyChangedListener(NODE_PROP_LISTENER);
         }
@@ -464,9 +464,15 @@ public final class ProjectWorkflowMap {
         manager.addListener(WF_LISTENER);
         manager.addNodeMessageListener(MSG_LISTENER);
         manager.addNodePropertyChangedListener(NODE_PROP_LISTENER);
-        WF_LISTENER.workflowChanged(new WorkflowEvent(
-                WorkflowEvent.Type.NODE_ADDED, manager.getID(), null,
-                Wrapper.unwrapWFM(manager)));
+
+        //so far, the WorkflowManagerUI doesn't allow any edit operations won't trigger any changed events
+        //TODO - needs to be considered in the future! WorkflowEvent consumers then need to be able to work
+        //with WorkflowManagerUI instances, too!
+        if(Wrapper.wraps(manager, WorkflowManager.class)) {
+            WF_LISTENER.workflowChanged(new WorkflowEvent(
+                    WorkflowEvent.Type.NODE_ADDED, manager.getID(), null,
+                    Wrapper.unwrapWFM(manager)));
+        }
     }
 
     /**
