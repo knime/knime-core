@@ -2,7 +2,6 @@ package org.knime.expressions;
 
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.codehaus.groovy.syntax.SyntaxException;
 
 public class ScriptCompilationException extends Exception {
 	/**
@@ -29,7 +28,7 @@ public class ScriptCompilationException extends Exception {
 	public ScriptCompilationException(String message) {
 		super(message);
 	}
-	
+
 	/**
 	 * Constructor taking the message and the causing exception.
 	 * 
@@ -59,13 +58,15 @@ public class ScriptCompilationException extends Exception {
 			 * -- These messages are derived from
 			 * org.codehaus.groovy.antlr.AntlrParserPlugin. --
 			 */
-			
+
 			if (syntaxErrorMessage.contains("class definition not expected here")) {
-				// Class definitions not allowed as the input script is wrapped into a method
+				// Class definitions not allowed as the input script is wrapped
+				// into a method
 				// which is wrapped in class.
 				return "Class definition not allowed in the expression";
 			} else if (syntaxErrorMessage.contains("method definition not expected here")) {
-				// Method definitions not allowed as the input script is wrapped into a method.
+				// Method definitions not allowed as the input script is wrapped
+				// into a method.
 				return "Method definition not allowed in the expression";
 			}
 		}

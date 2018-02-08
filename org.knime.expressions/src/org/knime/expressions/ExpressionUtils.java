@@ -77,9 +77,7 @@ import groovy.lang.GroovyClassLoader;
  */
 public class ExpressionUtils {
 
-	private final static String CLASS_NAME = "KNIME_GroovyClass";
 	private final static String METHOD_NAME = FunctionScript.METHOD_NAME;
-	private static int counter = 0;
 
 	/**
 	 * Parses the script, replaces column, flow variable names, and special

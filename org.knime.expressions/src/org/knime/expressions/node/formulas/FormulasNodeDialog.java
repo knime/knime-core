@@ -259,11 +259,9 @@ final class FormulasNodeDialog extends NodeDialogPane {
 		m_table.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(comboBox));
 
 		// figure out the parent to be able to make the dialog modal
-		Frame f = null;
 		Container c = getPanel().getParent();
 		while (c != null) {
 			if (c instanceof Frame) {
-				f = (Frame) c;
 				break;
 			}
 			c = c.getParent();

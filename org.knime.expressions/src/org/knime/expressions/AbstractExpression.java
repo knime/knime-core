@@ -45,8 +45,6 @@
  */
 package org.knime.expressions;
 
-import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
-
 /**
  * Abstract expression that implements the {@link Expression} interface and
  * basic methods.
@@ -91,8 +89,8 @@ public abstract class AbstractExpression implements Expression {
 	}
 
 	/**
-	 * @return The script containing the method name, parameters, and method-body
-	 *         that computes the expression.
+	 * @return The script containing the method name, parameters, and
+	 *         method-body that computes the expression.
 	 */
 	public String getScript() {
 		return m_script;

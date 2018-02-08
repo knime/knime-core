@@ -50,11 +50,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import org.codehaus.groovy.util.StringUtil;
 import org.knime.expressions.Expression;
 import org.knime.expressions.ExpressionSet;
-
-import groovyjarjarantlr.Utils;
 
 /**
  * An {@link ExpressionSet} for logical expressions.
