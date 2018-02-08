@@ -314,6 +314,12 @@ public abstract class MissingCellHandler {
 
         String factoryID = ext.getValue();
         MissingCellHandlerFactory fac = manager.getFactoryByID(factoryID);
+        if (fac == null) {
+            LOGGER.error("Unknown missing cell handler " + factoryID + ".");
+            final String parts[] = factoryID.split("\\.");
+            throw new InvalidSettingsException("Unknown missing cell handler " + parts[parts.length - 1] + ".");
+        }
+
         if (!fac.isApplicable(column.getType())) {
             throw new InvalidSettingsException("Missing cell handler " + fac.getDisplayName()
                 + " is not applicable for columns of type " + column.getType().toString() + ".");
