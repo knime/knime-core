@@ -337,8 +337,7 @@ public class UnittestRunnerApplication implements IApplication {
                 }
                 m_includePattern = Pattern.compile(stringArgs[i++]);
             } else {
-                System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
-                return false;
+                System.err.println("Unknown option: '" + stringArgs[i++] + "'");
             }
         }
 
