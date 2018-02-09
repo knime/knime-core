@@ -89,6 +89,12 @@ public class WorkspaceProfileProvider implements IProfileProvider {
      */
     public static final String PROFILE_LIST = "profileList";
 
+    /**
+     * Constant for the name of the property that tells whether profiles are enabled or not: {@value}.
+     */
+    public static final String PROFILES_ENABLED = "enabled";
+
+
     static {
         Bundle myself = FrameworkUtil.getBundle(WorkspaceProfileProvider.class);
         Path stateDir = Platform.getStateLocation(myself).toFile().toPath();
@@ -119,8 +125,9 @@ public class WorkspaceProfileProvider implements IProfileProvider {
                 props.load(is);
             }
 
+            boolean enabled = Boolean.valueOf(props.getProperty(PROFILES_ENABLED, "false"));
             String profileLocation = props.getProperty("profileLocation");
-            if (profileLocation != null) {
+            if (enabled && (profileLocation != null)) {
                 m_profilesLocation = new URI(profileLocation);
                 String requestedProfiles = props.getProperty("profileList", "");
                 m_requestedProfiles = Arrays.asList(requestedProfiles.split("[,;:]"));
