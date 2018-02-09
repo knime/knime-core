@@ -76,15 +76,7 @@ public abstract class StoreResizableDoubleArrayOperator extends AggregationOpera
     protected StoreResizableDoubleArrayOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
         final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-        try {
-            int maxVal = getMaxUniqueValues();
-            if (maxVal == 0) {
-                maxVal++;
-            }
-            m_cells = new ResizableDoubleArray(maxVal);
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException("Maximum unique values number too big");
-        }
+        m_cells = new ResizableDoubleArray();
     }
 
     @Override
@@ -93,7 +85,17 @@ public abstract class StoreResizableDoubleArrayOperator extends AggregationOpera
             setSkipMessage("Group contains too many values");
             return true;
         }
-        m_cells.addElement(((DoubleValue)cell).getDoubleValue());
+        // ensure that the array size never exceeds the maximum number of unique values
+        if (m_cells.getInternalValues().length < getMaxUniqueValues()
+            && m_cells.getInternalValues().length * m_cells.getExpansionFactor() > getMaxUniqueValues()) {
+            m_cells.setExpansionFactor((1f * getMaxUniqueValues()) / m_cells.getInternalValues().length);
+        }
+        try {
+            m_cells.addElement(((DoubleValue)cell).getDoubleValue());
+        } catch (final OutOfMemoryError e) {
+            setSkipMessage("Groups requires too much storage");
+            return true;
+        }
         return false;
     }
 
