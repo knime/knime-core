@@ -48,12 +48,14 @@
  */
 package org.knime.testing.internal.diffcheckers;
 
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.data.xml.util.XmlDomComparer;
 import org.knime.core.data.xml.util.XmlDomComparer.Diff;
 import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
+import org.w3c.dom.Document;
 
 /**
  * Checker if two XML documents are equal and outputs a detailed message where they differ otherwise.
@@ -97,12 +99,16 @@ public class XMLChecker extends AbstractDifferenceChecker<XMLValue> {
      */
     @Override
     public Result check(final XMLValue expected, final XMLValue got) {
-        Diff result = XmlDomComparer.compareNodes(expected.getDocument(), got.getDocument());
-        if (result != null) {
-            return new Result(result.toString() + " [expected document: '" + expected.toString() + "', actual '"
-                + got.toString() + "']");
-        } else {
-            return OK;
+        try (AutocloseableSupplier<Document> expSupplier = expected.getDocumentSupplier();
+                AutocloseableSupplier<Document> gotSupplier = got.getDocumentSupplier()) {
+            Diff result = XmlDomComparer.compareNodes(expSupplier.get(), gotSupplier.get());
+
+            if (result != null) {
+                return new Result(result.toString() + " [expected document: '" + expected.toString() + "', actual '"
+                    + got.toString() + "']");
+            } else {
+                return OK;
+            }
         }
     }
 

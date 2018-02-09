@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.dmg.pmml.PMMLDocument;
+import org.knime.core.data.util.AutocloseableSupplier;
 import org.knime.core.data.xml.util.XmlDomComparer.Diff;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -62,6 +63,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -176,18 +178,21 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inPorts, final ExecutionContext exec) throws Exception {
-        PMMLDocument doc1 = PMMLDocument.Factory.parse(((PMMLPortObject)inPorts[0]).getPMMLValue().getDocument());
-        PMMLDocument doc2 = PMMLDocument.Factory.parse(((PMMLPortObject)inPorts[1]).getPMMLValue().getDocument());
+        try (AutocloseableSupplier<Document> sup1 = ((PMMLPortObject)inPorts[0]).getPMMLValue().getDocumentSupplier();
+                AutocloseableSupplier<Document> sup2 =
+                    ((PMMLPortObject)inPorts[1]).getPMMLValue().getDocumentSupplier()) {
+            PMMLDocument doc1 = PMMLDocument.Factory.parse(sup1.get());
+            PMMLDocument doc2 = PMMLDocument.Factory.parse(sup2.get());
 
-        PMMLDocumentComparer comp =
-                new PMMLDocumentComparer(m_checkDataDictionaries.getBooleanValue(),
-                        m_checkTransformationDictionaries.getBooleanValue(), m_checkHeader.getBooleanValue(),
-                        m_checkMiningBuildTask.getBooleanValue(), m_checkModelVerification.getBooleanValue(),
-                        m_checkExtensions.getBooleanValue(), m_checkSchema.getBooleanValue());
+            PMMLDocumentComparer comp = new PMMLDocumentComparer(m_checkDataDictionaries.getBooleanValue(),
+                m_checkTransformationDictionaries.getBooleanValue(), m_checkHeader.getBooleanValue(),
+                m_checkMiningBuildTask.getBooleanValue(), m_checkModelVerification.getBooleanValue(),
+                m_checkExtensions.getBooleanValue(), m_checkSchema.getBooleanValue());
 
-        Diff res = comp.areEqual(doc1, doc2);
-        if (res != null) {
-            throw new IllegalStateException("Mismatch at: " + crToString(res));
+            Diff res = comp.areEqual(doc1, doc2);
+            if (res != null) {
+                throw new IllegalStateException("Mismatch at: " + crToString(res));
+            }
         }
         return new PortObject[0];
     }
