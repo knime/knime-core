@@ -64,6 +64,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -90,9 +91,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.PathUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -106,6 +106,8 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class ProfileManager {
     private static final ProfileManager INSTANCE = new ProfileManager();
+
+    private final List<Runnable> m_collectedLogs = new ArrayList<>(2);
 
     /**
      * Returns the singleton instance.
@@ -129,7 +131,7 @@ public class ProfileManager {
                 .findFirst().orElse(new EmptyProfileProvider());
     }
 
-    private static Supplier<IProfileProvider> getExtensionPointProviderSupplier() {
+    private Supplier<IProfileProvider> getExtensionPointProviderSupplier() {
         return () -> {
             IExtensionRegistry registry = Platform.getExtensionRegistry();
             IExtensionPoint point = registry.getExtensionPoint("org.knime.product.profileProvider");
@@ -142,10 +144,9 @@ public class ProfileManager {
                 try {
                     provider = (IProfileProvider)extension.get().createExecutableExtension("class");
                 } catch (CoreException ex) {
-                    Bundle b = FrameworkUtil.getBundle(ProfileManager.class);
-                    Platform.getLog(b).log(new Status(IStatus.ERROR, b.getSymbolicName(),
-                        "Could not create profile provider instance from class " + extension.get().getAttribute("class")
-                        + ". No profiles will be processed.",
+                    m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).error(
+                        "Could not create profile provider instance from class "
+                            + extension.get().getAttribute("class") + ". No profiles will be processed.",
                         ex));
                 }
             }
@@ -156,12 +157,17 @@ public class ProfileManager {
     /**
      * Apply the available profiles to this instance. This includes setting new default preferences and copying
      * supplementary files to instance's configuration area.
-     *
-     * @throws IOException if an I/O error occurs while processing files
      */
-    public void applyProfiles() throws IOException {
+    public void applyProfiles() {
         List<Path> localProfiles = fetchProfileContents();
-        applyPreferences(localProfiles);
+        try {
+            applyPreferences(localProfiles);
+        } catch (IOException ex) {
+            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass())
+                .error("Could not apply preferences from profiles: " + ex.getMessage(), ex));
+        }
+
+        m_collectedLogs.stream().forEach(r -> r.run());
     }
 
 
@@ -237,6 +243,8 @@ public class ProfileManager {
             builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
             URI profileUri = builder.build();
 
+            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).info("Downloading profiles from " + profileUri));
+
             // proxies
             HttpHost proxy = ProxySelector.getDefault().select(profileUri).stream()
                     .filter(p -> p.address() != null)
@@ -250,8 +258,8 @@ public class ProfileManager {
             try {
                 timeout = Integer.parseInt(to);
             } catch (NumberFormatException ex) {
-                Platform.getLog(myself).log(new Status(IStatus.WARNING, myself.getSymbolicName(),
-                    "Illegal value for system property knime.url.timeout :" + to, ex));
+                m_collectedLogs.add(() -> NodeLogger.getLogger(getClass())
+                    .warn("Illegal value for system property knime.url.timeout :" + to, ex));
             }
             RequestConfig requestConfig = RequestConfig.custom()
                     .setConnectTimeout(timeout)
@@ -307,14 +315,10 @@ public class ProfileManager {
                 }
             }
         } catch (IOException | URISyntaxException ex) {
-            String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". ";
-            if (Files.isDirectory(profileDir)) {
-                // Use existing files for now
-                msg += "Will use existing but potentially outdated profiles.";
-            } else {
-                msg += "No profiles will be applied.";
-            }
-            Platform.getLog(myself).log(new Status(IStatus.ERROR, myself.getSymbolicName(), msg, ex));
+            String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". "
+                + (Files.isDirectory(profileDir) ? "Will use existing but potentially outdated profiles."
+                    : "No profiles will be applied.");
+            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).error(msg, ex));
         }
 
         return profileDir;
