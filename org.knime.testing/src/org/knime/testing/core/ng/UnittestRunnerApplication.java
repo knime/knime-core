@@ -73,6 +73,7 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.workflow.BatchExecutor;
+import org.knime.product.profiles.ProfileManager;
 
 /**
  * This application runs all Unit tests it can find. It collects all classes by querying implementations of
@@ -122,6 +123,8 @@ public class UnittestRunnerApplication implements IApplication {
 
     @Override
     public Object start(final IApplicationContext context) throws Exception {
+        ProfileManager.getInstance().applyProfiles();
+
         PlatformUI.createDisplay(); // create a display because some tests may need it
         context.applicationRunning();
         Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);

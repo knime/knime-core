@@ -72,6 +72,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
+import org.knime.product.profiles.ProfileManager;
 import org.knime.testing.core.TestrunConfiguration;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -115,6 +116,8 @@ public class TestflowRunnerApplication implements IApplication {
     @Override
     public Object start(final IApplicationContext context) throws Exception {
         final long globalStartTime = System.currentTimeMillis();
+        ProfileManager.getInstance().applyProfiles();
+
         // we need a display, initialized as early as possible, otherwise closing JFrames may result
         // in X errors (BadWindow) under Linux
         PlatformUI.createDisplay();
