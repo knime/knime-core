@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.data.aggregation.AggregationMethod;
@@ -83,6 +84,9 @@ import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
+import org.knime.core.data.def.IntCell.IntCellFactory;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -96,7 +100,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.filter.InputFilter;
 
 /**
  * Model to identify outliers based on interquartile ranges.
@@ -105,14 +111,33 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public final class OutlierDetectorNodeModel extends NodeModel {
 
+    /** Missing input exception text. */
+    private static final String MISSING_INPUT_EXCEPTION = "No data table available!";
+
+    /** Empty table warning text. */
+    private static final String EMPTY_TABLE_WARNING = "Node created an empty data table.";
+
+    /** Invalid input exception text. */
+    private static final String INVALID_INPUT_EXCEPTION = "No double compatible columns in input";
+
+    /** Missing outlier column exception text. */
+    private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at leaste one numerical column!";
+
+    /** Scalar exception text. */
+    private static final String SCALAR_EXCEPTIOn = "The IQR scalar has to be greater than or equal 0.";
+
+    /** The default groups name. */
+    private static final String DEFAULT_GROUPS_NAME = "none";
+
+    /** Exception message if the MemoryGroupByTable execution fails due to heap-space problems. */
+    private static final String MEMORY_EXCEPTION =
+        "Outlier detection requires more heap-space than provided. Please change to out of memory computation, or increase the provided heap-space.";
+
     /** Treatment of missing cells. */
     private static final boolean INCL_MISSING_CELLS = false;
 
     /** The percentile values. */
     private static final double[] PERCENTILE_VALUES = new double[]{.25, .75};
-
-    /** Default number of max unique values used by {@link BigGroupByTable} */
-    private static final int DEFAULT_MAX_UNIQUE_VALS = (int)1e4;
 
     /** Number of data in-ports. */
     private static final int NBR_INPORTS = 1;
@@ -124,13 +149,13 @@ public final class OutlierDetectorNodeModel extends NodeModel {
     private static final String CFG_USE_GROUPS = "use-groups";
 
     /** Config key of the parameter. */
-    private static final String CFG_TUKEY_PAR = "tukeys-parameter";
+    private static final String CFG_SCALAR_PAR = "iqr-scalar";
 
     /** Config key of the columns defining the groups. */
     private static final String CFG_GROUP_COLS = "groups-list";
 
-    /** Config key of the columns need to be processed. */
-    private static final String CFG_PROCESS_COLS = "columns-to-process-list";
+    /** Config key of the (outlier)-columns to process. */
+    private static final String CFG_OUTLIER_COLS = "outlier-list";
 
     /** Config key of the included columns. */
     private static final String CFG_MEM_POLICY = "memory-policy";
@@ -177,10 +202,13 @@ public final class OutlierDetectorNodeModel extends NodeModel {
     /**
      * Enum encoding the outlier treatment.
      *
-     * @author Mark Ortmann
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
     enum TREATMENT_OPTIONS {
-            REPLACE("Replace"), FILTER("Filter");
+            REPLACE("Replace Value"), FILTER("Remove Row");
+
+        /** IllegalArgumentException prefix. */
+        private static final String ARGUMENT_EXCEPTION_PREFIX = "No TREATMENT_OPTIONS constant with name: ";
 
         private final String m_name;
 
@@ -198,8 +226,9 @@ public final class OutlierDetectorNodeModel extends NodeModel {
          *
          * @param name enum name
          * @return the enum
+         * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
          */
-        static TREATMENT_OPTIONS getEnum(final String name) {
+        static TREATMENT_OPTIONS getEnum(final String name) throws IllegalArgumentException {
             if (name == null) {
                 throw new NullPointerException("Name is null");
             }
@@ -208,7 +237,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                     return op;
                 }
             }
-            throw new IllegalArgumentException("No TREATMENT_OPTIONS constant with name: " + name);
+            throw new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name);
         }
 
     }
@@ -216,10 +245,13 @@ public final class OutlierDetectorNodeModel extends NodeModel {
     /**
      * Enum encoding the replacement strategy.
      *
-     * @author Mark Ortmann
+     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
     enum REPLACEMENT_STRATEGY {
-            MISSING("Missing values"), IQR("Closest interval boundary");
+            MISSING("Missing values"), INTERVAL_BOUNDARY("Closest allowed value");
+
+        /** IllegalArgumentException prefix. */
+        private static final String ARGUMENT_EXCEPTION_PREFIX = "No REPLACEMENT_OPTIONS constant with name: ";
 
         private final String m_name;
 
@@ -237,8 +269,9 @@ public final class OutlierDetectorNodeModel extends NodeModel {
          *
          * @param name the enum name
          * @return the enum
+         * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
          */
-        static REPLACEMENT_STRATEGY getEnum(final String name) {
+        static REPLACEMENT_STRATEGY getEnum(final String name) throws IllegalArgumentException {
             if (name == null) {
                 throw new NullPointerException("Name is null");
             }
@@ -247,7 +280,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                     return op;
                 }
             }
-            throw new IllegalArgumentException("No REPLACEMENT_OPTIONS constant with name: " + name);
+            throw new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name);
         }
 
     }
@@ -265,7 +298,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         throws Exception {
         // check if the input can be processed
         if (inData == null || inData[0] == null) {
-            throw new Exception("No data table available!");
+            throw new Exception(MISSING_INPUT_EXCEPTION);
         }
 
         // access the table to process
@@ -276,7 +309,20 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         final String[] outlierColNames = m_outlierSettings.applyTo(in.getSpec()).getIncludes();
 
         // calculate the first and third quartile of each outlier column wr.t. the groups
-        final GroupByTable t = getGroupByTable(in, exec.createSubExecutionContext(0.7), groupColNames, outlierColNames);
+        // this method might cause an out of memory exception while cloning the aggregators.
+        // However, this is very unlikely since the adjustment of the StoreResizableDoubleArrayOperator
+        final GroupByTable t;
+        try {
+            t = getGroupByTable(in, exec.createSubExecutionContext(0.7), groupColNames, outlierColNames);
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(MEMORY_EXCEPTION);
+        }
+        // skipped groups implies in our case an out of memory error. This can only occur if the computation is
+        // carried out inside the memory
+        if (!t.getSkippedGroupsByColName().isEmpty()) {
+            throw new IllegalArgumentException(MEMORY_EXCEPTION);
+        }
+
         final BufferedDataTable result = t.getBufferedTable();
 
         // calculate the IQR for each column w.r.t. to the groups
@@ -321,7 +367,8 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         final GlobalSettings gSettings = getGlobalSettings(in, groupColNames);
 
         // create the column aggregators
-        final ColumnAggregator[] agg = getAggretators(in.getDataTableSpec(), gSettings, outlierCols);
+        final ColumnAggregator[] agg =
+            getAggretators(in.getDataTableSpec(), gSettings, outlierCols, m_memorySetting.getBooleanValue());
 
         // init and return the GroupByTable obeying the chose memory settings
         final GroupByTable t;
@@ -344,11 +391,12 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      */
     private GlobalSettings getGlobalSettings(final BufferedDataTable in, final List<String> groupColNames) {
         final GlobalSettingsBuilder builder = GlobalSettings.builder();
-
+        // set the number of unique values to the number of table rows (might cause OutOfMemoryException
+        // during execution
+        builder.setMaxUniqueValues((int)in.size());
         builder.setAggregationContext(AggregationContext.COLUMN_AGGREGATION);
         builder.setDataTableSpec(in.getDataTableSpec());
         builder.setGroupColNames(groupColNames);
-        builder.setMaxUniqueValues(DEFAULT_MAX_UNIQUE_VALS);
         builder.setValueDelimiter(GlobalSettings.STANDARD_DELIMITER);
 
         return builder.build();
@@ -360,10 +408,11 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      * @param inSpec the input data table spec
      * @param gSettings the global settings
      * @param outlierCols the outlier column names
+     * @param accurateComp boolean indicating whether the "exact" quartiles have computed or only estimates
      * @return an array of column aggregators
      */
     private ColumnAggregator[] getAggretators(final DataTableSpec inSpec, final GlobalSettings gSettings,
-        final String[] outlierCols) {
+        final String[] outlierCols, final boolean accurateComp) {
         final ColumnAggregator[] aggregators = new ColumnAggregator[outlierCols.length << 1];
 
         int pos = 0;
@@ -373,11 +422,14 @@ public final class OutlierDetectorNodeModel extends NodeModel {
             final OperatorColumnSettings cSettings =
                 new OperatorColumnSettings(INCL_MISSING_CELLS, inSpec.getColumnSpec(outlierColName));
             for (final double percentile : PERCENTILE_VALUES) {
-                AggregationMethod method = m_memorySetting.getBooleanValue()
-                    ? new QuantileOperator(
+                final AggregationMethod method;
+                if (accurateComp) {
+                    method = new QuantileOperator(
                         new OperatorData("Quantile", true, false, DoubleValue.class, INCL_MISSING_CELLS), gSettings,
-                        cSettings, percentile, m_estimationSettings.getStringValue())
-                    : new PSquarePercentileOperator(gSettings, cSettings, 100 * percentile);
+                        cSettings, percentile, m_estimationSettings.getStringValue());
+                } else {
+                    method = new PSquarePercentileOperator(gSettings, cSettings, 100 * percentile);
+                }
                 aggregators[pos++] = new ColumnAggregator(cSettings.getOriginalColSpec(), method);
             }
         }
@@ -417,20 +469,35 @@ public final class OutlierDetectorNodeModel extends NodeModel {
             final HashMap<String, double[]> colsIQR = new HashMap<String, double[]>();
             for (int i = 0; i < outlierColNames.length; i++) {
                 final String outlierName = outlierColNames[i];
-                final double[] interval = new double[2];
-                int index = i * 2 + offset;
-                // first quartile of the current column
-                interval[0] = getDoubleValue(r.getCell(index));
-                // third quartile of the current column
-                interval[1] = getDoubleValue(r.getCell(++index));
+                double[] interval = null;
+                // the GroupByTable might return MissingValues, but only if
+                // the entire group consists of Missing Values
+                try {
+                    interval = new double[2];
+                    int index = i * 2 + offset;
+                    // first quartile of the current column
+                    interval[0] = getDoubleValue(r.getCell(index));
+                    // third quartile of the current column
+                    interval[1] = getDoubleValue(r.getCell(++index));
 
-                // calculate the scaled IQR
-                final double iqr = scalar * (interval[1] - interval[0]);
+                    // calculate the scaled IQR
+                    final double iqr = scalar * (interval[1] - interval[0]);
 
-                // update the interval
-                interval[0] -= iqr;
-                interval[1] += iqr;
-
+                    // update the interval
+                    interval[0] -= iqr;
+                    interval[1] += iqr;
+                } catch (final ClassCastException e) {
+                    // build the group names
+                    String groupNames =
+                        Arrays.stream(groupVals).map(cell -> cell.toString()).collect(Collectors.joining(", "));
+                    if (groupNames.isEmpty()) {
+                        groupNames = DEFAULT_GROUPS_NAME;
+                    }
+                    setWarningMessage(
+                        "Group <" + groupNames + "> contains only missing values in column " + outlierName);
+                }
+                // setting null here is no problem since during the update we will only access the interval
+                // if the cell is not missing. However, this implies that the interval is not null
                 colsIQR.put(outlierName, interval);
             }
 
@@ -448,7 +515,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      * @return the double value of the cell
      */
     private double getDoubleValue(final DataCell cell) {
-        return ((DoubleCell)cell).getDoubleValue();
+        return ((DoubleValue)cell).getDoubleValue();
     }
 
     /**
@@ -529,6 +596,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                 for (final Entry<String, double[]> entry : colsMap.entrySet()) {
                     final int outlierInd = inSpec.findColumnIndex(entry.getKey());
                     final DataCell cell = row.getCell(outlierInd);
+                    // remove initial missings as well
                     if (cell.isMissing()) {
                         toInsert = false;
                         break;
@@ -545,7 +613,12 @@ public final class OutlierDetectorNodeModel extends NodeModel {
             }
             container.close();
             out = container.getTable();
+            if (out.size() == 0) {
+                setWarningMessage(EMPTY_TABLE_WARNING);
+            }
         }
+        exec.setProgress(1);
+
         return new BufferedDataTable[]{out};
     }
 
@@ -566,11 +639,25 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         if (repOpt == REPLACEMENT_STRATEGY.MISSING && (val < interval[0] || val > interval[1])) {
             return DataType.getMissingCell();
         }
-        // sets to the lower interval bound if necessary
-        val = Math.max(val, interval[0]);
-        // sets to the higher interval bound if necessary
-        val = Math.min(val, interval[1]);
-        return DoubleCellFactory.create(val);
+        if (cell.getType() == DoubleCell.TYPE) {
+            // sets to the lower interval bound if necessary
+            val = Math.max(val, interval[0]);
+            // sets to the higher interval bound if necessary
+            val = Math.min(val, interval[1]);
+            return DoubleCellFactory.create(val);
+        } else {
+            // sets to the lower interval bound if necessary
+            // to the smallest integer inside the allowed interval
+            val = Math.max(val, Math.ceil(interval[0]));
+            // sets to the higher interval bound if necessary
+            // to the largest integer inside the allowed interval
+            val = Math.min(val, Math.floor(interval[1]));
+            // return the proper DataCell
+            if (cell.getType() == LongCell.TYPE) {
+                return LongCellFactory.create((long)val);
+            }
+            return IntCellFactory.create((int)val);
+        }
     }
 
     /**
@@ -596,24 +683,22 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         // check if the table contains any row holding numerical values
         DataTableSpec in = inSpecs[0];
         if (!in.containsCompatibleType(DoubleValue.class)) {
-            throw new InvalidSettingsException("No double compatible columns in input");
+            throw new InvalidSettingsException(INVALID_INPUT_EXCEPTION);
         }
-
-        String[] includes;
 
         // check and initialize the groups settings model
         if (m_groupSettings == null) {
             m_groupSettings = createGroupFilterModel();
-            //            m_groupSettings.loadDefaults(in);
+            // don't add anything to the include list during auto-configure
+            m_groupSettings.loadDefaults(in, new InputFilter<DataColumnSpec>() {
 
-            includes = m_groupSettings.applyTo(in).getIncludes();
-            if (includes.length > 0) {
-                setWarningMessage(
-                    "Auto configuration: Groups use all suitable columns(in total " + includes.length + ")");
-            }
-        } else {
-            includes = m_groupSettings.applyTo(in).getIncludes();
+                @Override
+                public boolean include(final DataColumnSpec name) {
+                    return false;
+                }
+            }, true);
         }
+        String[] includes;
 
         // check and initialize the outlier settings model
         if (m_outlierSettings == null) {
@@ -622,24 +707,29 @@ public final class OutlierDetectorNodeModel extends NodeModel {
             includes = m_outlierSettings.applyTo(in).getIncludes();
             if (includes.length > 0) {
                 setWarningMessage(
-                    "Auto configuration: Outliers use all suitable columns (in total " + includes.length + ")");
+                    "Auto configuration: Outliers use all suitable columns (in total " + includes.length + ").");
             }
-        } else {
-            includes = m_outlierSettings.applyTo(in).getIncludes();
-            if (includes.length == 0) {
-                throw new InvalidSettingsException("Please include at leaste one numerical column!");
-            }
+        }
+        includes = m_outlierSettings.applyTo(in).getIncludes();
+        if (includes.length == 0) {
+            throw new InvalidSettingsException(MISSING_OUTLIER_COLUMN_EXCEPTION);
         }
 
         // initialize the remaining settings models if necessary
         init();
 
-        // we can only perform filtering on a single column. Only works since the initial treatment value is
-        // an empty string
-        final String treatment = m_outlierTreatmentSettings.getStringValue();
-        if (includes.length > 1 && !treatment.isEmpty()
-            && TREATMENT_OPTIONS.getEnum(treatment) == TREATMENT_OPTIONS.FILTER) {
-            throw new InvalidSettingsException("Filtering outliers on multiple columns is currently disabled");
+        // test if flow variables violate settings related to enums
+        try {
+            EstimationType.valueOf(m_estimationSettings.getStringValue());
+            TREATMENT_OPTIONS.getEnum(m_outlierTreatmentSettings.getStringValue());
+            REPLACEMENT_STRATEGY.getEnum(m_outlierReplacementSettings.getStringValue());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage());
+        }
+
+        // test if IQR scalar is < 0
+        if (m_scalarModel.getDoubleValue() < 0) {
+            throw new InvalidSettingsException(SCALAR_EXCEPTIOn);
         }
 
         // return the output spec
@@ -770,7 +860,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      * @return the IQR scalar settings model
      */
     public static SettingsModelDouble createScalarModel() {
-        return new SettingsModelDouble(CFG_TUKEY_PAR, DEFAULT_SCALAR);
+        return new SettingsModelDoubleBounded(CFG_SCALAR_PAR, DEFAULT_SCALAR, 0, Double.MAX_VALUE);
     }
 
     /**
@@ -780,7 +870,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      */
     @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createOutlierFilterModel() {
-        return new SettingsModelColumnFilter2(CFG_PROCESS_COLS, DoubleValue.class);
+        return new SettingsModelColumnFilter2(CFG_OUTLIER_COLS, DoubleValue.class);
 
     }
 
@@ -789,6 +879,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
      *
      * @return the groups settings model
      */
+    @SuppressWarnings("unchecked")
     public static SettingsModelColumnFilter2 createGroupFilterModel() {
         return new SettingsModelColumnFilter2(CFG_GROUP_COLS);
     }

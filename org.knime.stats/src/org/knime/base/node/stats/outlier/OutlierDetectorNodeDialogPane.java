@@ -56,7 +56,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -81,17 +83,32 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
+    /** The tab label. */
+    private static final String TAB_NAME = "Settings";
+
+    /** The outlier settings border label. */
+    private static final String OUTLIER_SETTINGS_BORDER = "Outlier settings";
+
+    /** The group settings border label. */
+    private static final String GROUP_SETTINGS_BORDER = "Group settings";
+
+    /** The title of the outlier treatment panel. */
+    private static final String TREATMENT_TITLE = "Outlier treatment";
+
+    /** The title of the general settings panel. */
+    private static final String SETTINGS_TITLE = "General settings";
+
     /** The apply to groups checkbox name. */
-    private static final String APPLY_TO_GROUPS = "Apply to groups";
+    private static final String APPLY_TO_GROUPS = "Compute outlier statistics on groups";
 
     /** The groups tab name. */
     private static final String GROUPS_TAB = "Groups";
 
     /** The columns tab name. */
-    private static final String COLUMNS_TAB = "Outliers";
+    private static final String OUTLIER_TAB = "Outliers";
 
     /** The estimation type name. */
-    private static final String ESTIMATION_TYPE = "Estimation Type: ";
+    private static final String ESTIMATION_TYPE = "Estimation type: ";
 
     /** The IQR scalar label name. */
     private static final String QUARTILE_RANGE_MULT = "IQR scalar";
@@ -99,14 +116,8 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     /** The memory policy label name. */
     private static final String MEMORY_POLICY = "Process in memory";
 
-    /** The outlier treatment label name. */
-    private static final String OUTLIER_TREATMENT = "Outlier treatment";
-
     /** The outlier replacement strategy label name. */
     private static final String REPLACEMENT_STRATEGY = "Replacement strategy";
-
-    //    /** Label insets. */
-    //    private static final Insets LABEL_INSET = new Insets(0, 5, 0, 5);
 
     /** Dialog indicating whether the algorithm should be executed in or out of memory. */
     private DialogComponentBoolean m_memoryDialog;
@@ -137,8 +148,7 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
     /** Inits the dialog. */
     public OutlierDetectorNodeDialogPane() {
-        addTab(COLUMNS_TAB, getColumnsPanel());
-        addTab(GROUPS_TAB, getGroupsPanel());
+        addTab(TAB_NAME, getSettingsPanel());
         addListeners();
 
         m_diaComp = new DialogComponent[]{m_groupsDialog, m_outlierDialog, m_scalarDialog, m_estimationDialog,
@@ -146,11 +156,11 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * Creates the component holding information about the groups and execution options.
+     * Creates the settings tab.
      *
-     * @return the groups panel
+     * @return the settings tab
      */
-    private Component getColumnsPanel() {
+    private Component getSettingsPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -160,11 +170,14 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-
         gbc.gridwidth = 2;
-        // add component to select the outlier columns to process
-        m_outlierDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createOutlierFilterModel(), 0);
-        panel.add(m_outlierDialog.getComponentPanel(), gbc);
+
+        // add tabbed pane for the outlier and group column selection
+        final JTabbedPane tPane = new JTabbedPane();
+        tPane.setBorder(BorderFactory.createTitledBorder(""));
+        tPane.addTab(OUTLIER_TAB, createOutlierPanel());
+        tPane.addTab(GROUPS_TAB, createGroupsPanel());
+        panel.add(tPane, gbc);
 
         ++gbc.gridy;
         gbc.weighty = 0;
@@ -181,8 +194,53 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @param panel
-     * @param gbc
+     * Creates the outlier selection dialog.
+     *
+     * @return the outlier selection dialog
+     */
+    private JPanel createOutlierPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+
+        panel.setBorder(BorderFactory.createTitledBorder(OUTLIER_SETTINGS_BORDER));
+        m_outlierDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createOutlierFilterModel(), 0);
+        panel.add(m_outlierDialog.getComponentPanel(), gbc);
+        return panel;
+    }
+
+    /**
+     * Creates the groups selection dialog.
+     *
+     * @return the group selection dialog
+     */
+    private JPanel createGroupsPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+
+        panel.setBorder(BorderFactory.createTitledBorder(GROUP_SETTINGS_BORDER));
+        m_groupsDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createGroupFilterModel(), 0);
+        panel.add(m_groupsDialog.getComponentPanel(), gbc);
+        return panel;
+    }
+
+    /**
+     * Creates the settings panel.
+     *
+     * @return the settings panel
      */
     private JPanel createSettingsPanel() {
         final JPanel panel = new JPanel(new GridBagLayout());
@@ -192,15 +250,28 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.weighty = 1;
 
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "General settings"));
-        m_memoryDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createMemoryModel(), MEMORY_POLICY);
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), SETTINGS_TITLE));
 
-        // add component to scale the IQR
+        // add apply to groups selection dialog
+        m_useGroupsDialog =
+            new DialogComponentBoolean(OutlierDetectorNodeModel.createUseGroupsModel(), APPLY_TO_GROUPS);
+        panel.add(m_useGroupsDialog.getComponentPanel(), gbc);
+
+        ++gbc.gridy;
+
+        // add IQR scale dialog
         m_scalarDialog =
             new DialogComponentNumberEdit(OutlierDetectorNodeModel.createScalarModel(), QUARTILE_RANGE_MULT);
         panel.add(m_scalarDialog.getComponentPanel(), gbc);
+
+        ++gbc.gridy;
+
+        // add memory policy dialog
+        m_memoryDialog = new DialogComponentBoolean(OutlierDetectorNodeModel.createMemoryModel(), MEMORY_POLICY);
+        panel.add(m_memoryDialog.getComponentPanel(), gbc);
+
         ++gbc.gridy;
 
         // add a component to select the percentile estimation type
@@ -208,10 +279,8 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
             Arrays.stream(EstimationType.values()).map(val -> val.toString()).collect(Collectors.toList());
         m_estimationDialog = new DialogComponentStringSelection(OutlierDetectorNodeModel.createEstimationModel(),
             ESTIMATION_TYPE, eTypes);
-        panel.add(m_memoryDialog.getComponentPanel(), gbc);
-
-        ++gbc.gridy;
         panel.add(m_estimationDialog.getComponentPanel(), gbc);
+
         return panel;
     }
 
@@ -225,16 +294,17 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1;
+        gbc.weighty = 0;
         gbc.fill = GridBagConstraints.NONE;
 
         final JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Outlier treatment"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), TREATMENT_TITLE));
 
         // add component to select the outlier treatment option
         m_outlierTreatmentDialog =
-            new DialogComponentButtonGroup(OutlierDetectorNodeModel.createOutlierTreatmentModel(), false,
-                OUTLIER_TREATMENT, Arrays.stream(OutlierDetectorNodeModel.TREATMENT_OPTIONS.values())
-                    .map(val -> val.toString()).toArray(String[]::new));
+            new DialogComponentButtonGroup(OutlierDetectorNodeModel.createOutlierTreatmentModel(), false, null,
+                Arrays.stream(OutlierDetectorNodeModel.TREATMENT_OPTIONS.values()).map(val -> val.toString())
+                    .toArray(String[]::new));
         panel.add(m_outlierTreatmentDialog.getComponentPanel(), gbc);
 
         ++gbc.gridy;
@@ -245,37 +315,9 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
                 REPLACEMENT_STRATEGY, Arrays.stream(OutlierDetectorNodeModel.REPLACEMENT_STRATEGY.values())
                     .map(val -> val.toString()).toArray(String[]::new));
         panel.add(m_outlierReplacementDialog.getComponentPanel(), gbc);
-        return panel;
-    }
-
-    /**
-     * Creates the component holding information about the columns to check for outliers.
-     *
-     * @return the (outlier) columns panel
-     */
-    private Component getGroupsPanel() {
-        final JPanel panel = new JPanel(new GridBagLayout());
-        final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.LINE_START;
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
         gbc.weighty = 1;
-        gbc.weightx = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        // add component to select the groups
-        m_groupsDialog = new DialogComponentColumnFilter2(OutlierDetectorNodeModel.createGroupFilterModel(), 0);
-        panel.add(m_groupsDialog.getComponentPanel(), gbc);
-
-        gbc.weighty = 0;
-        gbc.weightx = 0;
-        gbc.fill = GridBagConstraints.NONE;
         ++gbc.gridy;
-        // add button to decide whether or not the group information is used by the algorithm
-        m_useGroupsDialog =
-            new DialogComponentBoolean(OutlierDetectorNodeModel.createUseGroupsModel(), APPLY_TO_GROUPS);
-        panel.add(m_useGroupsDialog.getComponentPanel(), gbc);
-
+        panel.add(Box.createGlue(), gbc);
         return panel;
     }
 
