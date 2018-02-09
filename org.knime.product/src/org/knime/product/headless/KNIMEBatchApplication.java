@@ -48,8 +48,8 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
+import org.knime.product.profiles.ProfileManager;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 
 /**
  * The run method of this class is executed when KNIME is run headless, that is in batch mode.
@@ -61,7 +61,7 @@ public class KNIMEBatchApplication implements IApplication {
      * {@inheritDoc}
      */
     @Override
-    public Object start(final IApplicationContext context) throws BundleException {
+    public Object start(final IApplicationContext context) throws Exception {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
@@ -69,6 +69,8 @@ public class KNIMEBatchApplication implements IApplication {
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true");
         }
+        ProfileManager.getInstance().applyProfiles();
+
         // load the ui plugin to read the preferences
         Platform.getBundle("org.knime.workbench.core").start(Bundle.START_TRANSIENT);
 
