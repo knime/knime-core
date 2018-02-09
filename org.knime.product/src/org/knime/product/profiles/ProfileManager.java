@@ -76,6 +76,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -289,12 +290,24 @@ public class ProfileManager {
                         PathUtils.deleteDirectoryIfExists(profileDir);
                         Files.move(tempDir, profileDir, StandardCopyOption.ATOMIC_MOVE);
                     } else if (code != 304) { // 304 = Not Modified
-                        throw new IOException(response.getStatusLine().getReasonPhrase());
+                        HttpEntity body = response.getEntity();
+                        String msg;
+                        if (body.getContentType().getValue().startsWith("text/")) {
+                            byte[] buf = new byte[Math.min(4096, Math.max(4096, (int)body.getContentLength()))];
+                            int read = body.getContent().read(buf);
+                            msg = new String(buf, 0, read, "US-ASCII").trim();
+                        } else if (!response.getStatusLine().getReasonPhrase().isEmpty()) {
+                            msg = response.getStatusLine().getReasonPhrase();
+                        } else {
+                            msg = "Server returned status " + response.getStatusLine().getStatusCode();
+                        }
+
+                        throw new IOException(msg);
                     }
                 }
             }
         } catch (IOException | URISyntaxException ex) {
-            String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ".";
+            String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". ";
             if (Files.isDirectory(profileDir)) {
                 // Use existing files for now
                 msg += "Will use existing but potentially outdated profiles.";
