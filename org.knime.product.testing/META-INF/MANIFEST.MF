@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Testcase for org.knime.product
+Bundle-SymbolicName: org.knime.product.testing;singleton:=true
+Bundle-Version: 3.6.0.qualifier
+Fragment-Host: org.knime.product;bundle-version="[3.6.0,4.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.knime.testing;bundle-version="[3.6.0,4.0.0)",
+ org.junit;bundle-version="[4.12.0,5.0.0)"
+Bundle-ClassPath: product-test.jar
