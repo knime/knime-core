@@ -44,57 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   09.02.2018 (thor): created
+ *   11.02.2018 (thor): created
  */
 package org.knime.product.profiles;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
 
-import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.junit.Test;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
+import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.application.ApplicationHandle;
 
 /**
- * Basic test for the profile manager.
+ * Profile provider for testing the {@link ProfileManager}.
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
-public class ProfileManagerTest {
+public class TestProfileProvider implements IProfileProvider {
     /**
-     * Checks if preferences from two profiles have been applied correctly. The profiles are part of this fragment
-     * (test-profiles/base and test-profiles/custom).
-     *
-     * @throws Exception if an error occurs
+     * {@inheritDoc}
      */
-    @Test
-    public void testAppliedPreferences() throws Exception {
-        String app = "Unknown";
-        Bundle myself = FrameworkUtil.getBundle(getClass());
-        if (myself != null) {
-            BundleContext ctx = myself.getBundleContext();
-            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
-            if (ser != null) {
-                ApplicationHandle appHandle = ctx.getService(ser);
-                app = appHandle.getInstanceId();
-                ctx.ungetService(ser);
-            }
+    @Override
+    public List<String> getRequestedProfiles() {
+        return Arrays.asList("base", "custom");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public URI getProfilesLocation() {
+        Enumeration<URL> profileUrls = FrameworkUtil.getBundle(getClass()).findEntries("/", "test-profiles", false);
+        try {
+            return FileLocator.toFileURL(profileUrls.nextElement()).toURI().normalize();
+        } catch (IOException | URISyntaxException ex) {
+            throw new RuntimeException(ex);
         }
-        // Only KNIME applications set new default preferences
-        assumeThat("Not started with a KNIME application", app, containsString(".knime."));
-
-        IEclipsePreferences productPrefs = DefaultScope.INSTANCE.getNode("org.knime.product");
-        assertThat("Unexpected preferences value for 'test-pref'", productPrefs.get("test-pref", ""), is("custom"));
-
-        IEclipsePreferences workbenchPrefs = DefaultScope.INSTANCE.getNode("org.knime.workbench.ui");
-        assertThat("Unexpected preferences value", workbenchPrefs.get("knime.gridsize.x", ""), is("3333"));
-        assertThat("Unexpected preferences value", workbenchPrefs.get("knime.gridsize.y", ""), is("5555"));
     }
 }

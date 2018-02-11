@@ -7,5 +7,11 @@
             TestcaseCollector="org.knime.product.testing.ProductTestcaseCollector">
       </TestcaseCollector>
    </extension>
+   <extension
+         point="org.knime.product.profileProvider">
+      <profileProvider
+            class="org.knime.product.profiles.TestProfileProvider">
+      </profileProvider>
+   </extension>
 
 </fragment>
