@@ -144,7 +144,7 @@ public class ProfileManager {
                 try {
                     provider = (IProfileProvider)extension.get().createExecutableExtension("class");
                 } catch (CoreException ex) {
-                    m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).error(
+                    m_collectedLogs.add(() -> NodeLogger.getLogger(ProfileManager.class).error(
                         "Could not create profile provider instance from class "
                             + extension.get().getAttribute("class") + ". No profiles will be processed.",
                         ex));
@@ -163,7 +163,7 @@ public class ProfileManager {
         try {
             applyPreferences(localProfiles);
         } catch (IOException ex) {
-            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass())
+            m_collectedLogs.add(() -> NodeLogger.getLogger(ProfileManager.class)
                 .error("Could not apply preferences from profiles: " + ex.getMessage(), ex));
         }
 
@@ -243,7 +243,8 @@ public class ProfileManager {
             builder.addParameter("profiles", String.join(",", m_provider.getRequestedProfiles()));
             URI profileUri = builder.build();
 
-            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).info("Downloading profiles from " + profileUri));
+            m_collectedLogs
+                .add(() -> NodeLogger.getLogger(ProfileManager.class).info("Downloading profiles from " + profileUri));
 
             // proxies
             HttpHost proxy = ProxySelector.getDefault().select(profileUri).stream()
@@ -252,13 +253,13 @@ public class ProfileManager {
                     .map(p -> new HttpHost(((InetSocketAddress) p.address()).getAddress()))
                     .orElse(null);
 
-            // timeout
+            // timeout; we cannot access KNIMEConstants here because that would acccess preferences
             int timeout = 2000;
             String to = System.getProperty("knime.url.timeout", Integer.toString(timeout));
             try {
                 timeout = Integer.parseInt(to);
             } catch (NumberFormatException ex) {
-                m_collectedLogs.add(() -> NodeLogger.getLogger(getClass())
+                m_collectedLogs.add(() -> NodeLogger.getLogger(ProfileManager.class)
                     .warn("Illegal value for system property knime.url.timeout :" + to, ex));
             }
             RequestConfig requestConfig = RequestConfig.custom()
@@ -318,7 +319,7 @@ public class ProfileManager {
             String msg = "Could not download profiles from " + profileLocation + ": " + ex.getMessage() + ". "
                 + (Files.isDirectory(profileDir) ? "Will use existing but potentially outdated profiles."
                     : "No profiles will be applied.");
-            m_collectedLogs.add(() -> NodeLogger.getLogger(getClass()).error(msg, ex));
+            m_collectedLogs.add(() -> NodeLogger.getLogger(ProfileManager.class).error(msg, ex));
         }
 
         return profileDir;
