@@ -177,23 +177,29 @@ public class ProfileManager {
             return; // plugin customizations are already explicitly provided by someone else
         }
 
-        Properties props = new Properties();
+        Properties combinedProperties = new Properties();
         for (Path dir : profiles) {
-            List<Path> prefFiles = Files.walk(dir).filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".epf"))
-                .collect(Collectors.toList());
+            List<Path> prefFiles = Files.walk(dir)
+                    .filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".epf"))
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            Properties props = new Properties();
             for (Path f : prefFiles) {
                 try (Reader r = Files.newBufferedReader(f, Charset.forName("UTF-8"))) {
                     props.load(r);
                 }
             }
+            replaceVariables(props, dir);
+            combinedProperties.putAll(props);
         }
 
         // removed "/instance" prefixes from preferences because otherwise they are not applied as default preferences
         // (because they are instance preferences...)
-        for (Object key : new HashSet<>(props.keySet())) {
+        for (Object key : new HashSet<>(combinedProperties.keySet())) {
             if (key.toString().startsWith("/instance/")) {
-                Object value = props.remove(key);
-                props.put(key.toString().substring("/instance/".length()), value);
+                Object value = combinedProperties.remove(key);
+                combinedProperties.put(key.toString().substring("/instance/".length()), value);
             }
         }
 
@@ -202,10 +208,30 @@ public class ProfileManager {
         // org.eclipse.core.internal.preferences.DefaultPreferences.loadProperties(String) also reads from a stream
         // and therefore assumes it's ISO-8859-1 encoded (with replacement for UTF characters).
         try (OutputStream out = Files.newOutputStream(pluginCustFile)) {
-            props.store(out, "");
+            combinedProperties.store(out, "");
         }
         DefaultPreferences.pluginCustomizationFile = pluginCustFile.toAbsolutePath().toString();
     }
+
+    private void replaceVariables(final Properties props, final Path profileLocation) {
+        List<VariableReplacer> replacers = Arrays.asList(
+            new VariableReplacer.EnvVariableReplacer(),
+            new VariableReplacer.SyspropVariableReplacer(),
+            new VariableReplacer.ProfileVariableReplacer(profileLocation));
+
+        for (String key : props.stringPropertyNames()) {
+            String value = props.getProperty(key);
+
+            for (VariableReplacer rep : replacers) {
+                value = rep.replaceVariables(value);
+            }
+
+            // finally replace escaped "variables" so that the double dollars are removed
+            props.replace(key, value.replaceAll("\\$(\\$\\{[^:\\}]+:[^\\}]+\\})", "$1"));
+        }
+
+    }
+
 
     private List<Path> fetchProfileContents() {
         List<String> profiles = m_provider.getRequestedProfiles();

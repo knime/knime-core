@@ -144,6 +144,6 @@ public class ProfileManagerTest {
 
         // escaped "variable" (with $$) => no replacement
         assertThat("Unexpected value for escaped variable", prefs.get("non-variable", "XXX"),
-            is("bla/$${custom:var}/foo"));
+            is("bla/${custom:var}/foo"));
     }
 }
