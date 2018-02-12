@@ -50,6 +50,7 @@ package org.knime.product.profiles;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Interface for a profile provider. A provider can be registered at the extension point
@@ -85,4 +86,15 @@ public interface IProfileProvider {
      * @return a URI pointing to the profiles location; can only be <code>null</code> if the list of profiles is empty
      */
     URI getProfilesLocation();
+
+    /**
+     * Resolves a variable with the "custom" prefix in preferences values. The default implementation doesn't resolve
+     * any variables, i.e. they will stay in plain text.
+     *
+     * @param name the variables name
+     * @return the variables value or an empty optional of the variable name is unknown
+     */
+    default Optional<String> resolveVariable(final String name) {
+        return Optional.empty();
+    }
 }

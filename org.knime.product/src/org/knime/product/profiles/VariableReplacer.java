@@ -111,6 +111,24 @@ abstract class VariableReplacer {
         }
     }
 
+    /**
+     * Replaces variables with "custom" prefix using the selected profile provider. This only makes sense if a custom
+     * profile provider is used.
+     */
+    static class CustomVariableReplacer extends VariableReplacer {
+        private final IProfileProvider m_provider;
+
+        CustomVariableReplacer(final IProfileProvider provider) {
+            super("custom");
+            m_provider = provider;
+        }
+
+        @Override
+        Optional<String> getVariableValue(final String varName) {
+            return m_provider.resolveVariable(varName);
+        }
+    }
+
 
     private final Pattern m_pattern;
 

@@ -217,7 +217,8 @@ public class ProfileManager {
         List<VariableReplacer> replacers = Arrays.asList(
             new VariableReplacer.EnvVariableReplacer(),
             new VariableReplacer.SyspropVariableReplacer(),
-            new VariableReplacer.ProfileVariableReplacer(profileLocation));
+            new VariableReplacer.ProfileVariableReplacer(profileLocation),
+            new VariableReplacer.CustomVariableReplacer(m_provider));
 
         for (String key : props.stringPropertyNames()) {
             String value = props.getProperty(key);
@@ -229,7 +230,6 @@ public class ProfileManager {
             // finally replace escaped "variables" so that the double dollars are removed
             props.replace(key, value.replaceAll("\\$(\\$\\{[^:\\}]+:[^\\}]+\\})", "$1"));
         }
-
     }
 
 
