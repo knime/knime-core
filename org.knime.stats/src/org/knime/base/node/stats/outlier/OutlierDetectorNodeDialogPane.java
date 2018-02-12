@@ -81,7 +81,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
+final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
 
     /** The tab label. */
     private static final String TAB_NAME = "Settings";
@@ -147,7 +147,7 @@ public class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     private final DialogComponent[] m_diaComp;
 
     /** Inits the dialog. */
-    public OutlierDetectorNodeDialogPane() {
+    OutlierDetectorNodeDialogPane() {
         addTab(TAB_NAME, getSettingsPanel());
         addListeners();
 

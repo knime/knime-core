@@ -89,6 +89,7 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -102,6 +103,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.InputFilter;
 
 /**
@@ -109,7 +111,7 @@ import org.knime.core.node.util.filter.InputFilter;
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public final class OutlierDetectorNodeModel extends NodeModel {
+final class OutlierDetectorNodeModel extends NodeModel {
 
     /** Missing input exception text. */
     private static final String MISSING_INPUT_EXCEPTION = "No data table available!";
@@ -124,14 +126,15 @@ public final class OutlierDetectorNodeModel extends NodeModel {
     private static final String MISSING_OUTLIER_COLUMN_EXCEPTION = "Please include at leaste one numerical column!";
 
     /** Scalar exception text. */
-    private static final String SCALAR_EXCEPTIOn = "The IQR scalar has to be greater than or equal 0.";
+    private static final String SCALAR_EXCEPTION = "The IQR scalar has to be greater than or equal 0.";
 
     /** The default groups name. */
     private static final String DEFAULT_GROUPS_NAME = "none";
 
     /** Exception message if the MemoryGroupByTable execution fails due to heap-space problems. */
     private static final String MEMORY_EXCEPTION =
-        "Outlier detection requires more heap-space than provided. Please change to out of memory computation, or increase the provided heap-space.";
+        "Outlier detection requires more heap-space than provided. Please change to out of memory computation, or "
+                + "increase the provided heap-space.";
 
     /** Treatment of missing cells. */
     private static final boolean INCL_MISSING_CELLS = false;
@@ -161,7 +164,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
     private static final String CFG_MEM_POLICY = "memory-policy";
 
     /** Config key of the estimation type used for in-memory computation. */
-    private static final String CFG_ESTIMATION_TYPE = "estmation-type";
+    private static final String CFG_ESTIMATION_TYPE = "estimation-type";
 
     /** Config key of the outlier treatment. */
     private static final String CFG_OUTLIER_TREATMENT = "outlier-treatment";
@@ -201,9 +204,8 @@ public final class OutlierDetectorNodeModel extends NodeModel {
 
     /**
      * Enum encoding the outlier treatment.
-     *
-     * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
+    // TODO Mark: TREATMENT_OPTIONS or TreatmentOptions? (hm... https://docs.oracle.com/javase/tutorial/java/javaOO/enum.html)
     enum TREATMENT_OPTIONS {
             REPLACE("Replace Value"), FILTER("Remove Row");
 
@@ -229,9 +231,10 @@ public final class OutlierDetectorNodeModel extends NodeModel {
          * @throws IllegalArgumentException if the given name is not associated with an TREATMENT_OPTIONS value
          */
         static TREATMENT_OPTIONS getEnum(final String name) throws IllegalArgumentException {
-            if (name == null) {
-                throw new NullPointerException("Name is null");
-            }
+            CheckUtils.checkArgumentNotNull(name, "Name must not be null");
+            // TODO Mark: Also possible?
+//            return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+//                .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
             for (final TREATMENT_OPTIONS op : values()) {
                 if (op.m_name.equals(name)) {
                     return op;
@@ -272,9 +275,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
          * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
          */
         static REPLACEMENT_STRATEGY getEnum(final String name) throws IllegalArgumentException {
-            if (name == null) {
-                throw new NullPointerException("Name is null");
-            }
+            CheckUtils.checkArgumentNotNull(name, "Name must not be null");
             for (final REPLACEMENT_STRATEGY op : values()) {
                 if (op.m_name.equals(name)) {
                     return op;
@@ -313,9 +314,11 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         // However, this is very unlikely since the adjustment of the StoreResizableDoubleArrayOperator
         final GroupByTable t;
         try {
+            // TODO sub progress don't add up to 1 (see also below)
             t = getGroupByTable(in, exec.createSubExecutionContext(0.7), groupColNames, outlierColNames);
         } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(MEMORY_EXCEPTION);
+            // TODO Mark: this is something we should talk about.
+            throw new IllegalArgumentException(MEMORY_EXCEPTION, e);
         }
         // skipped groups implies in our case an out of memory error. This can only occur if the computation is
         // carried out inside the memory
@@ -370,7 +373,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         final ColumnAggregator[] agg =
             getAggretators(in.getDataTableSpec(), gSettings, outlierCols, m_memorySetting.getBooleanValue());
 
-        // init and return the GroupByTable obeying the chose memory settings
+        // init and return the GroupByTable obeying the chosen memory settings
         final GroupByTable t;
         if (m_memorySetting.getBooleanValue()) {
             t = new MemoryGroupByTable(exec, in, groupColNames, agg, gSettings, false,
@@ -393,7 +396,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         final GlobalSettingsBuilder builder = GlobalSettings.builder();
         // set the number of unique values to the number of table rows (might cause OutOfMemoryException
         // during execution
-        builder.setMaxUniqueValues((int)in.size());
+        builder.setMaxUniqueValues(KnowsRowCountTable.checkRowCount(in.size()));
         builder.setAggregationContext(AggregationContext.COLUMN_AGGREGATION);
         builder.setDataTableSpec(in.getDataTableSpec());
         builder.setGroupColNames(groupColNames);
@@ -451,13 +454,15 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         final Map<GroupKey, Map<String, double[]>> iqrGroupsMap = new HashMap<GroupKey, Map<String, double[]>>();
 
         final long rowCount = data.size();
-        double rowCounter = 1;
+        long rowCounter = 1;
         final int offset = groupColNames.size();
         final double scalar = m_scalarModel.getDoubleValue();
 
         for (final DataRow r : data) {
             subExec.checkCanceled();
-            subExec.setProgress(rowCounter++ / rowCount, "Calculating IQR for row " + rowCounter + " of " + rowCount);
+            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
+            subExec.setProgress(rowCounterLong / (double)rowCount,
+                () -> "Calculating IQR for row " + rowCounterLong + " of " + rowCount);
 
             // calculate the groups key
             final DataCell[] groupVals = new DataCell[groupColNames.size()];
@@ -487,6 +492,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
                     interval[0] -= iqr;
                     interval[1] += iqr;
                 } catch (final ClassCastException e) {
+                    // TODO Mark: Programming against unchecked exception? Really?
                     // build the group names
                     String groupNames =
                         Arrays.stream(groupVals).map(cell -> cell.toString()).collect(Collectors.joining(", "));
@@ -590,6 +596,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
         } else {
             // we remove all columns containing an outlier
             BufferedDataContainer container = exec.createDataContainer(in.getDataTableSpec());
+            // TODO Mark: No cancelation, no progress
             for (final DataRow row : in) {
                 Map<String, double[]> colsMap = map.get(getGroupKey(groupIndices, row));
                 boolean toInsert = true;
@@ -614,6 +621,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
             container.close();
             out = container.getTable();
             if (out.size() == 0) {
+                // TODO Mark: Isn't this shown automatically?
                 setWarningMessage(EMPTY_TABLE_WARNING);
             }
         }
@@ -729,7 +737,7 @@ public final class OutlierDetectorNodeModel extends NodeModel {
 
         // test if IQR scalar is < 0
         if (m_scalarModel.getDoubleValue() < 0) {
-            throw new InvalidSettingsException(SCALAR_EXCEPTIOn);
+            throw new InvalidSettingsException(SCALAR_EXCEPTION);
         }
 
         // return the output spec
