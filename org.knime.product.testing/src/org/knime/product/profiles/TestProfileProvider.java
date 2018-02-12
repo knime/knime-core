@@ -55,6 +55,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.osgi.framework.FrameworkUtil;
@@ -85,5 +86,13 @@ public class TestProfileProvider implements IProfileProvider {
         } catch (IOException | URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> resolveVariable(final String name) {
+        return Optional.ofNullable("var".equals(name) ? "replaced-value" : null);
     }
 }

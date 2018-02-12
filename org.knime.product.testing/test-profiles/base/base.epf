@@ -1,3 +1,13 @@
 /instance/org.knime.product/test-pref=base
 /instance/org.knime.workbench.ui/knime.gridsize.x=4444
 /instance/org.knime.workbench.ui/knime.gridsize.y=5555
+/instance/org.knime.product/environment-variable=${env:TEMP}
+/instance/org.knime.product/system-property=${sysprop:user.name}
+/instance/org.knime.product/profile-name=${profile:name}
+/instance/org.knime.product/profile-location=${profile:location}
+/instance/org.knime.product/custom-variable=${custom:var}
+/instance/org.knime.product/unknown-environment-variable=${env:unknown}
+/instance/org.knime.product/unknown-system-property=${sysprop:unknown}
+/instance/org.knime.product/unknown-profile-variable=${profile:unknown}
+/instance/org.knime.product/unknown-custom-variable=${custom:unknown}
+/instance/org.knime.product/non-variable=bla/$${custom:var}/foo
