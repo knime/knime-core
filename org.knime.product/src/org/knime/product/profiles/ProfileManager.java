@@ -215,10 +215,10 @@ public class ProfileManager {
 
     private void replaceVariables(final Properties props, final Path profileLocation) {
         List<VariableReplacer> replacers = Arrays.asList(
-            new VariableReplacer.EnvVariableReplacer(),
-            new VariableReplacer.SyspropVariableReplacer(),
-            new VariableReplacer.ProfileVariableReplacer(profileLocation),
-            new VariableReplacer.CustomVariableReplacer(m_provider));
+            new VariableReplacer.EnvVariableReplacer(m_collectedLogs),
+            new VariableReplacer.SyspropVariableReplacer(m_collectedLogs),
+            new VariableReplacer.ProfileVariableReplacer(profileLocation, m_collectedLogs),
+            new VariableReplacer.CustomVariableReplacer(m_provider, m_collectedLogs));
 
         for (String key : props.stringPropertyNames()) {
             String value = props.getProperty(key);

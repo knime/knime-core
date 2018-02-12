@@ -49,9 +49,12 @@
 package org.knime.product.profiles;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.knime.core.node.NodeLogger;
 
 /**
  * Abstract class for replacing variables in preference values. A replacer looks for patterns such as
@@ -65,8 +68,8 @@ abstract class VariableReplacer {
      * Replaces environment variables, prefix "env".
      */
     static class EnvVariableReplacer extends VariableReplacer {
-        EnvVariableReplacer() {
-            super("env");
+        EnvVariableReplacer(final List<Runnable> logMessages) {
+            super("env", logMessages);
         }
 
         @Override
@@ -79,8 +82,8 @@ abstract class VariableReplacer {
      * Replaces system properties, prefix "sysprop".
      */
     static class SyspropVariableReplacer extends VariableReplacer {
-        SyspropVariableReplacer() {
-            super("sysprop");
+        SyspropVariableReplacer(final List<Runnable> logMessages) {
+            super("sysprop", logMessages);
         }
 
         @Override
@@ -96,8 +99,8 @@ abstract class VariableReplacer {
     static class ProfileVariableReplacer extends VariableReplacer {
         private final Path m_profileLocation;
 
-        ProfileVariableReplacer(final Path profileLocation) {
-            super("profile");
+        ProfileVariableReplacer(final Path profileLocation, final List<Runnable> logMessages) {
+            super("profile", logMessages);
             m_profileLocation = profileLocation;
         }
 
@@ -118,8 +121,8 @@ abstract class VariableReplacer {
     static class CustomVariableReplacer extends VariableReplacer {
         private final IProfileProvider m_provider;
 
-        CustomVariableReplacer(final IProfileProvider provider) {
-            super("custom");
+        CustomVariableReplacer(final IProfileProvider provider, final List<Runnable> logMessages) {
+            super("custom", logMessages);
             m_provider = provider;
         }
 
@@ -132,21 +135,33 @@ abstract class VariableReplacer {
 
     private final Pattern m_pattern;
 
+    private final List<Runnable> m_logMessages;
+
     /**
      * Creates a new replacer with the given variable prefix.
      *
      * @param prefix the prefix, must not be <code>null</code>
+     * @param logMessages a list where deferred log messages are collected
      */
-    protected VariableReplacer(final String prefix) {
+    protected VariableReplacer(final String prefix, final List<Runnable> logMessages) {
         m_pattern = Pattern.compile("(?<!\\$)(\\$\\{" + prefix + ":([^\\}]+)\\})");
+        m_logMessages = logMessages;
     }
 
     String replaceVariables(final String value) {
         String newValue = value;
         Matcher m = m_pattern.matcher(value);
         while (m.find()) {
-            String replacement = getVariableValue(m.group(2)).orElse(m.group(1));
-            newValue = newValue.replace(m.group(1), replacement);
+            String pattern = m.group(1);
+            String variable = m.group(2);
+
+            Optional<String> var = getVariableValue(variable);
+            if (var.isPresent()) {
+                newValue = newValue.replace(pattern, var.get());
+            } else {
+                m_logMessages.add(() -> NodeLogger.getLogger(VariableReplacer.this.getClass())
+                    .warn("Variable " + pattern + " in server-managed preferences is unknown"));
+            }
         }
 
         return newValue;
