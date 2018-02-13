@@ -80,7 +80,8 @@ public class TestProfileProvider implements IProfileProvider {
     public URI getProfilesLocation() {
         Enumeration<URL> profileUrls = FrameworkUtil.getBundle(getClass()).findEntries("/", "test-profiles", false);
         try {
-            return FileLocator.toFileURL(profileUrls.nextElement()).toURI().normalize();
+            String url = FileLocator.toFileURL(profileUrls.nextElement()).toString();
+            return new URI(url.replace(" ", "%20")).normalize();
         } catch (IOException | URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
