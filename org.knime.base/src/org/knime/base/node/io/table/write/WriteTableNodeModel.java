@@ -75,6 +75,51 @@ import org.knime.core.util.FileUtil;
  * @author wiswedel, University of Konstanz
  */
 public class WriteTableNodeModel extends NodeModel {
+    /**
+     * This is an ugly workaround for AP-8862. {@link DataContainer#writeToStream} first copies the whole table into a
+     * temporary file and then starts writing it to the output stream. In case the output stream is to a server the
+     * request is opened when the stream is opened but it may take quite some time before the first byte is written.
+     * This leads to timeouts on the server side if the input table is larger. Therefore this decorator defers opening
+     * the stream until the first byte is written.
+     */
+    private static class DeferredOpenOutputStream extends OutputStream {
+        private final URL m_url;
+        private OutputStream m_delegate;
+
+        DeferredOpenOutputStream(final URL url) {
+            m_url = url;
+        }
+
+        private OutputStream openStream() throws IOException {
+            if (m_delegate != null) {
+                return m_delegate;
+            }
+
+            m_delegate = FileUtil.openOutputConnection(m_url, "PUT").getOutputStream();
+            return m_delegate;
+        }
+
+        @Override
+        public void write(final int b) throws IOException {
+            openStream().write(b);
+        }
+
+        @Override
+        public void write(final byte b[], final int off, final int len) throws IOException {
+            openStream().write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            openStream().flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            openStream().close();
+        }
+    }
+
 
     /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
@@ -144,7 +189,7 @@ public class WriteTableNodeModel extends NodeModel {
         if (localPath != null) {
             DataContainer.writeToZip(in, localPath.toFile(), exec);
         } else {
-            try (OutputStream os = FileUtil.openOutputConnection(url, "PUT").getOutputStream()) {
+            try (OutputStream os = new DeferredOpenOutputStream(url)) {
                 DataContainer.writeToStream(in, os, exec);
             }
         }
