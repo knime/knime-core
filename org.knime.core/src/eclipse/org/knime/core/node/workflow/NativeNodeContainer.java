@@ -598,14 +598,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
-     * Enumerates the output tables and puts them into the workflow global
-     * repository of tables. All other (temporary) tables that were created in
-     * the given execution context, will be put in a set of temporary tables in
-     * the node.
+     * Enumerates the output tables and puts them into the workflow global repository of tables. All other (temporary)
+     * tables that were created in the given execution context, will be put in a set of temporary tables in the node.
+     *
+     * <p>
+     * This method is only to be called by the framework and by other external executor after execution.
      *
      * @param c The execution context containing the (so far) local tables.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
+    public final void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         HashMap<Integer, ContainerTable> globalRep =
             getParent().getGlobalTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
