@@ -530,13 +530,15 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 streamableOperator.loadInternals(saveAndLoadInternals(internals));
             }
             LOGGER.info("call: StreamableOperator#runIntermediate");
-            remoteNodeContainers[i].getNode().openFileStoreHandler(exec);
+            Node node = remoteNodeContainers[i].getNode();
+            node.openFileStoreHandler(exec);
             //use remote execution context
             streamableOperator.runIntermediate(portInputs[i], exec);
             if (mergeOpAvailable) {
                 LOGGER.info("call: StreamableOperator#saveInternals");
                 newInternals[i] = saveAndLoadInternals(streamableOperator.saveInternals());
             }
+            remoteNodeContainers[i].putOutputTablesIntoGlobalRepository(exec);
         }
         return newInternals;
     }
