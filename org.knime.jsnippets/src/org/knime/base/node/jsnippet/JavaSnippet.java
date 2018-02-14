@@ -52,6 +52,7 @@ import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_B
 import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_FIELDS;
 import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_IMPORTS;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,7 +65,7 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -376,49 +377,30 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
      * {@inheritDoc}
      */
     @Override
-    public Iterable<? extends JavaFileObject> getCompilationUnits()
-        throws IOException {
+    public Iterable<? extends JavaFileObject> getCompilationUnits() throws IOException {
+        if (m_snippet == null || m_snippetFile == null || !m_snippetFile.exists()) {
+            m_snippetFile = new File(m_tempClassPathDir, "JSnippet.java");
 
-        if (m_snippet == null || m_snippetFile == null
-                || !m_snippetFile.exists()) {
-            m_snippet = createJSnippetFile();
-        } else {
-            if (m_dirty) {
-                Writer out = m_snippet.openWriter();
+            // Note: this is a workaround for openWriter() not taking charset into account
+            m_snippet = new EclipseFileObject("JSnippet", m_snippetFile.toURI(), Kind.SOURCE, StandardCharsets.UTF_8);
+            m_dirty = true;
+        }
+
+        if (m_dirty) {
+            try (final Writer out = new BufferedWriter(
+                new OutputStreamWriter(m_snippet.openOutputStream(), StandardCharsets.UTF_8))) {
                 try {
-                    try {
-                        Document doc = getDocument();
-                        out.write(doc.getText(0, doc.getLength()));
-                        m_dirty = false;
-                    } catch (BadLocationException e) {
-                        // this should never happen.
-                        throw new IllegalStateException(e);
-                    }
-                } finally {
-                    out.close();
+                    final Document doc = getDocument();
+                    out.write(doc.getText(0, doc.getLength()));
+                    m_dirty = false;
+                } catch (BadLocationException e) {
+                    // this should never happen.
+                    throw new IllegalStateException(e);
                 }
             }
         }
+
         return Collections.singletonList(m_snippet);
-    }
-
-    /**
-     * Create the java-file of the snippet.
-     */
-    private JavaFileObject createJSnippetFile() throws IOException {
-        m_snippetFile = new File(m_tempClassPathDir, "JSnippet.java");
-        final Charset utf8Charset = Charset.forName("UTF-8");
-        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(m_snippetFile), utf8Charset);) {
-            try {
-                Document doc = getDocument();
-                out.write(doc.getText(0, doc.getLength()));
-            } catch (BadLocationException e) {
-                // this should never happen.
-                throw new IllegalStateException(e);
-            }
-        }
-
-        return new EclipseFileObject("JSnippet", m_snippetFile.toURI(), Kind.SOURCE, utf8Charset);
     }
 
     @Override
