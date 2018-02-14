@@ -323,7 +323,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "July 25, 2017";
+        BUILD_DATE = "February 14, 2018";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle("org.knime.product");
         if (coreBundle != null) {
