@@ -464,9 +464,11 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
 
         final LinkedBlockingQueue<Bundle> pending = new LinkedBlockingQueue<Bundle>();
 
-        // Resolve bundle names to bundles
-        Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
-            .map(b -> pending.add(b));
+        if (m_settings != null) {
+            // Resolve bundle names to bundles
+            Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
+                .forEach(b -> pending.add(b));
+        }
 
         Bundle bundle = null;
         while ((bundle = pending.poll()) != null) {

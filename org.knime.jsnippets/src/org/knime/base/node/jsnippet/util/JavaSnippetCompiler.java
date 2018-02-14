@@ -53,6 +53,7 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -125,7 +126,7 @@ public class JavaSnippetCompiler {
 
             m_compiler  = new EclipseCompiler();
         }
-        final StandardJavaFileManager stdFileMgr = m_compiler.getStandardFileManager(digsCollector, null, null);
+        final StandardJavaFileManager stdFileMgr = m_compiler.getStandardFileManager(digsCollector, null, Charset.forName("UTF-8"));
 
         final CompilationTask compileTask =
             m_compiler.getTask(out, stdFileMgr, digsCollector, m_compileArgs, null, m_snippet.getCompilationUnits());

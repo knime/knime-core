@@ -53,25 +53,23 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.swing.AbstractListModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -80,6 +78,7 @@ import javax.swing.text.Document;
 import org.eclipse.core.runtime.IBundleGroup;
 import org.eclipse.core.runtime.IBundleGroupProvider;
 import org.eclipse.core.runtime.Platform;
+import org.knime.base.node.jsnippet.ui.util.MouseClickListener;
 import org.osgi.framework.Bundle;
 
 /**
@@ -95,12 +94,19 @@ public class BundleListPanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    /* Filterable list model containing all available bundles */
     final DefaultListModel<String> m_listModel = new DefaultListModel<>();
 
+    /* List displaying all available bundles */
     final JList<String> m_list = new JList<>(m_listModel);
 
+    /* Field for filtering the bundle list */
+    final JTextField m_filterField = new JTextField();
+
+    /* All available bundle names */
     final static ArrayList<String> bundleNames = new ArrayList<>();
 
+    /* Find all available bundles */
     private static void initBundleNames() {
         if (!bundleNames.isEmpty()) {
             return;
@@ -117,27 +123,54 @@ public class BundleListPanel extends JPanel {
         Collections.sort(bundleNames);
     }
 
-    private static final class BundleListModel extends AbstractListModel<String> {
+    /* List model which filters bundleNames acording to a search string */
+    static final class FilterableListModel extends AbstractListModel<String> {
 
         private static final long serialVersionUID = 1L;
 
-        List<String> m_filtered = null;
+        private final List<String> m_unfiltered;
 
-        String m_filter = "";
+        private List<String> m_filtered;
+
+        private String m_filter = "";
+
+        /**
+         * Constructor
+         *
+         * @param unfiltered Unfiltered list of elements
+         */
+        public FilterableListModel(final List<String> unfiltered) {
+            m_filtered = m_unfiltered = unfiltered;
+        }
 
         @Override
         public int getSize() {
-            return m_filter.isEmpty() ? bundleNames.size() : m_filtered.size();
+            return m_filtered.size();
         }
 
         @Override
         public String getElementAt(final int index) {
-            return m_filter.isEmpty() ? bundleNames.get(index) : m_filtered.get(index);
+            return m_filtered.get(index);
         }
 
-        synchronized void setFilter(final String filter) {
+        /**
+         * Set the string with which to filter the elements of this list.
+         *
+         * @param filter Filter string
+         */
+        public synchronized void setFilter(final String filter) {
+            if (m_filter.equals(filter)) {
+                return;
+            }
+            if (filter.startsWith(m_filter)) {
+                // the most common use case will be a list gradually refined by user typing more characters
+                m_filtered = m_filtered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
+            } else if (filter.isEmpty()) {
+                m_filtered = m_unfiltered;
+            } else {
+                m_filtered = m_unfiltered.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
+            }
             m_filter = filter;
-            m_filtered = bundleNames.stream().filter(s -> s.contains(filter)).collect(Collectors.toList());
             this.fireContentsChanged(this, 0, bundleNames.size());
         }
     }
@@ -157,10 +190,10 @@ public class BundleListPanel extends JPanel {
         add(northPane, BorderLayout.NORTH);
 
         final JButton addBundleButton = new JButton("Add Bundle");
-        addBundleButton.addActionListener(e -> addBundle(m_listModel));
+        addBundleButton.addActionListener(e -> openAddBundleDialog());
 
         final JButton removeBundleButton = new JButton("Remove");
-        removeBundleButton.addActionListener(e -> removeBundles());
+        removeBundleButton.addActionListener(e -> removeSelectedBundles());
 
         final JPanel southPane = new JPanel(new FlowLayout());
         southPane.add(addBundleButton);
@@ -168,107 +201,100 @@ public class BundleListPanel extends JPanel {
         add(southPane, BorderLayout.SOUTH);
     }
 
-    private void addBundle(final DefaultListModel<String> listToAddTo) {
-        final int width = 280;
-        final int height = 360;
+    /**
+     * Dialog that displays a list of available bundles for selection.
+     *
+     * @author Jonathan Hale, KNIME GmbH, Konstanz, Germany
+     */
+    class AddBundleDialog extends JDialog {
+        private static final long serialVersionUID = 1L;
 
-        final JFrame frame = new JFrame("Add Bundle");
+        final JList<String> m_bundleList;
 
-        final Point p = getLocationOnScreen();
-        final Dimension d = getSize();
-        frame.setLocation(p.x + (d.width - width) / 2, p.y + (d.height - height) / 2);
+        final FilterableListModel m_bundleModel = new FilterableListModel(bundleNames);
 
-        final JPanel pane = new JPanel(new BorderLayout());
+        public AddBundleDialog(final Window window, final String title) {
+            final int width = 480;
+            final int height = 360;
 
-        final JPanel northPane = new JPanel(new GridLayout(2, 1));
-        northPane.add(new JLabel("Double-click bundle to add it together with its dependencies."));
-        final JTextField filterField = new JTextField();
-        northPane.add(filterField);
-        pane.add(northPane, BorderLayout.NORTH);
+            final Point p = window.getLocationOnScreen();
+            final Dimension d = getSize();
+            setLocation(p.x + (d.width - width) / 2, p.y + (d.height - height) / 2);
 
-        final BundleListModel bundleModel = new BundleListModel();
-        final JList<String> bundleList = new JList<>(bundleModel);
+            final JPanel pane = new JPanel(new BorderLayout());
 
-        final JScrollPane scrollPane = new JScrollPane(bundleList);
-        scrollPane.setPreferredSize(new Dimension(width, height));
-        pane.add(scrollPane, BorderLayout.CENTER);
+            final JPanel northPane = new JPanel(new GridLayout(2, 1));
+            northPane.add(new JLabel("Double-click bundle to add it together with its dependencies."));
 
-        bundleList.addMouseListener(new MouseListener() {
+            m_filterField.requestFocusInWindow();
+            northPane.add(m_filterField);
+            pane.add(northPane, BorderLayout.NORTH);
 
-            @Override
-            public void mouseReleased(final MouseEvent e) {
-            }
+            m_bundleList = new JList<>(m_bundleModel);
+            final JScrollPane scrollPane = new JScrollPane(m_bundleList);
+            scrollPane.setPreferredSize(new Dimension(width, height));
+            pane.add(scrollPane, BorderLayout.CENTER);
 
-            @Override
-            public void mousePressed(final MouseEvent e) {
-            }
+            m_bundleList.addMouseListener(new MouseClickListener() {
+                @Override
+                public void mouseClicked(final MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        // Double click closes the dialog
+                        final String bundleName = m_bundleList.getSelectedValue();
+                        addBundle(bundleName);
 
-            @Override
-            public void mouseExited(final MouseEvent e) {
-            }
-
-            @Override
-            public void mouseEntered(final MouseEvent e) {
-            }
-
-            @Override
-            public void mouseClicked(final MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    // Double click closes the dialog
-                    final String bundleName = bundleList.getSelectedValue();
-                    final Bundle firstBundle = Platform.getBundle(bundleName.split(" ")[0]);
-
-                    final Set<String> bundleNameSet = new HashSet<String>();
-
-
-                    for (final String bn : bundleNameSet) {
-                        listToAddTo.addElement(bn);
+                        setVisible(false);
+                        dispose();
                     }
-
-                    frame.setVisible(false);
-                    frame.dispose();
                 }
-            }
-        });
+            });
 
-        filterField.getDocument().addDocumentListener(new DocumentListener() {
+            m_filterField.getDocument().addDocumentListener(new DocumentListener() {
 
-            @Override
-            public void removeUpdate(final DocumentEvent e) {
-                update(e);
-            }
-
-            @Override
-            public void insertUpdate(final DocumentEvent e) {
-                update(e);
-            }
-
-            @Override
-            public void changedUpdate(final DocumentEvent e) {
-                update(e);
-            }
-
-            void update(final DocumentEvent e) {
-                try {
-                    final Document doc = e.getDocument();
-                    bundleModel.setFilter(doc.getText(0, doc.getLength()));
-                } catch (BadLocationException e1) {
-                    // Will never happen
+                @Override
+                public void removeUpdate(final DocumentEvent e) {
+                    update(e);
                 }
-            }
-        });
 
-        frame.add(pane);
-        frame.pack();
-        frame.setVisible(true);
+                @Override
+                public void insertUpdate(final DocumentEvent e) {
+                    update(e);
+                }
+
+                @Override
+                public void changedUpdate(final DocumentEvent e) {
+                    update(e);
+                }
+
+                void update(final DocumentEvent e) {
+                    try {
+                        final Document doc = e.getDocument();
+                        m_bundleModel.setFilter(doc.getText(0, doc.getLength()));
+                    } catch (BadLocationException e1) {
+                        // Will never happen
+                    }
+                }
+            });
+
+            add(pane);
+        }
     }
 
-    private void removeBundles() {
+    /* Opens the "Add Bundle" dialog */
+    AddBundleDialog openAddBundleDialog() {
+        final AddBundleDialog frame = new AddBundleDialog(SwingUtilities.getWindowAncestor(this), "Add Bundle");
+        frame.pack();
+        frame.setVisible(true);
+
+        return frame;
+    }
+
+    /* Remove all bundles currently selected in list */
+    void removeSelectedBundles() {
         final int[] selections = m_list.getSelectedIndices();
 
-        Collections.reverse(Arrays.asList(selections));
-        for (final int index : selections) {
-            m_listModel.remove(index);
+        for (int i = selections.length-1; i >= 0; --i) {
+            m_listModel.remove(selections[i]);
         }
     }
 
@@ -292,8 +318,36 @@ public class BundleListPanel extends JPanel {
         m_listModel.clear();
 
         for (final String b : bundles) {
-            m_listModel.addElement(b);
+            addBundle(b);
         }
     }
 
+    /**
+     * Add a bundle to the bundle list.
+     *
+     * @param bundleName Name of the bundle to add.
+     * @return true if adding was successful, false if bundle with given name was not found.
+     */
+    public boolean addBundle(final String bundleName) {
+        if (bundleName == null) {
+            return false;
+        }
+        final String nameWithoutVersion = bundleName.split(" ")[0];
+        final Bundle firstBundle = Platform.getBundle(nameWithoutVersion);
+
+        if (firstBundle == null) {
+            /* Bundle not found */
+            return false;
+        }
+
+        //final Set<String> bundleNameSet = new HashSet<String>();
+        final String symbolicName = firstBundle.getSymbolicName();
+        m_listModel.addElement(symbolicName);
+
+        //for (final String bn : bundleNameSet) {
+        //    listToAddTo.addElement(bn);
+        //}
+
+        return true;
+    }
 }
