@@ -92,7 +92,7 @@ public class WorkspaceProfileProvider implements IProfileProvider {
     /**
      * Constant for the name of the property that tells whether profiles are enabled or not: {@value}.
      */
-    public static final String PROFILES_ENABLED = "enabled";
+    public static final String PROFILES_ENABLED = "profilesEnabled";
 
 
     static {
