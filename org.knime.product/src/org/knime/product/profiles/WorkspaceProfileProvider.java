@@ -126,10 +126,10 @@ public class WorkspaceProfileProvider implements IProfileProvider {
             }
 
             boolean enabled = Boolean.valueOf(props.getProperty(PROFILES_ENABLED, "false"));
-            String profileLocation = props.getProperty("profileLocation");
+            String profileLocation = props.getProperty(PROFILE_LOCATION);
             if (enabled && (profileLocation != null)) {
                 m_profilesLocation = new URI(profileLocation);
-                String requestedProfiles = props.getProperty("profileList", "");
+                String requestedProfiles = props.getProperty(PROFILE_LIST, "");
                 m_requestedProfiles = Arrays.asList(requestedProfiles.split("[,;:]"));
             }
         }
