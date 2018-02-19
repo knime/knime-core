@@ -346,7 +346,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Error: remote locations are not supported");
                     setForeground(ERROR);
                 }
-            } catch (IOException | URISyntaxException | InvalidPathException ex) {
+            } catch (IOException | URISyntaxException | IllegalArgumentException ex) {
                 // ignore it
             }
         }
