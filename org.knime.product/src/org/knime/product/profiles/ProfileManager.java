@@ -227,7 +227,10 @@ public class ProfileManager {
                 value = rep.replaceVariables(value);
             }
 
-            // finally replace escaped "variables" so that the double dollars are removed
+            // finally replace escaped "variables" so that the double dollars are removed, e.g.:
+            //     /instance/org.knime.product/non-variable=bla/$${custom:var}/foo
+            // becomes
+            //     /instance/org.knime.product/non-variable=bla/${custom:var}/foo
             props.replace(key, value.replaceAll("\\$(\\$\\{[^:\\}]+:[^\\}]+\\})", "$1"));
         }
     }
