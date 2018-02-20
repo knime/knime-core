@@ -6,6 +6,7 @@
 		<project>org.knime.core</project>
 	</projects>
 	<buildSpec>
+<!-- Disabled to prevent outgoing changes on schemas.jar - needs to be temporarily re-enabled when we change the schemas
 	   <buildCommand>
             <name>org.eclipse.buckminster.ant.AntBuilder</name>
             <arguments>
@@ -23,6 +24,7 @@
                 </dictionary>
             </arguments>
         </buildCommand>
+ -->
 		<buildCommand>
 			<name>org.eclipse.jdt.core.javabuilder</name>
 			<arguments>
