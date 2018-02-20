@@ -45,15 +45,23 @@
 package org.knime.core.node.util.filter;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,30 +75,38 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableRowSorter;
 
-import org.knime.core.data.util.ListModelFilterUtils;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.DataColumnSpecTableCellRenderer;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 
 /**
@@ -116,26 +132,38 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private static final Border EXCLUDE_BORDER = BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
     /** Include list. */
-    @SuppressWarnings("rawtypes")
-    private final JList m_inclList;
+    private final JTable m_inclTable;
 
     /** Include model. */
     @SuppressWarnings("rawtypes")
-    private final ArrayListModel m_inclMdl;
+    private final NameFilterTableModel m_inclMdl;
+
+    /** Include sorter. */
+    @SuppressWarnings("rawtypes")
+    private final TableRowSorter<NameFilterTableModel> m_inclSorter;
+
+    /** Include cards. */
+    private final JPanel m_inclCards;
+
+    /** Include table placeholder. */
+    private final TablePlaceholder m_inclTablePlaceholder;
 
     /** Exclude list. */
-    @SuppressWarnings("rawtypes")
-    private final JList m_exclList;
+    private final JTable m_exclTable;
 
     /** Exclude model. */
     @SuppressWarnings("rawtypes")
-    private final ArrayListModel m_exclMdl;
+    private final NameFilterTableModel m_exclMdl;
 
-    /** Highlight all search hits in the include model. */
-    private final JCheckBox m_markAllHitsIncl;
+    /** Exclude sorter. */
+    @SuppressWarnings("rawtypes")
+    private final TableRowSorter<NameFilterTableModel> m_exclSorter;
 
-    /** Highlight all search hits in the exclude model. */
-    private final JCheckBox m_markAllHitsExcl;
+    /** Include cards. */
+    private final JPanel m_exclCards;
+
+    /** Include table placeholder. */
+    private final TablePlaceholder m_exclTablePlaceholder;
 
     /** Radio button for the exclusion option. */
     private final JRadioButton m_enforceExclusion;
@@ -156,16 +184,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private final JButton m_addButton;
 
     /** Search Field in include list. */
-    private final JTextField m_searchFieldIncl;
-
-    /** Search Button for include list. */
-    private final JButton m_searchButtonIncl;
+    private final JTextField m_inclSearchField;
 
     /** Search Field in exclude list. */
-    private final JTextField m_searchFieldExcl;
-
-    /** Search Button for exclude list. */
-    private final JButton m_searchButtonExcl;
+    private final JTextField m_exclSearchField;
 
     /** List of T elements to keep initial ordering of names. */
     private final LinkedHashSet<T> m_order = new LinkedHashSet<T>();
@@ -192,6 +214,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private JPanel m_filterPanel;
 
     private JPanel m_nameFilterPanel;
+
+    /** Constants for updating different parts of the UI*/
+    private static final String INCLUDE = "INCLUDE";
+    private static final String EXCLUDE = "EXCLUDE";
+    private static final String EMPTY = "EMPTY";
+    private static final String NOTHING_FOUND = "NOTHING_FOUND";
+    private static final String PLACEHOLDER = "PLACEHOLDER";
+    private static final String LIST = "LIST";
+
+    /** Text to be displayed in the filter as a placeholder */
+    private static final String FILTER = "Filter";
 
     /**
      * additional checkbox for the middle button panel
@@ -248,6 +281,327 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
+     * Placeholder being displayed instead of table when search matches no items.
+     *
+     * @author Johannes Schweig
+     */
+    private class TablePlaceholder extends JLabel{
+
+        TablePlaceholder(){
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setVerticalAlignment(SwingConstants.TOP);
+            setFont(getFont().deriveFont(Font.ITALIC));
+            setForeground(Color.GRAY);
+        }
+
+        /**
+         * Updates the labels text with the specified searchString
+         * @param searchString term that was searched for
+         */
+        private void updateText(final String mode, final String searchString, final int total){
+            // empty list/table
+            if (mode.equals(EMPTY)) {
+                setText("No columns in this list");
+            } else if (mode.equals(NOTHING_FOUND)) {
+                String str = searchString;
+                // shorten string if too long
+                int max = 15;
+                if (str.length() > max){
+                    str = str.substring(0, max) + "...";
+                }
+                setText("<html>No columns found matching<br>\""+str+"\" (total: " + total + ")</html>");
+            }
+        }
+
+    }
+
+    /**
+     * MouseListener handling double clicks of elements in the table.
+     *
+     * @author Johannes Schweig
+     */
+    private class DoubleClickMouseListener implements MouseListener {
+        private String table;
+
+        DoubleClickMouseListener(final String _table){
+            table = _table;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            // if a double click occurs on one of the rows, these rows are moved to the other table
+            if (e.getClickCount() == 2) {
+                if (table.equals(INCLUDE)) {
+                    onRemIt(m_inclTable.getSelectedRows());
+                }else if (table.equals(EXCLUDE)) {
+                    onAddIt(m_exclTable.getSelectedRows());
+                }
+            }
+            e.consume();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mousePressed(final MouseEvent e) { }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseReleased(final MouseEvent e) { }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseEntered(final MouseEvent e) { }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseExited(final MouseEvent e) { }
+
+    }
+
+    /**
+     * KeyListener of a table handling key strokes.
+     *
+     * @author Johannes Schweig
+     */
+    private class TableKeyListener implements KeyListener {
+        private String table;
+
+        TableKeyListener(final String _table){
+            table = _table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyTyped(final KeyEvent e) {
+            // find first column starting with typed character
+            String key = String.valueOf(e.getKeyChar());
+            int index = -1;
+            if (table.equals(INCLUDE)){
+                for (int i = 0; i < m_inclTable.getRowCount(); i++) {
+                    String s = ((DataColumnSpec) m_inclTable.getValueAt(i, 0)).getName();
+                    if (s.toLowerCase().startsWith(key)){
+                        index = i;
+                        break;
+                    }
+                }
+                // if a column is found, select it and scroll the view
+                if (index != -1) {
+                    m_inclTable.setRowSelectionInterval(index, index);
+                    m_inclTable.scrollRectToVisible(new Rectangle(m_inclTable.getCellRect(index, 0, true)));
+                }
+            }else if(table.equals(EXCLUDE)){
+                for (int i = 0; i < m_exclTable.getRowCount(); i++) {
+                    String s = ((DataColumnSpec) m_exclTable.getValueAt(i, 0)).getName();
+                    if (s.toLowerCase().startsWith(key)){
+                        index = i;
+                        break;
+                    }
+                }
+                // if a column is found, select it and scroll the view
+                if (index != -1) {
+                    m_exclTable.setRowSelectionInterval(index, index);
+                    m_exclTable.scrollRectToVisible(new Rectangle(m_exclTable.getCellRect(index, 0, true)));
+                }
+
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyPressed(final KeyEvent e) { }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyReleased(final KeyEvent e) { }
+
+    }
+
+    /**
+     * FocusListener that clears the selection in one table if the other gains focus.
+     *
+     * @author Johannes Schweig
+     */
+    private class TableFocusListener implements FocusListener{
+        private String table;
+
+        TableFocusListener (final String _table) {
+            table = _table;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusGained(final FocusEvent e) {
+            // clears selection of one table if the other gains focus
+            if(table.equals(INCLUDE)){
+                m_exclTable.clearSelection();
+            } else if(table.equals(EXCLUDE)){
+                m_inclTable.clearSelection();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusLost(final FocusEvent e) { }
+
+    }
+
+    /**
+     * KeyListener that updates the filter in the table if a new character is typed.
+     *
+     *  @author Johannes Schweig
+     */
+    private class SearchKeyListener implements KeyListener {
+        private String table;
+
+        /**
+         * Constructs a SearchKeyListener for a given table.
+         * @param _table table that the search is filtering
+         */
+        SearchKeyListener (final String _table) {
+            table = _table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyTyped(final KeyEvent e) { }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyPressed(final KeyEvent e) { }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void keyReleased(final KeyEvent e) {
+            updateRowFilter(table);
+            updateTablePlaceholder(table);
+        }
+    }
+
+    /**
+     * FocusListener that updates the placeholder in the textfield on focus loss and gain.
+     *
+     * @author Johannes Schweig
+     */
+    private class SearchFocusListener implements FocusListener {
+        private String table;
+
+        SearchFocusListener (final String _table) {
+            table = _table;
+        }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusGained(final FocusEvent e) {
+            updateTextFieldPlaceholder(true);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void focusLost(final FocusEvent e) {
+            updateTextFieldPlaceholder(false);
+        }
+
+        /**
+         * Shows or hides the placeholder text in the textfield
+         * @param table
+         * @param focus true if focusGained, false if focusLost
+         */
+        private void updateTextFieldPlaceholder (final boolean focus){
+            String query = table.equals(INCLUDE) ? m_inclSearchField.getText() : m_exclSearchField.getText();
+            if (table.equals(INCLUDE)){
+                if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
+                    m_inclSearchField.setText("");
+                    m_inclSearchField.setForeground(Color.BLACK);
+                    m_inclSearchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
+                } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
+                    m_inclSearchField.setText(FILTER);
+                    m_inclSearchField.setForeground(Color.GRAY);
+                    m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+                }
+            } else if (table.equals(EXCLUDE)){
+                if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
+                    m_exclSearchField.setText("");
+                    m_exclSearchField.setForeground(Color.BLACK);
+                    m_exclSearchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
+                } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
+                    m_exclSearchField.setText(FILTER);
+                    m_exclSearchField.setForeground(Color.GRAY);
+                    m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+                }
+
+            }
+        }
+
+    }
+
+    /**
+     * ActionListener that triggers the moving of columns on button press.
+     *
+     * @author Johannes Schweig
+     */
+    private class MoveAllActionListener implements ActionListener {
+        private String table;
+
+        /**
+         * Constructs a MoveAllActionListener for a table.
+         * @param _table the table from which elements are moved
+         */
+        MoveAllActionListener (final String _table) {
+            table = _table;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void actionPerformed(final ActionEvent e) {
+            // if table is not filtered
+            if (table.equals(INCLUDE)) {
+                if(m_inclSorter.getRowFilter()==null){
+                    onRemAll();
+                }else{ //if table is filtered
+                    int[] rows = IntStream.range(0, m_inclTable.getRowCount()).toArray();
+                    onRemIt(rows);
+                }
+            } else if (table.equals(EXCLUDE)) {
+                if(m_exclSorter.getRowFilter()==null){
+                    onAddAll();
+                }else{ //if table is filtered
+                    int[] rows = IntStream.range(0, m_exclTable.getRowCount()).toArray();
+                    onAddIt(rows);
+              }
+            }
+        }
+    }
+
+    /**
      * Creates a new filter column panel with three component which are the include list, button panel to shift elements
      * between the two lists, and the exclude list. The include list then will contain all values to filter.
      * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
@@ -260,7 +614,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param searchLabel text to show next to the search fields
      * @since 3.4
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"rawtypes"})
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter,
         final String searchLabel) {
         super(new GridLayout(1, 1));
@@ -274,187 +628,97 @@ public abstract class NameFilterPanel<T> extends JPanel {
         });
         m_patternButton = createButtonToFilterPanel(PatternFilterConfiguration.TYPE, "Wildcard/Regex Selection");
 
-        // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
+        // keeps buttons such as '>', '>>', '<', and '<<'
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
-        buttonPan.add(Box.createVerticalStrut(20));
-
-        m_addButton = new JButton("add >>");
-        m_addButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addButton);
-        m_addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onAddIt();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
-
-        m_addAllButton = new JButton("add all >>");
-        m_addAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addAllButton);
-        m_addAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onAddAll();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
-
-        m_remButton = new JButton("<< remove");
-        m_remButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_remButton);
-        m_remButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onRemIt();
-            }
-        });
-        buttonPan.add(Box.createVerticalStrut(25));
-
-        m_remAllButton = new JButton("<< remove all");
-        m_remAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_remAllButton);
-        m_remAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                onRemAll();
-            }
-        });
-        m_additionalCheckbox = createAdditionalButton();
-        if (m_additionalCheckbox != null){
-            buttonPan.add(Box.createVerticalStrut(25));
-            m_additionalCheckbox.setMaximumSize(new Dimension(125, 25));
-            buttonPan.add(m_additionalCheckbox);
-            m_additionalCheckbox.addActionListener(e -> fireFilteringChangedEvent());
-        }
-        buttonPan.add(Box.createVerticalStrut(20));
-        buttonPan.add(Box.createGlue());
+        buttonPan.add(Box.createVerticalStrut(57));
 
         // include list
-        m_inclMdl = new ArrayListModel();
-        m_inclList = new JList(m_inclMdl);
-        m_inclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_inclList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    onRemIt();
-                    me.consume();
-                }
-            }
-        });
-        final JScrollPane jspIncl = new JScrollPane(m_inclList);
-        jspIncl.setMinimumSize(new Dimension(150, 155));
+        m_inclMdl = new NameFilterTableModel();
+        m_inclTable = new JTable(m_inclMdl);
+        m_inclTable.setShowGrid(false);
+        m_inclTable.setTableHeader(null);
+        m_inclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclTable.addMouseListener(new DoubleClickMouseListener(INCLUDE));
+        m_inclTable.addKeyListener(new TableKeyListener(INCLUDE));
+        m_inclSorter = new TableRowSorter<NameFilterTableModel>(m_inclMdl);
+        m_inclTable.setRowSorter(m_inclSorter);
+        m_inclTable.addFocusListener(new TableFocusListener(INCLUDE));
+        final JScrollPane jspIncl = new JScrollPane(m_inclTable);
+        jspIncl.setPreferredSize(new Dimension(250, 100));
+        // setup cardlayout for display of placeholder on search returning no results
+        m_inclCards = new JPanel(new CardLayout());
+        m_inclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
+        m_inclTablePlaceholder = new TablePlaceholder();
+        m_inclCards.add(jspIncl, LIST);
+        m_inclCards.add(m_inclTablePlaceholder, PLACEHOLDER);
 
-        m_searchFieldIncl = new JTextField(8);
-        m_searchButtonIncl = new JButton("Search");
-        ActionListener actionListenerIncl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, m_searchFieldIncl.getText(),
-                    m_markAllHitsIncl.isSelected());
-            }
-        };
-        m_searchFieldIncl.addActionListener(actionListenerIncl);
-        m_searchButtonIncl.addActionListener(actionListenerIncl);
-        JPanel inclSearchPanel = new JPanel(new BorderLayout());
-        inclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
-        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
-        inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
-        m_markAllHitsIncl = new JCheckBox("Select all search hits");
-        ActionListener actionListenerAllIncl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_inclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, m_searchFieldIncl.getText(),
-                    m_markAllHitsIncl.isSelected());
-            }
-        };
-        m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
-        inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
+        m_inclSearchField = new JTextField(FILTER, 8);
+        m_inclSearchField.setForeground(Color.GRAY);
+        m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+        m_inclSearchField.addKeyListener(new SearchKeyListener(INCLUDE));
+        m_inclSearchField.addFocusListener(new SearchFocusListener(INCLUDE));
+        JPanel inclSearchPanel = new JPanel(new BorderLayout(8, 0));
+        inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+        inclSearchPanel.add(m_inclSearchField, BorderLayout.CENTER);
+        // filter icon
+        inclSearchPanel.add(new JLabel(new ImageIcon(getResourceUrl("filter.png"))), BorderLayout.WEST);
+
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(INCLUDE_BORDER, " Include ");
         includePanel.setBorder(m_includeBorder);
         includePanel.add(inclSearchPanel, BorderLayout.NORTH);
-        includePanel.add(jspIncl, BorderLayout.CENTER);
+        includePanel.add(m_inclCards, BorderLayout.CENTER);
 
         // exclude list
-        m_exclMdl = new ArrayListModel();
-        m_exclList = new JList(m_exclMdl);
-        m_exclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_exclList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    onAddIt();
-                    me.consume();
-                }
-            }
-        });
-
+        m_exclMdl = new NameFilterTableModel();
+        m_exclTable = new JTable(m_exclMdl);
+        m_exclTable.setShowGrid(false);
+        m_exclTable.setTableHeader(null);
+        m_exclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclTable.addMouseListener(new DoubleClickMouseListener(EXCLUDE));
+        m_exclTable.addKeyListener(new TableKeyListener(EXCLUDE));
         // set renderer for items in the in- and exclude list
-        m_inclList.setCellRenderer(getListCellRenderer());
-        m_exclList.setCellRenderer(getListCellRenderer());
+        m_inclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
+        m_exclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
+        m_exclSorter = new TableRowSorter<NameFilterTableModel>(m_exclMdl);
+        m_exclTable.setRowSorter(m_exclSorter);
+        m_exclTable.addFocusListener(new TableFocusListener(EXCLUDE));
+        final JScrollPane jspExcl = new JScrollPane(m_exclTable);
+        jspExcl.setPreferredSize(new Dimension(250, 100));
+        // setup cardlayout for display of placeholder on search returning no results
+        m_exclCards = new JPanel(new CardLayout());
+        m_exclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
+        m_exclTablePlaceholder = new TablePlaceholder();
+        m_exclCards.add(jspExcl, LIST);
+        m_exclCards.add(m_exclTablePlaceholder, PLACEHOLDER);
 
-        final JScrollPane jspExcl = new JScrollPane(m_exclList);
-        jspExcl.setMinimumSize(new Dimension(150, 155));
+        m_exclSearchField = new JTextField(FILTER, 8);
+        m_exclSearchField.setForeground(Color.GRAY);
+        m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
+        m_exclSearchField.addKeyListener(new SearchKeyListener(EXCLUDE));
+        m_exclSearchField.addFocusListener(new SearchFocusListener(EXCLUDE));
 
-        m_searchFieldExcl = new JTextField(8);
-        m_searchButtonExcl = new JButton("Search");
-        ActionListener actionListenerExcl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, m_searchFieldExcl.getText(),
-                    m_markAllHitsExcl.isSelected());
-            }
-        };
-        m_searchFieldExcl.addActionListener(actionListenerExcl);
-        m_searchButtonExcl.addActionListener(actionListenerExcl);
-        JPanel exclSearchPanel = new JPanel(new BorderLayout());
-        exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        exclSearchPanel.add(new JLabel((searchLabel != null ? searchLabel : "Column(s)")+": "), BorderLayout.WEST);
-        exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
-        exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
-        m_markAllHitsExcl = new JCheckBox("Select all search hits");
-        ActionListener actionListenerAllExcl = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                m_exclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, m_searchFieldExcl.getText(),
-                    m_markAllHitsExcl.isSelected());
-            }
-        };
-        m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
-        exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
+        JPanel exclSearchPanel = new JPanel(new BorderLayout(8, 0));
+        exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
+        exclSearchPanel.add(m_exclSearchField, BorderLayout.CENTER);
+        // filter icon
+        exclSearchPanel.add(new JLabel(new ImageIcon(getResourceUrl("filter.png"))), BorderLayout.WEST);
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
-        excludePanel.add(jspExcl, BorderLayout.CENTER);
+        excludePanel.add(m_exclCards, BorderLayout.CENTER);
 
-        JPanel buttonPan2 = new JPanel(new GridLayout());
-        Border border = BorderFactory.createTitledBorder(" Select ");
-        buttonPan2.setBorder(border);
-        buttonPan2.add(buttonPan);
 
         // add force incl/excl buttons
         m_enforceInclusion = new JRadioButton("Enforce inclusion");
+        m_enforceInclusion.setBorder(new EmptyBorder(8, 8, 8, 8));
         m_enforceExclusion = new JRadioButton("Enforce exclusion");
-        m_enforceInclusion.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                cleanInvalidValues();
-            }
-        });
-        m_enforceExclusion.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                cleanInvalidValues();
-            }
-        });
+        m_enforceExclusion.setBorder(new EmptyBorder(8, 8, 8, 8));
+        m_enforceInclusion.addActionListener(e -> cleanInvalidValues());
+        m_enforceExclusion.addActionListener(e -> cleanInvalidValues());
         if (!showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
             m_enforceInclusion.setToolTipText("Force the set of included names to stay the same.");
@@ -465,12 +729,46 @@ public abstract class NameFilterPanel<T> extends JPanel {
             m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
         }
+        m_addButton = new JButton(new ImageIcon(getResourceUrl("add.png")));
+        m_addButton.setMaximumSize(new Dimension(125, 25));
+        m_addButton.setToolTipText("Move the selected entries from the left to the right list.");
+        buttonPan.add(m_addButton);
+        m_addButton.addActionListener(e -> onAddIt(m_exclTable.getSelectedRows()));
+        buttonPan.add(Box.createVerticalStrut(25));
 
+        m_addAllButton = new JButton(new ImageIcon(getResourceUrl("add_all.png")));
+        m_addAllButton.setMaximumSize(new Dimension(125, 25));
+        m_addAllButton.setToolTipText("Moves all visible entries from the left to the right list.");
+        buttonPan.add(m_addAllButton);
+        m_addAllButton.addActionListener(new MoveAllActionListener(EXCLUDE));
+        buttonPan.add(Box.createVerticalStrut(25));
+
+        m_remButton = new JButton(new ImageIcon(getResourceUrl("rem.png")));
+        m_remButton.setMaximumSize(new Dimension(125, 25));
+        m_remButton.setToolTipText("Move the selected entries from the right to the left list.");
+        buttonPan.add(m_remButton);
+        m_remButton.addActionListener(e -> onRemIt(m_inclTable.getSelectedRows()));
+        buttonPan.add(Box.createVerticalStrut(25));
+
+        m_remAllButton = new JButton(new ImageIcon(getResourceUrl("rem_all.png")));
+        m_remAllButton.setMaximumSize(new Dimension(125, 25));
+        m_remAllButton.setToolTipText("Moves all visible entries from the right to the left list.");
+        buttonPan.add(m_remAllButton);
+        m_remAllButton.addActionListener(new MoveAllActionListener(INCLUDE));
+        m_additionalCheckbox = createAdditionalButton();
+        if (m_additionalCheckbox != null){
+            buttonPan.add(Box.createVerticalStrut(25));
+            m_additionalCheckbox.setMaximumSize(new Dimension(125, 25));
+            buttonPan.add(m_additionalCheckbox);
+            m_additionalCheckbox.addActionListener(e -> fireFilteringChangedEvent());
+        }
+        buttonPan.add(Box.createVerticalStrut(20));
+        buttonPan.add(Box.createGlue());
         // adds include, button, exclude component
         JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.X_AXIS));
         center.add(excludePanel);
-        center.add(buttonPan2);
+        center.add(buttonPan);
         center.add(includePanel);
         m_nameFilterPanel = center;
         initPanel();
@@ -530,14 +828,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
-        m_searchFieldIncl.setEnabled(enabled);
-        m_searchButtonIncl.setEnabled(enabled);
-        m_searchFieldExcl.setEnabled(enabled);
-        m_searchButtonExcl.setEnabled(enabled);
-        m_inclList.setEnabled(enabled);
-        m_exclList.setEnabled(enabled);
-        m_markAllHitsIncl.setEnabled(enabled);
-        m_markAllHitsExcl.setEnabled(enabled);
+        m_inclSearchField.setEnabled(enabled);
+        m_exclSearchField.setEnabled(enabled);
+        m_inclTable.setEnabled(enabled);
+        m_exclTable.setEnabled(enabled);
         m_remAllButton.setEnabled(enabled);
         m_remButton.setEnabled(enabled);
         m_addAllButton.setEnabled(enabled);
@@ -650,8 +944,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclMdl.clear();
         m_hideNames.clear();
 
-        ArrayList<T> tmp_incl = new ArrayList<>(m_order.size());
         ArrayList<T> tmp_excl = new ArrayList<>(m_order.size());
+        ArrayList<T> tmp_incl = new ArrayList<>(m_order.size());
         for (final String name : m_invalidIncludes) {
             final T t = getTforName(name);
             tmp_incl.add(t);
@@ -684,6 +978,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         m_inclMdl.addAll(tmp_incl);
         m_exclMdl.addAll(tmp_excl);
+        // forces update of the UI on startup
+        updateTablePlaceholder(INCLUDE);
+        updateTablePlaceholder(EXCLUDE);
 
         repaint();
     }
@@ -734,9 +1031,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
     /** @return list of all included T's */
     public Set<T> getIncludeList() {
         final Set<T> list = new LinkedHashSet<T>();
-        for (int i = 0; i < m_inclMdl.getSize(); i++) {
+        for (Object o : m_inclMdl) {
             @SuppressWarnings("unchecked")
-            T t = (T)m_inclMdl.getElementAt(i);
+            T t = (T) o;
             if (!isInvalidValue(getNameForT(t))) {
                 list.add(t);
             }
@@ -747,9 +1044,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
     /** @return list of all excluded T's */
     public Set<T> getExcludeList() {
         final Set<T> list = new LinkedHashSet<T>();
-        for (int i = 0; i < m_exclMdl.getSize(); i++) {
+        for (Object o : m_exclMdl) {
             @SuppressWarnings("unchecked")
-            T t = (T)m_exclMdl.getElementAt(i);
+            T t = (T) o;
             if (!isInvalidValue(getNameForT(t))) {
                 list.add(t);
             }
@@ -762,9 +1059,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     private String[] getInvalidIncludes() {
         List<String> list = new ArrayList<String>();
-        for (int i = 0; i < m_inclMdl.getSize(); i++) {
+        for (Object o : m_inclMdl) {
             @SuppressWarnings("unchecked")
-            String name = getNameForT((T)m_inclMdl.getElementAt(i));
+            String name = getNameForT((T) o);
             if (isInvalidValue(name)) {
                 list.add(name);
             }
@@ -777,9 +1074,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     private String[] getInvalidExcludes() {
         List<String> list = new ArrayList<String>();
-        for (int i = 0; i < m_exclMdl.getSize(); i++) {
+        for (Object o : m_exclMdl) {
             @SuppressWarnings("unchecked")
-            String name = getNameForT((T)m_exclMdl.getElementAt(i));
+            String name = getNameForT((T) o);
             if (isInvalidValue(name)) {
                 list.add(name);
             }
@@ -803,6 +1100,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      *
      * @param names a list of names to hide from the filter
      */
+    @SuppressWarnings("unchecked")
     public void hideNames(final T... names) {
         boolean changed = false;
         for (T name : names) {
@@ -828,8 +1126,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // add all selected elements from the include to the exclude list
         HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(m_hideNames);
-        for (Object e : m_exclMdl) {
-            hash.add(e);
+        for (Object o : m_exclMdl) {
+            hash.add(o);
         }
         m_exclMdl.clear();
         for (T name : m_order) {
@@ -856,42 +1154,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public void setExcludeTitle(final String title) {
         m_excludeBorder.setTitle(title);
-    }
-
-    /**
-     * Setter for the original "Remove All" button.
-     *
-     * @param text the new button title
-     */
-    public void setRemoveAllButtonText(final String text) {
-        m_remAllButton.setText(text);
-    }
-
-    /**
-     * Setter for the original "Add All" button.
-     *
-     * @param text the new button title
-     */
-    public void setAddAllButtonText(final String text) {
-        m_addAllButton.setText(text);
-    }
-
-    /**
-     * Setter for the original "Remove" button.
-     *
-     * @param text the new button title
-     */
-    public void setRemoveButtonText(final String text) {
-        m_remButton.setText(text);
-    }
-
-    /**
-     * Setter for the original "Add" button.
-     *
-     * @param text the new button title
-     */
-    public void setAddButtonText(final String text) {
-        m_addButton.setText(text);
     }
 
     /**
@@ -1037,17 +1299,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
     protected JRadioButton createButtonToFilterPanel(final String actionCommand, final String label) {
         JRadioButton button = new JRadioButton(label);
         button.setActionCommand(actionCommand);
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (e.getActionCommand() != null) {
-                    String oldType = m_currentType;
-                    m_currentType = e.getActionCommand();
-                    if (!m_currentType.equals(oldType)) {
-                        fireFilteringChangedEvent();
-                    }
-                    updateFilterPanel();
+        button.addActionListener(e -> {
+            if (e.getActionCommand() != null) {
+                String oldType = m_currentType;
+                m_currentType = e.getActionCommand();
+                if (!m_currentType.equals(oldType)) {
+                    fireFilteringChangedEvent();
                 }
+                updateFilterPanel();
             }
         });
         return button;
@@ -1080,16 +1339,20 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Called by the 'remove >>' button to exclude the selected elements from the include list.
+     * Called by the '>' button to exclude the selected elements from the include list.
+     * @param indices of rows to be removed in table display order
      */
     @SuppressWarnings("unchecked")
-    private void onRemIt() {
+    private void onRemIt(final int[] rows) {
         // add all selected elements from the include to the exclude list
-        List<T> o = m_inclList.getSelectedValuesList();
+        List<T> o = new ArrayList<T>();
+        for(int i : rows) {
+            o.add((T)m_inclTable.getValueAt(i, 0));
+        }
         HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(o);
-        for (Object e : m_exclMdl) {
-            hash.add(e);
+        for (Object obj : m_exclMdl) {
+            hash.add(obj);
         }
 
         boolean changed = m_inclMdl.removeAll(o);
@@ -1114,11 +1377,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
+            updateTablePlaceholder(INCLUDE);
+            updateTablePlaceholder(EXCLUDE);
         }
     }
 
     /**
-     * Called by the 'remove >>' button to exclude all elements from the include list.
+     * Called by the '>>' button to exclude all elements from the include list.
      */
     @SuppressWarnings("unchecked")
     private void onRemAll() {
@@ -1143,20 +1408,27 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
+            updateTablePlaceholder("INCLUDE");
+            updateTablePlaceholder("EXCLUDE");
         }
     }
 
     /**
-     * Called by the '<< add' button to include the selected elements from the exclude list.
+     * Called by the '<' button to include the selected elements from the exclude list.
+     * @param indices of rows to be added in table display order
      */
     @SuppressWarnings("unchecked")
-    private void onAddIt() {
+    private void onAddIt(final int[] rows) {
         // add all selected elements from the exclude to the include list
-        List<T> o = m_exclList.getSelectedValuesList();
+        List<T> o = new ArrayList<T>();
+        for(int i : rows) {
+            o.add((T)m_exclTable.getValueAt(i, 0));
+        }
+
         HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(o);
-        for (Object e : m_inclMdl) {
-            hash.add(e);
+        for (Object obj : m_inclMdl) {
+            hash.add(obj);
         }
 
         boolean changed = m_exclMdl.removeAll(o);
@@ -1181,11 +1453,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
+            updateTablePlaceholder(INCLUDE);
+            updateTablePlaceholder(EXCLUDE);
         }
     }
 
     /**
-     * Called by the '<< add all' button to include all elements from the exclude list.
+     * Called by the '<<' button to include all elements from the exclude list.
      */
     @SuppressWarnings("unchecked")
     private void onAddAll() {
@@ -1210,35 +1484,35 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
+            updateTablePlaceholder(INCLUDE);
+            updateTablePlaceholder(EXCLUDE);
         }
     }
 
     @SuppressWarnings("unchecked")
     private void cleanInvalidValues() {
         if (m_enforceExclusion.isSelected()) {
-            for (int i = 0; i < m_inclMdl.getSize(); i++) {
-                String name = getNameForT((T)m_inclMdl.getElementAt(i));
+            int i = 0;
+            for (Object o : m_inclMdl) {
+                String name = getNameForT((T) o);
                 if (isInvalidValue(name)) {
                     m_invalidIncludes.remove(name);
-                    m_order.remove(m_inclMdl.getElementAt(i));
+                    m_order.remove(o);
                     m_inclMdl.remove(i--);
                 }
+                i++;
             }
         } else {
-            for (int i = 0; i < m_exclMdl.getSize(); i++) {
-                String name = getNameForT((T)m_exclMdl.getElementAt(i));
+            int i = 0;
+            for (Object o : m_exclMdl) {
+                String name = getNameForT((T) o);
                 if (isInvalidValue(name)) {
                     m_invalidExcludes.remove(name);
-                    m_order.remove(m_exclMdl.getElementAt(i));
+                    m_order.remove(o);
                     m_exclMdl.remove(i--);
                 }
+                i++;
             }
-        }
-        if (m_inclMdl.isEmpty()) {
-            m_inclList.setToolTipText(null);
-        }
-        if (m_exclMdl.isEmpty()) {
-            m_exclList.setToolTipText(null);
         }
     }
 
@@ -1247,6 +1521,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     private void initPanel() {
         JPanel panel = new JPanel();
+        panel.setBorder(new EmptyBorder(4, 4, 4, 4));
         panel.setLayout(new GridBagLayout());
         // Setup the mode panel, containing the options by column name and by column type
         m_typeGroup = new ButtonGroup();
@@ -1350,5 +1625,84 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public InputFilter<T> getFilter() {
         return m_filter;
+    }
+
+
+    /**
+     * Updates the placeholder of the corresponding table.
+     * @param table
+     */
+    private void updateTablePlaceholder(final String table){
+        // include table
+        if (table.equals(INCLUDE)) {
+            CardLayout cl = (CardLayout) m_inclCards.getLayout();
+            // if there are no columns in the list
+            if (m_inclMdl.getRowCount() == 0) {
+                m_inclTablePlaceholder.updateText(EMPTY, "", 0);
+                cl.show(m_inclCards, PLACEHOLDER);
+            } else {
+                // nothing found
+                if (m_inclTable.getRowCount() == 0) {
+                    m_inclTablePlaceholder.updateText(NOTHING_FOUND, m_inclSearchField.getText(), m_inclMdl.getRowCount());
+                    cl.show(m_inclCards, PLACEHOLDER);
+                } else {
+                    cl.show(m_inclCards, LIST);
+                }
+            }
+        } else  if (table.equals(EXCLUDE)){ // exclude table
+            CardLayout cl = (CardLayout) m_exclCards.getLayout();
+            // if there are no columns in the list
+            if (m_exclMdl.getRowCount() == 0) {
+                m_exclTablePlaceholder.updateText(EMPTY, "", 0);
+                cl.show(m_exclCards, PLACEHOLDER);
+            } else {
+                // nothing found
+                if (m_exclTable.getRowCount() == 0) {
+                    m_exclTablePlaceholder.updateText(NOTHING_FOUND, m_exclSearchField.getText(), m_exclMdl.getRowCount());
+                    cl.show(m_exclCards, PLACEHOLDER);
+                } else {
+                    cl.show(m_exclCards, LIST);
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the rowfilter of the corresponding table with a new query. If the query is empty, the rowfilter will be set to null.
+     * @param table
+     */
+    @SuppressWarnings("rawtypes")
+    private void updateRowFilter(final String table){
+        String query = table.equals(INCLUDE) ? m_inclSearchField.getText() : m_exclSearchField.getText();
+        // RowFilter is set to null if search field is empty
+        RowFilter<NameFilterTableModel, Object> rf = null;
+        if(!query.isEmpty()){
+            try {
+                // by default perform case insensitive search
+                // escape all regex characters [\^$.|?*+()
+                // DataColumnSpec format "foo (knime type)" -> filter should only search for name
+                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(query) + ".*\\(.*\\)");
+            } catch (java.util.regex.PatternSyntaxException p) {
+                return;
+            }
+        }
+        // include list
+        if(table.equals(INCLUDE)){
+            m_inclSorter.setRowFilter(rf);
+        // exclude list
+        }else if (table.equals(EXCLUDE)){
+            m_exclSorter.setRowFilter(rf);
+        }
+    }
+
+    /**
+     * Creates a resource URL for a file in the class's path
+     * @param file
+     * @return resource URL
+     */
+    private URL getResourceUrl(final String file){
+        Package pack = NameFilterPanel.class.getPackage();
+        String iconBase = pack.getName().replace(".", "/") + "/";
+        return this.getClass().getClassLoader().getResource(iconBase + file);
     }
 }

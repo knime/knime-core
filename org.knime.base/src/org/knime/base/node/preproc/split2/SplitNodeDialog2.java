@@ -74,10 +74,6 @@ public class SplitNodeDialog2 extends NodeDialogPane {
         m_filterPanel = new DataColumnSpecFilterPanel();
         m_filterPanel.setIncludeTitle(" Bottom ");
         m_filterPanel.setExcludeTitle(" Top ");
-        m_filterPanel.setRemoveAllButtonText("<<");
-        m_filterPanel.setRemoveButtonText("<");
-        m_filterPanel.setAddAllButtonText(">>");
-        m_filterPanel.setAddButtonText(">");
         addTab("Settings", m_filterPanel);
     }
 
