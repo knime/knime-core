@@ -467,7 +467,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate>, Closeab
         if (m_settings != null) {
             // Resolve bundle names to bundles
             Stream.of(m_settings.getBundles()).map(bname -> Platform.getBundle(bname.split(" ")[0]))
-                .forEach(b -> pending.add(b));
+                .collect(Collectors.toCollection(() -> pending));
         }
 
         Bundle bundle = null;
