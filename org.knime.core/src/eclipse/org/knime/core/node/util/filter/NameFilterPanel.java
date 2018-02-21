@@ -55,12 +55,12 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,7 +117,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
  *
  * @since 2.6
  *
- * @param <T> the instance T this object is parametrized on
+ * @param <T> the instance T this object is parameterized on
  */
 @SuppressWarnings("serial")
 public abstract class NameFilterPanel<T> extends JPanel {
@@ -216,12 +216,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private JPanel m_nameFilterPanel;
 
     /** Constants for updating different parts of the UI*/
-    private static final String INCLUDE = "INCLUDE";
-    private static final String EXCLUDE = "EXCLUDE";
-    private static final String EMPTY = "EMPTY";
-    private static final String NOTHING_FOUND = "NOTHING_FOUND";
-    private static final String PLACEHOLDER = "PLACEHOLDER";
-    private static final String LIST = "LIST";
+    private static final String ID_CARDLAYOUT_PLACEHOLDER = "PLACEHOLDER";
+    private static final String ID_CARDLAYOUT_LIST = "LIST";
 
     /** Text to be displayed in the filter as a placeholder */
     private static final String FILTER = "Filter";
@@ -295,37 +291,43 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
 
         /**
-         * Updates the labels text with the specified searchString
-         * @param searchString term that was searched for
+         * Updates the label's text if there are no columns to be displayed.
+         *
          */
-        private void updateText(final String mode, final String searchString, final int total){
+        private void updateTextEmpty(){
+            setText("No columns in this list");
+        }
+
+        /**
+         * Updates the label's text if no matching columns are found.
+         * @param searchString term that was searched for
+         * @param total total number of columns in the table
+         */
+        private void updateTextNothingFound(final String searchString, final int total){
             // empty list/table
-            if (mode.equals(EMPTY)) {
-                setText("No columns in this list");
-            } else if (mode.equals(NOTHING_FOUND)) {
-                String str = searchString;
-                // shorten string if too long
-                int max = 15;
-                if (str.length() > max){
-                    str = str.substring(0, max) + "...";
-                }
-                setText("<html>No columns found matching<br>\""+str+"\" (total: " + total + ")</html>");
+            String str = searchString;
+            // shorten string if too long
+            int max = 15;
+            if (str.length() > max){
+                str = str.substring(0, max) + "...";
             }
+            setText("<html>No columns found matching<br>\""+str+"\" (total: " + total + ")</html>");
         }
 
     }
 
     /**
-     * MouseListener handling double clicks of elements in the table.
+     * MouseAdapter handling double clicks of elements in the table.
      *
      * @author Johannes Schweig
      */
-    private class DoubleClickMouseListener implements MouseListener {
-        private String table;
+    private class DoubleClickMouseAdapter extends MouseAdapter {
+        private JTable m_table;
 
-        DoubleClickMouseListener(final String _table){
-            table = _table;
+        DoubleClickMouseAdapter(final JTable table){
+            m_table = table;
         }
+
         /**
          * {@inheritDoc}
          */
@@ -333,50 +335,26 @@ public abstract class NameFilterPanel<T> extends JPanel {
         public void mouseClicked(final MouseEvent e) {
             // if a double click occurs on one of the rows, these rows are moved to the other table
             if (e.getClickCount() == 2) {
-                if (table.equals(INCLUDE)) {
+                if (m_table.equals(m_inclTable)) {
                     onRemIt(m_inclTable.getSelectedRows());
-                }else if (table.equals(EXCLUDE)) {
+                }else if (m_table.equals(m_exclTable)) {
                     onAddIt(m_exclTable.getSelectedRows());
                 }
             }
             e.consume();
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mousePressed(final MouseEvent e) { }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mouseReleased(final MouseEvent e) { }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mouseEntered(final MouseEvent e) { }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mouseExited(final MouseEvent e) { }
-
     }
 
     /**
-     * KeyListener of a table handling key strokes.
+     * KeyAdapter of a table handling key strokes.
      *
      * @author Johannes Schweig
      */
-    private class TableKeyListener implements KeyListener {
-        private String table;
+    private class TableKeyAdapter extends KeyAdapter {
+        private JTable m_table;
 
-        TableKeyListener(final String _table){
-            table = _table;
+        TableKeyAdapter(final JTable table){
+            m_table = table;
         }
 
         /**
@@ -387,60 +365,35 @@ public abstract class NameFilterPanel<T> extends JPanel {
             // find first column starting with typed character
             String key = String.valueOf(e.getKeyChar());
             int index = -1;
-            if (table.equals(INCLUDE)){
-                for (int i = 0; i < m_inclTable.getRowCount(); i++) {
-                    String s = ((DataColumnSpec) m_inclTable.getValueAt(i, 0)).getName();
-                    if (s.toLowerCase().startsWith(key)){
-                        index = i;
-                        break;
-                    }
+            for (int i = 0; i < m_table.getRowCount(); i++) {
+                String s = ((DataColumnSpec) m_table.getValueAt(i, 0)).getName();
+                if (s.toLowerCase().startsWith(key)){
+                    index = i;
+                    break;
                 }
-                // if a column is found, select it and scroll the view
-                if (index != -1) {
-                    m_inclTable.setRowSelectionInterval(index, index);
-                    m_inclTable.scrollRectToVisible(new Rectangle(m_inclTable.getCellRect(index, 0, true)));
-                }
-            }else if(table.equals(EXCLUDE)){
-                for (int i = 0; i < m_exclTable.getRowCount(); i++) {
-                    String s = ((DataColumnSpec) m_exclTable.getValueAt(i, 0)).getName();
-                    if (s.toLowerCase().startsWith(key)){
-                        index = i;
-                        break;
-                    }
-                }
-                // if a column is found, select it and scroll the view
-                if (index != -1) {
-                    m_exclTable.setRowSelectionInterval(index, index);
-                    m_exclTable.scrollRectToVisible(new Rectangle(m_exclTable.getCellRect(index, 0, true)));
-                }
-
+            }
+            // if a column is found, select it and scroll the view
+            if (index != -1) {
+                m_table.setRowSelectionInterval(index, index);
+                m_table.scrollRectToVisible(new Rectangle(m_table.getCellRect(index, 0, true)));
             }
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void keyPressed(final KeyEvent e) { }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void keyReleased(final KeyEvent e) { }
-
     }
 
     /**
-     * FocusListener that clears the selection in one table if the other gains focus.
+     * FocusAdapter that removes focus of a table if the other table is focused.
      *
      * @author Johannes Schweig
      */
-    private class TableFocusListener implements FocusListener{
-        private String table;
+    private class TableFocusAdapter extends FocusAdapter {
+        private JTable m_table;
 
-        TableFocusListener (final String _table) {
-            table = _table;
+        /**
+         * Initiates a TableFocusAdapter.
+         * @param table the table which focus is removed
+         */
+        TableFocusAdapter (final JTable table) {
+            m_table = table;
         }
         /**
          * {@inheritDoc}
@@ -448,69 +401,59 @@ public abstract class NameFilterPanel<T> extends JPanel {
         @Override
         public void focusGained(final FocusEvent e) {
             // clears selection of one table if the other gains focus
-            if(table.equals(INCLUDE)){
-                m_exclTable.clearSelection();
-            } else if(table.equals(EXCLUDE)){
-                m_inclTable.clearSelection();
-            }
+            m_table.clearSelection();
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void focusLost(final FocusEvent e) { }
-
     }
 
     /**
-     * KeyListener that updates the filter in the table if a new character is typed.
+     * KeyAdapter that updates the filter in the table if a new character is typed.
      *
      *  @author Johannes Schweig
      */
-    private class SearchKeyListener implements KeyListener {
-        private String table;
+    private class SearchKeyAdapter extends KeyAdapter {
+        private JTable m_table;
+        private JPanel m_cardsPanel;
+        private TablePlaceholder m_tablePlaceholder;
+        @SuppressWarnings("rawtypes")
+        private TableRowSorter<NameFilterTableModel> m_tableRowSorter;
+        private JTextField m_searchField;
 
         /**
          * Constructs a SearchKeyListener for a given table.
-         * @param _table table that the search is filtering
+         * @param table JTable that the search is filtering
+         * @param cardsPanel JPanel with CardLayout holding the JTable and a TablePlaceholder
+         * @param tablePlaceholder TablePlaceholder being displayed instead of the table
+         * @param tableRowSorter
          */
-        SearchKeyListener (final String _table) {
-            table = _table;
+        @SuppressWarnings("rawtypes")
+        SearchKeyAdapter (final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final TableRowSorter<NameFilterTableModel> tableRowSorter, final JTextField searchField) {
+            m_table = table;
+            m_cardsPanel = cardsPanel;
+            m_tablePlaceholder = tablePlaceholder;
+            m_tableRowSorter = tableRowSorter;
+            m_searchField = searchField;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void keyTyped(final KeyEvent e) { }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void keyPressed(final KeyEvent e) { }
 
         /**
          * {@inheritDoc}
          */
         @Override
         public void keyReleased(final KeyEvent e) {
-            updateRowFilter(table);
-            updateTablePlaceholder(table);
+            updateRowFilter(m_searchField.getText(), m_tableRowSorter);
+            updateFilterView(m_table, m_cardsPanel, m_tablePlaceholder, m_searchField.getText());
         }
     }
 
     /**
-     * FocusListener that updates the placeholder in the textfield on focus loss and gain.
+     * FocusAdapter that updates the placeholder in the textfield on focus loss and gain.
      *
      * @author Johannes Schweig
      */
-    private class SearchFocusListener implements FocusListener {
-        private String table;
+    private class SearchFocusAdapter extends FocusAdapter {
+        private JTextField m_searchField;
 
-        SearchFocusListener (final String _table) {
-            table = _table;
+        SearchFocusAdapter (final JTextField searchField) {
+            m_searchField = searchField;
         }
         /**
          * {@inheritDoc}
@@ -530,32 +473,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         /**
          * Shows or hides the placeholder text in the textfield
-         * @param table
          * @param focus true if focusGained, false if focusLost
          */
         private void updateTextFieldPlaceholder (final boolean focus){
-            String query = table.equals(INCLUDE) ? m_inclSearchField.getText() : m_exclSearchField.getText();
-            if (table.equals(INCLUDE)){
-                if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
-                    m_inclSearchField.setText("");
-                    m_inclSearchField.setForeground(Color.BLACK);
-                    m_inclSearchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
-                } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
-                    m_inclSearchField.setText(FILTER);
-                    m_inclSearchField.setForeground(Color.GRAY);
-                    m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-                }
-            } else if (table.equals(EXCLUDE)){
-                if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
-                    m_exclSearchField.setText("");
-                    m_exclSearchField.setForeground(Color.BLACK);
-                    m_exclSearchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
-                } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
-                    m_exclSearchField.setText(FILTER);
-                    m_exclSearchField.setForeground(Color.GRAY);
-                    m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-                }
-
+            String query = m_searchField.getText();
+            if ((query.isEmpty() || query.equals(FILTER)) && focus) { //  no text or filter text and textfield gains focus -> hide placeholder
+                m_searchField.setText("");
+                m_searchField.setForeground(Color.BLACK);
+                m_searchField.setFont(getFont().deriveFont(Font.PLAIN, 14f));
+            } else if (query.isEmpty() && !focus){ // no text and textfield looses focus -> show placeholder
+                m_searchField.setText(FILTER);
+                m_searchField.setForeground(Color.GRAY);
+                m_searchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
             }
         }
 
@@ -567,14 +496,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @author Johannes Schweig
      */
     private class MoveAllActionListener implements ActionListener {
-        private String table;
+        private JTable m_table;
 
         /**
          * Constructs a MoveAllActionListener for a table.
-         * @param _table the table from which elements are moved
+         * @param table the table from which elements are moved
+         * @param tableRowSorter the TableRowSorter filtering the elements in the table
          */
-        MoveAllActionListener (final String _table) {
-            table = _table;
+        MoveAllActionListener (final JTable table) {
+            m_table = table;
         }
 
         /**
@@ -583,18 +513,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
         @Override
         public void actionPerformed(final ActionEvent e) {
             // if table is not filtered
-            if (table.equals(INCLUDE)) {
+            if (m_table.equals(m_inclTable)) {
                 if(m_inclSorter.getRowFilter()==null){
                     onRemAll();
                 }else{ //if table is filtered
-                    int[] rows = IntStream.range(0, m_inclTable.getRowCount()).toArray();
+                    int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
                     onRemIt(rows);
                 }
-            } else if (table.equals(EXCLUDE)) {
+            } else if (m_table.equals(m_exclTable)) {
                 if(m_exclSorter.getRowFilter()==null){
                     onAddAll();
                 }else{ //if table is filtered
-                    int[] rows = IntStream.range(0, m_exclTable.getRowCount()).toArray();
+                    int[] rows = IntStream.range(0, m_table.getRowCount()).toArray();
                     onAddIt(rows);
               }
             }
@@ -634,31 +564,35 @@ public abstract class NameFilterPanel<T> extends JPanel {
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(Box.createVerticalStrut(57));
 
-        // include list
+        // JTables
         m_inclMdl = new NameFilterTableModel();
         m_inclTable = new JTable(m_inclMdl);
+        m_exclMdl = new NameFilterTableModel();
+        m_exclTable = new JTable(m_exclMdl);
+
+        // include list
         m_inclTable.setShowGrid(false);
         m_inclTable.setTableHeader(null);
         m_inclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_inclTable.addMouseListener(new DoubleClickMouseListener(INCLUDE));
-        m_inclTable.addKeyListener(new TableKeyListener(INCLUDE));
+        m_inclTable.addMouseListener(new DoubleClickMouseAdapter(m_inclTable));
+        m_inclTable.addKeyListener(new TableKeyAdapter(m_inclTable));
         m_inclSorter = new TableRowSorter<NameFilterTableModel>(m_inclMdl);
         m_inclTable.setRowSorter(m_inclSorter);
-        m_inclTable.addFocusListener(new TableFocusListener(INCLUDE));
+        m_inclTable.addFocusListener(new TableFocusAdapter(m_exclTable));
         final JScrollPane jspIncl = new JScrollPane(m_inclTable);
         jspIncl.setPreferredSize(new Dimension(250, 100));
         // setup cardlayout for display of placeholder on search returning no results
         m_inclCards = new JPanel(new CardLayout());
         m_inclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
         m_inclTablePlaceholder = new TablePlaceholder();
-        m_inclCards.add(jspIncl, LIST);
-        m_inclCards.add(m_inclTablePlaceholder, PLACEHOLDER);
+        m_inclCards.add(jspIncl, ID_CARDLAYOUT_LIST);
+        m_inclCards.add(m_inclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
         m_inclSearchField = new JTextField(FILTER, 8);
         m_inclSearchField.setForeground(Color.GRAY);
         m_inclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-        m_inclSearchField.addKeyListener(new SearchKeyListener(INCLUDE));
-        m_inclSearchField.addFocusListener(new SearchFocusListener(INCLUDE));
+        m_inclSearchField.addKeyListener(new SearchKeyAdapter(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSorter, m_inclSearchField));
+        m_inclSearchField.addFocusListener(new SearchFocusAdapter(m_inclSearchField));
         JPanel inclSearchPanel = new JPanel(new BorderLayout(8, 0));
         inclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
         inclSearchPanel.add(m_inclSearchField, BorderLayout.CENTER);
@@ -672,33 +606,31 @@ public abstract class NameFilterPanel<T> extends JPanel {
         includePanel.add(m_inclCards, BorderLayout.CENTER);
 
         // exclude list
-        m_exclMdl = new NameFilterTableModel();
-        m_exclTable = new JTable(m_exclMdl);
         m_exclTable.setShowGrid(false);
         m_exclTable.setTableHeader(null);
         m_exclTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_exclTable.addMouseListener(new DoubleClickMouseListener(EXCLUDE));
-        m_exclTable.addKeyListener(new TableKeyListener(EXCLUDE));
+        m_exclTable.addMouseListener(new DoubleClickMouseAdapter(m_exclTable));
+        m_exclTable.addKeyListener(new TableKeyAdapter(m_exclTable));
         // set renderer for items in the in- and exclude list
         m_inclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
         m_exclTable.setDefaultRenderer(Object.class, new DataColumnSpecTableCellRenderer());
         m_exclSorter = new TableRowSorter<NameFilterTableModel>(m_exclMdl);
         m_exclTable.setRowSorter(m_exclSorter);
-        m_exclTable.addFocusListener(new TableFocusListener(EXCLUDE));
+        m_exclTable.addFocusListener(new TableFocusAdapter(m_inclTable));
         final JScrollPane jspExcl = new JScrollPane(m_exclTable);
         jspExcl.setPreferredSize(new Dimension(250, 100));
         // setup cardlayout for display of placeholder on search returning no results
         m_exclCards = new JPanel(new CardLayout());
         m_exclCards.setBorder(new EmptyBorder(0, 8, 0, 8));
         m_exclTablePlaceholder = new TablePlaceholder();
-        m_exclCards.add(jspExcl, LIST);
-        m_exclCards.add(m_exclTablePlaceholder, PLACEHOLDER);
+        m_exclCards.add(jspExcl, ID_CARDLAYOUT_LIST);
+        m_exclCards.add(m_exclTablePlaceholder, ID_CARDLAYOUT_PLACEHOLDER);
 
         m_exclSearchField = new JTextField(FILTER, 8);
         m_exclSearchField.setForeground(Color.GRAY);
         m_exclSearchField.setFont(getFont().deriveFont(Font.ITALIC, 14f));
-        m_exclSearchField.addKeyListener(new SearchKeyListener(EXCLUDE));
-        m_exclSearchField.addFocusListener(new SearchFocusListener(EXCLUDE));
+        m_exclSearchField.addKeyListener(new SearchKeyAdapter(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSorter, m_exclSearchField));
+        m_exclSearchField.addFocusListener(new SearchFocusAdapter(m_exclSearchField));
 
         JPanel exclSearchPanel = new JPanel(new BorderLayout(8, 0));
         exclSearchPanel.setBorder(new EmptyBorder(8, 8, 8, 8));
@@ -740,7 +672,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
         m_addAllButton.setToolTipText("Moves all visible entries from the left to the right list.");
         buttonPan.add(m_addAllButton);
-        m_addAllButton.addActionListener(new MoveAllActionListener(EXCLUDE));
+        m_addAllButton.addActionListener(new MoveAllActionListener(m_exclTable));
         buttonPan.add(Box.createVerticalStrut(25));
 
         m_remButton = new JButton(new ImageIcon(getResourceUrl("rem.png")));
@@ -754,7 +686,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
         m_remAllButton.setToolTipText("Moves all visible entries from the right to the left list.");
         buttonPan.add(m_remAllButton);
-        m_remAllButton.addActionListener(new MoveAllActionListener(INCLUDE));
+        m_remAllButton.addActionListener(new MoveAllActionListener(m_inclTable));
         m_additionalCheckbox = createAdditionalButton();
         if (m_additionalCheckbox != null){
             buttonPan.add(Box.createVerticalStrut(25));
@@ -979,8 +911,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_inclMdl.addAll(tmp_incl);
         m_exclMdl.addAll(tmp_excl);
         // forces update of the UI on startup
-        updateTablePlaceholder(INCLUDE);
-        updateTablePlaceholder(EXCLUDE);
+        updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+        updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
 
         repaint();
     }
@@ -1377,8 +1309,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
-            updateTablePlaceholder(INCLUDE);
-            updateTablePlaceholder(EXCLUDE);
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
@@ -1408,8 +1340,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
-            updateTablePlaceholder("INCLUDE");
-            updateTablePlaceholder("EXCLUDE");
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
         }
     }
 
@@ -1453,9 +1385,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
-            updateTablePlaceholder(INCLUDE);
-            updateTablePlaceholder(EXCLUDE);
-        }
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
+}
     }
 
     /**
@@ -1484,34 +1416,32 @@ public abstract class NameFilterPanel<T> extends JPanel {
         if (changed) {
             cleanInvalidValues();
             fireFilteringChangedEvent();
-            updateTablePlaceholder(INCLUDE);
-            updateTablePlaceholder(EXCLUDE);
-        }
+            updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+            updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
+}
     }
 
     @SuppressWarnings("unchecked")
     private void cleanInvalidValues() {
         if (m_enforceExclusion.isSelected()) {
-            int i = 0;
-            for (Object o : m_inclMdl) {
+            for (int i = 0; i < m_inclMdl.getSize(); i++) {
+                Object o = m_inclMdl.getElementAt(i);
                 String name = getNameForT((T) o);
                 if (isInvalidValue(name)) {
                     m_invalidIncludes.remove(name);
                     m_order.remove(o);
                     m_inclMdl.remove(i--);
                 }
-                i++;
             }
         } else {
-            int i = 0;
-            for (Object o : m_exclMdl) {
+            for (int i = 0; i < m_exclMdl.getSize(); i++) {
+                Object o = m_exclMdl.getElementAt(i);
                 String name = getNameForT((T) o);
                 if (isInvalidValue(name)) {
                     m_invalidExcludes.remove(name);
                     m_order.remove(o);
                     m_exclMdl.remove(i--);
                 }
-                i++;
             }
         }
     }
@@ -1629,40 +1559,25 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
 
     /**
-     * Updates the placeholder of the corresponding table.
-     * @param table
+     * Displays a JTable if there is something to display, otherwise displays a TablePlaceholder.
+     * @param table the JTable being displayed instead of the TablePlaceholder
+     * @param cardsPanel the JPanel holding the cards
+     * @param tablePlaceholder the TablePlaceholder being displayed instead of the table
+     * @param searchQuery the entered search query
      */
-    private void updateTablePlaceholder(final String table){
-        // include table
-        if (table.equals(INCLUDE)) {
-            CardLayout cl = (CardLayout) m_inclCards.getLayout();
-            // if there are no columns in the list
-            if (m_inclMdl.getRowCount() == 0) {
-                m_inclTablePlaceholder.updateText(EMPTY, "", 0);
-                cl.show(m_inclCards, PLACEHOLDER);
+    private void updateFilterView(final JTable table, final JPanel cardsPanel, final TablePlaceholder tablePlaceholder, final String searchQuery){
+        CardLayout cl = (CardLayout) cardsPanel.getLayout();
+        // if there are no columns in the list
+        if (table.getModel().getRowCount() == 0) {
+            tablePlaceholder.updateTextEmpty();
+            cl.show(cardsPanel, ID_CARDLAYOUT_PLACEHOLDER);
+        } else {
+            // nothing found
+            if (table.getRowCount() == 0) {
+                tablePlaceholder.updateTextNothingFound(searchQuery, table.getModel().getRowCount());
+                cl.show(cardsPanel, ID_CARDLAYOUT_PLACEHOLDER);
             } else {
-                // nothing found
-                if (m_inclTable.getRowCount() == 0) {
-                    m_inclTablePlaceholder.updateText(NOTHING_FOUND, m_inclSearchField.getText(), m_inclMdl.getRowCount());
-                    cl.show(m_inclCards, PLACEHOLDER);
-                } else {
-                    cl.show(m_inclCards, LIST);
-                }
-            }
-        } else  if (table.equals(EXCLUDE)){ // exclude table
-            CardLayout cl = (CardLayout) m_exclCards.getLayout();
-            // if there are no columns in the list
-            if (m_exclMdl.getRowCount() == 0) {
-                m_exclTablePlaceholder.updateText(EMPTY, "", 0);
-                cl.show(m_exclCards, PLACEHOLDER);
-            } else {
-                // nothing found
-                if (m_exclTable.getRowCount() == 0) {
-                    m_exclTablePlaceholder.updateText(NOTHING_FOUND, m_exclSearchField.getText(), m_exclMdl.getRowCount());
-                    cl.show(m_exclCards, PLACEHOLDER);
-                } else {
-                    cl.show(m_exclCards, LIST);
-                }
+                cl.show(cardsPanel, ID_CARDLAYOUT_LIST);
             }
         }
     }
@@ -1672,27 +1587,20 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param table
      */
     @SuppressWarnings("rawtypes")
-    private void updateRowFilter(final String table){
-        String query = table.equals(INCLUDE) ? m_inclSearchField.getText() : m_exclSearchField.getText();
+    private void updateRowFilter(final String searchQuery, final TableRowSorter<NameFilterTableModel> tableRowSorter){
         // RowFilter is set to null if search field is empty
         RowFilter<NameFilterTableModel, Object> rf = null;
-        if(!query.isEmpty()){
+        if(!searchQuery.isEmpty()){
             try {
                 // by default perform case insensitive search
                 // escape all regex characters [\^$.|?*+()
                 // DataColumnSpec format "foo (knime type)" -> filter should only search for name
-                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(query) + ".*\\(.*\\)");
+                rf = RowFilter.regexFilter("(?i)" + Pattern.quote(searchQuery) + ".*\\(.*\\)");
             } catch (java.util.regex.PatternSyntaxException p) {
                 return;
             }
         }
-        // include list
-        if(table.equals(INCLUDE)){
-            m_inclSorter.setRowFilter(rf);
-        // exclude list
-        }else if (table.equals(EXCLUDE)){
-            m_exclSorter.setRowFilter(rf);
-        }
+        tableRowSorter.setRowFilter(rf);
     }
 
     /**
