@@ -321,7 +321,7 @@
       </AggregationOperator>
    </extension>
    <extension
-         point="org.knime.expressions.ExpressionSet">
+         point="org.knime.expressions.core.ExpressionSet">
       <expressionSet
             expressionSet="org.knime.base.expressions.datetime.LocalDateTimeExpressionSet">
       </expressionSet>
