@@ -104,10 +104,17 @@ ICTabRendering {
     private Color hotUnselectedTabsColorBackground;
 
     @Inject
-    public KNIMECTabFolderRenderer(final CTabFolder parent) {
-        super(parent);
-        parentWrapper = new CTabFolderWrapper(parent);
+    public KNIMECTabFolderRenderer (final CTabFolder parentTabFolder) {
+        super(parentTabFolder);
+        parentWrapper = new CTabFolderWrapper(parentTabFolder);
         rendererWrapper = new CTabFolderRendererWrapper(this);
+
+        if (!parentTabFolder.getMaximizeVisible()) {
+            parentTabFolder.setMaximizeVisible(true);
+        }
+        if (!parentTabFolder.getMinimizeVisible()) {
+            parentTabFolder.setMinimizeVisible(true);
+        }
     }
 
     @Override
