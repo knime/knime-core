@@ -44,22 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 16, 2018 (ortmann): created
+ *   Feb 15, 2018 (ortmann): created
  */
-package org.knime.base.algorithms.outlier;
+package org.knime.base.algorithms.outlier.options;
+
+import java.util.Arrays;
+
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Interface allowing to react to warnings.
+ * Enum encoding the replacement strategy.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public interface WarningListener {
+public enum OutlierReplacementStrategy {
+        /** Indicates that outliers have to be replaced by missing values */
+        MISSING("Missing values"),
+
+        /** Indicates that outliers have to be replaced by the closest value in the permitted interval */
+        INTERVAL_BOUNDARY("Closest permitted value");
+
+    /** Missing name exception. */
+    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
+
+    /** IllegalArgumentException prefix. */
+    private static final String ARGUMENT_EXCEPTION_PREFIX = "No OutlierReplacementStrategy constant with name: ";
+
+    private final String m_name;
+
+    OutlierReplacementStrategy(final String name) {
+        m_name = name;
+    }
+
+    @Override
+    public String toString() {
+        return m_name;
+    }
 
     /**
-     * Invoked when a warning is created.
+     * Returns the enum for a given String
      *
-     * @param warning the warning
+     * @param name the enum name
+     * @return the enum
+     * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
      */
-    public void warning(final Warning warning);
+    public static OutlierReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
+        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
+
+        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
+
+    }
 
 }

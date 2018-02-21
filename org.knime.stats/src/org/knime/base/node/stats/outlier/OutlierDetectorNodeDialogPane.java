@@ -62,8 +62,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.OutlierTreatmentOption;
+import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -117,7 +117,7 @@ final class OutlierDetectorNodeDialogPane extends NodeDialogPane {
     /** The outlier replacement strategy label name. */
     private static final String REPLACEMENT_STRATEGY = "Replacement strategy";
 
-    private static final String DOMAIN_POLICY = "Reset domain";
+    private static final String DOMAIN_POLICY = "Update domain";
 
     /** Dialog indicating whether the algorithm should be executed in or out of memory. */
     private DialogComponentBoolean m_memoryDialog;

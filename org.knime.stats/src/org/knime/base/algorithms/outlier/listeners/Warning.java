@@ -44,56 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 15, 2018 (ortmann): created
+ *   Feb 16, 2018 (ortmann): created
  */
-package org.knime.base.algorithms.outlier;
-
-import java.util.Arrays;
-
-import org.knime.core.node.util.CheckUtils;
+package org.knime.base.algorithms.outlier.listeners;
 
 /**
- * Enum encoding the replacement strategy.
+ * Class encoding a warning.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public enum OutlierReplacementStrategy {
-        /** Indicates that outliers have to be replaced by missing values */
-        MISSING("Missing values"),
+public class Warning {
 
-        /** Indicates that outliers have to be replaced by the closest value in the allowed interval */
-        INTERVAL_BOUNDARY("Closest allowed value");
+    /** The warning mesage */
+    private final String m_msg;
 
-    /** Missing name exception. */
-    private static final String NAME_MUST_NOT_BE_NULL = "Name must not be null";
-
-    /** IllegalArgumentException prefix. */
-    private static final String ARGUMENT_EXCEPTION_PREFIX = "No OutlierReplacementStrategy constant with name: ";
-
-    private final String m_name;
-
-    OutlierReplacementStrategy(final String name) {
-        m_name = name;
-    }
-
-    @Override
-    public String toString() {
-        return m_name;
+    /**
+     * Constructor
+     *
+     * @param message the warning message
+     */
+    public Warning(final String message) {
+        m_msg = message;
     }
 
     /**
-     * Returns the enum for a given String
+     * Returns the warning message.
      *
-     * @param name the enum name
-     * @return the enum
-     * @throws IllegalArgumentException if the given name is not associated with an REPLACEMENT_STRATEGY value
+     * @return the warning message
      */
-    public static OutlierReplacementStrategy getEnum(final String name) throws IllegalArgumentException {
-        CheckUtils.checkArgumentNotNull(name, NAME_MUST_NOT_BE_NULL);
-
-        return Arrays.stream(values()).filter(t -> t.m_name.equals(name)).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(ARGUMENT_EXCEPTION_PREFIX + name));
-
+    public String getMessage() {
+        return m_msg;
     }
 
 }

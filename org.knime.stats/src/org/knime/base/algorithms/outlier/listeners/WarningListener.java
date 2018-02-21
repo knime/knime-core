@@ -46,34 +46,20 @@
  * History
  *   Feb 16, 2018 (ortmann): created
  */
-package org.knime.base.algorithms.outlier;
+package org.knime.base.algorithms.outlier.listeners;
 
 /**
- * Class encoding a warning.
+ * Interface allowing to react to warnings.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  */
-public class Warning {
-
-    /** The warning mesage */
-    private final String m_msg;
+public interface WarningListener {
 
     /**
-     * Constructor
+     * Invoked when a warning is created.
      *
-     * @param message the warning message
+     * @param warning the warning
      */
-    public Warning(final String message) {
-        m_msg = message;
-    }
-
-    /**
-     * Returns the warning message.
-     *
-     * @return the warning message
-     */
-    public String getMessage() {
-        return m_msg;
-    }
+    public void warning(final Warning warning);
 
 }

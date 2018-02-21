@@ -28,8 +28,9 @@
 				typically, to the lower end of a boxplot's whisker and largest value
 				to its upper end.
 				<br />
-				Additionally, providing grouping information allows to detect
-				outliers only within their own group.
+				Providing grouping information allows to further detect
+				outliers only within their respective groups. Columns for which
+				outliers have to be detected will be skipped when computing the groups.
 			</p>
 			<p>
 				If an observation is flagged an outlier, one can either remove
@@ -100,9 +101,9 @@
 				The default is k = 1.5.
 			</option>
 			
-			<option name="Reset domain">
+			<option name="Update domain">
 				If checked the domain of the selected outlier columns
-				is reset.
+				is updated.
 			</option>
 
 			<option name="Process in memory">
@@ -160,10 +161,10 @@
 						Replaces every outlier by a missing value
 					</li>
 					<li>
-						<b>Closest allowed value:</b>
+						<b>Closest permitted value:</b>
 						Replaces the value of each outlier by the closest value within the
-						allowed interval R. If the column type is an integer the
-						replacement value is the closest integer within the allowed interval.
+						permitted interval R. If the column type is an integer the
+						replacement value is the closest integer within the permitted interval.
 					</li>
 				</ul>
 			</option>

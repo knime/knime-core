@@ -53,13 +53,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.OutlierDetector;
-import org.knime.base.algorithms.outlier.OutlierReplacementStrategy;
-import org.knime.base.algorithms.outlier.OutlierTreatmentOption;
-import org.knime.base.algorithms.outlier.Warning;
-import org.knime.base.algorithms.outlier.WarningListener;
+import org.knime.base.algorithms.outlier.listeners.Warning;
+import org.knime.base.algorithms.outlier.listeners.WarningListener;
+import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
+import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -113,7 +114,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     /** Config key of the iqr scalar. */
     private static final String CFG_SCALAR_PAR = "iqr-scalar";
 
-        /** Config key of the memory policy. */
+    /** Config key of the memory policy. */
     private static final String CFG_MEM_POLICY = "memory-policy";
 
     /** Config key of the estimation type used for in-memory computation. */
@@ -126,7 +127,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     private static final String CFG_OUTLIER_REPLACEMENT = "replacement-strategy";
 
     /** Config key of the domain policy. */
-    private static final String CFG_DOMAIN_POLICY = "reset-domain";
+    private static final String CFG_DOMAIN_POLICY = "update-domain";
 
     /** Default scalar to scale the interquartile range */
     private static final double DEFAULT_SCALAR = 1.5d;
@@ -161,7 +162,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     /** Settings model indicating whether the algorithm has to use the provided groups information. */
     private SettingsModelBoolean m_useGroupsSetting;
 
-    /** Settings model indicating whether the algorithm has to reset the domain of the output table, or not. */
+    /** Settings model indicating whether the algorithm has to update the domain of the output table, or not. */
     private SettingsModelBoolean m_domainSetting;
 
     /** Init the outlier detector node model with one input and output. */
@@ -181,7 +182,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
         outDet.execute(in, exec);
 
-        return new BufferedDataTable[]{outDet.getOutTable(), outDet.getIntervalTable()};
+        return new BufferedDataTable[]{outDet.getOutTable(), outDet.getIntervalsTable()};
     }
 
     /**
@@ -199,7 +200,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
             .setIQRScalar(m_scalarModel.getDoubleValue())//
             .setReplacementStrategy(OutlierReplacementStrategy.getEnum(m_outlierReplacementSettings.getStringValue()))//
             .setTreatmentOption(OutlierTreatmentOption.getEnum(m_outlierTreatmentSettings.getStringValue()))//
-            .resetDomain(m_domainSetting.getBooleanValue())//
+            .updateDomain(m_domainSetting.getBooleanValue())//
             .build();
     }
 
@@ -213,7 +214,9 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
     private List<String> getGroupColNames(final DataTableSpec inSpec) {
         final List<String> groupColNames;
         if (m_useGroupsSetting.getBooleanValue()) {
-            groupColNames = Arrays.asList(m_groupSettings.applyTo(inSpec).getIncludes());
+            groupColNames = Arrays.stream(m_groupSettings.applyTo(inSpec).getIncludes()).collect(Collectors.toList());
+            // remove columns for which the outliers have to be computed
+            groupColNames.removeAll(Arrays.asList(m_outlierSettings.applyTo(inSpec).getIncludes()));
         } else {
             groupColNames = Collections.emptyList();
         }
@@ -281,7 +284,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         OutlierDetector outDet = createOutlierDetector(inSpec);
 
         // return the output spec
-        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getIntervalTableSpec(inSpec)};
+        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getIntervalsTableSpec(inSpec)};
     }
 
     /**

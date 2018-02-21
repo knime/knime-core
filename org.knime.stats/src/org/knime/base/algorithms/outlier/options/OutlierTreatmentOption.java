@@ -46,7 +46,7 @@
  * History
  *   Feb 15, 2018 (ortmann): created
  */
-package org.knime.base.algorithms.outlier;
+package org.knime.base.algorithms.outlier.options;
 
 import java.util.Arrays;
 
