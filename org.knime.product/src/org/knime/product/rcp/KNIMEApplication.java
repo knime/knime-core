@@ -100,8 +100,6 @@ public class KNIMEApplication implements IApplication {
      */
     @Override
     public Object start(final IApplicationContext appContext) throws Exception {
-        ProfileManager.getInstance().applyProfiles();
-
         Display display = createDisplay();
 
         try {
@@ -114,6 +112,8 @@ public class KNIMEApplication implements IApplication {
                 appContext.applicationRunning();
                 return EXIT_OK;
             }
+
+            ProfileManager.getInstance().applyProfiles();
 
             ViewUtils.setLookAndFeel();
 
