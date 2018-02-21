@@ -139,13 +139,14 @@ public class JavaSnippetTest {
      */
     @Test
     public void testAdditionalBundles() throws Exception {
-        final JavaSnippetSettings settings = new JavaSnippetSettings();
+        final JavaSnippetSettings settings = new JavaSnippetSettings("new Complex(1.0, 1.0);");
         settings.setBundles(new String[]{"org.apache.commons.math3"});
         settings.setScriptImports("import org.apache.commons.math3.complex.Complex;");
         snippet.setSettings(settings);
 
         final AbstractJSnippet s = snippet.createSnippetInstance();
         assertNotNull(s);
+        s.snippet();
     }
 
 }
