@@ -36,13 +36,13 @@
 				the whole row from the data or replace it by some other value.
 			</p>
 			<p>
-				Missing Values contained in the data will be ignored, i.e., they
+				Missing values contained in the data will be ignored, i.e., they
 				will neither be used for the outlier computation nor will they be
 				flagged as an outlier.
 			</p>
 		</intro>
-		<tab name="Outliers">
-			<option name="Outlier settings">
+		<tab name="Outlier Selection (Outlier Settings)">
+			<option name="Outlier selection">
 				Allows to select the columns for which outliers have to be
 				detected
 				and treated. If "Compute outlier statistics on groups" is selected,
@@ -93,10 +93,87 @@
 			</option>
 
 		</tab>
-		<tab name="Groups">
-			<option name="Group settings">
+		
+		<tab name="General settings (Outlier Settings)">
+			<option name="IQR scalar">
+				Allows to scale the interquartile range (IQR).
+				The default is k = 1.5.
+			</option>
+			
+			<option name="Reset domain">
+				If checked the domain of the selected outlier columns
+				is reset.
+			</option>
+
+			<option name="Process in memory">
+				Process the table in the memory. Requires more
+				memory, but is faster
+				since the table does not need to be sorted in advance.
+				If in memory is selected more accurate values of 
+				Q<sub>1</sub> and Q<sub>3</sub>
+				are computed, otherwise these quartiles will
+				entirely be estimated
+				irrespective of the selected "Estimation type".
+				<br />
+				<br />
+				Note that the more accurate computation of the quartiles comes
+				with higher memory requirements. If the additionally required memory
+				exceeds the available memory this node will fail.
+			</option>
+
+			<option name="Estimation type">
+				Typically the value of the quartiles is not part of the input, but
+				lies between two observations. The estimation type allows to specify
+				how to deal with this problem, e.g., by using linear-interpolation.
+				A detailed explanation of the different options can be found
+				<a
+					href="https://en.wikipedia.org/wiki/Quantile#Estimating_quantiles_from_a_sample"> here</a>
+			</option>
+
+		</tab>
+
+		<tab name="Outlier treatment (Outlier Settings)">
+
+			<option name="Treatment">
+				Defines two different strategies to treat outliers:
+				<ul>
+					<li>
+						<b>Replace Value:</b>
+						Allows to replace outliers based on the selected "Replacement
+						strategy"
+					</li>
+					<li>
+						<b>Remove Row:</b>
+						Removes all rows from the input data that contain in any of the
+						selected columns at least one outlier
+					</li>
+
+				</ul>
+			</option>
+
+			<option name="Replacement strategy ">
+				Defines two different strategies to replace
+				outliers:
+				<ul>
+					<li>
+						<b>Missing values:</b>
+						Replaces every outlier by a missing value
+					</li>
+					<li>
+						<b>Closest allowed value:</b>
+						Replaces the value of each outlier by the closest value within the
+						allowed interval R. If the column type is an integer the
+						replacement value is the closest integer within the allowed interval.
+					</li>
+				</ul>
+			</option>
+
+		</tab>
+		
+		<tab name="Group Selection (Group Settings)">
+			<option name="Group selection">
 				Allows to select columns to identify groups. A group comprises all
-				rows of the input exhibiting the same values in each of the columns.
+				rows of the input exhibiting the same values in every single column.
 				The outliers will finally be computed with respect to each of the
 				individual groups.
 				<br/>
@@ -108,6 +185,11 @@
 				<br/>
 				<b>Options:</b>
 				<ul>
+					<li>
+						<b>Compute outlier statistics on groups</b>
+						Allows to specify groups. If the outliers should not be computed
+						on groups the included groups are being ignored.
+					</li>
 					<li>
 						<b>Include:</b>
 						This list contains the column names for which the groups shall be
@@ -148,88 +230,14 @@
 			</option>
 
 		</tab>
-
-		<tab name="General settings">
-			<option name="Compute outlier statistics on groups">
-				Allows to specify groups via the "Group
-				settings". If the outliers should not be computed on groups the
-				included groups from the "Group settings" are being ignored.
-			</option>
-
-			<option name="IQR scalar">
-				Allows to scale the interquartile range (IQR).
-				The default is k = 1.5.
-			</option>
-
-			<option name="Process in memory">
-				Process the table in the memory. Requires more
-				memory, but is faster
-				since the table does not need to be sorted in advance.
-				If in memory is selected more accurate values of 
-				Q<sub>1</sub> and Q<sub>3</sub>
-				are computed, otherwise these quartiles will
-				entirely be estimated
-				irrespective of the selected "Estimation type".
-				<br />
-				<br />
-				Note that the more accurate computation of the quartiles comes
-				with higher memory requirements. If the additionally required memory
-				exceeds the available memory this node will fail.
-			</option>
-
-			<option name="Estimation type">
-				Typically the value of the quartiles is not part of the input, but
-				lies between two observations. The estimation type allows to specify
-				how to deal with this problem, e.g., by using linear-interpolation.
-				A detailed explanation of the different options can be found
-				<a
-					href="https://en.wikipedia.org/wiki/Quantile#Estimating_quantiles_from_a_sample"> here</a>
-			</option>
-
-		</tab>
-
-		<tab name="Outlier treatment">
-
-			<option name="Treatment">
-				Defines two different strategies to treat outliers:
-				<ul>
-					<li>
-						<b>Replace Value:</b>
-						Allows to replace outliers based on the selected "Replacement
-						strategy"
-					</li>
-					<li>
-						<b>Remove Row:</b>
-						Removes all rows from the input data that contain in any of the
-						selected columns at least one outlier
-					</li>
-
-				</ul>
-			</option>
-
-			<option name="Replacement strategy">
-				Defines two different strategies to replace
-				outliers:
-				<ul>
-					<li>
-						<b>Missing values:</b>
-						Replaces every outlier by a missing value
-					</li>
-					<li>
-						<b>Closest allowed value:</b>
-						Replaces the value of each outlier by the closest value within the
-						allowed interval R. If the column type is an integer the
-						replacement value is the closest integer within the allowed interval.
-					</li>
-				</ul>
-			</option>
-
-		</tab>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Numeric input data">Numeric input data to evaluate</inPort>
 		<outPort index="0" name="Outlier table">Data table where outliers are either
 			replaced or rows containing outliers were removed
+		</outPort>
+		<outPort index="1" name="Interval bounds">Data table holding the lower and upper
+			bound for each group of the outliers
 		</outPort>
 	</ports>
 
