@@ -49,14 +49,11 @@
 package org.knime.base.algorithms.outlier;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.knime.base.algorithms.outlier.listeners.WarningListener;
-import org.knime.base.algorithms.outlier.listeners.WarningsListenerPool;
 import org.knime.base.algorithms.outlier.options.OutlierReplacementStrategy;
 import org.knime.base.algorithms.outlier.options.OutlierTreatmentOption;
-import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -85,19 +82,14 @@ public class OutlierDetector {
 
         private final OutlierReviser.Builder m_reviserBuilder;
 
-        private final WarningsListenerPool m_listenerPool;
-
         /**
          * Sets the outlier column names.
          *
          * @param outlierColNames the outlier column names to be used
          */
         public Builder(final String[] outlierColNames) {
-            m_listenerPool = new WarningsListenerPool();
             m_intervalsBuilder = new OutlierIntervalsCalculator.Builder(outlierColNames);
             m_reviserBuilder = new OutlierReviser.Builder(outlierColNames);
-            m_intervalsBuilder.setWarningListenerPool(m_listenerPool);
-            m_reviserBuilder.setWarningListenerPool(m_listenerPool);
         }
 
         /**
@@ -176,7 +168,7 @@ public class OutlierDetector {
          * @return the builder itself
          */
         public Builder addWarningListener(final WarningListener listener) {
-            m_listenerPool.addListener(listener);
+            m_reviserBuilder.addListener(listener);
             return this;
         }
 
@@ -232,22 +224,22 @@ public class OutlierDetector {
     }
 
     /**
-     * Returns the data table storing the allowed intervals.
+     * Returns the data table storing the allowed intervals and member counts.
      *
-     * @return the data table storing the allowed intervals
+     * @return the data table storing the allowed intervals and member counts
      */
-    public BufferedDataTable getIntervalsTable() {
-        return m_calculator.getIntervalsTable();
+    public BufferedDataTable getSummaryTable() {
+        return m_reviser.getSummaryTable();
     }
 
     /**
-     * Returns the spec of the table storing the allowed intervals.
+     * Returns the spec of the table storing the overview, i.e., permitted intervals, member counts.
      *
      * @param inSpec the spec of the input data table
      * @return the spec of the table storing the allowed intervals
      */
-    public DataTableSpec getIntervalsTableSpec(final DataTableSpec inSpec) {
-        return m_calculator.getIntervalsTableSpec(inSpec);
+    public DataTableSpec getSummaryTableSpec(final DataTableSpec inSpec) {
+        return m_reviser.getSummaryTableSpec(m_calculator.getIntervalsTableSpec(inSpec));
     }
 
     /**
@@ -268,16 +260,13 @@ public class OutlierDetector {
         }
         final double writeProgress = 0.02;
         final double treatmentProgrss = 1 - intervalsProgress - writeProgress;
-        // calculate the intervals
-        Map<GroupKey, Map<String, double[]>> permIntervalsMap =
+
+        // calculate the permitted intervals
+        final BufferedDataTable permittedIntervals =
             m_calculator.calculateIntervals(in, exec.createSubExecutionContext(intervalsProgress));
 
         // treat the outliers
-        final Map<GroupKey, Integer>[] outlierRepCounts =
-            m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permIntervalsMap, true);
-
-        // rename the interval table
-        m_calculator.updateIntervalsTable(exec.createSilentSubExecutionContext(writeProgress), outlierRepCounts);
+        m_reviser.treatOutliers(exec.createSubExecutionContext(treatmentProgrss), in, permittedIntervals);
 
         exec.setProgress(1);
     }

@@ -182,7 +182,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
 
         outDet.execute(in, exec);
 
-        return new BufferedDataTable[]{outDet.getOutTable(), outDet.getIntervalsTable()};
+        return new BufferedDataTable[]{outDet.getOutTable(), outDet.getSummaryTable()};
     }
 
     /**
@@ -284,7 +284,7 @@ final class OutlierDetectorNodeModel extends NodeModel implements WarningListene
         OutlierDetector outDet = createOutlierDetector(inSpec);
 
         // return the output spec
-        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getIntervalsTableSpec(inSpec)};
+        return new DataTableSpec[]{outDet.getOutTableSpec(inSpec), outDet.getSummaryTableSpec(inSpec)};
     }
 
     /**

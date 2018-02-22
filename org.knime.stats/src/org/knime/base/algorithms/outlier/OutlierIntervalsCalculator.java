@@ -48,28 +48,21 @@
  */
 package org.knime.base.algorithms.outlier;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
-import org.knime.base.algorithms.outlier.listeners.WarningsListenerPool;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.GlobalSettings.AggregationContext;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-import org.knime.base.data.aggregation.general.CountOperator;
 import org.knime.base.data.aggregation.numerical.PSquarePercentileOperator;
 import org.knime.base.data.aggregation.numerical.QuantileOperator;
 import org.knime.base.node.preproc.groupby.BigGroupByTable;
 import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByTable;
-import org.knime.base.node.preproc.groupby.GroupKey;
 import org.knime.base.node.preproc.groupby.MemoryGroupByTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -80,8 +73,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -102,9 +93,6 @@ public class OutlierIntervalsCalculator {
 
     /** Statistics calculation routine message. */
     private static final String STATISTICS_MSG = "Calculating statistics";
-
-    /** The default groups name. */
-    private static final String DEFAULT_GROUPS_NAME = "none";
 
     /** Exception message if the MemoryGroupByTable execution fails due to heap-space problems. */
     private static final String MEMORY_EXCEPTION =
@@ -128,12 +116,6 @@ public class OutlierIntervalsCalculator {
     /** The interquartile range scalar. */
     private final double m_iqrScalar;
 
-    /** Listeners pool forwarding warning messages. */
-    private final WarningsListenerPool m_listenerPool;
-
-    /** The table storing the interval bounds for each group */
-    private BufferedDataTable m_intervalTable;
-
     /** Tells whether the computation is done in or out of memory. */
     private final boolean m_inMemory;
 
@@ -156,9 +138,6 @@ public class OutlierIntervalsCalculator {
 
         /** The interquartile range scalar. */
         private double m_iqrScalar = 1.5d;
-
-        /** Listeners pool forwarding warning messages. */
-        private WarningsListenerPool m_listenerPool;
 
         /** Tells whether the computation is done in or out of memory. */
         private boolean m_inMemory = false;
@@ -219,18 +198,6 @@ public class OutlierIntervalsCalculator {
         }
 
         /**
-         * Sets the given listener pool, which is triggered whenever the {@link OutlierIntervalsCalculator} creates a
-         * warning.
-         *
-         * @param listenerPool the listener to be set
-         * @return the builder itself
-         */
-        public Builder setWarningListenerPool(final WarningsListenerPool listenerPool) {
-            m_listenerPool = listenerPool;
-            return this;
-        }
-
-        /**
          * Constructs the outlier detector using the settings provided by the builder.
          *
          * @return the outlier detector using the settings provided by the builder
@@ -251,7 +218,6 @@ public class OutlierIntervalsCalculator {
         m_estimationType = b.m_estimationType;
         m_iqrScalar = b.m_iqrScalar;
         m_inMemory = b.m_inMemory;
-        m_listenerPool = b.m_listenerPool;
 
     }
 
@@ -265,23 +231,14 @@ public class OutlierIntervalsCalculator {
     }
 
     /**
-     * Returns the data table storing the permitted intervals.
-     *
-     * @return the data table storing the permitted intervals
-     */
-    public BufferedDataTable getIntervalsTable() {
-        return m_intervalTable;
-    }
-
-    /**
      * Returns the spec of the table storing the permitted intervals.
      *
      * @param inSpec the spec of the input data table
      * @return the spec of the table storing the permitted intervals
      */
     public DataTableSpec getIntervalsTableSpec(final DataTableSpec inSpec) {
-        return addOutlierCountsAndPermute(renameColumns(GroupByTable.createGroupByTableSpec(inSpec, m_groupColNames,
-            getAggretators(inSpec, GlobalSettings.DEFAULT), COLUMN_NAME_POLICY))).createSpec();
+        return renameColumns(GroupByTable.createGroupByTableSpec(inSpec, m_groupColNames,
+            getAggretators(inSpec, GlobalSettings.DEFAULT), COLUMN_NAME_POLICY));
     }
 
     /**
@@ -292,8 +249,8 @@ public class OutlierIntervalsCalculator {
      * @return returns the mapping between groups and the permitted intervals for each outlier column
      * @throws Exception if the execution failed, due to internal reasons or cancelation from the outside.
      */
-    public Map<GroupKey, Map<String, double[]>> calculateIntervals(final BufferedDataTable in,
-        final ExecutionContext exec) throws Exception {
+    public BufferedDataTable calculateIntervals(final BufferedDataTable in, final ExecutionContext exec)
+        throws Exception {
 
         // calculate the first and third quartile of each outlier column wr.t. the groups this method might cause an
         // out of memory exception while cloning the aggregators. However, this is very unlikely
@@ -324,149 +281,14 @@ public class OutlierIntervalsCalculator {
         ExecutionContext intervalExec = exec.createSubExecutionContext(intervalsProgress);
 
         // calculate the intervals for each column w.r.t. to the groups
-        m_intervalTable = calcIntervals(intervalExec, t.getBufferedTable());
+        BufferedDataTable intervalsTable = calcIntervals(intervalExec, t.getBufferedTable());
 
-        // calculate the map encoding the information stored in the interval table
-        Map<GroupKey, Map<String, double[]>> intervalsGroupsMap = extractIntervals(intervalExec);
+        // rename the columns
+        intervalsTable = exec.createSpecReplacerTable(intervalsTable, renameColumns(intervalsTable.getDataTableSpec()));
 
+        // update the progress and return the permitted intervals
         exec.setProgress(1);
-        return intervalsGroupsMap;
-    }
-
-    /**
-     * Adds the outlier replacement count to the intervals table, and renames and permutes columns.
-     *
-     * @param exec the execution context
-     * @param outlierRepCounts the outlier repetitions counts to be added to the table
-     * @throws CanceledExecutionException if the user has canceled the execution
-     */
-    public void updateIntervalsTable(final ExecutionContext exec, final Map<GroupKey, Integer>[] outlierRepCounts)
-        throws CanceledExecutionException {
-        // rename the interval table
-        m_intervalTable = exec.createSpecReplacerTable(m_intervalTable, renameColumns(m_intervalTable.getSpec()));
-        // permute the interval table
-        m_intervalTable = exec.createColumnRearrangeTable(m_intervalTable,
-            addOutlierCountsAndPermute(m_intervalTable.getSpec(), outlierRepCounts), exec);
-    }
-
-    /**
-     * Creates an column rearranger that adds the replacement count for each outlier column and changes the ordering of
-     * the columns.
-     *
-     * @param inSpec the table spec of the data table
-     * @return the column rearranger
-     */
-    private ColumnRearranger addOutlierCountsAndPermute(final DataTableSpec inSpec) {
-        return addOutlierCountsAndPermute(inSpec, null);
-    }
-
-    /**
-     * Creates an column rearranger that adds the replacement count for each outlier column and changes the ordering of
-     * the columns.
-     *
-     * @param inSpec the table spec of the data table
-     * @param outlierRepCounts the array holding the outlier replacement counts
-     * @return the column rearranger
-     */
-    private ColumnRearranger addOutlierCountsAndPermute(final DataTableSpec inSpec,
-        final Map<GroupKey, Integer>[] outlierRepCounts) {
-
-        // first index where outliers can be found
-        final int outlierOffset = m_groupColNames.size();
-
-        // the number of outliers
-        final int noOutliers = m_outlierColNames.length;
-
-        // append cells storing the number of outliers per column
-        final ColumnRearranger colRearranger = new ColumnRearranger(inSpec);
-
-        // create the specs for the new columns
-        final DataColumnSpec[] outlierCountSpecs = new DataColumnSpec[noOutliers];
-        for (int i = 0; i < noOutliers; i++) {
-            outlierCountSpecs[i] =
-                new DataColumnSpecCreator(m_outlierColNames[i] + "(outlier count)", IntCell.TYPE).createSpec();
-        }
-
-        // array storing the outlier count values
-        final DataCell[] outlierCountCells = new DataCell[noOutliers];
-        // array storing the group values (key)
-        final DataCell[] groupVals = new DataCell[outlierOffset];
-
-        // factory
-        final AbstractCellFactory fac = new AbstractCellFactory(outlierCountSpecs) {
-
-            @Override
-            public DataCell[] getCells(final DataRow row) {
-                // calculate group key
-                for (int i = 0; i < outlierOffset; i++) {
-                    groupVals[i] = row.getCell(i);
-                }
-                final GroupKey key = new GroupKey(groupVals);
-                // set the values for the current group
-                for (int i = 0; i < noOutliers; i++) {
-                    // if no key exists this column did not contain an outlier for the given group, otherwise
-                    // set the proper value
-                    if (outlierRepCounts[i].containsKey(key)) {
-                        outlierCountCells[i] = IntCellFactory.create(outlierRepCounts[i].get(key));
-                    } else {
-                        outlierCountCells[i] = IntCellFactory.create(0);
-                    }
-                }
-                // return the outlier counts
-                return outlierCountCells;
-            }
-        };
-        // append the newly created columns
-        colRearranger.append(fac);
-
-        // calculate the new layout of the columns
-        final int[] permutation = calcPermutation(inSpec, outlierOffset, noOutliers);
-
-        // reorder the columns
-        colRearranger.permute(permutation);
-
-        // return the rearranger
-        return colRearranger;
-
-    }
-
-    /**
-     * Permutes the columns of the interval table such that all columns belonging to the same outlier (column) are
-     * blocked in the output table.
-     *
-     * @param inSpec the in spec
-     * @param outlierOffset offset encoding the first position where the interval columns can be found
-     * @param noOutliers the number of outlier columns
-     * @return the permutation ensuring that all statistics belonging to the same outlier are blocked in the output
-     *         table
-     */
-    private int[] calcPermutation(final DataTableSpec inSpec, final int outlierOffset, final int noOutliers) {
-        // the permutation array
-        final int[] permutation = new int[inSpec.getNumColumns() + noOutliers];
-
-        // offset encoding the first position where the member count columns can be found
-        final int memberCountOffset = 2 * noOutliers + outlierOffset;
-
-        // offset encoding the first position where the outlier count columns can be found
-        final int outlierCountOffset = 3 * noOutliers + outlierOffset;
-
-        int permIndex = 0;
-        // group columns are not moved
-        for (int i = 0; i < outlierOffset; i++) {
-            permutation[permIndex++] = i;
-        }
-        // block columns belonging to the same outlier
-        for (int i = 0; i < noOutliers; i++) {
-            permutation[permIndex++] = i + memberCountOffset;
-            permutation[permIndex++] = i + outlierCountOffset;
-            int index = i * 2 + outlierOffset;
-            permutation[permIndex++] = index;
-            ++index;
-            permutation[permIndex++] = index;
-
-        }
-        // return the permutation
-        return permutation;
+        return intervalsTable;
     }
 
     /**
@@ -480,7 +302,6 @@ public class OutlierIntervalsCalculator {
 
         final int outlierOffset = m_groupColNames.size();
         final int noOutliers = m_outlierColNames.length;
-        final int memberCountOffset = 2 * noOutliers + outlierOffset;
 
         for (int i = 0; i < outlierOffset; i++) {
             cols[i] = inSpec.getColumnSpec(i);
@@ -488,8 +309,6 @@ public class OutlierIntervalsCalculator {
 
         // rename the columns
         for (int i = 0; i < noOutliers; i++) {
-            cols[i + memberCountOffset] =
-                createColumnSpec(inSpec.getColumnSpec(i + memberCountOffset), m_outlierColNames[i] + " (member count)");
             int index = i * 2 + outlierOffset;
             cols[index] = createColumnSpec(inSpec.getColumnSpec(index), m_outlierColNames[i] + " (lower bound)");
             ++index;
@@ -566,7 +385,7 @@ public class OutlierIntervalsCalculator {
      * @return an array of column aggregators
      */
     private ColumnAggregator[] getAggretators(final DataTableSpec inSpec, final GlobalSettings gSettings) {
-        final ColumnAggregator[] aggregators = new ColumnAggregator[m_outlierColNames.length * 3];
+        final ColumnAggregator[] aggregators = new ColumnAggregator[m_outlierColNames.length * 2];
 
         int pos = 0;
         // for each outlier column name create the aggregators
@@ -574,12 +393,6 @@ public class OutlierIntervalsCalculator {
             // the operator column settings
             final OperatorColumnSettings cSettings =
                 new OperatorColumnSettings(INCL_MISSING_CELLS, inSpec.getColumnSpec(outlierColName));
-
-            // add an aggregator to count the number of non-missing elements for each individual group
-            // to the end of the aggregators array (makes it easier to parse the quartile columns)
-            aggregators[2 * m_outlierColNames.length + pos / 2] =
-                new ColumnAggregator(cSettings.getOriginalColSpec(), new CountOperator(gSettings, cSettings));
-
             // add the aggregators for calculating the first and third quartile with respect to the selected
             // memory policy
             for (final double percentile : PERCENTILES) {
@@ -674,70 +487,6 @@ public class OutlierIntervalsCalculator {
 
         // return the table storing the permitted intervals with updated domains
         return domainsUpdater.updateDomain(exec, exec.createColumnRearrangeTable(quartiles, colRearranger, exec));
-    }
-
-    /**
-     * Stores the interval boundaries for each outlier w.r.t. the different groups.
-     *
-     * @param exec the execution context
-     * @return a map from groups to pairs of columns and interval boundaries
-     * @throws CanceledExecutionException if the user has canceled the execution
-     */
-    private Map<GroupKey, Map<String, double[]>> extractIntervals(final ExecutionContext exec)
-        throws CanceledExecutionException {
-        final Map<GroupKey, Map<String, double[]>> intervalsGroupsMap = new HashMap<GroupKey, Map<String, double[]>>();
-
-        final long rowCount = m_intervalTable.size();
-        long rowCounter = 1;
-        final int outlierOffset = m_groupColNames.size();
-
-        for (final DataRow r : m_intervalTable) {
-            exec.checkCanceled();
-            final long rowCounterLong = rowCounter++; // 'final' due to access in lambda expression
-            exec.setProgress(rowCounterLong / (double)rowCount,
-                () -> "Storing interval for row " + rowCounterLong + " of " + rowCount);
-
-            // calculate the groups key
-            final DataCell[] groupVals = new DataCell[m_groupColNames.size()];
-            for (int i = 0; i < outlierOffset; i++) {
-                groupVals[i] = r.getCell(i);
-            }
-
-            // calculate for the current key the IQR of all outliers
-            final HashMap<String, double[]> colsIQR = new HashMap<String, double[]>();
-            for (int i = 0; i < m_outlierColNames.length; i++) {
-                final String outlierName = m_outlierColNames[i];
-                final double[] interval;
-                // the GroupByTable might return MissingValues, but only if
-                // the entire group consists of Missing Values
-                final int index = i * 2 + outlierOffset;
-                final DataCell fQuart = r.getCell(index);
-                final DataCell tQuart = r.getCell(index + 1);
-                if (!fQuart.isMissing() && !tQuart.isMissing()) {
-                    interval =
-                        new double[]{((DoubleValue)fQuart).getDoubleValue(), ((DoubleValue)tQuart).getDoubleValue()};
-                } else {
-                    interval = null;
-                    String groupNames = Arrays.stream(groupVals).map(groupCell -> groupCell.toString())
-                        .collect(Collectors.joining(", "));
-                    if (groupNames.isEmpty()) {
-                        groupNames = DEFAULT_GROUPS_NAME;
-                    }
-                    m_listenerPool.warnListeners(
-                        "Group <" + groupNames + "> contains only missing values in column " + outlierName);
-                }
-                // setting null here is no problem since during the update we will only access the interval
-                // if the cell is not missing. However, this implies that the interval is not null
-                colsIQR.put(outlierName, interval);
-            }
-
-            // associate the group's key with the outliers' interval
-            intervalsGroupsMap.put(new GroupKey(groupVals), colsIQR);
-
-        }
-
-        // return the mapping
-        return intervalsGroupsMap;
     }
 
 }
