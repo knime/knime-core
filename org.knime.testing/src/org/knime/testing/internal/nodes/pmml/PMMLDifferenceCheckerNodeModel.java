@@ -179,8 +179,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inPorts, final ExecutionContext exec) throws Exception {
         try (AutocloseableSupplier<Document> sup1 = ((PMMLPortObject)inPorts[0]).getPMMLValue().getDocumentSupplier();
-                AutocloseableSupplier<Document> sup2 =
-                    ((PMMLPortObject)inPorts[1]).getPMMLValue().getDocumentSupplier()) {
+             AutocloseableSupplier<Document> sup2 = ((PMMLPortObject)inPorts[1]).getPMMLValue().getDocumentSupplier()) {
             PMMLDocument doc1 = PMMLDocument.Factory.parse(sup1.get());
             PMMLDocument doc2 = PMMLDocument.Factory.parse(sup2.get());
 
