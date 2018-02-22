@@ -1081,10 +1081,11 @@ public final class FileUtil {
      */
     public static File getFileFromURL(final URL fileUrl) {
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
-            File dataFile = new File(fileUrl.getPath());
+            String path = getPathFromUrlWithFileProtocol(fileUrl);
+            File dataFile = new File(path);
             if (!dataFile.exists()) {
                 try {
-                    dataFile = new File(URLDecoder.decode(fileUrl.getPath(), "UTF-8"));
+                    dataFile = new File(URLDecoder.decode(path, "UTF-8"));
                 } catch (UnsupportedEncodingException ex) {
                     // ignore it
                 }
@@ -1099,6 +1100,22 @@ public final class FileUtil {
         } else {
             throw new IllegalArgumentException("Not a file or knime URL: '" + fileUrl + "'");
         }
+    }
+
+    /**
+     * Resolves the path of a URL with file: protocol.
+     *
+     * If the input URL looks like it is a UNC URL the returned path resolves to a UNC path with syntax
+     * \\&lthost&gt\&ltpath&gt.
+     *
+     * If the input URL points to a locally stored file only its path is returned.
+     *
+     * @param fileUrl input URL
+     * @return path of the input URL
+     */
+    private static String getPathFromUrlWithFileProtocol(final URL fileUrl) {
+        String uncProtocol = "\\\\";
+        return looksLikeUNC(fileUrl) ? uncProtocol + fileUrl.getHost() + fileUrl.getPath() : fileUrl.getPath();
     }
 
     /**
